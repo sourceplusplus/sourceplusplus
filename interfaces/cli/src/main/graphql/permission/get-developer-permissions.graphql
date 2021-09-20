@@ -1,0 +1,3 @@
+query getDeveloperPermissions($id: String!){
+    getDeveloperPermissions(id: $id)
+}

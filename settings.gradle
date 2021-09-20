@@ -1,0 +1,10 @@
+rootProject.buildFileName = "build.gradle.kts"
+rootProject.name = 'spp-platform'
+
+include ':interfaces:cli'
+include ':interfaces:marker'
+include 'platform'
+include ':probe:control'
+include ':probe:services'
+include 'processor'
+include 'protocol'

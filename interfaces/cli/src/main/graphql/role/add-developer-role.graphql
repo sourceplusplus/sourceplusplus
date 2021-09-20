@@ -1,0 +1,3 @@
+mutation addDeveloperRole($id: String!, $role: String!) {
+    addDeveloperRole(id: $id, role: $role)
+}

@@ -1,0 +1,18 @@
+FROM openjdk:11-jre
+
+RUN mkdir /opt/sourceplusplus
+WORKDIR /opt/sourceplusplus
+
+RUN mkdir /opt/sourceplusplus/config
+ADD ./config/logback.xml /opt/sourceplusplus/config
+ADD ./config/spp-platform.crt /opt/sourceplusplus/config
+ADD ./config/spp-platform.key /opt/sourceplusplus/config
+ADD ./config/spp-platform.yml /opt/sourceplusplus/config
+
+ADD ./spp-platform-*.jar /opt/sourceplusplus
+
+RUN mkdir /opt/sourceplusplus/probe
+ADD ./spp-probe-*.jar /opt/sourceplusplus/probe
+
+CMD (for f in /opt/sourceplusplus/probe/spp-probe-*-unprotected.jar; do cp -- "$f" "${f%-unprotected.jar}.jar"; done) && java -jar /opt/sourceplusplus/spp-platform-*.jar
+#CMD (for f in /opt/sourceplusplus/probe/spp-probe-*-unprotected.jar; do mv -- "$f" "${f%-unprotected.jar}.jar"; done) && java -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5107 -jar /opt/sourceplusplus/spp-platform-*.jar

@@ -1,0 +1,31 @@
+# Default detekt configuration:
+# https://github.com/detekt/detekt/blob/master/detekt-core/src/main/resources/default-detekt-config.yml
+
+build:
+  maxIssues: 19 #todo: zero out
+
+formatting:
+  Indentation:
+    active: true
+  CommentSpacing:
+    active: false
+  NoWildcardImports:
+    active: false
+
+style:
+  MagicNumber:
+    active: false
+  ForbiddenComment:
+    active: false
+  ReturnCount:
+    active: false
+  WildcardImport:
+    active: false
+
+exceptions:
+  TooGenericExceptionCaught:
+    active: false
+
+complexity:
+  LongParameterList:
+    functionThreshold: 8

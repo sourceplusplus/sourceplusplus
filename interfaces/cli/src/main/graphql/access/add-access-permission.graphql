@@ -1,0 +1,7 @@
+mutation addAccessPermission($locationPatterns: [String!], $type: AccessType!) {
+    addAccessPermission(locationPatterns: $locationPatterns, type: $type) {
+        id
+        locationPatterns
+        type
+    }
+}

@@ -1,0 +1,3 @@
+spp.processor.logging.provider.LoggingProcessorProvider
+spp.processor.live.provider.LiveInstrumentProcessorProvider
+spp.processor.live.provider.LiveViewProcessorProvider

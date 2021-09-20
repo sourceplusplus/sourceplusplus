@@ -1,0 +1,60 @@
+<idea-plugin>
+    <version>0.0.0</version> <!-- todo: update automatically-->
+    <id>com.sourceplusplus.plugin.intellij</id>
+    <name>Source++</name>
+    <vendor email="support@sourceplusplus.com" url="https://github.com/sourceplusplus">Source++</vendor>
+    <description>Add breakpoints, logs, metrics, and tracing to live production applications</description>
+    <idea-version since-build="202.4357" until-build="203.*"/>
+
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.java</depends>
+    <depends>com.intellij.modules.lang</depends>
+    <depends>com.intellij.modules.xdebugger</depends>
+    <depends optional="true" config-file="withGroovy.xml">org.intellij.groovy</depends>
+    <depends optional="true" config-file="withKotlin.xml">org.jetbrains.kotlin</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <projectService
+                serviceImplementation="com.sourceplusplus.sourcemarker.service.breakpoint.BreakpointHitWindowService"/>
+        <xdebugger.breakpointType
+                implementation="com.sourceplusplus.sourcemarker.service.breakpoint.model.LiveBreakpointType"/>
+        <editor.linePainter
+                implementation="com.sourceplusplus.sourcemarker.service.breakpoint.painter.VariableEditorLinePainter"/>
+        <applicationConfigurable
+                instance="com.sourceplusplus.sourcemarker.settings.SourceMarkerConfigurable"
+                groupId="tools"
+                id="Source++"
+                displayName="Source++"/>
+        <postStartupActivity
+                implementation="com.sourceplusplus.sourcemarker.activities.PluginSourceMarkerStartupActivity"/>
+
+        <codeInsight.lineMarkerProvider language="JAVA"
+                                        implementationClass="com.sourceplusplus.marker.plugin.SourceLineMarkerProvider$JavaDescriptor"/>
+        <codeInsight.inlayProvider language="JAVA"
+                                   implementationClass="com.sourceplusplus.marker.plugin.SourceInlayHintProvider"/>
+        <errorHandler implementation="com.sourceplusplus.sourcemarker.reporting.GitHubErrorReporter"/>
+
+        <projectService
+                serviceImplementation="com.sourceplusplus.sourcemarker.console.SourceMarkerConsoleService"/>
+        <toolWindow id="Source++ Console"
+                    factoryClass="com.sourceplusplus.sourcemarker.console.SourceMarkerToolWindowFactory"/>
+    </extensions>
+
+    <projectListeners>
+        <listener class="com.sourceplusplus.marker.plugin.FileActivityListener"
+                  topic="com.intellij.openapi.fileEditor.FileEditorManagerListener"/>
+    </projectListeners>
+
+    <actions>
+        <action id="com.sourceplusplus.sourcemarker.command.CommandBarAction"
+                class="com.sourceplusplus.sourcemarker.command.CommandBarAction"
+                text="SourceCommand Action" description="Source command action">
+            <keyboard-shortcut first-keystroke="control shift S" keymap="$default"/>
+        </action>
+        <action id="com.sourceplusplus.marker.plugin.SourceMarkerVisibilityAction"
+                class="com.sourceplusplus.marker.plugin.SourceMarkerVisibilityAction"
+                text="SourceMarkVisibility Action" description="SourceMark visibility action">
+            <keyboard-shortcut first-keystroke="control shift D" keymap="$default"/>
+        </action>
+    </actions>
+</idea-plugin>

@@ -1,0 +1,23 @@
+mutation removeLiveInstrument($id: String!) {
+    removeLiveInstrument(id: $id) {
+        id
+        location {
+            source
+            line
+        }
+        condition
+        expiresAt
+        hitLimit
+        applied
+        pending
+        throttle {
+            limit
+            step
+        }
+        ... on LiveLog {
+            logFormat
+            logArguments
+        }
+        type
+    }
+}

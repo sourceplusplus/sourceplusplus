@@ -1,0 +1,17 @@
+FROM centos:8.3.2011
+
+RUN mkdir /opt/sourceplusplus
+WORKDIR /opt/sourceplusplus
+
+RUN mkdir /opt/sourceplusplus/config
+ADD ./config/logback.xml /opt/sourceplusplus/config
+ADD ./config/spp-platform.crt /opt/sourceplusplus/config
+ADD ./config/spp-platform.key /opt/sourceplusplus/config
+ADD ./config/spp-platform.yml /opt/sourceplusplus/config
+
+ADD ./spp-platform /opt/sourceplusplus
+
+RUN mkdir /opt/sourceplusplus/probe
+ADD ./spp-probe-*.jar /opt/sourceplusplus/probe
+
+ENTRYPOINT ["/opt/sourceplusplus/spp-platform"]

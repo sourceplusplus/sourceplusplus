@@ -1,0 +1,20 @@
+query getLiveLogs{
+    getLiveLogs {
+        id
+        logFormat
+        logArguments
+        location {
+            source
+            line
+        }
+        condition
+        expiresAt
+        hitLimit
+        applied
+        pending
+        throttle {
+            limit
+            step
+        }
+    }
+}

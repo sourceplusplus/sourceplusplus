@@ -1,0 +1,18 @@
+query getLiveBreakpoints{
+    getLiveBreakpoints {
+        id
+        location {
+            source
+            line
+        }
+        condition
+        expiresAt
+        hitLimit
+        applied
+        pending
+        throttle {
+            limit
+            step
+        }
+    }
+}
