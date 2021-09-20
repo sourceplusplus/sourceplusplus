@@ -1,0 +1,50 @@
+version: '3.3'
+services:
+  spp-platform:
+    image: sourceplusplus/spp-platform:0.1.0
+    container_name: spp-platform
+    hostname: spp-platform
+    ports:
+      - "5445:5445"
+    depends_on:
+      - redis
+    links:
+      - redis
+    environment:
+      - SPP_CLUSTER_URL=localhost
+      - SPP_CLUSTER_NAME=docker
+      - SPP_DISABLE_TLS=true
+      - SPP_DISABLE_JWT=true
+  redis:
+    image: redis:6.2.1
+    container_name: redis
+    hostname: redis
+  skywalking-oap:
+    image: sourceplusplus/spp-oap-server:0.1.0
+    container_name: skywalking-oap
+    hostname: skywalking-oap
+    depends_on:
+      - es-server
+    links:
+      - es-server
+    restart: on-failure
+    environment:
+      - SW_STORAGE=elasticsearch7
+      - SW_STORAGE_ES_CLUSTER_NODES=es-server:9200
+      - SPP_PLATFORM_HOST=spp-platform
+      - SPP_PLATFORM_PORT=5460
+      - SPP_DISABLE_TLS=true
+  es-server:
+    image: blacktop/elasticsearch:7.0.0
+    container_name: es-server
+    hostname: es-server
+    cap_add:
+      - IPC_LOCK
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    command: -E cluster.name=es-skywalking -E path.data=data -E path.logs=logs -E network.host=0.0.0.0 -E node.name=node-1

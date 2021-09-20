@@ -1,0 +1,72 @@
+name: Docker Release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  docker-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+
+      - name: Export Properties
+        id: properties
+        shell: bash
+        run: |
+          echo "SPP_PLATFORM_VERSION=$(echo $GITHUB_REF | cut -d / -f 3 | cut -d v -f2-)" >> $GITHUB_ENV
+
+      - name: Login to DockerHub Registry
+        run: echo ${{ secrets.DOCKERHUB_PASSWORD }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
+
+      - name: Download spp-platform (Linux)
+        uses: robinraju/release-downloader@v1
+        with:
+          repository: sourceplusplus/live-platform
+          tag: v${{ env.SPP_PLATFORM_VERSION }}
+          fileName: spp-platform-${{ env.SPP_PLATFORM_VERSION }}-linux-amd64.tar.gz
+          out-file-path: ./docker/spp-platform
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Untar spp-platform
+        run: cd ./docker/spp-platform && tar -zxvf spp-platform-${{ env.SPP_PLATFORM_VERSION }}-linux-amd64.tar.gz --strip-components=1
+
+      - name: Build spp-platform tagged Docker image
+        run: cd ./docker/spp-platform && docker build . --file Dockerfile --tag sourceplusplus/spp-platform:${{ env.SPP_PLATFORM_VERSION }}
+
+      - name: Push spp-platform tagged Docker image
+        run: docker push sourceplusplus/spp-platform:${{ env.SPP_PLATFORM_VERSION }}
+
+      - name: Update spp-platform Docker Hub description
+        uses: peter-evans/dockerhub-description@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+          repository: sourceplusplus/spp-platform
+          readme-filepath: ./docker/spp-platform/README.md
+
+      - name: Download Source++ SkyWalking processor
+        uses: robinraju/release-downloader@v1
+        with:
+          repository: sourceplusplus/live-platform
+          tag: v${{ env.SPP_PLATFORM_VERSION }}
+          fileName: spp-processor-${{ env.SPP_PLATFORM_VERSION }}.jar
+          out-file-path: ./docker/spp-oap-server
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build spp-oap-server tagged Docker image
+        run: cd ./docker/spp-oap-server && docker build . --file Dockerfile --tag sourceplusplus/spp-oap-server:${{ env.SPP_PLATFORM_VERSION }}
+
+      - name: Push spp-oap-server tagged Docker image
+        run: docker push sourceplusplus/spp-oap-server:${{ env.SPP_PLATFORM_VERSION }}
+
+      - name: Update spp-oap-server Docker Hub description
+        uses: peter-evans/dockerhub-description@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+          repository: sourceplusplus/spp-oap-server
+          readme-filepath: ./docker/spp-oap-server/README.md

@@ -1,0 +1,18 @@
+mutation addLiveLog($input: LiveLogInput!) {
+    addLiveLog(input: $input) {
+        id
+        logFormat
+        logArguments
+        location {
+            source
+            line
+        }
+        condition
+        expiresAt
+        hitLimit
+        throttle {
+            limit
+            step
+        }
+    }
+}

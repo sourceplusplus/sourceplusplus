@@ -1,0 +1,16 @@
+mutation addLiveBreakpoint($input: LiveBreakpointInput!) {
+    addLiveBreakpoint(input: $input) {
+        id
+        location {
+            source
+            line
+        }
+        condition
+        expiresAt
+        hitLimit
+        throttle {
+            limit
+            step
+        }
+    }
+}

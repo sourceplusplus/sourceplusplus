@@ -1,0 +1,3 @@
+mutation addRolePermission($role: String!, $permission: String!) {
+    addRolePermission(role: $role, permission: $permission)
+}

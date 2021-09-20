@@ -1,0 +1,3 @@
+mutation removeRole($role: String!) {
+    removeRole(role: $role)
+}

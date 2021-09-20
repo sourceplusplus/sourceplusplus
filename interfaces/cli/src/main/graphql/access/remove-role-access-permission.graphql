@@ -1,0 +1,3 @@
+mutation removeRoleAccessPermission($role: String!, $accessPermissionId: String!) {
+    removeRoleAccessPermission(role: $role, accessPermissionId: $accessPermissionId)
+}
