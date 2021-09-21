@@ -14,17 +14,15 @@ plugins {
     id("java")
 }
 
-// Import variables from gradle.properties file
 val platformGroup: String by project
-val platformName: String by project
 val platformVersion: String by project
+val skywalkingVersion: String by project
+val jacksonVersion: String by project
+val vertxVersion: String by project
+val jupiterVersion: String by project
 
 group = platformGroup
 version = platformVersion
-
-val vertxVersion = ext.get("vertxVersion")
-val skywalkingVersion = ext.get("skywalkingVersion")
-val jacksonVersion = ext.get("jacksonVersion")
 
 tasks.getByName<JavaCompile>("compileJava") {
     options.release.set(8)
@@ -38,7 +36,7 @@ dependencies {
     implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:$jacksonVersion")
 
-    testImplementation("org.junit.jupiter:junit-jupiter-engine:5.7.2")
+    testImplementation("org.junit.jupiter:junit-jupiter-engine:$jupiterVersion")
     testImplementation("io.vertx:vertx-junit5:$vertxVersion")
     testImplementation("io.vertx:vertx-web-client:$vertxVersion")
     testImplementation("ch.qos.logback:logback-classic:1.2.3")

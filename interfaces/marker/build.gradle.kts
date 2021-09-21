@@ -1,15 +1,11 @@
 import org.apache.tools.ant.taskdefs.condition.Os
 
-// Import variables from gradle.properties file
 val platformGroup: String by project
-val platformName: String by project
 val platformVersion: String by project
+val sourceMarkerVersion: String by project
 
 group = platformGroup
 version = platformVersion
-
-val vertxVersion = ext.get("vertxVersion")
-val sourceMarkerVersion = ext.get("sourceMarkerVersion")
 
 tasks {
     getByName("clean") {
