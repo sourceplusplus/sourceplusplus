@@ -76,7 +76,7 @@ public class LiveBreakpointRemote extends AbstractVerticle {
             throw new RuntimeException(e);
         }
 
-        vertx.eventBus().<JsonObject>localConsumer("local." + LIVE_BREAKPOINT_REMOTE.address).handler(it -> {
+        vertx.eventBus().<JsonObject>localConsumer("local." + LIVE_BREAKPOINT_REMOTE.getAddress()).handler(it -> {
             try {
                 LiveInstrumentCommand command = LiveInstrumentCommand.fromJson(it.body().toString());
                 switch (command.getCommandType()) {
@@ -101,7 +101,7 @@ public class LiveBreakpointRemote extends AbstractVerticle {
 
                 FrameHelper.sendFrame(
                         BridgeEventType.PUBLISH.name().toLowerCase(),
-                        PlatformAddress.LIVE_BREAKPOINT_REMOVED.address,
+                        PlatformAddress.LIVE_BREAKPOINT_REMOVED.getAddress(),
                         JsonObject.mapFrom(map), SourceProbe.tcpSocket
                 );
             } catch (Throwable ex) {
@@ -111,7 +111,7 @@ public class LiveBreakpointRemote extends AbstractVerticle {
 
                 FrameHelper.sendFrame(
                         BridgeEventType.PUBLISH.name().toLowerCase(),
-                        PlatformAddress.LIVE_BREAKPOINT_REMOVED.address,
+                        PlatformAddress.LIVE_BREAKPOINT_REMOVED.getAddress(),
                         JsonObject.mapFrom(map), SourceProbe.tcpSocket
                 );
             }
@@ -126,7 +126,7 @@ public class LiveBreakpointRemote extends AbstractVerticle {
 
         FrameHelper.sendFrame(
                 BridgeEventType.PUBLISH.name().toLowerCase(),
-                PlatformAddress.LIVE_BREAKPOINTS.address,
+                PlatformAddress.LIVE_BREAKPOINTS.getAddress(),
                 JsonObject.mapFrom(response), SourceProbe.tcpSocket
         );
     }

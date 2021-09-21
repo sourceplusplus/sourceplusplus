@@ -57,7 +57,7 @@ public class IntegrationTest {
             );
 
             AtomicBoolean unregistered = new AtomicBoolean(false);
-            MessageConsumer<JsonObject> consumer = vertx.eventBus().localConsumer("local." + LIVE_LOG_REMOTE.address);
+            MessageConsumer<JsonObject> consumer = vertx.eventBus().localConsumer("local." + LIVE_LOG_REMOTE.getAddress());
             consumer.handler(it -> {
                 log.info("Got command: {}", it.body());
                 if (unregistered.get()) {

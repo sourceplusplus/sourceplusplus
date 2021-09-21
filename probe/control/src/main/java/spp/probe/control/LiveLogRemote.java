@@ -77,7 +77,7 @@ public class LiveLogRemote extends AbstractVerticle {
             throw new RuntimeException(e);
         }
 
-        vertx.eventBus().<JsonObject>localConsumer("local." + LIVE_LOG_REMOTE.address).handler(it -> {
+        vertx.eventBus().<JsonObject>localConsumer("local." + LIVE_LOG_REMOTE.getAddress()).handler(it -> {
             try {
                 LiveInstrumentCommand command = LiveInstrumentCommand.fromJson(it.body().toString());
                 switch (command.getCommandType()) {
@@ -102,7 +102,7 @@ public class LiveLogRemote extends AbstractVerticle {
 
                 FrameHelper.sendFrame(
                         BridgeEventType.PUBLISH.name().toLowerCase(),
-                        PlatformAddress.LIVE_LOG_REMOVED.address,
+                        PlatformAddress.LIVE_LOG_REMOVED.getAddress(),
                         JsonObject.mapFrom(map), SourceProbe.tcpSocket
                 );
             } catch (Throwable ex) {
@@ -112,7 +112,7 @@ public class LiveLogRemote extends AbstractVerticle {
 
                 FrameHelper.sendFrame(
                         BridgeEventType.PUBLISH.name().toLowerCase(),
-                        PlatformAddress.LIVE_LOG_REMOVED.address,
+                        PlatformAddress.LIVE_LOG_REMOVED.getAddress(),
                         JsonObject.mapFrom(map), SourceProbe.tcpSocket
                 );
             }
@@ -127,7 +127,7 @@ public class LiveLogRemote extends AbstractVerticle {
 
         FrameHelper.sendFrame(
                 BridgeEventType.PUBLISH.name().toLowerCase(),
-                PlatformAddress.LIVE_LOGS.address,
+                PlatformAddress.LIVE_LOGS.getAddress(),
                 JsonObject.mapFrom(response), SourceProbe.tcpSocket
         );
     }
