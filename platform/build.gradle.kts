@@ -54,7 +54,7 @@ dependencies {
     implementation("org.bouncycastle:bcpkix-jdk15on:1.68")
     implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:$jacksonVersion")
-    implementation("commons-io:commons-io:2.8.0")
+    implementation("commons-io:commons-io:2.11.0")
     implementation("com.apollographql.apollo:apollo-runtime:2.5.6")
     implementation("org.zeroturnaround:zt-zip:1.14")
 
