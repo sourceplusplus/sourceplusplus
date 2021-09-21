@@ -83,7 +83,7 @@ tasks.create("createProperties") {
 tasks["processResources"].dependsOn("createProperties")
 
 graal {
-    //graalVersion(graalVersion.toString())
+    //graalVersion(graalVersion.toString())//
     mainClass("spp.platform.SourcePlatform")
     outputName("spp-platform")
     option("-H:+PrintClassInitialization")
