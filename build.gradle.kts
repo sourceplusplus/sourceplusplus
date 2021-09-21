@@ -19,6 +19,7 @@ val platformName: String by project
 val platformVersion: String by project
 val graalVersion: String by project
 val skywalkingVersion = "8.6.0"
+val jacksonVersion = "2.10.2"
 
 group = platformGroup
 version = platformVersion
@@ -36,6 +37,7 @@ subprojects {
         set("skywalkingVersion", skywalkingVersion)
         set("sourceMarkerVersion", "0.2.2")
         set("graalVersion", "20.2.0")
+        set("jacksonVersion", jacksonVersion)
     }
     val vertxVersion = ext.get("vertxVersion")
 
@@ -57,10 +59,10 @@ subprojects {
         implementation("io.vertx:vertx-lang-kotlin:$vertxVersion")
         implementation("io.vertx:vertx-lang-kotlin-coroutines:$vertxVersion")
         implementation("io.vertx:vertx-web:$vertxVersion")
-        implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.10.2")
-        implementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.10.2")
-        implementation("com.fasterxml.jackson.datatype:jackson-datatype-guava:2.10.2")
-        implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.10.2")
+        implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jacksonVersion")
+        implementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:$jacksonVersion")
+        implementation("com.fasterxml.jackson.datatype:jackson-datatype-guava:$jacksonVersion")
+        implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
         implementation("io.dropwizard.metrics:metrics-core:4.1.15")
         implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.2.1")
     }

@@ -16,6 +16,7 @@ version = platformVersion
 
 val vertxVersion = "4.0.3"
 val graalVersion = ext.get("graalVersion")
+val jacksonVersion = ext.get("jacksonVersion")
 
 dependencies {
     implementation("org.graalvm.sdk:graal-sdk:$graalVersion")
@@ -51,8 +52,8 @@ dependencies {
     implementation("com.flagsmith:flagsmith-java-client:2.3")
     implementation("org.bouncycastle:bcprov-jdk15on:1.68")
     implementation("org.bouncycastle:bcpkix-jdk15on:1.68")
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.10.2")
-    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.10.2")
+    implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
+    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:$jacksonVersion")
     implementation("commons-io:commons-io:2.8.0")
     implementation("com.apollographql.apollo:apollo-runtime:2.5.6")
     implementation("org.zeroturnaround:zt-zip:1.14")
