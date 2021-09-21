@@ -68,4 +68,4 @@ The Source++ documentation is available [here](https://docs.sourceplusplus.com).
 
 ## License
 
-This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. Please see the [LICENSE](https://github.com/sourceplusplus/live-platform/blob/main/LICENSE) file in our repository for the full text.
+This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. Please see the [LICENSE](LICENSE) file in our repository for the full text.
