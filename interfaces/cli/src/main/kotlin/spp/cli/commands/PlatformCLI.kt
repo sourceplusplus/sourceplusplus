@@ -100,14 +100,14 @@ object PlatformCLI : CliktCommand(name = "spp-cli", allowMultipleSubcommands = t
         } else {
             val tokenUri = "$serverUrl/api/new-token?access_token=$accessToken"
             val resp = httpClient.newCall(Request.Builder().url(tokenUri).build()).execute()
-            if (resp.code in 200..299) {
-                jwtToken = resp.body!!.string()
-            } else if (resp.code == 401 && accessToken.isNullOrEmpty()) {
+            if (resp.code() in 200..299) {
+                jwtToken = resp.body()!!.string()
+            } else if (resp.code() == 401 && accessToken.isNullOrEmpty()) {
                 throw IllegalStateException("Connection failed. Reason: Missing access token")
-            } else if (resp.code == 401) {
+            } else if (resp.code() == 401) {
                 throw IllegalStateException("Connection failed. Reason: Invalid access token")
             } else {
-                throw IllegalStateException("Connection failed. Reason: " + resp.message)
+                throw IllegalStateException("Connection failed. Reason: " + resp.message())
             }
         }
 
