@@ -18,7 +18,7 @@ val platformGroup: String by project
 val platformName: String by project
 val platformVersion: String by project
 val graalVersion: String by project
-val skywalkingVersion = "8.6.0"
+val skywalkingVersion = "8.7.0"
 val jacksonVersion = "2.10.2"
 
 group = platformGroup
