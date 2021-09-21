@@ -12,15 +12,13 @@ plugins {
     id("java")
 }
 
-// Import variables from gradle.properties file
 val platformGroup: String by project
-val platformName: String by project
 val platformVersion: String by project
+val skywalkingVersion: String by project
+val gsonVersion: String by project
 
 group = platformGroup
 version = platformVersion
-
-val skywalkingVersion = ext.get("skywalkingVersion")
 
 tasks.getByName<JavaCompile>("compileJava") {
     options.release.set(8)
@@ -34,7 +32,7 @@ repositories {
 dependencies {
     implementation(project(":protocol"))
     compileOnly(files("$projectDir/../.ext/skywalking-agent-$skywalkingVersion.jar"))
-    implementation("com.google.code.gson:gson:2.8.6")
+    implementation("com.google.code.gson:gson:$gsonVersion")
     implementation("org.springframework:spring-expression:5.3.6")
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.mockito:mockito-core:3.+")

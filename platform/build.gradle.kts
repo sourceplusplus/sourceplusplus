@@ -3,24 +3,29 @@ import java.util.*
 plugins {
     id("com.github.johnrengelman.shadow") version "6.1.0"
     id("com.palantir.graal") version "0.7.2"
-    id("com.apollographql.apollo").version("2.5.6")
+    id("com.apollographql.apollo").version("2.5.9")
 }
 
-// Import variables from gradle.properties file
 val platformGroup: String by project
-val platformName: String by project
 val platformVersion: String by project
+val graalVersion: String by project
+val jacksonVersion: String by project
+val sppProtocolVersion: String by project
+val commonsLang3Version: String by project
+val cliktVersion: String by project
+val bouncycastleVersion: String by project
+val jupiterVersion: String by project
+val apolloVersion: String by project
+val commonsIoVersion: String by project
 
 group = platformGroup
 version = platformVersion
 
-val vertxVersion = "4.0.3"
-val graalVersion = ext.get("graalVersion")
-val jacksonVersion = ext.get("jacksonVersion")
+val vertxVersion = "4.0.3" //todo: consolidate with gradle.properties 4.0.2
 
 dependencies {
     implementation("org.graalvm.sdk:graal-sdk:$graalVersion")
-    implementation("com.github.sourceplusplus:sourcemarker:19ab6d805e") {
+    implementation("com.github.sourceplusplus:sourcemarker:$sppProtocolVersion") {
         exclude(mapOf("group" to "com.github.sourceplusplus.sourcemarker", "module" to "portal-js"))
         exclude(mapOf("group" to "com.github.sourceplusplus.sourcemarker", "module" to "portal-metadata"))
         exclude(mapOf("group" to "com.github.sourceplusplus.sourcemarker", "module" to "protocol-js"))
@@ -32,8 +37,8 @@ dependencies {
     shadow(project(":processor")) //todo: figure out why extra configurations.add() and this are needed
 
     implementation("io.github.microutils:kotlin-logging-jvm:2.0.8")
-    implementation("org.apache.commons:commons-lang3:3.12.0")
-    implementation("com.github.ajalt.clikt:clikt:3.2.0")
+    implementation("org.apache.commons:commons-lang3:$commonsLang3Version")
+    implementation("com.github.ajalt.clikt:clikt:$cliktVersion")
     implementation("ch.qos.logback:logback-classic:1.2.3")
     implementation("io.vertx:vertx-service-discovery:$vertxVersion")
     implementation("io.vertx:vertx-service-proxy:$vertxVersion")
@@ -49,16 +54,15 @@ dependencies {
     implementation(files(".ext/vertx-tcp-eventbus-bridge-4.0.3-SNAPSHOT.jar"))
     implementation("com.auth0:java-jwt:3.14.0")
     implementation("com.auth0:jwks-rsa:0.17.0")
-    implementation("com.flagsmith:flagsmith-java-client:2.3")
-    implementation("org.bouncycastle:bcprov-jdk15on:1.68")
-    implementation("org.bouncycastle:bcpkix-jdk15on:1.68")
+    implementation("org.bouncycastle:bcprov-jdk15on:$bouncycastleVersion")
+    implementation("org.bouncycastle:bcpkix-jdk15on:$bouncycastleVersion")
     implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:$jacksonVersion")
-    implementation("commons-io:commons-io:2.11.0")
-    implementation("com.apollographql.apollo:apollo-runtime:2.5.6")
+    implementation("commons-io:commons-io:$commonsIoVersion")
+    implementation("com.apollographql.apollo:apollo-runtime:$apolloVersion")
     implementation("org.zeroturnaround:zt-zip:1.14")
 
-    testImplementation("org.junit.jupiter:junit-jupiter-engine:5.7.2")
+    testImplementation("org.junit.jupiter:junit-jupiter-engine:$jupiterVersion")
     testImplementation("io.vertx:vertx-junit5:$vertxVersion")
     testImplementation("io.vertx:vertx-web-client:$vertxVersion")
 }

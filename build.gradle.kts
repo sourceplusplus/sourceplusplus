@@ -1,7 +1,6 @@
 import java.io.FileOutputStream
 import java.net.URL
 
-val kotlinVersion = "1.5.0"
 plugins {
     id("java")
     id("com.avast.gradle.docker-compose") version "0.14.3"
@@ -15,11 +14,10 @@ plugins {
 }
 
 val platformGroup: String by project
-val platformName: String by project
 val platformVersion: String by project
-val graalVersion: String by project
-val skywalkingVersion = "8.6.0"
-val jacksonVersion = "2.12.5"
+val skywalkingVersion: String by project
+val jacksonVersion: String by project
+val vertxVersion: String by project
 
 group = platformGroup
 version = platformVersion
@@ -31,16 +29,6 @@ repositories {
 }
 
 subprojects {
-    ext {
-        set("vertxVersion", "4.0.2") //SkyWalking 8.6.0-compatible
-        set("kotlinVersion", kotlinVersion)
-        set("skywalkingVersion", skywalkingVersion)
-        set("sourceMarkerVersion", "0.2.2")
-        set("graalVersion", "20.2.0")
-        set("jacksonVersion", jacksonVersion)
-    }
-    val vertxVersion = ext.get("vertxVersion")
-
     repositories {
         mavenCentral()
         jcenter()

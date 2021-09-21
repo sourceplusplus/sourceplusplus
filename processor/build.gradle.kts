@@ -11,19 +11,19 @@ plugins {
     id("com.github.johnrengelman.shadow") version "6.1.0"
 }
 
-// Import variables from gradle.properties file
 val platformGroup: String by project
-val platformName: String by project
 val platformVersion: String by project
+val skywalkingVersion: String by project
+val vertxVersion: String by project
+val gsonVersion: String by project
+val grpcVersion: String by project
+val sppProtocolVersion: String by project
 
 group = platformGroup
 version = platformVersion
 
-val vertxVersion = ext.get("vertxVersion")
-val skywalkingVersion = ext.get("skywalkingVersion")
-
 dependencies {
-    implementation("com.github.sourceplusplus.sourcemarker:protocol-jvm:19ab6d805e") {
+    implementation("com.github.sourceplusplus.sourcemarker:protocol-jvm:$sppProtocolVersion") {
         isTransitive = false
     }
 
@@ -42,9 +42,6 @@ dependencies {
     compileOnly("org.apache.skywalking:event-analyzer:$skywalkingVersion") { isTransitive = false }
     compileOnly("org.apache.skywalking:meter-analyzer:$skywalkingVersion") { isTransitive = false }
     compileOnly("org.elasticsearch:elasticsearch:7.5.0")
-    implementation("io.grpc:grpc-stub:1.32.1") {
-        exclude(mapOf("group" to "com.google.guava", "module" to "guava"))
-    }
     implementation("io.vertx:vertx-service-discovery:$vertxVersion")
 //    implementation("io.vertx:vertx-service-proxy:$vertxVersion")
     implementation(files("../platform/.ext/vertx-service-proxy-4.0.2.jar"))
@@ -53,12 +50,15 @@ dependencies {
     annotationProcessor("io.vertx:vertx-service-proxy:$vertxVersion")
     implementation("io.vertx:vertx-tcp-eventbus-bridge:$vertxVersion")
     implementation("org.slf4j:slf4j-api:1.7.30")
-    implementation("com.google.code.gson:gson:2.8.6")
-    compileOnly("io.grpc:grpc-netty:1.35.0") {
+    implementation("com.google.code.gson:gson:$gsonVersion")
+    implementation("com.google.guava:guava:28.1-jre")
+    implementation("io.grpc:grpc-stub:$grpcVersion") {
         exclude(mapOf("group" to "com.google.guava", "module" to "guava"))
     }
-    implementation("com.google.guava:guava:28.1-jre")
-    compileOnly("io.grpc:grpc-protobuf:1.35.0") {
+    compileOnly("io.grpc:grpc-netty:$grpcVersion") {
+        exclude(mapOf("group" to "com.google.guava", "module" to "guava"))
+    }
+    compileOnly("io.grpc:grpc-protobuf:$grpcVersion") {
         exclude(mapOf("group" to "com.google.guava", "module" to "guava"))
     }
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.1.0")
