@@ -24,6 +24,7 @@ version = platformVersion
 
 val vertxVersion = ext.get("vertxVersion")
 val skywalkingVersion = ext.get("skywalkingVersion")
+val jacksonVersion = ext.get("jacksonVersion")
 
 tasks.getByName<JavaCompile>("compileJava") {
     options.release.set(8)
@@ -34,8 +35,8 @@ dependencies {
     implementation(project(":protocol"))
     compileOnly(files("$projectDir/../.ext/skywalking-agent-$skywalkingVersion.jar"))
     implementation("io.vertx:vertx-tcp-eventbus-bridge:$vertxVersion")
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.10.2")
-    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.10.2")
+    implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
+    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:$jacksonVersion")
 
     testImplementation("org.junit.jupiter:junit-jupiter-engine:5.7.2")
     testImplementation("io.vertx:vertx-junit5:$vertxVersion")

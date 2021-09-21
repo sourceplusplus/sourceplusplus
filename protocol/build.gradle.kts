@@ -11,6 +11,7 @@ group = platformGroup
 version = platformVersion
 
 val vertxVersion = ext.get("vertxVersion")
+val jacksonVersion = ext.get("jacksonVersion")
 
 tasks.getByName<JavaCompile>("compileJava") {
     options.release.set(8)
@@ -19,5 +20,5 @@ tasks.getByName<JavaCompile>("compileJava") {
 
 dependencies {
     implementation("io.vertx:vertx-core:$vertxVersion")
-    implementation("com.fasterxml.jackson.core:jackson-annotations:2.10.2")
+    implementation("com.fasterxml.jackson.core:jackson-annotations:$jacksonVersion")
 }
