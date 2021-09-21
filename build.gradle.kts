@@ -58,7 +58,7 @@ subprojects {
         implementation("io.vertx:vertx-web:$vertxVersion")
         implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.10.2")
         implementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.10.2")
-        implementation("com.fasterxml.jackson.datatype:jackson-datatype-guava:2.10.2")
+        implementation("com.fasterxml.jackson.datatype:jackson-datatype-guava:2.12.5")
         implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.10.2")
         implementation("io.dropwizard.metrics:metrics-core:4.1.15")
         implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.2.1")
