@@ -58,7 +58,7 @@ dependencies {
     implementation("com.apollographql.apollo:apollo-runtime:2.5.6")
     implementation("org.zeroturnaround:zt-zip:1.14")
 
-    testImplementation("org.junit.jupiter:junit-jupiter-engine:5.7.2")
+    testImplementation("org.junit.jupiter:junit-jupiter-engine:5.8.0")
     testImplementation("io.vertx:vertx-junit5:$vertxVersion")
     testImplementation("io.vertx:vertx-web-client:$vertxVersion")
 }

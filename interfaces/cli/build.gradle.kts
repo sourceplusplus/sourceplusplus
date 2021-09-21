@@ -43,7 +43,7 @@ dependencies {
     implementation("com.auth0:java-jwt:3.15.0")
     implementation("eu.geekplace.javapinning:java-pinning-core:1.2.0")
 
-    testImplementation("org.junit.jupiter:junit-jupiter-engine:5.7.2")
+    testImplementation("org.junit.jupiter:junit-jupiter-engine:5.8.0")
 }
 
 //todo: shouldn't need to put in src (github actions needs for some reason)
