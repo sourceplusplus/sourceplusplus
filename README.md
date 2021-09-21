@@ -2,8 +2,6 @@
 
 [![License](https://img.shields.io/github/license/sourceplusplus/live-platform)](LICENSE)
 [![Build](https://github.com/sourceplusplus/live-platform/actions/workflows/build.yml/badge.svg)](https://github.com/sourceplusplus/live-platform/actions/workflows/build.yml)
-[![Version](https://img.shields.io/jetbrains/plugin/v/12033-source-.svg)](https://plugins.jetbrains.com/plugin/12033-source-)
-[![GitHub all releases](https://img.shields.io/github/downloads/sourceplusplus/live-platform/total)](https://github.com/sourceplusplus/live-platform/releases)
 [![Docker Cloud Build Status](https://img.shields.io/docker/cloud/build/sourceplusplus/spp-platform)](https://hub.docker.com/repository/docker/sourceplusplus/spp-platform)
 
 Source++ is an open-source live coding platform. Add breakpoints, logs, metrics, and distributed tracing to live production software in real-time on-demand, right from your IDE or CLI.
