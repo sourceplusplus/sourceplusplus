@@ -45,7 +45,6 @@ dependencies {
     implementation("io.grpc:grpc-stub:1.32.1") {
         exclude(mapOf("group" to "com.google.guava", "module" to "guava"))
     }
-    implementation("com.google.protobuf:protobuf-java:3.13.0")
     implementation("io.vertx:vertx-service-discovery:$vertxVersion")
 //    implementation("io.vertx:vertx-service-proxy:$vertxVersion")
     implementation(files("../platform/.ext/vertx-service-proxy-4.0.2.jar"))
