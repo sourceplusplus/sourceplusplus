@@ -102,10 +102,10 @@ tasks.register<Copy>("updateSkywalkingConfiguration") {
 tasks.register<Copy>("updateSkywalkingToolkit") {
     dependsOn("updateSkywalkingConfiguration")
     from(
-        File(projectDir, "../.ext/toolkit/apm-toolkit-log4j-1.x-activation-8.6.0.jar"),
-        File(projectDir, "../.ext/toolkit/apm-toolkit-log4j-2.x-activation-8.6.0.jar"),
-        File(projectDir, "../.ext/toolkit/apm-toolkit-logback-1.x-activation-8.6.0.jar"),
-        File(projectDir, "../.ext/toolkit/apm-toolkit-logging-common-8.6.0.jar")
+        File(projectDir, "../.ext/toolkit/apm-toolkit-log4j-1.x-activation-$skywalkingVersion.jar"),
+        File(projectDir, "../.ext/toolkit/apm-toolkit-log4j-2.x-activation-$skywalkingVersion.jar"),
+        File(projectDir, "../.ext/toolkit/apm-toolkit-logback-1.x-activation-$skywalkingVersion.jar"),
+        File(projectDir, "../.ext/toolkit/apm-toolkit-logging-common-$skywalkingVersion.jar")
     )
     into(File(project.rootDir, "docker/e2e/apache-skywalking-apm-bin-es7/agent/activations"))
 }
