@@ -28,19 +28,19 @@ dependencies {
     }
 
     implementation(project(":protocol"))
-    compileOnly("org.apache.skywalking:apm-network:8.6.0") { isTransitive = false }
-    compileOnly("org.apache.skywalking:library-server:8.6.0") { isTransitive = false }
-    compileOnly("org.apache.skywalking:library-module:8.6.0") { isTransitive = false }
-    compileOnly("org.apache.skywalking:log-analyzer:8.6.0") { isTransitive = false }
-    compileOnly("org.apache.skywalking:telemetry-api:8.6.0") { isTransitive = false }
-    compileOnly("org.apache.skywalking:server-core:8.6.0") { isTransitive = false }
-    compileOnly("org.apache.skywalking:skywalking-sharing-server-plugin:8.6.0") { isTransitive = false }
-    compileOnly("org.apache.skywalking:storage-elasticsearch-plugin:8.6.0") { isTransitive = false }
-    compileOnly("org.apache.skywalking:library-client:8.6.0") { isTransitive = false }
-    compileOnly("org.apache.skywalking:skywalking-trace-receiver-plugin:8.6.0") { isTransitive = false }
-    compileOnly("org.apache.skywalking:agent-analyzer:8.6.0") { isTransitive = false }
-    compileOnly("org.apache.skywalking:event-analyzer:8.6.0") { isTransitive = false }
-    compileOnly("org.apache.skywalking:meter-analyzer:8.6.0") { isTransitive = false }
+    compileOnly("org.apache.skywalking:apm-network:$skywalkingVersion") { isTransitive = false }
+    compileOnly("org.apache.skywalking:library-server:$skywalkingVersion") { isTransitive = false }
+    compileOnly("org.apache.skywalking:library-module:$skywalkingVersion") { isTransitive = false }
+    compileOnly("org.apache.skywalking:log-analyzer:$skywalkingVersion") { isTransitive = false }
+    compileOnly("org.apache.skywalking:telemetry-api:$skywalkingVersion") { isTransitive = false }
+    compileOnly("org.apache.skywalking:server-core:$skywalkingVersion") { isTransitive = false }
+    compileOnly("org.apache.skywalking:skywalking-sharing-server-plugin:$skywalkingVersion") { isTransitive = false }
+    compileOnly("org.apache.skywalking:storage-elasticsearch-plugin:$skywalkingVersion") { isTransitive = false }
+    compileOnly("org.apache.skywalking:library-client:$skywalkingVersion") { isTransitive = false }
+    compileOnly("org.apache.skywalking:skywalking-trace-receiver-plugin:$skywalkingVersion") { isTransitive = false }
+    compileOnly("org.apache.skywalking:agent-analyzer:$skywalkingVersion") { isTransitive = false }
+    compileOnly("org.apache.skywalking:event-analyzer:$skywalkingVersion") { isTransitive = false }
+    compileOnly("org.apache.skywalking:meter-analyzer:$skywalkingVersion") { isTransitive = false }
     compileOnly("org.elasticsearch:elasticsearch:7.5.0")
     implementation("io.grpc:grpc-stub:1.32.1") {
         exclude(mapOf("group" to "com.google.guava", "module" to "guava"))

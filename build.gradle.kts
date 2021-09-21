@@ -18,6 +18,7 @@ val platformGroup: String by project
 val platformName: String by project
 val platformVersion: String by project
 val graalVersion: String by project
+val skywalkingVersion = "8.6.0"
 
 group = platformGroup
 version = platformVersion
@@ -32,7 +33,7 @@ subprojects {
     ext {
         set("vertxVersion", "4.0.2") //SkyWalking 8.6.0-compatible
         set("kotlinVersion", kotlinVersion)
-        set("skywalkingVersion", "8.6.0")
+        set("skywalkingVersion", skywalkingVersion)
         set("sourceMarkerVersion", "0.2.2")
         set("graalVersion", "20.2.0")
     }
@@ -123,10 +124,10 @@ tasks {
 
     register("downloadSkywalking") {
         doLast {
-            val f = File(projectDir, "docker/e2e/apache-skywalking-apm-es7-8.6.0.tar.gz")
+            val f = File(projectDir, "docker/e2e/apache-skywalking-apm-es7-$skywalkingVersion.tar.gz")
             if (!f.exists()) {
                 println("Downloading Apache SkyWalking")
-                URL("https://archive.apache.org/dist/skywalking/8.6.0/apache-skywalking-apm-es7-8.6.0.tar.gz")
+                URL("https://archive.apache.org/dist/skywalking/$skywalkingVersion/apache-skywalking-apm-es7-$skywalkingVersion.tar.gz")
                     .openStream().use { input ->
                         FileOutputStream(f).use { output ->
                             input.copyTo(output)
