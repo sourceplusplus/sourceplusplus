@@ -35,7 +35,7 @@ dependencies {
     implementation("org.apache.commons:commons-lang3:3.12.0")
     implementation("com.github.ajalt.clikt:clikt:3.2.0")
     implementation("com.flagsmith:flagsmith-java-client:2.3")
-    implementation("org.bouncycastle:bcprov-jdk15on:1.68")
+    implementation("org.bouncycastle:bcprov-jdk15on:1.69")
     implementation("org.bouncycastle:bcpkix-jdk15on:1.68")
     implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:$jacksonVersion")
