@@ -61,7 +61,7 @@ subprojects {
         implementation("com.fasterxml.jackson.datatype:jackson-datatype-guava:2.10.2")
         implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.10.2")
         implementation("io.dropwizard.metrics:metrics-core:4.1.15")
-        implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.2.0")
+        implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.2.1")
     }
 
     apply<io.gitlab.arturbosch.detekt.DetektPlugin>()
