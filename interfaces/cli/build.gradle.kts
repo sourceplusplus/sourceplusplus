@@ -20,7 +20,7 @@ val jacksonVersion = ext.get("jacksonVersion")
 
 dependencies {
     implementation("com.apollographql.apollo:apollo-runtime:2.5.6")
-    implementation("com.apollographql.apollo:apollo-coroutines-support:2.5.6")
+    implementation("com.apollographql.apollo:apollo-coroutines-support:2.5.9")
     api("com.apollographql.apollo:apollo-api:2.5.6")
 
     implementation("com.github.sourceplusplus:sourcemarker:19ab6d805e") {
