@@ -34,7 +34,7 @@ dependencies {
     compileOnly("org.apache.skywalking:log-analyzer:8.6.0") { isTransitive = false }
     compileOnly("org.apache.skywalking:telemetry-api:8.6.0") { isTransitive = false }
     compileOnly("org.apache.skywalking:server-core:8.6.0") { isTransitive = false }
-    compileOnly("org.apache.skywalking:skywalking-sharing-server-plugin:8.6.0") { isTransitive = false }
+    compileOnly("org.apache.skywalking:skywalking-sharing-server-plugin:8.7.0") { isTransitive = false }
     compileOnly("org.apache.skywalking:storage-elasticsearch-plugin:8.6.0") { isTransitive = false }
     compileOnly("org.apache.skywalking:library-client:8.6.0") { isTransitive = false }
     compileOnly("org.apache.skywalking:skywalking-trace-receiver-plugin:8.6.0") { isTransitive = false }
