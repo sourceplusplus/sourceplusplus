@@ -32,7 +32,7 @@ dependencies {
 
     implementation("io.github.microutils:kotlin-logging-jvm:2.0.8")
     implementation("org.apache.commons:commons-lang3:3.12.0")
-    implementation("com.github.ajalt.clikt:clikt:3.1.0")
+    implementation("com.github.ajalt.clikt:clikt:3.2.0")
     implementation("ch.qos.logback:logback-classic:1.2.3")
     implementation("io.vertx:vertx-service-discovery:$vertxVersion")
     implementation("io.vertx:vertx-service-proxy:$vertxVersion")
