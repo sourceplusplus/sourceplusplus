@@ -38,6 +38,7 @@ subprojects {
         set("sourceMarkerVersion", "0.2.2")
         set("graalVersion", "20.2.0")
         set("jacksonVersion", jacksonVersion)
+        set("apolloVersion", "2.5.9")
     }
     val vertxVersion = ext.get("vertxVersion")
 

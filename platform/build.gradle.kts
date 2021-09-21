@@ -1,9 +1,10 @@
 import java.util.*
 
+val apolloVersion = ext.get("apolloVersion")
 plugins {
     id("com.github.johnrengelman.shadow") version "6.1.0"
     id("com.palantir.graal") version "0.7.2"
-    id("com.apollographql.apollo").version("2.5.6")
+    id("com.apollographql.apollo")
 }
 
 // Import variables from gradle.properties file
@@ -55,7 +56,7 @@ dependencies {
     implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:$jacksonVersion")
     implementation("commons-io:commons-io:2.8.0")
-    implementation("com.apollographql.apollo:apollo-runtime:2.5.6")
+    implementation("com.apollographql.apollo:apollo-runtime:$apolloVersion")
     implementation("org.zeroturnaround:zt-zip:1.14")
 
     testImplementation("org.junit.jupiter:junit-jupiter-engine:5.7.2")
