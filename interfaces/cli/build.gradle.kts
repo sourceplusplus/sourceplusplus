@@ -39,7 +39,7 @@ dependencies {
     implementation("org.bouncycastle:bcpkix-jdk15on:1.68")
     implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:$jacksonVersion")
-    implementation("commons-io:commons-io:2.8.0")
+    implementation("commons-io:commons-io:2.11.0")
     implementation("com.auth0:java-jwt:3.15.0")
     implementation("eu.geekplace.javapinning:java-pinning-core:1.2.0")
 
