@@ -121,10 +121,10 @@ public class LiveLogRemote extends AbstractVerticle {
     }
 
     private void getLogs() throws Exception {
-        LiveInstrumentCommand.Response response = new LiveInstrumentCommand.Response();
-        response.setTimestamp(System.currentTimeMillis());
-        response.setSuccess(true);
-        response.setContext(new LiveInstrumentContext().addLiveInstruments((List<String>) getLogs.invoke(null)));
+        LiveInstrumentCommand.Response response = new LiveInstrumentCommand.Response(
+                true, null, System.currentTimeMillis(),
+                new LiveInstrumentContext().addLiveInstruments((List<String>) getLogs.invoke(null))
+        );
 
         FrameHelper.sendFrame(
                 BridgeEventType.PUBLISH.name().toLowerCase(),
