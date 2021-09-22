@@ -1,4 +1,4 @@
-name: Full Build
+name: Debian Build
 
 on:
   pull_request:
@@ -8,11 +8,11 @@ on:
     paths-ignore:
       - '**.md'
       - '**.svg'
-      - '.github/workflows/mini-build.yml'
+      - '.github/workflows/jvm-debian-build.yml'
   workflow_dispatch:
 
 jobs:
-  full-build:
+  debian-build:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     outputs:
@@ -31,7 +31,7 @@ jobs:
           echo "::set-output name=version::$VERSION"
           echo "SPP_PLATFORM_VERSION=$VERSION" >> $GITHUB_ENV
       - name: Build & start platform
-        run: ./gradlew shadowJar nativeImage updateDockerFiles composeUp -Dbuild.profile=full
+        run: ./gradlew shadowJar nativeImage updateDockerFiles composeUp -Dbuild.profile=debian
       - name: Compress platform
         run: curl -O -J -L https://github.com/upx/upx/releases/download/v3.96/upx-3.96-amd64_linux.tar.xz && tar -xJf upx-3.96-amd64_linux.tar.xz && ./upx-3.96-amd64_linux/upx platform/build/graal/spp-platform
       - name: Compress CLI
@@ -100,7 +100,7 @@ jobs:
       - name: "[CLI] Remove live instruments"
         run: ./interfaces/cli/build/graal/spp-cli -v -c ./platform/config/spp-platform.crt -k ./platform/config/spp-platform.key developer remove-live-instruments spp.example.webapp.model.User 48
       - name: Run integration tests
-        run: ./gradlew test -Dtest.profile=integration -Dbuild.profile=full
+        run: ./gradlew test -Dtest.profile=integration -Dbuild.profile=debian
       - name: Build S++ Plugin
         run: ./gradlew buildPlugin
       - name: Download platform logs from container
@@ -154,7 +154,7 @@ jobs:
 
   releaseDraft:
     name: Release Draft
-    needs: [full-build]
+    needs: [debian-build]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master'
     steps:
@@ -175,15 +175,15 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: v${{ needs.full-build.outputs.version }}
-          release_name: v${{ needs.full-build.outputs.version }}
+          tag_name: v${{ needs.debian-build.outputs.version }}
+          release_name: v${{ needs.debian-build.outputs.version }}
           body: ${{ needs.build.outputs.changelog }}
           draft: true
 
       - name: Download Source++ Plugin artifact
         uses: actions/download-artifact@v2
         with:
-          name: spp-plugin-${{ needs.full-build.outputs.version }}.zip
+          name: spp-plugin-${{ needs.debian-build.outputs.version }}.zip
 
       - name: Upload Source++ Plugin asset
         uses: actions/upload-release-asset@v1
@@ -191,14 +191,14 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.createDraft.outputs.upload_url }}
-          asset_path: ./spp-plugin-${{ needs.full-build.outputs.version }}.zip
-          asset_name: spp-plugin-${{ needs.full-build.outputs.version }}.zip
+          asset_path: ./spp-plugin-${{ needs.debian-build.outputs.version }}.zip
+          asset_name: spp-plugin-${{ needs.debian-build.outputs.version }}.zip
           asset_content_type: application/zip
 
       - name: Download Source++ SkyWalking processor artifact
         uses: actions/download-artifact@v2
         with:
-          name: spp-processor-${{ needs.full-build.outputs.version }}.jar
+          name: spp-processor-${{ needs.debian-build.outputs.version }}.jar
 
       - name: Upload Source++ SkyWalking processor asset
         uses: actions/upload-release-asset@v1
@@ -206,14 +206,14 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.createDraft.outputs.upload_url }}
-          asset_path: ./spp-processor-${{ needs.full-build.outputs.version }}.jar
-          asset_name: spp-processor-${{ needs.full-build.outputs.version }}.jar
+          asset_path: ./spp-processor-${{ needs.debian-build.outputs.version }}.jar
+          asset_name: spp-processor-${{ needs.debian-build.outputs.version }}.jar
           asset_content_type: application/java-archive
 
       - name: Download spp-platform artifact (Linux)
         uses: actions/download-artifact@v2
         with:
-          name: spp-platform-${{ needs.full-build.outputs.version }}-linux-amd64.tar.gz
+          name: spp-platform-${{ needs.debian-build.outputs.version }}-linux-amd64.tar.gz
 
       - name: Upload spp-platform asset (Linux)
         uses: actions/upload-release-asset@v1
@@ -221,12 +221,12 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.createDraft.outputs.upload_url }}
-          asset_path: ./spp-platform-${{ needs.full-build.outputs.version }}-linux-amd64.tar.gz
-          asset_name: spp-platform-${{ needs.full-build.outputs.version }}-linux-amd64.tar.gz
+          asset_path: ./spp-platform-${{ needs.debian-build.outputs.version }}-linux-amd64.tar.gz
+          asset_name: spp-platform-${{ needs.debian-build.outputs.version }}-linux-amd64.tar.gz
           asset_content_type: application/gzip
 
   docker-push:
-    needs: [full-build, releaseDraft]
+    needs: [debian-build, releaseDraft]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master'
 
@@ -241,17 +241,17 @@ jobs:
       - name: Download spp-platform artifact (Linux)
         uses: actions/download-artifact@v2
         with:
-          name: spp-platform-${{ needs.full-build.outputs.version }}-linux-amd64.tar.gz
+          name: spp-platform-${{ needs.debian-build.outputs.version }}-linux-amd64.tar.gz
           path: ./docker/spp-platform
 
       - name: Untar spp-platform
-        run: cd ./docker/spp-platform && tar -zxvf spp-platform-${{ needs.full-build.outputs.version }}-linux-amd64.tar.gz --strip-components=1
+        run: cd ./docker/spp-platform && tar -zxvf spp-platform-${{ needs.debian-build.outputs.version }}-linux-amd64.tar.gz --strip-components=1
 
       - name: Build spp-platform tagged Docker image
-        run: cd ./docker/spp-platform && docker build . --file Dockerfile --tag sourceplusplus/spp-platform:${{ needs.full-build.outputs.version }}
+        run: cd ./docker/spp-platform && docker build . --file Dockerfile --tag sourceplusplus/spp-platform:${{ needs.debian-build.outputs.version }}
 
       - name: Retag spp-platform tagged Docker image to latest
-        run: docker tag sourceplusplus/spp-platform:${{ needs.full-build.outputs.version }} sourceplusplus/spp-platform:latest
+        run: docker tag sourceplusplus/spp-platform:${{ needs.debian-build.outputs.version }} sourceplusplus/spp-platform:latest
 
       - name: Push spp-platform latest Docker image
         run: docker push sourceplusplus/spp-platform:latest
@@ -259,14 +259,14 @@ jobs:
       - name: Download Source++ SkyWalking processor
         uses: actions/download-artifact@v2
         with:
-          name: spp-processor-${{ needs.full-build.outputs.version }}.jar
+          name: spp-processor-${{ needs.debian-build.outputs.version }}.jar
           path: ./docker/spp-oap-server
 
       - name: Build spp-oap-server tagged Docker image
-        run: cd ./docker/spp-oap-server && docker build . --file Dockerfile --tag sourceplusplus/spp-oap-server:${{ needs.full-build.outputs.version }}
+        run: cd ./docker/spp-oap-server && docker build . --file Dockerfile --tag sourceplusplus/spp-oap-server:${{ needs.debian-build.outputs.version }}
 
       - name: Retag spp-oap-server tagged Docker image to latest
-        run: docker tag sourceplusplus/spp-oap-server:${{ needs.full-build.outputs.version }} sourceplusplus/spp-oap-server:latest
+        run: docker tag sourceplusplus/spp-oap-server:${{ needs.debian-build.outputs.version }} sourceplusplus/spp-oap-server:latest
 
       - name: Push spp-oap-server latest Docker image
         run: docker push sourceplusplus/spp-oap-server:latest
@@ -274,20 +274,20 @@ jobs:
   # Delete build artifacts
   cleanup:
     name: Cleanup
-    needs: [full-build, releaseDraft, docker-push]
+    needs: [debian-build, releaseDraft, docker-push]
     runs-on: ubuntu-latest
     steps:
       - name: Delete spp-platform (Linux)
         uses: geekyeggo/delete-artifact@v1
         with:
-          name: spp-platform-${{ needs.full-build.outputs.version }}-linux-amd64.tar.gz
+          name: spp-platform-${{ needs.debian-build.outputs.version }}-linux-amd64.tar.gz
 
       - name: Delete Source++ Plugin
         uses: geekyeggo/delete-artifact@v1
         with:
-          name: spp-plugin-${{ needs.full-build.outputs.version }}.zip
+          name: spp-plugin-${{ needs.debian-build.outputs.version }}.zip
 
       - name: Delete Source++ SkyWalking processor
         uses: geekyeggo/delete-artifact@v1
         with:
-          name: spp-processor-${{ needs.full-build.outputs.version }}.jar
+          name: spp-processor-${{ needs.debian-build.outputs.version }}.jar
