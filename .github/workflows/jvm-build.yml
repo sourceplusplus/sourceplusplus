@@ -1,7 +1,10 @@
 name: JVM Build
 
 on:
+  pull_request:
   push:
+    branches-ignore:
+      - master
     paths-ignore:
       - '**.md'
       - '**.svg'
