@@ -77,7 +77,7 @@ tasks {
         }
 
         doLast {
-            File("$buildDir/libs/spp-skywalking-services-$version-shadow.jar").delete()
+            File("$buildDir/libs/spp-skywalking-services-$version.jar").delete()
         }
     }
 

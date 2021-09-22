@@ -48,7 +48,11 @@ tasks.getByName<Test>("test") {
     if (System.getProperty("test.profile") != "integration") {
         exclude("integration/**")
     } else {
-        jvmArgs = listOf("-javaagent:../../docker/e2e/spp-probe-${project.version}.jar")
+        jvmArgs = if (System.getProperty("build.profile") == "debian") {
+            listOf("-javaagent:../../docker/e2e/spp-probe-${project.version}.jar")
+        } else {
+            listOf("-javaagent:../../docker/e2e/spp-probe-${project.version}-shadow.jar")
+        }
     }
 
     testLogging {
@@ -135,11 +139,11 @@ tasks.register<Zip>("zipSppSkywalking") {
             from(File(projectDir, "../services/build/libs/spp-skywalking-services-$version.jar"))
         } else {
             doFirst {
-                if (!File(projectDir, "../services/build/libs/spp-skywalking-services-$version.jar").exists()) {
-                    throw GradleException("Missing spp-skywalking-services")
+                if (!File(projectDir, "../services/build/libs/spp-skywalking-services-$version-shadow.jar").exists()) {
+                    throw GradleException("Missing spp-skywalking-services-shadow")
                 }
             }
-            from(File(projectDir, "../services/build/libs/spp-skywalking-services-$version.jar"))
+            from(File(projectDir, "../services/build/libs/spp-skywalking-services-$version-shadow.jar"))
         }
     }
 }
@@ -166,7 +170,7 @@ tasks.getByName("build") {
     dependsOn("shadowJar", "proguard")
 
     doLast {
-        File("$buildDir/libs/control-$version-shadow.jar").delete()
+        File("$buildDir/libs/control-$version.jar").delete()
     }
 }
 
