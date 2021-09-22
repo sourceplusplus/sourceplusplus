@@ -66,7 +66,6 @@ dependencies {
 
 tasks.getByName<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar") {
     archiveBaseName.set("spp-processor")
-    archiveClassifier.set("unprotected")
 
     exclude("google/**")
     exclude("kotlin/**/*.kotlin_metadata")
@@ -122,12 +121,12 @@ tasks {
     create<proguard.gradle.ProGuardTask>("proguard") {
         dependsOn("shadowJar")
         configuration("proguard.conf")
-        injars(File("$buildDir/libs/spp-processor-$version-unprotected.jar"))
+        injars(File("$buildDir/libs/spp-processor-$version.jar"))
         outjars(File("$buildDir/libs/spp-processor-$version.jar"))
         libraryjars("${org.gradle.internal.jvm.Jvm.current().javaHome}/jmods")
 
         doLast {
-            File("$buildDir/libs/spp-processor-$version-unprotected.jar").delete()
+            File("$buildDir/libs/spp-processor-$version.jar").delete()
         }
     }
 }

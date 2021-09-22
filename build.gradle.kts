@@ -130,7 +130,7 @@ tasks {
 
     register<Copy>("updateDockerFiles") {
         dependsOn(":platform:build", ":probe:control:build", ":processor:build")
-        if (System.getProperty("build.profile") != "mini") {
+        if (System.getProperty("build.profile") != "jvm") {
             doFirst {
                 if (!File("platform/build/graal/spp-platform").exists()) {
                     throw GradleException("Missing spp-platform")
@@ -153,17 +153,17 @@ tasks {
                 if (!File("platform/build/libs/spp-platform-$version.jar").exists()) {
                     throw GradleException("Missing spp-platform-$version.jar")
                 }
-                if (!File("probe/control/build/libs/spp-probe-$version-unprotected.jar").exists()) {
-                    throw GradleException("Missing spp-probe-$version-unprotected.jar")
+                if (!File("probe/control/build/libs/spp-probe-$version.jar").exists()) {
+                    throw GradleException("Missing spp-probe-$version.jar")
                 }
-                if (!File("processor/build/libs/spp-processor-$version-unprotected.jar").exists()) {
-                    throw GradleException("Missing spp-processor-$version-unprotected.jar")
+                if (!File("processor/build/libs/spp-processor-$version.jar").exists()) {
+                    throw GradleException("Missing spp-processor-$version.jar")
                 }
             }
             from(
                 "platform/build/libs/spp-platform-$version.jar",
-                "probe/control/build/libs/spp-probe-$version-unprotected.jar",
-                "processor/build/libs/spp-processor-$version-unprotected.jar"
+                "probe/control/build/libs/spp-probe-$version.jar",
+                "processor/build/libs/spp-processor-$version.jar"
             )
             into(File(projectDir, "docker/e2e"))
         }
@@ -174,10 +174,10 @@ dockerCompose {
     dockerComposeWorkingDirectory = "./docker/e2e"
     removeVolumes = true
 
-    if (System.getProperty("build.profile") != "mini") {
+    if (System.getProperty("build.profile") != "jvm") {
         useComposeFiles = listOf("docker-compose.yml")
     } else {
-        useComposeFiles = listOf("docker-compose-mini.yml")
+        useComposeFiles = listOf("docker-compose-jvm.yml")
     }
     //captureContainersOutput = true
     captureContainersOutputToFile = File("./build/docker-compose.log")

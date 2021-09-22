@@ -51,7 +51,7 @@ tasks.getByName<Test>("test") {
         jvmArgs = if (System.getProperty("build.profile") == "full") {
             listOf("-javaagent:../../docker/e2e/spp-probe-${project.version}.jar")
         } else {
-            listOf("-javaagent:../../docker/e2e/spp-probe-${project.version}-unprotected.jar")
+            listOf("-javaagent:../../docker/e2e/spp-probe-${project.version}.jar")
         }
     }
 
@@ -139,11 +139,11 @@ tasks.register<Zip>("zipSppSkywalking") {
             from(File(projectDir, "../services/build/libs/spp-skywalking-services-$version.jar"))
         } else {
             doFirst {
-                if (!File(projectDir, "../services/build/libs/spp-skywalking-services-$version-unprotected.jar").exists()) {
-                    throw GradleException("Missing spp-skywalking-services-unprotected")
+                if (!File(projectDir, "../services/build/libs/spp-skywalking-services-$version.jar").exists()) {
+                    throw GradleException("Missing spp-skywalking-services")
                 }
             }
-            from(File(projectDir, "../services/build/libs/spp-skywalking-services-$version-unprotected.jar"))
+            from(File(projectDir, "../services/build/libs/spp-skywalking-services-$version.jar"))
         }
     }
 }
@@ -153,7 +153,6 @@ tasks.getByName<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("sha
     dependsOn(":downloadSkywalking")
 
     archiveBaseName.set("spp-probe")
-    archiveClassifier.set("unprotected")
     exclude("module-info.class")
     exclude("META-INF/**")
     manifest {
@@ -185,13 +184,13 @@ tasks {
     create<proguard.gradle.ProGuardTask>("proguard") {
         dependsOn("shadowJar")
         configuration("proguard.conf")
-        injars(File("$buildDir/libs/spp-probe-$version-unprotected.jar"))
+        injars(File("$buildDir/libs/spp-probe-$version.jar"))
         outjars(File("$buildDir/libs/spp-probe-$version.jar"))
         libraryjars("${org.gradle.internal.jvm.Jvm.current().javaHome}/jmods")
         libraryjars(files("$projectDir/../.ext/skywalking-agent-$skywalkingVersion.jar"))
 
         doLast {
-            File("$buildDir/libs/spp-probe-$version-unprotected.jar").delete()
+            File("$buildDir/libs/spp-probe-$version.jar").delete()
         }
     }
 }
