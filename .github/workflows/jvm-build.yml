@@ -2,8 +2,6 @@ name: JVM Build
 
 on:
   push:
-    branches-ignore: 
-      - master
     paths-ignore:
       - '**.md'
       - '**.svg'
