@@ -75,6 +75,7 @@ graal {
     option("-H:+PrintClassInitialization")
     option("-H:+ReportExceptionStackTraces")
     option("-H:IncludeResourceBundles=build")
+    option("-H:+AddAllCharsets")
 }
 
 tasks.getByName<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar") {
