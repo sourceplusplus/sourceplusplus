@@ -23,11 +23,4 @@ class LiveInstrumentCommand : Serializable {
     enum class CommandType {
         GET_LIVE_INSTRUMENTS, ADD_LIVE_INSTRUMENT, REMOVE_LIVE_INSTRUMENT
     }
-
-    companion object {
-        @JvmStatic
-        fun fromJson(json: String?): LiveInstrumentCommand {
-            return Json.decodeValue(json, LiveInstrumentCommand::class.java)
-        }
-    }
 }

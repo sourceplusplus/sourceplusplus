@@ -1,6 +1,7 @@
 package spp.probe.control;
 
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.bridge.BridgeEventType;
 import io.vertx.ext.eventbus.bridge.tcp.impl.protocol.FrameHelper;
@@ -79,7 +80,7 @@ public class LiveLogRemote extends AbstractVerticle {
 
         vertx.eventBus().<JsonObject>localConsumer("local." + LIVE_LOG_REMOTE.getAddress()).handler(it -> {
             try {
-                LiveInstrumentCommand command = LiveInstrumentCommand.fromJson(it.body().toString());
+                LiveInstrumentCommand command = Json.decodeValue(it.body().toString(), LiveInstrumentCommand.class);
                 switch (command.getCommandType()) {
                     case GET_LIVE_INSTRUMENTS:
                         getLogs();
