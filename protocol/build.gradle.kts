@@ -1,7 +1,3 @@
-plugins {
-    kotlin("jvm")
-}
-
 val platformGroup: String by project
 val platformVersion: String by project
 val jacksonVersion: String by project
