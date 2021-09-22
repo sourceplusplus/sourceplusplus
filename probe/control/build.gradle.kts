@@ -139,7 +139,7 @@ tasks.register<Zip>("zipSppSkywalking") {
                     throw GradleException("Missing spp-skywalking-services")
                 }
             }
-            from(File(projectDir, "../services/build/libs/spp-skywalking-services-$version.jar"))
+            from(File(projectDir, "../services/build/libs/spp-skywalking-services-$version-shadow.jar"))
         }
     }
 }
@@ -166,7 +166,7 @@ tasks.getByName("build") {
     dependsOn("shadowJar", "proguard")
 
     doLast {
-        File("$buildDir/libs/control-$version-shadow.jar").delete()
+        File("$buildDir/libs/control-$version.jar").delete()
     }
 }
 
