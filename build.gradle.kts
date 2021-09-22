@@ -42,7 +42,7 @@ subprojects {
     apply(plugin = "kotlin-kapt")
 
     dependencies {
-        implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.1")
+        implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2")
         implementation("io.vertx:vertx-core:$vertxVersion")
         implementation("io.vertx:vertx-lang-kotlin:$vertxVersion")
         implementation("io.vertx:vertx-lang-kotlin-coroutines:$vertxVersion")
