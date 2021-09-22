@@ -45,7 +45,7 @@ tasks {
 
     shadowJar {
         archiveBaseName.set("spp-skywalking-services")
-        archiveClassifier.set("unprotected")
+        archiveClassifier.set("shadow")
         exclude("META-INF/native-image/**")
         exclude("META-INF/vertx/**")
         exclude("module-info.class")
@@ -70,7 +70,7 @@ tasks {
     }
 
     build {
-        if (System.getProperty("build.profile") == "full") {
+        if (System.getProperty("build.profile") == "debian") {
             dependsOn("shadowJar", "proguard")
         } else {
             dependsOn("shadowJar")
@@ -89,13 +89,13 @@ tasks {
     create<proguard.gradle.ProGuardTask>("proguard") {
         dependsOn("shadowJar")
         configuration("proguard.conf")
-        injars(File("$buildDir/libs/spp-skywalking-services-$version-unprotected.jar"))
+        injars(File("$buildDir/libs/spp-skywalking-services-$version-shadow.jar"))
         outjars(File("$buildDir/libs/spp-skywalking-services-$version.jar"))
         libraryjars("${org.gradle.internal.jvm.Jvm.current().javaHome}/jmods")
         libraryjars(files("$projectDir/../.ext/skywalking-agent-$skywalkingVersion.jar"))
 
         doLast {
-            File("$buildDir/libs/spp-skywalking-services-$version-unprotected.jar").delete()
+            File("$buildDir/libs/spp-skywalking-services-$version-shadow.jar").delete()
         }
     }
 }
