@@ -276,8 +276,10 @@ class LiveInstrumentController(private val vertx: Vertx) {
 
     suspend fun dispatchGetBreakpointsCommand(): AsyncResult<List<LiveInstrument>> {
         log.debug("Dispatching get live breakpoints command")
-        val productionDebuggerCommand = LiveInstrumentCommand()
-        productionDebuggerCommand.commandType = LiveInstrumentCommand.CommandType.GET_LIVE_INSTRUMENTS
+        val productionDebuggerCommand = LiveInstrumentCommand(
+            LiveInstrumentCommand.CommandType.GET_LIVE_INSTRUMENTS,
+            LiveInstrumentContext()
+        )
 
         val response = Json.decodeValue(
             vertx.eventBus().request<JsonObject>(
@@ -296,9 +298,10 @@ class LiveInstrumentController(private val vertx: Vertx) {
 
     fun addBreakpoint(selfId: String, breakpoint: LiveBreakpoint): AsyncResult<LiveInstrument> {
         log.debug("Adding live breakpoint: $breakpoint")
-        val debuggerCommand = LiveInstrumentCommand()
-        debuggerCommand.commandType = LiveInstrumentCommand.CommandType.ADD_LIVE_INSTRUMENT
-        debuggerCommand.context = LiveInstrumentContext()
+        val debuggerCommand = LiveInstrumentCommand(
+            LiveInstrumentCommand.CommandType.ADD_LIVE_INSTRUMENT,
+            LiveInstrumentContext()
+        )
         debuggerCommand.context.addLiveInstrument(breakpoint)
 
         val devBreakpoint = DeveloperInstrument(selfId, breakpoint)
@@ -345,8 +348,10 @@ class LiveInstrumentController(private val vertx: Vertx) {
 
     suspend fun dispatchGetLogsCommand(): AsyncResult<List<LiveInstrument>> {
         log.debug("Dispatching get live logs command")
-        val liveInstrumentCommand = LiveInstrumentCommand()
-        liveInstrumentCommand.commandType = LiveInstrumentCommand.CommandType.GET_LIVE_INSTRUMENTS
+        val liveInstrumentCommand = LiveInstrumentCommand(
+            LiveInstrumentCommand.CommandType.GET_LIVE_INSTRUMENTS,
+            LiveInstrumentContext()
+        )
 
         val response = Json.decodeValue(
             vertx.eventBus().request<JsonObject>(
@@ -365,9 +370,10 @@ class LiveInstrumentController(private val vertx: Vertx) {
 
     fun addLog(selfId: String, liveLog: LiveLog): AsyncResult<LiveInstrument> {
         log.debug("Adding live log: $liveLog")
-        val logCommand = LiveInstrumentCommand()
-        logCommand.commandType = LiveInstrumentCommand.CommandType.ADD_LIVE_INSTRUMENT
-        logCommand.context = LiveInstrumentContext()
+        val logCommand = LiveInstrumentCommand(
+            LiveInstrumentCommand.CommandType.ADD_LIVE_INSTRUMENT,
+            LiveInstrumentContext()
+        )
         logCommand.context.addLiveInstrument(liveLog)
 
         val devLog = DeveloperInstrument(selfId, liveLog)
@@ -405,9 +411,10 @@ class LiveInstrumentController(private val vertx: Vertx) {
         val devBreakpoint = DeveloperInstrument(selfId, breakpoint)
         liveInstruments.remove(devBreakpoint)
 
-        val debuggerCommand = LiveInstrumentCommand()
-        debuggerCommand.commandType = LiveInstrumentCommand.CommandType.REMOVE_LIVE_INSTRUMENT
-        debuggerCommand.context = LiveInstrumentContext()
+        val debuggerCommand = LiveInstrumentCommand(
+            LiveInstrumentCommand.CommandType.REMOVE_LIVE_INSTRUMENT,
+            LiveInstrumentContext()
+        )
         debuggerCommand.context.addLiveInstrument(breakpoint)
         vertx.eventBus().publish(LIVE_BREAKPOINT_REMOTE.address, JsonObject.mapFrom(debuggerCommand))
 
@@ -445,9 +452,10 @@ class LiveInstrumentController(private val vertx: Vertx) {
         val devLog = DeveloperInstrument(selfId, liveLog)
         liveInstruments.remove(devLog)
 
-        val debuggerCommand = LiveInstrumentCommand()
-        debuggerCommand.commandType = LiveInstrumentCommand.CommandType.REMOVE_LIVE_INSTRUMENT
-        debuggerCommand.context = LiveInstrumentContext()
+        val debuggerCommand = LiveInstrumentCommand(
+            LiveInstrumentCommand.CommandType.REMOVE_LIVE_INSTRUMENT,
+            LiveInstrumentContext()
+        )
         debuggerCommand.context.addLiveInstrument(liveLog)
         vertx.eventBus().publish(LIVE_LOG_REMOTE.address, JsonObject.mapFrom(debuggerCommand))
 
@@ -499,9 +507,10 @@ class LiveInstrumentController(private val vertx: Vertx) {
 
     fun removeBreakpoints(selfId: String, location: LiveSourceLocation): AsyncResult<List<LiveInstrument>> {
         log.debug("Removing live breakpoint(s): $location")
-        val debuggerCommand = LiveInstrumentCommand()
-        debuggerCommand.commandType = LiveInstrumentCommand.CommandType.REMOVE_LIVE_INSTRUMENT
-        debuggerCommand.context = LiveInstrumentContext()
+        val debuggerCommand = LiveInstrumentCommand(
+            LiveInstrumentCommand.CommandType.REMOVE_LIVE_INSTRUMENT,
+            LiveInstrumentContext()
+        )
         debuggerCommand.context.addLocation(location)
 
         val result = liveInstruments.filter { it.instrument.location == location && it.instrument is LiveBreakpoint }
@@ -524,9 +533,10 @@ class LiveInstrumentController(private val vertx: Vertx) {
 
     fun removeLogs(selfId: String, location: LiveSourceLocation): AsyncResult<List<LiveInstrument>> {
         log.debug("Removing live log(s): $location")
-        val liveInstrumentCommand = LiveInstrumentCommand()
-        liveInstrumentCommand.commandType = LiveInstrumentCommand.CommandType.REMOVE_LIVE_INSTRUMENT
-        liveInstrumentCommand.context = LiveInstrumentContext()
+        val liveInstrumentCommand = LiveInstrumentCommand(
+            LiveInstrumentCommand.CommandType.REMOVE_LIVE_INSTRUMENT,
+            LiveInstrumentContext()
+        )
         liveInstrumentCommand.context.addLocation(location)
 
         val result = liveInstruments.filter { it.instrument.location == location && it.instrument is LiveLog }

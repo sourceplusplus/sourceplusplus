@@ -193,20 +193,20 @@ public class SourceProbe {
                 //register remotes
                 FrameHelper.sendFrame(
                         BridgeEventType.REGISTER.name().toLowerCase(),
-                        LIVE_BREAKPOINT_REMOTE.address,
+                        LIVE_BREAKPOINT_REMOTE.getAddress(),
                         new JsonObject(),
                         SourceProbe.tcpSocket
                 );
                 FrameHelper.sendFrame(
                         BridgeEventType.REGISTER.name().toLowerCase(),
-                        LIVE_LOG_REMOTE.address,
+                        LIVE_LOG_REMOTE.getAddress(),
                         new JsonObject(),
                         SourceProbe.tcpSocket
                 );
                 consumer.unregister();
             });
             FrameHelper.sendFrame(
-                    BridgeEventType.SEND.name().toLowerCase(), PlatformAddress.PROBE_CONNECTED.address,
+                    BridgeEventType.SEND.name().toLowerCase(), PlatformAddress.PROBE_CONNECTED.getAddress(),
                     replyAddress, new JsonObject(), true, JsonObject.mapFrom(pc), socket.result()
             );
         });
