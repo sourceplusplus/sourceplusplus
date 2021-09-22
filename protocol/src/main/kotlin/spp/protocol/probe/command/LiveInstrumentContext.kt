@@ -1,5 +1,6 @@
 package spp.protocol.probe.command
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import io.vertx.core.json.Json
 import java.util.stream.Collectors
@@ -8,9 +9,12 @@ import java.util.stream.Collectors
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class LiveInstrumentContext(
     var instruments: MutableSet<String> = HashSet(),
-    var locations: MutableSet<String> = HashSet(),
-    val liveInstruments: List<String> = ArrayList(instruments)
+    var locations: MutableSet<String> = HashSet()
 ) {
+
+    @get:JsonIgnore
+    val liveInstruments: List<String>
+        get() = instruments.toList()
 
     fun addLiveInstrument(liveInstrument: Any): LiveInstrumentContext {
         instruments.add(Json.encode(liveInstrument))
