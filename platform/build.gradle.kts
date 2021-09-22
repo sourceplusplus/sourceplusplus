@@ -21,7 +21,7 @@ val commonsIoVersion: String by project
 group = platformGroup
 version = platformVersion
 
-val vertxVersion = "4.0.3" //todo: consolidate with gradle.properties 4.0.2
+val vertxVersion = "4.1.4" //todo: consolidate with gradle.properties 4.0.2
 
 dependencies {
     implementation("org.graalvm.sdk:graal-sdk:$graalVersion")
