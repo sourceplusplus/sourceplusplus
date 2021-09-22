@@ -130,7 +130,7 @@ tasks {
 
     register<Copy>("updateDockerFiles") {
         dependsOn(":platform:build", ":probe:control:build", ":processor:build")
-        if (System.getProperty("build.profile") != "jvm") {
+        if (System.getProperty("build.profile") == "debian") {
             doFirst {
                 if (!File("platform/build/graal/spp-platform").exists()) {
                     throw GradleException("Missing spp-platform")
@@ -174,8 +174,8 @@ dockerCompose {
     dockerComposeWorkingDirectory = "./docker/e2e"
     removeVolumes = true
 
-    if (System.getProperty("build.profile") != "jvm") {
-        useComposeFiles = listOf("docker-compose.yml")
+    if (System.getProperty("build.profile") == "debian") {
+        useComposeFiles = listOf("docker-compose-debian.yml")
     } else {
         useComposeFiles = listOf("docker-compose-jvm.yml")
     }
