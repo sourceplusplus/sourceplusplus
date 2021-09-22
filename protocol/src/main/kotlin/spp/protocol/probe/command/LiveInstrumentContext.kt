@@ -3,6 +3,7 @@ package spp.protocol.probe.command
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import io.vertx.core.json.Json
+import java.io.Serializable
 import java.util.stream.Collectors
 
 //todo: treat this as a regular data class
@@ -10,7 +11,7 @@ import java.util.stream.Collectors
 data class LiveInstrumentContext(
     var instruments: MutableSet<String> = HashSet(),
     var locations: MutableSet<String> = HashSet()
-) {
+) : Serializable {
 
     @get:JsonIgnore
     val liveInstruments: List<String>
