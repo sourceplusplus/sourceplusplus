@@ -107,7 +107,7 @@ tasks.getByName("build") {
     dependsOn("shadowJar", "proguard")
 
     doLast {
-        File("$buildDir/libs/processor-$version-shadow.jar").delete()
+        File("$buildDir/libs/processor-$version.jar").delete()
     }
 }
 
