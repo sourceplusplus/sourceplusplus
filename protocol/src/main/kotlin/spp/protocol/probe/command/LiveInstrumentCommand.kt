@@ -1,9 +1,10 @@
 package spp.protocol.probe.command
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import java.beans.ConstructorProperties
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class LiveInstrumentCommand(
+data class LiveInstrumentCommand @ConstructorProperties("commandType", "context") constructor(
     var commandType: CommandType,
     var context: LiveInstrumentContext
 ) {
