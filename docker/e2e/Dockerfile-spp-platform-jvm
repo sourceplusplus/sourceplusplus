@@ -15,4 +15,4 @@ RUN mkdir /opt/sourceplusplus/probe
 ADD ./spp-probe-*.jar /opt/sourceplusplus/probe
 
 CMD (for f in /opt/sourceplusplus/probe/spp-probe-*-shadow.jar; do cp -- "$f" "${f%.jar}.jar"; done) && java -jar /opt/sourceplusplus/spp-platform-*.jar
-#CMD (for f in /opt/sourceplusplus/probe/spp-probe-*.jar; do mv -- "$f" "${f%.jar}.jar"; done) && java -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5107 -jar /opt/sourceplusplus/spp-platform-*.jar
+#CMD (for f in /opt/sourceplusplus/probe/spp-probe-*-shadow.jar; do mv -- "$f" "${f%.jar}.jar"; done) && java -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5107 -jar /opt/sourceplusplus/spp-platform-*.jar
