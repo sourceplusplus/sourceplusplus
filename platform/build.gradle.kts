@@ -69,7 +69,7 @@ dependencies {
 
 //todo: shouldn't need to put in src (github actions needs for some reason)
 tasks.create("createProperties") {
-    if (System.getProperty("build.profile") == "full") {
+    if (System.getProperty("build.profile") == "debian") {
         val buildBuildFile = File(projectDir, "src/main/resources/build.properties")
         if (buildBuildFile.exists()) {
             buildBuildFile.delete()

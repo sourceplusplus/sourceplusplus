@@ -69,7 +69,7 @@ tasks {
     }
 
     build {
-        if (System.getProperty("build.profile") == "full") {
+        if (System.getProperty("build.profile") == "debian") {
             dependsOn("shadowJar", "proguard")
         } else {
             dependsOn("shadowJar")

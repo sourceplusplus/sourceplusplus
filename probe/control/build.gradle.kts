@@ -48,7 +48,7 @@ tasks.getByName<Test>("test") {
     if (System.getProperty("test.profile") != "integration") {
         exclude("integration/**")
     } else {
-        jvmArgs = if (System.getProperty("build.profile") == "full") {
+        jvmArgs = if (System.getProperty("build.profile") == "debian") {
             listOf("-javaagent:../../docker/e2e/spp-probe-${project.version}.jar")
         } else {
             listOf("-javaagent:../../docker/e2e/spp-probe-${project.version}.jar")
@@ -66,7 +66,7 @@ tasks.getByName<Test>("test") {
 
 //todo: shouldn't need to put in src (github actions needs for some reason)
 tasks.create("createProperties") {
-    if (System.getProperty("build.profile") == "full") {
+    if (System.getProperty("build.profile") == "debian") {
         val buildBuildFile = File(projectDir, "src/main/resources/build.properties")
         if (buildBuildFile.exists()) {
             buildBuildFile.delete()
@@ -110,7 +110,7 @@ tasks.register<Copy>("updateSkywalkingToolkit") {
 }
 
 tasks.register<Zip>("zipSppSkywalking") {
-    if (System.getProperty("build.profile") == "full") {
+    if (System.getProperty("build.profile") == "debian") {
         dependsOn("untarSkywalking", ":probe:services:proguard", "updateSkywalkingToolkit")
         mustRunAfter(":probe:services:proguard")
     } else {
@@ -130,7 +130,7 @@ tasks.register<Zip>("zipSppSkywalking") {
     )
 
     into("plugins") {
-        if (System.getProperty("build.profile") == "full") {
+        if (System.getProperty("build.profile") == "debian") {
             doFirst {
                 if (!File(projectDir, "../services/build/libs/spp-skywalking-services-$version.jar").exists()) {
                     throw GradleException("Missing spp-skywalking-services")
