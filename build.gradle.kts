@@ -154,10 +154,10 @@ tasks {
                     throw GradleException("Missing spp-platform-$version.jar")
                 }
                 if (!File("probe/control/build/libs/spp-probe-$version-shadow.jar").exists()) {
-                    throw GradleException("Missing spp-probe-$version.jar")
+                    throw GradleException("Missing spp-probe-$version-shadow.jar")
                 }
                 if (!File("processor/build/libs/spp-processor-$version-shadow.jar").exists()) {
-                    throw GradleException("Missing spp-processor-$version.jar")
+                    throw GradleException("Missing spp-processor-$version-shadow.jar")
                 }
             }
             from(
