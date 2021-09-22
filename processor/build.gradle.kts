@@ -49,7 +49,7 @@ dependencies {
     kapt("io.vertx:vertx-codegen:$vertxVersion:processor")
     annotationProcessor("io.vertx:vertx-service-proxy:$vertxVersion")
     implementation("io.vertx:vertx-tcp-eventbus-bridge:$vertxVersion")
-    implementation("org.slf4j:slf4j-api:1.7.30")
+    implementation("org.slf4j:slf4j-api:1.7.32")
     implementation("com.google.code.gson:gson:$gsonVersion")
     implementation("com.google.guava:guava:28.1-jre")
     implementation("io.grpc:grpc-stub:$grpcVersion") {

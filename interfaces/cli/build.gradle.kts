@@ -2,7 +2,7 @@ import java.util.*
 
 plugins {
     id("com.github.johnrengelman.shadow") version "6.1.0"
-    id("com.palantir.graal") version "0.7.2"
+    id("com.palantir.graal") version "0.9.0"
     id("com.apollographql.apollo").version("2.5.9")
 }
 
@@ -90,7 +90,7 @@ tasks.getByName<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("sha
     }
 }
 
-configurations.compile {
+configurations.runtimeClasspath {
     exclude("ch.qos.logback", "logback-classic")
     exclude("org.slf4j", "slf4j-api")
 }
