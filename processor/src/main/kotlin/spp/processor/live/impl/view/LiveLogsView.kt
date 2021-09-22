@@ -1,5 +1,6 @@
 package spp.processor.live.impl.view
 
+import com.google.protobuf.Message
 import com.sourceplusplus.protocol.artifact.log.Log
 import io.vertx.core.json.JsonObject
 import kotlinx.datetime.toJavaInstant
@@ -28,7 +29,7 @@ class LiveLogsView(private val subscriptionCache: MetricTypeSubscriptionCache) :
     private val sppLogAnalyzer = object : LogAnalysisListener {
         override fun build() = Unit
 
-        override fun parse(logData: LogData.Builder): LogAnalysisListener {
+        override fun parse(logData: LogData.Builder, p1: Message?): LogAnalysisListener {
             if (log.isTraceEnabled) log.trace("Parsing log data {}", logData)
 
             val subbedArtifacts = subscriptionCache["endpoint_logs"]

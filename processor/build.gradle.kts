@@ -92,7 +92,11 @@ tasks.getByName<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("sha
     exclude("META-INF/io.netty.versions.properties")
 
     relocate("com.fasterxml", "spp.processor.common.com.fasterxml")
-    relocate("com.google", "spp.processor.common.com.google")
+    relocate("com.google.common", "spp.processor.common.com.google.common")
+    relocate("com.google.errorprone", "spp.processor.common.com.google.errorprone")
+    relocate("com.google.gson", "spp.processor.common.com.google.gson")
+    relocate("com.google.j2objc", "spp.processor.common.com.google.j2objc")
+    relocate("com.google.thirdparty", "spp.processor.common.com.google.thirdparty")
     relocate("io.netty", "spp.processor.common.io.netty")
     relocate("io.vertx", "spp.processor.common.io.vertx")
     relocate("kotlin", "spp.processor.common.kotlin")
