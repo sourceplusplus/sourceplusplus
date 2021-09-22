@@ -90,7 +90,7 @@ tasks.getByName<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("sha
     }
 }
 
-configurations.compile {
+configurations.runtimeClasspath {
     exclude("ch.qos.logback", "logback-classic")
     exclude("org.slf4j", "slf4j-api")
 }
