@@ -120,10 +120,10 @@ public class LiveBreakpointRemote extends AbstractVerticle {
     }
 
     private void getBreakpoints() throws Exception {
-        LiveInstrumentCommand.Response response = new LiveInstrumentCommand.Response();
-        response.setTimestamp(System.currentTimeMillis());
-        response.setSuccess(true);
-        response.setContext(new LiveInstrumentContext().addLiveInstruments((List<String>) getBreakpoints.invoke(null)));
+        LiveInstrumentCommand.Response response = new LiveInstrumentCommand.Response(
+                true, null, System.currentTimeMillis(),
+                new LiveInstrumentContext().addLiveInstruments((List<String>) getBreakpoints.invoke(null))
+        );
 
         FrameHelper.sendFrame(
                 BridgeEventType.PUBLISH.name().toLowerCase(),
