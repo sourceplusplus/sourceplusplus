@@ -2,6 +2,7 @@ package spp.processor.live.impl.instrument
 
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
+import com.google.protobuf.Message
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import org.apache.skywalking.apm.network.language.agent.v3.SegmentObject
@@ -50,7 +51,7 @@ class LiveInstrumentAnalysis(elasticSearch: EsDAO) : AnalysisListenerFactory, Lo
     private val sppLogAnalyzer = object : LogAnalysisListener {
         override fun build() = Unit
 
-        override fun parse(logData: LogData.Builder): LogAnalysisListener {
+        override fun parse(logData: LogData.Builder, p1: Message?): LogAnalysisListener {
             if (log.isTraceEnabled) log.trace("Parsing log data {}", logData)
             var logId: String? = null
             var logger: String? = null
