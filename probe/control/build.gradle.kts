@@ -140,7 +140,7 @@ tasks.register<Zip>("zipSppSkywalking") {
         } else {
             doFirst {
                 if (!File(projectDir, "../services/build/libs/spp-skywalking-services-$version-shadow.jar").exists()) {
-                    throw GradleException("Missing spp-skywalking-services")
+                    throw GradleException("Missing spp-skywalking-services-shadow")
                 }
             }
             from(File(projectDir, "../services/build/libs/spp-skywalking-services-$version-shadow.jar"))
