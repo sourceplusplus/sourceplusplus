@@ -1,6 +1,7 @@
 package integration;
 
 import io.vertx.core.eventbus.MessageConsumer;
+import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
@@ -65,7 +66,7 @@ public class IntegrationTest {
                     return;
                 }
 
-                LiveInstrumentCommand command = LiveInstrumentCommand.fromJson(it.body().toString());
+                LiveInstrumentCommand command = Json.decodeValue(it.body().toString(), LiveInstrumentCommand.class);
 
                 testContext.verify(() -> {
                     assertEquals(ADD_LIVE_INSTRUMENT, command.getCommandType());
