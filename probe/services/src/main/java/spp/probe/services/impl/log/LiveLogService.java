@@ -93,7 +93,7 @@ public class LiveLogService {
             inst.retransformClasses(clazz);
             log.setLive(true);
             if (!log.isRemoval()) {
-                logEventConsumer.accept(LIVE_LOG_APPLIED.address, log.toJson());
+                logEventConsumer.accept(LIVE_LOG_APPLIED.getAddress(), log.toJson());
             }
         } catch (Throwable ex) {
             //remove and re-transform
@@ -218,7 +218,7 @@ public class LiveLogService {
             if (ex != null) {
                 map.put("cause", ThrowableTransformer.INSTANCE.convert2String(ex, 4000));
             }
-            logEventConsumer.accept(LIVE_LOG_REMOVED.address, ModelSerializer.INSTANCE.toJson(map));
+            logEventConsumer.accept(LIVE_LOG_REMOVED.getAddress(), ModelSerializer.INSTANCE.toJson(map));
         }
     }
 

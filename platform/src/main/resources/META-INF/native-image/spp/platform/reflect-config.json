@@ -739,6 +739,12 @@
     "name":"java.security.SecurityPermission"
   },
   {
+    "name":"java.util.Set[]"
+  },
+  {
+    "name":"java.util.Collection[]"
+  },
+  {
     "name":"java.util.Date"
   },
   {
@@ -1644,6 +1650,24 @@
     "allPublicMethods" : true
   },
   {
+    "name": "spp.protocol.probe.command.LiveInstrumentCommand$CommandType",
+    "allDeclaredConstructors" : true,
+    "allPublicConstructors" : true,
+    "allDeclaredFields" : true,
+    "allPublicFields" : true,
+    "allDeclaredMethods" : true,
+    "allPublicMethods" : true
+  },
+  {
+    "name": "spp.protocol.probe.command.LiveInstrumentContext[]",
+    "allDeclaredConstructors" : true,
+    "allPublicConstructors" : true,
+    "allDeclaredFields" : true,
+    "allPublicFields" : true,
+    "allDeclaredMethods" : true,
+    "allPublicMethods" : true
+  },
+  {
     "name": "spp.protocol.probe.command.LocalTracingCommand",
     "allDeclaredConstructors" : true,
     "allPublicConstructors" : true,
@@ -2143,6 +2167,33 @@
     "allPublicFields" : true,
     "allDeclaredMethods" : true,
     "allPublicMethods" : true
+  },
+  {
+    "name": "spp.protocol.probe.status.ProbeConnection[]",
+    "allDeclaredConstructors" : true,
+    "allPublicConstructors" : true,
+    "allDeclaredMethods" : true,
+    "allPublicMethods" : true,
+    "allDeclaredClasses" : true,
+    "allPublicClasses" : true
+  },
+  {
+    "name": "spp.protocol.processor.status.ProcessorConnection[]",
+    "allDeclaredConstructors" : true,
+    "allPublicConstructors" : true,
+    "allDeclaredMethods" : true,
+    "allPublicMethods" : true,
+    "allDeclaredClasses" : true,
+    "allPublicClasses" : true
+  },
+  {
+    "name": "spp.protocol.probe.command.LiveInstrumentCommand[]",
+    "allDeclaredConstructors" : true,
+    "allPublicConstructors" : true,
+    "allDeclaredMethods" : true,
+    "allPublicMethods" : true,
+    "allDeclaredClasses" : true,
+    "allPublicClasses" : true
   },
   {
     "name":"spp.platform.util.LazyInitRollingFileAppender",

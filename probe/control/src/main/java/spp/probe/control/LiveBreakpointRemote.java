@@ -1,6 +1,7 @@
 package spp.probe.control;
 
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.bridge.BridgeEventType;
 import io.vertx.ext.eventbus.bridge.tcp.impl.protocol.FrameHelper;
@@ -76,9 +77,9 @@ public class LiveBreakpointRemote extends AbstractVerticle {
             throw new RuntimeException(e);
         }
 
-        vertx.eventBus().<JsonObject>localConsumer("local." + LIVE_BREAKPOINT_REMOTE.address).handler(it -> {
+        vertx.eventBus().<JsonObject>localConsumer("local." + LIVE_BREAKPOINT_REMOTE.getAddress()).handler(it -> {
             try {
-                LiveInstrumentCommand command = LiveInstrumentCommand.fromJson(it.body().toString());
+                LiveInstrumentCommand command = Json.decodeValue(it.body().toString(), LiveInstrumentCommand.class);
                 switch (command.getCommandType()) {
                     case GET_LIVE_INSTRUMENTS:
                         getBreakpoints();
@@ -101,7 +102,7 @@ public class LiveBreakpointRemote extends AbstractVerticle {
 
                 FrameHelper.sendFrame(
                         BridgeEventType.PUBLISH.name().toLowerCase(),
-                        PlatformAddress.LIVE_BREAKPOINT_REMOVED.address,
+                        PlatformAddress.LIVE_BREAKPOINT_REMOVED.getAddress(),
                         JsonObject.mapFrom(map), SourceProbe.tcpSocket
                 );
             } catch (Throwable ex) {
@@ -111,7 +112,7 @@ public class LiveBreakpointRemote extends AbstractVerticle {
 
                 FrameHelper.sendFrame(
                         BridgeEventType.PUBLISH.name().toLowerCase(),
-                        PlatformAddress.LIVE_BREAKPOINT_REMOVED.address,
+                        PlatformAddress.LIVE_BREAKPOINT_REMOVED.getAddress(),
                         JsonObject.mapFrom(map), SourceProbe.tcpSocket
                 );
             }
@@ -119,14 +120,14 @@ public class LiveBreakpointRemote extends AbstractVerticle {
     }
 
     private void getBreakpoints() throws Exception {
-        LiveInstrumentCommand.Response response = new LiveInstrumentCommand.Response();
-        response.setTimestamp(System.currentTimeMillis());
-        response.setSuccess(true);
-        response.setContext(new LiveInstrumentContext().addLiveInstruments((List<String>) getBreakpoints.invoke(null)));
+        LiveInstrumentCommand.Response response = new LiveInstrumentCommand.Response(
+                true, null, System.currentTimeMillis(),
+                new LiveInstrumentContext().addLiveInstruments((List<String>) getBreakpoints.invoke(null))
+        );
 
         FrameHelper.sendFrame(
                 BridgeEventType.PUBLISH.name().toLowerCase(),
-                PlatformAddress.LIVE_BREAKPOINTS.address,
+                PlatformAddress.LIVE_BREAKPOINTS.getAddress(),
                 JsonObject.mapFrom(response), SourceProbe.tcpSocket
         );
     }
