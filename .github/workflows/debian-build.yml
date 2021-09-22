@@ -8,7 +8,7 @@ on:
     paths-ignore:
       - '**.md'
       - '**.svg'
-      - '.github/workflows/jvm-debian-build.yml'
+      - '.github/workflows/jvm-build.yml'
   workflow_dispatch:
 
 jobs:
