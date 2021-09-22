@@ -48,11 +48,7 @@ tasks.getByName<Test>("test") {
     if (System.getProperty("test.profile") != "integration") {
         exclude("integration/**")
     } else {
-        jvmArgs = if (System.getProperty("build.profile") == "debian") {
-            listOf("-javaagent:../../docker/e2e/spp-probe-${project.version}.jar")
-        } else {
-            listOf("-javaagent:../../docker/e2e/spp-probe-${project.version}.jar")
-        }
+        jvmArgs = listOf("-javaagent:../../docker/e2e/spp-probe-${project.version}.jar")
     }
 
     testLogging {
