@@ -171,14 +171,14 @@ tasks {
 }
 
 dockerCompose {
-    dockerComposeWorkingDirectory = "./docker/e2e"
-    removeVolumes = true
+    dockerComposeWorkingDirectory.set(File("./docker/e2e"))
+    removeVolumes.set(true)
 
     if (System.getProperty("build.profile") == "debian") {
-        useComposeFiles = listOf("docker-compose-debian.yml")
+        useComposeFiles.set(listOf("docker-compose-debian.yml"))
     } else {
-        useComposeFiles = listOf("docker-compose-jvm.yml")
+        useComposeFiles.set(listOf("docker-compose-jvm.yml"))
     }
     //captureContainersOutput = true
-    captureContainersOutputToFile = File("./build/docker-compose.log")
+    captureContainersOutputToFile.set(File("./build/docker-compose.log"))
 }
