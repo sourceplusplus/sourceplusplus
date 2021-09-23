@@ -273,9 +273,10 @@ jobs:
 
   # Delete build artifacts
   cleanup:
-    name: Cleanup
-    needs: [debian-build]
+    needs: [debian-build, releaseDraft, docker-push]
     runs-on: ubuntu-latest
+    if: always()
+
     steps:
       - name: Delete spp-platform (Linux)
         uses: geekyeggo/delete-artifact@v1
