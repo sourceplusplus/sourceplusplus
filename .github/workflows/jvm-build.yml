@@ -1,13 +1,9 @@
 name: JVM Build
 
-concurrency: 
-  group: ${{ github.head_ref }}
-  cancel-in-progress: true
-
 on:
   pull_request:
   push:
-    branches-ignore: 
+    branches-ignore:
       - master
     paths-ignore:
       - '**.md'
@@ -19,6 +15,10 @@ jobs:
   jvm-build:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    concurrency: 
+      group: ${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: true
+
     steps:
       - uses: docker-practice/actions-setup-docker@master
       - uses: actions/checkout@v2
