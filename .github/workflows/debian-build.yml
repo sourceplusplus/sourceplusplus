@@ -226,7 +226,7 @@ jobs:
           asset_content_type: application/gzip
 
   docker-push:
-    needs: [debian-build, releaseDraft]
+    needs: [debian-build]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master'
 
