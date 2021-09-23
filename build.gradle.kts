@@ -3,7 +3,7 @@ import java.net.URL
 
 plugins {
     id("java")
-    id("com.avast.gradle.docker-compose") version "0.14.3"
+    id("com.avast.gradle.docker-compose") version "0.14.9"
 
     val kotlinVersion = "1.5.0"
     kotlin("jvm") version kotlinVersion apply false
