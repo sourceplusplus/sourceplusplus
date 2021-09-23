@@ -274,7 +274,7 @@ jobs:
   # Delete build artifacts
   cleanup:
     name: Cleanup
-    needs: [debian-build, releaseDraft, docker-push]
+    needs: [debian-build]
     runs-on: ubuntu-latest
     steps:
       - name: Delete spp-platform (Linux)
