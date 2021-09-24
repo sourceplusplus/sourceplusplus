@@ -3,7 +3,7 @@ name: JVM Build
 on:
   pull_request:
   push:
-    branches-ignore:
+    branches:
       - master
     paths-ignore:
       - '**.md'
