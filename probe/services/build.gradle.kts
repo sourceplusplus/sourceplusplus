@@ -33,7 +33,7 @@ dependencies {
     implementation(project(":protocol"))
     compileOnly(files("$projectDir/../.ext/skywalking-agent-$skywalkingVersion.jar"))
     implementation("com.google.code.gson:gson:$gsonVersion")
-    implementation("org.springframework:spring-expression:5.3.6")
+    implementation("org.springframework:spring-expression:5.3.10")
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.mockito:mockito-core:3.+")
 }
