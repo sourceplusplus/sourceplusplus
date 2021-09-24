@@ -39,7 +39,7 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter-engine:$jupiterVersion")
     testImplementation("io.vertx:vertx-junit5:$vertxVersion")
     testImplementation("io.vertx:vertx-web-client:$vertxVersion")
-    testImplementation("ch.qos.logback:logback-classic:1.2.3")
+    testImplementation("ch.qos.logback:logback-classic:1.2.6")
 }
 
 tasks.getByName<Test>("test") {
