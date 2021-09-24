@@ -36,7 +36,7 @@ dependencies {
     implementation(project(":processor"))
     shadow(project(":processor")) //todo: figure out why extra configurations.add() and this are needed
 
-    implementation("io.github.microutils:kotlin-logging-jvm:2.0.8")
+    implementation("io.github.microutils:kotlin-logging-jvm:2.0.11")
     implementation("org.apache.commons:commons-lang3:$commonsLang3Version")
     implementation("com.github.ajalt.clikt:clikt:$cliktVersion")
     implementation("ch.qos.logback:logback-classic:1.2.3")
