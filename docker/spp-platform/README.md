@@ -10,10 +10,12 @@ docker run -d --name=spp-platform -p 5445:5445 sourceplusplus/spp-platform
 
 ## Environment
 
-SPP_DISABLE_JWT
-SPP_DISABLE_TLS
-SPP_CLUSTER_URL
-SPP_CLUSTER_NAME
+| Name             | Required | Default Value | 
+|------------------|:--------:|:--------------|
+| SPP_DISABLE_JWT  | no       | false         |
+| SPP_DISABLE_TLS  | no       | false         |
+| SPP_CLUSTER_URL  | no       | localhost     |
+| SPP_CLUSTER_NAME | no       |               |
 
 ## How to use the container
 
