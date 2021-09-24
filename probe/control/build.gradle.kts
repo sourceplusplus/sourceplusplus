@@ -20,6 +20,7 @@ val skywalkingVersion: String by project
 val jacksonVersion: String by project
 val vertxVersion: String by project
 val jupiterVersion: String by project
+val logbackVersion: String by project
 
 group = platformGroup
 version = platformVersion
@@ -39,7 +40,7 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter-engine:$jupiterVersion")
     testImplementation("io.vertx:vertx-junit5:$vertxVersion")
     testImplementation("io.vertx:vertx-web-client:$vertxVersion")
-    testImplementation("ch.qos.logback:logback-classic:1.2.6")
+    testImplementation("ch.qos.logback:logback-classic:$logbackVersion")
 }
 
 tasks.getByName<Test>("test") {
