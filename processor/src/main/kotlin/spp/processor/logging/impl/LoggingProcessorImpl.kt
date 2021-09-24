@@ -36,7 +36,7 @@ class LoggingProcessorImpl : CoroutineVerticle(), LoggingProcessor {
         log.info("Getting pattern occurred counts")
         val size = 1000
         val aggregation = SearchSourceBuilder.searchSource().aggregation(
-            TermsAggregationBuilder("content", ValueType.STRING).field("content").size(size)
+            TermsAggregationBuilder("content").field("content").size(size)
         ).size(size)
         val logPatternCounts = (elasticSearch.client.search("log", aggregation)
             .aggregations.get("content") as ParsedStringTerms).buckets.stream()
