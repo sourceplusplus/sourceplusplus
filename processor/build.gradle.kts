@@ -61,7 +61,7 @@ dependencies {
     compileOnly("io.grpc:grpc-protobuf:$grpcVersion") {
         exclude(mapOf("group" to "com.google.guava", "module" to "guava"))
     }
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.2")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.0")
 }
 
 tasks.getByName<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar") {
