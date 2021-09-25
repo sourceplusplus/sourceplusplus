@@ -53,7 +53,7 @@ dependencies {
     implementation("io.vertx:vertx-redis-client:$vertxVersion")
     implementation("io.vertx:vertx-web-graphql:${vertxVersion}")
     implementation(files(".ext/vertx-tcp-eventbus-bridge-4.0.3-SNAPSHOT.jar"))
-    implementation("com.auth0:java-jwt:3.14.0")
+    implementation("com.auth0:java-jwt:3.18.2")
     implementation("com.auth0:jwks-rsa:0.19.0")
     implementation("org.bouncycastle:bcprov-jdk15on:$bouncycastleVersion")
     implementation("org.bouncycastle:bcpkix-jdk15on:$bouncycastleVersion")
