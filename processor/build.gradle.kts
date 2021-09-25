@@ -51,7 +51,7 @@ dependencies {
     implementation("io.vertx:vertx-tcp-eventbus-bridge:$vertxVersion")
     implementation("org.slf4j:slf4j-api:1.7.32")
     implementation("com.google.code.gson:gson:$gsonVersion")
-    implementation("com.google.guava:guava:30.1.1-jre")
+    implementation("com.google.guava:guava:31.0-jre")
     implementation("io.grpc:grpc-stub:$grpcVersion") {
         exclude(mapOf("group" to "com.google.guava", "module" to "guava"))
     }
