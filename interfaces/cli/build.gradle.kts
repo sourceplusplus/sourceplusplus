@@ -16,6 +16,7 @@ val cliktVersion: String by project
 val bouncycastleVersion: String by project
 val jupiterVersion: String by project
 val commonsIoVersion: String by project
+val auth0JwtVersion: String by project
 
 group = platformGroup
 version = platformVersion
@@ -41,7 +42,7 @@ dependencies {
     implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:$jacksonVersion")
     implementation("commons-io:commons-io:$commonsIoVersion")
-    implementation("com.auth0:java-jwt:3.15.0")
+    implementation("com.auth0:java-jwt:$auth0JwtVersion")
     implementation("eu.geekplace.javapinning:java-pinning-core:1.2.0")
 
     testImplementation("org.junit.jupiter:junit-jupiter-engine:$jupiterVersion")
