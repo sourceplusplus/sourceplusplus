@@ -198,7 +198,7 @@ class LiveInstrumentController(private val vertx: Vertx) {
                 //publish remove command to all probes
                 removeLiveBreakpoint(
                     instrumentRemoval.selfId,
-                    Instant.fromEpochMilliseconds(bpData.getLong("occurredAt")),
+                    Instant.fromEpochMilliseconds(it.body().getLong("occurredAt")),
                     instrumentRemoval.instrument as LiveBreakpoint,
                     it.body().getString("cause")
                 )
