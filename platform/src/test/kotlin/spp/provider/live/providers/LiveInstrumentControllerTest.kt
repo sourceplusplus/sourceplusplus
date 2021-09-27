@@ -23,7 +23,7 @@ class LiveInstrumentControllerTest {
     @Test
     fun expiredPendingInstrument(vertx: Vertx, testContext: VertxTestContext) {
         vertx.eventBus().consumer<Any>(ProbeAddress.LIVE_BREAKPOINT_REMOTE.address) {
-            println(it)
+            //ignore
         }
 
         val instrumentController = LiveInstrumentController(vertx)
