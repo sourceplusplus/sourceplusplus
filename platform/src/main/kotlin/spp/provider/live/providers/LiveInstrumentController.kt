@@ -21,6 +21,7 @@ import io.vertx.core.json.Json
 import io.vertx.core.json.JsonObject
 import io.vertx.kotlin.core.json.get
 import io.vertx.kotlin.coroutines.await
+import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import org.slf4j.LoggerFactory
 import spp.protocol.platform.PlatformAddress
@@ -183,6 +184,7 @@ class LiveInstrumentController(private val vertx: Vertx) {
                 //publish remove command to all probes
                 removeLiveBreakpoint(
                     instrumentRemoval.selfId,
+                    Instant.fromEpochMilliseconds(bpData.getLong("occurredAt")),
                     instrumentRemoval.instrument as LiveBreakpoint,
                     it.body().getString("cause")
                 )
@@ -406,7 +408,7 @@ class LiveInstrumentController(private val vertx: Vertx) {
         return Future.succeededFuture(liveLog)
     }
 
-    private fun removeLiveBreakpoint(selfId: String, breakpoint: LiveBreakpoint, cause: String?) {
+    private fun removeLiveBreakpoint(selfId: String, occurredAt: Instant, breakpoint: LiveBreakpoint, cause: String?) {
         log.debug("Removing live breakpoint: ${breakpoint.id}")
         val devBreakpoint = DeveloperInstrument(selfId, breakpoint)
         liveInstruments.remove(devBreakpoint)
@@ -434,7 +436,7 @@ class LiveInstrumentController(private val vertx: Vertx) {
                     LiveInstrumentEvent(
                         LiveInstrumentEventType.BREAKPOINT_REMOVED,
                         //todo: could send whole breakpoint instead of just id
-                        Json.encode(LiveBreakpointRemoved(breakpoint.id!!, jvmCause))
+                        Json.encode(LiveBreakpointRemoved(breakpoint.id!!, occurredAt, jvmCause))
                     )
                 )
             )
@@ -494,7 +496,9 @@ class LiveInstrumentController(private val vertx: Vertx) {
         return if (instrumentRemoval != null) {
             //publish remove command to all probes
             when (instrumentRemoval.instrument) {
-                is LiveBreakpoint -> removeLiveBreakpoint(selfId, instrumentRemoval.instrument, null)
+                is LiveBreakpoint -> removeLiveBreakpoint(
+                    selfId, Clock.System.now(), instrumentRemoval.instrument, null
+                )
                 is LiveLog -> removeLiveLog(selfId, instrumentRemoval.instrument, null)
                 else -> TODO()
             }
