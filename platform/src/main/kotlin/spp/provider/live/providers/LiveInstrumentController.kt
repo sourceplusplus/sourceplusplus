@@ -34,6 +34,7 @@ import spp.protocol.probe.command.LiveInstrumentContext
 import spp.protocol.processor.ProcessorAddress
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.TimeUnit
 
 class LiveInstrumentController(private val vertx: Vertx) {
 
@@ -129,6 +130,19 @@ class LiveInstrumentController(private val vertx: Vertx) {
     private val waitingApply = ConcurrentHashMap<String, Handler<AsyncResult<DeveloperInstrument>>>()
 
     init {
+        vertx.setPeriodic(TimeUnit.SECONDS.toMillis(1)) {
+            if (liveInstruments.isNotEmpty()) {
+                liveInstruments.forEach {
+                    if (it.instrument.pending
+                        && it.instrument.expiresAt != null
+                        && it.instrument.expiresAt!! <= System.currentTimeMillis()
+                    ) {
+                        removeLiveInstrument("system", it)
+                    }
+                }
+            }
+        }
+
         //send active instruments on probe connection
         vertx.eventBus().consumer<JsonObject>(ProbeAddress.REMOTE_REGISTERED.address) {
             //todo: impl batch instrument add
@@ -494,19 +508,29 @@ class LiveInstrumentController(private val vertx: Vertx) {
         if (log.isTraceEnabled) log.trace("Removing live instrument: $instrumentId")
         val instrumentRemoval = liveInstruments.find { it.instrument.id == instrumentId }
         return if (instrumentRemoval != null) {
-            //publish remove command to all probes
-            when (instrumentRemoval.instrument) {
-                is LiveBreakpoint -> removeLiveBreakpoint(
-                    selfId, Clock.System.now(), instrumentRemoval.instrument, null
-                )
-                is LiveLog -> removeLiveLog(selfId, instrumentRemoval.instrument, null)
-                else -> TODO()
-            }
-
-            Future.succeededFuture(instrumentRemoval.instrument)
+            removeLiveInstrument(selfId, instrumentRemoval)
         } else {
             Future.succeededFuture()
         }
+    }
+
+    fun removeLiveInstrument(selfId: String, instrumentRemoval: DeveloperInstrument): AsyncResult<LiveInstrument?> {
+        if (instrumentRemoval.instrument.id == null) {
+            //unpublished instrument; just remove from platform
+            liveInstruments.remove(instrumentRemoval)
+            return Future.succeededFuture(instrumentRemoval.instrument)
+        }
+
+        //publish remove command to all probes
+        when (instrumentRemoval.instrument) {
+            is LiveBreakpoint -> removeLiveBreakpoint(
+                selfId, Clock.System.now(), instrumentRemoval.instrument, null
+            )
+            is LiveLog -> removeLiveLog(selfId, instrumentRemoval.instrument, null)
+            else -> TODO()
+        }
+
+        return Future.succeededFuture(instrumentRemoval.instrument)
     }
 
     fun removeBreakpoints(selfId: String, location: LiveSourceLocation): AsyncResult<List<LiveInstrument>> {
