@@ -214,6 +214,7 @@ public class LiveBreakpointService {
         if (breakpointEventConsumer != null) {
             Map<String, Object> map = new HashMap<>();
             map.put("breakpoint", breakpoint.toJson());
+            map.put("occurredAt", System.currentTimeMillis());
             if (ex != null) {
                 map.put("cause", ThrowableTransformer.INSTANCE.convert2String(ex, 4000));
             }
