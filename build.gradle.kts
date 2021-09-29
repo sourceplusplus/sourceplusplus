@@ -60,6 +60,7 @@ subprojects {
         withType<io.gitlab.arturbosch.detekt.Detekt> {
             parallel = true
             buildUponDefaultConfig = true
+            setSource(files("config/detekt/detekt.yml"))
         }
 
         withType<JavaCompile> {
