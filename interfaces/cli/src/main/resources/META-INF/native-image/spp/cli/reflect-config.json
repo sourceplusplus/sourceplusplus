@@ -863,77 +863,6 @@
     "allPublicClasses" : true
   },
   {
-    "name": "com.sourceplusplus.protocol.artifact.debugger.HindsightBreakpoint",
-    "fields":[
-      {"name":"location", "allowWrite":true},
-      {"name":"condition", "allowWrite":true},
-      {"name":"expiresAt", "allowWrite":true},
-      {"name":"hitLimit", "allowWrite":true},
-      {"name":"id", "allowWrite":true}
-    ],
-    "allPublicFields": true,
-    "allDeclaredFields": true,
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true,
-    "allDeclaredClasses" : true,
-    "allPublicClasses" : true
-  },
-  {
-    "name": "com.sourceplusplus.protocol.artifact.debugger.SourceLocation",
-    "fields":[
-      {"name":"source", "allowWrite":true},
-      {"name":"line", "allowWrite":true},
-      {"name":"commitId", "allowWrite":true},
-      {"name":"fileChecksum", "allowWrite":true}
-    ],
-    "allPublicFields": true,
-    "allDeclaredFields": true,
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true,
-    "allDeclaredClasses" : true,
-    "allPublicClasses" : true
-  },
-  {
-    "name": "com.sourceplusplus.protocol.artifact.debugger.SourceLocation[]",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true,
-    "allDeclaredClasses" : true,
-    "allPublicClasses" : true
-  },
-  {
-    "name": "com.sourceplusplus.protocol.artifact.debugger.HindsightBreakpoint[]",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true,
-    "allDeclaredClasses" : true,
-    "allPublicClasses" : true
-  },
-  {
-    "name": "com.sourceplusplus.protocol.artifact.debugger.HindsightBreakpoint$Companion[]",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true,
-    "allDeclaredClasses" : true,
-    "allPublicClasses" : true
-  },
-  {
-    "name": "com.sourceplusplus.protocol.artifact.debugger.SourceLocation$Companion[]",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true,
-    "allDeclaredClasses" : true,
-    "allPublicClasses" : true
-  },
-  {
     "name": "spp.protocol.probe.status.ProbeConnection",
     "allDeclaredConstructors" : true,
     "allPublicConstructors" : true,
@@ -978,45 +907,6 @@
     "allPublicClasses" : true
   },
   {
-    "name": "com.sourceplusplus.protocol.artifact.debugger.event.BreakpointEvent",
-    "fields":[
-      {"name":"eventType", "allowWrite":true},
-      {"name":"data", "allowWrite":true}
-    ],
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true,
-    "allDeclaredClasses" : true,
-    "allPublicClasses" : true
-  },
-  {
-    "name": "com.sourceplusplus.protocol.artifact.debugger.event.BreakpointEvent[]",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true,
-    "allDeclaredClasses" : true,
-    "allPublicClasses" : true
-  },
-  {
-    "name": "com.sourceplusplus.protocol.artifact.debugger.event.BreakpointHit",
-    "fields":[
-      {"name":"breakpointId", "allowWrite":true},
-      {"name":"traceId", "allowWrite":true},
-      {"name":"occurredAt", "allowWrite":true},
-      {"name":"host", "allowWrite":true},
-      {"name":"application", "allowWrite":true},
-      {"name":"stackTrace", "allowWrite":true}
-    ],
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true,
-    "allDeclaredClasses" : true,
-    "allPublicClasses" : true
-  },
-  {
     "name": "java.util.HashSet",
     "methods": [
       { "name": "<init>", "parameterTypes": [] }
@@ -1033,37 +923,6 @@
   },
   {
     "name": "com.sourceplusplus.protocol.artifact.exception.JvmStackTrace[]",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true,
-    "allDeclaredClasses" : true,
-    "allPublicClasses" : true
-  },
-  {
-    "name": "com.sourceplusplus.protocol.artifact.debugger.event.BreakpointRemoved",
-    "fields":[
-      {"name":"breakpointId", "allowWrite":true},
-      {"name":"cause", "allowWrite":true}
-    ],
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true,
-    "allDeclaredClasses" : true,
-    "allPublicClasses" : true
-  },
-  {
-    "name": "com.sourceplusplus.protocol.artifact.debugger.event.BreakpointRemoved[]",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true,
-    "allDeclaredClasses" : true,
-    "allPublicClasses" : true
-  },
-  {
-    "name": "com.sourceplusplus.protocol.artifact.debugger.event.BreakpointHit[]",
     "allDeclaredConstructors" : true,
     "allPublicConstructors" : true,
     "allDeclaredMethods" : true,
@@ -1101,30 +960,6 @@
       {"name":"method", "allowWrite":true},
       {"name":"source", "allowWrite":true},
       {"name":"variables", "allowWrite":true}
-    ],
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true,
-    "allDeclaredClasses" : true,
-    "allPublicClasses" : true
-  },
-  {
-    "name": "com.sourceplusplus.protocol.artifact.debugger.TraceVariable[]",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true,
-    "allDeclaredClasses" : true,
-    "allPublicClasses" : true
-  },
-  {
-    "name": "com.sourceplusplus.protocol.artifact.debugger.TraceVariable",
-    "fields":[
-      {"name":"name", "allowWrite":true},
-      {"name":"value", "allowWrite":true},
-      {"name":"lineNumber", "allowWrite":true},
-      {"name":"scope", "allowWrite":true}
     ],
     "allDeclaredConstructors" : true,
     "allPublicConstructors" : true,
