@@ -9,7 +9,7 @@ services:
       - "5455:5455"
     build:
       context: .
-      dockerfile: Dockerfile-spp-platform
+      dockerfile: Dockerfile-spp-platform-debian
     depends_on:
       - redis
     links:

@@ -21,6 +21,7 @@ import io.vertx.core.json.Json
 import io.vertx.core.json.JsonObject
 import io.vertx.kotlin.core.json.get
 import io.vertx.kotlin.coroutines.await
+import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import org.slf4j.LoggerFactory
 import spp.protocol.platform.PlatformAddress
@@ -33,6 +34,7 @@ import spp.protocol.probe.command.LiveInstrumentContext
 import spp.protocol.processor.ProcessorAddress
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.TimeUnit
 
 class LiveInstrumentController(private val vertx: Vertx) {
 
@@ -128,6 +130,19 @@ class LiveInstrumentController(private val vertx: Vertx) {
     private val waitingApply = ConcurrentHashMap<String, Handler<AsyncResult<DeveloperInstrument>>>()
 
     init {
+        vertx.setPeriodic(TimeUnit.SECONDS.toMillis(1)) {
+            if (liveInstruments.isNotEmpty()) {
+                liveInstruments.forEach {
+                    if (it.instrument.pending
+                        && it.instrument.expiresAt != null
+                        && it.instrument.expiresAt!! <= System.currentTimeMillis()
+                    ) {
+                        removeLiveInstrument("system", it)
+                    }
+                }
+            }
+        }
+
         //send active instruments on probe connection
         vertx.eventBus().consumer<JsonObject>(ProbeAddress.REMOTE_REGISTERED.address) {
             //todo: impl batch instrument add
@@ -180,9 +195,10 @@ class LiveInstrumentController(private val vertx: Vertx) {
 
             val instrumentRemoval = liveInstruments.find { find -> find.instrument.id == bpData.getString("id") }
             if (instrumentRemoval != null) {
-                //publish remove command to all probes
+                //publish remove command to all probes & markers
                 removeLiveBreakpoint(
                     instrumentRemoval.selfId,
+                    Instant.fromEpochMilliseconds(it.body().getLong("occurredAt")),
                     instrumentRemoval.instrument as LiveBreakpoint,
                     it.body().getString("cause")
                 )
@@ -238,9 +254,10 @@ class LiveInstrumentController(private val vertx: Vertx) {
 
             val instrumentRemoval = liveInstruments.find { find -> find.instrument.id == logData.getString("id") }
             if (instrumentRemoval != null) {
-                //publish remove command to all probes
+                //publish remove command to all probes & markers
                 removeLiveLog(
                     instrumentRemoval.selfId,
+                    Instant.fromEpochMilliseconds(it.body().getLong("occurredAt")),
                     instrumentRemoval.instrument as LiveLog,
                     it.body().getString("cause")
                 )
@@ -406,7 +423,7 @@ class LiveInstrumentController(private val vertx: Vertx) {
         return Future.succeededFuture(liveLog)
     }
 
-    private fun removeLiveBreakpoint(selfId: String, breakpoint: LiveBreakpoint, cause: String?) {
+    private fun removeLiveBreakpoint(selfId: String, occurredAt: Instant, breakpoint: LiveBreakpoint, cause: String?) {
         log.debug("Removing live breakpoint: ${breakpoint.id}")
         val devBreakpoint = DeveloperInstrument(selfId, breakpoint)
         liveInstruments.remove(devBreakpoint)
@@ -434,7 +451,7 @@ class LiveInstrumentController(private val vertx: Vertx) {
                     LiveInstrumentEvent(
                         LiveInstrumentEventType.BREAKPOINT_REMOVED,
                         //todo: could send whole breakpoint instead of just id
-                        Json.encode(LiveBreakpointRemoved(breakpoint.id!!, jvmCause))
+                        Json.encode(LiveBreakpointRemoved(breakpoint.id!!, occurredAt, jvmCause))
                     )
                 )
             )
@@ -447,7 +464,7 @@ class LiveInstrumentController(private val vertx: Vertx) {
         }
     }
 
-    private fun removeLiveLog(selfId: String, liveLog: LiveLog, cause: String?) {
+    private fun removeLiveLog(selfId: String, occurredAt: Instant, liveLog: LiveLog, cause: String?) {
         log.debug("Removing live log: ${liveLog.id}")
         val devLog = DeveloperInstrument(selfId, liveLog)
         liveInstruments.remove(devLog)
@@ -475,7 +492,7 @@ class LiveInstrumentController(private val vertx: Vertx) {
                     LiveInstrumentEvent(
                         LiveInstrumentEventType.LOG_REMOVED,
                         //todo: could send whole log instead of just id
-                        Json.encode(LiveLogRemoved(liveLog.id!!, jvmCause))
+                        Json.encode(LiveLogRemoved(liveLog.id!!, occurredAt, jvmCause, liveLog))
                     )
                 )
             )
@@ -492,17 +509,27 @@ class LiveInstrumentController(private val vertx: Vertx) {
         if (log.isTraceEnabled) log.trace("Removing live instrument: $instrumentId")
         val instrumentRemoval = liveInstruments.find { it.instrument.id == instrumentId }
         return if (instrumentRemoval != null) {
-            //publish remove command to all probes
-            when (instrumentRemoval.instrument) {
-                is LiveBreakpoint -> removeLiveBreakpoint(selfId, instrumentRemoval.instrument, null)
-                is LiveLog -> removeLiveLog(selfId, instrumentRemoval.instrument, null)
-                else -> TODO()
-            }
-
-            Future.succeededFuture(instrumentRemoval.instrument)
+            removeLiveInstrument(selfId, instrumentRemoval)
         } else {
             Future.succeededFuture()
         }
+    }
+
+    fun removeLiveInstrument(selfId: String, instrumentRemoval: DeveloperInstrument): AsyncResult<LiveInstrument?> {
+        if (instrumentRemoval.instrument.id == null) {
+            //unpublished instrument; just remove from platform
+            liveInstruments.remove(instrumentRemoval)
+            return Future.succeededFuture(instrumentRemoval.instrument)
+        }
+
+        //publish remove command to all probes
+        when (instrumentRemoval.instrument) {
+            is LiveBreakpoint -> removeLiveBreakpoint(selfId, Clock.System.now(), instrumentRemoval.instrument, null)
+            is LiveLog -> removeLiveLog(selfId, Clock.System.now(), instrumentRemoval.instrument, null)
+            else -> TODO()
+        }
+
+        return Future.succeededFuture(instrumentRemoval.instrument)
     }
 
     fun removeBreakpoints(selfId: String, location: LiveSourceLocation): AsyncResult<List<LiveInstrument>> {

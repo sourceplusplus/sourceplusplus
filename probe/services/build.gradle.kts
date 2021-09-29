@@ -3,12 +3,12 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath("com.guardsquare:proguard-gradle:7.1.0")
+        classpath("com.guardsquare:proguard-gradle:7.1.1")
     }
 }
 
 plugins {
-    id("com.github.johnrengelman.shadow") version "6.1.0"
+    id("com.github.johnrengelman.shadow") version "7.0.0"
     id("java")
 }
 
@@ -33,7 +33,7 @@ dependencies {
     implementation(project(":protocol"))
     compileOnly(files("$projectDir/../.ext/skywalking-agent-$skywalkingVersion.jar"))
     implementation("com.google.code.gson:gson:$gsonVersion")
-    implementation("org.springframework:spring-expression:5.3.6")
+    implementation("org.springframework:spring-expression:5.3.10")
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.mockito:mockito-core:3.+")
 }
@@ -45,7 +45,7 @@ tasks {
 
     shadowJar {
         archiveBaseName.set("spp-skywalking-services")
-        archiveClassifier.set("unprotected")
+        archiveClassifier.set("shadow")
         exclude("META-INF/native-image/**")
         exclude("META-INF/vertx/**")
         exclude("module-info.class")
@@ -70,7 +70,7 @@ tasks {
     }
 
     build {
-        if (System.getProperty("build.profile") == "full") {
+        if (System.getProperty("build.profile") == "debian") {
             dependsOn("shadowJar", "proguard")
         } else {
             dependsOn("shadowJar")
@@ -89,13 +89,13 @@ tasks {
     create<proguard.gradle.ProGuardTask>("proguard") {
         dependsOn("shadowJar")
         configuration("proguard.conf")
-        injars(File("$buildDir/libs/spp-skywalking-services-$version-unprotected.jar"))
+        injars(File("$buildDir/libs/spp-skywalking-services-$version-shadow.jar"))
         outjars(File("$buildDir/libs/spp-skywalking-services-$version.jar"))
         libraryjars("${org.gradle.internal.jvm.Jvm.current().javaHome}/jmods")
         libraryjars(files("$projectDir/../.ext/skywalking-agent-$skywalkingVersion.jar"))
 
         doLast {
-            File("$buildDir/libs/spp-skywalking-services-$version-unprotected.jar").delete()
+            File("$buildDir/libs/spp-skywalking-services-$version-shadow.jar").delete()
         }
     }
 }

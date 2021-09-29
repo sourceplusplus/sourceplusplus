@@ -14,5 +14,5 @@ ADD ./spp-platform-*.jar /opt/sourceplusplus
 RUN mkdir /opt/sourceplusplus/probe
 ADD ./spp-probe-*.jar /opt/sourceplusplus/probe
 
-CMD (for f in /opt/sourceplusplus/probe/spp-probe-*-unprotected.jar; do cp -- "$f" "${f%-unprotected.jar}.jar"; done) && java -jar /opt/sourceplusplus/spp-platform-*.jar
-#CMD (for f in /opt/sourceplusplus/probe/spp-probe-*-unprotected.jar; do mv -- "$f" "${f%-unprotected.jar}.jar"; done) && java -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5107 -jar /opt/sourceplusplus/spp-platform-*.jar
+CMD (for f in /opt/sourceplusplus/probe/spp-probe-*-shadow.jar; do cp -- "$f" "${f%-shadow.jar}.jar"; done) && java -jar /opt/sourceplusplus/spp-platform-*.jar
+#CMD (for f in /opt/sourceplusplus/probe/spp-probe-*-shadow.jar; do mv -- "$f" "${f%-shadow.jar}.jar"; done) && java -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5107 -jar /opt/sourceplusplus/spp-platform-*.jar

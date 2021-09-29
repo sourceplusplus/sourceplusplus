@@ -95,6 +95,7 @@ public class LiveLogRemote extends AbstractVerticle {
             } catch (InvocationTargetException ex) {
                 Map<String, Object> map = new HashMap<>();
                 map.put("command", it.body().toString());
+                map.put("occurredAt", System.currentTimeMillis());
                 if (ex.getCause() != null) {
                     map.put("cause", ThrowableTransformer.INSTANCE.convert2String(ex.getCause(), 4000));
                 } else {
@@ -109,6 +110,7 @@ public class LiveLogRemote extends AbstractVerticle {
             } catch (Throwable ex) {
                 Map<String, Object> map = new HashMap<>();
                 map.put("command", it.body().toString());
+                map.put("occurredAt", System.currentTimeMillis());
                 map.put("cause", ThrowableTransformer.INSTANCE.convert2String(ex, 4000));
 
                 FrameHelper.sendFrame(
