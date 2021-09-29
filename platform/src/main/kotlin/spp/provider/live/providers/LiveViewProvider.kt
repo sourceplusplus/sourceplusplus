@@ -166,7 +166,7 @@ class LiveViewProvider(
                 val promise = Promise.promise<LiveViewProcessor>()
                 EventBusService.getProxy(discovery, LiveViewProcessor::class.java, promise)
                 liveViewProcessor = promise.future().await()
-            } catch (throwable: Throwable) {
+            } catch (ignored: Throwable) {
                 log.warn("{} service unavailable", LiveViewProcessor::class.simpleName)
                 //todo: this isn't a remote; either create new exception or connect more directly to elasticsearch
                 handler.handle(

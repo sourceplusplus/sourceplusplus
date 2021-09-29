@@ -72,15 +72,9 @@ class CertsToJksOptionsConverter(private val certificatePath: String, private va
         val keyObject = pemParser.readObject()
         val converter = JcaPEMKeyConverter()
         return when (keyObject) {
-            is PEMKeyPair -> {
-                converter.getKeyPair(keyObject).private
-            }
-            is PrivateKeyInfo -> {
-                converter.getPrivateKey(keyObject)
-            }
-            else -> {
-                throw RuntimeException("unsupported key object ${keyObject.javaClass}")
-            }
+            is PEMKeyPair -> converter.getKeyPair(keyObject).private
+            is PrivateKeyInfo -> converter.getPrivateKey(keyObject)
+            else -> throw IllegalStateException("Unsupported key object: ${keyObject.javaClass}")
         }
     }
 }

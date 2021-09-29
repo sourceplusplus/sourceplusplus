@@ -40,7 +40,7 @@ class LogCountIndicator(private val discovery: ServiceDiscovery) : LogCountIndic
                     val promise = Promise.promise<LoggingProcessor>()
                     EventBusService.getProxy(discovery, LoggingProcessor::class.java, promise)
                     loggingProcessor = promise.future().await()
-                } catch (throwable: Throwable) {
+                } catch (ignored: Throwable) {
                     log.warn("{} service unavailable", LoggingProcessor::class.simpleName)
                     //todo: this isn't a remote; either create new exception or connect more directly to elasticsearch
                     handler.handle(
