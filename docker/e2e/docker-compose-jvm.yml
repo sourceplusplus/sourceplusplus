@@ -10,7 +10,7 @@ services:
       #- "5107:5107"
     build:
       context: .
-      dockerfile: Dockerfile-spp-platform-mini
+      dockerfile: Dockerfile-spp-platform-jvm
     depends_on:
       - redis
     links:

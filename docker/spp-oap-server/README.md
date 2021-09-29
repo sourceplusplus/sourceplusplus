@@ -10,12 +10,14 @@ docker run -d --name=spp-oap-server sourceplusplus/spp-oap-server
 
 ## Environment
 
-SPP_PLATFORM_HOST
-SPP_PLATFORM_PORT
-SPP_DISABLE_TLS
-SPP_PLATFORM_SSL_TRUST_ALL
-SPP_PLATFORM_CERTIFICATE
-SPP_PLATFORM_CERTIFICATE_FILE
+| Name                           | Required | Default Value | 
+|:-------------------------------|----------|---------------|
+| SPP_PLATFORM_HOST              | yes      |               |
+| SPP_PLATFORM_PORT              | yes      |               |
+| SPP_DISABLE_TLS                | no       | false         |
+| SPP_PLATFORM_SSL_TRUST_ALL     | no       | false         |
+| SPP_PLATFORM_CERTIFICATE       | no       |               |
+| SPP_PLATFORM_CERTIFICATE_FILE  | no       |               |
 
 ## How to use the container
 

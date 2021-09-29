@@ -3,7 +3,7 @@ import java.net.URL
 
 plugins {
     id("java")
-    id("com.avast.gradle.docker-compose") version "0.14.3"
+    id("com.avast.gradle.docker-compose") version "0.14.9"
 
     val kotlinVersion = "1.5.0"
     kotlin("jvm") version kotlinVersion apply false
@@ -42,7 +42,7 @@ subprojects {
     apply(plugin = "kotlin-kapt")
 
     dependencies {
-        implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.1")
+        implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2")
         implementation("io.vertx:vertx-core:$vertxVersion")
         implementation("io.vertx:vertx-lang-kotlin:$vertxVersion")
         implementation("io.vertx:vertx-lang-kotlin-coroutines:$vertxVersion")
@@ -52,7 +52,7 @@ subprojects {
         implementation("com.fasterxml.jackson.datatype:jackson-datatype-guava:$jacksonVersion")
         implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
         implementation("io.dropwizard.metrics:metrics-core:4.2.3")
-        implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.2.1")
+        implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.3.0")
     }
 
     apply<io.gitlab.arturbosch.detekt.DetektPlugin>()
@@ -130,7 +130,7 @@ tasks {
 
     register<Copy>("updateDockerFiles") {
         dependsOn(":platform:build", ":probe:control:build", ":processor:build")
-        if (System.getProperty("build.profile") != "mini") {
+        if (System.getProperty("build.profile") == "debian") {
             doFirst {
                 if (!File("platform/build/graal/spp-platform").exists()) {
                     throw GradleException("Missing spp-platform")
@@ -153,17 +153,17 @@ tasks {
                 if (!File("platform/build/libs/spp-platform-$version.jar").exists()) {
                     throw GradleException("Missing spp-platform-$version.jar")
                 }
-                if (!File("probe/control/build/libs/spp-probe-$version-unprotected.jar").exists()) {
-                    throw GradleException("Missing spp-probe-$version-unprotected.jar")
+                if (!File("probe/control/build/libs/spp-probe-$version-shadow.jar").exists()) {
+                    throw GradleException("Missing spp-probe-$version-shadow.jar")
                 }
-                if (!File("processor/build/libs/spp-processor-$version-unprotected.jar").exists()) {
-                    throw GradleException("Missing spp-processor-$version-unprotected.jar")
+                if (!File("processor/build/libs/spp-processor-$version-shadow.jar").exists()) {
+                    throw GradleException("Missing spp-processor-$version-shadow.jar")
                 }
             }
             from(
                 "platform/build/libs/spp-platform-$version.jar",
-                "probe/control/build/libs/spp-probe-$version-unprotected.jar",
-                "processor/build/libs/spp-processor-$version-unprotected.jar"
+                "probe/control/build/libs/spp-probe-$version-shadow.jar",
+                "processor/build/libs/spp-processor-$version-shadow.jar"
             )
             into(File(projectDir, "docker/e2e"))
         }
@@ -171,14 +171,14 @@ tasks {
 }
 
 dockerCompose {
-    dockerComposeWorkingDirectory = "./docker/e2e"
-    removeVolumes = true
+    dockerComposeWorkingDirectory.set(File("./docker/e2e"))
+    removeVolumes.set(true)
 
-    if (System.getProperty("build.profile") != "mini") {
-        useComposeFiles = listOf("docker-compose.yml")
+    if (System.getProperty("build.profile") == "debian") {
+        useComposeFiles.set(listOf("docker-compose-debian.yml"))
     } else {
-        useComposeFiles = listOf("docker-compose-mini.yml")
+        useComposeFiles.set(listOf("docker-compose-jvm.yml"))
     }
     //captureContainersOutput = true
-    captureContainersOutputToFile = File("./build/docker-compose.log")
+    captureContainersOutputToFile.set(File("./build/docker-compose.log"))
 }

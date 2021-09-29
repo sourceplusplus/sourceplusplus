@@ -1,8 +1,8 @@
 import java.util.*
 
 plugins {
-    id("com.github.johnrengelman.shadow") version "6.1.0"
-    id("com.palantir.graal") version "0.7.2"
+    id("com.github.johnrengelman.shadow") version "7.0.0"
+    id("com.palantir.graal") version "0.9.0"
     id("com.apollographql.apollo").version("2.5.9")
 }
 
@@ -50,7 +50,7 @@ dependencies {
 
 //todo: shouldn't need to put in src (github actions needs for some reason)
 tasks.create("createProperties") {
-    if (System.getProperty("build.profile") == "full") {
+    if (System.getProperty("build.profile") == "debian") {
         val buildBuildFile = File(projectDir, "src/main/resources/build.properties")
         if (buildBuildFile.exists()) {
             buildBuildFile.delete()
@@ -91,7 +91,7 @@ tasks.getByName<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("sha
     }
 }
 
-configurations.compile {
+configurations.runtimeClasspath {
     exclude("ch.qos.logback", "logback-classic")
     exclude("org.slf4j", "slf4j-api")
 }

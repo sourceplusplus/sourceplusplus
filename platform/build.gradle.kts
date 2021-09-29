@@ -1,8 +1,8 @@
 import java.util.*
 
 plugins {
-    id("com.github.johnrengelman.shadow") version "6.1.0"
-    id("com.palantir.graal") version "0.7.2"
+    id("com.github.johnrengelman.shadow") version "7.0.0"
+    id("com.palantir.graal") version "0.9.0"
     id("com.apollographql.apollo").version("2.5.9")
 }
 
@@ -17,12 +17,13 @@ val bouncycastleVersion: String by project
 val jupiterVersion: String by project
 val apolloVersion: String by project
 val commonsIoVersion: String by project
+val logbackVersion: String by project
 val auth0JwtVersion: String by project
 
 group = platformGroup
 version = platformVersion
 
-val vertxVersion = "4.0.3" //todo: consolidate with gradle.properties 4.0.2
+val vertxVersion = "4.1.4" //todo: consolidate with gradle.properties 4.0.2
 
 dependencies {
     implementation("org.graalvm.sdk:graal-sdk:$graalVersion")
@@ -37,10 +38,10 @@ dependencies {
     implementation(project(":processor"))
     shadow(project(":processor")) //todo: figure out why extra configurations.add() and this are needed
 
-    implementation("io.github.microutils:kotlin-logging-jvm:2.0.8")
+    implementation("io.github.microutils:kotlin-logging-jvm:2.0.11")
     implementation("org.apache.commons:commons-lang3:$commonsLang3Version")
     implementation("com.github.ajalt.clikt:clikt:$cliktVersion")
-    implementation("ch.qos.logback:logback-classic:1.2.3")
+    implementation("ch.qos.logback:logback-classic:$logbackVersion")
     implementation("io.vertx:vertx-service-discovery:$vertxVersion")
     implementation("io.vertx:vertx-service-proxy:$vertxVersion")
     implementation("io.vertx:vertx-codegen:$vertxVersion")
@@ -70,7 +71,7 @@ dependencies {
 
 //todo: shouldn't need to put in src (github actions needs for some reason)
 tasks.create("createProperties") {
-    if (System.getProperty("build.profile") == "full") {
+    if (System.getProperty("build.profile") == "debian") {
         val buildBuildFile = File(projectDir, "src/main/resources/build.properties")
         if (buildBuildFile.exists()) {
             buildBuildFile.delete()

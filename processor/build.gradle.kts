@@ -3,12 +3,12 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath("com.guardsquare:proguard-gradle:7.1.0")
+        classpath("com.guardsquare:proguard-gradle:7.1.1")
     }
 }
 
 plugins {
-    id("com.github.johnrengelman.shadow") version "6.1.0"
+    id("com.github.johnrengelman.shadow") version "7.0.0"
 }
 
 val platformGroup: String by project
@@ -41,7 +41,7 @@ dependencies {
     compileOnly("org.apache.skywalking:agent-analyzer:$skywalkingVersion") { isTransitive = false }
     compileOnly("org.apache.skywalking:event-analyzer:$skywalkingVersion") { isTransitive = false }
     compileOnly("org.apache.skywalking:meter-analyzer:$skywalkingVersion") { isTransitive = false }
-    compileOnly("org.elasticsearch:elasticsearch:7.5.0")
+    compileOnly("org.elasticsearch:elasticsearch:7.15.0")
     implementation("io.vertx:vertx-service-discovery:$vertxVersion")
 //    implementation("io.vertx:vertx-service-proxy:$vertxVersion")
     implementation(files("../platform/.ext/vertx-service-proxy-4.0.2.jar"))
@@ -49,9 +49,9 @@ dependencies {
     kapt("io.vertx:vertx-codegen:$vertxVersion:processor")
     annotationProcessor("io.vertx:vertx-service-proxy:$vertxVersion")
     implementation("io.vertx:vertx-tcp-eventbus-bridge:$vertxVersion")
-    implementation("org.slf4j:slf4j-api:1.7.30")
+    implementation("org.slf4j:slf4j-api:1.7.32")
     implementation("com.google.code.gson:gson:$gsonVersion")
-    implementation("com.google.guava:guava:28.1-jre")
+    implementation("com.google.guava:guava:31.0.1-jre")
     implementation("io.grpc:grpc-stub:$grpcVersion") {
         exclude(mapOf("group" to "com.google.guava", "module" to "guava"))
     }
@@ -61,12 +61,12 @@ dependencies {
     compileOnly("io.grpc:grpc-protobuf:$grpcVersion") {
         exclude(mapOf("group" to "com.google.guava", "module" to "guava"))
     }
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.1.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.0")
 }
 
 tasks.getByName<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar") {
     archiveBaseName.set("spp-processor")
-    archiveClassifier.set("unprotected")
+    archiveClassifier.set("shadow")
 
     exclude("google/**")
     exclude("kotlin/**/*.kotlin_metadata")
@@ -122,12 +122,12 @@ tasks {
     create<proguard.gradle.ProGuardTask>("proguard") {
         dependsOn("shadowJar")
         configuration("proguard.conf")
-        injars(File("$buildDir/libs/spp-processor-$version-unprotected.jar"))
+        injars(File("$buildDir/libs/spp-processor-$version-shadow.jar"))
         outjars(File("$buildDir/libs/spp-processor-$version.jar"))
         libraryjars("${org.gradle.internal.jvm.Jvm.current().javaHome}/jmods")
 
         doLast {
-            File("$buildDir/libs/spp-processor-$version-unprotected.jar").delete()
+            File("$buildDir/libs/spp-processor-$version-shadow.jar").delete()
         }
     }
 }
