@@ -195,7 +195,7 @@ class LiveInstrumentController(private val vertx: Vertx) {
 
             val instrumentRemoval = liveInstruments.find { find -> find.instrument.id == bpData.getString("id") }
             if (instrumentRemoval != null) {
-                //publish remove command to all probes
+                //publish remove command to all probes & markers
                 removeLiveBreakpoint(
                     instrumentRemoval.selfId,
                     Instant.fromEpochMilliseconds(it.body().getLong("occurredAt")),
@@ -254,7 +254,7 @@ class LiveInstrumentController(private val vertx: Vertx) {
 
             val instrumentRemoval = liveInstruments.find { find -> find.instrument.id == logData.getString("id") }
             if (instrumentRemoval != null) {
-                //publish remove command to all probes
+                //publish remove command to all probes & markers
                 removeLiveLog(
                     instrumentRemoval.selfId,
                     Instant.fromEpochMilliseconds(it.body().getLong("occurredAt")),
@@ -492,7 +492,7 @@ class LiveInstrumentController(private val vertx: Vertx) {
                     LiveInstrumentEvent(
                         LiveInstrumentEventType.LOG_REMOVED,
                         //todo: could send whole log instead of just id
-                        Json.encode(LiveLogRemoved(liveLog.id!!, occurredAt, jvmCause))
+                        Json.encode(LiveLogRemoved(liveLog.id!!, occurredAt, jvmCause, liveLog))
                     )
                 )
             )
