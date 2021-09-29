@@ -215,6 +215,7 @@ public class LiveLogService {
         if (logEventConsumer != null) {
             Map<String, Object> map = new HashMap<>();
             map.put("log", log.toJson());
+            map.put("occurredAt", System.currentTimeMillis());
             if (ex != null) {
                 map.put("cause", ThrowableTransformer.INSTANCE.convert2String(ex, 4000));
             }

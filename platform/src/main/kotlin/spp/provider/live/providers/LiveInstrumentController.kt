@@ -257,6 +257,7 @@ class LiveInstrumentController(private val vertx: Vertx) {
                 //publish remove command to all probes
                 removeLiveLog(
                     instrumentRemoval.selfId,
+                    Instant.fromEpochMilliseconds(it.body().getLong("occurredAt")),
                     instrumentRemoval.instrument as LiveLog,
                     it.body().getString("cause")
                 )
@@ -463,7 +464,7 @@ class LiveInstrumentController(private val vertx: Vertx) {
         }
     }
 
-    private fun removeLiveLog(selfId: String, liveLog: LiveLog, cause: String?) {
+    private fun removeLiveLog(selfId: String, occurredAt: Instant, liveLog: LiveLog, cause: String?) {
         log.debug("Removing live log: ${liveLog.id}")
         val devLog = DeveloperInstrument(selfId, liveLog)
         liveInstruments.remove(devLog)
@@ -491,7 +492,7 @@ class LiveInstrumentController(private val vertx: Vertx) {
                     LiveInstrumentEvent(
                         LiveInstrumentEventType.LOG_REMOVED,
                         //todo: could send whole log instead of just id
-                        Json.encode(LiveLogRemoved(liveLog.id!!, jvmCause))
+                        Json.encode(LiveLogRemoved(liveLog.id!!, occurredAt, jvmCause))
                     )
                 )
             )
@@ -523,10 +524,8 @@ class LiveInstrumentController(private val vertx: Vertx) {
 
         //publish remove command to all probes
         when (instrumentRemoval.instrument) {
-            is LiveBreakpoint -> removeLiveBreakpoint(
-                selfId, Clock.System.now(), instrumentRemoval.instrument, null
-            )
-            is LiveLog -> removeLiveLog(selfId, instrumentRemoval.instrument, null)
+            is LiveBreakpoint -> removeLiveBreakpoint(selfId, Clock.System.now(), instrumentRemoval.instrument, null)
+            is LiveLog -> removeLiveLog(selfId, Clock.System.now(), instrumentRemoval.instrument, null)
             else -> TODO()
         }
 
