@@ -21,11 +21,19 @@ style:
     active: false
   WildcardImport:
     active: false
+  MaxLineLength:
+    excludes: ['**/test/**']
 
 exceptions:
   TooGenericExceptionCaught:
     active: false
+  TooGenericExceptionThrown:
+    excludes: ['**/test/**']
+  PrintStackTrace:
+    excludes: ['**/SourcePlatform.kt', '**/ServiceProvider.kt']
 
 complexity:
   LongParameterList:
     functionThreshold: 8
+  LongMethod:
+    excludes: ['**/test/**']

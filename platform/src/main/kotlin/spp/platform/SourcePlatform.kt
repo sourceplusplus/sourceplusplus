@@ -98,8 +98,8 @@ class SourcePlatform : CoroutineVerticle() {
                     configurator.context = context
                     context.reset()
                     configurator.doConfigure(File("config/logback.xml"))
-                } catch (ignore: ch.qos.logback.core.joran.spi.JoranException) {
-                    ignore.printStackTrace()
+                } catch (ex: ch.qos.logback.core.joran.spi.JoranException) {
+                    ex.printStackTrace()
                 }
                 LoggerFactory.getLogger(SourcePlatform::class.java)
                     .trace("Set logging via {}", File("config/logback.xml"))

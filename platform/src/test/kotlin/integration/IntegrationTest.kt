@@ -41,7 +41,7 @@ import java.util.*
 open class IntegrationTest {
 
     companion object {
-        val SYSTEM_JWT_TOKEN =
+        const val SYSTEM_JWT_TOKEN =
             "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJkZXZlbG9wZXJfaWQiOiJzeXN0ZW0iLCJjcmVhdGVkX2F0IjoxNjIyNDIxMzY0ODY4" +
                     "LCJleHBpcmVzX2F0IjoxNjUzOTU3MzY0ODY4LCJpYXQiOjE2MjI0MjEzNjR9.ZVHtxQkfCF7KM_dyDOgawbwpEAsmnCWB4c8I" +
                     "52svPvVc-SlzkEe0SYrNufNPniYZeM3IF0Gbojl_DSk2KleAz9CLRO3zfegciXKeEEvGjsNOqfQjgU5yZtBWmTimVXq5QoZME" +
@@ -52,7 +52,7 @@ open class IntegrationTest {
                     "MaLW-OIzfrl3kzQNuF80YT-nxmNtp5PrcxehprlPmqSB_dyTHccsO3l63d8y9hiIzfRUgUjTJbktFn5t41ADARMs_0WMpIGZJ" +
                     "yxcVssstt4J1Gj8WUFOdqPsIKigJZMn3yshC5S-KY-7S0dVd0VXgvpPqmpb9Q9Uho"
 
-        val TEST_JWT_TOKEN =
+        const val TEST_JWT_TOKEN =
             "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJkZXZlbG9wZXJfaWQiOiJ0ZXN0IiwiY3JlYXRlZF9hdCI6MTYyMjQyNTY0ODIyNywiZ" +
                     "XhwaXJlc19hdCI6MTY1Mzk2MTY0ODIyNywiaWF0IjoxNjIyNDI1NjQ4fQ.hdWHNVe9No8iFjgKLT4UWp3hm8qCUg-bkymHcSns" +
                     "Vs_Cup2sLvqQOPiWdpHP2yK8BNJVprCG-ZTelDSkqYBC3-o4fhPHzisiYVdLso3sc-cIO-4eJevZ9o1BxUcxMmcESE4EDkIn7P" +
@@ -64,12 +64,12 @@ open class IntegrationTest {
                     "M2NYTigNAY8PqDKn5IiLBNiGkdGgdQNRiiz0vuxPumt268aa6_Kf_EY"
 
         private val log = LoggerFactory.getLogger(IntegrationTest::class.java)
-        val INSTANCE_ID = UUID.randomUUID().toString()
+        private val INSTANCE_ID = UUID.randomUUID().toString()
         val vertx = Vertx.vertx()!!
         lateinit var tcpSocket: NetSocket
         lateinit var discovery: ServiceDiscovery
 
-        val parser = FrameParser { event: AsyncResult<JsonObject> ->
+        private val parser = FrameParser { event: AsyncResult<JsonObject> ->
             if (event.failed()) {
                 log.error("Failed to receive frame", event.cause())
                 return@FrameParser

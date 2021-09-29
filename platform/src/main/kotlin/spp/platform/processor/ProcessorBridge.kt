@@ -15,7 +15,8 @@ import io.vertx.servicediscovery.ServiceDiscoveryOptions
 import org.slf4j.LoggerFactory
 import spp.platform.core.SourceSubscriber
 import spp.protocol.platform.PlatformAddress
-import spp.protocol.processor.ProcessorAddress
+import spp.protocol.platform.PlatformAddress.MARKER_DISCONNECTED
+import spp.protocol.processor.ProcessorAddress.*
 import spp.protocol.processor.status.ProcessorConnection
 
 class ProcessorBridge(private val sppTlsKey: String, private val sppTlsCert: String) : CoroutineVerticle() {
@@ -31,15 +32,15 @@ class ProcessorBridge(private val sppTlsKey: String, private val sppTlsCert: Str
                 .addInboundPermitted(PermittedOptions().setAddress(ServiceDiscoveryOptions.DEFAULT_ANNOUNCE_ADDRESS))
                 .addInboundPermitted(PermittedOptions().setAddress(ServiceDiscoveryOptions.DEFAULT_USAGE_ADDRESS))
                 .addInboundPermitted(PermittedOptions().setAddress(PlatformAddress.PROCESSOR_CONNECTED.address))
-                .addInboundPermitted(PermittedOptions().setAddress(ProcessorAddress.BREAKPOINT_HIT.address))
-                .addInboundPermitted(PermittedOptions().setAddress(ProcessorAddress.LOG_HIT.address))
-                .addInboundPermitted(PermittedOptions().setAddress(ProcessorAddress.VIEW_SUBSCRIPTION_EVENT.address))
+                .addInboundPermitted(PermittedOptions().setAddress(BREAKPOINT_HIT.address))
+                .addInboundPermitted(PermittedOptions().setAddress(LOG_HIT.address))
+                .addInboundPermitted(PermittedOptions().setAddress(VIEW_SUBSCRIPTION_EVENT.address))
                 //to processor
-                .addOutboundPermitted(PermittedOptions().setAddress(PlatformAddress.MARKER_DISCONNECTED.address))
-                .addOutboundPermitted(PermittedOptions().setAddress(ProcessorAddress.LOGGING_PROCESSOR.address))
-                .addOutboundPermitted(PermittedOptions().setAddress(ProcessorAddress.LIVE_VIEW_PROCESSOR.address))
-                .addOutboundPermitted(PermittedOptions().setAddress(ProcessorAddress.LIVE_INSTRUMENT_PROCESSOR.address))
-                .addOutboundPermitted(PermittedOptions().setAddress(ProcessorAddress.SET_LOG_PUBLISH_RATE_LIMIT.address)),
+                .addOutboundPermitted(PermittedOptions().setAddress(MARKER_DISCONNECTED.address))
+                .addOutboundPermitted(PermittedOptions().setAddress(LOGGING_PROCESSOR.address))
+                .addOutboundPermitted(PermittedOptions().setAddress(LIVE_VIEW_PROCESSOR.address))
+                .addOutboundPermitted(PermittedOptions().setAddress(LIVE_INSTRUMENT_PROCESSOR.address))
+                .addOutboundPermitted(PermittedOptions().setAddress(SET_LOG_PUBLISH_RATE_LIMIT.address)),
             NetServerOptions()
                 .removeEnabledSecureTransportProtocol("SSLv2Hello")
                 .removeEnabledSecureTransportProtocol("TLSv1")
