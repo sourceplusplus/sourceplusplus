@@ -1120,41 +1120,6 @@
     "allPublicClasses" : true
   },
   {
-    "name": "spp.protocol.probe.command.ProductionDebuggerCommand$Response",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true,
-    "allDeclaredClasses" : true,
-    "allPublicClasses" : true
-  },
-  {
-    "name": "spp.protocol.probe.command.ProductionDebuggerCommand",
-    "fields":[
-      {"name":"commandType", "allowWrite":true},
-      {"name":"debuggerContext", "allowWrite":true}
-    ],
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true,
-    "allDeclaredClasses" : true,
-    "allPublicClasses" : true
-  },
-  {
-    "name": "spp.protocol.probe.command.DebuggerContext",
-    "fields":[
-      {"name":"breakpoints", "allowWrite":true},
-      {"name":"locations", "allowWrite":true}
-    ],
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true,
-    "allDeclaredClasses" : true,
-    "allPublicClasses" : true
-  },
-  {
     "name": "java.util.HashSet",
     "methods": [
       { "name": "<init>", "parameterTypes": [] }

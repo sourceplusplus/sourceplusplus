@@ -31,7 +31,6 @@ public class LiveLogRemote extends AbstractVerticle {
             BridgeEventType.PUBLISH.name().toLowerCase(), address, new JsonObject(json), SourceProbe.tcpSocket
     );
 
-    private Method getLogs;
     private Method addLog;
     private Method removeLog;
     private static Method isLogEnabled;
@@ -54,7 +53,6 @@ public class LiveLogRemote extends AbstractVerticle {
             serviceClass.getMethod("setLogEventConsumer", BiConsumer.class).invoke(null, EVENT_CONSUMER);
             serviceClass.getMethod("setInstrumentation", Instrumentation.class).invoke(null, instrumentation);
 
-            getLogs = serviceClass.getMethod("getLogs");
             addLog = serviceClass.getMethod("addLog",
                     String.class, String.class, String[].class, String.class, int.class,
                     String.class, int.class, int.class, String.class, Long.class, boolean.class);
@@ -82,9 +80,6 @@ public class LiveLogRemote extends AbstractVerticle {
             try {
                 LiveInstrumentCommand command = Json.decodeValue(it.body().toString(), LiveInstrumentCommand.class);
                 switch (command.getCommandType()) {
-                    case GET_LIVE_INSTRUMENTS:
-                        getLogs();
-                        break;
                     case ADD_LIVE_INSTRUMENT:
                         addLog(command);
                         break;
@@ -120,19 +115,6 @@ public class LiveLogRemote extends AbstractVerticle {
                 );
             }
         });
-    }
-
-    private void getLogs() throws Exception {
-        LiveInstrumentCommand.Response response = new LiveInstrumentCommand.Response(
-                true, null, System.currentTimeMillis(),
-                new LiveInstrumentContext().addLiveInstruments((List<String>) getLogs.invoke(null))
-        );
-
-        FrameHelper.sendFrame(
-                BridgeEventType.PUBLISH.name().toLowerCase(),
-                PlatformAddress.LIVE_LOGS.getAddress(),
-                JsonObject.mapFrom(response), SourceProbe.tcpSocket
-        );
     }
 
     private void addLog(LiveInstrumentCommand command) throws Exception {
