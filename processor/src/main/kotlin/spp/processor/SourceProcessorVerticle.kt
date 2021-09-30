@@ -24,7 +24,6 @@ import spp.processor.logging.impl.LoggingProcessorImpl
 import spp.protocol.processor.ProcessorAddress
 import kotlin.system.exitProcess
 
-@Suppress("unused")
 class SourceProcessorVerticle : CoroutineVerticle() {
 
     companion object {

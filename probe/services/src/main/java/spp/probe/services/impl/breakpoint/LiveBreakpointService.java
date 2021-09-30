@@ -143,11 +143,6 @@ public class LiveBreakpointService {
     }
 
     @SuppressWarnings("unused")
-    public static List<String> getBreakpoints() {
-        return breakpoints.values().stream().map(LiveBreakpoint::toJson).collect(Collectors.toList());
-    }
-
-    @SuppressWarnings("unused")
     public static String addBreakpoint(String id, String source, int line, String condition, int hitLimit,
                                        int throttleLimit, String throttleStep, Long expiresAt, boolean applyImmediately) {
         Location location = new Location(source, line);

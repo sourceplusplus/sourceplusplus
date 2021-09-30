@@ -143,11 +143,6 @@ public class LiveLogService {
     }
 
     @SuppressWarnings("unused")
-    public static List<String> getLogs() {
-        return logs.values().stream().map(LiveLog::toJson).collect(Collectors.toList());
-    }
-
-    @SuppressWarnings("unused")
     public static String addLog(String id, String logFormat, String[] logArguments, String source, int line,
                                 String condition, int hitLimit, int throttleLimit, String throttleStep,
                                 Long expiresAt, boolean applyImmediately) {

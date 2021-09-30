@@ -18,7 +18,6 @@ data class LiveInstrumentCommand @ConstructorProperties("commandType", "context"
     ) : Serializable
 
     enum class CommandType {
-        GET_LIVE_INSTRUMENTS,
         ADD_LIVE_INSTRUMENT,
         REMOVE_LIVE_INSTRUMENT
     }

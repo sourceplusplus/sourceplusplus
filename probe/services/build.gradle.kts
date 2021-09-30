@@ -25,10 +25,6 @@ tasks.getByName<JavaCompile>("compileJava") {
     sourceCompatibility = "1.8"
 }
 
-repositories {
-    jcenter()
-}
-
 dependencies {
     implementation(project(":protocol"))
     compileOnly(files("$projectDir/../.ext/skywalking-agent-$skywalkingVersion.jar"))

@@ -10,14 +10,12 @@ import org.apache.skywalking.apm.agent.core.plugin.WitnessFinder;
 import spp.probe.SourceProbe;
 import spp.protocol.platform.PlatformAddress;
 import spp.protocol.probe.command.LiveInstrumentCommand;
-import spp.protocol.probe.command.LiveInstrumentContext;
 
 import java.lang.instrument.Instrumentation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
 
@@ -30,7 +28,6 @@ public class LiveBreakpointRemote extends AbstractVerticle {
             BridgeEventType.PUBLISH.name().toLowerCase(), address, new JsonObject(json), SourceProbe.tcpSocket
     );
 
-    private Method getBreakpoints;
     private Method addBreakpoint;
     private Method removeBreakpoint;
     private static Method isBreakpointEnabled;
@@ -53,7 +50,6 @@ public class LiveBreakpointRemote extends AbstractVerticle {
             serviceClass.getMethod("setBreakpointEventConsumer", BiConsumer.class).invoke(null, EVENT_CONSUMER);
             serviceClass.getMethod("setInstrumentation", Instrumentation.class).invoke(null, instrumentation);
 
-            getBreakpoints = serviceClass.getMethod("getBreakpoints");
             addBreakpoint = serviceClass.getMethod("addBreakpoint",
                     String.class, String.class, int.class, String.class, int.class,
                     int.class, String.class, Long.class, boolean.class);
@@ -81,9 +77,6 @@ public class LiveBreakpointRemote extends AbstractVerticle {
             try {
                 LiveInstrumentCommand command = Json.decodeValue(it.body().toString(), LiveInstrumentCommand.class);
                 switch (command.getCommandType()) {
-                    case GET_LIVE_INSTRUMENTS:
-                        getBreakpoints();
-                        break;
                     case ADD_LIVE_INSTRUMENT:
                         addBreakpoint(command);
                         break;
@@ -119,19 +112,6 @@ public class LiveBreakpointRemote extends AbstractVerticle {
                 );
             }
         });
-    }
-
-    private void getBreakpoints() throws Exception {
-        LiveInstrumentCommand.Response response = new LiveInstrumentCommand.Response(
-                true, null, System.currentTimeMillis(),
-                new LiveInstrumentContext().addLiveInstruments((List<String>) getBreakpoints.invoke(null))
-        );
-
-        FrameHelper.sendFrame(
-                BridgeEventType.PUBLISH.name().toLowerCase(),
-                PlatformAddress.LIVE_BREAKPOINTS.getAddress(),
-                JsonObject.mapFrom(response), SourceProbe.tcpSocket
-        );
     }
 
     private void addBreakpoint(LiveInstrumentCommand command) throws Exception {
