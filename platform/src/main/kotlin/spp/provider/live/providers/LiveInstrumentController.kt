@@ -287,32 +287,6 @@ class LiveInstrumentController(private val vertx: Vertx) {
         return liveInstruments.map { it.instrument }.filterIsInstance(LiveLog::class.java).filter { !it.pending }
     }
 
-    fun getBreakpoints(): List<LiveBreakpoint> {
-        return liveInstruments.map { it.instrument }.filterIsInstance(LiveBreakpoint::class.java)
-    }
-
-    suspend fun dispatchGetBreakpointsCommand(): AsyncResult<List<LiveInstrument>> {
-        log.debug("Dispatching get live breakpoints command")
-        val productionDebuggerCommand = LiveInstrumentCommand(
-            LiveInstrumentCommand.CommandType.GET_LIVE_INSTRUMENTS,
-            LiveInstrumentContext()
-        )
-
-        val response = Json.decodeValue(
-            vertx.eventBus().request<JsonObject>(
-                LIVE_BREAKPOINT_REMOTE.address,
-                JsonObject.mapFrom(productionDebuggerCommand)
-            ).await().body().toString(), LiveInstrumentCommand.Response::class.java
-        )
-        return if (response.isSuccess) {
-            Future.succeededFuture(
-                response.context.getLiveInstrumentsCast(LiveBreakpoint::class.java)
-            )
-        } else {
-            Future.failedFuture(response.fault)
-        }
-    }
-
     fun addBreakpoint(selfId: String, breakpoint: LiveBreakpoint): AsyncResult<LiveInstrument> {
         log.debug("Adding live breakpoint: $breakpoint")
         val debuggerCommand = LiveInstrumentCommand(
@@ -357,32 +331,6 @@ class LiveInstrumentController(private val vertx: Vertx) {
 
     fun getLiveInstrumentsByIds(ids: List<String>): List<LiveInstrument> {
         return ids.mapNotNull { getLiveInstrumentById(it) }
-    }
-
-    fun getLogs(): List<LiveLog> {
-        return liveInstruments.map { it.instrument }.filterIsInstance(LiveLog::class.java)
-    }
-
-    suspend fun dispatchGetLogsCommand(): AsyncResult<List<LiveInstrument>> {
-        log.debug("Dispatching get live logs command")
-        val liveInstrumentCommand = LiveInstrumentCommand(
-            LiveInstrumentCommand.CommandType.GET_LIVE_INSTRUMENTS,
-            LiveInstrumentContext()
-        )
-
-        val response = Json.decodeValue(
-            vertx.eventBus().request<JsonObject>(
-                LIVE_LOG_REMOTE.address,
-                JsonObject.mapFrom(liveInstrumentCommand)
-            ).await().body().toString(), LiveInstrumentCommand.Response::class.java
-        )
-        return if (response.isSuccess) {
-            Future.succeededFuture(
-                response.context.getLiveInstrumentsCast(LiveLog::class.java)
-            )
-        } else {
-            Future.failedFuture(response.fault)
-        }
     }
 
     fun addLog(selfId: String, liveLog: LiveLog): AsyncResult<LiveInstrument> {
