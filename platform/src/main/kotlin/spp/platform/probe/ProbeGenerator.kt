@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper
 import com.google.common.io.Files
 import io.vertx.core.AbstractVerticle
-import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.GlobalScope
@@ -39,7 +38,7 @@ class ProbeGenerator : AbstractVerticle() {
             try {
                 val fileLocation = generateProbe(config)
                 it.reply(fileLocation)
-            } catch (ex: NoSuchFileException) {
+            } catch (ignored: NoSuchFileException) {
                 val missingPath = File("${config.probeLocation}/spp-probe-${config.probeVersion}.jar").absolutePath
                 log.error("Missing probe: $missingPath")
                 it.fail(404, "Missing probe: $missingPath")

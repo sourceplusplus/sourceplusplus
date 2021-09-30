@@ -9,17 +9,13 @@ import com.sourceplusplus.protocol.service.live.LiveInstrumentService
 import io.vertx.core.*
 import io.vertx.kotlin.coroutines.await
 import io.vertx.kotlin.coroutines.dispatcher
-import io.vertx.servicediscovery.ServiceDiscovery
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
 import spp.platform.util.RequestContext
 import java.util.*
 
-class LiveInstrumentProvider(
-    private val vertx: Vertx,
-    private val discovery: ServiceDiscovery
-) : LiveInstrumentService {
+class LiveInstrumentProvider(private val vertx: Vertx) : LiveInstrumentService {
 
     companion object {
         private val log = LoggerFactory.getLogger(LiveInstrumentProvider::class.java)
