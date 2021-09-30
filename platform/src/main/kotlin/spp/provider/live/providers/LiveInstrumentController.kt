@@ -287,10 +287,6 @@ class LiveInstrumentController(private val vertx: Vertx) {
         return liveInstruments.map { it.instrument }.filterIsInstance(LiveLog::class.java).filter { !it.pending }
     }
 
-    fun getBreakpoints(): List<LiveBreakpoint> {
-        return liveInstruments.map { it.instrument }.filterIsInstance(LiveBreakpoint::class.java)
-    }
-
     fun addBreakpoint(selfId: String, breakpoint: LiveBreakpoint): AsyncResult<LiveInstrument> {
         log.debug("Adding live breakpoint: $breakpoint")
         val debuggerCommand = LiveInstrumentCommand(
