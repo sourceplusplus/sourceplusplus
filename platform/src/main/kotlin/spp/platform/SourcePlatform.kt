@@ -98,8 +98,8 @@ class SourcePlatform : CoroutineVerticle() {
                     configurator.context = context
                     context.reset()
                     configurator.doConfigure(File("config/logback.xml"))
-                } catch (ignore: ch.qos.logback.core.joran.spi.JoranException) {
-                    ignore.printStackTrace()
+                } catch (ex: ch.qos.logback.core.joran.spi.JoranException) {
+                    ex.printStackTrace()
                 }
                 LoggerFactory.getLogger(SourcePlatform::class.java)
                     .trace("Set logging via {}", File("config/logback.xml"))
@@ -421,15 +421,15 @@ class SourcePlatform : CoroutineVerticle() {
 
         //Start platform
         vertx.deployVerticle(
-            ProbeVerticle(jwt, sppTlsKey, sppTlsCert),
+            ProbeVerticle(sppTlsKey, sppTlsCert),
             DeploymentOptions().setConfig(config.getJsonObject("spp-platform").getJsonObject("probe"))
         ).await()
         vertx.deployVerticle(
-            MarkerVerticle(jwt, sppTlsKey, sppTlsCert),
+            MarkerVerticle(sppTlsKey, sppTlsCert),
             DeploymentOptions().setConfig(config.getJsonObject("spp-platform").getJsonObject("marker"))
         ).await()
         vertx.deployVerticle(
-            ProcessorVerticle(jwt, sppTlsKey, sppTlsCert),
+            ProcessorVerticle(sppTlsKey, sppTlsCert),
             DeploymentOptions().setConfig(config.getJsonObject("spp-platform").getJsonObject("processor"))
         ).await()
 

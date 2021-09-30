@@ -6,9 +6,9 @@ import spp.provider.live.providers.LiveInstrumentProvider
 import spp.provider.live.providers.LiveViewProvider
 
 class LiveProviders(
-    private val vertx: Vertx,
-    private val discovery: ServiceDiscovery
+    vertx: Vertx,
+    discovery: ServiceDiscovery
 ) {
-    val liveInstrument: LiveInstrumentProvider = LiveInstrumentProvider(vertx, discovery)
+    val liveInstrument: LiveInstrumentProvider = LiveInstrumentProvider(vertx)
     val liveView: LiveViewProvider = LiveViewProvider(vertx, discovery)
 }

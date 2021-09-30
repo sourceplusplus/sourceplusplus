@@ -1,13 +1,14 @@
 package spp.platform.marker
 
-import com.sourceplusplus.protocol.SourceMarkerServices
+import com.sourceplusplus.protocol.SourceMarkerServices.Provide
+import com.sourceplusplus.protocol.SourceMarkerServices.Status
+import com.sourceplusplus.protocol.SourceMarkerServices.Utilize
 import com.sourceplusplus.protocol.status.MarkerConnection
 import io.vertx.core.buffer.Buffer
 import io.vertx.core.http.ClientAuth
 import io.vertx.core.json.Json
 import io.vertx.core.net.NetServerOptions
 import io.vertx.core.net.PemKeyCertOptions
-import io.vertx.ext.auth.jwt.JWTAuth
 import io.vertx.ext.bridge.BridgeEventType
 import io.vertx.ext.bridge.BridgeOptions
 import io.vertx.ext.bridge.PermittedOptions
@@ -22,7 +23,6 @@ import spp.platform.core.SourceSubscriber
 import spp.protocol.platform.PlatformAddress
 
 class MarkerBridge(
-    private val jwtAuth: JWTAuth,
     private val sppTlsKey: String,
     private val sppTlsCert: String
 ) : CoroutineVerticle() {
@@ -38,15 +38,15 @@ class MarkerBridge(
             BridgeOptions()
                 //from marker
                 .addInboundPermitted(PermittedOptions().setAddress("get-records")) //todo: name like others
-                .addInboundPermitted(PermittedOptions().setAddress(SourceMarkerServices.Status.MARKER_CONNECTED))
-                .addInboundPermitted(PermittedOptions().setAddress(SourceMarkerServices.Utilize.LIVE_VIEW))
-                .addInboundPermitted(PermittedOptions().setAddress(SourceMarkerServices.Utilize.LIVE_INSTRUMENT))
-                .addInboundPermitted(PermittedOptions().setAddress(SourceMarkerServices.Utilize.LOG_COUNT_INDICATOR))
+                .addInboundPermitted(PermittedOptions().setAddress(Status.MARKER_CONNECTED))
+                .addInboundPermitted(PermittedOptions().setAddress(Utilize.LIVE_VIEW))
+                .addInboundPermitted(PermittedOptions().setAddress(Utilize.LIVE_INSTRUMENT))
+                .addInboundPermitted(PermittedOptions().setAddress(Utilize.LOG_COUNT_INDICATOR))
                 //to marker
-                .addOutboundPermitted(PermittedOptions().setAddress(SourceMarkerServices.Provide.LIVE_INSTRUMENT_SUBSCRIBER))
-                .addOutboundPermitted(PermittedOptions().setAddress(SourceMarkerServices.Provide.LIVE_VIEW_SUBSCRIBER))
+                .addOutboundPermitted(PermittedOptions().setAddress(Provide.LIVE_INSTRUMENT_SUBSCRIBER))
+                .addOutboundPermitted(PermittedOptions().setAddress(Provide.LIVE_VIEW_SUBSCRIBER))
                 .addOutboundPermitted(
-                    PermittedOptions().setAddressRegex(SourceMarkerServices.Provide.LIVE_VIEW_SUBSCRIBER + "\\..+")
+                    PermittedOptions().setAddressRegex(Provide.LIVE_VIEW_SUBSCRIBER + "\\..+")
                 ),
             NetServerOptions()
                 .removeEnabledSecureTransportProtocol("SSLv2Hello")
@@ -60,7 +60,7 @@ class MarkerBridge(
                 )
         ) {
             if (it.type() == BridgeEventType.SEND) {
-                if (it.rawMessage.getString("address") == SourceMarkerServices.Status.MARKER_CONNECTED) {
+                if (it.rawMessage.getString("address") == Status.MARKER_CONNECTED) {
                     GlobalScope.launch(vertx.dispatcher()) {
                         val conn = Json.decodeValue(
                             it.rawMessage.getJsonObject("body").toString(), MarkerConnection::class.java
