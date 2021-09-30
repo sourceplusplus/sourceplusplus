@@ -9,7 +9,6 @@ import io.vertx.core.http.ClientAuth
 import io.vertx.core.json.Json
 import io.vertx.core.net.NetServerOptions
 import io.vertx.core.net.PemKeyCertOptions
-import io.vertx.ext.auth.jwt.JWTAuth
 import io.vertx.ext.bridge.BridgeEventType
 import io.vertx.ext.bridge.BridgeOptions
 import io.vertx.ext.bridge.PermittedOptions
@@ -24,7 +23,6 @@ import spp.platform.core.SourceSubscriber
 import spp.protocol.platform.PlatformAddress
 
 class MarkerBridge(
-    private val jwtAuth: JWTAuth,
     private val sppTlsKey: String,
     private val sppTlsCert: String
 ) : CoroutineVerticle() {
