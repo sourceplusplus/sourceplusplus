@@ -421,15 +421,15 @@ class SourcePlatform : CoroutineVerticle() {
 
         //Start platform
         vertx.deployVerticle(
-            ProbeVerticle(jwt, sppTlsKey, sppTlsCert),
+            ProbeVerticle(sppTlsKey, sppTlsCert),
             DeploymentOptions().setConfig(config.getJsonObject("spp-platform").getJsonObject("probe"))
         ).await()
         vertx.deployVerticle(
-            MarkerVerticle(jwt, sppTlsKey, sppTlsCert),
+            MarkerVerticle(sppTlsKey, sppTlsCert),
             DeploymentOptions().setConfig(config.getJsonObject("spp-platform").getJsonObject("marker"))
         ).await()
         vertx.deployVerticle(
-            ProcessorVerticle(jwt, sppTlsKey, sppTlsCert),
+            ProcessorVerticle(sppTlsKey, sppTlsCert),
             DeploymentOptions().setConfig(config.getJsonObject("spp-platform").getJsonObject("processor"))
         ).await()
 

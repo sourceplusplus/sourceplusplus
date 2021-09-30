@@ -1,12 +1,10 @@
 package spp.platform.processor
 
 import io.vertx.core.DeploymentOptions
-import io.vertx.ext.auth.jwt.JWTAuth
 import io.vertx.kotlin.coroutines.CoroutineVerticle
 import io.vertx.kotlin.coroutines.await
 
 class ProcessorVerticle(
-    private val jwtAuth: JWTAuth,
     private val sppTlsKey: String,
     private val sppTlsCert: String
 ) : CoroutineVerticle() {
