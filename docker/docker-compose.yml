@@ -11,6 +11,7 @@ services:
     links:
       - redis
     environment:
+      - SPP_REDIS_HOST=redis
       - SPP_CLUSTER_URL=localhost
       - SPP_CLUSTER_NAME=docker
       - SPP_DISABLE_TLS=true
