@@ -2,6 +2,9 @@ name: Debian Build
 
 on:
   pull_request:
+    paths-ignore:
+      - '**.md'
+      - '**.svg'
   push:
     branches:
       - master
