@@ -36,7 +36,7 @@ Powered by [Apache SkyWalking](https://github.com/apache/skywalking), Source++ e
   - [Admin CLI](https://docs.sourceplusplus.com/implementation/tools/clients/cli/admin/) / [Developer CLI](https://docs.sourceplusplus.com/implementation/tools/clients/cli/developer/)
 - Probes
   - [JVM](https://docs.sourceplusplus.com/implementation/tools/probe/general/)
-  - Python (todo)
+  - Python (coming soon)
 
 ## Compiling Project
 
