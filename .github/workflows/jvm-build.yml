@@ -20,6 +20,9 @@ jobs:
       cancel-in-progress: true
 
     steps:
+      - name: Logging
+        run: |
+          echo "${{toJSON(github.event)}}"
       - uses: docker-practice/actions-setup-docker@master
       - uses: actions/checkout@v2
         with:
