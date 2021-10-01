@@ -42,7 +42,7 @@ class ProcessorTracker : CoroutineVerticle() {
             it.reply(true)
 
             log.info(
-                "Processor connection established. Latency: {}ms - Active processors: {}",
+                "Processor connected. Latency: {}ms - Active processors: {}",
                 latency, activeProcessors.size
             )
 

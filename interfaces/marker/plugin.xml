@@ -1,10 +1,10 @@
 <idea-plugin>
-    <version>0.1.1</version> <!-- todo: update automatically-->
+    <version>0.1.2</version> <!-- todo: update automatically-->
     <id>com.sourceplusplus.plugin.intellij</id>
     <name>Source++</name>
     <vendor email="support@sourceplusplus.com" url="https://github.com/sourceplusplus">Source++</vendor>
     <description>Add breakpoints, logs, metrics, and tracing to live production applications</description>
-    <idea-version since-build="202.4357" until-build="203.*"/>
+    <idea-version since-build="202.4357" until-build="213.*"/>
 
     <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.modules.java</depends>
