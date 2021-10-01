@@ -1,3 +1,7 @@
+# 0.1.2 (2021-09-30)
+
+- Increase IntelliJ compatability range
+
 # 0.1.1 (2021-09-30)
 
 - Improved live control bar
