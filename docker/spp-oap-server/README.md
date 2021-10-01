@@ -2,7 +2,7 @@
 
 ## Running the Source++ Processor container
 
-Start your container binding the external port 5445.
+Start your container.
 
 ```
 docker run -d --name=spp-oap-server sourceplusplus/spp-oap-server
