@@ -38,7 +38,7 @@ class MarkerTracker : CoroutineVerticle() {
             it.reply(true)
 
             log.info(
-                "Marker connection established. Latency: {}ms - Active markers: {}",
+                "Marker connected. Latency: {}ms - Active markers: {}",
                 latency, activeMarkers.size
             )
 
