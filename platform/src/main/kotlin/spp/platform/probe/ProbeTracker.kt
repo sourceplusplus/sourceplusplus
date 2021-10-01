@@ -50,7 +50,7 @@ class ProbeTracker : CoroutineVerticle() {
             it.reply(true)
 
             log.info(
-                "Probe connection established. Latency: {}ms - Probes connected: {}",
+                "Probe connected. Latency: {}ms - Probes connected: {}",
                 latency, activeProbes.size
             )
 
