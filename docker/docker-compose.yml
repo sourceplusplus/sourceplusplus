@@ -11,9 +11,10 @@ services:
     links:
       - redis
     environment:
-      - SPP_REDIS_HOST=redis
       - SPP_CLUSTER_URL=localhost
       - SPP_CLUSTER_NAME=docker
+      - SPP_REDIS_HOST=redis
+      - SPP_SKYWALKING_HOST=skywalking-oap
       - SPP_DISABLE_TLS=true
       - SPP_DISABLE_JWT=true
   redis:
