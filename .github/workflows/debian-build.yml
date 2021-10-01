@@ -6,12 +6,14 @@ on:
     branches:
       - master
     paths-ignore:
+      - '**.md'
+      - '**.svg'
       - '.github/workflows/jvm-build.yml'
   workflow_dispatch:
 
 jobs:
   debian-build:
-    if: ${{ !contains(github.event.head_commit.message, '#docs') && !contains(github.event.pull_request.title, '#docs') }}
+    if: ${{ !contains(github.event.pull_request.head.ref, '#docs') }}
 
     runs-on: ubuntu-latest
     timeout-minutes: 45
