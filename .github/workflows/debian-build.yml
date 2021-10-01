@@ -2,15 +2,10 @@ name: Debian Build
 
 on:
   pull_request:
-    paths-ignore:
-      - '**.md'
-      - '**.svg'
   push:
     branches:
       - master
     paths-ignore:
-      - '**.md'
-      - '**.svg'
       - '.github/workflows/jvm-build.yml'
   workflow_dispatch:
 
