@@ -33,10 +33,10 @@ Powered by [Apache SkyWalking](https://github.com/apache/skywalking), Source++ e
 - [Installation guides](https://docs.sourceplusplus.com/installation/)
 - Clients
   - [JetBrains Plugin](https://docs.sourceplusplus.com/implementation/tools/clients/jetbrains-plugin/)
-  - [GraphQL API](https://docs.sourceplusplus.com/implementation/tools/clients/graphql/)
   - [Admin CLI](https://docs.sourceplusplus.com/implementation/tools/clients/cli/admin/) / [Developer CLI](https://docs.sourceplusplus.com/implementation/tools/clients/cli/developer/)
 - Probes
   - [JVM](https://docs.sourceplusplus.com/implementation/tools/probe/general/)
+  - Python (todo)
 
 ## Compiling Project
 
