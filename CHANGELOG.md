@@ -1,3 +1,7 @@
+# 0.1.3 (2021-10-02)
+
+- Fixed live control bar action configuration
+
 # 0.1.2 (2021-09-30)
 
 - Increase IntelliJ compatability range
