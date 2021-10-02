@@ -46,8 +46,8 @@
     </projectListeners>
 
     <actions>
-        <action id="com.sourceplusplus.sourcemarker.command.CommandBarAction"
-                class="com.sourceplusplus.sourcemarker.command.CommandBarAction"
+        <action id="com.sourceplusplus.sourcemarker.command.ControlBarAction"
+                class="com.sourceplusplus.sourcemarker.command.ControlBarAction"
                 text="SourceCommand Action" description="Source command action">
             <keyboard-shortcut first-keystroke="control shift S" keymap="$default"/>
         </action>
