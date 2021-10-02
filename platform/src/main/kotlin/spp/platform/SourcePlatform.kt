@@ -457,6 +457,11 @@ class SourcePlatform : CoroutineVerticle() {
         SourceStorage.installDefaults()
         if (!System.getenv("SPP_SYSTEM_ACCESS_TOKEN").isNullOrBlank()) {
             SourceStorage.setAccessToken("system", System.getenv("SPP_SYSTEM_ACCESS_TOKEN"))
+        } else {
+            val systemAccessToken = config.getJsonObject("spp-platform").getString("access_token")
+            if (systemAccessToken != null) {
+                SourceStorage.setAccessToken("system", systemAccessToken)
+            }
         }
         log.debug("Source++ Platform initialized")
     }
