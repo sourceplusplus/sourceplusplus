@@ -1,5 +1,6 @@
 # 0.1.3 (2021-10-02)
 
+- Ability to set system access token via spp-platform.yml
 - Fixed live control bar action configuration
 
 # 0.1.2 (2021-09-30)

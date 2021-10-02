@@ -15,8 +15,6 @@ services:
       - redis
     links:
       - redis
-    environment:
-      - SPP_SYSTEM_ACCESS_TOKEN=change-me
   redis:
     image: redis:6.2.1
     container_name: redis
