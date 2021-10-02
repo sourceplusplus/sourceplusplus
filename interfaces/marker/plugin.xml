@@ -1,5 +1,5 @@
 <idea-plugin>
-    <version>0.1.2</version> <!-- todo: update automatically-->
+    <version>0.1.3</version> <!-- todo: update automatically-->
     <id>com.sourceplusplus.plugin.intellij</id>
     <name>Source++</name>
     <vendor email="support@sourceplusplus.com" url="https://github.com/sourceplusplus">Source++</vendor>
@@ -46,8 +46,8 @@
     </projectListeners>
 
     <actions>
-        <action id="com.sourceplusplus.sourcemarker.command.CommandBarAction"
-                class="com.sourceplusplus.sourcemarker.command.CommandBarAction"
+        <action id="com.sourceplusplus.sourcemarker.command.ControlBarAction"
+                class="com.sourceplusplus.sourcemarker.command.ControlBarAction"
                 text="SourceCommand Action" description="Source command action">
             <keyboard-shortcut first-keystroke="control shift S" keymap="$default"/>
         </action>
