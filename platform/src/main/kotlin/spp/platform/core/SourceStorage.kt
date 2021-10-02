@@ -103,8 +103,12 @@ object SourceStorage {
         val existingToken = SourcePlatform.redis.get("developers:ids:$id:access_token").await()
         if (existingToken != null) {
             val existingTokenStr = existingToken.toString(StandardCharsets.UTF_8)
-            SourcePlatform.redis.srem(listOf("developers:access_tokens", existingTokenStr)).await()
-            SourcePlatform.redis.del(listOf("developers:access_tokens:$existingToken")).await()
+            if (existingTokenStr.equals(accessToken)) {
+                return //no change in access token; ignore
+            } else {
+                SourcePlatform.redis.srem(listOf("developers:access_tokens", existingTokenStr)).await()
+                SourcePlatform.redis.del(listOf("developers:access_tokens:$existingToken")).await()
+            }
         } else {
             //add developer first
             SourcePlatform.redis.sadd(listOf("developers:ids", id)).await()
