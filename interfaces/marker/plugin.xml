@@ -4,7 +4,7 @@
     <name>Source++</name>
     <vendor email="support@sourceplusplus.com" url="https://github.com/sourceplusplus">Source++</vendor>
     <description>Add breakpoints, logs, metrics, and tracing to live production applications</description>
-    <idea-version since-build="202.4357" until-build="213.*"/>
+    <idea-version since-build="202.4357"/>
 
     <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.modules.java</depends>
