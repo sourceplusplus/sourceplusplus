@@ -467,7 +467,7 @@ class SourcePlatform : CoroutineVerticle() {
     }
 
     private fun doProbeGeneration(route: RoutingContext) {
-        log.info("Starting probe generation")
+        log.debug("Generating signed probe")
         val platformHost = System.getenv("SPP_CLUSTER_URL") ?: "localhost"
         val platformName = System.getenv("SPP_CLUSTER_NAME") ?: "unknown"
         val config = SourceProbeConfig(platformHost, platformName)
@@ -478,8 +478,10 @@ class SourcePlatform : CoroutineVerticle() {
                     route.response()
                         .putHeader("content-disposition", "attachment; filename=${signedProbe.name}")
                         .sendFile(it.result().body())
+                    log.info("Signed probe downloaded")
                 }
             } else {
+                log.error("Failed to generate signed probe", it.cause())
                 val replyEx = it.cause() as ReplyException
                 route.response().setStatusCode(replyEx.failureCode())
                     .end(it.cause().message)
