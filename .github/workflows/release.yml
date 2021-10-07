@@ -22,6 +22,8 @@ jobs:
       - name: Login to DockerHub Registry
         run: echo ${{ secrets.DOCKERHUB_PASSWORD }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
 
+      # Download release artifacts
+
       - name: Download spp-platform (Linux)
         uses: robinraju/release-downloader@v1
         with:
@@ -30,6 +32,17 @@ jobs:
           fileName: spp-platform-${{ env.SPP_PLATFORM_VERSION }}-linux-amd64.tar.gz
           out-file-path: ./docker/spp-platform
           token: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Download Source++ SkyWalking processor
+        uses: robinraju/release-downloader@v1
+        with:
+          repository: sourceplusplus/live-platform
+          tag: v${{ env.SPP_PLATFORM_VERSION }}
+          fileName: spp-processor-${{ env.SPP_PLATFORM_VERSION }}.jar
+          out-file-path: ./docker/spp-oap-server
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # Push spp-platform
 
       - name: Untar spp-platform
         run: cd ./docker/spp-platform && tar -zxvf spp-platform-${{ env.SPP_PLATFORM_VERSION }}-linux-amd64.tar.gz --strip-components=1
@@ -48,14 +61,7 @@ jobs:
           repository: sourceplusplus/spp-platform
           readme-filepath: ./docker/spp-platform/README.md
 
-      - name: Download Source++ SkyWalking processor
-        uses: robinraju/release-downloader@v1
-        with:
-          repository: sourceplusplus/live-platform
-          tag: v${{ env.SPP_PLATFORM_VERSION }}
-          fileName: spp-processor-${{ env.SPP_PLATFORM_VERSION }}.jar
-          out-file-path: ./docker/spp-oap-server
-          token: ${{ secrets.GITHUB_TOKEN }}
+      # Push spp-oap-server
 
       - name: Build spp-oap-server tagged Docker image
         run: cd ./docker/spp-oap-server && docker build . --file Dockerfile --tag sourceplusplus/spp-oap-server:${{ env.SPP_PLATFORM_VERSION }}
