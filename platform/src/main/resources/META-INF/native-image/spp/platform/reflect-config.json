@@ -1620,7 +1620,8 @@
       {"name":"applyImmediately", "allowWrite":true},
       {"name":"applied", "allowWrite":true},
       {"name":"pending", "allowWrite":true},
-      {"name":"throttle", "allowWrite":true}
+      {"name":"throttle", "allowWrite":true},
+      {"name":"meta", "allowWrite":true}
     ],
     "allDeclaredConstructors" : true,
     "allPublicConstructors" : true,
@@ -1652,7 +1653,8 @@
       {"name":"applyImmediately", "allowWrite":true},
       {"name":"applied", "allowWrite":true},
       {"name":"pending", "allowWrite":true},
-      {"name":"throttle", "allowWrite":true}
+      {"name":"throttle", "allowWrite":true},
+      {"name":"meta", "allowWrite":true}
     ],
     "allDeclaredConstructors" : true,
     "allPublicConstructors" : true,
