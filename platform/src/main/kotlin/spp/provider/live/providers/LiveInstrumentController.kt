@@ -20,7 +20,6 @@ import io.vertx.core.eventbus.ReplyFailure
 import io.vertx.core.json.Json
 import io.vertx.core.json.JsonObject
 import io.vertx.kotlin.core.json.get
-import io.vertx.kotlin.coroutines.await
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import org.slf4j.LoggerFactory
@@ -153,13 +152,13 @@ class LiveInstrumentController(private val vertx: Vertx) {
             if (remote == LIVE_BREAKPOINT_REMOTE.address) {
                 log.debug("Live breakpoint remote registered. Sending active live breakpoints")
                 liveInstruments.filter { it.instrument is LiveBreakpoint }.forEach {
-                    addBreakpoint(it.selfId, it.instrument as LiveBreakpoint)
+                    addBreakpoint(it.selfId, it.instrument as LiveBreakpoint, false)
                 }
             }
             if (remote == LIVE_LOG_REMOTE.address) {
                 log.debug("Live log remote registered. Sending active live logs")
                 liveInstruments.filter { it.instrument is LiveLog }.forEach {
-                    addLog(it.selfId, it.instrument as LiveLog)
+                    addLog(it.selfId, it.instrument as LiveLog, false)
                 }
             }
         }
@@ -287,7 +286,9 @@ class LiveInstrumentController(private val vertx: Vertx) {
         return liveInstruments.map { it.instrument }.filterIsInstance(LiveLog::class.java).filter { !it.pending }
     }
 
-    fun addBreakpoint(selfId: String, breakpoint: LiveBreakpoint): AsyncResult<LiveInstrument> {
+    fun addBreakpoint(
+        selfId: String, breakpoint: LiveBreakpoint, alertSubscribers: Boolean = true
+    ): AsyncResult<LiveInstrument> {
         log.debug("Adding live breakpoint: $breakpoint")
         val debuggerCommand = LiveInstrumentCommand(
             LiveInstrumentCommand.CommandType.ADD_LIVE_INSTRUMENT,
@@ -316,12 +317,14 @@ class LiveInstrumentController(private val vertx: Vertx) {
             }
         }
 
-        vertx.eventBus().publish(
-            SourceMarkerServices.Provide.LIVE_INSTRUMENT_SUBSCRIBER,
-            JsonObject.mapFrom(
-                LiveInstrumentEvent(LiveInstrumentEventType.BREAKPOINT_ADDED, Json.encode(breakpoint))
+        if (alertSubscribers) {
+            vertx.eventBus().publish(
+                SourceMarkerServices.Provide.LIVE_INSTRUMENT_SUBSCRIBER,
+                JsonObject.mapFrom(
+                    LiveInstrumentEvent(LiveInstrumentEventType.BREAKPOINT_ADDED, Json.encode(breakpoint))
+                )
             )
-        )
+        }
         return Future.succeededFuture(breakpoint)
     }
 
@@ -333,7 +336,9 @@ class LiveInstrumentController(private val vertx: Vertx) {
         return ids.mapNotNull { getLiveInstrumentById(it) }
     }
 
-    fun addLog(selfId: String, liveLog: LiveLog): AsyncResult<LiveInstrument> {
+    fun addLog(
+        selfId: String, liveLog: LiveLog, alertSubscribers: Boolean = true
+    ): AsyncResult<LiveInstrument> {
         log.debug("Adding live log: $liveLog")
         val logCommand = LiveInstrumentCommand(
             LiveInstrumentCommand.CommandType.ADD_LIVE_INSTRUMENT,
@@ -362,12 +367,14 @@ class LiveInstrumentController(private val vertx: Vertx) {
             }
         }
 
-        vertx.eventBus().publish(
-            SourceMarkerServices.Provide.LIVE_INSTRUMENT_SUBSCRIBER,
-            JsonObject.mapFrom(
-                LiveInstrumentEvent(LiveInstrumentEventType.LOG_ADDED, Json.encode(liveLog))
+        if (alertSubscribers) {
+            vertx.eventBus().publish(
+                SourceMarkerServices.Provide.LIVE_INSTRUMENT_SUBSCRIBER,
+                JsonObject.mapFrom(
+                    LiveInstrumentEvent(LiveInstrumentEventType.LOG_ADDED, Json.encode(liveLog))
+                )
             )
-        )
+        }
         return Future.succeededFuture(liveLog)
     }
 
