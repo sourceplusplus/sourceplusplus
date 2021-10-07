@@ -31,7 +31,7 @@ dependencies {
     implementation("com.google.code.gson:gson:$gsonVersion")
     implementation("org.springframework:spring-expression:5.3.10")
     testImplementation("junit:junit:4.13.2")
-    testImplementation("org.mockito:mockito-core:3.+")
+    testImplementation("org.mockito:mockito-core:4.+")
 }
 
 tasks {
