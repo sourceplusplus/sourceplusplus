@@ -1,5 +1,6 @@
 # 0.1.4 (2021-10-06)
 
+- Added meta storage to live instruments
 - Improved status bar UIs
 - Early refactoring for coming Python support
 
