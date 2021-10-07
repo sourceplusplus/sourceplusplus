@@ -1,6 +1,6 @@
 {
   "plugin_name": "Source++",
-  "plugin_id": "com.sourceplusplus",
+  "plugin_id": "com.sourceplusplus.plugin.intellij",
   "visible_settings": {
     "apache_skywalking": false,
     "service_discovery": true
