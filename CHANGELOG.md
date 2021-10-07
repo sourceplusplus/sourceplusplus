@@ -1,3 +1,8 @@
+# 0.1.6 (2021-10-07)
+
+- Ability to open control bar before/after current line
+- Fixed error report configuration issue
+
 # 0.1.5 (2021-10-07)
 
 - Added meta storage to live instruments

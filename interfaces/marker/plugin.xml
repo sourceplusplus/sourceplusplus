@@ -1,5 +1,5 @@
 <idea-plugin>
-    <version>0.1.5</version> <!-- todo: update automatically-->
+    <version>0.1.6</version> <!-- todo: update automatically-->
     <id>com.sourceplusplus.plugin.intellij</id>
     <name>Source++</name>
     <vendor email="support@sourceplusplus.com" url="https://github.com/sourceplusplus">Source++</vendor>
