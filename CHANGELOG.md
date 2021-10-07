@@ -1,3 +1,9 @@
+# 0.1.4 (2021-10-06)
+
+- Added meta storage to live instruments
+- Improved status bar UIs
+- Early refactoring for coming Python support
+
 # 0.1.3 (2021-10-02)
 
 - Ability to set system access token via spp-platform.yml
