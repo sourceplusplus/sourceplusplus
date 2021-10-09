@@ -887,7 +887,7 @@
     "allPublicClasses" : true
   },
   {
-    "name": "com.sourceplusplus.protocol.artifact.exception.JvmStackTrace[]",
+    "name": "com.sourceplusplus.protocol.artifact.exception.LiveStackTrace[]",
     "allDeclaredConstructors" : true,
     "allPublicConstructors" : true,
     "allDeclaredMethods" : true,
@@ -896,7 +896,7 @@
     "allPublicClasses" : true
   },
   {
-    "name": "com.sourceplusplus.protocol.artifact.exception.JvmStackTrace",
+    "name": "com.sourceplusplus.protocol.artifact.exception.LiveStackTrace",
     "fields":[
       {"name":"exceptionType", "allowWrite":true},
       {"name":"message", "allowWrite":true},
@@ -911,7 +911,7 @@
     "allPublicClasses" : true
   },
   {
-    "name": "com.sourceplusplus.protocol.artifact.exception.JvmStackTraceElement[]",
+    "name": "com.sourceplusplus.protocol.artifact.exception.LiveStackTraceElement[]",
     "allDeclaredConstructors" : true,
     "allPublicConstructors" : true,
     "allDeclaredMethods" : true,
@@ -920,7 +920,7 @@
     "allPublicClasses" : true
   },
   {
-    "name": "com.sourceplusplus.protocol.artifact.exception.JvmStackTraceElement",
+    "name": "com.sourceplusplus.protocol.artifact.exception.LiveStackTraceElement",
     "fields":[
       {"name":"method", "allowWrite":true},
       {"name":"source", "allowWrite":true},
