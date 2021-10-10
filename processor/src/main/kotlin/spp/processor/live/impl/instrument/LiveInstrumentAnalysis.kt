@@ -3,6 +3,8 @@ package spp.processor.live.impl.instrument
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
 import com.google.protobuf.Message
+import com.sourceplusplus.protocol.instrument.LiveSourceLocation
+import io.vertx.core.json.Json
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import org.apache.skywalking.apm.network.language.agent.v3.SegmentObject
@@ -30,8 +32,6 @@ class LiveInstrumentAnalysis(elasticSearch: EsDAO) : AnalysisListenerFactory, Lo
         const val INSTANCE_FIELD = "spp.field:"
         const val STACK_TRACE = "spp.stack-trace:"
         const val BREAKPOINT = "spp.breakpoint:"
-        const val LOCATION_SOURCE = "spp.location-source:"
-        const val LOCATION_LINE = "spp.location-line:"
     }
 
     private var logPublishRateLimit = 1000
@@ -160,13 +160,12 @@ class LiveInstrumentAnalysis(elasticSearch: EsDAO) : AnalysisListenerFactory, Lo
                         stackTraces[it.key.substring(STACK_TRACE.length)] = it.value
                     }
                     it.key.startsWith(BREAKPOINT) -> {
-                        breakpointIds.add(it.key.substring(BREAKPOINT.length))
-                    }
-                    it.key.startsWith(LOCATION_SOURCE) -> {
-                        locationSources[it.key.substring(LOCATION_SOURCE.length)] = it.value
-                    }
-                    it.key.startsWith(LOCATION_LINE) -> {
-                        locationLines[it.key.substring(LOCATION_LINE.length)] = it.value.toInt()
+                        val breakpointId = it.key.substring(BREAKPOINT.length)
+                        breakpointIds.add(breakpointId)
+                        Json.decodeValue(it.value, LiveSourceLocation::class.java).apply {
+                            locationSources[breakpointId] = source
+                            locationLines[breakpointId] = line
+                        }
                     }
                 }
             }
