@@ -175,6 +175,8 @@ class LiveInstrumentController(private val vertx: Vertx) {
                         applied = true,
                         pending = false
                     )
+                    (appliedBp.meta as MutableMap<String, Any>)["applied_at"] = System.currentTimeMillis().toString()
+
                     val devInstrument = DeveloperInstrument(it.selfId, appliedBp)
                     liveInstruments.remove(it)
                     liveInstruments.add(devInstrument)
@@ -212,9 +214,9 @@ class LiveInstrumentController(private val vertx: Vertx) {
             if (instrument != null) {
                 val instrumentMeta = instrument.meta as MutableMap<String, Any>
                 if ((instrumentMeta["hit_count"] as AtomicInteger?)?.incrementAndGet() == 1) {
-                    instrumentMeta["first_hit"] = System.currentTimeMillis().toString()
+                    instrumentMeta["first_hit_at"] = System.currentTimeMillis().toString()
                 }
-                instrumentMeta["last_hit"] = System.currentTimeMillis().toString()
+                instrumentMeta["last_hit_at"] = System.currentTimeMillis().toString()
             }
 
             vertx.eventBus().publish(
@@ -231,9 +233,9 @@ class LiveInstrumentController(private val vertx: Vertx) {
             if (instrument != null) {
                 val instrumentMeta = instrument.meta as MutableMap<String, Any>
                 if ((instrumentMeta["hit_count"] as AtomicInteger?)?.incrementAndGet() == 1) {
-                    instrumentMeta["first_hit"] = System.currentTimeMillis().toString()
+                    instrumentMeta["first_hit_at"] = System.currentTimeMillis().toString()
                 }
-                instrumentMeta["last_hit"] = System.currentTimeMillis().toString()
+                instrumentMeta["last_hit_at"] = System.currentTimeMillis().toString()
             }
 
             vertx.eventBus().publish(
@@ -252,6 +254,8 @@ class LiveInstrumentController(private val vertx: Vertx) {
                         applied = true,
                         pending = false
                     )
+                    (appliedLog.meta as MutableMap<String, Any>)["applied_at"] = System.currentTimeMillis().toString()
+
                     val devInstrument = DeveloperInstrument(it.selfId, appliedLog)
                     liveInstruments.remove(it)
                     liveInstruments.add(devInstrument)
@@ -606,6 +610,6 @@ class LiveInstrumentController(private val vertx: Vertx) {
             return true
         }
 
-        override fun hashCode(): Int = instrument.hashCode()
+        override fun hashCode(): Int = Objects.hash(selfId, instrument)
     }
 }
