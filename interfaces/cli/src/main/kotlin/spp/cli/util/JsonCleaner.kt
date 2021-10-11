@@ -34,7 +34,12 @@ object JsonCleaner {
     private fun cleanJsonArray(jsonArray: JsonArray): JsonArray {
         val cleanJsonArray = JsonArray()
         for (i in 0 until jsonArray.size()) {
-            cleanJsonArray.add(cleanJson(jsonArray.getJsonObject(i)))
+            when (val value = jsonArray.getValue(i)) {
+                is JsonObject -> cleanJsonArray.add(cleanJson(value))
+                is JsonArray -> cleanJsonArray.add(cleanJsonArray(value))
+                is String -> cleanJsonArray.add(value)
+                else -> throw UnsupportedOperationException("Type: " + value.javaClass.simpleName)
+            }
         }
         return cleanJsonArray
     }
