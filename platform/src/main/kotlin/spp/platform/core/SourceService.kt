@@ -946,8 +946,8 @@ object SourceService {
         return completableFuture
     }
 
-    private fun removeLiveInstrument(env: DataFetchingEnvironment): CompletableFuture<LiveInstrument?> {
-        val completableFuture = CompletableFuture<LiveInstrument?>()
+    private fun removeLiveInstrument(env: DataFetchingEnvironment): CompletableFuture<Map<String, Any>?> {
+        val completableFuture = CompletableFuture<Map<String, Any>?>()
         GlobalScope.launch {
             val selfId = if (System.getenv("SPP_DISABLE_JWT") != "true") {
                 val devId = env.getContext<RoutingContextImpl>().user().principal().getString("developer_id")
@@ -962,7 +962,11 @@ object SourceService {
             RequestContext.put("self_id", selfId)
             ServiceProvider.liveProviders.liveInstrument.removeLiveInstrument(id) {
                 if (it.succeeded()) {
-                    completableFuture.complete(it.result())
+                    if (it.result() == null) {
+                        completableFuture.complete(null)
+                    } else {
+                        completableFuture.complete(fixMeta(it.result()!!))
+                    }
                 } else {
                     completableFuture.completeExceptionally(it.cause())
                 }
