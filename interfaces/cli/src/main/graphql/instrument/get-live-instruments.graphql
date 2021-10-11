@@ -19,5 +19,9 @@ query getLiveInstruments{
             logArguments
         }
         type
+        meta {
+            name
+            value
+        }
     }
 }
