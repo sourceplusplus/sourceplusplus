@@ -34,7 +34,6 @@ class MetaTest : IntegrationTest() {
                 testContext.verify {
                     assertNotNull(it.result())
                     val instrument = it.result()!!
-                    assertEquals(2, instrument.meta.size)
                     assertEquals(instrument.meta["key1"], "value1")
                     assertEquals(instrument.meta["key2"], "value2")
                 }
@@ -80,7 +79,6 @@ class MetaTest : IntegrationTest() {
                         testContext.verify {
                             assertEquals(1, it.result().size)
                             val instrument = it.result()[0]
-                            assertEquals(2, instrument.meta.size)
                             assertEquals(instrument.meta["key1"], "value1")
                             assertEquals(instrument.meta["key2"], "value2")
                         }
