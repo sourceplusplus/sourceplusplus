@@ -13,7 +13,7 @@ on:
 
 jobs:
   jvm-build:
-    if: ${{ !contains(github.event.pull_request.head.ref, '#docs') }}
+    if: ${{ !contains(github.event.pull_request.head.ref, '#docs') || !(startsWith(github.event.head_commit.message, 'Merge pull request') && contains(github.event.head_commit.message, '#docs')) }}
 
     runs-on: ubuntu-latest
     timeout-minutes: 15
