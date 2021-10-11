@@ -49,8 +49,8 @@ class LiveInstrumentProvider(private val vertx: Vertx) : LiveInstrumentService {
                             pending = true,
                             applied = false,
                             meta = instrument.meta.toMutableMap().apply {
-                                put("creation_date", Instant.now().toEpochMilli().toString())
-                                put("creator", selfId)
+                                put("created_at", System.currentTimeMillis().toString())
+                                put("created_by", selfId)
                                 put("hit_count", AtomicInteger())
                             }
                         )
@@ -71,8 +71,8 @@ class LiveInstrumentProvider(private val vertx: Vertx) : LiveInstrumentService {
                             pending = true,
                             applied = false,
                             meta = instrument.meta.toMutableMap().apply {
-                                put("creation_date", Instant.now().toEpochMilli().toString())
-                                put("creator", selfId)
+                                put("created_at", System.currentTimeMillis().toString())
+                                put("created_by", selfId)
                                 put("hit_count", AtomicInteger())
                             }
                         )
