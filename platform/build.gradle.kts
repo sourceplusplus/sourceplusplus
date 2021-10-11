@@ -27,7 +27,7 @@ val vertxVersion = "4.1.4" //todo: consolidate with gradle.properties 4.0.2
 
 dependencies {
     implementation("org.graalvm.sdk:graal-sdk:$graalVersion")
-    implementation("com.github.sourceplusplus:sourcemarker:v$sppProtocolVersion") {
+    implementation("com.github.sourceplusplus:sourcemarker:$sppProtocolVersion") {
         exclude(mapOf("group" to "com.github.sourceplusplus.sourcemarker", "module" to "portal-js"))
         exclude(mapOf("group" to "com.github.sourceplusplus.sourcemarker", "module" to "portal-metadata"))
         exclude(mapOf("group" to "com.github.sourceplusplus.sourcemarker", "module" to "protocol-js"))

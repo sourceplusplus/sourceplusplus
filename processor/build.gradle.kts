@@ -23,7 +23,7 @@ group = platformGroup
 version = platformVersion
 
 dependencies {
-    implementation("com.github.sourceplusplus.sourcemarker:protocol-jvm:v$sppProtocolVersion") {
+    implementation("com.github.sourceplusplus.sourcemarker:protocol-jvm:$sppProtocolVersion") {
         isTransitive = false
     }
 

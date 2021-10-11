@@ -26,7 +26,7 @@ dependencies {
     implementation("com.apollographql.apollo:apollo-coroutines-support:$apolloVersion")
     api("com.apollographql.apollo:apollo-api:$apolloVersion")
 
-    implementation("com.github.sourceplusplus:sourcemarker:v$sppProtocolVersion") {
+    implementation("com.github.sourceplusplus:sourcemarker:$sppProtocolVersion") {
         exclude(mapOf("group" to "com.github.sourceplusplus.sourcemarker", "module" to "portal-js"))
         exclude(mapOf("group" to "com.github.sourceplusplus.sourcemarker", "module" to "portal-metadata"))
         exclude(mapOf("group" to "com.github.sourceplusplus.sourcemarker", "module" to "protocol-js"))
