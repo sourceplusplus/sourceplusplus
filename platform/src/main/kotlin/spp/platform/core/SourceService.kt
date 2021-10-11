@@ -470,7 +470,7 @@ object SourceService {
             RequestContext.put("self_id", selfId)
             ServiceProvider.liveProviders.liveInstrument.getLiveLogs {
                 if (it.succeeded()) {
-                    completableFuture.complete(it.result().map { fixMeta(it) })
+                    completableFuture.complete(it.result().map { fixJsonMaps(it) })
                 } else {
                     completableFuture.completeExceptionally(it.cause())
                 }
@@ -494,7 +494,7 @@ object SourceService {
             RequestContext.put("self_id", selfId)
             ServiceProvider.liveProviders.liveInstrument.getLiveBreakpoints {
                 if (it.succeeded()) {
-                    completableFuture.complete(it.result().map { fixMeta(it) })
+                    completableFuture.complete(it.result().map { fixJsonMaps(it) })
                 } else {
                     completableFuture.completeExceptionally(it.cause())
                 }
@@ -518,7 +518,7 @@ object SourceService {
             RequestContext.put("self_id", selfId)
             ServiceProvider.liveProviders.liveInstrument.getLiveInstruments {
                 if (it.succeeded()) {
-                    completableFuture.complete(it.result().map { fixMeta(it) })
+                    completableFuture.complete(it.result().map { fixJsonMaps(it) })
                 } else {
                     completableFuture.completeExceptionally(it.cause())
                 }
@@ -965,7 +965,7 @@ object SourceService {
                     if (it.result() == null) {
                         completableFuture.complete(null)
                     } else {
-                        completableFuture.complete(fixMeta(it.result()!!))
+                        completableFuture.complete(fixJsonMaps(it.result()!!))
                     }
                 } else {
                     completableFuture.completeExceptionally(it.cause())
@@ -995,7 +995,7 @@ object SourceService {
                 LiveSourceLocation(source, line)
             ) {
                 if (it.succeeded()) {
-                    completableFuture.complete(it.result().map { fixMeta(it) })
+                    completableFuture.complete(it.result().map { fixJsonMaps(it) })
                 } else {
                     completableFuture.completeExceptionally(it.cause())
                 }
@@ -1064,12 +1064,6 @@ object SourceService {
                     ThrottleStep.valueOf(throttleOb.getString("step"))
                 )
             } else InstrumentThrottle.DEFAULT
-            val meta = mutableMapOf<String, String>()
-            val metaOb = input.getJsonArray("meta") ?: JsonArray()
-            for (i in 0 until metaOb.size()) {
-                val metaInfoOb = metaOb.getJsonObject(i)
-                meta[metaInfoOb.getString("name")] = metaInfoOb.getString("value")
-            }
 
             RequestContext.put("self_id", selfId)
             ServiceProvider.liveProviders.liveInstrument.addLiveInstrument(
@@ -1080,11 +1074,11 @@ object SourceService {
                     expiresAt = expiresAt,
                     hitLimit = hitLimit ?: 1,
                     throttle = throttle,
-                    meta = meta
+                    meta = toJsonMap(input.getJsonArray("meta"))
                 )
             ) {
                 if (it.succeeded()) {
-                    completableFuture.complete(fixMeta(it.result()))
+                    completableFuture.complete(fixJsonMaps(it.result()))
                 } else {
                     completableFuture.completeExceptionally(it.cause())
                 }
@@ -1125,12 +1119,6 @@ object SourceService {
                     ThrottleStep.valueOf(throttleOb.getString("step"))
                 )
             } else InstrumentThrottle.DEFAULT
-            val meta = mutableMapOf<String, String>()
-            val metaOb = input.getJsonArray("meta") ?: JsonArray()
-            for (i in 0 until metaOb.size()) {
-                val metaInfoOb = metaOb.getJsonObject(i)
-                meta[metaInfoOb.getString("name")] = metaInfoOb.getString("value")
-            }
 
             RequestContext.put("self_id", selfId)
             ServiceProvider.liveProviders.liveInstrument.addLiveInstrument(
@@ -1140,11 +1128,11 @@ object SourceService {
                     expiresAt = expiresAt,
                     hitLimit = hitLimit ?: 1,
                     throttle = throttle,
-                    meta = meta
+                    meta = toJsonMap(input.getJsonArray("meta"))
                 )
             ) {
                 if (it.succeeded()) {
-                    completableFuture.complete(fixMeta(it.result()))
+                    completableFuture.complete(fixJsonMaps(it.result()))
                 } else {
                     completableFuture.completeExceptionally(it.cause())
                 }
@@ -1153,8 +1141,18 @@ object SourceService {
         return completableFuture
     }
 
+    private fun toJsonMap(metaArray: JsonArray?): MutableMap<String, String> {
+        val meta = mutableMapOf<String, String>()
+        val metaOb = metaArray ?: JsonArray()
+        for (i in 0 until metaOb.size()) {
+            val metaInfoOb = metaOb.getJsonObject(i)
+            meta[metaInfoOb.getString("name")] = metaInfoOb.getString("value")
+        }
+        return meta
+    }
+
     @Suppress("UNCHECKED_CAST")
-    private fun fixMeta(liveInstrument: LiveInstrument): Map<String, Any> {
+    private fun fixJsonMaps(liveInstrument: LiveInstrument): Map<String, Any> {
         val rtnMap = (JsonObject.mapFrom(liveInstrument).map as Map<String, Any>).toMutableMap()
         val meta = rtnMap["meta"] as LinkedHashMap<String, String>
         rtnMap["meta"] = meta.map { mapOf("name" to it.key, "value" to it.value) }.toTypedArray()
