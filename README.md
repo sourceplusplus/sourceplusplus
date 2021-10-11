@@ -28,7 +28,7 @@ Powered by [Apache SkyWalking](https://github.com/apache/skywalking), Source++ e
 
 ## Get Started
 
-<!-- - [Get Source++](https://sourceplusplus.com/get/) -->
+<!-- - [Get Source++](https://sourceplusplus.com/get/) test-->
 - [Tutorial app](https://github.com/sourceplusplus/tutorial-java) (Java)
 - [Installation guides](https://docs.sourceplusplus.com/installation/)
 - Clients
