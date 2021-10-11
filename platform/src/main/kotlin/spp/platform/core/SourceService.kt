@@ -12,6 +12,7 @@ import graphql.Scalars
 import graphql.schema.DataFetchingEnvironment
 import graphql.schema.idl.*
 import io.vertx.core.Vertx
+import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import io.vertx.ext.web.impl.RoutingContextImpl
 import kotlinx.coroutines.GlobalScope
@@ -39,7 +40,9 @@ object SourceService {
         val runtimeWiring = RuntimeWiring.newRuntimeWiring()
             .scalar(Scalars.GraphQLLong)
             .type(TypeRuntimeWiring.newTypeWiring("LiveInstrument").typeResolver {
-                if ((it.getObject() as Any) is LiveBreakpoint) {
+                if ((it.getObject() as Any) is LiveBreakpoint ||
+                    (it.getObject() as Map<String, Any>)["type"] == "BREAKPOINT"
+                ) {
                     it.schema.getObjectType("LiveBreakpoint")
                 } else {
                     it.schema.getObjectType("LiveLog")
@@ -1058,7 +1061,7 @@ object SourceService {
                 )
             } else InstrumentThrottle.DEFAULT
             val meta = mutableMapOf<String, String>()
-            val metaOb = input.getJsonArray("meta")
+            val metaOb = input.getJsonArray("meta") ?: JsonArray()
             for (i in 0 until metaOb.size()) {
                 val metaInfoOb = metaOb.getJsonObject(i)
                 meta[metaInfoOb.getString("name")] = metaInfoOb.getString("value")
@@ -1119,7 +1122,7 @@ object SourceService {
                 )
             } else InstrumentThrottle.DEFAULT
             val meta = mutableMapOf<String, String>()
-            val metaOb = input.getJsonArray("meta")
+            val metaOb = input.getJsonArray("meta") ?: JsonArray()
             for (i in 0 until metaOb.size()) {
                 val metaInfoOb = metaOb.getJsonObject(i)
                 meta[metaInfoOb.getString("name")] = metaInfoOb.getString("value")

@@ -10,6 +10,7 @@ import com.sourceplusplus.protocol.instrument.breakpoint.LiveBreakpoint
 import com.sourceplusplus.protocol.instrument.breakpoint.event.LiveBreakpointHit
 import com.sourceplusplus.protocol.instrument.breakpoint.event.LiveBreakpointRemoved
 import com.sourceplusplus.protocol.instrument.log.LiveLog
+import com.sourceplusplus.protocol.instrument.log.event.LiveLogHit
 import com.sourceplusplus.protocol.instrument.log.event.LiveLogRemoved
 import io.vertx.core.AsyncResult
 import io.vertx.core.Future
@@ -34,6 +35,7 @@ import spp.protocol.processor.ProcessorAddress
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicInteger
 
 class LiveInstrumentController(private val vertx: Vertx) {
 
@@ -206,6 +208,15 @@ class LiveInstrumentController(private val vertx: Vertx) {
         vertx.eventBus().consumer<JsonObject>(ProcessorAddress.BREAKPOINT_HIT.address) {
             if (log.isTraceEnabled) log.trace("Live breakpoint hit: {}", it.body())
             val bpHit = transformRawBreakpointHit(it.body())
+            val instrument = getLiveInstrumentById(bpHit.breakpointId)
+            if (instrument != null) {
+                val instrumentMeta = instrument.meta as MutableMap<String, Any>
+                if ((instrumentMeta["hit_count"] as AtomicInteger?)?.incrementAndGet() == 1) {
+                    instrumentMeta["first_hit"] = System.currentTimeMillis().toString()
+                }
+                instrumentMeta["last_hit"] = System.currentTimeMillis().toString()
+            }
+
             vertx.eventBus().publish(
                 SourceMarkerServices.Provide.LIVE_INSTRUMENT_SUBSCRIBER,
                 JsonObject.mapFrom(LiveInstrumentEvent(LiveInstrumentEventType.BREAKPOINT_HIT, Json.encode(bpHit)))
@@ -215,7 +226,16 @@ class LiveInstrumentController(private val vertx: Vertx) {
 
         vertx.eventBus().consumer<JsonObject>(ProcessorAddress.LOG_HIT.address) {
             if (log.isTraceEnabled) log.trace("Live log hit: {}", it.body())
-            //val logHit = Json.decodeValue(it.body().toString(), LiveLogHit::class.java)
+            val logHit = Json.decodeValue(it.body().toString(), LiveLogHit::class.java)
+            val instrument = getLiveInstrumentById(logHit.logId)
+            if (instrument != null) {
+                val instrumentMeta = instrument.meta as MutableMap<String, Any>
+                if ((instrumentMeta["hit_count"] as AtomicInteger?)?.incrementAndGet() == 1) {
+                    instrumentMeta["first_hit"] = System.currentTimeMillis().toString()
+                }
+                instrumentMeta["last_hit"] = System.currentTimeMillis().toString()
+            }
+
             vertx.eventBus().publish(
                 SourceMarkerServices.Provide.LIVE_INSTRUMENT_SUBSCRIBER,
                 JsonObject.mapFrom(LiveInstrumentEvent(LiveInstrumentEventType.LOG_HIT, it.body().toString()))
@@ -496,7 +516,7 @@ class LiveInstrumentController(private val vertx: Vertx) {
         debuggerCommand.context.addLocation(location)
 
         val result = liveInstruments.filter { it.instrument.location == location && it.instrument is LiveBreakpoint }
-        liveInstruments.removeAll(result)
+        liveInstruments.removeAll(result.toSet())
         if (result.isEmpty()) {
             log.info("Could not find live breakpoint(s) at: $location")
         } else {
@@ -522,7 +542,7 @@ class LiveInstrumentController(private val vertx: Vertx) {
         liveInstrumentCommand.context.addLocation(location)
 
         val result = liveInstruments.filter { it.instrument.location == location && it.instrument is LiveLog }
-        liveInstruments.removeAll(result)
+        liveInstruments.removeAll(result.toSet())
         if (result.isEmpty()) {
             log.info("Could not find live log(s) at: $location")
         } else {
