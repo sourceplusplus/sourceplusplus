@@ -17,7 +17,7 @@ object JsonCleaner {
             }
         }
 
-        //clean meta
+        //reformat meta
         if (cleanJson.containsKey("meta") && cleanJson.getValue("meta") is JsonArray) {
             val metaArr = cleanJson.getJsonArray("meta")
             val metaOb = JsonObject()
