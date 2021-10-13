@@ -237,7 +237,7 @@ open class IntegrationTest {
 
                 //send marker connected status
                 val replyAddress = UUID.randomUUID().toString()
-                val pc = MarkerConnection(INSTANCE_ID, System.currentTimeMillis(), "hardwareId")
+                val pc = MarkerConnection(INSTANCE_ID, System.currentTimeMillis())
                 val consumer: MessageConsumer<Boolean> = vertx.eventBus().localConsumer("local.$replyAddress")
 
                 val promise = Promise.promise<Void>()
