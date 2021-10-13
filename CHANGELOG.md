@@ -1,3 +1,10 @@
+# 0.1.7 (2021-10-13)
+
+- Ability to CRUD instrument meta data via CLI/API
+- Added `hit_count`, `created_at`, `created_by`, `first_hit_at`, and `last_hit_at` instrument meta attributes 
+- Ability to move control bar with arrow keys
+- Removed redundant location-source/location-line live breakpoint attributes
+
 # 0.1.6 (2021-10-07)
 
 - Ability to open control bar before/after current line
