@@ -12,5 +12,9 @@ mutation addLiveBreakpoint($input: LiveBreakpointInput!) {
             limit
             step
         }
+        meta {
+            name
+            value
+        }
     }
 }

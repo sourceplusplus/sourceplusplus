@@ -58,6 +58,11 @@ input InstrumentThrottleInput {
     step: ThrottleStep!
 }
 
+type MetaInfo {
+    name: String!
+    value: String!
+}
+
 interface LiveInstrument {
     id: String!
     location: LiveSourceLocation!
@@ -68,6 +73,7 @@ interface LiveInstrument {
     pending: Boolean
     throttle: InstrumentThrottle
     type: LiveInstrumentType
+    meta: [MetaInfo]
 }
 
 type LiveLog implements LiveInstrument {
@@ -82,6 +88,7 @@ type LiveLog implements LiveInstrument {
     pending: Boolean
     throttle: InstrumentThrottle
     type: LiveInstrumentType
+    meta: [MetaInfo]
 }
 
 input LiveLogInput {
@@ -92,6 +99,7 @@ input LiveLogInput {
     expiresAt: Long
     hitLimit: Int
     throttle: InstrumentThrottleInput
+    meta: [MetaInfoInput]
 }
 
 type LiveBreakpoint implements LiveInstrument {
@@ -104,6 +112,7 @@ type LiveBreakpoint implements LiveInstrument {
     pending: Boolean
     throttle: InstrumentThrottle
     type: LiveInstrumentType
+    meta: [MetaInfo]
 }
 
 input LiveBreakpointInput {
@@ -112,6 +121,12 @@ input LiveBreakpointInput {
     expiresAt: Long
     hitLimit: Int
     throttle: InstrumentThrottleInput
+    meta: [MetaInfoInput]
+}
+
+input MetaInfoInput {
+    name: String!
+    value: String!
 }
 
 type LiveSourceLocation {

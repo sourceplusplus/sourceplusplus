@@ -14,5 +14,9 @@ query getLiveBreakpoints{
             limit
             step
         }
+        meta {
+            name
+            value
+        }
     }
 }
