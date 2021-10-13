@@ -62,6 +62,15 @@ tasks {
         archiveFileName.set("jetbrains-$sourceMarkerVersion.jar")
         destinationDirectory.set(File(buildDir, "spp-plugin"))
 
+        doFirst {
+            val patchedPluginXml = File(project(":interfaces:marker").projectDir, "plugin.xml")
+                .copyTo(File(project(":interfaces:marker").projectDir, "build/plugin.xml"))
+            patchedPluginXml.writeText(
+                patchedPluginXml.readText()
+                    .replace("<version></version>", "<version>${project.version}</version>")
+            )
+        }
+
         from(zipTree("build/spp-plugin/SourceMarker/lib/jetbrains-$sourceMarkerVersion.jar")) {
             exclude(
                 "/plugin-configuration.json",
@@ -76,7 +85,7 @@ tasks {
             from(File(project(":interfaces:marker").projectDir, "plugin-configuration.json"))
         }
         into("/META-INF") {
-            from(File(project(":interfaces:marker").projectDir, "plugin.xml"))
+            from(File(project(":interfaces:marker").projectDir, "build/plugin.xml"))
             from(File(project(":interfaces:marker").projectDir, "pluginIcon.svg"))
             from(File(project(":interfaces:marker").projectDir, "pluginIcon_dark.svg"))
         }
