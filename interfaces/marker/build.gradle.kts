@@ -63,7 +63,6 @@ tasks {
         destinationDirectory.set(File(buildDir, "spp-plugin"))
 
         doFirst {
-            File("build").mkdir()
             val patchedPluginXml = File(project(":interfaces:marker").projectDir, "plugin.xml")
                 .copyTo(File(project(":interfaces:marker").projectDir, "build/plugin.xml"))
             patchedPluginXml.writeText(
