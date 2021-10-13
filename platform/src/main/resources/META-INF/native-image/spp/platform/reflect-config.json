@@ -308,6 +308,10 @@
     "name":"com.fasterxml.jackson.databind.ser.Serializers[]"
   },
   {
+    "name":"com.fasterxml.jackson.databind.ser.std.StdJdkSerializers$AtomicIntegerSerializer",
+    "methods":[{"name":"<init>","parameterTypes":[] }]
+  },
+  {
     "name":"com.fasterxml.jackson.databind.type.TypeModifier[]"
   },
   {

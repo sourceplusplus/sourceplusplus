@@ -13,7 +13,9 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
 import spp.platform.util.RequestContext
+import java.time.Instant
 import java.util.*
+import java.util.concurrent.atomic.AtomicInteger
 
 class LiveInstrumentProvider(private val vertx: Vertx) : LiveInstrumentService {
 
@@ -45,7 +47,12 @@ class LiveInstrumentProvider(private val vertx: Vertx) : LiveInstrumentService {
                             instrument
                         }.copy(
                             pending = true,
-                            applied = false
+                            applied = false,
+                            meta = instrument.meta.toMutableMap().apply {
+                                put("created_at", System.currentTimeMillis().toString())
+                                put("created_by", selfId)
+                                put("hit_count", AtomicInteger())
+                            }
                         )
 
                         if (pendingBp.applyImmediately) {
@@ -62,7 +69,12 @@ class LiveInstrumentProvider(private val vertx: Vertx) : LiveInstrumentService {
                             instrument
                         }.copy(
                             pending = true,
-                            applied = false
+                            applied = false,
+                            meta = instrument.meta.toMutableMap().apply {
+                                put("created_at", System.currentTimeMillis().toString())
+                                put("created_by", selfId)
+                                put("hit_count", AtomicInteger())
+                            }
                         )
 
                         if (pendingLog.applyImmediately) {
