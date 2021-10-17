@@ -11,6 +11,7 @@ import kotlinx.coroutines.launch
 import mu.KotlinLogging
 import spp.platform.SourcePlatform
 import spp.protocol.platform.PlatformAddress
+import spp.protocol.platform.client.ActiveProcessor
 import spp.protocol.processor.status.ProcessorConnection
 import java.time.Duration
 import java.time.Instant
@@ -19,11 +20,14 @@ import java.util.concurrent.ConcurrentHashMap
 class ProcessorTracker : CoroutineVerticle() {
 
     private val log = KotlinLogging.logger {}
-
-    //only stores connection time; SourceServiceDiscovery handles registered services
-    private val activeProcessors: MutableMap<String, Instant> = ConcurrentHashMap()
+    private val activeProcessors: MutableMap<String, ActiveProcessor> = ConcurrentHashMap()
 
     override suspend fun start() {
+        vertx.eventBus().consumer<JsonObject>(activeProcessorsAddress) {
+            GlobalScope.launch(vertx.dispatcher()) {
+                it.reply(ArrayList(activeProcessors.values))
+            }
+        }
         vertx.eventBus().consumer<JsonObject>(connectedProcessorsAddress) {
             GlobalScope.launch(vertx.dispatcher()) {
                 it.reply(
@@ -38,7 +42,7 @@ class ProcessorTracker : CoroutineVerticle() {
             val latency = System.currentTimeMillis() - conn.connectionTime
             log.trace { "Establishing connection with processor ${conn.processorId}" }
 
-            activeProcessors[conn.processorId] = Instant.now()
+            activeProcessors[conn.processorId] = ActiveProcessor(conn.processorId, System.currentTimeMillis())
             it.reply(true)
 
             log.info(
@@ -53,7 +57,7 @@ class ProcessorTracker : CoroutineVerticle() {
         }
         vertx.eventBus().consumer<JsonObject>(PlatformAddress.PROCESSOR_DISCONNECTED.address) {
             val conn = Json.decodeValue(it.body().toString(), ProcessorConnection::class.java)
-            val connectedAt = activeProcessors.remove(conn.processorId)!!
+            val connectedAt = Instant.ofEpochMilli(activeProcessors.remove(conn.processorId)!!.connectedAt)
             log.info("Processor disconnected. Connection time: {}", Duration.between(Instant.now(), connectedAt))
 
             GlobalScope.launch(vertx.dispatcher()) {
@@ -71,9 +75,14 @@ class ProcessorTracker : CoroutineVerticle() {
 
     companion object {
         private const val connectedProcessorsAddress = "get-connected-processors"
+        private const val activeProcessorsAddress = "get-active-processors"
 
-        suspend fun getConnectedProcessors(vertx: Vertx): Int {
+        suspend fun getConnectedProcessorCount(vertx: Vertx): Int {
             return vertx.eventBus().request<Int>(connectedProcessorsAddress, null).await().body()
+        }
+
+        suspend fun getActiveProcessors(vertx: Vertx): List<ActiveProcessor> {
+            return vertx.eventBus().request<List<ActiveProcessor>>(activeProcessorsAddress, null).await().body()
         }
     }
 }
