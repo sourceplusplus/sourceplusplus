@@ -5,7 +5,8 @@ import java.beans.ConstructorProperties
 import java.io.Serializable
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class ProbeConnection @ConstructorProperties("probeId", "connectionTime") constructor(
+data class ProbeConnection @ConstructorProperties("probeId", "connectionTime", "meta") constructor(
     var probeId: String,
-    var connectionTime: Long
+    var connectionTime: Long,
+    var meta: MutableMap<String, Any> = mutableMapOf()
 ) : Serializable

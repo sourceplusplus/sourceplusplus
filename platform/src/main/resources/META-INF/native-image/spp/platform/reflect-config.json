@@ -978,11 +978,12 @@
   {
     "name":"sun.security.x509.SubjectKeyIdentifierExtension",
     "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]
-  }
-
-  ,
+  },
   {
     "name": "com.sourceplusplus.protocol.status.MarkerConnection",
+    "methods": [
+      { "name": "<init>", "parameterTypes": [] }
+    ],
     "allDeclaredConstructors": true,
     "allDeclaredMethods": true
   },
@@ -1004,12 +1005,6 @@
     "allPublicFields" : true,
     "allDeclaredMethods" : true,
     "allPublicMethods" : true
-  },
-  {
-    "name": "com.sourceplusplus.protocol.status.MarkerConnection",
-    "methods": [
-      { "name": "<init>", "parameterTypes": [] }
-    ]
   },
   {
     "name": "kotlin.reflect.jvm.internal.ReflectionFactoryImpl",
