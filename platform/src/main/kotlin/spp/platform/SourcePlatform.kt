@@ -14,6 +14,7 @@ import io.vertx.core.Vertx
 import io.vertx.core.VertxOptions
 import io.vertx.core.eventbus.ReplyException
 import io.vertx.core.http.HttpServerOptions
+import io.vertx.core.json.Json
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import io.vertx.core.json.jackson.DatabindCodec
@@ -165,6 +166,7 @@ class SourcePlatform : CoroutineVerticle() {
         DatabindCodec.mapper().registerModule(module)
         ProtocolMarshaller.setupCodecs(vertx)
         vertx.eventBus().registerDefaultCodec(SourceProbeConfig::class.java, ProtocolMessageCodec())
+        vertx.eventBus().registerDefaultCodec(ArrayList::class.java, ProtocolMessageCodec())
 
         val keyFile = File("config/spp-platform.key")
         val certFile = File("config/spp-platform.crt")
@@ -212,19 +214,24 @@ class SourcePlatform : CoroutineVerticle() {
         writer.writeObject(keyPair.private)
         writer.close()
 
-        val jwt = JWTAuth.create(
-            vertx, JWTAuthOptions()
-                .addPubSecKey(
-                    PubSecKeyOptions()
-                        .setAlgorithm("RS256")
-                        .setBuffer(publicKey.toString())
-                )
-                .addPubSecKey(
-                    PubSecKeyOptions()
-                        .setAlgorithm("RS256")
-                        .setBuffer((privateKey.toString()))
-                )
-        )
+        val jwt: JWTAuth?
+        if ("true".equals(System.getenv("SPP_DISABLE_JWT"), true)) {
+            jwt = null
+        } else {
+            jwt = JWTAuth.create(
+                vertx, JWTAuthOptions()
+                    .addPubSecKey(
+                        PubSecKeyOptions()
+                            .setAlgorithm("RS256")
+                            .setBuffer(publicKey.toString())
+                    )
+                    .addPubSecKey(
+                        PubSecKeyOptions()
+                            .setAlgorithm("RS256")
+                            .setBuffer((privateKey.toString()))
+                    )
+            )
+        }
 
         val router = Router.router(vertx)
         router.route().handler(ResponseTimeHandler.create())
@@ -250,7 +257,7 @@ class SourcePlatform : CoroutineVerticle() {
             GlobalScope.launch {
                 val dev = SourceStorage.getDeveloperByAccessToken(token)
                 if (dev != null) {
-                    val jwtToken = jwt.generateToken(
+                    val jwtToken = jwt!!.generateToken(
                         JsonObject()
                             .put("developer_id", dev.id)
                             .put("created_at", java.time.Instant.now().toEpochMilli())
@@ -266,6 +273,7 @@ class SourcePlatform : CoroutineVerticle() {
 
         if (System.getenv("SPP_DISABLE_JWT") != "true") {
             val authHandler = JWTAuthHandler.create(jwt)
+            router.route("/clients").handler(authHandler)
             router.route("/stats").handler(authHandler)
             router.route("/health").handler(authHandler)
             router.route("/api/*").handler(authHandler)
@@ -338,39 +346,8 @@ class SourcePlatform : CoroutineVerticle() {
         addServiceCheck(checks, Utilize.LIVE_INSTRUMENT)
         addServiceCheck(checks, Utilize.LOG_COUNT_INDICATOR)
         router["/health"].handler(HealthCheckHandler.createWithHealthChecks(checks))
-        router["/stats"].handler { ctx ->
-            var selfId = ctx.user()?.principal()?.getString("developer_id")
-            if (selfId == null) {
-                if (System.getenv("SPP_DISABLE_JWT") != "true") {
-                    ctx.response().setStatusCode(500).end("Missing self id")
-                    return@handler
-                } else {
-                    selfId = "system"
-                }
-            }
-            log.info("Get platform stats request. Developer: {}", selfId)
-
-            GlobalScope.launch(vertx.dispatcher()) {
-                val promise = Promise.promise<JsonObject>()
-                RequestContext.put("self_id", selfId)
-                ServiceProvider.liveProviders.liveView.getLiveViewSubscriptionStats(promise)
-                val subStats = try {
-                    promise.future().await()
-                } catch (ex: Throwable) {
-                    log.error("Failed to get live view subscription stats", ex)
-                    ctx.response().setStatusCode(500).end()
-                    return@launch
-                }
-
-                ctx.response().putHeader("Content-Type", "application/json")
-                    .end(
-                        JsonObject()
-                            .put("platform", getPlatformStats())
-                            .put("subscriptions", subStats)
-                            .toString()
-                    )
-            }
-        }
+        router["/stats"].handler(this::getStats)
+        router["/clients"].handler(this::getClients)
 
         log.info("Connecting to storage")
         val sdHost = System.getenv("SPP_REDIS_HOST") ?: config.getJsonObject("redis").getString("host")
@@ -425,7 +402,7 @@ class SourcePlatform : CoroutineVerticle() {
             DeploymentOptions().setConfig(config.getJsonObject("spp-platform").getJsonObject("probe"))
         ).await()
         vertx.deployVerticle(
-            MarkerVerticle(sppTlsKey, sppTlsCert),
+            MarkerVerticle(jwt, sppTlsKey, sppTlsCert),
             DeploymentOptions().setConfig(config.getJsonObject("spp-platform").getJsonObject("marker"))
         ).await()
         vertx.deployVerticle(
@@ -519,11 +496,69 @@ class SourcePlatform : CoroutineVerticle() {
         }
     }
 
+    private fun getClients(ctx: RoutingContext) {
+        var selfId = ctx.user()?.principal()?.getString("developer_id")
+        if (selfId == null) {
+            if (System.getenv("SPP_DISABLE_JWT") != "true") {
+                ctx.response().setStatusCode(500).end("Missing self id")
+                return
+            } else {
+                selfId = "system"
+            }
+        }
+        log.info("Get platform clients request. Developer: {}", selfId)
+
+        GlobalScope.launch(vertx.dispatcher()) {
+            ctx.response().putHeader("Content-Type", "application/json")
+                .end(
+                    JsonObject()
+                        .put("processors", JsonArray(Json.encode(ProcessorTracker.getActiveProcessors(vertx))))
+                        .put("markers", JsonArray(Json.encode(MarkerTracker.getActiveMarkers(vertx))))
+                        .put("probes", JsonArray(Json.encode(ProbeTracker.getActiveProbes(vertx))))
+                        .toString()
+                )
+        }
+    }
+
+    private fun getStats(ctx: RoutingContext) {
+        var selfId = ctx.user()?.principal()?.getString("developer_id")
+        if (selfId == null) {
+            if (System.getenv("SPP_DISABLE_JWT") != "true") {
+                ctx.response().setStatusCode(500).end("Missing self id")
+                return
+            } else {
+                selfId = "system"
+            }
+        }
+        log.info("Get platform stats request. Developer: {}", selfId)
+
+        GlobalScope.launch(vertx.dispatcher()) {
+            val promise = Promise.promise<JsonObject>()
+            RequestContext.put("self_id", selfId)
+            ServiceProvider.liveProviders.liveView.getLiveViewSubscriptionStats(promise)
+            val subStats = try {
+                promise.future().await()
+            } catch (ex: Throwable) {
+                log.error("Failed to get live view subscription stats", ex)
+                ctx.response().setStatusCode(500).end()
+                return@launch
+            }
+
+            ctx.response().putHeader("Content-Type", "application/json")
+                .end(
+                    JsonObject()
+                        .put("platform", getPlatformStats())
+                        .put("subscriptions", subStats)
+                        .toString()
+                )
+        }
+    }
+
     private suspend fun getPlatformStats(): JsonObject {
         return JsonObject()
-            .put("connected-processors", ProcessorTracker.getConnectedProcessors(vertx))
-            .put("connected-markers", MarkerTracker.getConnectedMarkers(vertx))
-            .put("connected-probes", ProbeTracker.getConnectedProbes(vertx))
+            .put("connected-processors", ProcessorTracker.getConnectedProcessorCount(vertx))
+            .put("connected-markers", MarkerTracker.getConnectedMarkerCount(vertx))
+            .put("connected-probes", ProbeTracker.getConnectedProbeCount(vertx))
             .put(
                 "services",
                 JsonObject()
