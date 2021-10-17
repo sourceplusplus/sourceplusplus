@@ -42,7 +42,9 @@ class ProcessorTracker : CoroutineVerticle() {
             val latency = System.currentTimeMillis() - conn.connectionTime
             log.trace { "Establishing connection with processor ${conn.processorId}" }
 
-            activeProcessors[conn.processorId] = ActiveProcessor(conn.processorId, System.currentTimeMillis())
+            activeProcessors[conn.processorId] = ActiveProcessor(
+                conn.processorId, System.currentTimeMillis(), meta = conn.meta
+            )
             it.reply(true)
 
             log.info(

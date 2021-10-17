@@ -54,7 +54,7 @@ class ProbeTracker : CoroutineVerticle() {
             val latency = System.currentTimeMillis() - conn.connectionTime
             log.trace { msg("Establishing connection with probe {}", conn.probeId) }
 
-            activeProbes[conn.probeId] = ActiveProbe(conn.probeId, System.currentTimeMillis())
+            activeProbes[conn.probeId] = ActiveProbe(conn.probeId, System.currentTimeMillis(), meta = conn.meta)
             it.reply(true)
 
             log.info(
