@@ -46,15 +46,15 @@ class LiveLogTest {
     @Test
     fun duplicateLog() {
         LiveInstrumentService.clearAll()
-        val bpId = LiveInstrumentService.addLog(
+        val logId = LiveInstrumentService.addLog(
             "id", "test", arrayOfNulls(0), "com.example.Test", 5,
             "1==1", 1, 1, "SECOND", null, true
         )
-        val bpId2 = LiveInstrumentService.addLog(
+        val logId2 = LiveInstrumentService.addLog(
             "id", "test", arrayOfNulls(0), "com.example.Test", 5,
             "1==1", 1, 1, "SECOND", null, true
         )
-        Assert.assertEquals(bpId, bpId2)
+        Assert.assertEquals(logId, logId2)
         val location = Location("com.example.Test", 5)
         Assert.assertEquals(1, LiveInstrumentService.getInstrumentsMap().size.toLong())
         val log = LiveInstrumentService.getInstrumentsMap().values.stream().findFirst().get()
