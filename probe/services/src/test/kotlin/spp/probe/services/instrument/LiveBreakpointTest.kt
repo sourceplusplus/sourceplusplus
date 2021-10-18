@@ -1,4 +1,4 @@
-package spp.probe.services.impl.log
+package spp.probe.services.instrument
 
 import org.junit.Assert
 import org.junit.Test
@@ -9,12 +9,11 @@ import org.springframework.expression.spel.SpelCompilerMode
 import org.springframework.expression.spel.SpelParserConfiguration
 import org.springframework.expression.spel.standard.SpelExpressionParser
 import spp.probe.services.common.model.Location
-import spp.probe.services.instrument.LiveInstrumentService
 import spp.probe.services.instrument.model.LiveInstrument
 import java.lang.instrument.Instrumentation
 
 @RunWith(JUnit4::class)
-class LiveLogServiceTest {
+class LiveBreakpointTest {
     companion object {
         private val parser = SpelExpressionParser(
             SpelParserConfiguration(SpelCompilerMode.IMMEDIATE, LiveInstrumentService::class.java.classLoader)
@@ -22,16 +21,16 @@ class LiveLogServiceTest {
 
         init {
             LiveInstrumentService.setInstrumentation(Mockito.mock(Instrumentation::class.java))
-            LiveInstrumentService.setInstrumentApplier { inst: Instrumentation?, log: LiveInstrument? -> }
+            LiveInstrumentService.setInstrumentApplier { inst: Instrumentation?, breakpoint: LiveInstrument? -> }
         }
     }
 
     @Test
-    fun addLog() {
+    fun addBreakpoint() {
         LiveInstrumentService.clearAll()
-        LiveInstrumentService.addLog(
-            "id", "test", arrayOfNulls(0), "com.example.Test", 5,
-            "1==1", 1, 1, "SECOND", null, true
+        LiveInstrumentService.addBreakpoint(
+            "id", "com.example.Test", 5, "1==1",
+            1, 1, "SECOND", null, true
         )
         Assert.assertEquals(1, LiveInstrumentService.getInstrumentsMap().size.toLong())
         val location = Location("com.example.Test", 5)
@@ -45,15 +44,15 @@ class LiveLogServiceTest {
     }
 
     @Test
-    fun duplicateLog() {
+    fun duplicateBreakpoint() {
         LiveInstrumentService.clearAll()
-        val bpId = LiveInstrumentService.addLog(
-            "id", "test", arrayOfNulls(0), "com.example.Test", 5,
-            "1==1", 1, 1, "SECOND", null, true
+        val bpId = LiveInstrumentService.addBreakpoint(
+            "id", "com.example.Test", 5, "1==1",
+            1, 1, "SECOND", null, true
         )
-        val bpId2 = LiveInstrumentService.addLog(
-            "id", "test", arrayOfNulls(0), "com.example.Test", 5,
-            "1==1", 1, 1, "SECOND", null, true
+        val bpId2 = LiveInstrumentService.addBreakpoint(
+            "id", "com.example.Test", 5, "1==1",
+            1, 1, "SECOND", null, true
         )
         Assert.assertEquals(bpId, bpId2)
         val location = Location("com.example.Test", 5)
@@ -67,15 +66,15 @@ class LiveLogServiceTest {
     }
 
     @Test
-    fun multipleLogsSameLine() {
+    fun multipleBreakpointsSameLine() {
         LiveInstrumentService.clearAll()
-        val bpId = LiveInstrumentService.addLog(
-            "id1", "test", arrayOfNulls(0), "java.lang.Object", 5,
-            "1==1", 1, 1, "SECOND", null, true
+        val bpId = LiveInstrumentService.addBreakpoint(
+            "id1", "java.lang.Object", 5, "1==1",
+            1, 1, "SECOND", null, true
         )
-        val bpId2 = LiveInstrumentService.addLog(
-            "id2", "test", arrayOfNulls(0), "java.lang.Object", 5,
-            "1==2", 1, 1, "SECOND", null, true
+        val bpId2 = LiveInstrumentService.addBreakpoint(
+            "id2", "java.lang.Object", 5, "1==2",
+            1, 1, "SECOND", null, true
         )
         Assert.assertNotEquals(bpId, bpId2)
         Assert.assertEquals(2, LiveInstrumentService.getInstrumentsMap().size.toLong())
