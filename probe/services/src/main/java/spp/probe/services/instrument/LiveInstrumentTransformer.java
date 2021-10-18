@@ -42,16 +42,16 @@ public class LiveInstrumentTransformer extends MethodVisitor {
         mv.visitLineNumber(line, start);
         for (LiveInstrument instrument : LiveInstrumentService.getInstruments(new Location(source, line))) {
             Label instrumentLabel = new Label();
+            isInstrumentEnabled(instrument.getId(), instrumentLabel);
+
             if (instrument instanceof LiveLog) {
                 LiveLog log = (LiveLog) instrument;
-                logSwitch(log.getId(), instrumentLabel);
                 if (log.getLogArguments().length > 0 || log.getExpression() != null) {
                     captureSnapshot(log.getId(), line);
                 }
                 isHit(log.getId(), instrumentLabel);
                 processForLog(log);
             } else {
-                breakpointSwitch(instrument.getId(), instrumentLabel);
                 captureSnapshot(instrument.getId(), line);
                 isHit(instrument.getId(), instrumentLabel);
                 processForBreakpoint(instrument.getId(), source, line);
@@ -60,17 +60,11 @@ public class LiveInstrumentTransformer extends MethodVisitor {
         }
     }
 
-    private void breakpointSwitch(String breakpointId, Label breakpointLabel) {
-        mv.visitLdcInsn(breakpointId);
-        mv.visitMethodInsn(INVOKESTATIC, REMOTE_CLASS_LOCATION, "isBreakpointEnabled",
+    private void isInstrumentEnabled(String instrumentId, Label instrumentLabel) {
+        mv.visitLdcInsn(instrumentId);
+        mv.visitMethodInsn(INVOKESTATIC, REMOTE_CLASS_LOCATION, "isInstrumentEnabled",
                 REMOTE_CHECK_DESC, false);
-        mv.visitJumpInsn(IFEQ, breakpointLabel);
-    }
-
-    private void logSwitch(String breakpointId, Label breakpointLabel) {
-        mv.visitLdcInsn(breakpointId);
-        mv.visitMethodInsn(INVOKESTATIC, REMOTE_CLASS_LOCATION, "isLogEnabled", REMOTE_CHECK_DESC, false);
-        mv.visitJumpInsn(IFEQ, breakpointLabel);
+        mv.visitJumpInsn(IFEQ, instrumentLabel);
     }
 
     private void captureSnapshot(String breakpointId, int line) {
