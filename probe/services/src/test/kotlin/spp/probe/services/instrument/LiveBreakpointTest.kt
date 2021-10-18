@@ -21,7 +21,8 @@ class LiveBreakpointTest {
 
         init {
             LiveInstrumentService.setInstrumentation(Mockito.mock(Instrumentation::class.java))
-            LiveInstrumentService.setInstrumentApplier { inst: Instrumentation?, breakpoint: LiveInstrument? -> }
+            LiveInstrumentService.setInstrumentApplier { _: Instrumentation?, _: LiveInstrument? -> }
+            LiveInstrumentService.setInstrumentEventConsumer { _, _ -> }
         }
     }
 
