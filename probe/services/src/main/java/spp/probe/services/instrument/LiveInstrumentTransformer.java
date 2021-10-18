@@ -79,7 +79,7 @@ public class LiveInstrumentTransformer extends MethodVisitor {
         addFields(breakpointId);
     }
 
-    private void isHit(String breakpointId, final Label breakpointLabel) {
+    private void isHit(String breakpointId, Label breakpointLabel) {
         mv.visitLdcInsn(breakpointId);
         mv.visitMethodInsn(INVOKESTATIC, REMOTE_CLASS_LOCATION, "isHit",
                 REMOTE_CHECK_DESC, false);
