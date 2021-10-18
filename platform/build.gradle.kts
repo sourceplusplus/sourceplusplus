@@ -10,7 +10,7 @@ val platformGroup: String by project
 val platformVersion: String by project
 val graalVersion: String by project
 val jacksonVersion: String by project
-val sppProtocolVersion: String by project
+val sourceMarkerVersion: String by project
 val commonsLang3Version: String by project
 val cliktVersion: String by project
 val bouncycastleVersion: String by project
@@ -27,7 +27,7 @@ val vertxVersion = "4.1.4" //todo: consolidate with gradle.properties 4.0.2
 
 dependencies {
     implementation("org.graalvm.sdk:graal-sdk:$graalVersion")
-    implementation("com.github.sourceplusplus:sourcemarker:v$sppProtocolVersion") {
+    implementation("com.github.sourceplusplus:sourcemarker:v$sourceMarkerVersion") {
         exclude(mapOf("group" to "com.github.sourceplusplus.sourcemarker", "module" to "portal-js"))
         exclude(mapOf("group" to "com.github.sourceplusplus.sourcemarker", "module" to "portal-metadata"))
         exclude(mapOf("group" to "com.github.sourceplusplus.sourcemarker", "module" to "protocol-js"))
