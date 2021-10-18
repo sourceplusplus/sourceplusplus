@@ -21,7 +21,8 @@ class LiveLogTest {
 
         init {
             LiveInstrumentService.setInstrumentation(Mockito.mock(Instrumentation::class.java))
-            LiveInstrumentService.setInstrumentApplier { inst: Instrumentation?, log: LiveInstrument? -> }
+            LiveInstrumentService.setInstrumentApplier { _: Instrumentation?, _: LiveInstrument? -> }
+            LiveInstrumentService.setInstrumentEventConsumer { _, _ -> }
         }
     }
 

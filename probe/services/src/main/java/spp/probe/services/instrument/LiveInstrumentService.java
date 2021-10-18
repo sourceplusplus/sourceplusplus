@@ -244,17 +244,21 @@ public class LiveInstrumentService {
 
     public static void _removeInstrument(LiveInstrument instrument, Throwable ex) {
         removeInstrument(instrument.getLocation().getSource(), instrument.getLocation().getLine(), instrument.getId());
-        if (instrumentEventConsumer != null) {
-            Map<String, Object> map = new HashMap<>();
-            if (instrument instanceof LiveLog) {
-                map.put("log", instrument.toJson());
-            } else {
-                map.put("breakpoint", instrument.toJson());
-            }
-            map.put("occurredAt", System.currentTimeMillis());
-            if (ex != null) {
-                map.put("cause", ThrowableTransformer.INSTANCE.convert2String(ex, 4000));
-            }
+
+        Map<String, Object> map = new HashMap<>();
+        if (instrument instanceof LiveLog) {
+            map.put("log", instrument.toJson());
+        } else {
+            map.put("breakpoint", instrument.toJson());
+        }
+        map.put("occurredAt", System.currentTimeMillis());
+        if (ex != null) {
+            map.put("cause", ThrowableTransformer.INSTANCE.convert2String(ex, 4000));
+        }
+
+        if (instrument instanceof LiveLog) {
+            instrumentEventConsumer.accept(LIVE_LOG_REMOVED.getAddress(), ModelSerializer.INSTANCE.toJson(map));
+        } else {
             instrumentEventConsumer.accept(LIVE_BREAKPOINT_REMOVED.getAddress(), ModelSerializer.INSTANCE.toJson(map));
         }
     }
