@@ -40,25 +40,23 @@ public class LiveInstrumentTransformer extends MethodVisitor {
     @Override
     public void visitLineNumber(int line, Label start) {
         mv.visitLineNumber(line, start);
-        for (LiveInstrument bp : LiveInstrumentService.getInstruments(new Location(source, line))) {
-            if (bp instanceof LiveLog) {
-                LiveLog log = (LiveLog) bp;
-                Label logLabel = new Label();
-                logSwitch(log.getId(), logLabel);
+        for (LiveInstrument instrument : LiveInstrumentService.getInstruments(new Location(source, line))) {
+            Label instrumentLabel = new Label();
+            if (instrument instanceof LiveLog) {
+                LiveLog log = (LiveLog) instrument;
+                logSwitch(log.getId(), instrumentLabel);
                 if (log.getLogArguments().length > 0 || log.getExpression() != null) {
                     captureSnapshot(log.getId(), line);
                 }
-                isHit(log.getId(), logLabel);
+                isHit(log.getId(), instrumentLabel);
                 processForLog(log);
-                mv.visitLabel(logLabel);
             } else {
-                Label breakpointLabel = new Label();
-                breakpointSwitch(bp.getId(), breakpointLabel);
-                captureSnapshot(bp.getId(), line);
-                isHit(bp.getId(), breakpointLabel);
-                processForBreakpoint(bp.getId(), source, line);
-                mv.visitLabel(breakpointLabel);
+                breakpointSwitch(instrument.getId(), instrumentLabel);
+                captureSnapshot(instrument.getId(), line);
+                isHit(instrument.getId(), instrumentLabel);
+                processForBreakpoint(instrument.getId(), source, line);
             }
+            mv.visitLabel(instrumentLabel);
         }
     }
 

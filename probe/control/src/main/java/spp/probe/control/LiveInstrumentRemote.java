@@ -31,9 +31,8 @@ public class LiveInstrumentRemote extends AbstractVerticle {
     );
 
     private Method addBreakpoint;
-    private Method removeBreakpoint;
     private Method addLog;
-    private Method removeLog;
+    private Method removeInstrument;
     private static Method putLog;
     private static Method isInstrumentEnabled;
     private static Method putLocalVariable;
@@ -58,7 +57,7 @@ public class LiveInstrumentRemote extends AbstractVerticle {
             addBreakpoint = serviceClass.getMethod("addBreakpoint",
                     String.class, String.class, int.class, String.class, int.class,
                     int.class, String.class, Long.class, boolean.class);
-            removeBreakpoint = serviceClass.getMethod("removeInstrument",
+            removeInstrument = serviceClass.getMethod("removeInstrument",
                     String.class, int.class, String.class);
             isInstrumentEnabled = serviceClass.getMethod("isInstrumentEnabled", String.class);
             isHit = serviceClass.getMethod("isHit", String.class);
@@ -66,8 +65,6 @@ public class LiveInstrumentRemote extends AbstractVerticle {
             addLog = serviceClass.getMethod("addLog",
                     String.class, String.class, String[].class, String.class, int.class,
                     String.class, int.class, int.class, String.class, Long.class, boolean.class);
-            removeLog = serviceClass.getMethod("removeLog",
-                    String.class, int.class, String.class);
 
             Class contextClass = Class.forName(
                     "spp.probe.services.common.ContextReceiver", false, agentClassLoader);
@@ -94,7 +91,7 @@ public class LiveInstrumentRemote extends AbstractVerticle {
                         addBreakpoint(command);
                         break;
                     case REMOVE_LIVE_INSTRUMENT:
-                        removeBreakpoint(command);
+                        removeInstrument(command);
                         break;
                 }
             } catch (InvocationTargetException ex) {
@@ -133,7 +130,7 @@ public class LiveInstrumentRemote extends AbstractVerticle {
                         addLog(command);
                         break;
                     case REMOVE_LIVE_INSTRUMENT:
-                        removeLog(command);
+                        removeInstrument(command);
                         break;
                 }
             } catch (InvocationTargetException ex) {
@@ -184,20 +181,20 @@ public class LiveInstrumentRemote extends AbstractVerticle {
                 throttleLimit, throttleStep, expiresAt, applyImmediately);
     }
 
-    private void removeBreakpoint(LiveInstrumentCommand command) throws Exception {
+    private void removeInstrument(LiveInstrumentCommand command) throws Exception {
         for (String breakpointData : command.getContext().getLiveInstruments()) {
             JsonObject breakpointObject = new JsonObject(breakpointData);
             String breakpointId = breakpointObject.getString("id");
             JsonObject location = breakpointObject.getJsonObject("location");
             String source = location.getString("source");
             int line = location.getInteger("line");
-            removeBreakpoint.invoke(null, source, line, breakpointId);
+            removeInstrument.invoke(null, source, line, breakpointId);
         }
         for (String locationData : command.getContext().getLocations()) {
             JsonObject location = new JsonObject(locationData);
             String source = location.getString("source");
             int line = location.getInteger("line");
-            removeBreakpoint.invoke(null, source, line, null);
+            removeInstrument.invoke(null, source, line, null);
         }
     }
 
@@ -220,23 +217,6 @@ public class LiveInstrumentRemote extends AbstractVerticle {
         Long expiresAt = logObject.getLong("expiresAt");
         addLog.invoke(null, id, logFormat, logArguments, source, line, condition,
                 hitLimit, throttleLimit, throttleStep, expiresAt, applyImmediately);
-    }
-
-    private void removeLog(LiveInstrumentCommand command) throws Exception {
-        for (String logData : command.getContext().getLiveInstruments()) {
-            JsonObject logObject = new JsonObject(logData);
-            String logId = logObject.getString("id");
-            JsonObject location = logObject.getJsonObject("location");
-            String source = location.getString("source");
-            int line = location.getInteger("line");
-            removeLog.invoke(null, source, line, logId);
-        }
-        for (String locationData : command.getContext().getLocations()) {
-            JsonObject location = new JsonObject(locationData);
-            String source = location.getString("source");
-            int line = location.getInteger("line");
-            removeLog.invoke(null, source, line, null);
-        }
     }
 
     @SuppressWarnings("unused")
