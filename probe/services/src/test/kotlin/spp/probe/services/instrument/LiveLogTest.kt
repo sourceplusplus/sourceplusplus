@@ -35,11 +35,11 @@ class LiveLogTest {
         Assert.assertEquals(1, LiveInstrumentService.getInstrumentsMap().size.toLong())
         val location = Location("com.example.Test", 5)
         Assert.assertEquals(1, LiveInstrumentService.getInstrumentsMap().size.toLong())
-        val bp = LiveInstrumentService.getInstrumentsMap().values.stream().findFirst().get()
-        Assert.assertEquals(location, bp.location)
+        val log = LiveInstrumentService.getInstrumentsMap().values.stream().findFirst().get()
+        Assert.assertEquals(location, log.location)
         Assert.assertEquals(
             parser.parseExpression("1==1").expressionString,
-            bp.expression.expressionString
+            log.expression.expressionString
         )
     }
 
@@ -57,26 +57,26 @@ class LiveLogTest {
         Assert.assertEquals(bpId, bpId2)
         val location = Location("com.example.Test", 5)
         Assert.assertEquals(1, LiveInstrumentService.getInstrumentsMap().size.toLong())
-        val bp = LiveInstrumentService.getInstrumentsMap().values.stream().findFirst().get()
-        Assert.assertEquals(location, bp.location)
+        val log = LiveInstrumentService.getInstrumentsMap().values.stream().findFirst().get()
+        Assert.assertEquals(location, log.location)
         Assert.assertEquals(
             parser.parseExpression("1==1").expressionString,
-            bp.expression.expressionString
+            log.expression.expressionString
         )
     }
 
     @Test
     fun multipleLogsSameLine() {
         LiveInstrumentService.clearAll()
-        val bpId = LiveInstrumentService.addLog(
+        val logId = LiveInstrumentService.addLog(
             "id1", "test", arrayOfNulls(0), "java.lang.Object", 5,
             "1==1", 1, 1, "SECOND", null, true
         )
-        val bpId2 = LiveInstrumentService.addLog(
+        val logId2 = LiveInstrumentService.addLog(
             "id2", "test", arrayOfNulls(0), "java.lang.Object", 5,
             "1==2", 1, 1, "SECOND", null, true
         )
-        Assert.assertNotEquals(bpId, bpId2)
+        Assert.assertNotEquals(logId, logId2)
         Assert.assertEquals(2, LiveInstrumentService.getInstrumentsMap().size.toLong())
     }
 }
