@@ -44,7 +44,7 @@ class MarkerTracker(private val jwtAuth: JWTAuth?) : CoroutineVerticle() {
             val latency = System.currentTimeMillis() - conn.connectionTime
             log.trace { "Establishing connection with marker ${conn.markerId}" }
 
-            if (jwtAuth != null) {
+            if (jwtAuth != null && !marker.headers().get("token").isNullOrEmpty()) {
                 jwtAuth.authenticate(JsonObject().put("token", marker.headers().get("token"))).onComplete {
                     if (it.succeeded()) {
                         addActiveMarker(it.result().principal().getString("developer_id"), conn, marker, latency)
