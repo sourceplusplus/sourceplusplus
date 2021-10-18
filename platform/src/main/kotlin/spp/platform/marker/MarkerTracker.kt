@@ -49,7 +49,8 @@ class MarkerTracker(private val jwtAuth: JWTAuth?) : CoroutineVerticle() {
                     if (it.succeeded()) {
                         addActiveMarker(it.result().principal().getString("developer_id"), conn, marker, latency)
                     } else {
-                        throw IllegalStateException("Invalid access")
+                        log.warn("Rejected invalid marker access")
+                        marker.reply(false)
                     }
                 }
             } else {
@@ -58,12 +59,15 @@ class MarkerTracker(private val jwtAuth: JWTAuth?) : CoroutineVerticle() {
         }
         vertx.eventBus().consumer<JsonObject>(PlatformAddress.MARKER_DISCONNECTED.address) {
             val conn = Json.decodeValue(it.body().toString(), MarkerConnection::class.java)
-            val connectedAt = Instant.ofEpochMilli(activeMarkers.remove(conn.markerId)!!.connectedAt)
-            log.info("Marker disconnected. Connection time: {}", Duration.between(Instant.now(), connectedAt))
+            val activeMarker = activeMarkers.remove(conn.markerId)
+            if (activeMarker != null) {
+                val connectedAt = Instant.ofEpochMilli(activeMarker.connectedAt)
+                log.info("Marker disconnected. Connection time: {}", Duration.between(Instant.now(), connectedAt))
 
-            GlobalScope.launch(vertx.dispatcher()) {
-                vertx.sharedData().getLocalCounter(SourceMarkerServices.Status.MARKER_CONNECTED).await()
-                    .decrementAndGet().await()
+                GlobalScope.launch(vertx.dispatcher()) {
+                    vertx.sharedData().getLocalCounter(SourceMarkerServices.Status.MARKER_CONNECTED).await()
+                        .decrementAndGet().await()
+                }
             }
         }
     }
