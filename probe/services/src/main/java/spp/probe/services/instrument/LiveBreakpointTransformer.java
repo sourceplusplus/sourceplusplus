@@ -1,4 +1,4 @@
-package spp.probe.services.impl.log;
+package spp.probe.services.instrument;
 
 import org.apache.skywalking.apm.dependencies.net.bytebuddy.jar.asm.Label;
 import org.apache.skywalking.apm.dependencies.net.bytebuddy.jar.asm.MethodVisitor;
@@ -9,13 +9,15 @@ import spp.probe.services.common.model.ClassMetadata;
 import spp.probe.services.common.model.LocalVariable;
 import spp.probe.services.common.model.Location;
 import spp.probe.services.common.transform.LiveTransformer;
-import spp.probe.services.impl.log.model.LiveLog;
+import spp.probe.services.instrument.model.LiveInstrument;
+import spp.probe.services.instrument.model.LiveLog;
 
 import static org.apache.skywalking.apm.dependencies.net.bytebuddy.jar.asm.Opcodes.*;
 
-public class LiveLogTransformer extends MethodVisitor {
+public class LiveBreakpointTransformer extends MethodVisitor {
 
-    private static final String REMOTE_CLASS_LOCATION = "spp/probe/control/LiveLogRemote";
+    private static final String THROWABLE_INTERNAL_NAME = Type.getInternalName(Throwable.class);
+    private static final String REMOTE_CLASS_LOCATION = "spp/probe/control/LiveInstrumentRemote";
     private static final String REMOTE_CHECK_DESC = "(Ljava/lang/String;)Z";
     private static final String REMOTE_SAVE_VAR_DESC = "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Object;)V";
     private static final String PUT_LOG_DESC = "(Ljava/lang/String;Ljava/lang/String;[Ljava/lang/String;)V";
@@ -25,8 +27,8 @@ public class LiveLogTransformer extends MethodVisitor {
     private final int access;
     private final ClassMetadata classMetadata;
 
-    public LiveLogTransformer(String source, String className, String methodName, String desc, int access,
-                              ClassMetadata classMetadata, MethodVisitor mv) {
+    public LiveBreakpointTransformer(String source, String className, String methodName, String desc, int access,
+                                     ClassMetadata classMetadata, MethodVisitor mv) {
         super(ASM7, mv);
         this.source = source;
         this.className = className;
@@ -36,18 +38,35 @@ public class LiveLogTransformer extends MethodVisitor {
     }
 
     @Override
-    public void visitLineNumber(final int line, final Label start) {
+    public void visitLineNumber(int line, Label start) {
         mv.visitLineNumber(line, start);
-        for (LiveLog log : LiveLogService.getLogs(new Location(source, line))) {
-            Label logLabel = new Label();
-            logSwitch(log.getId(), logLabel);
-            if (log.getLogArguments().length > 0 || log.getExpression() != null) {
-                captureSnapshot(log.getId(), line);
+        for (LiveInstrument bp : LiveInstrumentService.getInstruments(new Location(source, line))) {
+            if (bp instanceof LiveLog) {
+                LiveLog log = (LiveLog) bp;
+                Label logLabel = new Label();
+                logSwitch(log.getId(), logLabel);
+                if (log.getLogArguments().length > 0 || log.getExpression() != null) {
+                    captureSnapshot(log.getId(), line);
+                }
+                isHit(log.getId(), logLabel);
+                processForLog(log);
+                mv.visitLabel(logLabel);
+            } else {
+                Label breakpointLabel = new Label();
+                breakpointSwitch(bp.getId(), breakpointLabel);
+                captureSnapshot(bp.getId(), line);
+                isHit(bp.getId(), breakpointLabel);
+                processForBreakpoint(bp.getId(), source, line);
+                mv.visitLabel(breakpointLabel);
             }
-            isHit(log.getId(), logLabel);
-            processForLog(log);
-            mv.visitLabel(logLabel);
         }
+    }
+
+    private void breakpointSwitch(String breakpointId, Label breakpointLabel) {
+        mv.visitLdcInsn(breakpointId);
+        mv.visitMethodInsn(INVOKESTATIC, REMOTE_CLASS_LOCATION, "isBreakpointEnabled",
+                REMOTE_CHECK_DESC, false);
+        mv.visitJumpInsn(IFEQ, breakpointLabel);
     }
 
     private void logSwitch(String breakpointId, Label breakpointLabel) {
@@ -64,8 +83,14 @@ public class LiveLogTransformer extends MethodVisitor {
 
     private void isHit(String breakpointId, final Label breakpointLabel) {
         mv.visitLdcInsn(breakpointId);
-        mv.visitMethodInsn(INVOKESTATIC, REMOTE_CLASS_LOCATION, "isHit", REMOTE_CHECK_DESC, false);
+        mv.visitMethodInsn(INVOKESTATIC, REMOTE_CLASS_LOCATION, "isHit",
+                REMOTE_CHECK_DESC, false);
         mv.visitJumpInsn(IFEQ, breakpointLabel);
+    }
+
+    private void processForBreakpoint(String breakpointId, String source, int line) {
+        putBreakpoint(breakpointId, source, line);
+        mv.visitLabel(new Label());
     }
 
     private void processForLog(LiveLog log) {
@@ -99,10 +124,10 @@ public class LiveLogTransformer extends MethodVisitor {
         }
     }
 
-    private void addFields(String breakpointId) {
+    private void addFields(String instrumentId) {
         if ((access & Opcodes.ACC_STATIC) == 0) {
             for (ClassField field : classMetadata.getFields()) {
-                mv.visitLdcInsn(breakpointId);
+                mv.visitLdcInsn(instrumentId);
                 mv.visitLdcInsn(field.getName());
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitFieldInsn(GETFIELD, className, field.getName(), field.getDesc());
@@ -112,6 +137,22 @@ public class LiveLogTransformer extends MethodVisitor {
                         "putField", REMOTE_SAVE_VAR_DESC, false);
             }
         }
+    }
+
+    private void putBreakpoint(String instrumentId, String source, int line) {
+        mv.visitLdcInsn(instrumentId);
+        mv.visitLdcInsn(source);
+        mv.visitLdcInsn(line);
+        mv.visitTypeInsn(NEW, THROWABLE_INTERNAL_NAME);
+        mv.visitInsn(DUP);
+        mv.visitMethodInsn(INVOKESPECIAL, THROWABLE_INTERNAL_NAME,
+                "<init>",
+                "()V",
+                false);
+
+        mv.visitMethodInsn(INVOKESTATIC, REMOTE_CLASS_LOCATION,
+                "putBreakpoint",
+                "(Ljava/lang/String;Ljava/lang/String;ILjava/lang/Throwable;)V", false);
     }
 
     private void putLog(LiveLog log) {
