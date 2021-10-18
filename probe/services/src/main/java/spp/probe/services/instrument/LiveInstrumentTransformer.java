@@ -14,7 +14,7 @@ import spp.probe.services.instrument.model.LiveLog;
 
 import static org.apache.skywalking.apm.dependencies.net.bytebuddy.jar.asm.Opcodes.*;
 
-public class LiveBreakpointTransformer extends MethodVisitor {
+public class LiveInstrumentTransformer extends MethodVisitor {
 
     private static final String THROWABLE_INTERNAL_NAME = Type.getInternalName(Throwable.class);
     private static final String REMOTE_CLASS_LOCATION = "spp/probe/control/LiveInstrumentRemote";
@@ -27,7 +27,7 @@ public class LiveBreakpointTransformer extends MethodVisitor {
     private final int access;
     private final ClassMetadata classMetadata;
 
-    public LiveBreakpointTransformer(String source, String className, String methodName, String desc, int access,
+    public LiveInstrumentTransformer(String source, String className, String methodName, String desc, int access,
                                      ClassMetadata classMetadata, MethodVisitor mv) {
         super(ASM7, mv);
         this.source = source;
