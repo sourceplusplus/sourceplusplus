@@ -28,8 +28,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
-import static spp.protocol.platform.PlatformAddress.LIVE_BREAKPOINT_APPLIED;
-import static spp.protocol.platform.PlatformAddress.LIVE_BREAKPOINT_REMOVED;
+import static spp.protocol.platform.PlatformAddress.*;
 
 public class LiveInstrumentService {
 
@@ -57,7 +56,7 @@ public class LiveInstrumentService {
                         removeInstruments.add(it);
                     }
                 });
-                removeInstruments.forEach(it -> _removeBreakpoint(it, null));
+                removeInstruments.forEach(it -> _removeInstrument(it, null));
             }
         }, 5000, 5000);
     }
@@ -94,11 +93,15 @@ public class LiveInstrumentService {
             inst.retransformClasses(clazz);
             instrument.setLive(true);
             if (!instrument.isRemoval()) {
-                instrumentEventConsumer.accept(LIVE_BREAKPOINT_APPLIED.getAddress(), instrument.toJson());
+                if (instrument instanceof LiveLog) {
+                    instrumentEventConsumer.accept(LIVE_LOG_APPLIED.getAddress(), instrument.toJson());
+                } else {
+                    instrumentEventConsumer.accept(LIVE_BREAKPOINT_APPLIED.getAddress(), instrument.toJson());
+                }
             }
         } catch (Throwable ex) {
             //remove and re-transform
-            _removeBreakpoint(instrument, ex);
+            _removeInstrument(instrument, ex);
 
             applyingInstruments.remove(instrument.getId());
             inst.addTransformer(transformer, true);
@@ -239,11 +242,15 @@ public class LiveInstrumentService {
         return Collections.EMPTY_LIST;
     }
 
-    public static void _removeBreakpoint(LiveInstrument breakpoint, Throwable ex) {
-        removeInstrument(breakpoint.getLocation().getSource(), breakpoint.getLocation().getLine(), breakpoint.getId());
+    public static void _removeInstrument(LiveInstrument instrument, Throwable ex) {
+        removeInstrument(instrument.getLocation().getSource(), instrument.getLocation().getLine(), instrument.getId());
         if (instrumentEventConsumer != null) {
             Map<String, Object> map = new HashMap<>();
-            map.put("breakpoint", breakpoint.toJson());
+            if (instrument instanceof LiveLog) {
+                map.put("log", instrument.toJson());
+            } else {
+                map.put("breakpoint", instrument.toJson());
+            }
             map.put("occurredAt", System.currentTimeMillis());
             if (ex != null) {
                 map.put("cause", ThrowableTransformer.INSTANCE.convert2String(ex, 4000));
@@ -284,7 +291,7 @@ public class LiveInstrumentService {
 
         if (instrument.getExpression() == null) {
             if (instrument.isFinished()) {
-                _removeBreakpoint(instrument, null);
+                _removeInstrument(instrument, null);
             }
             return true;
         }
@@ -292,7 +299,7 @@ public class LiveInstrumentService {
         try {
             if (evaluateCondition(instrument)) {
                 if (instrument.isFinished()) {
-                    _removeBreakpoint(instrument, null);
+                    _removeInstrument(instrument, null);
                 }
                 return true;
             } else {
@@ -301,7 +308,7 @@ public class LiveInstrumentService {
             }
         } catch (Throwable e) {
             ContextReceiver.clear(instrumentId);
-            _removeBreakpoint(instrument, e);
+            _removeInstrument(instrument, e);
             return false;
         }
     }
