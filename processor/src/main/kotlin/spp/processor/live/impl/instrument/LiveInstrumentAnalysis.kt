@@ -3,8 +3,6 @@ package spp.processor.live.impl.instrument
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
 import com.google.protobuf.Message
-import com.sourceplusplus.protocol.instrument.LiveSourceLocation
-import io.vertx.core.json.Json
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import org.apache.skywalking.apm.network.language.agent.v3.SegmentObject
@@ -162,9 +160,9 @@ class LiveInstrumentAnalysis(elasticSearch: EsDAO) : AnalysisListenerFactory, Lo
                     it.key.startsWith(BREAKPOINT) -> {
                         val breakpointId = it.key.substring(BREAKPOINT.length)
                         breakpointIds.add(breakpointId)
-                        Json.decodeValue(it.value, LiveSourceLocation::class.java).apply {
-                            locationSources[breakpointId] = source
-                            locationLines[breakpointId] = line
+                        JsonObject(it.value).apply {
+                            locationSources[breakpointId] = getString("source")
+                            locationLines[breakpointId] = getInteger("line")
                         }
                     }
                 }
