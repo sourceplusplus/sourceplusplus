@@ -13,8 +13,7 @@ import io.vertx.core.net.PemTrustOptions;
 import io.vertx.ext.bridge.BridgeEventType;
 import io.vertx.ext.eventbus.bridge.tcp.impl.protocol.FrameHelper;
 import io.vertx.ext.eventbus.bridge.tcp.impl.protocol.FrameParser;
-import spp.probe.control.LiveBreakpointRemote;
-import spp.probe.control.LiveLogRemote;
+import spp.probe.control.LiveInstrumentRemote;
 import spp.probe.util.NopInternalLogger;
 import spp.probe.util.NopLogDelegateFactory;
 import spp.protocol.platform.PlatformAddress;
@@ -47,8 +46,7 @@ public class SourceProbe {
     public static Vertx vertx;
     private static final AtomicBoolean connected = new AtomicBoolean();
     public static NetSocket tcpSocket;
-    public static LiveBreakpointRemote breakpointRemote;
-    public static LiveLogRemote logRemote;
+    public static LiveInstrumentRemote instrumentRemote;
 
     public static boolean isAgentInitialized() {
         return instrumentation != null;
@@ -97,18 +95,15 @@ public class SourceProbe {
     }
 
     public static void deployRemotes() {
-        vertx.deployVerticle(breakpointRemote = new LiveBreakpointRemote());
-        vertx.deployVerticle(logRemote = new LiveLogRemote());
+        vertx.deployVerticle(instrumentRemote = new LiveInstrumentRemote());
     }
 
     public static void disconnectFromPlatform() throws Exception {
         connected.set(false);
         tcpSocket.close();
         tcpSocket = null;
-        breakpointRemote.stop();
-        logRemote.stop();
-        breakpointRemote = null;
-        logRemote = null;
+        instrumentRemote.stop();
+        instrumentRemote = null;
     }
 
     public static synchronized void connectToPlatform() {
