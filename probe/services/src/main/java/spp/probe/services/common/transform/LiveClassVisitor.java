@@ -4,7 +4,7 @@ import org.apache.skywalking.apm.dependencies.net.bytebuddy.jar.asm.ClassVisitor
 import org.apache.skywalking.apm.dependencies.net.bytebuddy.jar.asm.MethodVisitor;
 import org.apache.skywalking.apm.dependencies.net.bytebuddy.jar.asm.Opcodes;
 import spp.probe.services.common.model.ClassMetadata;
-import spp.probe.services.instrument.LiveBreakpointTransformer;
+import spp.probe.services.instrument.LiveInstrumentTransformer;
 
 public class LiveClassVisitor extends ClassVisitor {
 
@@ -28,7 +28,7 @@ public class LiveClassVisitor extends ClassVisitor {
 
     @Override
     public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
-        return new LiveBreakpointTransformer(source, className, name, desc, access, classMetadata,
+        return new LiveInstrumentTransformer(source, className, name, desc, access, classMetadata,
                 super.visitMethod(access, name, desc, signature, exceptions));
     }
 }

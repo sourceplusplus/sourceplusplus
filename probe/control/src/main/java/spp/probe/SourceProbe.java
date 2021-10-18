@@ -46,7 +46,7 @@ public class SourceProbe {
     public static Vertx vertx;
     private static final AtomicBoolean connected = new AtomicBoolean();
     public static NetSocket tcpSocket;
-    public static LiveInstrumentRemote breakpointRemote;
+    public static LiveInstrumentRemote instrumentRemote;
 
     public static boolean isAgentInitialized() {
         return instrumentation != null;
@@ -95,15 +95,15 @@ public class SourceProbe {
     }
 
     public static void deployRemotes() {
-        vertx.deployVerticle(breakpointRemote = new LiveInstrumentRemote());
+        vertx.deployVerticle(instrumentRemote = new LiveInstrumentRemote());
     }
 
     public static void disconnectFromPlatform() throws Exception {
         connected.set(false);
         tcpSocket.close();
         tcpSocket = null;
-        breakpointRemote.stop();
-        breakpointRemote = null;
+        instrumentRemote.stop();
+        instrumentRemote = null;
     }
 
     public static synchronized void connectToPlatform() {
