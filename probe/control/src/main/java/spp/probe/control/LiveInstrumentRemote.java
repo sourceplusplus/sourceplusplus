@@ -58,7 +58,7 @@ public class LiveInstrumentRemote extends AbstractVerticle {
             addBreakpoint = serviceClass.getMethod("addBreakpoint",
                     String.class, String.class, int.class, String.class, int.class,
                     int.class, String.class, Long.class, boolean.class);
-            removeBreakpoint = serviceClass.getMethod("removeBreakpoint",
+            removeBreakpoint = serviceClass.getMethod("removeInstrument",
                     String.class, int.class, String.class);
             isInstrumentEnabled = serviceClass.getMethod("isInstrumentEnabled", String.class);
             isHit = serviceClass.getMethod("isHit", String.class);
