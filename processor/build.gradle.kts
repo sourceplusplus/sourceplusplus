@@ -17,13 +17,13 @@ val skywalkingVersion: String by project
 val vertxVersion: String by project
 val gsonVersion: String by project
 val grpcVersion: String by project
-val sppProtocolVersion: String by project
+val sourceMarkerVersion: String by project
 
 group = platformGroup
 version = platformVersion
 
 dependencies {
-    implementation("com.github.sourceplusplus.sourcemarker:protocol-jvm:v$sppProtocolVersion") {
+    implementation("com.github.sourceplusplus.sourcemarker:protocol-jvm:v$sourceMarkerVersion") {
         isTransitive = false
     }
 

@@ -69,7 +69,7 @@ class MarkerTracker(private val jwtAuth: JWTAuth?) : CoroutineVerticle() {
     }
 
     private fun addActiveMarker(selfId: String, conn: MarkerConnection, marker: Message<JsonObject>, latency: Long) {
-        activeMarkers[conn.markerId] = ActiveMarker(conn.markerId, System.currentTimeMillis(), selfId)
+        activeMarkers[conn.markerId] = ActiveMarker(conn.markerId, System.currentTimeMillis(), selfId, meta = conn.meta)
         marker.reply(true)
 
         log.info(
