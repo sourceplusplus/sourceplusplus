@@ -1,8 +1,8 @@
 package spp.provider.live.providers
 
 import com.sourceplusplus.protocol.SourceMarkerServices
-import com.sourceplusplus.protocol.artifact.exception.JvmStackTrace
-import com.sourceplusplus.protocol.artifact.exception.JvmStackTraceElement
+import com.sourceplusplus.protocol.artifact.exception.LiveStackTrace
+import com.sourceplusplus.protocol.artifact.exception.LiveStackTraceElement
 import com.sourceplusplus.protocol.artifact.exception.sourceAsLineNumber
 import com.sourceplusplus.protocol.error.MissingRemoteException
 import com.sourceplusplus.protocol.instrument.*
@@ -102,14 +102,14 @@ class LiveInstrumentController(private val vertx: Vertx) {
                 }
             }
 
-            val stackTrace = JvmStackTrace.fromString(bpData.getString("stack_trace"))!!
+            val stackTrace = LiveStackTrace.fromString(bpData.getString("stack_trace"))!!
             //correct unknown source
             if (stackTrace.first().sourceAsLineNumber() == null) {
                 val language = stackTrace.elements[1].source.substringAfter(".").substringBefore(":")
                 val actualSource = "${
                     bpData.getString("location_source").substringAfterLast(".")
                 }.$language:${bpData.getInteger("location_line")}"
-                val correctedElement = JvmStackTraceElement(stackTrace.first().method, actualSource)
+                val correctedElement = LiveStackTraceElement(stackTrace.first().method, actualSource)
                 stackTrace.elements.removeAt(0)
                 stackTrace.elements.add(0, correctedElement)
             }
@@ -414,7 +414,7 @@ class LiveInstrumentController(private val vertx: Vertx) {
         debuggerCommand.context.addLiveInstrument(breakpoint)
         vertx.eventBus().publish(LIVE_BREAKPOINT_REMOTE.address, JsonObject.mapFrom(debuggerCommand))
 
-        val jvmCause = if (cause == null) null else JvmStackTrace.fromString(cause)
+        val jvmCause = if (cause == null) null else LiveStackTrace.fromString(cause)
         val waitingHandler = waitingApply.remove(breakpoint.id)
         if (waitingHandler != null) {
             if (cause?.startsWith("EventBusException") == true) {
@@ -455,7 +455,7 @@ class LiveInstrumentController(private val vertx: Vertx) {
         debuggerCommand.context.addLiveInstrument(liveLog)
         vertx.eventBus().publish(LIVE_LOG_REMOTE.address, JsonObject.mapFrom(debuggerCommand))
 
-        val jvmCause = if (cause == null) null else JvmStackTrace.fromString(cause)
+        val jvmCause = if (cause == null) null else LiveStackTrace.fromString(cause)
         val waitingHandler = waitingApply.remove(liveLog.id)
         if (waitingHandler != null) {
             if (cause?.startsWith("EventBusException") == true) {
