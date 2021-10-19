@@ -55,8 +55,7 @@ jobs:
 
       - name: Publish Plugin
         env:
-          JETBRAINS_PUBLISH_TOKEN=${{ secrets.JETBRAINS_PUBLISH_TOKEN }}
-          PUBLISH_TOKEN=${{ secrets.JETBRAINS_PUBLISH_TOKEN }}
+          JETBRAINS_PUBLISH_TOKEN: ${{ secrets.JETBRAINS_PUBLISH_TOKEN }}
         run: ./gradlew publishPlugin
 
       # Push spp-platform
