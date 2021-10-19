@@ -1,4 +1,4 @@
-# 0.1.13 (2021-10-19)
+# 0.1.14 (2021-10-19)
 - Added `/clients` endpoint
 - Refactored LiveInstrumentRemote
 - Fixed plugin publishing workflow
