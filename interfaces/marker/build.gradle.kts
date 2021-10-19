@@ -130,9 +130,9 @@ tasks {
         workingDir = File(project(":interfaces:marker").projectDir, "SourceMarker")
 
         if (Os.isFamily(Os.FAMILY_UNIX)) {
-            commandLine("./gradlew", "publishPlugin")
+            commandLine("./gradlew", "publishPlugin", "-x", "buildPlugin")
         } else {
-            commandLine("cmd", "/c", "gradlew.bat", "publishPlugin")
+            commandLine("cmd", "/c", "gradlew.bat", "publishPlugin", "-x", "buildPlugin")
         }
     }
 }
