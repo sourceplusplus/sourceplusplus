@@ -1,4 +1,4 @@
-# 0.1.8 (2021-10-18)
+# 0.1.9 (2021-10-18)
 - Added `/clients` endpoint
 - Refactored LiveInstrumentRemote
 
