@@ -1,6 +1,7 @@
-# 0.1.9 (2021-10-18)
+# 0.1.12 (2021-10-19)
 - Added `/clients` endpoint
 - Refactored LiveInstrumentRemote
+- Fixed plugin publishing workflow
 
 # 0.1.7 (2021-10-13)
 - Ability to CRUD instrument meta data via CLI/API
