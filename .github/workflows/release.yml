@@ -54,7 +54,7 @@ jobs:
       # Publish spp-plugin (JetBrains)
 
       - name: Publish Plugin
-        run: ./gradlew publishPlugin -x buildPlugin
+        run: ./gradlew publishPlugin
 
       # Push spp-platform
 
