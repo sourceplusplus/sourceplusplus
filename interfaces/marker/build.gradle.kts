@@ -123,7 +123,7 @@ tasks {
             File(project(":interfaces:marker").projectDir, "SourceMarker/plugin/jetbrains/build.gradle.kts").appendText(
                 "\ntasks.getByName<org.jetbrains.intellij.tasks.PublishPluginTask>(\"publishPlugin\") {\n" +
                         "    distributionFile.set(file(\"../../../build/spp-plugin-${project.version}.zip\"))\n" +
-                        "    token = System.getenv(\"JETBRAINS_PUBLISH_TOKEN\")\n" +
+                        "    token.set(System.getenv(\"JETBRAINS_PUBLISH_TOKEN\"))\n" +
                         "}"
             )
         }

@@ -50,12 +50,13 @@ public class LiveInstrumentTransformer extends MethodVisitor {
                     captureSnapshot(log.getId(), line);
                 }
                 isHit(log.getId(), instrumentLabel);
-                processForLog(log);
+                putLog(log);
             } else {
                 captureSnapshot(instrument.getId(), line);
                 isHit(instrument.getId(), instrumentLabel);
-                processForBreakpoint(instrument.getId(), source, line);
+                putBreakpoint(instrument.getId(), source, line);
             }
+            mv.visitLabel(new Label());
             mv.visitLabel(instrumentLabel);
         }
     }
@@ -67,33 +68,23 @@ public class LiveInstrumentTransformer extends MethodVisitor {
         mv.visitJumpInsn(IFEQ, instrumentLabel);
     }
 
-    private void captureSnapshot(String breakpointId, int line) {
-        addLocals(breakpointId, line);
-        addStaticFields(breakpointId);
-        addFields(breakpointId);
+    private void captureSnapshot(String instrumentId, int line) {
+        addLocals(instrumentId, line);
+        addStaticFields(instrumentId);
+        addFields(instrumentId);
     }
 
-    private void isHit(String breakpointId, Label breakpointLabel) {
-        mv.visitLdcInsn(breakpointId);
+    private void isHit(String instrumentId, Label instrumentLabel) {
+        mv.visitLdcInsn(instrumentId);
         mv.visitMethodInsn(INVOKESTATIC, REMOTE_CLASS_LOCATION, "isHit",
                 REMOTE_CHECK_DESC, false);
-        mv.visitJumpInsn(IFEQ, breakpointLabel);
+        mv.visitJumpInsn(IFEQ, instrumentLabel);
     }
 
-    private void processForBreakpoint(String breakpointId, String source, int line) {
-        putBreakpoint(breakpointId, source, line);
-        mv.visitLabel(new Label());
-    }
-
-    private void processForLog(LiveLog log) {
-        putLog(log);
-        mv.visitLabel(new Label());
-    }
-
-    private void addLocals(String breakpointId, int line) {
+    private void addLocals(String instrumentId, int line) {
         for (LocalVariable var : classMetadata.getVariables().get(methodUniqueName)) {
             if (line >= var.getStart() && line < var.getEnd()) {
-                mv.visitLdcInsn(breakpointId);
+                mv.visitLdcInsn(instrumentId);
                 mv.visitLdcInsn(var.getName());
                 mv.visitVarInsn(Type.getType(var.getDesc()).getOpcode(ILOAD), var.getIndex());
 
@@ -104,9 +95,9 @@ public class LiveInstrumentTransformer extends MethodVisitor {
         }
     }
 
-    private void addStaticFields(String breakpointId) {
+    private void addStaticFields(String instrumentId) {
         for (ClassField field : classMetadata.getStaticFields()) {
-            mv.visitLdcInsn(breakpointId);
+            mv.visitLdcInsn(instrumentId);
             mv.visitLdcInsn(field.getName());
             mv.visitFieldInsn(GETSTATIC, className, field.getName(), field.getDesc());
 
