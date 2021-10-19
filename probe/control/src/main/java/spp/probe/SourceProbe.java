@@ -26,6 +26,7 @@ import java.lang.instrument.Instrumentation;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.HashMap;
 import java.util.Objects;
 import java.util.ResourceBundle;
 import java.util.UUID;
@@ -179,8 +180,11 @@ public class SourceProbe {
             socket.result().handler(parser);
 
             //send probe connected status
+            HashMap<String, Object> meta = new HashMap<>();
+            meta.put("language", "java");
+            meta.put("probe_version", BUILD.getString("build_version"));
             String replyAddress = UUID.randomUUID().toString();
-            ProbeConnection pc = new ProbeConnection(UUID.randomUUID().toString(), System.currentTimeMillis());
+            ProbeConnection pc = new ProbeConnection(UUID.randomUUID().toString(), System.currentTimeMillis(), meta);
             MessageConsumer<Boolean> consumer = vertx.eventBus().localConsumer("local." + replyAddress);
             consumer.handler(resp -> {
                 if (ProbeConfiguration.isNotQuite()) System.out.println("Received probe connection confirmation");

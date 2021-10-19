@@ -757,11 +757,17 @@
   {
     "name":"sun.security.x509.SubjectKeyIdentifierExtension",
     "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]
-  }
-
-  ,
+  },
   {
     "name": "com.sourceplusplus.protocol.status.MarkerConnection",
+    "fields":[
+      {"name":"markerId", "allowWrite":true},
+      {"name":"connectionTime", "allowWrite":true},
+      {"name":"meta", "allowWrite":true}
+    ],
+    "methods": [
+      { "name": "<init>", "parameterTypes": [] }
+    ],
     "allDeclaredConstructors": true,
     "allDeclaredMethods": true
   },
@@ -783,12 +789,6 @@
     "allPublicFields" : true,
     "allDeclaredMethods" : true,
     "allPublicMethods" : true
-  },
-  {
-    "name": "com.sourceplusplus.protocol.status.MarkerConnection",
-    "methods": [
-      { "name": "<init>", "parameterTypes": [] }
-    ]
   },
   {
     "name": "kotlin.reflect.jvm.internal.ReflectionFactoryImpl",
@@ -839,6 +839,14 @@
   },
   {
     "name": "spp.protocol.processor.status.ProcessorConnection",
+    "fields":[
+      {"name":"processorId", "allowWrite":true},
+      {"name":"connectionTime", "allowWrite":true},
+      {"name":"meta", "allowWrite":true}
+    ],
+    "methods": [
+      { "name": "<init>", "parameterTypes": [] }
+    ],
     "allPublicFields": true,
     "allDeclaredFields": true,
     "allDeclaredConstructors" : true,
@@ -868,6 +876,14 @@
   },
   {
     "name": "spp.protocol.probe.status.ProbeConnection",
+    "fields":[
+      {"name":"probeId", "allowWrite":true},
+      {"name":"connectionTime", "allowWrite":true},
+      {"name":"meta", "allowWrite":true}
+    ],
+    "methods": [
+      { "name": "<init>", "parameterTypes": [] }
+    ],
     "allDeclaredConstructors" : true,
     "allPublicConstructors" : true,
     "allDeclaredMethods" : true,
