@@ -77,7 +77,9 @@ object SourceProcessor {
         val platformCertificateFile = System.getenv("SPP_PLATFORM_CERTIFICATE_FILE")
         val myCaAsABuffer = when {
             platformCertificateFile != null -> Buffer.buffer(File(platformCertificateFile).readText())
-            platformCertificate != null -> Buffer.buffer("-----BEGIN CERTIFICATE-----$platformCertificate-----END CERTIFICATE-----")
+            platformCertificate != null -> Buffer.buffer(
+                "-----BEGIN CERTIFICATE-----$platformCertificate-----END CERTIFICATE-----"
+            )
             else -> null
         }
         val options = when {
