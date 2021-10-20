@@ -18,8 +18,7 @@ import spp.protocol.probe.command.LiveInstrumentCommand;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static spp.probe.SourceProbe.vertx;
 import static spp.protocol.probe.ProbeAddress.LIVE_LOG_REMOTE;
 import static spp.protocol.probe.command.LiveInstrumentCommand.CommandType.ADD_LIVE_INSTRUMENT;
@@ -39,6 +38,48 @@ public class IntegrationTest {
                     "Sp1nOmwJ64FDIbSpfpgUAqfSWXKZYhSisfnBLEyHCjMSPzVmDh949w-W1wU9q5nGFtrx6PTOxK_WKOiWU8_oeTjL0pD8pKXqJ" +
                     "MaLW-OIzfrl3kzQNuF80YT-nxmNtp5PrcxehprlPmqSB_dyTHccsO3l63d8y9hiIzfRUgUjTJbktFn5t41ADARMs_0WMpIGZJ" +
                     "yxcVssstt4J1Gj8WUFOdqPsIKigJZMn3yshC5S-KY-7S0dVd0VXgvpPqmpb9Q9Uho";
+
+    @Test
+    public void verifyClientConnected() throws Exception {
+        VertxTestContext testContext = new VertxTestContext();
+        assertTrue(SourceProbe.isAgentInitialized());
+        ProbeConfiguration.setQuietMode(false);
+
+        String platformHost = (System.getenv("SPP_PLATFORM_HOST") != null)
+                ? System.getenv("SPP_PLATFORM_HOST") : "localhost";
+        ProbeConfiguration.setString("platform_host", platformHost);
+
+        WebClient client = WebClient.create(
+                vertx, new WebClientOptions().setSsl(true).setTrustAll(true).setVerifyHost(false)
+        );
+        client.get(5445, platformHost, "/clients")
+                .bearerTokenAuthentication(SYSTEM_JWT_TOKEN).send().onComplete(it -> {
+                    if (it.succeeded()) {
+                        var result = it.result().bodyAsJsonObject();
+                        var processors = result.getJsonArray("processors");
+                        var markers = result.getJsonArray("markers");
+                        var probes = result.getJsonArray("probes");
+                        testContext.verify(() -> {
+                            assertNotEquals(0, processors.size());
+                            assertEquals(0, markers.size());
+                            assertNotEquals(0, probes.size());
+                        });
+
+                        client.close();
+                        testContext.completeNow();
+                    } else {
+                        testContext.failNow(it.cause());
+                    }
+                });
+
+        if (testContext.awaitCompletion(30, TimeUnit.SECONDS)) {
+            if (testContext.failed()) {
+                throw new RuntimeException(testContext.causeOfFailure());
+            }
+        } else {
+            throw new RuntimeException("Test timed out");
+        }
+    }
 
     @Test
     public void receivePendingInstrumentsOnReconnect() throws Exception {

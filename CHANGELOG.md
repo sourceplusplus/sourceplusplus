@@ -1,3 +1,6 @@
+# 0.1.15 (2021-10-20)
+- Fixed `/clients` response in native build
+
 # 0.1.14 (2021-10-19)
 - Added `/clients` endpoint
 - Refactored LiveInstrumentRemote

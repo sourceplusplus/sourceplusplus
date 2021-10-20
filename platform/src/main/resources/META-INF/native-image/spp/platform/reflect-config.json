@@ -2071,5 +2071,47 @@
   {
     "name":"ch.qos.logback.core.status.NopStatusListener",
     "methods":[{"name":"<init>","parameterTypes":[] }]
+  },
+  {
+    "name": "spp.protocol.platform.client.ActiveMarker",
+    "fields":[
+      {"name":"processorId", "allowWrite":true},
+      {"name":"connectedAt", "allowWrite":true},
+      {"name":"meta", "allowWrite":true}
+    ],
+    "allDeclaredConstructors" : true,
+    "allPublicConstructors" : true,
+    "allDeclaredFields" : true,
+    "allPublicFields" : true,
+    "allDeclaredMethods" : true,
+    "allPublicMethods" : true
+  },
+  {
+    "name": "spp.protocol.platform.client.ActiveProbe",
+    "fields":[
+      {"name":"processorId", "allowWrite":true},
+      {"name":"connectedAt", "allowWrite":true},
+      {"name":"meta", "allowWrite":true}
+    ],
+    "allDeclaredConstructors" : true,
+    "allPublicConstructors" : true,
+    "allDeclaredFields" : true,
+    "allPublicFields" : true,
+    "allDeclaredMethods" : true,
+    "allPublicMethods" : true
+  },
+  {
+    "name": "spp.protocol.platform.client.ActiveProcessor",
+    "fields":[
+      {"name":"processorId", "allowWrite":true},
+      {"name":"connectedAt", "allowWrite":true},
+      {"name":"meta", "allowWrite":true}
+    ],
+    "allDeclaredConstructors" : true,
+    "allPublicConstructors" : true,
+    "allDeclaredFields" : true,
+    "allPublicFields" : true,
+    "allDeclaredMethods" : true,
+    "allPublicMethods" : true
   }
 ]
