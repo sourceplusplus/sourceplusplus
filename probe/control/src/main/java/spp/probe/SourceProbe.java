@@ -183,6 +183,7 @@ public class SourceProbe {
             HashMap<String, Object> meta = new HashMap<>();
             meta.put("language", "java");
             meta.put("probe_version", BUILD.getString("build_version"));
+            meta.put("java_version", System.getProperty("java.version"));
             String replyAddress = UUID.randomUUID().toString();
             ProbeConnection pc = new ProbeConnection(UUID.randomUUID().toString(), System.currentTimeMillis(), meta);
             MessageConsumer<Boolean> consumer = vertx.eventBus().localConsumer("local." + replyAddress);
