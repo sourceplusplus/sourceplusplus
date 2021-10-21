@@ -10,7 +10,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class LiveInstrument implements Serializable {
 
-    private final transient AtomicInteger hitCount = new AtomicInteger(0);
     private final String id;
     private final Location location;
     private final transient Expression expression;
@@ -89,13 +88,8 @@ public class LiveInstrument implements Serializable {
     public boolean isFinished() {
         if (expiresAt != null && System.currentTimeMillis() >= expiresAt) {
             return true;
-        }
-
-        int totalHits = hitCount.incrementAndGet();
-        if (hitLimit == -1) {
-            return false;
         } else {
-            return totalHits >= hitLimit;
+            return hitLimit != -1 && throttle.getTotalHitCount() >= hitLimit;
         }
     }
 
