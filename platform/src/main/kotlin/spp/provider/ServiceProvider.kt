@@ -31,7 +31,7 @@ import spp.provider.live.LiveProviders
 import spp.provider.logging.LoggingProviders
 import kotlin.system.exitProcess
 
-class ServiceProvider(private val jwtAuth: JWTAuth) : CoroutineVerticle() {
+class ServiceProvider(private val jwtAuth: JWTAuth?) : CoroutineVerticle() {
 
     companion object {
         private val log = LoggerFactory.getLogger(ServiceProvider::class.java)
@@ -66,7 +66,7 @@ class ServiceProvider(private val jwtAuth: JWTAuth) : CoroutineVerticle() {
                         if (log.isTraceEnabled) log.trace("Validating log count indicator access")
 
                         val promise = Promise.promise<Message<JsonObject>>()
-                        jwtAuth.authenticate(JsonObject().put("token", msg.headers().get("auth-token"))).onComplete {
+                        jwtAuth!!.authenticate(JsonObject().put("token", msg.headers().get("auth-token"))).onComplete {
                             GlobalScope.launch {
                                 if (it.succeeded()) {
                                     val selfId = it.result().principal().getString("developer_id")
@@ -111,7 +111,7 @@ class ServiceProvider(private val jwtAuth: JWTAuth) : CoroutineVerticle() {
                         if (log.isTraceEnabled) log.trace("Validating live instrument access")
 
                         val promise = Promise.promise<Message<JsonObject>>()
-                        jwtAuth.authenticate(JsonObject().put("token", msg.headers().get("auth-token"))).onComplete {
+                        jwtAuth!!.authenticate(JsonObject().put("token", msg.headers().get("auth-token"))).onComplete {
                             GlobalScope.launch {
                                 if (it.succeeded()) {
                                     val selfId = it.result().principal().getString("developer_id")
@@ -160,7 +160,7 @@ class ServiceProvider(private val jwtAuth: JWTAuth) : CoroutineVerticle() {
                         if (log.isTraceEnabled) log.trace("Validating live view access")
 
                         val promise = Promise.promise<Message<JsonObject>>()
-                        jwtAuth.authenticate(JsonObject().put("token", msg.headers().get("auth-token"))).onComplete {
+                        jwtAuth!!.authenticate(JsonObject().put("token", msg.headers().get("auth-token"))).onComplete {
                             GlobalScope.launch {
                                 if (it.succeeded()) {
                                     val selfId = it.result().principal().getString("developer_id")

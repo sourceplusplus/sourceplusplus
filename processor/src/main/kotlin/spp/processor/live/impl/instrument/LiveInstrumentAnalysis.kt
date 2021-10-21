@@ -30,8 +30,6 @@ class LiveInstrumentAnalysis(elasticSearch: EsDAO) : AnalysisListenerFactory, Lo
         const val INSTANCE_FIELD = "spp.field:"
         const val STACK_TRACE = "spp.stack-trace:"
         const val BREAKPOINT = "spp.breakpoint:"
-        const val LOCATION_SOURCE = "spp.location-source:"
-        const val LOCATION_LINE = "spp.location-line:"
     }
 
     private var logPublishRateLimit = 1000
@@ -160,13 +158,12 @@ class LiveInstrumentAnalysis(elasticSearch: EsDAO) : AnalysisListenerFactory, Lo
                         stackTraces[it.key.substring(STACK_TRACE.length)] = it.value
                     }
                     it.key.startsWith(BREAKPOINT) -> {
-                        breakpointIds.add(it.key.substring(BREAKPOINT.length))
-                    }
-                    it.key.startsWith(LOCATION_SOURCE) -> {
-                        locationSources[it.key.substring(LOCATION_SOURCE.length)] = it.value
-                    }
-                    it.key.startsWith(LOCATION_LINE) -> {
-                        locationLines[it.key.substring(LOCATION_LINE.length)] = it.value.toInt()
+                        val breakpointId = it.key.substring(BREAKPOINT.length)
+                        breakpointIds.add(breakpointId)
+                        JsonObject(it.value).apply {
+                            locationSources[breakpointId] = getString("source")
+                            locationLines[breakpointId] = getInteger("line")
+                        }
                     }
                 }
             }
