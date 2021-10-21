@@ -12,6 +12,7 @@ import graphql.Scalars
 import graphql.schema.DataFetchingEnvironment
 import graphql.schema.idl.*
 import io.vertx.core.Vertx
+import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import io.vertx.ext.web.impl.RoutingContextImpl
 import kotlinx.coroutines.GlobalScope
@@ -39,7 +40,9 @@ object SourceService {
         val runtimeWiring = RuntimeWiring.newRuntimeWiring()
             .scalar(Scalars.GraphQLLong)
             .type(TypeRuntimeWiring.newTypeWiring("LiveInstrument").typeResolver {
-                if ((it.getObject() as Any) is LiveBreakpoint) {
+                if ((it.getObject() as Any) is LiveBreakpoint ||
+                    (it.getObject() as Map<String, Any>)["type"] == "BREAKPOINT"
+                ) {
                     it.schema.getObjectType("LiveBreakpoint")
                 } else {
                     it.schema.getObjectType("LiveLog")
@@ -452,8 +455,8 @@ object SourceService {
         return completableFuture
     }
 
-    private fun getLiveLogs(env: DataFetchingEnvironment): CompletableFuture<List<LiveLog>> {
-        val completableFuture = CompletableFuture<List<LiveLog>>()
+    private fun getLiveLogs(env: DataFetchingEnvironment): CompletableFuture<List<Map<String, Any>>> {
+        val completableFuture = CompletableFuture<List<Map<String, Any>>>()
         GlobalScope.launch {
             val selfId = if (System.getenv("SPP_DISABLE_JWT") != "true") {
                 val devId = env.getContext<RoutingContextImpl>().user().principal().getString("developer_id")
@@ -467,7 +470,7 @@ object SourceService {
             RequestContext.put("self_id", selfId)
             ServiceProvider.liveProviders.liveInstrument.getLiveLogs {
                 if (it.succeeded()) {
-                    completableFuture.complete(it.result())
+                    completableFuture.complete(it.result().map { fixJsonMaps(it) })
                 } else {
                     completableFuture.completeExceptionally(it.cause())
                 }
@@ -476,8 +479,8 @@ object SourceService {
         return completableFuture
     }
 
-    private fun getLiveBreakpoints(env: DataFetchingEnvironment): CompletableFuture<List<LiveBreakpoint>> {
-        val completableFuture = CompletableFuture<List<LiveBreakpoint>>()
+    private fun getLiveBreakpoints(env: DataFetchingEnvironment): CompletableFuture<List<Map<String, Any>>> {
+        val completableFuture = CompletableFuture<List<Map<String, Any>>>()
         GlobalScope.launch {
             val selfId = if (System.getenv("SPP_DISABLE_JWT") != "true") {
                 val devId = env.getContext<RoutingContextImpl>().user().principal().getString("developer_id")
@@ -491,7 +494,7 @@ object SourceService {
             RequestContext.put("self_id", selfId)
             ServiceProvider.liveProviders.liveInstrument.getLiveBreakpoints {
                 if (it.succeeded()) {
-                    completableFuture.complete(it.result())
+                    completableFuture.complete(it.result().map { fixJsonMaps(it) })
                 } else {
                     completableFuture.completeExceptionally(it.cause())
                 }
@@ -500,8 +503,8 @@ object SourceService {
         return completableFuture
     }
 
-    private fun getLiveInstruments(env: DataFetchingEnvironment): CompletableFuture<List<LiveInstrument>> {
-        val completableFuture = CompletableFuture<List<LiveInstrument>>()
+    private fun getLiveInstruments(env: DataFetchingEnvironment): CompletableFuture<List<Map<String, Any>>> {
+        val completableFuture = CompletableFuture<List<Map<String, Any>>>()
         GlobalScope.launch {
             val selfId = if (System.getenv("SPP_DISABLE_JWT") != "true") {
                 val devId = env.getContext<RoutingContextImpl>().user().principal().getString("developer_id")
@@ -515,7 +518,7 @@ object SourceService {
             RequestContext.put("self_id", selfId)
             ServiceProvider.liveProviders.liveInstrument.getLiveInstruments {
                 if (it.succeeded()) {
-                    completableFuture.complete(it.result())
+                    completableFuture.complete(it.result().map { fixJsonMaps(it) })
                 } else {
                     completableFuture.completeExceptionally(it.cause())
                 }
@@ -943,8 +946,8 @@ object SourceService {
         return completableFuture
     }
 
-    private fun removeLiveInstrument(env: DataFetchingEnvironment): CompletableFuture<LiveInstrument?> {
-        val completableFuture = CompletableFuture<LiveInstrument?>()
+    private fun removeLiveInstrument(env: DataFetchingEnvironment): CompletableFuture<Map<String, Any>?> {
+        val completableFuture = CompletableFuture<Map<String, Any>?>()
         GlobalScope.launch {
             val selfId = if (System.getenv("SPP_DISABLE_JWT") != "true") {
                 val devId = env.getContext<RoutingContextImpl>().user().principal().getString("developer_id")
@@ -959,7 +962,11 @@ object SourceService {
             RequestContext.put("self_id", selfId)
             ServiceProvider.liveProviders.liveInstrument.removeLiveInstrument(id) {
                 if (it.succeeded()) {
-                    completableFuture.complete(it.result())
+                    if (it.result() == null) {
+                        completableFuture.complete(null)
+                    } else {
+                        completableFuture.complete(fixJsonMaps(it.result()!!))
+                    }
                 } else {
                     completableFuture.completeExceptionally(it.cause())
                 }
@@ -968,8 +975,8 @@ object SourceService {
         return completableFuture
     }
 
-    private fun removeLiveInstruments(env: DataFetchingEnvironment): CompletableFuture<List<LiveInstrument>> {
-        val completableFuture = CompletableFuture<List<LiveInstrument>>()
+    private fun removeLiveInstruments(env: DataFetchingEnvironment): CompletableFuture<List<Map<String, Any>>> {
+        val completableFuture = CompletableFuture<List<Map<String, Any>>>()
         GlobalScope.launch {
             val selfId = if (System.getenv("SPP_DISABLE_JWT") != "true") {
                 val devId = env.getContext<RoutingContextImpl>().user().principal().getString("developer_id")
@@ -988,7 +995,7 @@ object SourceService {
                 LiveSourceLocation(source, line)
             ) {
                 if (it.succeeded()) {
-                    completableFuture.complete(it.result())
+                    completableFuture.complete(it.result().map { fixJsonMaps(it) })
                 } else {
                     completableFuture.completeExceptionally(it.cause())
                 }
@@ -1021,8 +1028,8 @@ object SourceService {
         return completableFuture
     }
 
-    private fun addLiveLog(env: DataFetchingEnvironment): CompletableFuture<LiveLog> {
-        val completableFuture = CompletableFuture<LiveLog>()
+    private fun addLiveLog(env: DataFetchingEnvironment): CompletableFuture<Map<String, Any>> {
+        val completableFuture = CompletableFuture<Map<String, Any>>()
         GlobalScope.launch {
             val selfId = if (System.getenv("SPP_DISABLE_JWT") != "true") {
                 val devId = env.getContext<RoutingContextImpl>().user().principal().getString("developer_id")
@@ -1066,11 +1073,12 @@ object SourceService {
                     condition = condition,
                     expiresAt = expiresAt,
                     hitLimit = hitLimit ?: 1,
-                    throttle = throttle
+                    throttle = throttle,
+                    meta = toJsonMap(input.getJsonArray("meta"))
                 )
             ) {
                 if (it.succeeded()) {
-                    completableFuture.complete(it.result() as LiveLog)
+                    completableFuture.complete(fixJsonMaps(it.result()))
                 } else {
                     completableFuture.completeExceptionally(it.cause())
                 }
@@ -1079,8 +1087,8 @@ object SourceService {
         return completableFuture
     }
 
-    private fun addLiveBreakpoint(env: DataFetchingEnvironment): CompletableFuture<LiveBreakpoint> {
-        val completableFuture = CompletableFuture<LiveBreakpoint>()
+    private fun addLiveBreakpoint(env: DataFetchingEnvironment): CompletableFuture<Map<String, Any>> {
+        val completableFuture = CompletableFuture<Map<String, Any>>()
         GlobalScope.launch {
             val selfId = if (System.getenv("SPP_DISABLE_JWT") != "true") {
                 val devId = env.getContext<RoutingContextImpl>().user().principal().getString("developer_id")
@@ -1119,16 +1127,35 @@ object SourceService {
                     condition = condition,
                     expiresAt = expiresAt,
                     hitLimit = hitLimit ?: 1,
-                    throttle = throttle
+                    throttle = throttle,
+                    meta = toJsonMap(input.getJsonArray("meta"))
                 )
             ) {
                 if (it.succeeded()) {
-                    completableFuture.complete(it.result() as LiveBreakpoint)
+                    completableFuture.complete(fixJsonMaps(it.result()))
                 } else {
                     completableFuture.completeExceptionally(it.cause())
                 }
             }
         }
         return completableFuture
+    }
+
+    private fun toJsonMap(metaArray: JsonArray?): MutableMap<String, String> {
+        val meta = mutableMapOf<String, String>()
+        val metaOb = metaArray ?: JsonArray()
+        for (i in 0 until metaOb.size()) {
+            val metaInfoOb = metaOb.getJsonObject(i)
+            meta[metaInfoOb.getString("name")] = metaInfoOb.getString("value")
+        }
+        return meta
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun fixJsonMaps(liveInstrument: LiveInstrument): Map<String, Any> {
+        val rtnMap = (JsonObject.mapFrom(liveInstrument).map as Map<String, Any>).toMutableMap()
+        val meta = rtnMap["meta"] as LinkedHashMap<String, String>
+        rtnMap["meta"] = meta.map { mapOf("name" to it.key, "value" to it.value) }.toTypedArray()
+        return rtnMap
     }
 }

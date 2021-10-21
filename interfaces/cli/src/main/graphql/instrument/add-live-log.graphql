@@ -14,5 +14,9 @@ mutation addLiveLog($input: LiveLogInput!) {
             limit
             step
         }
+        meta {
+            name
+            value
+        }
     }
 }

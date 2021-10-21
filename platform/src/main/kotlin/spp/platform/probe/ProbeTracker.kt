@@ -11,16 +11,24 @@ import kotlinx.coroutines.launch
 import mu.KotlinLogging
 import spp.platform.util.Msg.msg
 import spp.protocol.platform.PlatformAddress
+import spp.protocol.platform.client.ActiveProbe
 import spp.protocol.probe.ProbeAddress
 import spp.protocol.probe.status.ProbeConnection
+import java.time.Duration
+import java.time.Instant
 import java.util.concurrent.ConcurrentHashMap
 
 class ProbeTracker : CoroutineVerticle() {
 
     private val log = KotlinLogging.logger {}
-    private val activeProbes: MutableMap<String, MutableSet<String>> = ConcurrentHashMap()
+    private val activeProbes: MutableMap<String, ActiveProbe> = ConcurrentHashMap()
 
     override suspend fun start() {
+        vertx.eventBus().consumer<JsonObject>(activeProbesAddress) {
+            GlobalScope.launch(vertx.dispatcher()) {
+                it.reply(ArrayList(activeProbes.values))
+            }
+        }
         vertx.eventBus().consumer<JsonObject>(connectedProbesAddress) {
             GlobalScope.launch(vertx.dispatcher()) {
                 it.reply(
@@ -33,7 +41,7 @@ class ProbeTracker : CoroutineVerticle() {
         vertx.eventBus().consumer<JsonObject>(ProbeAddress.REMOTE_REGISTERED.address) {
             val remote = it.body().getString("address")
             val probeId = it.headers().get("probe_id")
-            activeProbes[probeId]!!.add(remote)
+            activeProbes[probeId]!!.remotes.add(remote)
             log.trace { msg("Probe {} registered {}", probeId, remote) }
 
             GlobalScope.launch(vertx.dispatcher()) {
@@ -46,7 +54,7 @@ class ProbeTracker : CoroutineVerticle() {
             val latency = System.currentTimeMillis() - conn.connectionTime
             log.trace { msg("Establishing connection with probe {}", conn.probeId) }
 
-            activeProbes[conn.probeId] = ConcurrentHashMap.newKeySet()
+            activeProbes[conn.probeId] = ActiveProbe(conn.probeId, System.currentTimeMillis(), meta = conn.meta)
             it.reply(true)
 
             log.info(
@@ -61,14 +69,15 @@ class ProbeTracker : CoroutineVerticle() {
         }
         vertx.eventBus().consumer<JsonObject>(PlatformAddress.PROBE_DISCONNECTED.address) {
             val conn = Json.decodeValue(it.body().toString(), ProbeConnection::class.java)
-            val registeredRemotes = activeProbes.remove(conn.probeId)!!
-            log.info("Probe disconnected") //todo: could report total connection time
+            val activeProbe = activeProbes.remove(conn.probeId)!!
+            val connectedAt = Instant.ofEpochMilli(activeProbe.connectedAt)
+            log.info("Probe disconnected. Connection time: {}", Duration.between(Instant.now(), connectedAt))
 
             GlobalScope.launch(vertx.dispatcher()) {
                 vertx.sharedData().getLocalCounter(PlatformAddress.PROBE_CONNECTED.address).await()
                     .decrementAndGet().await()
 
-                registeredRemotes.forEach {
+                activeProbe.remotes.forEach {
                     vertx.sharedData().getLocalCounter(it).await()
                         .decrementAndGet().await()
                 }
@@ -78,9 +87,14 @@ class ProbeTracker : CoroutineVerticle() {
 
     companion object {
         private const val connectedProbesAddress = "get-connected-probes"
+        private const val activeProbesAddress = "get-active-probes"
 
-        suspend fun getConnectedProbes(vertx: Vertx): Int {
+        suspend fun getConnectedProbeCount(vertx: Vertx): Int {
             return vertx.eventBus().request<Int>(connectedProbesAddress, null).await().body()
+        }
+
+        suspend fun getActiveProbes(vertx: Vertx): List<ActiveProbe> {
+            return vertx.eventBus().request<List<ActiveProbe>>(activeProbesAddress, null).await().body()
         }
     }
 }

@@ -16,5 +16,9 @@ query getLiveLogs{
             limit
             step
         }
+        meta {
+            name
+            value
+        }
     }
 }

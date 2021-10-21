@@ -9,7 +9,7 @@ plugins {
 val platformGroup: String by project
 val platformVersion: String by project
 val jacksonVersion: String by project
-val sppProtocolVersion: String by project
+val sourceMarkerVersion: String by project
 val apolloVersion: String by project
 val commonsLang3Version: String by project
 val cliktVersion: String by project
@@ -26,7 +26,7 @@ dependencies {
     implementation("com.apollographql.apollo:apollo-coroutines-support:$apolloVersion")
     api("com.apollographql.apollo:apollo-api:$apolloVersion")
 
-    implementation("com.github.sourceplusplus:sourcemarker:v$sppProtocolVersion") {
+    implementation("com.github.sourceplusplus:sourcemarker:v$sourceMarkerVersion") {
         exclude(mapOf("group" to "com.github.sourceplusplus.sourcemarker", "module" to "portal-js"))
         exclude(mapOf("group" to "com.github.sourceplusplus.sourcemarker", "module" to "portal-metadata"))
         exclude(mapOf("group" to "com.github.sourceplusplus.sourcemarker", "module" to "protocol-js"))

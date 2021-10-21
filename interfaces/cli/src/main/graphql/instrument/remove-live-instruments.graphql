@@ -19,5 +19,9 @@ mutation removeLiveInstruments($source: String!, $line: Int!) {
             logArguments
         }
         type
+        meta {
+            name
+            value
+        }
     }
 }

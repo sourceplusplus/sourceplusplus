@@ -17,13 +17,13 @@ val skywalkingVersion: String by project
 val vertxVersion: String by project
 val gsonVersion: String by project
 val grpcVersion: String by project
-val sppProtocolVersion: String by project
+val sourceMarkerVersion: String by project
 
 group = platformGroup
 version = platformVersion
 
 dependencies {
-    implementation("com.github.sourceplusplus.sourcemarker:protocol-jvm:v$sppProtocolVersion") {
+    implementation("com.github.sourceplusplus.sourcemarker:protocol-jvm:v$sourceMarkerVersion") {
         isTransitive = false
     }
 
@@ -41,7 +41,7 @@ dependencies {
     compileOnly("org.apache.skywalking:agent-analyzer:$skywalkingVersion") { isTransitive = false }
     compileOnly("org.apache.skywalking:event-analyzer:$skywalkingVersion") { isTransitive = false }
     compileOnly("org.apache.skywalking:meter-analyzer:$skywalkingVersion") { isTransitive = false }
-    compileOnly("org.elasticsearch:elasticsearch:7.15.0")
+    compileOnly("org.elasticsearch:elasticsearch:7.15.1")
     implementation("io.vertx:vertx-service-discovery:$vertxVersion")
 //    implementation("io.vertx:vertx-service-proxy:$vertxVersion")
     implementation(files("../platform/.ext/vertx-service-proxy-4.0.2.jar"))

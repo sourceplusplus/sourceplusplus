@@ -1,4 +1,4 @@
-package spp.probe.services.impl.breakpoint.model;
+package spp.probe.services.instrument.model;
 
 import org.springframework.expression.Expression;
 import spp.probe.services.common.ModelSerializer;
@@ -8,7 +8,7 @@ import spp.probe.services.common.model.Location;
 import java.io.Serializable;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class LiveBreakpoint implements Serializable {
+public class LiveInstrument implements Serializable {
 
     private final transient AtomicInteger hitCount = new AtomicInteger(0);
     private final String id;
@@ -22,7 +22,7 @@ public class LiveBreakpoint implements Serializable {
     private transient boolean live;
     private final HitThrottle throttle;
 
-    public LiveBreakpoint(String id, Location location, Expression expression, int hitLimit,
+    public LiveInstrument(String id, Location location, Expression expression, int hitLimit,
                           HitThrottle throttle, Long expiresAt) {
         this.id = id;
         this.location = location;

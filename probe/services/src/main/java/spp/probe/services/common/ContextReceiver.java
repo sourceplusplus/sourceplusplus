@@ -88,8 +88,6 @@ public class ContextReceiver {
                 ThrowableTransformer.INSTANCE.convert2String(throwable, 4000));
         activeSpan.tag(new StringTag("spp.breakpoint:" + breakpointId),
                 new Location(source, line).toJson());
-        activeSpan.tag(new StringTag("spp.location-source:" + breakpointId), source);
-        activeSpan.tag(new StringTag("spp.location-line:" + breakpointId), String.valueOf(line));
 
         ContextManager.stopSpan(activeSpan);
     }

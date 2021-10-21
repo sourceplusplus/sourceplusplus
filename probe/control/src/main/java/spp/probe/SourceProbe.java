@@ -13,8 +13,7 @@ import io.vertx.core.net.PemTrustOptions;
 import io.vertx.ext.bridge.BridgeEventType;
 import io.vertx.ext.eventbus.bridge.tcp.impl.protocol.FrameHelper;
 import io.vertx.ext.eventbus.bridge.tcp.impl.protocol.FrameParser;
-import spp.probe.control.LiveBreakpointRemote;
-import spp.probe.control.LiveLogRemote;
+import spp.probe.control.LiveInstrumentRemote;
 import spp.probe.util.NopInternalLogger;
 import spp.probe.util.NopLogDelegateFactory;
 import spp.protocol.platform.PlatformAddress;
@@ -27,6 +26,7 @@ import java.lang.instrument.Instrumentation;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.HashMap;
 import java.util.Objects;
 import java.util.ResourceBundle;
 import java.util.UUID;
@@ -47,8 +47,7 @@ public class SourceProbe {
     public static Vertx vertx;
     private static final AtomicBoolean connected = new AtomicBoolean();
     public static NetSocket tcpSocket;
-    public static LiveBreakpointRemote breakpointRemote;
-    public static LiveLogRemote logRemote;
+    public static LiveInstrumentRemote instrumentRemote;
 
     public static boolean isAgentInitialized() {
         return instrumentation != null;
@@ -97,18 +96,15 @@ public class SourceProbe {
     }
 
     public static void deployRemotes() {
-        vertx.deployVerticle(breakpointRemote = new LiveBreakpointRemote());
-        vertx.deployVerticle(logRemote = new LiveLogRemote());
+        vertx.deployVerticle(instrumentRemote = new LiveInstrumentRemote());
     }
 
     public static void disconnectFromPlatform() throws Exception {
         connected.set(false);
         tcpSocket.close();
         tcpSocket = null;
-        breakpointRemote.stop();
-        logRemote.stop();
-        breakpointRemote = null;
-        logRemote = null;
+        instrumentRemote.stop();
+        instrumentRemote = null;
     }
 
     public static synchronized void connectToPlatform() {
@@ -184,8 +180,12 @@ public class SourceProbe {
             socket.result().handler(parser);
 
             //send probe connected status
+            HashMap<String, Object> meta = new HashMap<>();
+            meta.put("language", "java");
+            meta.put("probe_version", BUILD.getString("build_version"));
+            meta.put("java_version", System.getProperty("java.version"));
             String replyAddress = UUID.randomUUID().toString();
-            ProbeConnection pc = new ProbeConnection(UUID.randomUUID().toString(), System.currentTimeMillis());
+            ProbeConnection pc = new ProbeConnection(UUID.randomUUID().toString(), System.currentTimeMillis(), meta);
             MessageConsumer<Boolean> consumer = vertx.eventBus().localConsumer("local." + replyAddress);
             consumer.handler(resp -> {
                 if (ProbeConfiguration.isNotQuite()) System.out.println("Received probe connection confirmation");
