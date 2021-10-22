@@ -1,3 +1,6 @@
+# 0.1.17 (2021-10-22)
+- Improved JetBrains product code handling
+
 # 0.1.15 (2021-10-20)
 - Fixed `/clients` response in native build
 
