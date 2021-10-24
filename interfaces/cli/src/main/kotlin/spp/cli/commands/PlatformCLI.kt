@@ -34,7 +34,10 @@ object PlatformCLI : CliktCommand(name = "spp-cli", allowMultipleSubcommands = t
 
     val verbose by option("-v", "--verbose", help = "Enable verbose mode").flag()
     private val platformHost: String by option("-p", "--platform", help = "Source++ platform host")
-        .default("https://" + (System.getenv("SPP_PLATFORM_HOST") ?: "localhost") + ":5445")
+        .default(
+            (if (System.getenv("SPP_DISABLE_TLS") != "true") "https://" else "http")
+                    + (System.getenv("SPP_PLATFORM_HOST") ?: "localhost") + ":5445"
+        )
     private val platformCertificate by option("-c", "--certificate", help = "Source++ platform certificate").file()
         .default(File("config/spp-platform.crt"))
     private val platformKey by option("-k", "--key", help = "Source++ platform key").file()
