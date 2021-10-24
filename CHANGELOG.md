@@ -1,3 +1,6 @@
+# 0.1.18 (2021-10-24)
+- Improved CLI default config
+
 # 0.1.17 (2021-10-22)
 - Improved JetBrains product code handling
 
