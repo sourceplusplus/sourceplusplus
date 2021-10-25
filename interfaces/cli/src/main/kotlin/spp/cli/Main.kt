@@ -58,7 +58,7 @@ object Main {
                 GetDeveloperAccessPermissions(),
                 GetRoleAccessPermissions(),
                 RemoveAccessPermission(),
-                RemoveRoleAccessPermission(),
+                RemoveRoleAccessPermission()
             ),
             Developer().subcommands(
                 //instrument
