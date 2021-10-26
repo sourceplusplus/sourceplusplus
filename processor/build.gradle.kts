@@ -23,11 +23,7 @@ group = platformGroup
 version = platformVersion
 
 dependencies {
-    implementation("com.github.sourceplusplus.sourcemarker:protocol-jvm:v$sourceMarkerVersion") {
-        isTransitive = false
-    }
-
-    implementation(project(":protocol"))
+    implementation("com.github.sourceplusplus.protocol:protocol:0.1.21")
     compileOnly("org.apache.skywalking:apm-network:$skywalkingVersion") { isTransitive = false }
     compileOnly("org.apache.skywalking:library-server:$skywalkingVersion") { isTransitive = false }
     compileOnly("org.apache.skywalking:library-module:$skywalkingVersion") { isTransitive = false }

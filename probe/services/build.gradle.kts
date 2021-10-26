@@ -26,7 +26,7 @@ tasks.getByName<JavaCompile>("compileJava") {
 }
 
 dependencies {
-    implementation(project(":protocol"))
+    implementation("com.github.sourceplusplus.protocol:protocol:0.1.21")
     compileOnly(files("$projectDir/../.ext/skywalking-agent-$skywalkingVersion.jar"))
     implementation("com.google.code.gson:gson:$gsonVersion")
     implementation("org.springframework:spring-expression:5.3.12")
