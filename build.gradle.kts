@@ -129,14 +129,11 @@ tasks {
     }
 
     register<Copy>("updateDockerFiles") {
-        dependsOn(":platform:build", ":probe:control:build", ":processor:build")
+        dependsOn(":platform:build", ":processor:build")
         if (System.getProperty("build.profile") == "debian") {
             doFirst {
                 if (!File("platform/build/graal/spp-platform").exists()) {
                     throw GradleException("Missing spp-platform")
-                }
-                if (!File("probe/control/build/libs/spp-probe-$version.jar").exists()) {
-                    throw GradleException("Missing spp-probe-$version.jar")
                 }
                 if (!File("processor/build/libs/spp-processor-$version.jar").exists()) {
                     throw GradleException("Missing spp-processor-$version.jar")
@@ -144,7 +141,6 @@ tasks {
             }
             from(
                 "platform/build/graal/spp-platform",
-                "probe/control/build/libs/spp-probe-$version.jar",
                 "processor/build/libs/spp-processor-$version.jar"
             )
             into(File(projectDir, "docker/e2e"))
@@ -153,16 +149,12 @@ tasks {
                 if (!File("platform/build/libs/spp-platform-$version.jar").exists()) {
                     throw GradleException("Missing spp-platform-$version.jar")
                 }
-                if (!File("probe/control/build/libs/spp-probe-$version-shadow.jar").exists()) {
-                    throw GradleException("Missing spp-probe-$version-shadow.jar")
-                }
                 if (!File("processor/build/libs/spp-processor-$version-shadow.jar").exists()) {
                     throw GradleException("Missing spp-processor-$version-shadow.jar")
                 }
             }
             from(
                 "platform/build/libs/spp-platform-$version.jar",
-                "probe/control/build/libs/spp-probe-$version-shadow.jar",
                 "processor/build/libs/spp-processor-$version-shadow.jar"
             )
             into(File(projectDir, "docker/e2e"))
