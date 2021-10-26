@@ -17,6 +17,7 @@ val bouncycastleVersion: String by project
 val jupiterVersion: String by project
 val commonsIoVersion: String by project
 val auth0JwtVersion: String by project
+val protocolVersion: String by project
 
 group = platformGroup
 version = platformVersion
@@ -26,7 +27,7 @@ dependencies {
     implementation("com.apollographql.apollo:apollo-coroutines-support:$apolloVersion")
     api("com.apollographql.apollo:apollo-api:$apolloVersion")
 
-    implementation("com.github.sourceplusplus.protocol:protocol:0.1.21")
+    implementation("com.github.sourceplusplus.protocol:protocol:$protocolVersion")
 
     implementation("org.apache.commons:commons-lang3:$commonsLang3Version")
     implementation("com.github.ajalt.clikt:clikt:$cliktVersion")

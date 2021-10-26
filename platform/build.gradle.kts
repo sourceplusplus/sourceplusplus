@@ -19,6 +19,7 @@ val apolloVersion: String by project
 val commonsIoVersion: String by project
 val logbackVersion: String by project
 val auth0JwtVersion: String by project
+val protocolVersion: String by project
 
 group = platformGroup
 version = platformVersion
@@ -27,7 +28,7 @@ val vertxVersion = "4.1.4" //todo: consolidate with gradle.properties 4.0.2
 
 dependencies {
     implementation("org.graalvm.sdk:graal-sdk:$graalVersion")
-    implementation("com.github.sourceplusplus.protocol:protocol:0.1.21")
+    implementation("com.github.sourceplusplus.protocol:protocol:$protocolVersion")
     implementation(project(":processor"))
     shadow(project(":processor")) //todo: figure out why extra configurations.add() and this are needed
 
