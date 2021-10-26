@@ -4,3 +4,6 @@
 [submodule "interfaces/marker/SourceMarker"]
 	path = interfaces/marker/SourceMarker
 	url = https://github.com/sourceplusplus/SourceMarker
+[submodule "protocol"]
+	path = protocol
+	url = https://github.com/sourceplusplus/protocol
