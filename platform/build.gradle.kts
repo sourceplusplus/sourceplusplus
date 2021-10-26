@@ -2,7 +2,7 @@ import java.util.*
 
 plugins {
     id("com.github.johnrengelman.shadow") version "7.1.0"
-    id("com.palantir.graal") version "0.9.0"
+    id("com.palantir.graal") version "0.10.0"
     id("com.apollographql.apollo").version("2.5.9")
 }
 
