@@ -5,7 +5,7 @@ on:
     types: [published]
 
 jobs:
-  docker-release:
+  release:
     runs-on: ubuntu-latest
 
     steps:
