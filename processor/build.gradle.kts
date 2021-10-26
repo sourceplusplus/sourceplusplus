@@ -18,12 +18,13 @@ val vertxVersion: String by project
 val gsonVersion: String by project
 val grpcVersion: String by project
 val sourceMarkerVersion: String by project
+val protocolVersion: String by project
 
 group = platformGroup
 version = platformVersion
 
 dependencies {
-    implementation("com.github.sourceplusplus.protocol:protocol:0.1.21")
+    implementation("com.github.sourceplusplus.protocol:protocol:$protocolVersion")
     compileOnly("org.apache.skywalking:apm-network:$skywalkingVersion") { isTransitive = false }
     compileOnly("org.apache.skywalking:library-server:$skywalkingVersion") { isTransitive = false }
     compileOnly("org.apache.skywalking:library-module:$skywalkingVersion") { isTransitive = false }
