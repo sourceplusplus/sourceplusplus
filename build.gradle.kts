@@ -91,14 +91,9 @@ subprojects {
 tasks {
     register("makeDist") {
         //todo: use gradle copy task
-        dependsOn(
-            ":platform:build", ":probe:control:build", ":processor:build", ":interfaces:marker:buildPlugin"
-        )
+        dependsOn(":platform:build", ":processor:build", ":interfaces:marker:buildPlugin")
         doLast {
             file("dist/spp-platform-$version/config").mkdirs()
-            file("dist/spp-platform-$version/probe").mkdirs()
-            file("probe/control/build/libs/spp-probe-$version.jar")
-                .copyTo(file("dist/spp-platform-$version/probe/spp-probe-$version.jar"))
             file("platform/config/spp-platform.yml")
                 .copyTo(file("dist/spp-platform-$version/config/spp-platform.yml"))
             file("platform/build/graal/spp-platform")
