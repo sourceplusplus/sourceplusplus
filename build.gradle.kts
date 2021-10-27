@@ -160,6 +160,7 @@ tasks {
 dockerCompose {
     dockerComposeWorkingDirectory.set(File("./docker/e2e"))
     removeVolumes.set(true)
+    waitForTcpPorts.set(false)
 
     if (System.getProperty("build.profile") == "debian") {
         useComposeFiles.set(listOf("docker-compose-debian.yml"))
