@@ -10,3 +10,6 @@
 [submodule "probes/jvm"]
 	path = probes/jvm
 	url = https://github.com/sourceplusplus/probe-jvm
+[submodule "probes/python"]
+	path = probes/python
+	url = https://github.com/sourceplusplus/probe-python
