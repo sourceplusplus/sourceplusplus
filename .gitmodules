@@ -7,3 +7,6 @@
 [submodule "protocol"]
 	path = protocol
 	url = https://github.com/sourceplusplus/protocol
+[submodule "probes/jvm"]
+	path = probes/jvm
+	url = https://github.com/sourceplusplus/probe-jvm
