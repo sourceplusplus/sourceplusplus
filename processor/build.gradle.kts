@@ -26,6 +26,12 @@ val jacksonVersion: String by project
 group = platformGroup
 version = platformVersion
 
+repositories {
+    mavenCentral()
+    jcenter()
+    maven(url = "https://kotlin.bintray.com/kotlinx/")
+}
+
 dependencies {
     implementation(project(":protocol"))
     compileOnly("org.apache.skywalking:apm-network:$skywalkingVersion") { isTransitive = false }
