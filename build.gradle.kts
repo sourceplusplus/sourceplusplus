@@ -91,14 +91,9 @@ subprojects {
 tasks {
     register("makeDist") {
         //todo: use gradle copy task
-        dependsOn(
-            ":platform:build", ":probe:control:build", ":processor:build", ":interfaces:marker:buildPlugin"
-        )
+        dependsOn(":platform:build", ":processor:build", ":interfaces:marker:buildPlugin")
         doLast {
             file("dist/spp-platform-$version/config").mkdirs()
-            file("dist/spp-platform-$version/probe").mkdirs()
-            file("probe/control/build/libs/spp-probe-$version.jar")
-                .copyTo(file("dist/spp-platform-$version/probe/spp-probe-$version.jar"))
             file("platform/config/spp-platform.yml")
                 .copyTo(file("dist/spp-platform-$version/config/spp-platform.yml"))
             file("platform/build/graal/spp-platform")
@@ -129,14 +124,11 @@ tasks {
     }
 
     register<Copy>("updateDockerFiles") {
-        dependsOn(":platform:build", ":probe:control:build", ":processor:build")
+        dependsOn(":platform:build", ":processor:build")
         if (System.getProperty("build.profile") == "debian") {
             doFirst {
                 if (!File("platform/build/graal/spp-platform").exists()) {
                     throw GradleException("Missing spp-platform")
-                }
-                if (!File("probe/control/build/libs/spp-probe-$version.jar").exists()) {
-                    throw GradleException("Missing spp-probe-$version.jar")
                 }
                 if (!File("processor/build/libs/spp-processor-$version.jar").exists()) {
                     throw GradleException("Missing spp-processor-$version.jar")
@@ -144,7 +136,6 @@ tasks {
             }
             from(
                 "platform/build/graal/spp-platform",
-                "probe/control/build/libs/spp-probe-$version.jar",
                 "processor/build/libs/spp-processor-$version.jar"
             )
             into(File(projectDir, "docker/e2e"))
@@ -153,16 +144,12 @@ tasks {
                 if (!File("platform/build/libs/spp-platform-$version.jar").exists()) {
                     throw GradleException("Missing spp-platform-$version.jar")
                 }
-                if (!File("probe/control/build/libs/spp-probe-$version-shadow.jar").exists()) {
-                    throw GradleException("Missing spp-probe-$version-shadow.jar")
-                }
                 if (!File("processor/build/libs/spp-processor-$version-shadow.jar").exists()) {
                     throw GradleException("Missing spp-processor-$version-shadow.jar")
                 }
             }
             from(
                 "platform/build/libs/spp-platform-$version.jar",
-                "probe/control/build/libs/spp-probe-$version-shadow.jar",
                 "processor/build/libs/spp-processor-$version-shadow.jar"
             )
             into(File(projectDir, "docker/e2e"))
@@ -173,6 +160,7 @@ tasks {
 dockerCompose {
     dockerComposeWorkingDirectory.set(File("./docker/e2e"))
     removeVolumes.set(true)
+    waitForTcpPorts.set(false)
 
     if (System.getProperty("build.profile") == "debian") {
         useComposeFiles.set(listOf("docker-compose-debian.yml"))
