@@ -178,20 +178,6 @@ tasks.register<Copy>("updateDockerFiles") {
     }
 }
 
-tasks.register("buildAndStartPlatform") {
-    //get and disable proguard task
-    val proguardTask = project.tasks.findByName("proguard")
-    if (proguardTask != null) {
-        proguardTask.enabled = false
-    }
-
-    dependsOn(
-        ":platform:shadowJar",
-        ":platform:updateDockerFiles",
-        ":platform:composeUp"
-    )
-}
-
 dockerCompose {
     dockerComposeWorkingDirectory.set(File("../docker/e2e"))
     removeVolumes.set(true)
