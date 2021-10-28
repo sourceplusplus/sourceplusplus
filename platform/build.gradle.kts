@@ -157,10 +157,10 @@ tasks.register<Copy>("updateDockerFiles") {
             }
         }
         from(
-            "platform/build/graal/spp-platform",
-            "processor/build/libs/spp-processor-$version.jar"
+            "build/graal/spp-platform",
+            "../processor/build/libs/spp-processor-$version.jar"
         )
-        into(File(projectDir, "docker/e2e"))
+        into(File(projectDir, "../docker/e2e"))
     } else {
         doFirst {
             if (!File("platform/build/libs/spp-platform-$version.jar").exists()) {
@@ -171,10 +171,10 @@ tasks.register<Copy>("updateDockerFiles") {
             }
         }
         from(
-            "platform/build/libs/spp-platform-$version.jar",
-            "processor/build/libs/spp-processor-$version-shadow.jar"
+            "build/libs/spp-platform-$version.jar",
+            "../processor/build/libs/spp-processor-$version-shadow.jar"
         )
-        into(File(projectDir, "docker/e2e"))
+        into(File(projectDir, "../docker/e2e"))
     }
 }
 
