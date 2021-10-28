@@ -1,12 +1,14 @@
 import java.util.*
 
 plugins {
-    id("com.github.johnrengelman.shadow") version "7.1.0"
-    id("com.palantir.graal") version "0.10.0"
-    id("com.apollographql.apollo").version("2.5.9")
+    id("com.avast.gradle.docker-compose")
+    id("io.gitlab.arturbosch.detekt")
+    id("com.github.johnrengelman.shadow")
+    id("com.palantir.graal")
+    id("com.apollographql.apollo")
     id("java")
-    id("org.jetbrains.kotlin.jvm") apply true
-    id("org.jetbrains.kotlin.kapt") apply true
+    id("org.jetbrains.kotlin.jvm")
+    id("org.jetbrains.kotlin.kapt")
 }
 
 val platformGroup: String by project
@@ -28,6 +30,12 @@ group = platformGroup
 version = platformVersion
 
 val vertxVersion = "4.1.4" //todo: consolidate with gradle.properties 4.0.2
+
+repositories {
+    mavenCentral()
+    jcenter()
+    maven(url = "https://kotlin.bintray.com/kotlinx/")
+}
 
 dependencies {
     implementation("org.graalvm.sdk:graal-sdk:$graalVersion")
@@ -134,5 +142,64 @@ tasks.getByName<Test>("test") {
 
         outputs.upToDateWhen { false }
         showStandardStreams = true
+    }
+}
+
+tasks.register<Copy>("updateDockerFiles") {
+    dependsOn(":platform:build", ":processor:build")
+    if (System.getProperty("build.profile") == "debian") {
+        doFirst {
+            if (!File("platform/build/graal/spp-platform").exists()) {
+                throw GradleException("Missing spp-platform")
+            }
+            if (!File("processor/build/libs/spp-processor-$version.jar").exists()) {
+                throw GradleException("Missing spp-processor-$version.jar")
+            }
+        }
+        from(
+            "platform/build/graal/spp-platform",
+            "processor/build/libs/spp-processor-$version.jar"
+        )
+        into(File(projectDir, "docker/e2e"))
+    } else {
+        doFirst {
+            if (!File("platform/build/libs/spp-platform-$version.jar").exists()) {
+                throw GradleException("Missing spp-platform-$version.jar")
+            }
+            if (!File("processor/build/libs/spp-processor-$version-shadow.jar").exists()) {
+                throw GradleException("Missing spp-processor-$version-shadow.jar")
+            }
+        }
+        from(
+            "platform/build/libs/spp-platform-$version.jar",
+            "processor/build/libs/spp-processor-$version-shadow.jar"
+        )
+        into(File(projectDir, "docker/e2e"))
+    }
+}
+
+tasks.register("buildAndStartPlatform") {
+    //get and disable proguard task
+    val proguardTask = project.tasks.findByName("proguard")
+    if (proguardTask != null) {
+        proguardTask.enabled = false
+    }
+
+    dependsOn(
+        ":platform:shadowJar",
+        ":platform:updateDockerFiles",
+        ":platform:composeUp"
+    )
+}
+
+dockerCompose {
+    dockerComposeWorkingDirectory.set(File("../docker/e2e"))
+    removeVolumes.set(true)
+    waitForTcpPorts.set(false)
+
+    if (System.getProperty("build.profile") == "debian") {
+        useComposeFiles.set(listOf("docker-compose-debian.yml"))
+    } else {
+        useComposeFiles.set(listOf("docker-compose-jvm.yml"))
     }
 }
