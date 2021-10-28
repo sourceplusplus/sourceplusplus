@@ -1,3 +1,15 @@
+pluginManagement {
+    plugins {
+        String kotlinVersion = "1.5.31"
+        id 'org.jetbrains.kotlin.jvm' version kotlinVersion apply false
+        id 'org.jetbrains.kotlin.multiplatform' version kotlinVersion apply false
+        id 'org.jetbrains.kotlin.js' version kotlinVersion apply false
+        id 'org.jetbrains.kotlin.plugin.serialization' version kotlinVersion apply false
+        id 'org.jetbrains.kotlin.kapt' version kotlinVersion apply false
+        id 'org.jetbrains.kotlin.plugin.noarg' version kotlinVersion apply false
+    }
+}
+
 rootProject.buildFileName = "build.gradle.kts"
 rootProject.name = 'spp-platform'
 
@@ -5,3 +17,4 @@ include ':interfaces:cli'
 include ':interfaces:marker'
 include 'platform'
 include 'processor'
+include 'protocol'

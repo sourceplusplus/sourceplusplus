@@ -8,9 +8,9 @@ group = platformGroup
 version = platformVersion
 
 tasks {
-    getByName("clean") {
-        dependsOn("cleanSourceMarker")
-    }
+//    getByName("clean") {
+//        dependsOn("cleanSourceMarker")
+//    }
 
     register<Exec>("cleanSourceMarker") {
         workingDir = File(project(":interfaces:marker").projectDir, "SourceMarker")
