@@ -2,10 +2,9 @@ import java.io.FileOutputStream
 import java.net.URL
 
 plugins {
-    id("java")
     id("com.avast.gradle.docker-compose") version "0.14.9"
 
-    val kotlinVersion = "1.5.0"
+    val kotlinVersion = "1.5.31"
     kotlin("jvm") version kotlinVersion apply false
     kotlin("multiplatform") version kotlinVersion apply false
     kotlin("js") version kotlinVersion apply false
@@ -36,26 +35,7 @@ subprojects {
         maven(url = "https://jitpack.io")
     }
 
-    apply(plugin = "org.jetbrains.kotlin.jvm")
-    if (name == "control" || name == "services" || name == "protocol") return@subprojects
-
-    apply(plugin = "kotlin-kapt")
-
-    dependencies {
-        implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2")
-        implementation("io.vertx:vertx-core:$vertxVersion")
-        implementation("io.vertx:vertx-lang-kotlin:$vertxVersion")
-        implementation("io.vertx:vertx-lang-kotlin-coroutines:$vertxVersion")
-        implementation("io.vertx:vertx-web:$vertxVersion")
-        implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jacksonVersion")
-        implementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:$jacksonVersion")
-        implementation("com.fasterxml.jackson.datatype:jackson-datatype-guava:$jacksonVersion")
-        implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
-        implementation("io.dropwizard.metrics:metrics-core:4.2.4")
-        implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.3.1")
-    }
-
-    apply<io.gitlab.arturbosch.detekt.DetektPlugin>()
+//    apply<io.gitlab.arturbosch.detekt.DetektPlugin>()
     tasks {
         withType<io.gitlab.arturbosch.detekt.Detekt> {
             parallel = true
@@ -66,15 +46,15 @@ subprojects {
             sourceCompatibility = "1.8"
             targetCompatibility = "1.8"
         }
-        withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
-            kotlinOptions.apiVersion = "1.4"
-            kotlinOptions.jvmTarget = "1.8"
-            kotlinOptions.freeCompilerArgs +=
-                listOf(
-                    "-Xno-optimized-callable-references",
-                    "-Xjvm-default=compatibility"
-                )
-        }
+//        withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+//            kotlinOptions.apiVersion = "1.4"
+//            kotlinOptions.jvmTarget = "1.8"
+//            kotlinOptions.freeCompilerArgs +=
+//                listOf(
+//                    "-Xno-optimized-callable-references",
+//                    "-Xjvm-default=compatibility"
+//                )
+//        }
 
         withType<Test> {
             testLogging {
@@ -167,6 +147,4 @@ dockerCompose {
     } else {
         useComposeFiles.set(listOf("docker-compose-jvm.yml"))
     }
-    //captureContainersOutput = true
-    captureContainersOutputToFile.set(File("./build/docker-compose.log"))
 }
