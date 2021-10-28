@@ -149,30 +149,30 @@ tasks.register<Copy>("updateDockerFiles") {
     dependsOn(":platform:build", ":processor:build")
     if (System.getProperty("build.profile") == "debian") {
         doFirst {
-            if (!File("platform/build/graal/spp-platform").exists()) {
+            if (!File(projectDir, "build/graal/spp-platform").exists()) {
                 throw GradleException("Missing spp-platform")
             }
-            if (!File("processor/build/libs/spp-processor-$version.jar").exists()) {
+            if (!File(projectDir, "../processor/build/libs/spp-processor-$version.jar").exists()) {
                 throw GradleException("Missing spp-processor-$version.jar")
             }
         }
         from(
-            "build/graal/spp-platform",
-            "../processor/build/libs/spp-processor-$version.jar"
+            File(projectDir, "build/graal/spp-platform"),
+            File(projectDir, "../processor/build/libs/spp-processor-$version.jar")
         )
         into(File(projectDir, "../docker/e2e"))
     } else {
         doFirst {
-            if (!File("platform/build/libs/spp-platform-$version.jar").exists()) {
+            if (!File(projectDir, "build/libs/spp-platform-$version.jar").exists()) {
                 throw GradleException("Missing spp-platform-$version.jar")
             }
-            if (!File("processor/build/libs/spp-processor-$version-shadow.jar").exists()) {
+            if (!File(projectDir, "../processor/build/libs/spp-processor-$version-shadow.jar").exists()) {
                 throw GradleException("Missing spp-processor-$version-shadow.jar")
             }
         }
         from(
-            "build/libs/spp-platform-$version.jar",
-            "../processor/build/libs/spp-processor-$version-shadow.jar"
+            File(projectDir, "build/libs/spp-platform-$version.jar"),
+            File(projectDir, "../processor/build/libs/spp-processor-$version-shadow.jar")
         )
         into(File(projectDir, "../docker/e2e"))
     }
