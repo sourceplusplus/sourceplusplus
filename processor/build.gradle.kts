@@ -10,6 +10,7 @@ buildscript {
 plugins {
     id("com.github.johnrengelman.shadow") version "7.1.0"
     kotlin("jvm")
+    kotlin("kapt")
 }
 
 val platformGroup: String by project
@@ -45,6 +46,8 @@ dependencies {
     implementation(files("../platform/.ext/vertx-service-proxy-4.0.2.jar"))
     implementation("io.vertx:vertx-codegen:$vertxVersion")
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.3.1")
+    kapt("io.vertx:vertx-codegen:$vertxVersion:processor")
+    annotationProcessor("io.vertx:vertx-service-proxy:$vertxVersion")
     implementation("io.vertx:vertx-tcp-eventbus-bridge:$vertxVersion")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2")
     implementation("io.vertx:vertx-core:$vertxVersion")
@@ -111,9 +114,9 @@ tasks.getByName<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("sha
 tasks.getByName("build") {
     dependsOn("shadowJar", "proguard")
 
-    doLast {
-        File("$buildDir/libs/processor-$version.jar").delete()
-    }
+//    doLast {
+//        File("$buildDir/libs/processor-$version.jar").delete()
+//    }
 }
 
 tasks.create<com.github.jengelman.gradle.plugins.shadow.tasks.ConfigureShadowRelocation>("relocateShadowJar") {
@@ -131,8 +134,8 @@ tasks {
         outjars(File("$buildDir/libs/spp-processor-$version.jar"))
         libraryjars("${org.gradle.internal.jvm.Jvm.current().javaHome}/jmods")
 
-        doLast {
-            File("$buildDir/libs/spp-processor-$version-shadow.jar").delete()
-        }
+//        doLast {
+//            File("$buildDir/libs/spp-processor-$version-shadow.jar").delete()
+//        }
     }
 }
