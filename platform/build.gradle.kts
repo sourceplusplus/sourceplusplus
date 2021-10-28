@@ -5,8 +5,6 @@ plugins {
     id("com.palantir.graal") version "0.10.0"
     id("com.apollographql.apollo").version("2.5.9")
     id("java")
-//    kotlin("multiplatform") apply false
-//    kotlin("js") apply false
     id("org.jetbrains.kotlin.jvm") apply true
     id("org.jetbrains.kotlin.kapt") apply true
 }

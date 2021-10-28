@@ -3,13 +3,9 @@ import java.net.URL
 
 plugins {
     id("com.avast.gradle.docker-compose") version "0.14.9"
-
-    val kotlinVersion = "1.5.31"
-    kotlin("jvm") version kotlinVersion apply false
-    kotlin("multiplatform") version kotlinVersion apply false
-    kotlin("js") version kotlinVersion apply false
-
     id("io.gitlab.arturbosch.detekt") version "1.18.1"
+
+    kotlin("multiplatform") apply false
 }
 
 val platformGroup: String by project
@@ -35,7 +31,7 @@ subprojects {
         maven(url = "https://jitpack.io")
     }
 
-//    apply<io.gitlab.arturbosch.detekt.DetektPlugin>()
+    apply<io.gitlab.arturbosch.detekt.DetektPlugin>()
     tasks {
         withType<io.gitlab.arturbosch.detekt.Detekt> {
             parallel = true
