@@ -129,6 +129,16 @@ tasks.getByName<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("sha
     configurations.add(project.configurations.shadow.get())
 }
 
+tasks.getByName("clean") {
+    doFirst {
+        File(projectDir, "../docker/e2e").listFiles()?.forEach {
+            if (it.name.startsWith("spp-platform-") || it.name.startsWith("spp-processor-")) {
+                it.delete()
+            }
+        }
+    }
+}
+
 tasks.getByName<Test>("test") {
     failFast = true
     useJUnitPlatform()
@@ -189,3 +199,4 @@ dockerCompose {
         useComposeFiles.set(listOf("docker-compose-jvm.yml"))
     }
 }
+tasks.getByName("composeUp").mustRunAfter("updateDockerFiles")
