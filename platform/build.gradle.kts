@@ -4,6 +4,11 @@ plugins {
     id("com.github.johnrengelman.shadow") version "7.1.0"
     id("com.palantir.graal") version "0.10.0"
     id("com.apollographql.apollo").version("2.5.9")
+    id("java")
+//    kotlin("multiplatform") apply false
+//    kotlin("js") apply false
+    id("org.jetbrains.kotlin.jvm") apply true
+    id("org.jetbrains.kotlin.kapt") apply true
 }
 
 val platformGroup: String by project
@@ -28,7 +33,7 @@ val vertxVersion = "4.1.4" //todo: consolidate with gradle.properties 4.0.2
 
 dependencies {
     implementation("org.graalvm.sdk:graal-sdk:$graalVersion")
-    implementation("com.github.sourceplusplus.protocol:protocol:$protocolVersion")
+    implementation(project(":protocol"))
     implementation(project(":processor"))
     shadow(project(":processor")) //todo: figure out why extra configurations.add() and this are needed
 
@@ -57,6 +62,17 @@ dependencies {
     implementation("commons-io:commons-io:$commonsIoVersion")
     implementation("com.apollographql.apollo:apollo-runtime:$apolloVersion")
     implementation("org.zeroturnaround:zt-zip:1.14")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2")
+    implementation("io.vertx:vertx-core:$vertxVersion")
+    implementation("io.vertx:vertx-lang-kotlin:$vertxVersion")
+    implementation("io.vertx:vertx-lang-kotlin-coroutines:$vertxVersion")
+    implementation("io.vertx:vertx-web:$vertxVersion")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jacksonVersion")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:$jacksonVersion")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-guava:$jacksonVersion")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
+    implementation("io.dropwizard.metrics:metrics-core:4.2.4")
+    implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.3.1")
 
     testImplementation("org.junit.jupiter:junit-jupiter-engine:$jupiterVersion")
     testImplementation("io.vertx:vertx-junit5:$vertxVersion")

@@ -9,6 +9,7 @@ buildscript {
 
 plugins {
     id("com.github.johnrengelman.shadow") version "7.1.0"
+    id("org.jetbrains.kotlin.jvm") apply true
 }
 
 val platformGroup: String by project
@@ -19,12 +20,13 @@ val gsonVersion: String by project
 val grpcVersion: String by project
 val sourceMarkerVersion: String by project
 val protocolVersion: String by project
+val jacksonVersion: String by project
 
 group = platformGroup
 version = platformVersion
 
 dependencies {
-    implementation("com.github.sourceplusplus.protocol:protocol:$protocolVersion")
+    implementation(project(":protocol"))
     compileOnly("org.apache.skywalking:apm-network:$skywalkingVersion") { isTransitive = false }
     compileOnly("org.apache.skywalking:library-server:$skywalkingVersion") { isTransitive = false }
     compileOnly("org.apache.skywalking:library-module:$skywalkingVersion") { isTransitive = false }
@@ -40,12 +42,18 @@ dependencies {
     compileOnly("org.apache.skywalking:meter-analyzer:$skywalkingVersion") { isTransitive = false }
     compileOnly("org.elasticsearch:elasticsearch:7.15.1")
     implementation("io.vertx:vertx-service-discovery:$vertxVersion")
-//    implementation("io.vertx:vertx-service-proxy:$vertxVersion")
     implementation(files("../platform/.ext/vertx-service-proxy-4.0.2.jar"))
     implementation("io.vertx:vertx-codegen:$vertxVersion")
-    kapt("io.vertx:vertx-codegen:$vertxVersion:processor")
-    annotationProcessor("io.vertx:vertx-service-proxy:$vertxVersion")
+    implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.3.1")
     implementation("io.vertx:vertx-tcp-eventbus-bridge:$vertxVersion")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2")
+    implementation("io.vertx:vertx-core:$vertxVersion")
+    implementation("io.vertx:vertx-lang-kotlin:$vertxVersion")
+    implementation("io.vertx:vertx-lang-kotlin-coroutines:$vertxVersion")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jacksonVersion")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:$jacksonVersion")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-guava:$jacksonVersion")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
     implementation("org.slf4j:slf4j-api:1.7.32")
     implementation("com.google.code.gson:gson:$gsonVersion")
     implementation("com.google.guava:guava:31.0.1-jre")
