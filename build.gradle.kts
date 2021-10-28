@@ -16,6 +16,11 @@ subprojects {
             substitute(module("com.github.sourceplusplus.protocol:protocol")).using(project(":protocol"))
         }
     }
+
+    tasks.withType<JavaCompile> {
+        sourceCompatibility = "1.8"
+        targetCompatibility = "1.8"
+    }
 }
 
 tasks {
