@@ -11,7 +11,4 @@ ADD ./config/spp-platform.yml /opt/sourceplusplus/config
 
 ADD ./spp-platform /opt/sourceplusplus
 
-RUN mkdir /opt/sourceplusplus/probe
-ADD ./spp-probe-*.jar /opt/sourceplusplus/probe
-
 ENTRYPOINT ["/opt/sourceplusplus/spp-platform"]

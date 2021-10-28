@@ -60,7 +60,9 @@ The Source++ documentation is available [here](https://docs.sourceplusplus.com).
         ├── cli             # Command-line interface
         └── marker          # IDE plugin
     ├── platform            # Live coding server
-    ├── probe               # Live coding JVM agent
+    ├── probes              # Live coding probes
+        ├── jvm             # JVM support
+        └── python          # Python support
     ├── processor           # Live instrument processing
     └── protocol            # Communication protocol
 

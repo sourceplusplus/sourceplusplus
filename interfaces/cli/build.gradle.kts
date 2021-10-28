@@ -17,6 +17,7 @@ val bouncycastleVersion: String by project
 val jupiterVersion: String by project
 val commonsIoVersion: String by project
 val auth0JwtVersion: String by project
+val protocolVersion: String by project
 
 group = platformGroup
 version = platformVersion
@@ -26,14 +27,7 @@ dependencies {
     implementation("com.apollographql.apollo:apollo-coroutines-support:$apolloVersion")
     api("com.apollographql.apollo:apollo-api:$apolloVersion")
 
-    implementation("com.github.sourceplusplus:sourcemarker:v$sourceMarkerVersion") {
-        exclude(mapOf("group" to "com.github.sourceplusplus.sourcemarker", "module" to "portal-js"))
-        exclude(mapOf("group" to "com.github.sourceplusplus.sourcemarker", "module" to "portal-metadata"))
-        exclude(mapOf("group" to "com.github.sourceplusplus.sourcemarker", "module" to "protocol-js"))
-        exclude(mapOf("group" to "com.github.sourceplusplus.sourcemarker", "module" to "protocol-metadata"))
-        exclude(mapOf("group" to "SourceMarker.monitor", "module" to "skywalking"))
-    }
-    implementation(project(":protocol"))
+    implementation("com.github.sourceplusplus.protocol:protocol:$protocolVersion")
 
     implementation("org.apache.commons:commons-lang3:$commonsLang3Version")
     implementation("com.github.ajalt.clikt:clikt:$cliktVersion")
