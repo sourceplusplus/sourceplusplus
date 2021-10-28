@@ -5,7 +5,10 @@ plugins {
     id("com.avast.gradle.docker-compose")
 }
 
+val platformVersion: String by project
 val skywalkingVersion: String by project
+
+version = platformVersion
 
 subprojects {
     configurations.all {
