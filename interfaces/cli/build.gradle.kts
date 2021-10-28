@@ -4,6 +4,7 @@ plugins {
     id("com.github.johnrengelman.shadow") version "7.1.0"
     id("com.palantir.graal") version "0.10.0"
     id("com.apollographql.apollo").version("2.5.9")
+    kotlin("jvm")
 }
 
 val platformGroup: String by project
@@ -18,6 +19,7 @@ val jupiterVersion: String by project
 val commonsIoVersion: String by project
 val auth0JwtVersion: String by project
 val protocolVersion: String by project
+val vertxVersion: String by project
 
 group = platformGroup
 version = platformVersion
@@ -27,8 +29,9 @@ dependencies {
     implementation("com.apollographql.apollo:apollo-coroutines-support:$apolloVersion")
     api("com.apollographql.apollo:apollo-api:$apolloVersion")
 
-    implementation("com.github.sourceplusplus.protocol:protocol:$protocolVersion")
+    implementation(project(":protocol"))
 
+    implementation("io.vertx:vertx-core:$vertxVersion")
     implementation("org.apache.commons:commons-lang3:$commonsLang3Version")
     implementation("com.github.ajalt.clikt:clikt:$cliktVersion")
     implementation("org.bouncycastle:bcprov-jdk15on:$bouncycastleVersion")
