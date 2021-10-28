@@ -17,5 +17,4 @@ include ':interfaces:cli'
 include ':interfaces:marker'
 include 'platform'
 include 'processor'
-
-include ':protocol'
+include 'protocol'
