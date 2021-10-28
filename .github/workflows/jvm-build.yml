@@ -35,7 +35,7 @@ jobs:
           echo "::set-output name=version::$VERSION"
           echo "SPP_PLATFORM_VERSION=$VERSION" >> $GITHUB_ENV
       - name: Build & start platform
-        run: ./gradlew :platform:shadowJar :platform:updateDockerFiles :platform:composeUp -x proguard -Dbuild.profile=jvm
+        run: ./gradlew :interfaces:cli:shadowJar :platform:shadowJar :platform:updateDockerFiles :platform:composeUp -x proguard -Dbuild.profile=jvm
       - name: Docker IPs
         run: docker inspect --format='{{.Name}} - {{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $(docker ps -aq)
       - name: Set SPP_PLATFORM_HOST
