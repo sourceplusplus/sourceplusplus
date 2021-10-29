@@ -32,12 +32,12 @@ Powered by [Apache SkyWalking](https://github.com/apache/skywalking), Source++ e
 - Tutorials
   - [JVM](https://github.com/sourceplusplus/tutorial-java)
   - Python
-- Clients
-  - [JetBrains Plugin](https://docs.sourceplusplus.com/implementation/tools/clients/jetbrains-plugin/)
-  - [Admin CLI](https://docs.sourceplusplus.com/implementation/tools/clients/cli/admin/) / [Developer CLI](https://docs.sourceplusplus.com/implementation/tools/clients/cli/developer/)
 - Probes
   - [JVM](https://github.com/sourceplusplus/probe-jvm)
   - [Python](https://github.com/sourceplusplus/probe-python)
+- Clients
+  - [JetBrains Plugin](https://docs.sourceplusplus.com/implementation/tools/clients/jetbrains-plugin/)
+  - [Admin CLI](https://docs.sourceplusplus.com/implementation/tools/clients/cli/admin/) / [Developer CLI](https://docs.sourceplusplus.com/implementation/tools/clients/cli/developer/)
 
 ## Compiling Project
 
