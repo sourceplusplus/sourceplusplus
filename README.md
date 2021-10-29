@@ -29,14 +29,15 @@ Powered by [Apache SkyWalking](https://github.com/apache/skywalking), Source++ e
 ## Get Started
 
 <!-- - [Get Source++](https://sourceplusplus.com/get/) -->
-- [Tutorial app](https://github.com/sourceplusplus/tutorial-java) (Java)
-- [Installation guides](https://docs.sourceplusplus.com/installation/)
+- Tutorials
+  - [JVM](https://github.com/sourceplusplus/tutorial-java)
+  - Python
 - Clients
   - [JetBrains Plugin](https://docs.sourceplusplus.com/implementation/tools/clients/jetbrains-plugin/)
   - [Admin CLI](https://docs.sourceplusplus.com/implementation/tools/clients/cli/admin/) / [Developer CLI](https://docs.sourceplusplus.com/implementation/tools/clients/cli/developer/)
 - Probes
-  - [JVM](https://docs.sourceplusplus.com/implementation/tools/probe/general/)
-  - Python (coming soon)
+  - [JVM](https://github.com/sourceplusplus/probe-jvm)
+  - [Python](https://github.com/sourceplusplus/probe-python)
 
 ## Compiling Project
 
