@@ -5,6 +5,7 @@ import com.sourceplusplus.protocol.instrument.LiveInstrumentBatch
 import com.sourceplusplus.protocol.instrument.LiveSourceLocation
 import com.sourceplusplus.protocol.instrument.breakpoint.LiveBreakpoint
 import com.sourceplusplus.protocol.instrument.log.LiveLog
+import com.sourceplusplus.protocol.instrument.meter.LiveMeter
 import com.sourceplusplus.protocol.service.live.LiveInstrumentService
 import io.vertx.core.*
 import io.vertx.kotlin.coroutines.await
@@ -13,7 +14,6 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
 import spp.platform.util.RequestContext
-import java.time.Instant
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -83,6 +83,31 @@ class LiveInstrumentProvider(private val vertx: Vertx) : LiveInstrumentService {
                         } else {
                             handler.handle(controller.addLog(selfId, pendingLog))
                         }
+                    }
+                    is LiveMeter -> {
+                        val pendingMeter = if (instrument.id == null) {
+                            instrument.copy(id = UUID.randomUUID().toString())
+                        } else {
+                            instrument
+                        }.copy(
+                            pending = true,
+                            applied = false,
+                            meta = instrument.meta.toMutableMap().apply {
+                                put("created_at", System.currentTimeMillis().toString())
+                                put("created_by", selfId)
+                                put("hit_count", AtomicInteger())
+                            }
+                        )
+
+                        if (pendingMeter.applyImmediately) {
+                            controller.addApplyImmediatelyHandler(pendingMeter.id!!, handler)
+                            controller.addMeter(selfId, pendingMeter)
+                        } else {
+                            handler.handle(controller.addMeter(selfId, pendingMeter))
+                        }
+                    }
+                    else -> {
+                        handler.handle(Future.failedFuture(IllegalArgumentException("Unknown live instrument type")))
                     }
                 }
             } catch (throwable: Throwable) {
@@ -167,11 +192,17 @@ class LiveInstrumentProvider(private val vertx: Vertx) : LiveInstrumentService {
             try {
                 val breakpointsResult = controller.removeBreakpoints(selfId, location)
                 val logsResult = controller.removeLogs(selfId, location)
+                val metersResult = controller.removeMeters(selfId, location)
 
                 when {
                     breakpointsResult.failed() -> handler.handle(Future.failedFuture(breakpointsResult.cause()))
                     logsResult.failed() -> handler.handle(Future.failedFuture(logsResult.cause()))
-                    else -> handler.handle(Future.succeededFuture(breakpointsResult.result() + logsResult.result()))
+                    metersResult.failed() -> handler.handle(Future.failedFuture(metersResult.cause()))
+                    else -> handler.handle(
+                        Future.succeededFuture(
+                            breakpointsResult.result() + logsResult.result() + metersResult.result()
+                        )
+                    )
                 }
             } catch (throwable: Throwable) {
                 log.warn("Remove live instruments failed. Reason: {}", throwable.message)
@@ -226,6 +257,18 @@ class LiveInstrumentProvider(private val vertx: Vertx) : LiveInstrumentService {
         log.info("Received get live logs request. Developer: {}", selfId)
 
         handler.handle(Future.succeededFuture(controller.getActiveLiveLogs()))
+    }
+
+    override fun getLiveMeters(handler: Handler<AsyncResult<List<LiveMeter>>>) {
+        val requestCtx = RequestContext.get()
+        val selfId = requestCtx["self_id"]
+        if (selfId == null) {
+            handler.handle(Future.failedFuture(IllegalStateException("Missing self id")))
+            return
+        }
+        log.info("Received get live meters request. Developer: {}", selfId)
+
+        handler.handle(Future.succeededFuture(controller.getActiveLiveMeters()))
     }
 
     fun clearAllLiveInstruments() {
@@ -288,6 +331,25 @@ class LiveInstrumentProvider(private val vertx: Vertx) : LiveInstrumentService {
                 handler.handle(controller.clearLiveLogs(selfId))
             } catch (throwable: Throwable) {
                 log.warn("Clear live logs failed. Reason: {}", throwable.message)
+                handler.handle(Future.failedFuture(throwable))
+            }
+        }
+    }
+
+    override fun clearLiveMeters(handler: Handler<AsyncResult<Boolean>>) {
+        val requestCtx = RequestContext.get()
+        val selfId = requestCtx["self_id"]
+        if (selfId == null) {
+            handler.handle(Future.failedFuture(IllegalStateException("Missing self id")))
+            return
+        }
+        log.info("Received clear live meters request. Developer: {}", selfId)
+
+        GlobalScope.launch(vertx.dispatcher()) {
+            try {
+                handler.handle(controller.clearLiveMeters(selfId))
+            } catch (throwable: Throwable) {
+                log.warn("Clear live meters failed. Reason: {}", throwable.message)
                 handler.handle(Future.failedFuture(throwable))
             }
         }
