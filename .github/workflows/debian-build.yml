@@ -154,7 +154,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: spp-processor-${{ env.SPP_PLATFORM_VERSION }}.jar
-          path: ./processor/build/libs/spp-processor-${{ env.SPP_PLATFORM_VERSION }}-shadow.jar
+          path: ./docker/e2e/spp-processor-${{ env.SPP_PLATFORM_VERSION }}.jar
 
   releaseDraft:
     name: Release Draft
@@ -279,7 +279,7 @@ jobs:
   cleanup:
     needs: [debian-build, releaseDraft, docker-push]
     runs-on: ubuntu-latest
-#     if: always()
+    if: always()
 
     steps:
       - name: Delete spp-platform (Linux)
