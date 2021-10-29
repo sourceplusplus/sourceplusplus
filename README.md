@@ -13,7 +13,7 @@ Powered by [Apache SkyWalking](https://github.com/apache/skywalking), Source++ e
 - Live Instruments
   - **Live Breakpoints**: Non-Breaking Breakpoints 
   - **Live Logs**: Just-in-Time Logging
-  - **Live Metrics**: Real-Time KPI Monitoring
+  - **Live Meters**: Real-Time KPI Monitoring
   - **Live Spans**: User-Domain Tracing
 - Multi-instance debugging
 - Role-based access control
