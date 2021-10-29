@@ -26,6 +26,12 @@ val jacksonVersion: String by project
 group = platformGroup
 version = platformVersion
 
+repositories {
+    mavenCentral()
+    jcenter()
+    maven(url = "https://kotlin.bintray.com/kotlinx/")
+}
+
 dependencies {
     implementation(project(":protocol"))
     compileOnly("org.apache.skywalking:apm-network:$skywalkingVersion") { isTransitive = false }
@@ -111,31 +117,10 @@ tasks.getByName<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("sha
     relocate("kotlinx", "spp.processor.common.kotlinx")
     relocate("org.slf4j", "spp.processor.common.org.slf4j")
 }
-tasks.getByName("build") {
-    dependsOn("shadowJar", "proguard")
-
-//    doLast {
-//        File("$buildDir/libs/processor-$version.jar").delete()
-//    }
-}
+tasks.getByName("build").dependsOn("shadowJar")
 
 tasks.create<com.github.jengelman.gradle.plugins.shadow.tasks.ConfigureShadowRelocation>("relocateShadowJar") {
     target = tasks.getByName("shadowJar") as com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
     prefix = "spp.processor.common"
 }
-
 tasks.getByName("shadowJar").dependsOn("relocateShadowJar")
-
-tasks {
-    create<proguard.gradle.ProGuardTask>("proguard") {
-        dependsOn("shadowJar")
-        configuration("proguard.conf")
-        injars(File("$buildDir/libs/spp-processor-$version-shadow.jar"))
-        outjars(File("$buildDir/libs/spp-processor-$version.jar"))
-        libraryjars("${org.gradle.internal.jvm.Jvm.current().javaHome}/jmods")
-
-//        doLast {
-//            File("$buildDir/libs/spp-processor-$version-shadow.jar").delete()
-//        }
-    }
-}

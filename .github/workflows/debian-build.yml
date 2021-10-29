@@ -37,7 +37,7 @@ jobs:
           echo "::set-output name=version::$VERSION"
           echo "SPP_PLATFORM_VERSION=$VERSION" >> $GITHUB_ENV
       - name: Build & start platform
-        run: ./gradlew shadowJar nativeImage updateDockerFiles composeUp -Dbuild.profile=debian
+        run: ./gradlew :platform:shadowJar nativeImage :platform:updateDockerFiles :platform:composeUp -Dbuild.profile=debian
       - name: Compress platform
         run: curl -O -J -L https://github.com/upx/upx/releases/download/v3.96/upx-3.96-amd64_linux.tar.xz && tar -xJf upx-3.96-amd64_linux.tar.xz && ./upx-3.96-amd64_linux/upx platform/build/graal/spp-platform
       - name: Compress CLI
@@ -106,7 +106,7 @@ jobs:
       - name: "[CLI] Remove live instruments"
         run: ./interfaces/cli/build/graal/spp-cli -v -c ./platform/config/spp-platform.crt -k ./platform/config/spp-platform.key developer remove-live-instruments spp.example.webapp.model.User 48
       - name: Run integration tests
-        run: ./gradlew test -Dtest.profile=integration -Dbuild.profile=debian
+        run: ./gradlew test -x :probe-jvm:control:test -Dtest.profile=integration -Dbuild.profile=debian
       - name: Build S++ Plugin
         run: ./gradlew buildPlugin
       - name: Download platform logs from container
@@ -154,7 +154,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: spp-processor-${{ env.SPP_PLATFORM_VERSION }}.jar
-          path: ./processor/build/libs/spp-processor-${{ env.SPP_PLATFORM_VERSION }}.jar
+          path: ./processor/build/libs/spp-processor-${{ env.SPP_PLATFORM_VERSION }}-shadow.jar
 
   releaseDraft:
     name: Release Draft
