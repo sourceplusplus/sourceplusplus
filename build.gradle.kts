@@ -35,7 +35,7 @@ tasks {
                 .copyTo(file("dist/spp-platform-$version/spp-platform"))
             file("interfaces/cli/build/graal/spp-cli")
                 .copyTo(file("dist/spp-platform-$version/spp-cli"))
-            file("processor/build/libs/spp-processor-$version.jar")
+            file("processor/build/libs/spp-processor-$version-shadow.jar")
                 .copyTo(file("dist/spp-processor-$version.jar"))
             file("interfaces/marker/build/spp-plugin-$version.zip")
                 .copyTo(file("dist/spp-plugin-$version.zip"))
@@ -65,13 +65,13 @@ tasks {
                 if (!File("platform/build/graal/spp-platform").exists()) {
                     throw GradleException("Missing spp-platform")
                 }
-                if (!File("processor/build/libs/spp-processor-$version.jar").exists()) {
-                    throw GradleException("Missing spp-processor-$version.jar")
+                if (!File("processor/build/libs/spp-processor-$version-shadow.jar").exists()) {
+                    throw GradleException("Missing spp-processor-$version-shadow.jar")
                 }
             }
             from(
                 "platform/build/graal/spp-platform",
-                "processor/build/libs/spp-processor-$version.jar"
+                "processor/build/libs/spp-processor-$version-shadow.jar"
             )
             into(File(projectDir, "docker/e2e"))
         } else {

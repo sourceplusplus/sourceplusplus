@@ -162,13 +162,13 @@ tasks.register<Copy>("updateDockerFiles") {
             if (!File(projectDir, "build/graal/spp-platform").exists()) {
                 throw GradleException("Missing spp-platform")
             }
-            if (!File(projectDir, "../processor/build/libs/spp-processor-$version.jar").exists()) {
-                throw GradleException("Missing spp-processor-$version.jar")
+            if (!File(projectDir, "../processor/build/libs/spp-processor-$version-shadow.jar").exists()) {
+                throw GradleException("Missing spp-processor-$version-shadow.jar")
             }
         }
         from(
             File(projectDir, "build/graal/spp-platform"),
-            File(projectDir, "../processor/build/libs/spp-processor-$version.jar")
+            File(projectDir, "../processor/build/libs/spp-processor-$version-shadow.jar")
         )
         into(File(projectDir, "../docker/e2e"))
     } else {
