@@ -1,10 +1,6 @@
 import java.io.FileOutputStream
 import java.net.URL
 
-plugins {
-    id("com.avast.gradle.docker-compose")
-}
-
 val platformVersion: String by project
 val skywalkingVersion: String by project
 
@@ -56,17 +52,5 @@ tasks {
                 println("Downloaded Apache SkyWalking")
             }
         }
-    }
-}
-
-dockerCompose {
-    dockerComposeWorkingDirectory.set(File("./docker/e2e"))
-    removeVolumes.set(true)
-    waitForTcpPorts.set(false)
-
-    if (System.getProperty("build.profile") == "debian") {
-        useComposeFiles.set(listOf("docker-compose-debian.yml"))
-    } else {
-        useComposeFiles.set(listOf("docker-compose-jvm.yml"))
     }
 }
