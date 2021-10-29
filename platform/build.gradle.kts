@@ -166,11 +166,8 @@ tasks.register<Copy>("updateDockerFiles") {
                 throw GradleException("Missing spp-processor-$version-shadow.jar")
             }
         }
-        from(
-            File(projectDir, "build/graal/spp-platform"),
-            File(projectDir, "../processor/build/libs/spp-processor-$version-shadow.jar")
-        )
-        into(File(projectDir, "../docker/e2e"))
+        from(File(projectDir, "build/graal/spp-platform"))
+            .into(File(projectDir, "../docker/e2e"))
     } else {
         doFirst {
             if (!File(projectDir, "build/libs/spp-platform-$version.jar").exists()) {
@@ -180,11 +177,14 @@ tasks.register<Copy>("updateDockerFiles") {
                 throw GradleException("Missing spp-processor-$version-shadow.jar")
             }
         }
-        from(
-            File(projectDir, "build/libs/spp-platform-$version.jar"),
-            File(projectDir, "../processor/build/libs/spp-processor-$version-shadow.jar")
-        )
-        into(File(projectDir, "../docker/e2e"))
+        from(File(projectDir, "build/libs/spp-platform-$version.jar"))
+            .into(File(projectDir, "../docker/e2e"))
+    }
+
+    from(File(projectDir, "../processor/build/libs/spp-processor-$version-shadow.jar"))
+        .into(File(projectDir, "../docker/e2e"))
+    rename {
+        it.replace("-shadow", "")
     }
 }
 
