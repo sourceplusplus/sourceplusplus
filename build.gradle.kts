@@ -2,65 +2,24 @@ import java.io.FileOutputStream
 import java.net.URL
 
 plugins {
-    id("com.avast.gradle.docker-compose") version "0.14.9"
-    id("io.gitlab.arturbosch.detekt") version "1.18.1"
-
-    kotlin("multiplatform") apply false
+    id("com.avast.gradle.docker-compose")
 }
 
-val platformGroup: String by project
 val platformVersion: String by project
 val skywalkingVersion: String by project
-val jacksonVersion: String by project
-val vertxVersion: String by project
 
-group = platformGroup
 version = platformVersion
 
-repositories {
-    mavenCentral()
-    jcenter()
-    maven(url = "https://kotlin.bintray.com/kotlinx/")
-}
-
 subprojects {
-    repositories {
-        mavenCentral()
-        jcenter()
-        maven(url = "https://kotlin.bintray.com/kotlinx/")
-        maven(url = "https://jitpack.io")
+    configurations.all {
+        resolutionStrategy.dependencySubstitution {
+            substitute(module("com.github.sourceplusplus.protocol:protocol")).using(project(":protocol"))
+        }
     }
 
-    apply<io.gitlab.arturbosch.detekt.DetektPlugin>()
-    tasks {
-        withType<io.gitlab.arturbosch.detekt.Detekt> {
-            parallel = true
-            buildUponDefaultConfig = true
-        }
-
-        withType<JavaCompile> {
-            sourceCompatibility = "1.8"
-            targetCompatibility = "1.8"
-        }
-//        withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
-//            kotlinOptions.apiVersion = "1.4"
-//            kotlinOptions.jvmTarget = "1.8"
-//            kotlinOptions.freeCompilerArgs +=
-//                listOf(
-//                    "-Xno-optimized-callable-references",
-//                    "-Xjvm-default=compatibility"
-//                )
-//        }
-
-        withType<Test> {
-            testLogging {
-                events("passed", "skipped", "failed")
-                setExceptionFormat("full")
-
-                outputs.upToDateWhen { false }
-                showStandardStreams = true
-            }
-        }
+    tasks.withType<JavaCompile> {
+        sourceCompatibility = "1.8"
+        targetCompatibility = "1.8"
     }
 }
 
@@ -76,7 +35,7 @@ tasks {
                 .copyTo(file("dist/spp-platform-$version/spp-platform"))
             file("interfaces/cli/build/graal/spp-cli")
                 .copyTo(file("dist/spp-platform-$version/spp-cli"))
-            file("processor/build/libs/spp-processor-$version.jar")
+            file("processor/build/libs/spp-processor-$version-shadow.jar")
                 .copyTo(file("dist/spp-processor-$version.jar"))
             file("interfaces/marker/build/spp-plugin-$version.zip")
                 .copyTo(file("dist/spp-plugin-$version.zip"))
@@ -106,13 +65,13 @@ tasks {
                 if (!File("platform/build/graal/spp-platform").exists()) {
                     throw GradleException("Missing spp-platform")
                 }
-                if (!File("processor/build/libs/spp-processor-$version.jar").exists()) {
-                    throw GradleException("Missing spp-processor-$version.jar")
+                if (!File("processor/build/libs/spp-processor-$version-shadow.jar").exists()) {
+                    throw GradleException("Missing spp-processor-$version-shadow.jar")
                 }
             }
             from(
                 "platform/build/graal/spp-platform",
-                "processor/build/libs/spp-processor-$version.jar"
+                "processor/build/libs/spp-processor-$version-shadow.jar"
             )
             into(File(projectDir, "docker/e2e"))
         } else {

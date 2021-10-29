@@ -24,6 +24,12 @@ val vertxVersion: String by project
 group = platformGroup
 version = platformVersion
 
+repositories {
+    mavenCentral()
+    jcenter()
+    maven(url = "https://kotlin.bintray.com/kotlinx/")
+}
+
 dependencies {
     implementation("com.apollographql.apollo:apollo-runtime:$apolloVersion")
     implementation("com.apollographql.apollo:apollo-coroutines-support:$apolloVersion")
