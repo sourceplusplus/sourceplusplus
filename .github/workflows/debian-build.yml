@@ -154,7 +154,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: spp-processor-${{ env.SPP_PLATFORM_VERSION }}.jar
-          path: ./processor/build/libs/spp-processor-${{ env.SPP_PLATFORM_VERSION }}.jar
+          path: ./processor/build/libs/spp-processor-${{ env.SPP_PLATFORM_VERSION }}-shadow.jar
 
   releaseDraft:
     name: Release Draft
