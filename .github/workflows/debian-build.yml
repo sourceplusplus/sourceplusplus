@@ -279,7 +279,7 @@ jobs:
   cleanup:
     needs: [debian-build, releaseDraft, docker-push]
     runs-on: ubuntu-latest
-    if: always()
+#     if: always()
 
     steps:
       - name: Delete spp-platform (Linux)
