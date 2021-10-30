@@ -1,6 +1,7 @@
 package spp.processor.live.impl
 
 import com.sourceplusplus.protocol.instrument.meter.LiveMeter
+import com.sourceplusplus.protocol.instrument.meter.MeterType
 import io.vertx.core.AsyncResult
 import io.vertx.core.Future
 import io.vertx.core.Handler
@@ -39,16 +40,33 @@ class LiveInstrumentProcessorImpl : CoroutineVerticle(), LiveInstrumentProcessor
     }
 
     override fun setupLiveMeter(liveMeter: LiveMeter, handler: Handler<AsyncResult<JsonObject>>) {
-        val meterSystem = SourceProcessor.module!!.find(CoreModule.NAME).provider().getService(MeterSystem::class.java)
         val meterConfig = MeterConfig()
-        meterConfig.metricPrefix = "spp"
-        meterConfig.metricsRules = mutableListOf(
-            MeterConfig.Rule().apply {
-                val idVariable = "meter_" + liveMeter.id!!.replace("-", "_")
-                name = idVariable
-                exp = "($idVariable.sum(['service', 'instance'])).instance(['service'], ['instance'])"
+        when (liveMeter.meterType) {
+            MeterType.COUNTER -> {
+                meterConfig.metricPrefix = "spp"
+                meterConfig.metricsRules = mutableListOf(
+                    MeterConfig.Rule().apply {
+                        val idVariable = "meter_" + liveMeter.id!!.replace("-", "_")
+                        name = idVariable
+                        exp = "($idVariable.sum(['service', 'instance'])).instance(['service'], ['instance'])"
+                    }
+                )
             }
-        )
+            MeterType.GAUGE -> {
+                meterConfig.metricPrefix = "spp"
+                meterConfig.metricsRules = mutableListOf(
+                    MeterConfig.Rule().apply {
+                        val idVariable = "gauge_" + liveMeter.id!!.replace("-", "_")
+                        name = idVariable
+                        exp = "($idVariable.downsampling(LATEST)).instance(['service'], ['instance'])"
+                    }
+                )
+            }
+
+            else -> throw UnsupportedOperationException("Unsupported meter type: ${liveMeter.meterType}")
+        }
+
+        val meterSystem = SourceProcessor.module!!.find(CoreModule.NAME).provider().getService(MeterSystem::class.java)
         val service = SourceProcessor.module!!.find(AnalyzerModule.NAME).provider()
             .getService(IMeterProcessService::class.java) as MeterProcessService
         service.converts().add(MetricConvert(meterConfig, meterSystem))
