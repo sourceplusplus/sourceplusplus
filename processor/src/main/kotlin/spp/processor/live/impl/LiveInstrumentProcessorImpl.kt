@@ -62,7 +62,16 @@ class LiveInstrumentProcessorImpl : CoroutineVerticle(), LiveInstrumentProcessor
                     }
                 )
             }
-
+            MeterType.HISTOGRAM -> {
+                meterConfig.metricPrefix = "spp"
+                meterConfig.metricsRules = mutableListOf(
+                    MeterConfig.Rule().apply {
+                        val idVariable = "histogram_" + liveMeter.id!!.replace("-", "_")
+                        name = idVariable
+                        exp = "($idVariable.sum(['le', 'service', 'instance']).increase('PT5M').histogram().histogram_percentile([50,70,90,99])).instance(['service'], ['instance'])"
+                    }
+                )
+            }
             else -> throw UnsupportedOperationException("Unsupported meter type: ${liveMeter.meterType}")
         }
 
