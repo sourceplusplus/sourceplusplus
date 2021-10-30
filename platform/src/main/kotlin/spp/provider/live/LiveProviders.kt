@@ -9,6 +9,6 @@ class LiveProviders(
     vertx: Vertx,
     discovery: ServiceDiscovery
 ) {
-    val liveInstrument: LiveInstrumentProvider = LiveInstrumentProvider(vertx)
+    val liveInstrument: LiveInstrumentProvider = LiveInstrumentProvider(vertx, discovery)
     val liveView: LiveViewProvider = LiveViewProvider(vertx, discovery)
 }
