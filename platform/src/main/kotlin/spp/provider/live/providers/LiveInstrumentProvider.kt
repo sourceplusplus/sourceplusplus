@@ -1,5 +1,6 @@
 package spp.provider.live.providers
 
+import com.sourceplusplus.protocol.error.MissingRemoteException
 import com.sourceplusplus.protocol.instrument.LiveInstrument
 import com.sourceplusplus.protocol.instrument.LiveInstrumentBatch
 import com.sourceplusplus.protocol.instrument.LiveSourceLocation
@@ -8,22 +9,30 @@ import com.sourceplusplus.protocol.instrument.log.LiveLog
 import com.sourceplusplus.protocol.instrument.meter.LiveMeter
 import com.sourceplusplus.protocol.service.live.LiveInstrumentService
 import io.vertx.core.*
+import io.vertx.core.json.JsonObject
 import io.vertx.kotlin.coroutines.await
 import io.vertx.kotlin.coroutines.dispatcher
+import io.vertx.servicediscovery.ServiceDiscovery
+import io.vertx.servicediscovery.types.EventBusService
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
 import spp.platform.util.RequestContext
+import spp.processor.live.LiveInstrumentProcessor
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 
-class LiveInstrumentProvider(private val vertx: Vertx) : LiveInstrumentService {
+class LiveInstrumentProvider(
+    private val vertx: Vertx,
+    private val discovery: ServiceDiscovery
+) : LiveInstrumentService {
 
     companion object {
         private val log = LoggerFactory.getLogger(LiveInstrumentProvider::class.java)
     }
 
     private val controller = LiveInstrumentController(vertx)
+    private lateinit var liveInstrumentProcessor: LiveInstrumentProcessor
 
     override fun addLiveInstrument(instrument: LiveInstrument, handler: Handler<AsyncResult<LiveInstrument>>) {
         val requestCtx = RequestContext.get()
@@ -95,10 +104,10 @@ class LiveInstrumentProvider(private val vertx: Vertx) : LiveInstrumentService {
                             meta = instrument.meta.toMutableMap().apply {
                                 put("created_at", System.currentTimeMillis().toString())
                                 put("created_by", selfId)
-                                put("hit_count", AtomicInteger())
                             }
                         )
 
+                        setupLiveMeter(pendingMeter)
                         if (pendingMeter.applyImmediately) {
                             controller.addApplyImmediatelyHandler(pendingMeter.id!!, handler)
                             controller.addMeter(selfId, pendingMeter)
@@ -351,6 +360,33 @@ class LiveInstrumentProvider(private val vertx: Vertx) : LiveInstrumentService {
             } catch (throwable: Throwable) {
                 log.warn("Clear live meters failed. Reason: {}", throwable.message)
                 handler.handle(Future.failedFuture(throwable))
+            }
+        }
+    }
+
+    private suspend fun setupLiveMeter(liveMeter: LiveMeter) {
+        log.info("Setting up live meter: $liveMeter")
+        initInstrumentProcessor()
+
+        val promise = Promise.promise<LiveInstrumentProcessor>()
+        EventBusService.getProxy(discovery, LiveInstrumentProcessor::class.java, promise)
+        liveInstrumentProcessor = promise.future().await()
+
+        val async = Promise.promise<JsonObject>()
+        liveInstrumentProcessor.setupLiveMeter(liveMeter, async)
+        async.future().await()
+    }
+
+    private suspend fun initInstrumentProcessor() {
+        if (!::liveInstrumentProcessor.isInitialized) {
+            try {
+                val promise = Promise.promise<LiveInstrumentProcessor>()
+                EventBusService.getProxy(discovery, LiveInstrumentProcessor::class.java, promise)
+                liveInstrumentProcessor = promise.future().await()
+            } catch (ignored: Throwable) {
+                log.warn("{} service unavailable", LiveInstrumentProcessor::class.simpleName)
+                //todo: this isn't a remote; either create new exception or connect more directly to elasticsearch
+                throw MissingRemoteException(LiveInstrumentProcessor::class.java.name).toEventBusException()
             }
         }
     }

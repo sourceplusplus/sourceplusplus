@@ -1,14 +1,5 @@
-buildscript {
-    repositories {
-        mavenCentral()
-    }
-    dependencies {
-        classpath("com.guardsquare:proguard-gradle:7.1.1")
-    }
-}
-
 plugins {
-    id("com.github.johnrengelman.shadow") version "7.1.0"
+    id("com.github.johnrengelman.shadow")
     kotlin("jvm")
     kotlin("kapt")
 }
@@ -22,6 +13,7 @@ val grpcVersion: String by project
 val sourceMarkerVersion: String by project
 val protocolVersion: String by project
 val jacksonVersion: String by project
+val kotlinVersion: String by project
 
 group = platformGroup
 version = platformVersion
@@ -34,6 +26,7 @@ repositories {
 
 dependencies {
     implementation(project(":protocol"))
+    implementation("org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion")
     compileOnly("org.apache.skywalking:apm-network:$skywalkingVersion") { isTransitive = false }
     compileOnly("org.apache.skywalking:library-server:$skywalkingVersion") { isTransitive = false }
     compileOnly("org.apache.skywalking:library-module:$skywalkingVersion") { isTransitive = false }
@@ -75,7 +68,6 @@ dependencies {
     compileOnly("io.grpc:grpc-protobuf:$grpcVersion") {
         exclude(mapOf("group" to "com.google.guava", "module" to "guava"))
     }
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.0")
 }
 
 tasks.getByName<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar") {
@@ -116,11 +108,6 @@ tasks.getByName<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("sha
     relocate("kotlin", "spp.processor.common.kotlin")
     relocate("kotlinx", "spp.processor.common.kotlinx")
     relocate("org.slf4j", "spp.processor.common.org.slf4j")
+//    minimize()
 }
 tasks.getByName("build").dependsOn("shadowJar")
-
-tasks.create<com.github.jengelman.gradle.plugins.shadow.tasks.ConfigureShadowRelocation>("relocateShadowJar") {
-    target = tasks.getByName("shadowJar") as com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
-    prefix = "spp.processor.common"
-}
-tasks.getByName("shadowJar").dependsOn("relocateShadowJar")
