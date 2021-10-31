@@ -100,7 +100,7 @@ jobs:
       - name: "[CLI] Remove live instruments"
         run: java -jar ./interfaces/cli/build/libs/spp-cli-${{ env.SPP_PLATFORM_VERSION }}.jar -v -c ./platform/config/spp-platform.crt -k ./platform/config/spp-platform.key developer remove-live-instruments spp.example.webapp.model.User 48
       - name: Run integration tests
-        run: ./gradlew test -x proguard -x :probe-jvm:control:test -Dtest.profile=integration -Dbuild.profile=jvm
+        run: ./gradlew :platform:test -x proguard -Dtest.profile=integration -Dbuild.profile=jvm
 
       - run: ./gradlew :platform:composeLogs
         if: ${{ always() }}
