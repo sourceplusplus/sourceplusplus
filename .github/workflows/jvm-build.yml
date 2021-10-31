@@ -102,7 +102,7 @@ jobs:
       - name: Run integration tests
         run: ./gradlew test -x proguard -x :probe-jvm:control:test -Dtest.profile=integration -Dbuild.profile=jvm
 
-      - run: ./gradlew composeLogs
+      - run: ./gradlew :platform:composeLogs
         if: ${{ always() }}
 
       - name: Upload docker logs artifact
