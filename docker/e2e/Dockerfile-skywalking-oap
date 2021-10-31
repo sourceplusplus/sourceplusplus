@@ -1,4 +1,4 @@
-FROM apache/skywalking-oap-server:8.7.0-es7
+FROM apache/skywalking-oap-server:8.8.1
 
 ADD ./spp-processor-*.jar /skywalking/oap-libs
 
