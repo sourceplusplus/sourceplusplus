@@ -7,6 +7,10 @@ import com.sourceplusplus.protocol.instrument.LiveSourceLocation
 import com.sourceplusplus.protocol.instrument.ThrottleStep
 import com.sourceplusplus.protocol.instrument.breakpoint.LiveBreakpoint
 import com.sourceplusplus.protocol.instrument.log.LiveLog
+import com.sourceplusplus.protocol.instrument.meter.LiveMeter
+import com.sourceplusplus.protocol.instrument.meter.MeterType
+import com.sourceplusplus.protocol.instrument.meter.MetricValue
+import com.sourceplusplus.protocol.instrument.meter.MetricValueType
 import graphql.GraphQL
 import graphql.Scalars
 import graphql.schema.DataFetchingEnvironment
@@ -44,8 +48,12 @@ object SourceService {
                     (it.getObject() as Map<String, Any>)["type"] == "BREAKPOINT"
                 ) {
                     it.schema.getObjectType("LiveBreakpoint")
-                } else {
+                } else if ((it.getObject() as Any) is LiveLog ||
+                    (it.getObject() as Map<String, Any>)["type"] == "LOG"
+                ) {
                     it.schema.getObjectType("LiveLog")
+                } else {
+                    it.schema.getObjectType("LiveMeter")
                 }
             }.build())
             .type(
@@ -91,14 +99,17 @@ object SourceService {
                     "getDevelopers",
                     this::getDevelopers
                 ).dataFetcher(
-                    "getLiveLogs",
-                    this::getLiveLogs
+                    "getLiveInstruments",
+                    this::getLiveInstruments
                 ).dataFetcher(
                     "getLiveBreakpoints",
                     this::getLiveBreakpoints
                 ).dataFetcher(
-                    "getLiveInstruments",
-                    this::getLiveInstruments
+                    "getLiveLogs",
+                    this::getLiveLogs
+                ).dataFetcher(
+                    "getLiveMeters",
+                    this::getLiveMeters
                 )
             }
             .type(
@@ -168,11 +179,14 @@ object SourceService {
                     "clearLiveInstruments",
                     this::clearLiveInstruments
                 ).dataFetcher(
+                    "addLiveBreakpoint",
+                    this::addLiveBreakpoint
+                ).dataFetcher(
                     "addLiveLog",
                     this::addLiveLog
                 ).dataFetcher(
-                    "addLiveBreakpoint",
-                    this::addLiveBreakpoint
+                    "addLiveMeter",
+                    this::addLiveMeter
                 )
             }.build()
         val schemaGenerator = SchemaGenerator()
@@ -455,20 +469,20 @@ object SourceService {
         return completableFuture
     }
 
-    private fun getLiveLogs(env: DataFetchingEnvironment): CompletableFuture<List<Map<String, Any>>> {
+    private fun getLiveInstruments(env: DataFetchingEnvironment): CompletableFuture<List<Map<String, Any>>> {
         val completableFuture = CompletableFuture<List<Map<String, Any>>>()
         GlobalScope.launch {
             val selfId = if (System.getenv("SPP_DISABLE_JWT") != "true") {
                 val devId = env.getContext<RoutingContextImpl>().user().principal().getString("developer_id")
-                if (!SourceStorage.hasPermission(devId, GET_LIVE_LOGS)) {
-                    completableFuture.completeExceptionally(PermissionAccessDenied(GET_LIVE_LOGS))
+                if (!SourceStorage.hasPermission(devId, GET_LIVE_INSTRUMENTS)) {
+                    completableFuture.completeExceptionally(PermissionAccessDenied(GET_LIVE_INSTRUMENTS))
                     return@launch
                 }
                 devId
             } else "system"
 
             RequestContext.put("self_id", selfId)
-            ServiceProvider.liveProviders.liveInstrument.getLiveLogs {
+            ServiceProvider.liveProviders.liveInstrument.getLiveInstruments {
                 if (it.succeeded()) {
                     completableFuture.complete(it.result().map { fixJsonMaps(it) })
                 } else {
@@ -503,20 +517,44 @@ object SourceService {
         return completableFuture
     }
 
-    private fun getLiveInstruments(env: DataFetchingEnvironment): CompletableFuture<List<Map<String, Any>>> {
+    private fun getLiveLogs(env: DataFetchingEnvironment): CompletableFuture<List<Map<String, Any>>> {
         val completableFuture = CompletableFuture<List<Map<String, Any>>>()
         GlobalScope.launch {
             val selfId = if (System.getenv("SPP_DISABLE_JWT") != "true") {
                 val devId = env.getContext<RoutingContextImpl>().user().principal().getString("developer_id")
-                if (!SourceStorage.hasPermission(devId, GET_LIVE_INSTRUMENTS)) {
-                    completableFuture.completeExceptionally(PermissionAccessDenied(GET_LIVE_INSTRUMENTS))
+                if (!SourceStorage.hasPermission(devId, GET_LIVE_LOGS)) {
+                    completableFuture.completeExceptionally(PermissionAccessDenied(GET_LIVE_LOGS))
                     return@launch
                 }
                 devId
             } else "system"
 
             RequestContext.put("self_id", selfId)
-            ServiceProvider.liveProviders.liveInstrument.getLiveInstruments {
+            ServiceProvider.liveProviders.liveInstrument.getLiveLogs {
+                if (it.succeeded()) {
+                    completableFuture.complete(it.result().map { fixJsonMaps(it) })
+                } else {
+                    completableFuture.completeExceptionally(it.cause())
+                }
+            }
+        }
+        return completableFuture
+    }
+
+    private fun getLiveMeters(env: DataFetchingEnvironment): CompletableFuture<List<Map<String, Any>>> {
+        val completableFuture = CompletableFuture<List<Map<String, Any>>>()
+        GlobalScope.launch {
+            val selfId = if (System.getenv("SPP_DISABLE_JWT") != "true") {
+                val devId = env.getContext<RoutingContextImpl>().user().principal().getString("developer_id")
+                if (!SourceStorage.hasPermission(devId, GET_LIVE_METERS)) {
+                    completableFuture.completeExceptionally(PermissionAccessDenied(GET_LIVE_METERS))
+                    return@launch
+                }
+                devId
+            } else "system"
+
+            RequestContext.put("self_id", selfId)
+            ServiceProvider.liveProviders.liveInstrument.getLiveMeters {
                 if (it.succeeded()) {
                     completableFuture.complete(it.result().map { fixJsonMaps(it) })
                 } else {
@@ -1028,6 +1066,60 @@ object SourceService {
         return completableFuture
     }
 
+    private fun addLiveBreakpoint(env: DataFetchingEnvironment): CompletableFuture<Map<String, Any>> {
+        val completableFuture = CompletableFuture<Map<String, Any>>()
+        GlobalScope.launch {
+            val selfId = if (System.getenv("SPP_DISABLE_JWT") != "true") {
+                val devId = env.getContext<RoutingContextImpl>().user().principal().getString("developer_id")
+                if (!SourceStorage.hasPermission(devId, ADD_LIVE_BREAKPOINT)) {
+                    completableFuture.completeExceptionally(PermissionAccessDenied(ADD_LIVE_BREAKPOINT))
+                    return@launch
+                }
+                devId
+            } else "system"
+
+            val input = JsonObject.mapFrom(env.getArgument("input"))
+            val location = input.getJsonObject("location")
+            val locationSource = location.getString("source")
+            val locationLine = location.getInteger("line")
+            if (!SourceStorage.hasInstrumentAccess(selfId, locationSource)) {
+                log.warn("Rejected developer {} unauthorized instrument access to: {}", selfId, locationSource)
+                completableFuture.completeExceptionally(InstrumentAccessDenied(locationSource))
+                return@launch
+            }
+
+            val condition = input.getString("condition")
+            val expiresAt = input.getLong("expiresAt")
+            val hitLimit = input.getInteger("hitLimit")
+            val throttleOb = input.getJsonObject("throttle")
+            val throttle = if (throttleOb != null) {
+                InstrumentThrottle(
+                    throttleOb.getInteger("limit"),
+                    ThrottleStep.valueOf(throttleOb.getString("step"))
+                )
+            } else InstrumentThrottle.DEFAULT
+
+            RequestContext.put("self_id", selfId)
+            ServiceProvider.liveProviders.liveInstrument.addLiveInstrument(
+                LiveBreakpoint(
+                    location = LiveSourceLocation(locationSource, locationLine),
+                    condition = condition,
+                    expiresAt = expiresAt,
+                    hitLimit = hitLimit ?: 1,
+                    throttle = throttle,
+                    meta = toJsonMap(input.getJsonArray("meta"))
+                )
+            ) {
+                if (it.succeeded()) {
+                    completableFuture.complete(fixJsonMaps(it.result()))
+                } else {
+                    completableFuture.completeExceptionally(it.cause())
+                }
+            }
+        }
+        return completableFuture
+    }
+
     private fun addLiveLog(env: DataFetchingEnvironment): CompletableFuture<Map<String, Any>> {
         val completableFuture = CompletableFuture<Map<String, Any>>()
         GlobalScope.launch {
@@ -1087,13 +1179,13 @@ object SourceService {
         return completableFuture
     }
 
-    private fun addLiveBreakpoint(env: DataFetchingEnvironment): CompletableFuture<Map<String, Any>> {
+    private fun addLiveMeter(env: DataFetchingEnvironment): CompletableFuture<Map<String, Any>> {
         val completableFuture = CompletableFuture<Map<String, Any>>()
         GlobalScope.launch {
             val selfId = if (System.getenv("SPP_DISABLE_JWT") != "true") {
                 val devId = env.getContext<RoutingContextImpl>().user().principal().getString("developer_id")
-                if (!SourceStorage.hasPermission(devId, ADD_LIVE_BREAKPOINT)) {
-                    completableFuture.completeExceptionally(PermissionAccessDenied(ADD_LIVE_BREAKPOINT))
+                if (!SourceStorage.hasPermission(devId, ADD_LIVE_METER)) {
+                    completableFuture.completeExceptionally(PermissionAccessDenied(ADD_LIVE_METER))
                     return@launch
                 }
                 devId
@@ -1109,6 +1201,13 @@ object SourceService {
                 return@launch
             }
 
+            val metricValueInput = input.getJsonObject("metricValue")
+            val metricValue = MetricValue(
+                MetricValueType.valueOf(metricValueInput.getString("valueType")),
+                metricValueInput.getString("number"),
+                metricValueInput.getString("supplier")
+            )
+
             val condition = input.getString("condition")
             val expiresAt = input.getLong("expiresAt")
             val hitLimit = input.getInteger("hitLimit")
@@ -1122,11 +1221,14 @@ object SourceService {
 
             RequestContext.put("self_id", selfId)
             ServiceProvider.liveProviders.liveInstrument.addLiveInstrument(
-                LiveBreakpoint(
+                LiveMeter(
+                    meterName = input.getString("meterName"),
+                    meterType = MeterType.valueOf(input.getString("meterType")),
+                    metricValue = metricValue,
                     location = LiveSourceLocation(locationSource, locationLine),
                     condition = condition,
                     expiresAt = expiresAt,
-                    hitLimit = hitLimit ?: 1,
+                    hitLimit = hitLimit ?: -1,
                     throttle = throttle,
                     meta = toJsonMap(input.getJsonArray("meta"))
                 )
