@@ -44,6 +44,7 @@ dependencies {
     compileOnly("org.apache.skywalking:server-core:$skywalkingVersion") { isTransitive = false }
     compileOnly("org.apache.skywalking:skywalking-sharing-server-plugin:$skywalkingVersion") { isTransitive = false }
     compileOnly("org.apache.skywalking:storage-elasticsearch-plugin:$skywalkingVersion") { isTransitive = false }
+    compileOnly("org.apache.skywalking:library-elasticsearch-client:$skywalkingVersion") { isTransitive = false }
     compileOnly("org.apache.skywalking:library-client:$skywalkingVersion") { isTransitive = false }
     compileOnly("org.apache.skywalking:skywalking-trace-receiver-plugin:$skywalkingVersion") { isTransitive = false }
     compileOnly("org.apache.skywalking:agent-analyzer:$skywalkingVersion") { isTransitive = false }

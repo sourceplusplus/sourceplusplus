@@ -31,7 +31,7 @@ services:
       - es-server
     restart: on-failure
     environment:
-      - SW_STORAGE=elasticsearch7
+      - SW_STORAGE=elasticsearch
       - SW_STORAGE_ES_CLUSTER_NODES=es-server:9200
       - SPP_PLATFORM_HOST=spp-platform
       - SPP_PLATFORM_PORT=5460
