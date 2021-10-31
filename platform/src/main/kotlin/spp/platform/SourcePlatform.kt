@@ -621,6 +621,12 @@ class SourcePlatform : CoroutineVerticle() {
                                     .getLocalCounter(ProbeAddress.LIVE_LOG_REMOTE.address)
                                     .await().get().await()
                             )
+                            .put(
+                                ProbeAddress.LIVE_METER_REMOTE.address,
+                                vertx.sharedData()
+                                    .getLocalCounter(ProbeAddress.LIVE_METER_REMOTE.address)
+                                    .await().get().await()
+                            )
                     )
             )
     }

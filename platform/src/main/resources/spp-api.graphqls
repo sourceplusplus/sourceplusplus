@@ -33,11 +33,14 @@ enum RolePermission {
     ADD_ACCESS_PERMISSION,
     REMOVE_ACCESS_PERMISSION,
 
-    ADD_LIVE_LOG,
     ADD_LIVE_BREAKPOINT,
+    ADD_LIVE_LOG,
+    ADD_LIVE_METER,
+
     GET_LIVE_INSTRUMENTS,
-    GET_LIVE_LOGS,
     GET_LIVE_BREAKPOINTS,
+    GET_LIVE_LOGS,
+    GET_LIVE_METERS,
     REMOVE_LIVE_INSTRUMENT
 }
 
@@ -46,6 +49,29 @@ enum ThrottleStep {
     MINUTE,
     HOUR,
     DAY
+}
+
+enum MeterType {
+    COUNTER,
+    GAUGE,
+    HISTOGRAM
+}
+
+enum MetricValueType {
+    NUMBER,
+    SUPPLIER
+}
+
+type MetricValue {
+    valueType: MetricValueType!
+    number: String
+    supplier: String
+}
+
+input MetricValueInput {
+    valueType: MetricValueType!
+    number: String
+    supplier: String
 }
 
 type InstrumentThrottle {
@@ -74,6 +100,34 @@ interface LiveInstrument {
     throttle: InstrumentThrottle
     type: LiveInstrumentType
     meta: [MetaInfo]
+}
+
+type LiveMeter implements LiveInstrument {
+    meterName: String!
+    meterType: MeterType!
+    metricValue: MetricValue!
+    id: String!
+    location: LiveSourceLocation!
+    condition: String
+    expiresAt: Long
+    hitLimit: Int
+    applied: Boolean
+    pending: Boolean
+    throttle: InstrumentThrottle
+    type: LiveInstrumentType
+    meta: [MetaInfo]
+}
+
+input LiveMeterInput {
+    meterName: String!
+    meterType: MeterType!
+    metricValue: MetricValueInput!
+    location: LiveSourceLocationInput!
+    condition: String
+    expiresAt: Long
+    hitLimit: Int
+    throttle: InstrumentThrottleInput
+    meta: [MetaInfoInput]
 }
 
 type LiveLog implements LiveInstrument {
@@ -172,9 +226,10 @@ type Query {
     getDeveloperPermissions(id: String!): [RolePermission!]!
 
     getDevelopers: [Developer!]!
-    getLiveLogs: [LiveLog!]!
-    getLiveBreakpoints: [LiveBreakpoint!]!
     getLiveInstruments: [LiveInstrument!]!
+    getLiveBreakpoints: [LiveBreakpoint!]!
+    getLiveLogs: [LiveLog!]!
+    getLiveMeters: [LiveMeter!]!
 }
 
 type Mutation {
@@ -203,13 +258,15 @@ type Mutation {
     removeLiveInstruments(source: String!, line: Int!): [LiveInstrument!]!
     clearLiveInstruments: Boolean!
 
-    addLiveLog(input: LiveLogInput!): LiveLog!
     addLiveBreakpoint(input: LiveBreakpointInput!): LiveBreakpoint!
+    addLiveLog(input: LiveLogInput!): LiveLog!
+    addLiveMeter(input: LiveMeterInput!): LiveMeter!
 }
 
 scalar Long
 
 enum LiveInstrumentType {
     BREAKPOINT,
-    LOG
+    LOG,
+    METER
 }
