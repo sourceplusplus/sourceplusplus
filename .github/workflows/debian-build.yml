@@ -106,33 +106,20 @@ jobs:
       - name: "[CLI] Remove live instruments"
         run: ./interfaces/cli/build/graal/spp-cli -v -c ./platform/config/spp-platform.crt -k ./platform/config/spp-platform.key developer remove-live-instruments spp.example.webapp.model.User 48
       - name: Run integration tests
-        run: ./gradlew test -x :probe-jvm:control:test -Dtest.profile=integration -Dbuild.profile=debian
+        run: ./gradlew :platform:test -Dtest.profile=integration -Dbuild.profile=debian
       - name: Build S++ Plugin
         run: ./gradlew buildPlugin
-      - name: Download platform logs from container
+
+      - run: ./gradlew :platform:composeLogs
         if: ${{ always() }}
-        run: docker cp $(docker ps -aqf "name=spp-platform"):/opt/sourceplusplus/logs/spp-platform.log .
-      - name: Upload platform logs artifact
-        if: ${{ always() }}
-        uses: actions/upload-artifact@v2
-        with:
-          name: spp-platform.log
-          path: ./spp-platform.log
-      - name: Download probe logs from container
-        if: ${{ always() }}
-        run: docker cp $(docker ps -aqf "name=spp-example-webapp"):/tmp/spp-probe/logs/skywalking-api.log .
-      - name: Upload probe logs artifact
-        if: ${{ always() }}
-        uses: actions/upload-artifact@v2
-        with:
-          name: spp-probe.log
-          path: ./skywalking-api.log
+
       - name: Upload docker logs artifact
         if: ${{ always() }}
         uses: actions/upload-artifact@v2
         with:
-          name: docker-compose.log
-          path: ./build/docker-compose.log
+          name: docker-logs
+          path: ./platform/build/containers-logs
+
       - name: Build release dist
         run: |
           mkdir -p dist/spp-platform-${{ env.SPP_PLATFORM_VERSION }}/config \

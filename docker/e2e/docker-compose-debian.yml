@@ -38,7 +38,7 @@ services:
       - es-server
     restart: on-failure
     environment:
-      - SW_STORAGE=elasticsearch7
+      - SW_STORAGE=elasticsearch
       - SW_STORAGE_ES_CLUSTER_NODES=es-server:9200
       #- JAVA_OPTS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5106
   spp-example-webapp:
@@ -71,7 +71,7 @@ services:
         hard: 65536
     command: -E cluster.name=es-skywalking -E path.data=data -E path.logs=logs -E network.host=0.0.0.0 -E node.name=node-1
 #  skywalking-ui:
-#    image: apache/skywalking-ui:8.7.0
+#    image: apache/skywalking-ui:8.8.1
 #    container_name: skywalking-ui
 #    hostname: skywalking-ui
 #    ports:
