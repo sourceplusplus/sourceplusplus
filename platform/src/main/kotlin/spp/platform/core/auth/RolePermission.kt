@@ -33,10 +33,12 @@ enum class RolePermission(val manager: Boolean = true) {
     REMOVE_ACCESS_PERMISSION(true),
 
     //instruments
-    ADD_LIVE_LOG(false),
     ADD_LIVE_BREAKPOINT(false),
+    ADD_LIVE_LOG(false),
+    ADD_LIVE_METER(false),
     GET_LIVE_INSTRUMENTS(false),
-    GET_LIVE_LOGS(false),
     GET_LIVE_BREAKPOINTS(false),
+    GET_LIVE_LOGS(false),
+    GET_LIVE_METERS(false),
     REMOVE_LIVE_INSTRUMENT(false)
 }

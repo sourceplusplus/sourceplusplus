@@ -8,7 +8,6 @@ plugins {
     id("com.apollographql.apollo")
     id("java")
     id("org.jetbrains.kotlin.jvm")
-    id("org.jetbrains.kotlin.kapt")
 }
 
 val platformGroup: String by project
@@ -48,10 +47,6 @@ dependencies {
     implementation("com.github.ajalt.clikt:clikt:$cliktVersion")
     implementation("ch.qos.logback:logback-classic:$logbackVersion")
     implementation("io.vertx:vertx-service-discovery:$vertxVersion")
-    implementation("io.vertx:vertx-service-proxy:$vertxVersion")
-    implementation("io.vertx:vertx-codegen:$vertxVersion")
-    kapt("io.vertx:vertx-codegen:$vertxVersion:processor")
-//    annotationProcessor("io.vertx:vertx-service-proxy:$vertxVersion")
     implementation(files(".ext/vertx-service-proxy-4.0.2.jar"))
     implementation("io.vertx:vertx-health-check:$vertxVersion")
     implementation("io.vertx:vertx-web-graphql:$vertxVersion")
