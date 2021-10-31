@@ -110,7 +110,7 @@ jobs:
       - name: Build S++ Plugin
         run: ./gradlew buildPlugin
 
-      - run: ./gradlew composeLogs
+      - run: ./gradlew :platform:composeLogs
         if: ${{ always() }}
 
       - name: Upload docker logs artifact
