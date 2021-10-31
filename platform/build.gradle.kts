@@ -1,130 +1,100 @@
-import java.util.*
-
 plugins {
     id("com.avast.gradle.docker-compose")
-    id("io.gitlab.arturbosch.detekt")
-    id("com.github.johnrengelman.shadow")
-    id("com.palantir.graal")
-    id("com.apollographql.apollo")
-    id("java")
-    id("org.jetbrains.kotlin.jvm")
+    id("io.gitlab.arturbosch.detekt") apply false
+    id("com.github.johnrengelman.shadow") apply false
+    id("com.palantir.graal") apply false
+    id("org.jetbrains.kotlin.jvm") apply false
 }
 
 val platformGroup: String by project
 val platformVersion: String by project
-val graalVersion: String by project
-val jacksonVersion: String by project
-val sourceMarkerVersion: String by project
-val commonsLang3Version: String by project
-val cliktVersion: String by project
-val bouncycastleVersion: String by project
-val jupiterVersion: String by project
-val apolloVersion: String by project
-val commonsIoVersion: String by project
-val logbackVersion: String by project
-val auth0JwtVersion: String by project
-val protocolVersion: String by project
 
 group = platformGroup
 version = platformVersion
 
-val vertxVersion = "4.1.4" //todo: consolidate with gradle.properties 4.0.2
+subprojects {
+    apply(plugin = "io.gitlab.arturbosch.detekt")
+    apply(plugin = "org.jetbrains.kotlin.jvm")
+    if (name == "core") {
+        apply(plugin = "com.github.johnrengelman.shadow")
+        apply(plugin = "com.palantir.graal")
+    }
 
-repositories {
-    mavenCentral()
-    jcenter()
-    maven(url = "https://kotlin.bintray.com/kotlinx/")
-}
+    val graalVersion: String by project
+    val jacksonVersion: String by project
+    val commonsLang3Version: String by project
+    val cliktVersion: String by project
+    val bouncycastleVersion: String by project
+    val jupiterVersion: String by project
+    val apolloVersion: String by project
+    val commonsIoVersion: String by project
+    val logbackVersion: String by project
+    val auth0JwtVersion: String by project
+    val vertxVersion: String by project
 
-dependencies {
-    implementation("org.graalvm.sdk:graal-sdk:$graalVersion")
-    implementation(project(":protocol"))
-    implementation(project(":processor"))
-    shadow(project(":processor")) //todo: figure out why extra configurations.add() and this are needed
+    repositories {
+        mavenCentral()
+        jcenter()
+        maven(url = "https://kotlin.bintray.com/kotlinx/")
+    }
 
-    implementation("io.github.microutils:kotlin-logging-jvm:2.0.11")
-    implementation("org.apache.commons:commons-lang3:$commonsLang3Version")
-    implementation("com.github.ajalt.clikt:clikt:$cliktVersion")
-    implementation("ch.qos.logback:logback-classic:$logbackVersion")
-    implementation("io.vertx:vertx-service-discovery:$vertxVersion")
-    implementation(files(".ext/vertx-service-proxy-4.0.2.jar"))
-    implementation("io.vertx:vertx-health-check:$vertxVersion")
-    implementation("io.vertx:vertx-web-graphql:$vertxVersion")
-    implementation("io.vertx:vertx-auth-jwt:$vertxVersion")
-    implementation("io.vertx:vertx-redis-client:$vertxVersion")
-    implementation("io.vertx:vertx-web-graphql:${vertxVersion}")
-    implementation(files(".ext/vertx-tcp-eventbus-bridge-4.0.3-SNAPSHOT.jar"))
-    implementation("com.auth0:java-jwt:$auth0JwtVersion")
-    implementation("com.auth0:jwks-rsa:0.20.0")
-    implementation("org.bouncycastle:bcprov-jdk15on:$bouncycastleVersion")
-    implementation("org.bouncycastle:bcpkix-jdk15on:$bouncycastleVersion")
-    implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
-    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:$jacksonVersion")
-    implementation("commons-io:commons-io:$commonsIoVersion")
-    implementation("com.apollographql.apollo:apollo-runtime:$apolloVersion")
-    implementation("org.zeroturnaround:zt-zip:1.14")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2")
-    implementation("io.vertx:vertx-core:$vertxVersion")
-    implementation("io.vertx:vertx-lang-kotlin:$vertxVersion")
-    implementation("io.vertx:vertx-lang-kotlin-coroutines:$vertxVersion")
-    implementation("io.vertx:vertx-web:$vertxVersion")
-    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jacksonVersion")
-    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:$jacksonVersion")
-    implementation("com.fasterxml.jackson.datatype:jackson-datatype-guava:$jacksonVersion")
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
-    implementation("io.dropwizard.metrics:metrics-core:4.2.4")
-    implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.3.1")
+    dependencies {
+        val implementation by configurations
+        val testImplementation by configurations
 
-    testImplementation("org.junit.jupiter:junit-jupiter-engine:$jupiterVersion")
-    testImplementation("io.vertx:vertx-junit5:$vertxVersion")
-    testImplementation("io.vertx:vertx-web-client:$vertxVersion")
-}
+        implementation("org.graalvm.sdk:graal-sdk:$graalVersion")
+        implementation(project(":protocol"))
+        implementation(project(":processor"))
+        if (name == "core") {
+            implementation(project(":platform:common"))
 
-//todo: shouldn't need to put in src (github actions needs for some reason)
-tasks.create("createProperties") {
-    if (System.getProperty("build.profile") == "debian") {
-        val buildBuildFile = File(projectDir, "src/main/resources/build.properties")
-        if (buildBuildFile.exists()) {
-            buildBuildFile.delete()
-        } else {
-            buildBuildFile.parentFile.mkdirs()
+            val shadow by configurations
+            shadow(project(":processor")) //todo: figure out why extra configurations.add() and this are needed
+        } else if (name == "services") {
+            val compileOnly by configurations
+            compileOnly(project(":platform:common"))
         }
 
-        buildBuildFile.writer().use {
-            val p = Properties()
-            p["build_version"] = project.version.toString()
-            p.store(it, null)
-        }
+        implementation("io.github.microutils:kotlin-logging-jvm:2.0.11")
+        implementation("org.apache.commons:commons-lang3:$commonsLang3Version")
+        implementation("com.github.ajalt.clikt:clikt:$cliktVersion")
+        implementation("ch.qos.logback:logback-classic:$logbackVersion")
+        implementation("io.vertx:vertx-service-discovery:$vertxVersion")
+        implementation(files("../.ext/vertx-service-proxy-4.0.2.jar"))
+        implementation("io.vertx:vertx-health-check:$vertxVersion")
+        implementation("io.vertx:vertx-web-graphql:$vertxVersion")
+        implementation("io.vertx:vertx-auth-jwt:$vertxVersion")
+        implementation("io.vertx:vertx-redis-client:$vertxVersion")
+        implementation("io.vertx:vertx-web-graphql:${vertxVersion}")
+        implementation(files("../.ext/vertx-tcp-eventbus-bridge-4.0.3-SNAPSHOT.jar"))
+        implementation("com.auth0:java-jwt:$auth0JwtVersion")
+        implementation("com.auth0:jwks-rsa:0.20.0")
+        implementation("org.bouncycastle:bcprov-jdk15on:$bouncycastleVersion")
+        implementation("org.bouncycastle:bcpkix-jdk15on:$bouncycastleVersion")
+        implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
+        implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:$jacksonVersion")
+        implementation("commons-io:commons-io:$commonsIoVersion")
+        implementation("com.apollographql.apollo:apollo-runtime:$apolloVersion")
+        implementation("org.zeroturnaround:zt-zip:1.14")
+        implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2")
+        implementation("io.vertx:vertx-core:$vertxVersion")
+        implementation("io.vertx:vertx-lang-kotlin:$vertxVersion")
+        implementation("io.vertx:vertx-lang-kotlin-coroutines:$vertxVersion")
+        implementation("io.vertx:vertx-web:$vertxVersion")
+        implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jacksonVersion")
+        implementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:$jacksonVersion")
+        implementation("com.fasterxml.jackson.datatype:jackson-datatype-guava:$jacksonVersion")
+        implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
+        implementation("io.dropwizard.metrics:metrics-core:4.2.4")
+        implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.3.1")
+
+        testImplementation("org.junit.jupiter:junit-jupiter-engine:$jupiterVersion")
+        testImplementation("io.vertx:vertx-junit5:$vertxVersion")
+        testImplementation("io.vertx:vertx-web-client:$vertxVersion")
     }
 }
-tasks["processResources"].dependsOn("createProperties")
 
-graal {
-    //graalVersion(graalVersion.toString())
-    mainClass("spp.platform.SourcePlatform")
-    outputName("spp-platform")
-    option("-H:+PrintClassInitialization")
-    option("-H:+ReportExceptionStackTraces")
-    option("-H:+TraceClassInitialization")
-    option("-H:IncludeResourceBundles=build")
-}
-
-tasks.getByName<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar") {
-    archiveBaseName.set("spp-platform")
-    archiveClassifier.set("")
-    manifest {
-        attributes(
-            mapOf(
-                "Main-Class" to "spp.platform.SourcePlatform"
-            )
-        )
-    }
-    configurations.add(project.configurations.compileClasspath.get())
-    configurations.add(project.configurations.runtimeClasspath.get())
-    configurations.add(project.configurations.shadow.get())
-}
-
-tasks.getByName("clean") {
+tasks.register("clean") {
     doFirst {
         File(projectDir, "../docker/e2e").listFiles()?.forEach {
             if (it.name.startsWith("spp-platform-") || it.name.startsWith("spp-processor-")) {
@@ -134,45 +104,33 @@ tasks.getByName("clean") {
     }
 }
 
-tasks.getByName<Test>("test") {
-    failFast = true
-    useJUnitPlatform()
-    if (System.getProperty("test.profile") != "integration") {
-        exclude("integration/**")
-    }
-
-    testLogging {
-        events("passed", "skipped", "failed")
-        setExceptionFormat("full")
-
-        outputs.upToDateWhen { false }
-        showStandardStreams = true
-    }
+tasks.register("build") {
+    dependsOn(":platform:core:build")
 }
 
 tasks.register<Copy>("updateDockerFiles") {
     dependsOn(":platform:build", ":processor:build")
     if (System.getProperty("build.profile") == "debian") {
         doFirst {
-            if (!File(projectDir, "build/graal/spp-platform").exists()) {
+            if (!File(projectDir, "core/build/graal/spp-platform").exists()) {
                 throw GradleException("Missing spp-platform")
             }
             if (!File(projectDir, "../processor/build/libs/spp-processor-$version-shadow.jar").exists()) {
                 throw GradleException("Missing spp-processor-$version-shadow.jar")
             }
         }
-        from(File(projectDir, "build/graal/spp-platform"))
+        from(File(projectDir, "core/build/graal/spp-platform"))
             .into(File(projectDir, "../docker/e2e"))
     } else {
         doFirst {
-            if (!File(projectDir, "build/libs/spp-platform-$version.jar").exists()) {
+            if (!File(projectDir, "core/build/libs/spp-platform-$version.jar").exists()) {
                 throw GradleException("Missing spp-platform-$version.jar")
             }
             if (!File(projectDir, "../processor/build/libs/spp-processor-$version-shadow.jar").exists()) {
                 throw GradleException("Missing spp-processor-$version-shadow.jar")
             }
         }
-        from(File(projectDir, "build/libs/spp-platform-$version.jar"))
+        from(File(projectDir, "core/build/libs/spp-platform-$version.jar"))
             .into(File(projectDir, "../docker/e2e"))
     }
 

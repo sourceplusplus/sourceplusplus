@@ -25,7 +25,7 @@ tasks {
         dependsOn(":platform:build", ":processor:build", ":interfaces:marker:buildPlugin")
         doLast {
             file("dist/spp-platform-$version/config").mkdirs()
-            file("platform/config/spp-platform.yml")
+            file("config/spp-platform.yml")
                 .copyTo(file("dist/spp-platform-$version/config/spp-platform.yml"))
             file("platform/build/graal/spp-platform")
                 .copyTo(file("dist/spp-platform-$version/spp-platform"))

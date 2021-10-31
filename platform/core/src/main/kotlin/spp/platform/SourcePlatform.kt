@@ -431,7 +431,7 @@ class SourcePlatform : CoroutineVerticle() {
         vertx.sharedData().getLocalMap<String, Int>("spp.core")["http.port"] = server.actualPort()
         log.info("API server started. Port: {}", server.actualPort())
 
-        SourceStorage.installDefaults()
+        SourceStorage.setup(redis)
         if (!System.getenv("SPP_SYSTEM_ACCESS_TOKEN").isNullOrBlank()) {
             SourceStorage.setAccessToken("system", System.getenv("SPP_SYSTEM_ACCESS_TOKEN"))
         } else {
