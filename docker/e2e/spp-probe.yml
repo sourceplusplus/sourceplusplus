@@ -11,9 +11,3 @@ skywalking:
     service_name: "appUuid"
   collector:
     backend_service: "skywalking-oap:11800"
-  plugin:
-    toolkit:
-      log:
-        grpc:
-          reporter:
-            server_host: "skywalking-oap"
