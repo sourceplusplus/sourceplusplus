@@ -14,10 +14,10 @@ import org.apache.skywalking.oap.server.analyzer.provider.AnalyzerModuleConfig
 import org.apache.skywalking.oap.server.analyzer.provider.trace.parser.listener.*
 import org.apache.skywalking.oap.server.library.module.ModuleManager
 import org.apache.skywalking.oap.server.storage.plugin.elasticsearch.base.EsDAO
-import org.elasticsearch.common.xcontent.json.JsonXContent
 import org.slf4j.LoggerFactory
 import spp.processor.SourceProcessor
 import spp.protocol.processor.ProcessorAddress
+import spp.protocol.processor.ProcessorAddress.BREAKPOINT_HIT
 import java.util.concurrent.TimeUnit
 
 class LiveInstrumentAnalysis(elasticSearch: EsDAO) : AnalysisListenerFactory, LogAnalysisListenerFactory {
@@ -169,33 +169,19 @@ class LiveInstrumentAnalysis(elasticSearch: EsDAO) : AnalysisListenerFactory, Lo
             }
 
             breakpointIds.forEach {
-                elasticSearch.client.forceInsert(
-                    "spp_breakpoint_hit", "${it}:${segment.traceId}",
-                    JsonXContent.contentBuilder()
-                        .startObject()
-                        .field("breakpoint_id", it)
-                        .field("trace_id", segment.traceId)
-                        .field("stack_trace", stackTraces[it]!!)
-                        .field("variables", variables.getOrDefault(it, emptyList()))
-                        .timeField("occurred_at", span.startTime)
-                        .field("service_host", segment.serviceInstance.substringAfter("@"))
-                        .field("service", segment.service)
-                        .field("location_source", locationSources[it]!!)
-                        .field("location_line", locationLines[it]!!)
-                        .endObject()
+                val bpHitObj = mapOf(
+                    "breakpoint_id" to it,
+                    "trace_id" to segment.traceId,
+                    "stack_trace" to stackTraces[it]!!,
+                    "variables" to variables.getOrDefault(it, emptyList()),
+                    "occurred_at" to span.startTime,
+                    "service_host" to segment.serviceInstance.substringAfter("@"),
+                    "service" to segment.service,
+                    "location_source" to locationSources[it]!!,
+                    "location_line" to locationLines[it]!!
                 )
-
-                val bpHit = JsonObject()
-                    .put("breakpoint_id", it)
-                    .put("trace_id", segment.traceId)
-                    .put("stack_trace", stackTraces[it]!!)
-                    .put("variables", variables.getOrDefault(it, emptyList()))
-                    .put("occurred_at", span.startTime)
-                    .put("service_host", segment.serviceInstance.substringAfter("@"))
-                    .put("service", segment.service)
-                    .put("location_source", locationSources[it]!!)
-                    .put("location_line", locationLines[it]!!)
-                SourceProcessor.vertx.eventBus().publish(ProcessorAddress.BREAKPOINT_HIT.address, bpHit)
+                elasticSearch.client.forceInsert("spp_breakpoint_hit", "${it}:${segment.traceId}", bpHitObj)
+                SourceProcessor.vertx.eventBus().publish(BREAKPOINT_HIT.address, JsonObject.mapFrom(bpHitObj))
             }
         }
     }
