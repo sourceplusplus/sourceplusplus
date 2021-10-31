@@ -116,22 +116,6 @@ class ProbeGenerator : AbstractVerticle() {
                     .put(
                         "collector", JsonObject()
                             .put("backend_service", config.skywalkingBackendService)
-                    ).put(
-                        "plugin", JsonObject()
-                            .put(
-                                "toolkit", JsonObject()
-                                    .put(
-                                        "log", JsonObject()
-                                            .put(
-                                                "grpc", JsonObject()
-                                                    .put(
-                                                        "reporter", JsonObject()
-                                                            .put("server_host", config.platformHost)
-                                                            .put("server_port", "11800") //todo: config
-                                                    )
-                                            )
-                                    )
-                            )
                     )
             )
 
