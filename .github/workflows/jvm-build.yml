@@ -39,7 +39,7 @@ jobs:
           echo "::set-output name=version::$VERSION"
           echo "SPP_PLATFORM_VERSION=$VERSION" >> $GITHUB_ENV
       - name: Build & start platform
-        run: ./gradlew :interfaces:cli:build :platform:build :platform:updateDockerFiles :platform:composeUp -x proguard -Dbuild.profile=jvm
+        run: ./gradlew -p assemble updateDockerFiles composeUp -x proguard -Dbuild.profile=jvm
       - name: Docker IPs
         run: docker inspect --format='{{.Name}} - {{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $(docker ps -aq)
       - name: Set SPP_PLATFORM_HOST
@@ -104,7 +104,7 @@ jobs:
       - name: "[CLI] Remove live instruments"
         run: java -jar ./interfaces/cli/build/libs/spp-cli-${{ env.SPP_PLATFORM_VERSION }}.jar -v developer remove-live-instruments spp.example.webapp.model.User 48
       - name: Run integration tests
-        run: ./gradlew test -x :probe-jvm:control:test -x proguard -Dtest.profile=integration -Dbuild.profile=jvm
+        run: ./gradlew -p platform test -x proguard -Dtest.profile=integration -Dbuild.profile=jvm
 
       - run: ./gradlew :platform:composeLogs
         if: ${{ always() }}
