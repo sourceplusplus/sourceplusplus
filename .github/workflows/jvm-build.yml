@@ -49,6 +49,7 @@ jobs:
       - name: Wait for skywalking
         run: |
           until $(curl --header "Authorization: Bearer ${{ env.SPP_JWT_TOKEN }}" --insecure --output /dev/null --silent --fail https://localhost:5445/health); do printf '.'; sleep 5; done
+      - run: sleep 30s
 #      - name: "[CLI] Get developers"
 #        run: java -jar ./interfaces/cli/build/libs/spp-cli-${{ env.SPP_PLATFORM_VERSION }}.jar -v admin get-developers
 #      - name: "[CLI] Add developer"
