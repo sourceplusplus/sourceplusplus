@@ -72,7 +72,7 @@ import spp.platform.util.RequestContext
 import spp.protocol.platform.PlatformAddress
 import spp.protocol.probe.ProbeAddress
 import spp.protocol.processor.ProcessorAddress
-import spp.provider.ServiceProvider
+import spp.service.ServiceProvider
 import java.io.File
 import java.io.FileWriter
 import java.io.StringReader

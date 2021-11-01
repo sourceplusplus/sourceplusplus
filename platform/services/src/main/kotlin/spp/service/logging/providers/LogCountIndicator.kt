@@ -1,4 +1,4 @@
-package spp.provider.logging.providers
+package spp.service.logging.providers
 
 import com.sourceplusplus.protocol.artifact.log.LogCountSummary
 import com.sourceplusplus.protocol.error.MissingRemoteException

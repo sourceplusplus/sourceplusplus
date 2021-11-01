@@ -29,7 +29,7 @@ import spp.platform.core.auth.RolePermission.*
 import spp.platform.core.auth.error.InstrumentAccessDenied
 import spp.platform.core.auth.error.PermissionAccessDenied
 import spp.platform.util.RequestContext
-import spp.provider.ServiceProvider
+import spp.service.ServiceProvider
 import java.util.*
 import java.util.concurrent.CompletableFuture
 
