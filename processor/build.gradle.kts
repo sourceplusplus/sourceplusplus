@@ -1,12 +1,3 @@
-buildscript {
-    repositories {
-        mavenCentral()
-    }
-    dependencies {
-        classpath("com.guardsquare:proguard-gradle:7.1.1")
-    }
-}
-
 plugins {
     id("com.github.johnrengelman.shadow")
     kotlin("jvm")

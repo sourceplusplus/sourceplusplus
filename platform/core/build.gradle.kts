@@ -1,12 +1,9 @@
 import java.util.*
 
 plugins {
-    id("com.avast.gradle.docker-compose")
     id("io.gitlab.arturbosch.detekt")
     id("com.github.johnrengelman.shadow")
     id("com.palantir.graal")
-    id("com.apollographql.apollo")
-    id("java")
     id("org.jetbrains.kotlin.jvm")
 }
 
@@ -32,6 +29,9 @@ val vertxVersion = "4.1.4" //todo: consolidate with gradle.properties 4.0.2
 
 dependencies {
     implementation(project(":platform:services"))
+    implementation(project(":platform:common"))
+
+    shadow(project(":processor")) //todo: figure out why extra configurations.add() and this are needed
 }
 
 //todo: shouldn't need to put in src (github actions needs for some reason)
