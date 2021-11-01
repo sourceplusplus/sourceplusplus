@@ -228,7 +228,7 @@ class SourcePlatform : CoroutineVerticle() {
                     .addPubSecKey(
                         PubSecKeyOptions()
                             .setAlgorithm("RS256")
-                            .setBuffer((privateKey.toString()))
+                            .setBuffer(privateKey.toString())
                     )
             )
         }
