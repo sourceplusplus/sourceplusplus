@@ -99,10 +99,6 @@ tasks.register("clean") {
     }
 }
 
-tasks.register("build") {
-    dependsOn(":platform:core:build")
-}
-
 tasks.register<Copy>("updateDockerFiles") {
     dependsOn(":platform:build", ":processor:build")
     if (System.getProperty("build.profile") == "debian") {
