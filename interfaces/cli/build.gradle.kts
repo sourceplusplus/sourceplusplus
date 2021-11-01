@@ -93,6 +93,7 @@ tasks.getByName<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("sha
         )
     }
 }
+tasks.getByName("build").dependsOn("shadowJar")
 
 configurations.runtimeClasspath {
     exclude("ch.qos.logback", "logback-classic")
