@@ -41,7 +41,7 @@ jobs:
           echo "::set-output name=version::$VERSION"
           echo "SPP_PLATFORM_VERSION=$VERSION" >> $GITHUB_ENV
       - name: Build & start platform
-        run: ./gradlew :platform:build nativeImage :platform:updateDockerFiles :platform:composeUp -Dbuild.profile=debian
+        run: ./gradlew -p platform assemble nativeImage updateDockerFiles composeUp -Dbuild.profile=debian
       - name: Compress platform
         run: curl -O -J -L https://github.com/upx/upx/releases/download/v3.96/upx-3.96-amd64_linux.tar.xz && tar -xJf upx-3.96-amd64_linux.tar.xz && ./upx-3.96-amd64_linux/upx platform/core/build/graal/spp-platform
       - name: Compress CLI
@@ -110,7 +110,7 @@ jobs:
       - name: "[CLI] Remove live instruments"
         run: ./interfaces/cli/build/graal/spp-cli -v developer remove-live-instruments spp.example.webapp.model.User 48
       - name: Run integration tests
-        run: ./gradlew test -x :probe-jvm:control:test -Dtest.profile=integration -Dbuild.profile=debian
+        run: ./gradlew -p platform test -Dtest.profile=integration -Dbuild.profile=debian
       - name: Build S++ Plugin
         run: ./gradlew buildPlugin
 
