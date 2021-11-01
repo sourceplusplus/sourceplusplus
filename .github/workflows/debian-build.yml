@@ -124,7 +124,7 @@ jobs:
         run: |
           mkdir -p dist/spp-platform-${{ env.SPP_PLATFORM_VERSION }}/config \
           && cp config/spp-platform.yml dist/spp-platform-${{ env.SPP_PLATFORM_VERSION }}/config \
-          && cp platform/build/graal/spp-platform dist/spp-platform-${{ env.SPP_PLATFORM_VERSION }} \
+          && cp platform/core/build/graal/spp-platform dist/spp-platform-${{ env.SPP_PLATFORM_VERSION }} \
           && cp interfaces/cli/build/graal/spp-cli dist/spp-platform-${{ env.SPP_PLATFORM_VERSION }} \
           && (cd dist && tar -zcvf ../spp-platform-${{ env.SPP_PLATFORM_VERSION }}-linux-amd64.tar.gz *)
       - name: Upload spp-platform
