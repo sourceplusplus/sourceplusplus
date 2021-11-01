@@ -49,60 +49,60 @@ jobs:
       - name: Wait for skywalking
         run: |
           until $(curl --header "Authorization: Bearer ${{ env.SPP_JWT_TOKEN }}" --insecure --output /dev/null --silent --fail https://localhost:5445/health); do printf '.'; sleep 5; done
-      - name: "[CLI] Get developers"
-        run: java -jar ./interfaces/cli/build/libs/spp-cli-${{ env.SPP_PLATFORM_VERSION }}.jar -v admin get-developers
-      - name: "[CLI] Add developer"
-        run: java -jar ./interfaces/cli/build/libs/spp-cli-${{ env.SPP_PLATFORM_VERSION }}.jar -v admin add-developer test
-      - name: "[CLI] Refresh developer token"
-        run: java -jar ./interfaces/cli/build/libs/spp-cli-${{ env.SPP_PLATFORM_VERSION }}.jar -v admin refresh-developer-token test
-      - name: "[CLI] Get roles"
-        run: java -jar ./interfaces/cli/build/libs/spp-cli-${{ env.SPP_PLATFORM_VERSION }}.jar -v admin get-roles
-      - name: "[CLI] Get role permissions"
-        run: java -jar ./interfaces/cli/build/libs/spp-cli-${{ env.SPP_PLATFORM_VERSION }}.jar -v admin get-role-permissions role_manager
-      - name: "[CLI] Add role"
-        run: java -jar ./interfaces/cli/build/libs/spp-cli-${{ env.SPP_PLATFORM_VERSION }}.jar -v admin add-role tester
-      - name: "[CLI] Add role permission"
-        run: java -jar ./interfaces/cli/build/libs/spp-cli-${{ env.SPP_PLATFORM_VERSION }}.jar -v admin add-role-permission tester ADD_DEVELOPER
-      - name: "[CLI] Add developer role"
-        run: java -jar ./interfaces/cli/build/libs/spp-cli-${{ env.SPP_PLATFORM_VERSION }}.jar -v admin add-developer-role test tester
-      - name: "[CLI] Get developer roles"
-        run: java -jar ./interfaces/cli/build/libs/spp-cli-${{ env.SPP_PLATFORM_VERSION }}.jar -v admin get-developer-roles test
-      - name: "[CLI] Get developer permissions"
-        run: java -jar ./interfaces/cli/build/libs/spp-cli-${{ env.SPP_PLATFORM_VERSION }}.jar -v admin get-developer-permissions test
-      - name: "[CLI] Add access permission"
-        run: ACCESS_PERMISSION_ID=$(java -jar ./interfaces/cli/build/libs/spp-cli-${{ env.SPP_PLATFORM_VERSION }}.jar -v admin add-access-permission -l spp.example.webapp.model.User WHITE_LIST | grep -oP '(?<="id"\s:\s")[^"]*') && echo "ACCESS_PERMISSION_ID=$ACCESS_PERMISSION_ID" >> $GITHUB_ENV
-      - name: "[CLI] Add role access permission"
-        run: java -jar ./interfaces/cli/build/libs/spp-cli-${{ env.SPP_PLATFORM_VERSION }}.jar -v admin add-role-access-permission tester ${{ env.ACCESS_PERMISSION_ID }}
-      - name: "[CLI] Get access permissions"
-        run: java -jar ./interfaces/cli/build/libs/spp-cli-${{ env.SPP_PLATFORM_VERSION }}.jar -v admin get-access-permissions
-      - name: "[CLI] Get developer access permissions"
-        run: java -jar ./interfaces/cli/build/libs/spp-cli-${{ env.SPP_PLATFORM_VERSION }}.jar -v admin get-developer-access-permissions test
-      - name: "[CLI] Get role access permissions"
-        run: java -jar ./interfaces/cli/build/libs/spp-cli-${{ env.SPP_PLATFORM_VERSION }}.jar -v admin get-role-access-permissions tester
-      - name: "[CLI] Remove role access permission"
-        run: java -jar ./interfaces/cli/build/libs/spp-cli-${{ env.SPP_PLATFORM_VERSION }}.jar -v admin remove-role-access-permission tester ${{ env.ACCESS_PERMISSION_ID }}
-      - name: "[CLI] Remove access permission"
-        run: java -jar ./interfaces/cli/build/libs/spp-cli-${{ env.SPP_PLATFORM_VERSION }}.jar -v admin remove-access-permission ${{ env.ACCESS_PERMISSION_ID }}
-      - name: "[CLI] Remove developer role"
-        run: java -jar ./interfaces/cli/build/libs/spp-cli-${{ env.SPP_PLATFORM_VERSION }}.jar -v admin remove-developer-role test tester
-      - name: "[CLI] Remove role permission"
-        run: java -jar ./interfaces/cli/build/libs/spp-cli-${{ env.SPP_PLATFORM_VERSION }}.jar -v admin remove-role-permission tester ADD_DEVELOPER
-      - name: "[CLI] Remove role"
-        run: java -jar ./interfaces/cli/build/libs/spp-cli-${{ env.SPP_PLATFORM_VERSION }}.jar -v admin remove-role tester
-      - name: "[CLI] Remove developer"
-        run: java -jar ./interfaces/cli/build/libs/spp-cli-${{ env.SPP_PLATFORM_VERSION }}.jar -v admin remove-developer test
-      - name: "[CLI] Add live breakpoint"
-        run: java -jar ./interfaces/cli/build/libs/spp-cli-${{ env.SPP_PLATFORM_VERSION }}.jar -v developer add-live-breakpoint -h 100 spp.example.webapp.model.User 48
-      - name: "[CLI] Add live log"
-        run: java -jar ./interfaces/cli/build/libs/spp-cli-${{ env.SPP_PLATFORM_VERSION }}.jar -v developer add-live-log -h 100 spp.example.webapp.model.User 48 test-message
-      - name: "[CLI] Get live instruments"
-        run: java -jar ./interfaces/cli/build/libs/spp-cli-${{ env.SPP_PLATFORM_VERSION }}.jar -v developer get-live-instruments
-      - name: "[CLI] Get live breakpoints"
-        run: java -jar ./interfaces/cli/build/libs/spp-cli-${{ env.SPP_PLATFORM_VERSION }}.jar -v developer get-live-breakpoints
-      - name: "[CLI] Get live logs"
-        run: java -jar ./interfaces/cli/build/libs/spp-cli-${{ env.SPP_PLATFORM_VERSION }}.jar -v developer get-live-logs
-      - name: "[CLI] Remove live instruments"
-        run: java -jar ./interfaces/cli/build/libs/spp-cli-${{ env.SPP_PLATFORM_VERSION }}.jar -v developer remove-live-instruments spp.example.webapp.model.User 48
+#      - name: "[CLI] Get developers"
+#        run: java -jar ./interfaces/cli/build/libs/spp-cli-${{ env.SPP_PLATFORM_VERSION }}.jar -v admin get-developers
+#      - name: "[CLI] Add developer"
+#        run: java -jar ./interfaces/cli/build/libs/spp-cli-${{ env.SPP_PLATFORM_VERSION }}.jar -v admin add-developer test
+#      - name: "[CLI] Refresh developer token"
+#        run: java -jar ./interfaces/cli/build/libs/spp-cli-${{ env.SPP_PLATFORM_VERSION }}.jar -v admin refresh-developer-token test
+#      - name: "[CLI] Get roles"
+#        run: java -jar ./interfaces/cli/build/libs/spp-cli-${{ env.SPP_PLATFORM_VERSION }}.jar -v admin get-roles
+#      - name: "[CLI] Get role permissions"
+#        run: java -jar ./interfaces/cli/build/libs/spp-cli-${{ env.SPP_PLATFORM_VERSION }}.jar -v admin get-role-permissions role_manager
+#      - name: "[CLI] Add role"
+#        run: java -jar ./interfaces/cli/build/libs/spp-cli-${{ env.SPP_PLATFORM_VERSION }}.jar -v admin add-role tester
+#      - name: "[CLI] Add role permission"
+#        run: java -jar ./interfaces/cli/build/libs/spp-cli-${{ env.SPP_PLATFORM_VERSION }}.jar -v admin add-role-permission tester ADD_DEVELOPER
+#      - name: "[CLI] Add developer role"
+#        run: java -jar ./interfaces/cli/build/libs/spp-cli-${{ env.SPP_PLATFORM_VERSION }}.jar -v admin add-developer-role test tester
+#      - name: "[CLI] Get developer roles"
+#        run: java -jar ./interfaces/cli/build/libs/spp-cli-${{ env.SPP_PLATFORM_VERSION }}.jar -v admin get-developer-roles test
+#      - name: "[CLI] Get developer permissions"
+#        run: java -jar ./interfaces/cli/build/libs/spp-cli-${{ env.SPP_PLATFORM_VERSION }}.jar -v admin get-developer-permissions test
+#      - name: "[CLI] Add access permission"
+#        run: ACCESS_PERMISSION_ID=$(java -jar ./interfaces/cli/build/libs/spp-cli-${{ env.SPP_PLATFORM_VERSION }}.jar -v admin add-access-permission -l spp.example.webapp.model.User WHITE_LIST | grep -oP '(?<="id"\s:\s")[^"]*') && echo "ACCESS_PERMISSION_ID=$ACCESS_PERMISSION_ID" >> $GITHUB_ENV
+#      - name: "[CLI] Add role access permission"
+#        run: java -jar ./interfaces/cli/build/libs/spp-cli-${{ env.SPP_PLATFORM_VERSION }}.jar -v admin add-role-access-permission tester ${{ env.ACCESS_PERMISSION_ID }}
+#      - name: "[CLI] Get access permissions"
+#        run: java -jar ./interfaces/cli/build/libs/spp-cli-${{ env.SPP_PLATFORM_VERSION }}.jar -v admin get-access-permissions
+#      - name: "[CLI] Get developer access permissions"
+#        run: java -jar ./interfaces/cli/build/libs/spp-cli-${{ env.SPP_PLATFORM_VERSION }}.jar -v admin get-developer-access-permissions test
+#      - name: "[CLI] Get role access permissions"
+#        run: java -jar ./interfaces/cli/build/libs/spp-cli-${{ env.SPP_PLATFORM_VERSION }}.jar -v admin get-role-access-permissions tester
+#      - name: "[CLI] Remove role access permission"
+#        run: java -jar ./interfaces/cli/build/libs/spp-cli-${{ env.SPP_PLATFORM_VERSION }}.jar -v admin remove-role-access-permission tester ${{ env.ACCESS_PERMISSION_ID }}
+#      - name: "[CLI] Remove access permission"
+#        run: java -jar ./interfaces/cli/build/libs/spp-cli-${{ env.SPP_PLATFORM_VERSION }}.jar -v admin remove-access-permission ${{ env.ACCESS_PERMISSION_ID }}
+#      - name: "[CLI] Remove developer role"
+#        run: java -jar ./interfaces/cli/build/libs/spp-cli-${{ env.SPP_PLATFORM_VERSION }}.jar -v admin remove-developer-role test tester
+#      - name: "[CLI] Remove role permission"
+#        run: java -jar ./interfaces/cli/build/libs/spp-cli-${{ env.SPP_PLATFORM_VERSION }}.jar -v admin remove-role-permission tester ADD_DEVELOPER
+#      - name: "[CLI] Remove role"
+#        run: java -jar ./interfaces/cli/build/libs/spp-cli-${{ env.SPP_PLATFORM_VERSION }}.jar -v admin remove-role tester
+#      - name: "[CLI] Remove developer"
+#        run: java -jar ./interfaces/cli/build/libs/spp-cli-${{ env.SPP_PLATFORM_VERSION }}.jar -v admin remove-developer test
+#      - name: "[CLI] Add live breakpoint"
+#        run: java -jar ./interfaces/cli/build/libs/spp-cli-${{ env.SPP_PLATFORM_VERSION }}.jar -v developer add-live-breakpoint -h 100 spp.example.webapp.model.User 48
+#      - name: "[CLI] Add live log"
+#        run: java -jar ./interfaces/cli/build/libs/spp-cli-${{ env.SPP_PLATFORM_VERSION }}.jar -v developer add-live-log -h 100 spp.example.webapp.model.User 48 test-message
+#      - name: "[CLI] Get live instruments"
+#        run: java -jar ./interfaces/cli/build/libs/spp-cli-${{ env.SPP_PLATFORM_VERSION }}.jar -v developer get-live-instruments
+#      - name: "[CLI] Get live breakpoints"
+#        run: java -jar ./interfaces/cli/build/libs/spp-cli-${{ env.SPP_PLATFORM_VERSION }}.jar -v developer get-live-breakpoints
+#      - name: "[CLI] Get live logs"
+#        run: java -jar ./interfaces/cli/build/libs/spp-cli-${{ env.SPP_PLATFORM_VERSION }}.jar -v developer get-live-logs
+#      - name: "[CLI] Remove live instruments"
+#        run: java -jar ./interfaces/cli/build/libs/spp-cli-${{ env.SPP_PLATFORM_VERSION }}.jar -v developer remove-live-instruments spp.example.webapp.model.User 48
       - name: Run integration tests
         run: ./gradlew -p platform test -Dtest.profile=integration -Dbuild.profile=jvm
 
