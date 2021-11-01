@@ -45,12 +45,7 @@ subprojects {
         implementation("org.graalvm.sdk:graal-sdk:$graalVersion")
         implementation(project(":protocol"))
         implementation(project(":processor"))
-        if (name == "core") {
-            implementation(project(":platform:common"))
-
-            val shadow by configurations
-            shadow(project(":processor")) //todo: figure out why extra configurations.add() and this are needed
-        } else if (name == "services") {
+        if (name == "services") {
             val compileOnly by configurations
             compileOnly(project(":platform:common"))
         }
