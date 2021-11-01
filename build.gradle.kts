@@ -31,7 +31,7 @@ tasks {
             file("dist/spp-platform-$version/config").mkdirs()
             file("config/spp-platform.yml")
                 .copyTo(file("dist/spp-platform-$version/config/spp-platform.yml"))
-            file("platform/build/graal/spp-platform")
+            file("platform/core/build/graal/spp-platform")
                 .copyTo(file("dist/spp-platform-$version/spp-platform"))
             file("interfaces/cli/build/graal/spp-cli")
                 .copyTo(file("dist/spp-platform-$version/spp-cli"))
