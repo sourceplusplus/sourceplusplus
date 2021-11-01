@@ -25,8 +25,6 @@ val protocolVersion: String by project
 group = platformGroup
 version = platformVersion
 
-val vertxVersion = "4.1.4" //todo: consolidate with gradle.properties 4.0.2
-
 dependencies {
     implementation(project(":platform:services"))
     implementation(project(":platform:common"))
