@@ -1,6 +1,10 @@
 import java.io.FileOutputStream
 import java.net.URL
 
+plugins {
+    id("com.dorongold.task-tree") version "2.1.0"
+}
+
 val platformVersion: String by project
 val skywalkingVersion: String by project
 
