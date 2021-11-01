@@ -1,4 +1,4 @@
-package spp.provider.live.providers
+package spp.service.live.providers
 
 import com.sourceplusplus.protocol.SourceMarkerServices.Provide.LIVE_VIEW_SUBSCRIBER
 import com.sourceplusplus.protocol.error.MissingRemoteException

@@ -12,7 +12,7 @@
         <appender-ref ref="STDOUT"/>
     </root>
     <logger name="spp.platform" level="DEBUG"/>
-    <logger name="spp.provider" level="DEBUG"/>
+    <logger name="spp.service" level="DEBUG"/>
     <logger name="spp.processor" level="DEBUG"/>
 
     <logger name="io.netty" level="WARN"/>

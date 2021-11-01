@@ -1,4 +1,4 @@
-package spp.provider
+package spp.service
 
 import com.sourceplusplus.protocol.SourceMarkerServices.Utilize
 import com.sourceplusplus.protocol.SourceMarkerServices.Utilize.LIVE_INSTRUMENT
@@ -27,8 +27,8 @@ import spp.platform.core.SourceStorage
 import spp.platform.core.auth.error.AccessDenied
 import spp.platform.core.auth.error.InstrumentAccessDenied
 import spp.platform.util.RequestContext
-import spp.provider.live.LiveProviders
-import spp.provider.logging.LoggingProviders
+import spp.service.live.LiveProviders
+import spp.service.logging.LoggingProviders
 import kotlin.system.exitProcess
 
 class ServiceProvider(private val jwtAuth: JWTAuth?) : CoroutineVerticle() {

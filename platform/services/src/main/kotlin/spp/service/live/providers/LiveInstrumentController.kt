@@ -1,4 +1,4 @@
-package spp.provider.live.providers
+package spp.service.live.providers
 
 import com.sourceplusplus.protocol.SourceMarkerServices
 import com.sourceplusplus.protocol.artifact.exception.LiveStackTrace

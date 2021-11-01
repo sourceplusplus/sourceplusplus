@@ -1,4 +1,4 @@
-package spp.provider.live.providers
+package spp.service.live.providers
 
 import com.google.common.io.Resources
 import com.sourceplusplus.protocol.instrument.LiveSourceLocation

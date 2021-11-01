@@ -1,8 +1,8 @@
-package spp.provider.logging
+package spp.service.logging
 
 import io.vertx.core.Vertx
 import io.vertx.servicediscovery.ServiceDiscovery
-import spp.provider.logging.providers.LogCountIndicator
+import spp.service.logging.providers.LogCountIndicator
 
 class LoggingProviders(
     private val vertx: Vertx,
