@@ -52,59 +52,59 @@ jobs:
         run: |
           until $(curl --header "Authorization: Bearer ${{ env.SPP_JWT_TOKEN }}" --insecure --output /dev/null --silent --fail https://${{ env.SPP_PLATFORM_HOST }}:5445/health); do printf '.'; sleep 5; done
       - name: "[CLI] Get developers"
-        run: ./interfaces/cli/build/graal/spp-cli -v -c ./platform/config/spp-platform.crt -k ./platform/config/spp-platform.key admin get-developers
+        run: ./interfaces/cli/build/graal/spp-cli -v admin get-developers
       - name: "[CLI] Add developer"
-        run: ./interfaces/cli/build/graal/spp-cli -v -c ./platform/config/spp-platform.crt -k ./platform/config/spp-platform.key admin add-developer test
+        run: ./interfaces/cli/build/graal/spp-cli -v admin add-developer test
       - name: "[CLI] Refresh developer token"
-        run: ./interfaces/cli/build/graal/spp-cli -v -c ./platform/config/spp-platform.crt -k ./platform/config/spp-platform.key admin refresh-developer-token test
+        run: ./interfaces/cli/build/graal/spp-cli -v admin refresh-developer-token test
       - name: "[CLI] Get roles"
-        run: ./interfaces/cli/build/graal/spp-cli -v -c ./platform/config/spp-platform.crt -k ./platform/config/spp-platform.key admin get-roles
+        run: ./interfaces/cli/build/graal/spp-cli -v admin get-roles
       - name: "[CLI] Get role permissions"
-        run: ./interfaces/cli/build/graal/spp-cli -v -c ./platform/config/spp-platform.crt -k ./platform/config/spp-platform.key admin get-role-permissions role_manager
+        run: ./interfaces/cli/build/graal/spp-cli -v admin get-role-permissions role_manager
       - name: "[CLI] Add role"
-        run: ./interfaces/cli/build/graal/spp-cli -v -c ./platform/config/spp-platform.crt -k ./platform/config/spp-platform.key admin add-role tester
+        run: ./interfaces/cli/build/graal/spp-cli -v admin add-role tester
       - name: "[CLI] Add role permission"
-        run: ./interfaces/cli/build/graal/spp-cli -v -c ./platform/config/spp-platform.crt -k ./platform/config/spp-platform.key admin add-role-permission tester ADD_DEVELOPER
+        run: ./interfaces/cli/build/graal/spp-cli -v admin add-role-permission tester ADD_DEVELOPER
       - name: "[CLI] Add developer role"
-        run: ./interfaces/cli/build/graal/spp-cli -v -c ./platform/config/spp-platform.crt -k ./platform/config/spp-platform.key admin add-developer-role test tester
+        run: ./interfaces/cli/build/graal/spp-cli -v admin add-developer-role test tester
       - name: "[CLI] Get developer roles"
-        run: ./interfaces/cli/build/graal/spp-cli -v -c ./platform/config/spp-platform.crt -k ./platform/config/spp-platform.key admin get-developer-roles test
+        run: ./interfaces/cli/build/graal/spp-cli -v admin get-developer-roles test
       - name: "[CLI] Get developer permissions"
-        run: ./interfaces/cli/build/graal/spp-cli -v -c ./platform/config/spp-platform.crt -k ./platform/config/spp-platform.key admin get-developer-permissions test
+        run: ./interfaces/cli/build/graal/spp-cli -v admin get-developer-permissions test
       - name: "[CLI] Add access permission"
-        run: ACCESS_PERMISSION_ID=$(./interfaces/cli/build/graal/spp-cli -v -c ./platform/config/spp-platform.crt -k ./platform/config/spp-platform.key admin add-access-permission -l spp.example.webapp.model.User WHITE_LIST | grep -oP '(?<="id"\s:\s")[^"]*') && echo "ACCESS_PERMISSION_ID=$ACCESS_PERMISSION_ID" >> $GITHUB_ENV
+        run: ACCESS_PERMISSION_ID=$(./interfaces/cli/build/graal/spp-cli -v admin add-access-permission -l spp.example.webapp.model.User WHITE_LIST | grep -oP '(?<="id"\s:\s")[^"]*') && echo "ACCESS_PERMISSION_ID=$ACCESS_PERMISSION_ID" >> $GITHUB_ENV
       - name: "[CLI] Add role access permission"
-        run: ./interfaces/cli/build/graal/spp-cli -v -c ./platform/config/spp-platform.crt -k ./platform/config/spp-platform.key admin add-role-access-permission tester ${{ env.ACCESS_PERMISSION_ID }}
+        run: ./interfaces/cli/build/graal/spp-cli -v admin add-role-access-permission tester ${{ env.ACCESS_PERMISSION_ID }}
       - name: "[CLI] Get access permissions"
-        run: ./interfaces/cli/build/graal/spp-cli -v -c ./platform/config/spp-platform.crt -k ./platform/config/spp-platform.key admin get-access-permissions
+        run: ./interfaces/cli/build/graal/spp-cli -v admin get-access-permissions
       - name: "[CLI] Get developer access permissions"
-        run: ./interfaces/cli/build/graal/spp-cli -v -c ./platform/config/spp-platform.crt -k ./platform/config/spp-platform.key admin get-developer-access-permissions test
+        run: ./interfaces/cli/build/graal/spp-cli -v admin get-developer-access-permissions test
       - name: "[CLI] Get role access permissions"
-        run: ./interfaces/cli/build/graal/spp-cli -v -c ./platform/config/spp-platform.crt -k ./platform/config/spp-platform.key admin get-role-access-permissions tester
+        run: ./interfaces/cli/build/graal/spp-cli -v admin get-role-access-permissions tester
       - name: "[CLI] Remove role access permission"
-        run: ./interfaces/cli/build/graal/spp-cli -v -c ./platform/config/spp-platform.crt -k ./platform/config/spp-platform.key admin remove-role-access-permission tester ${{ env.ACCESS_PERMISSION_ID }}
+        run: ./interfaces/cli/build/graal/spp-cli -v admin remove-role-access-permission tester ${{ env.ACCESS_PERMISSION_ID }}
       - name: "[CLI] Remove access permission"
-        run: ./interfaces/cli/build/graal/spp-cli -v -c ./platform/config/spp-platform.crt -k ./platform/config/spp-platform.key admin remove-access-permission ${{ env.ACCESS_PERMISSION_ID }}
+        run: ./interfaces/cli/build/graal/spp-cli -v admin remove-access-permission ${{ env.ACCESS_PERMISSION_ID }}
       - name: "[CLI] Remove developer role"
-        run: ./interfaces/cli/build/graal/spp-cli -v -c ./platform/config/spp-platform.crt -k ./platform/config/spp-platform.key admin remove-developer-role test tester
+        run: ./interfaces/cli/build/graal/spp-cli -v admin remove-developer-role test tester
       - name: "[CLI] Remove role permission"
-        run: ./interfaces/cli/build/graal/spp-cli -v -c ./platform/config/spp-platform.crt -k ./platform/config/spp-platform.key admin remove-role-permission tester ADD_DEVELOPER
+        run: ./interfaces/cli/build/graal/spp-cli -v admin remove-role-permission tester ADD_DEVELOPER
       - name: "[CLI] Remove role"
-        run: ./interfaces/cli/build/graal/spp-cli -v -c ./platform/config/spp-platform.crt -k ./platform/config/spp-platform.key admin remove-role tester
+        run: ./interfaces/cli/build/graal/spp-cli -v admin remove-role tester
       - name: "[CLI] Remove developer"
-        run: ./interfaces/cli/build/graal/spp-cli -v -c ./platform/config/spp-platform.crt -k ./platform/config/spp-platform.key admin remove-developer test
+        run: ./interfaces/cli/build/graal/spp-cli -v admin remove-developer test
       - name: "[CLI] Add live breakpoint"
-        run: ./interfaces/cli/build/graal/spp-cli -v -c ./platform/config/spp-platform.crt -k ./platform/config/spp-platform.key developer add-live-breakpoint -h 100 spp.example.webapp.model.User 48
+        run: ./interfaces/cli/build/graal/spp-cli -v developer add-live-breakpoint -h 100 spp.example.webapp.model.User 48
       - name: "[CLI] Add live log"
-        run: ./interfaces/cli/build/graal/spp-cli -v -c ./platform/config/spp-platform.crt -k ./platform/config/spp-platform.key developer add-live-log -h 100 spp.example.webapp.model.User 48 test-message
+        run: ./interfaces/cli/build/graal/spp-cli -v developer add-live-log -h 100 spp.example.webapp.model.User 48 test-message
       - name: "[CLI] Get live instruments"
-        run: ./interfaces/cli/build/graal/spp-cli -v -c ./platform/config/spp-platform.crt -k ./platform/config/spp-platform.key developer get-live-instruments
+        run: ./interfaces/cli/build/graal/spp-cli -v developer get-live-instruments
       - name: "[CLI] Get live breakpoints"
-        run: ./interfaces/cli/build/graal/spp-cli -v -c ./platform/config/spp-platform.crt -k ./platform/config/spp-platform.key developer get-live-breakpoints
+        run: ./interfaces/cli/build/graal/spp-cli -v developer get-live-breakpoints
       - name: "[CLI] Get live logs"
-        run: ./interfaces/cli/build/graal/spp-cli -v -c ./platform/config/spp-platform.crt -k ./platform/config/spp-platform.key developer get-live-logs
+        run: ./interfaces/cli/build/graal/spp-cli -v developer get-live-logs
       - name: "[CLI] Remove live instruments"
-        run: ./interfaces/cli/build/graal/spp-cli -v -c ./platform/config/spp-platform.crt -k ./platform/config/spp-platform.key developer remove-live-instruments spp.example.webapp.model.User 48
+        run: ./interfaces/cli/build/graal/spp-cli -v developer remove-live-instruments spp.example.webapp.model.User 48
       - name: Run integration tests
         run: ./gradlew :platform:test -Dtest.profile=integration -Dbuild.profile=debian
       - name: Build S++ Plugin
