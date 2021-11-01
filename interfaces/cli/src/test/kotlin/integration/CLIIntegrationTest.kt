@@ -15,8 +15,8 @@ abstract class CLIIntegrationTest {
         Main.main(
             arrayOf(
                 "-v",
-                "-c", "../../platform/config/spp-platform.crt",
-                "-k", "../../platform/config/spp-platform.key",
+                "-c", "../../config/spp-platform.crt",
+                "-k", "../../config/spp-platform.key",
                 "system", "reset"
             )
         )
