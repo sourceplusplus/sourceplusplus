@@ -20,8 +20,8 @@ class LiveInstrumentCLI : CLIIntegrationTest() {
         Main.main(
             arrayOf(
                 "-v",
-                "-c", "../../platform/config/spp-platform.crt",
-                "-k", "../../platform/config/spp-platform.key",
+                "-c", "../../config/spp-platform.crt",
+                "-k", "../../config/spp-platform.key",
                 "developer",
                 "add-live-log",
                 "-h", "100",
@@ -43,8 +43,8 @@ class LiveInstrumentCLI : CLIIntegrationTest() {
         Main.main(
             arrayOf(
                 "-v",
-                "-c", "../../platform/config/spp-platform.crt",
-                "-k", "../../platform/config/spp-platform.key",
+                "-c", "../../config/spp-platform.crt",
+                "-k", "../../config/spp-platform.key",
                 "developer",
                 "remove-live-instrument",
                 addedLiveLog.id!!
@@ -68,8 +68,8 @@ class LiveInstrumentCLI : CLIIntegrationTest() {
         Main.main(
             arrayOf(
                 "-v",
-                "-c", "../../platform/config/spp-platform.crt",
-                "-k", "../../platform/config/spp-platform.key",
+                "-c", "../../config/spp-platform.crt",
+                "-k", "../../config/spp-platform.key",
                 "developer",
                 "add-live-breakpoint",
                 "integration.LiveInstrumentCLI", "2",
@@ -87,8 +87,8 @@ class LiveInstrumentCLI : CLIIntegrationTest() {
         Main.main(
             arrayOf(
                 "-v",
-                "-c", "../../platform/config/spp-platform.crt",
-                "-k", "../../platform/config/spp-platform.key",
+                "-c", "../../config/spp-platform.crt",
+                "-k", "../../config/spp-platform.key",
                 "developer",
                 "remove-live-instrument",
                 removedLiveBp.id!!
@@ -111,8 +111,8 @@ class LiveInstrumentCLI : CLIIntegrationTest() {
         Main.main(
             arrayOf(
                 "-v",
-                "-c", "../../platform/config/spp-platform.crt",
-                "-k", "../../platform/config/spp-platform.key",
+                "-c", "../../config/spp-platform.crt",
+                "-k", "../../config/spp-platform.key",
                 "developer",
                 "add-live-log",
                 "integration.LiveInstrumentCLI", "4",
@@ -130,8 +130,8 @@ class LiveInstrumentCLI : CLIIntegrationTest() {
         Main.main(
             arrayOf(
                 "-v",
-                "-c", "../../platform/config/spp-platform.crt",
-                "-k", "../../platform/config/spp-platform.key",
+                "-c", "../../config/spp-platform.crt",
+                "-k", "../../config/spp-platform.key",
                 "developer",
                 "add-live-breakpoint",
                 "integration.LiveInstrumentCLI", "4",
@@ -147,8 +147,8 @@ class LiveInstrumentCLI : CLIIntegrationTest() {
         Main.main(
             arrayOf(
                 "-v",
-                "-c", "../../platform/config/spp-platform.crt",
-                "-k", "../../platform/config/spp-platform.key",
+                "-c", "../../config/spp-platform.crt",
+                "-k", "../../config/spp-platform.key",
                 "developer",
                 "get-live-instruments"
             )
@@ -163,8 +163,8 @@ class LiveInstrumentCLI : CLIIntegrationTest() {
         Main.main(
             arrayOf(
                 "-v",
-                "-c", "../../platform/config/spp-platform.crt",
-                "-k", "../../platform/config/spp-platform.key",
+                "-c", "../../config/spp-platform.crt",
+                "-k", "../../config/spp-platform.key",
                 "developer",
                 "remove-live-instrument",
                 addedLiveLog.id!!
@@ -180,8 +180,8 @@ class LiveInstrumentCLI : CLIIntegrationTest() {
         Main.main(
             arrayOf(
                 "-v",
-                "-c", "../../platform/config/spp-platform.crt",
-                "-k", "../../platform/config/spp-platform.key",
+                "-c", "../../config/spp-platform.crt",
+                "-k", "../../config/spp-platform.key",
                 "developer",
                 "remove-live-instrument",
                 addedLiveBp.id!!

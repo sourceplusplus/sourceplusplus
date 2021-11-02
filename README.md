@@ -50,7 +50,7 @@ The Source++ documentation is available [here](https://docs.sourceplusplus.com).
 ## Directory Structure
 
     .
-    ├── config              # Detekt, etc.
+    ├── config              # Development setup, Detekt, etc.
     ├── docker              # Docker setup files
         ├── e2e             # End-to-end testing environment
         ├── spp-oap-server  # SkyWalking OAP (incl. Source++ processor) image
@@ -61,6 +61,9 @@ The Source++ documentation is available [here](https://docs.sourceplusplus.com).
         ├── cli             # Command-line interface
         └── marker          # IDE plugin
     ├── platform            # Live coding server
+        ├── common          # Common code
+        ├── core            # Core code
+        └── services        # Services
     ├── probes              # Live coding probes
         ├── jvm             # JVM support
         └── python          # Python support

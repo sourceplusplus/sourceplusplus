@@ -6,6 +6,7 @@ skywalking:
   logging:
     level: "INFO"
   agent:
+    keep_tracing: true
     is_cache_enhanced_class: true
     class_cache_mode: "FILE"
     service_name: "appUuid"
