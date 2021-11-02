@@ -1,7 +1,0 @@
-query getAccessPermissions{
-    getAccessPermissions {
-        id
-        locationPatterns
-        type
-    }
-}

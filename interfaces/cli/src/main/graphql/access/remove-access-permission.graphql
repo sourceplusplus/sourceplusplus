@@ -1,3 +1,0 @@
-mutation removeAccessPermission($id: String!) {
-    removeAccessPermission(id: $id)
-}

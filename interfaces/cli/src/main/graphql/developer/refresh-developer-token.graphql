@@ -1,6 +1,0 @@
-mutation refreshDeveloperToken($id: String!) {
-    refreshDeveloperToken(id: $id) {
-        id
-        accessToken
-    }
-}
