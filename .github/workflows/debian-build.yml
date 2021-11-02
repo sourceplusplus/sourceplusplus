@@ -76,6 +76,7 @@ jobs:
           && cp config/spp-platform.yml dist/spp-platform-${{ env.SPP_PLATFORM_VERSION }}/config \
           && cp platform/core/build/graal/spp-platform dist/spp-platform-${{ env.SPP_PLATFORM_VERSION }} \
           && (cd dist && tar -zcvf ../spp-platform-${{ env.SPP_PLATFORM_VERSION }}-linux-amd64.tar.gz *)
+
       - name: Upload spp-platform
         uses: actions/upload-artifact@v2
         with:
@@ -86,11 +87,15 @@ jobs:
         with:
           name: spp-plugin-${{ env.SPP_PLATFORM_VERSION }}.zip
           path: ./interfaces/marker/build/spp-plugin-${{ env.SPP_PLATFORM_VERSION }}.zip
-      - name: Upload S++ SkyWalking processor
+
+      - name: Zip S++ processors
+        run: find docker/e2e -name 'spp-processor-*' | zip spp-processors.zip -@
+
+      - name: Upload S++ processors
         uses: actions/upload-artifact@v2
         with:
-          name: spp-processor-${{ env.SPP_PLATFORM_VERSION }}.jar
-          path: ./docker/e2e/spp-processor-${{ env.SPP_PLATFORM_VERSION }}.jar
+          name: spp-processors.zip
+          path: ./spp-processors.zip
 
   releaseDraft:
     name: Release Draft
@@ -135,20 +140,20 @@ jobs:
           asset_name: spp-plugin-${{ needs.debian-build.outputs.version }}.zip
           asset_content_type: application/zip
 
-      - name: Download Source++ SkyWalking processor artifact
+      - name: Download S++ processors artifact
         uses: actions/download-artifact@v2
         with:
-          name: spp-processor-${{ needs.debian-build.outputs.version }}.jar
+          name: spp-processors.zip
 
-      - name: Upload Source++ SkyWalking processor asset
+      - name: Upload S++ processors asset
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.createDraft.outputs.upload_url }}
-          asset_path: ./spp-processor-${{ needs.debian-build.outputs.version }}.jar
-          asset_name: spp-processor-${{ needs.debian-build.outputs.version }}.jar
-          asset_content_type: application/java-archive
+          asset_path: ./spp-processors.zip
+          asset_name: spp-processors.zip
+          asset_content_type: application/zip
 
       - name: Download spp-platform artifact (Linux)
         uses: actions/download-artifact@v2
@@ -196,11 +201,14 @@ jobs:
       - name: Push spp-platform latest Docker image
         run: docker push sourceplusplus/spp-platform:latest
 
-      - name: Download Source++ SkyWalking processor
+      - name: Download Source++ processors
         uses: actions/download-artifact@v2
         with:
-          name: spp-processor-${{ needs.debian-build.outputs.version }}.jar
+          name: spp-processors.zip
           path: ./docker/spp-oap-server
+
+      - name: Unzip Source++ processors
+        run: cd ./docker/spp-oap-server && unzip spp-processors.zip
 
       - name: Build spp-oap-server tagged Docker image
         run: cd ./docker/spp-oap-server && docker build . --file Dockerfile --tag sourceplusplus/spp-oap-server:${{ needs.debian-build.outputs.version }}
@@ -228,7 +236,7 @@ jobs:
         with:
           name: spp-plugin-${{ needs.debian-build.outputs.version }}.zip
 
-      - name: Delete Source++ SkyWalking processor
+      - name: Delete Source++ processors
         uses: geekyeggo/delete-artifact@v1
         with:
-          name: spp-processor-${{ needs.debian-build.outputs.version }}.jar
+          name: spp-processors.zip
