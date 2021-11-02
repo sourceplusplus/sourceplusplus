@@ -4,8 +4,8 @@ plugins {
     kotlin("kapt")
 }
 
-val platformGroup: String by project
-val platformVersion: String by project
+val processorGroup: String by project
+val processorVersion: String by project
 val skywalkingVersion: String by project
 val vertxVersion: String by project
 val gsonVersion: String by project
@@ -15,8 +15,8 @@ val protocolVersion: String by project
 val jacksonVersion: String by project
 val kotlinVersion: String by project
 
-group = platformGroup
-version = platformVersion
+group = processorGroup
+version = processorVersion
 
 repositories {
     mavenCentral()
@@ -43,7 +43,7 @@ dependencies {
     compileOnly("org.apache.skywalking:meter-analyzer:$skywalkingVersion") { isTransitive = false }
     compileOnly("org.elasticsearch:elasticsearch:7.15.1")
     implementation("io.vertx:vertx-service-discovery:$vertxVersion")
-    implementation(files("../platform/.ext/vertx-service-proxy-4.0.2.jar"))
+    implementation(files(".ext/vertx-service-proxy-4.0.2.jar"))
     implementation("io.vertx:vertx-codegen:$vertxVersion")
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.3.1")
     kapt("io.vertx:vertx-codegen:$vertxVersion:processor")
@@ -72,7 +72,7 @@ dependencies {
 }
 
 tasks.getByName<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar") {
-    archiveBaseName.set("spp-processor")
+    archiveBaseName.set("spp-processor-instrument")
     archiveClassifier.set("shadow")
 
 //    exclude("google/**")

@@ -179,20 +179,6 @@ object SourceProcessor {
                     JsonObject(),
                     tcpSocket
                 )
-                FrameHelper.sendFrame(
-                    BridgeEventType.REGISTER.name.toLowerCase(),
-                    ProcessorAddress.LOGGING_PROCESSOR.address,
-                    JsonObject(),
-                    tcpSocket
-                )
-
-                //register settings
-                FrameHelper.sendFrame(
-                    BridgeEventType.REGISTER.name.toLowerCase(),
-                    ProcessorAddress.SET_LOG_PUBLISH_RATE_LIMIT.address,
-                    JsonObject(),
-                    tcpSocket
-                )
 
                 //deploy processor
                 log.info("Deploying source processor")
