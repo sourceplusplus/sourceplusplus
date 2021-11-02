@@ -13,3 +13,6 @@
 [submodule "probes/python"]
 	path = probes/python
 	url = https://github.com/sourceplusplus/probe-python
+[submodule "interfaces/cli"]
+	path = interfaces/cli
+	url = https://github.com/sourceplusplus/interface-cli
