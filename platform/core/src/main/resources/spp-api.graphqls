@@ -1,0 +1,272 @@
+type Developer {
+    id: String!
+    accessToken: String
+}
+
+type DeveloperRole {
+    roleName: String!
+}
+
+enum RolePermission {
+    RESET,
+    ADD_DEVELOPER,
+    REMOVE_DEVELOPER,
+    GET_DEVELOPERS,
+    REFRESH_DEVELOPER_TOKEN,
+
+    ADD_ROLE,
+    REMOVE_ROLE,
+    GET_ROLES,
+    GET_DEVELOPER_ROLES,
+    ADD_DEVELOPER_ROLE,
+    REMOVE_DEVELOPER_ROLE,
+
+    GET_DEVELOPER_PERMISSIONS,
+    GET_ROLE_PERMISSIONS,
+    ADD_ROLE_PERMISSION,
+    REMOVE_ROLE_PERMISSION,
+
+    GET_ACCESS_PERMISSIONS,
+    GET_DATA_REDACTIONS,
+    ADD_DATA_REDACTION,
+    REMOVE_DATA_REDACTION,
+    ADD_ACCESS_PERMISSION,
+    REMOVE_ACCESS_PERMISSION,
+
+    ADD_LIVE_BREAKPOINT,
+    ADD_LIVE_LOG,
+    ADD_LIVE_METER,
+
+    GET_LIVE_INSTRUMENTS,
+    GET_LIVE_BREAKPOINTS,
+    GET_LIVE_LOGS,
+    GET_LIVE_METERS,
+    REMOVE_LIVE_INSTRUMENT
+}
+
+enum ThrottleStep {
+    SECOND,
+    MINUTE,
+    HOUR,
+    DAY
+}
+
+enum MeterType {
+    COUNTER,
+    GAUGE,
+    HISTOGRAM
+}
+
+enum MetricValueType {
+    NUMBER,
+    SUPPLIER
+}
+
+type MetricValue {
+    valueType: MetricValueType!
+    number: String
+    supplier: String
+}
+
+input MetricValueInput {
+    valueType: MetricValueType!
+    number: String
+    supplier: String
+}
+
+type InstrumentThrottle {
+    limit: Int!
+    step: ThrottleStep!
+}
+
+input InstrumentThrottleInput {
+    limit: Int!
+    step: ThrottleStep!
+}
+
+type MetaInfo {
+    name: String!
+    value: String!
+}
+
+interface LiveInstrument {
+    id: String!
+    location: LiveSourceLocation!
+    condition: String
+    expiresAt: Long
+    hitLimit: Int
+    applied: Boolean
+    pending: Boolean
+    throttle: InstrumentThrottle
+    type: LiveInstrumentType
+    meta: [MetaInfo]
+}
+
+type LiveMeter implements LiveInstrument {
+    meterName: String!
+    meterType: MeterType!
+    metricValue: MetricValue!
+    id: String!
+    location: LiveSourceLocation!
+    condition: String
+    expiresAt: Long
+    hitLimit: Int
+    applied: Boolean
+    pending: Boolean
+    throttle: InstrumentThrottle
+    type: LiveInstrumentType
+    meta: [MetaInfo]
+}
+
+input LiveMeterInput {
+    meterName: String!
+    meterType: MeterType!
+    metricValue: MetricValueInput!
+    location: LiveSourceLocationInput!
+    condition: String
+    expiresAt: Long
+    hitLimit: Int
+    throttle: InstrumentThrottleInput
+    meta: [MetaInfoInput]
+}
+
+type LiveLog implements LiveInstrument {
+    logFormat: String!
+    logArguments: [String!]!
+    id: String!
+    location: LiveSourceLocation!
+    condition: String
+    expiresAt: Long
+    hitLimit: Int
+    applied: Boolean
+    pending: Boolean
+    throttle: InstrumentThrottle
+    type: LiveInstrumentType
+    meta: [MetaInfo]
+}
+
+input LiveLogInput {
+    logFormat: String!
+    logArguments: [String!]
+    location: LiveSourceLocationInput!
+    condition: String
+    expiresAt: Long
+    hitLimit: Int
+    throttle: InstrumentThrottleInput
+    meta: [MetaInfoInput]
+}
+
+type LiveBreakpoint implements LiveInstrument {
+    id: String!
+    location: LiveSourceLocation!
+    condition: String
+    expiresAt: Long
+    hitLimit: Int
+    applied: Boolean
+    pending: Boolean
+    throttle: InstrumentThrottle
+    type: LiveInstrumentType
+    meta: [MetaInfo]
+}
+
+input LiveBreakpointInput {
+    location: LiveSourceLocationInput!
+    condition: String
+    expiresAt: Long
+    hitLimit: Int
+    throttle: InstrumentThrottleInput
+    meta: [MetaInfoInput]
+}
+
+input MetaInfoInput {
+    name: String!
+    value: String!
+}
+
+type LiveSourceLocation {
+    source: String!
+    line: Int!
+}
+
+input LiveSourceLocationInput {
+    source: String!
+    line: Int!
+}
+
+enum AccessType {
+    BLACK_LIST
+    WHITE_LIST
+}
+
+type AccessPermission {
+    id: String!
+    locationPatterns: [String!]
+    type: AccessType!
+}
+
+type DataRedaction {
+    id: String!
+    redactionPattern: String!
+}
+
+type Query {
+    getAccessPermissions: [AccessPermission!]!
+    getAccessPermission(id: String!): AccessPermission!
+    getRoleAccessPermissions(role: String!): [AccessPermission!]!
+    getDeveloperAccessPermissions(developerId: String!): [AccessPermission!]!
+
+    getDataRedactions: [DataRedaction!]!
+    getDataRedaction(id: String!): DataRedaction!
+    getRoleDataRedactions(role: String!): [DataRedaction!]!
+    getDeveloperDataRedactions(developerId: String!): [DataRedaction!]!
+
+    getRoles: [DeveloperRole!]!
+    getRolePermissions(role: String!): [RolePermission!]!
+    getDeveloperRoles(id: String!): [DeveloperRole!]!
+    getDeveloperPermissions(id: String!): [RolePermission!]!
+
+    getDevelopers: [Developer!]!
+    getLiveInstruments: [LiveInstrument!]!
+    getLiveBreakpoints: [LiveBreakpoint!]!
+    getLiveLogs: [LiveLog!]!
+    getLiveMeters: [LiveMeter!]!
+}
+
+type Mutation {
+    reset: Boolean!
+    addAccessPermission(locationPatterns: [String!], type: AccessType!): AccessPermission!
+    removeAccessPermission(id: String!): Boolean!
+    addRoleAccessPermission(role: String!, accessPermissionId: String!): Boolean!
+    removeRoleAccessPermission(role: String!, accessPermissionId: String!): Boolean!
+
+    addDataRedaction(redactionPattern: String!): DataRedaction!
+    removeDataRedaction(id: String!): Boolean!
+    addRoleDataRedaction(role: String!, dataRedactionId: String!): Boolean!
+    removeRoleDataRedaction(role: String!, dataRedactionId: String!): Boolean!
+
+    addRole(role: String!): Boolean!
+    removeRole(role: String!): Boolean!
+    addRolePermission(role: String!, permission: String!): Boolean!
+    removeRolePermission(role: String!, permission: String!): Boolean!
+    addDeveloperRole(id: String!, role: String!): Boolean!
+    removeDeveloperRole(id: String!, role: String!): Boolean!
+
+    addDeveloper(id: String!): Developer!
+    refreshDeveloperToken(id: String!): Developer!
+    removeDeveloper(id: String!): Boolean!
+    removeLiveInstrument(id: String!): LiveInstrument
+    removeLiveInstruments(source: String!, line: Int!): [LiveInstrument!]!
+    clearLiveInstruments: Boolean!
+
+    addLiveBreakpoint(input: LiveBreakpointInput!): LiveBreakpoint!
+    addLiveLog(input: LiveLogInput!): LiveLog!
+    addLiveMeter(input: LiveMeterInput!): LiveMeter!
+}
+
+scalar Long
+
+enum LiveInstrumentType {
+    BREAKPOINT,
+    LOG,
+    METER
+}

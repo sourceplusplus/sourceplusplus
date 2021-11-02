@@ -2,6 +2,10 @@ name: Debian Build
 
 on:
   pull_request:
+    paths-ignore:
+      - '**.md'
+      - '**.svg'
+      - '.github/workflows/jvm-build.yml'
   push:
     branches:
       - master
@@ -37,11 +41,9 @@ jobs:
           echo "::set-output name=version::$VERSION"
           echo "SPP_PLATFORM_VERSION=$VERSION" >> $GITHUB_ENV
       - name: Build & start platform
-        run: ./gradlew :platform:shadowJar nativeImage :platform:updateDockerFiles :platform:composeUp -Dbuild.profile=debian
+        run: ./gradlew -p platform assemble nativeImage updateDockerFiles composeUp -Dbuild.profile=debian
       - name: Compress platform
-        run: curl -O -J -L https://github.com/upx/upx/releases/download/v3.96/upx-3.96-amd64_linux.tar.xz && tar -xJf upx-3.96-amd64_linux.tar.xz && ./upx-3.96-amd64_linux/upx platform/build/graal/spp-platform
-      - name: Compress CLI
-        run: ./upx-3.96-amd64_linux/upx interfaces/cli/build/graal/spp-cli
+        run: curl -O -J -L https://github.com/upx/upx/releases/download/v3.96/upx-3.96-amd64_linux.tar.xz && tar -xJf upx-3.96-amd64_linux.tar.xz && ./upx-3.96-amd64_linux/upx platform/core/build/graal/spp-platform
       - name: Docker IPs
         run: docker inspect --format='{{.Name}} - {{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $(docker ps -aq)
       - name: Set SPP_PLATFORM_HOST
@@ -51,62 +53,10 @@ jobs:
       - name: Wait for skywalking
         run: |
           until $(curl --header "Authorization: Bearer ${{ env.SPP_JWT_TOKEN }}" --insecure --output /dev/null --silent --fail https://${{ env.SPP_PLATFORM_HOST }}:5445/health); do printf '.'; sleep 5; done
-      - name: "[CLI] Get developers"
-        run: ./interfaces/cli/build/graal/spp-cli -v -c ./platform/config/spp-platform.crt -k ./platform/config/spp-platform.key admin get-developers
-      - name: "[CLI] Add developer"
-        run: ./interfaces/cli/build/graal/spp-cli -v -c ./platform/config/spp-platform.crt -k ./platform/config/spp-platform.key admin add-developer test
-      - name: "[CLI] Refresh developer token"
-        run: ./interfaces/cli/build/graal/spp-cli -v -c ./platform/config/spp-platform.crt -k ./platform/config/spp-platform.key admin refresh-developer-token test
-      - name: "[CLI] Get roles"
-        run: ./interfaces/cli/build/graal/spp-cli -v -c ./platform/config/spp-platform.crt -k ./platform/config/spp-platform.key admin get-roles
-      - name: "[CLI] Get role permissions"
-        run: ./interfaces/cli/build/graal/spp-cli -v -c ./platform/config/spp-platform.crt -k ./platform/config/spp-platform.key admin get-role-permissions role_manager
-      - name: "[CLI] Add role"
-        run: ./interfaces/cli/build/graal/spp-cli -v -c ./platform/config/spp-platform.crt -k ./platform/config/spp-platform.key admin add-role tester
-      - name: "[CLI] Add role permission"
-        run: ./interfaces/cli/build/graal/spp-cli -v -c ./platform/config/spp-platform.crt -k ./platform/config/spp-platform.key admin add-role-permission tester ADD_DEVELOPER
-      - name: "[CLI] Add developer role"
-        run: ./interfaces/cli/build/graal/spp-cli -v -c ./platform/config/spp-platform.crt -k ./platform/config/spp-platform.key admin add-developer-role test tester
-      - name: "[CLI] Get developer roles"
-        run: ./interfaces/cli/build/graal/spp-cli -v -c ./platform/config/spp-platform.crt -k ./platform/config/spp-platform.key admin get-developer-roles test
-      - name: "[CLI] Get developer permissions"
-        run: ./interfaces/cli/build/graal/spp-cli -v -c ./platform/config/spp-platform.crt -k ./platform/config/spp-platform.key admin get-developer-permissions test
-      - name: "[CLI] Add access permission"
-        run: ACCESS_PERMISSION_ID=$(./interfaces/cli/build/graal/spp-cli -v -c ./platform/config/spp-platform.crt -k ./platform/config/spp-platform.key admin add-access-permission -l spp.example.webapp.model.User WHITE_LIST | grep -oP '(?<="id"\s:\s")[^"]*') && echo "ACCESS_PERMISSION_ID=$ACCESS_PERMISSION_ID" >> $GITHUB_ENV
-      - name: "[CLI] Add role access permission"
-        run: ./interfaces/cli/build/graal/spp-cli -v -c ./platform/config/spp-platform.crt -k ./platform/config/spp-platform.key admin add-role-access-permission tester ${{ env.ACCESS_PERMISSION_ID }}
-      - name: "[CLI] Get access permissions"
-        run: ./interfaces/cli/build/graal/spp-cli -v -c ./platform/config/spp-platform.crt -k ./platform/config/spp-platform.key admin get-access-permissions
-      - name: "[CLI] Get developer access permissions"
-        run: ./interfaces/cli/build/graal/spp-cli -v -c ./platform/config/spp-platform.crt -k ./platform/config/spp-platform.key admin get-developer-access-permissions test
-      - name: "[CLI] Get role access permissions"
-        run: ./interfaces/cli/build/graal/spp-cli -v -c ./platform/config/spp-platform.crt -k ./platform/config/spp-platform.key admin get-role-access-permissions tester
-      - name: "[CLI] Remove role access permission"
-        run: ./interfaces/cli/build/graal/spp-cli -v -c ./platform/config/spp-platform.crt -k ./platform/config/spp-platform.key admin remove-role-access-permission tester ${{ env.ACCESS_PERMISSION_ID }}
-      - name: "[CLI] Remove access permission"
-        run: ./interfaces/cli/build/graal/spp-cli -v -c ./platform/config/spp-platform.crt -k ./platform/config/spp-platform.key admin remove-access-permission ${{ env.ACCESS_PERMISSION_ID }}
-      - name: "[CLI] Remove developer role"
-        run: ./interfaces/cli/build/graal/spp-cli -v -c ./platform/config/spp-platform.crt -k ./platform/config/spp-platform.key admin remove-developer-role test tester
-      - name: "[CLI] Remove role permission"
-        run: ./interfaces/cli/build/graal/spp-cli -v -c ./platform/config/spp-platform.crt -k ./platform/config/spp-platform.key admin remove-role-permission tester ADD_DEVELOPER
-      - name: "[CLI] Remove role"
-        run: ./interfaces/cli/build/graal/spp-cli -v -c ./platform/config/spp-platform.crt -k ./platform/config/spp-platform.key admin remove-role tester
-      - name: "[CLI] Remove developer"
-        run: ./interfaces/cli/build/graal/spp-cli -v -c ./platform/config/spp-platform.crt -k ./platform/config/spp-platform.key admin remove-developer test
-      - name: "[CLI] Add live breakpoint"
-        run: ./interfaces/cli/build/graal/spp-cli -v -c ./platform/config/spp-platform.crt -k ./platform/config/spp-platform.key developer add-live-breakpoint -h 100 spp.example.webapp.model.User 48
-      - name: "[CLI] Add live log"
-        run: ./interfaces/cli/build/graal/spp-cli -v -c ./platform/config/spp-platform.crt -k ./platform/config/spp-platform.key developer add-live-log -h 100 spp.example.webapp.model.User 48 test-message
-      - name: "[CLI] Get live instruments"
-        run: ./interfaces/cli/build/graal/spp-cli -v -c ./platform/config/spp-platform.crt -k ./platform/config/spp-platform.key developer get-live-instruments
-      - name: "[CLI] Get live breakpoints"
-        run: ./interfaces/cli/build/graal/spp-cli -v -c ./platform/config/spp-platform.crt -k ./platform/config/spp-platform.key developer get-live-breakpoints
-      - name: "[CLI] Get live logs"
-        run: ./interfaces/cli/build/graal/spp-cli -v -c ./platform/config/spp-platform.crt -k ./platform/config/spp-platform.key developer get-live-logs
-      - name: "[CLI] Remove live instruments"
-        run: ./interfaces/cli/build/graal/spp-cli -v -c ./platform/config/spp-platform.crt -k ./platform/config/spp-platform.key developer remove-live-instruments spp.example.webapp.model.User 48
+      - run: sleep 30s
+
       - name: Run integration tests
-        run: ./gradlew :platform:test -Dtest.profile=integration -Dbuild.profile=debian
+        run: ./gradlew -p platform test -Dtest.profile=integration -Dbuild.profile=debian
       - name: Build S++ Plugin
         run: ./gradlew buildPlugin
 
@@ -123,9 +73,8 @@ jobs:
       - name: Build release dist
         run: |
           mkdir -p dist/spp-platform-${{ env.SPP_PLATFORM_VERSION }}/config \
-          && cp platform/config/spp-platform.yml dist/spp-platform-${{ env.SPP_PLATFORM_VERSION }}/config \
-          && cp platform/build/graal/spp-platform dist/spp-platform-${{ env.SPP_PLATFORM_VERSION }} \
-          && cp interfaces/cli/build/graal/spp-cli dist/spp-platform-${{ env.SPP_PLATFORM_VERSION }} \
+          && cp config/spp-platform.yml dist/spp-platform-${{ env.SPP_PLATFORM_VERSION }}/config \
+          && cp platform/core/build/graal/spp-platform dist/spp-platform-${{ env.SPP_PLATFORM_VERSION }} \
           && (cd dist && tar -zcvf ../spp-platform-${{ env.SPP_PLATFORM_VERSION }}-linux-amd64.tar.gz *)
       - name: Upload spp-platform
         uses: actions/upload-artifact@v2

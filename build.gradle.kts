@@ -1,6 +1,10 @@
 import java.io.FileOutputStream
 import java.net.URL
 
+plugins {
+    id("com.dorongold.task-tree") version "2.1.0"
+}
+
 val platformVersion: String by project
 val skywalkingVersion: String by project
 
@@ -22,19 +26,13 @@ subprojects {
 tasks {
     register("makeDist") {
         //todo: use gradle copy task
-        dependsOn(":platform:build", ":processor:build", ":interfaces:marker:buildPlugin")
+        dependsOn(":platform:core:build", ":processor:build", ":interfaces:marker:buildPlugin")
         doLast {
             file("dist/spp-platform-$version/config").mkdirs()
-            file("platform/config/spp-platform.yml")
+            file("config/spp-platform.yml")
                 .copyTo(file("dist/spp-platform-$version/config/spp-platform.yml"))
-            file("platform/build/graal/spp-platform")
+            file("platform/core/build/graal/spp-platform")
                 .copyTo(file("dist/spp-platform-$version/spp-platform"))
-            file("interfaces/cli/build/graal/spp-cli")
-                .copyTo(file("dist/spp-platform-$version/spp-cli"))
-            file("processor/build/libs/spp-processor-$version-shadow.jar")
-                .copyTo(file("dist/spp-processor-$version.jar"))
-            file("interfaces/marker/build/spp-plugin-$version.zip")
-                .copyTo(file("dist/spp-plugin-$version.zip"))
         }
     }
 

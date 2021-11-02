@@ -23,6 +23,9 @@ include 'interfaces:marker'
 include 'platform'
 include 'processor'
 include 'protocol'
+include 'platform:core'
+include 'platform:common'
+include 'platform:services'
 
 include 'probe-jvm'
 project(':probe-jvm').projectDir = new File(rootDir, 'probes/jvm')
