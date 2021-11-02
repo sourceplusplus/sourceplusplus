@@ -114,11 +114,10 @@ tasks.getByName<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("sha
     relocate("org.jetbrains", "spp.processor.common.org.jetbrains")
     relocate("org.jooq", "spp.processor.common.org.jooq")
     relocate("org.reactivestreams", "spp.processor.common.org.reactivestreams")
-    //relocate("javax", "spp.processor.common.javax")
     relocate("kotlin", "spp.processor.common.kotlin")
     relocate("kotlinx", "spp.processor.common.kotlinx")
     relocate("org.slf4j", "spp.processor.common.org.slf4j")
     relocate("com.sourceplusplus.protocol", "spp.processor.common.com.sourceplusplus.protocol")
-//    minimize()
+    minimize()
 }
 tasks.getByName("build").dependsOn("shadowJar")
