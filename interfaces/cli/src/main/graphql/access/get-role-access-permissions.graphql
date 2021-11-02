@@ -1,7 +1,0 @@
-query getRoleAccessPermissions($role: String!){
-    getRoleAccessPermissions(role: $role) {
-        id
-        locationPatterns
-        type
-    }
-}

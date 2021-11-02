@@ -1,3 +1,0 @@
-query getRolePermissions($role: String!){
-    getRolePermissions(role: $role)
-}

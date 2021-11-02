@@ -1,5 +1,0 @@
-query getDeveloperRoles($id: String!){
-    getDeveloperRoles(id: $id) {
-        roleName
-    }
-}
