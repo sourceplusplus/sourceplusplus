@@ -1,6 +1,0 @@
-mutation addDeveloper($id: String!) {
-    addDeveloper(id: $id) {
-        id
-        accessToken
-    }
-}

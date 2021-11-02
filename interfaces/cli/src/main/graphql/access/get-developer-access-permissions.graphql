@@ -1,7 +1,0 @@
-query getDeveloperAccessPermissions($developerId: String!){
-    getDeveloperAccessPermissions(developerId: $developerId) {
-        id
-        locationPatterns
-        type
-    }
-}

@@ -1,3 +1,0 @@
-mutation removeDeveloperRole($id: String!, $role: String!) {
-    removeDeveloperRole(id: $id, role: $role)
-}
