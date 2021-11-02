@@ -89,7 +89,7 @@ jobs:
           path: ./interfaces/marker/build/spp-plugin-${{ env.SPP_PLATFORM_VERSION }}.zip
 
       - name: Zip S++ processors
-        run: find docker/e2e -name 'spp-processor-*' | zip spp-processors.zip -@
+        run: find docker/e2e -name 'spp-processor-*' | zip -j spp-processors.zip -@
 
       - name: Upload S++ processors
         uses: actions/upload-artifact@v2
