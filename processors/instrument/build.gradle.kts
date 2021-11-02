@@ -5,7 +5,7 @@ plugins {
 }
 
 val processorGroup: String by project
-val processorVersion: String by project
+val instrumentProcessorVersion: String by project
 val skywalkingVersion: String by project
 val vertxVersion: String by project
 val gsonVersion: String by project
@@ -16,7 +16,7 @@ val jacksonVersion: String by project
 val kotlinVersion: String by project
 
 group = processorGroup
-version = processorVersion
+version = instrumentProcessorVersion
 
 repositories {
     mavenCentral()
