@@ -26,7 +26,7 @@ subprojects {
 tasks {
     register("makeDist") {
         //todo: use gradle copy task
-        dependsOn(":platform:core:build", ":processor:build", ":interfaces:marker:buildPlugin")
+        dependsOn(":platform:core:build", ":interfaces:marker:buildPlugin")
         doLast {
             file("dist/spp-platform-$version/config").mkdirs()
             file("config/spp-platform.yml")

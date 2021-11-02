@@ -21,14 +21,13 @@ rootProject.name = 'spp-platform'
 include 'interfaces:cli'
 include 'interfaces:marker'
 include 'platform'
-include 'processor'
 include 'protocol'
 include 'platform:core'
 include 'platform:common'
 include 'platform:services'
 
-include 'probe-jvm'
-project(':probe-jvm').projectDir = new File(rootDir, 'probes/jvm')
-//project(':probe-jvm').buildFileName = "build.gradle.kts"
-include ':probe-jvm:control'
-include ':probe-jvm:services'
+include ':probes:jvm:control'
+include ':probes:jvm:services'
+
+include ':processors:instrument'
+include ':processors:log-summary'

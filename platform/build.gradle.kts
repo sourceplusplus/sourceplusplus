@@ -8,6 +8,8 @@ plugins {
 
 val platformGroup: String by project
 val platformVersion: String by project
+val instrumentProcessorVersion: String by project
+val logSummaryProcessorVersion: String by project
 
 group = platformGroup
 version = platformVersion
@@ -44,7 +46,8 @@ subprojects {
 
         implementation("org.graalvm.sdk:graal-sdk:$graalVersion")
         implementation(project(":protocol"))
-        implementation(project(":processor"))
+        implementation(project(":processors:instrument"))
+        implementation(project(":processors:log-summary"))
         if (name == "services") {
             val compileOnly by configurations
             compileOnly(project(":platform:common"))
@@ -100,14 +103,11 @@ tasks.register("clean") {
 }
 
 tasks.register<Copy>("updateDockerFiles") {
-    dependsOn(":platform:core:build", ":processor:build")
+    dependsOn(":platform:core:build", ":processors:instrument:build", ":processors:log-summary:build")
     if (System.getProperty("build.profile") == "debian") {
         doFirst {
             if (!File(projectDir, "core/build/graal/spp-platform").exists()) {
                 throw GradleException("Missing spp-platform")
-            }
-            if (!File(projectDir, "../processor/build/libs/spp-processor-$version-shadow.jar").exists()) {
-                throw GradleException("Missing spp-processor-$version-shadow.jar")
             }
         }
         from(File(projectDir, "core/build/graal/spp-platform"))
@@ -117,19 +117,23 @@ tasks.register<Copy>("updateDockerFiles") {
             if (!File(projectDir, "core/build/libs/spp-platform-$version.jar").exists()) {
                 throw GradleException("Missing spp-platform-$version.jar")
             }
-            if (!File(projectDir, "../processor/build/libs/spp-processor-$version-shadow.jar").exists()) {
-                throw GradleException("Missing spp-processor-$version-shadow.jar")
-            }
         }
         from(File(projectDir, "core/build/libs/spp-platform-$version.jar"))
             .into(File(projectDir, "../docker/e2e"))
     }
-
-    from(File(projectDir, "../processor/build/libs/spp-processor-$version-shadow.jar"))
-        .into(File(projectDir, "../docker/e2e"))
-    rename {
-        it.replace("-shadow", "")
+    doFirst {
+        if (!File(projectDir, "../processors/instrument/build/libs/spp-processor-instrument-$instrumentProcessorVersion.jar").exists()) {
+            throw GradleException("Missing spp-processor-instrument-$instrumentProcessorVersion.jar")
+        }
+        if (!File(projectDir, "../processors/log-summary/build/libs/spp-processor-log-summary-$logSummaryProcessorVersion.jar").exists()) {
+            throw GradleException("Missing spp-processor-log-summary-$logSummaryProcessorVersion.jar")
+        }
     }
+
+    from(File(projectDir, "../processors/instrument/build/libs/spp-processor-instrument-$instrumentProcessorVersion.jar"))
+        .into(File(projectDir, "../docker/e2e"))
+    from(File(projectDir, "../processors/log-summary/build/libs/spp-processor-log-summary-$logSummaryProcessorVersion.jar"))
+        .into(File(projectDir, "../docker/e2e"))
 }
 
 dockerCompose {
