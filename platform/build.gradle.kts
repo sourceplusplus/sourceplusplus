@@ -8,7 +8,8 @@ plugins {
 
 val platformGroup: String by project
 val platformVersion: String by project
-val processorVersion: String by project
+val instrumentProcessorVersion: String by project
+val logSummaryProcessorVersion: String by project
 
 group = platformGroup
 version = platformVersion
@@ -120,16 +121,18 @@ tasks.register<Copy>("updateDockerFiles") {
         from(File(projectDir, "core/build/libs/spp-platform-$version.jar"))
             .into(File(projectDir, "../docker/e2e"))
     }
-    if (!File(projectDir, "../processors/instrument/build/libs/spp-processor-instrument-$processorVersion-shadow.jar").exists()) {
-        throw GradleException("Missing spp-processor-instrument-$processorVersion-shadow.jar")
-    }
-    if (!File(projectDir, "../processors/log-summary/build/libs/spp-processor-log-summary-$processorVersion-shadow.jar").exists()) {
-        throw GradleException("Missing spp-processor-log-summary-$processorVersion-shadow.jar")
+    doFirst {
+        if (!File(projectDir, "../processors/instrument/build/libs/spp-processor-instrument-$instrumentProcessorVersion-shadow.jar").exists()) {
+            throw GradleException("Missing spp-processor-instrument-$instrumentProcessorVersion-shadow.jar")
+        }
+        if (!File(projectDir, "../processors/log-summary/build/libs/spp-processor-log-summary-$logSummaryProcessorVersion-shadow.jar").exists()) {
+            throw GradleException("Missing spp-processor-log-summary-$logSummaryProcessorVersion-shadow.jar")
+        }
     }
 
-    from(File(projectDir, "../processors/instrument/build/libs/spp-processor-instrument-$processorVersion-shadow.jar"))
+    from(File(projectDir, "../processors/instrument/build/libs/spp-processor-instrument-$instrumentProcessorVersion-shadow.jar"))
         .into(File(projectDir, "../docker/e2e"))
-    from(File(projectDir, "../processors/log-summary/build/libs/spp-processor-log-summary-$processorVersion-shadow.jar"))
+    from(File(projectDir, "../processors/log-summary/build/libs/spp-processor-log-summary-$logSummaryProcessorVersion-shadow.jar"))
         .into(File(projectDir, "../docker/e2e"))
     rename {
         it.replace("-shadow", "")
