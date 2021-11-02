@@ -7,6 +7,5 @@ RUN mkdir /opt/sourceplusplus/config
 ADD ./config/spp-platform.yml /opt/sourceplusplus/config
 
 ADD ./spp-platform /opt/sourceplusplus
-ADD ./spp-cli /opt/sourceplusplus
 
 ENTRYPOINT ["/opt/sourceplusplus/spp-platform"]
