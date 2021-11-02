@@ -6,7 +6,7 @@ import org.apache.skywalking.oap.server.core.analysis.metrics.WithMetadata
 import org.apache.skywalking.oap.server.core.exporter.ExportEvent
 import org.apache.skywalking.oap.server.core.exporter.MetricValuesExportService
 import org.slf4j.LoggerFactory
-import spp.processor.SourceProcessor
+import spp.processor.InstrumentProcessor
 import spp.processor.live.impl.view.util.EntityNaming
 import spp.processor.live.impl.view.util.MetricTypeSubscriptionCache
 
@@ -65,12 +65,12 @@ class LiveActivityView(private val subscriptionCache: MetricTypeSubscriptionCach
                         }
                         sub.waitingEvents.clear()
 
-                        SourceProcessor.vertx.eventBus().send(
+                        InstrumentProcessor.vertx.eventBus().send(
                             sub.consumer.address(),
                             JsonObject().put("metrics", multiMetrics).put("multiMetrics", true)
                         )
                     } else {
-                        SourceProcessor.vertx.eventBus().send(
+                        InstrumentProcessor.vertx.eventBus().send(
                             sub.consumer.address(),
                             jsonEvent.getJsonObject("metrics").put("multiMetrics", false)
                         )

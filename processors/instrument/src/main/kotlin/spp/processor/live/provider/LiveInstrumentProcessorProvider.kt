@@ -15,7 +15,7 @@ import org.apache.skywalking.oap.server.library.module.ModuleProvider
 import org.apache.skywalking.oap.server.receiver.sharing.server.SharingServerModule
 import org.apache.skywalking.oap.server.storage.plugin.elasticsearch.base.EsDAO
 import org.slf4j.LoggerFactory
-import spp.processor.SourceProcessor
+import spp.processor.InstrumentProcessor
 import spp.processor.live.impl.instrument.LiveInstrumentAnalysis
 
 class LiveInstrumentModule : ModuleDefine("spp-live-instrument") {
@@ -35,7 +35,7 @@ class LiveInstrumentProcessorProvider : ModuleProvider() {
 
     override fun start() {
         log.info("Starting LiveInstrumentProcessorProvider")
-        SourceProcessor.module = manager
+        InstrumentProcessor.module = manager
 
         //todo: indexes
 

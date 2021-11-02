@@ -9,7 +9,7 @@ import org.apache.skywalking.apm.network.logging.v3.LogData
 import org.apache.skywalking.oap.log.analyzer.provider.log.listener.LogAnalysisListener
 import org.apache.skywalking.oap.log.analyzer.provider.log.listener.LogAnalysisListenerFactory
 import org.slf4j.LoggerFactory
-import spp.processor.SourceProcessor
+import spp.processor.InstrumentProcessor
 import spp.processor.live.impl.view.util.MetricTypeSubscriptionCache
 import java.time.Instant
 import java.time.ZoneOffset
@@ -53,7 +53,7 @@ class LiveLogsView(private val subscriptionCache: MetricTypeSubscriptionCache) :
                         .put("entityId", logPattern)
                         .put("timeBucket", formatter.format(log.timestamp.toJavaInstant()))
                         .put("log", JsonObject.mapFrom(log).apply { remove("formattedMessage") })
-                    SourceProcessor.vertx.eventBus().send(sub.consumer.address(), event)
+                    InstrumentProcessor.vertx.eventBus().send(sub.consumer.address(), event)
                 }
             }
             return this

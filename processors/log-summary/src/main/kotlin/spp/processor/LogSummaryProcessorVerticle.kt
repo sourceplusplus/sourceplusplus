@@ -14,16 +14,16 @@ import io.vertx.serviceproxy.ServiceBinder
 import kotlinx.datetime.Instant
 import org.apache.skywalking.oap.server.core.analysis.metrics.DataTable
 import org.slf4j.LoggerFactory
-import spp.processor.SourceProcessor.INSTANCE_ID
+import spp.processor.LogSummaryProcessor.INSTANCE_ID
 import spp.processor.logging.LoggingProcessor
 import spp.processor.logging.impl.LoggingProcessorImpl
 import spp.protocol.processor.ProcessorAddress
 import kotlin.system.exitProcess
 
-class SourceProcessorVerticle : CoroutineVerticle() {
+class LogSummaryProcessorVerticle : CoroutineVerticle() {
 
     companion object {
-        private val log = LoggerFactory.getLogger(SourceProcessorVerticle::class.java)
+        private val log = LoggerFactory.getLogger(LogSummaryProcessorVerticle::class.java)
 
         val loggingProcessor = LoggingProcessorImpl()
     }
@@ -31,7 +31,7 @@ class SourceProcessorVerticle : CoroutineVerticle() {
     private var loggingRecord: Record? = null
 
     override suspend fun start() {
-        log.info("Starting SourceProcessorVerticle")
+        log.info("Starting LogSummaryProcessorVerticle")
         val module = SimpleModule()
         module.addSerializer(DataTable::class.java, object : JsonSerializer<DataTable>() {
             override fun serialize(value: DataTable, gen: JsonGenerator, provider: SerializerProvider) {
@@ -61,7 +61,7 @@ class SourceProcessorVerticle : CoroutineVerticle() {
             LoggingProcessor::class.java,
             JsonObject().put("INSTANCE_ID", INSTANCE_ID)
         )
-        SourceProcessor.discovery.publish(loggingRecord) {
+        LogSummaryProcessor.discovery.publish(loggingRecord) {
             if (it.succeeded()) {
                 log.info("Logging processor published")
             } else {
@@ -72,8 +72,8 @@ class SourceProcessorVerticle : CoroutineVerticle() {
     }
 
     override suspend fun stop() {
-        log.info("Stopping SourceProcessorVerticle")
-        SourceProcessor.discovery.unpublish(loggingRecord!!.registration).onComplete {
+        log.info("Stopping LogSummaryProcessorVerticle")
+        LogSummaryProcessor.discovery.unpublish(loggingRecord!!.registration).onComplete {
             if (it.succeeded()) {
                 log.info("Logging processor unpublished")
             } else {

@@ -6,7 +6,7 @@ import org.apache.skywalking.oap.server.library.module.ModuleDefine
 import org.apache.skywalking.oap.server.library.module.ModuleProvider
 import org.apache.skywalking.oap.server.receiver.sharing.server.SharingServerModule
 import org.slf4j.LoggerFactory
-import spp.processor.SourceProcessor
+import spp.processor.LogSummaryProcessor
 
 class LoggingModule : ModuleDefine("spp-logging") {
     override fun services(): Array<Class<*>> = emptyArray()
@@ -25,7 +25,7 @@ class LoggingProcessorProvider : ModuleProvider() {
 
     override fun start() {
         log.info("Starting LoggingProcessorProvider")
-        SourceProcessor.module = manager
+        LogSummaryProcessor.module = manager
     }
 
     override fun notifyAfterCompleted() = Unit

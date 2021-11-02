@@ -12,7 +12,7 @@ import org.apache.skywalking.oap.server.storage.plugin.elasticsearch.base.EsDAO
 import org.elasticsearch.search.aggregations.bucket.terms.ParsedStringTerms
 import org.elasticsearch.search.aggregations.bucket.terms.Terms
 import org.slf4j.LoggerFactory
-import spp.processor.SourceProcessor
+import spp.processor.LogSummaryProcessor
 import spp.processor.logging.LoggingProcessor
 import java.util.stream.Collectors
 
@@ -26,7 +26,7 @@ class LoggingProcessorImpl : CoroutineVerticle(), LoggingProcessor {
 
     override suspend fun start() {
         log.info("Starting LoggingProcessorImpl")
-        elasticSearch = SourceProcessor.module!!.find(StorageModule.NAME).provider()
+        elasticSearch = LogSummaryProcessor.module!!.find(StorageModule.NAME).provider()
             .getService(ILogQueryDAO::class.java) as EsDAO
     }
 

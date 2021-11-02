@@ -14,7 +14,7 @@ import io.vertx.serviceproxy.ServiceBinder
 import kotlinx.datetime.Instant
 import org.apache.skywalking.oap.server.core.analysis.metrics.DataTable
 import org.slf4j.LoggerFactory
-import spp.processor.SourceProcessor.INSTANCE_ID
+import spp.processor.InstrumentProcessor.INSTANCE_ID
 import spp.processor.live.LiveInstrumentProcessor
 import spp.processor.live.LiveViewProcessor
 import spp.processor.live.impl.LiveInstrumentProcessorImpl
@@ -22,10 +22,10 @@ import spp.processor.live.impl.LiveViewProcessorImpl
 import spp.protocol.processor.ProcessorAddress
 import kotlin.system.exitProcess
 
-class SourceProcessorVerticle : CoroutineVerticle() {
+class InstrumentProcessorVerticle : CoroutineVerticle() {
 
     companion object {
-        private val log = LoggerFactory.getLogger(SourceProcessorVerticle::class.java)
+        private val log = LoggerFactory.getLogger(InstrumentProcessorVerticle::class.java)
 
         val liveViewProcessor = LiveViewProcessorImpl()
         val liveInstrumentProcessor = LiveInstrumentProcessorImpl()
@@ -35,7 +35,7 @@ class SourceProcessorVerticle : CoroutineVerticle() {
     private var liveViewRecord: Record? = null
 
     override suspend fun start() {
-        log.info("Starting SourceProcessorVerticle")
+        log.info("Starting InstrumentProcessorVerticle")
         val module = SimpleModule()
         module.addSerializer(DataTable::class.java, object : JsonSerializer<DataTable>() {
             override fun serialize(value: DataTable, gen: JsonGenerator, provider: SerializerProvider) {
@@ -66,7 +66,7 @@ class SourceProcessorVerticle : CoroutineVerticle() {
             LiveInstrumentProcessor::class.java,
             JsonObject().put("INSTANCE_ID", INSTANCE_ID)
         )
-        SourceProcessor.discovery.publish(liveInstrumentRecord) {
+        InstrumentProcessor.discovery.publish(liveInstrumentRecord) {
             if (it.succeeded()) {
                 log.info("Live instrument processor published")
             } else {
@@ -84,7 +84,7 @@ class SourceProcessorVerticle : CoroutineVerticle() {
             LiveViewProcessor::class.java,
             JsonObject().put("INSTANCE_ID", INSTANCE_ID)
         )
-        SourceProcessor.discovery.publish(liveViewRecord) {
+        InstrumentProcessor.discovery.publish(liveViewRecord) {
             if (it.succeeded()) {
                 log.info("Live view processor published")
             } else {
@@ -95,15 +95,15 @@ class SourceProcessorVerticle : CoroutineVerticle() {
     }
 
     override suspend fun stop() {
-        log.info("Stopping SourceProcessorVerticle")
-        SourceProcessor.discovery.unpublish(liveInstrumentRecord!!.registration).onComplete {
+        log.info("Stopping InstrumentProcessorVerticle")
+        InstrumentProcessor.discovery.unpublish(liveInstrumentRecord!!.registration).onComplete {
             if (it.succeeded()) {
                 log.info("Live instrument processor unpublished")
             } else {
                 log.error("Failed to unpublish live instrument processor", it.cause())
             }
         }.await()
-        SourceProcessor.discovery.unpublish(liveViewRecord!!.registration).onComplete {
+        InstrumentProcessor.discovery.unpublish(liveViewRecord!!.registration).onComplete {
             if (it.succeeded()) {
                 log.info("Live view processor unpublished")
             } else {
