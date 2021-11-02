@@ -31,9 +31,9 @@ import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.system.exitProcess
 
-object SourceProcessor {
+object InstrumentProcessor {
 
-    private val log = LoggerFactory.getLogger(SourceProcessor::class.java)
+    private val log = LoggerFactory.getLogger(InstrumentProcessor::class.java)
     val INSTANCE_ID = UUID.randomUUID().toString()
     var module: ModuleManager? = null
     var options: VertxOptions? = null
@@ -52,6 +52,9 @@ object SourceProcessor {
 
             republishEvents(vertx, ServiceDiscoveryOptions.DEFAULT_ANNOUNCE_ADDRESS)
             republishEvents(vertx, ServiceDiscoveryOptions.DEFAULT_USAGE_ADDRESS)
+            republishEvents(vertx, ProcessorAddress.VIEW_SUBSCRIPTION_EVENT.address)
+            republishEvents(vertx, ProcessorAddress.BREAKPOINT_HIT.address)
+            republishEvents(vertx, ProcessorAddress.LOG_HIT.address)
 
             try {
                 discovery = ServiceDiscovery.create(vertx)
@@ -166,22 +169,20 @@ object SourceProcessor {
                 //register services
                 FrameHelper.sendFrame(
                     BridgeEventType.REGISTER.name.toLowerCase(),
-                    ProcessorAddress.LOGGING_PROCESSOR.address,
+                    ProcessorAddress.LIVE_VIEW_PROCESSOR.address,
                     JsonObject(),
                     tcpSocket
                 )
-
-                //register settings
                 FrameHelper.sendFrame(
                     BridgeEventType.REGISTER.name.toLowerCase(),
-                    ProcessorAddress.SET_LOG_PUBLISH_RATE_LIMIT.address,
+                    ProcessorAddress.LIVE_INSTRUMENT_PROCESSOR.address,
                     JsonObject(),
                     tcpSocket
                 )
 
                 //deploy processor
                 log.info("Deploying source processor")
-                vertx.deployVerticle(SourceProcessorVerticle()) {
+                vertx.deployVerticle(InstrumentProcessorVerticle()) {
                     if (it.succeeded()) {
                         processorVerticleId = it.result()
                     } else {

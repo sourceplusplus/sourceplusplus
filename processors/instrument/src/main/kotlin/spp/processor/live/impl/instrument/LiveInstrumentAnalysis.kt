@@ -15,7 +15,7 @@ import org.apache.skywalking.oap.server.analyzer.provider.trace.parser.listener.
 import org.apache.skywalking.oap.server.library.module.ModuleManager
 import org.apache.skywalking.oap.server.storage.plugin.elasticsearch.base.EsDAO
 import org.slf4j.LoggerFactory
-import spp.processor.SourceProcessor
+import spp.processor.InstrumentProcessor
 import spp.protocol.processor.ProcessorAddress
 import spp.protocol.processor.ProcessorAddress.BREAKPOINT_HIT
 import java.util.concurrent.TimeUnit
@@ -41,7 +41,7 @@ class LiveInstrumentAnalysis(elasticSearch: EsDAO) : AnalysisListenerFactory, Lo
 
     init {
         //todo: map of rate limit per log id
-        SourceProcessor.vertx.eventBus().consumer<Int>(ProcessorAddress.SET_LOG_PUBLISH_RATE_LIMIT.address) {
+        InstrumentProcessor.vertx.eventBus().consumer<Int>(ProcessorAddress.SET_LOG_PUBLISH_RATE_LIMIT.address) {
             logPublishRateLimit = it.body()
         }
     }
@@ -93,7 +93,7 @@ class LiveInstrumentAnalysis(elasticSearch: EsDAO) : AnalysisListenerFactory, Lo
                         )
                         .put("total", -1)
                 )
-            SourceProcessor.vertx.eventBus().publish(ProcessorAddress.LOG_HIT.address, logHit)
+            InstrumentProcessor.vertx.eventBus().publish(ProcessorAddress.LOG_HIT.address, logHit)
             logPublishCache.put(logId!!, System.currentTimeMillis())
             return this
         }
@@ -181,7 +181,7 @@ class LiveInstrumentAnalysis(elasticSearch: EsDAO) : AnalysisListenerFactory, Lo
                     "location_line" to locationLines[it]!!
                 )
                 elasticSearch.client.forceInsert("spp_breakpoint_hit", "${it}:${segment.traceId}", bpHitObj)
-                SourceProcessor.vertx.eventBus().publish(BREAKPOINT_HIT.address, JsonObject.mapFrom(bpHitObj))
+                InstrumentProcessor.vertx.eventBus().publish(BREAKPOINT_HIT.address, JsonObject.mapFrom(bpHitObj))
             }
         }
     }

@@ -18,7 +18,7 @@ import org.apache.skywalking.oap.server.core.storage.StorageModule
 import org.apache.skywalking.oap.server.core.storage.query.ILogQueryDAO
 import org.apache.skywalking.oap.server.storage.plugin.elasticsearch.base.EsDAO
 import org.slf4j.LoggerFactory
-import spp.processor.SourceProcessor
+import spp.processor.InstrumentProcessor
 import spp.processor.live.LiveInstrumentProcessor
 
 class LiveInstrumentProcessorImpl : CoroutineVerticle(), LiveInstrumentProcessor {
@@ -31,7 +31,7 @@ class LiveInstrumentProcessorImpl : CoroutineVerticle(), LiveInstrumentProcessor
 
     override suspend fun start() {
         log.info("Starting LiveInstrumentProcessorImpl")
-        elasticSearch = SourceProcessor.module!!.find(StorageModule.NAME).provider()
+        elasticSearch = InstrumentProcessor.module!!.find(StorageModule.NAME).provider()
             .getService(ILogQueryDAO::class.java) as EsDAO
     }
 
@@ -75,8 +75,8 @@ class LiveInstrumentProcessorImpl : CoroutineVerticle(), LiveInstrumentProcessor
             else -> throw UnsupportedOperationException("Unsupported meter type: ${liveMeter.meterType}")
         }
 
-        val meterSystem = SourceProcessor.module!!.find(CoreModule.NAME).provider().getService(MeterSystem::class.java)
-        val service = SourceProcessor.module!!.find(AnalyzerModule.NAME).provider()
+        val meterSystem = InstrumentProcessor.module!!.find(CoreModule.NAME).provider().getService(MeterSystem::class.java)
+        val service = InstrumentProcessor.module!!.find(AnalyzerModule.NAME).provider()
             .getService(IMeterProcessService::class.java) as MeterProcessService
         service.converts().add(MetricConvert(meterConfig, meterSystem))
         handler.handle(Future.succeededFuture(JsonObject()))

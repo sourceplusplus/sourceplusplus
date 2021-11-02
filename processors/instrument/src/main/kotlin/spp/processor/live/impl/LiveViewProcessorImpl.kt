@@ -11,7 +11,7 @@ import io.vertx.ext.bridge.BridgeEventType
 import io.vertx.ext.eventbus.bridge.tcp.impl.protocol.FrameHelper
 import io.vertx.kotlin.coroutines.CoroutineVerticle
 import org.slf4j.LoggerFactory
-import spp.processor.SourceProcessor
+import spp.processor.InstrumentProcessor
 import spp.processor.live.LiveViewProcessor
 import spp.processor.live.impl.view.LiveActivityView
 import spp.processor.live.impl.view.LiveLogsView
@@ -42,7 +42,7 @@ class LiveViewProcessorImpl : CoroutineVerticle(), LiveViewProcessor {
             BridgeEventType.REGISTER.name.toLowerCase(),
             MARKER_DISCONNECTED.address,
             JsonObject(),
-            SourceProcessor.tcpSocket
+            InstrumentProcessor.tcpSocket
         )
 
         vertx.eventBus().consumer<JsonObject>("local." + MARKER_DISCONNECTED.address) {

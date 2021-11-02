@@ -16,7 +16,7 @@ import org.apache.skywalking.oap.server.analyzer.provider.trace.parser.listener.
 import org.apache.skywalking.oap.server.analyzer.provider.trace.parser.listener.EntryAnalysisListener
 import org.apache.skywalking.oap.server.library.module.ModuleManager
 import org.slf4j.LoggerFactory
-import spp.processor.SourceProcessor
+import spp.processor.InstrumentProcessor
 import spp.processor.live.impl.view.util.MetricTypeSubscriptionCache
 import java.time.Instant
 import java.time.ZoneOffset
@@ -95,7 +95,7 @@ class LiveTracesView(private val subscriptionCache: MetricTypeSubscriptionCache)
                         .put("entityId", entityId)
                         .put("timeBucket", formatter.format(trace.start.toJavaInstant()))
                         .put("trace", JsonObject.mapFrom(trace))
-                    SourceProcessor.vertx.eventBus().send(sub.consumer.address(), event)
+                    InstrumentProcessor.vertx.eventBus().send(sub.consumer.address(), event)
                 }
             }
         }

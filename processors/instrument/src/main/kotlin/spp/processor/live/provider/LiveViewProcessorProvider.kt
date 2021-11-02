@@ -13,8 +13,8 @@ import org.apache.skywalking.oap.server.library.module.ModuleConfig
 import org.apache.skywalking.oap.server.library.module.ModuleDefine
 import org.apache.skywalking.oap.server.library.module.ModuleProvider
 import org.slf4j.LoggerFactory
-import spp.processor.SourceProcessor
-import spp.processor.SourceProcessorVerticle.Companion.liveViewProcessor
+import spp.processor.InstrumentProcessor
+import spp.processor.InstrumentProcessorVerticle.Companion.liveViewProcessor
 
 class LiveViewModule : ModuleDefine("exporter") {
     override fun services(): Array<Class<*>> = arrayOf(MetricValuesExportService::class.java)
@@ -37,7 +37,7 @@ class LiveViewProcessorProvider : ModuleProvider() {
 
     override fun start() {
         log.info("Starting LiveViewProcessorProvider")
-        SourceProcessor.module = manager
+        InstrumentProcessor.module = manager
 
         //live traces view
         val segmentParserService = manager.find(AnalyzerModule.NAME)
