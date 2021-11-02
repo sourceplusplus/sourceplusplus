@@ -122,21 +122,18 @@ tasks.register<Copy>("updateDockerFiles") {
             .into(File(projectDir, "../docker/e2e"))
     }
     doFirst {
-        if (!File(projectDir, "../processors/instrument/build/libs/spp-processor-instrument-$instrumentProcessorVersion-shadow.jar").exists()) {
-            throw GradleException("Missing spp-processor-instrument-$instrumentProcessorVersion-shadow.jar")
+        if (!File(projectDir, "../processors/instrument/build/libs/spp-processor-instrument-$instrumentProcessorVersion.jar").exists()) {
+            throw GradleException("Missing spp-processor-instrument-$instrumentProcessorVersion.jar")
         }
-        if (!File(projectDir, "../processors/log-summary/build/libs/spp-processor-log-summary-$logSummaryProcessorVersion-shadow.jar").exists()) {
-            throw GradleException("Missing spp-processor-log-summary-$logSummaryProcessorVersion-shadow.jar")
+        if (!File(projectDir, "../processors/log-summary/build/libs/spp-processor-log-summary-$logSummaryProcessorVersion.jar").exists()) {
+            throw GradleException("Missing spp-processor-log-summary-$logSummaryProcessorVersion.jar")
         }
     }
 
-    from(File(projectDir, "../processors/instrument/build/libs/spp-processor-instrument-$instrumentProcessorVersion-shadow.jar"))
+    from(File(projectDir, "../processors/instrument/build/libs/spp-processor-instrument-$instrumentProcessorVersion.jar"))
         .into(File(projectDir, "../docker/e2e"))
-    from(File(projectDir, "../processors/log-summary/build/libs/spp-processor-log-summary-$logSummaryProcessorVersion-shadow.jar"))
+    from(File(projectDir, "../processors/log-summary/build/libs/spp-processor-log-summary-$logSummaryProcessorVersion.jar"))
         .into(File(projectDir, "../docker/e2e"))
-    rename {
-        it.replace("-shadow", "")
-    }
 }
 
 dockerCompose {

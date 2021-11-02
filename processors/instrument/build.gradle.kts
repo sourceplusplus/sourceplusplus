@@ -73,7 +73,7 @@ dependencies {
 
 tasks.getByName<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar") {
     archiveBaseName.set("spp-processor-instrument")
-    archiveClassifier.set("shadow")
+    archiveClassifier.set("")
 
 //    exclude("google/**")
 //    exclude("kotlin/**/*.kotlin_metadata")
