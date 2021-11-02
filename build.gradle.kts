@@ -33,10 +33,6 @@ tasks {
                 .copyTo(file("dist/spp-platform-$version/config/spp-platform.yml"))
             file("platform/core/build/graal/spp-platform")
                 .copyTo(file("dist/spp-platform-$version/spp-platform"))
-            file("processor/build/libs/spp-processor-$version-shadow.jar")
-                .copyTo(file("dist/spp-processor-$version.jar"))
-            file("interfaces/marker/build/spp-plugin-$version.zip")
-                .copyTo(file("dist/spp-plugin-$version.zip"))
         }
     }
 
