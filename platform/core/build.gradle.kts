@@ -29,7 +29,8 @@ dependencies {
     implementation(project(":platform:services"))
     implementation(project(":platform:common"))
 
-    shadow(project(":processor")) //todo: figure out why extra configurations.add() and this are needed
+    shadow(project(":processors:instrument")) //todo: figure out why extra configurations.add() and this are needed
+    shadow(project(":processors:log-summary")) //todo: figure out why extra configurations.add() and this are needed
 }
 
 //todo: shouldn't need to put in src (github actions needs for some reason)

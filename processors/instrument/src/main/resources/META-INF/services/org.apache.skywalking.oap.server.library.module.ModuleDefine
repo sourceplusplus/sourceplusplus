@@ -1,3 +1,2 @@
-spp.processor.logging.provider.LoggingModule
 spp.processor.live.provider.LiveInstrumentModule
 spp.processor.live.provider.LiveViewModule

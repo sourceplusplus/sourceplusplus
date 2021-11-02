@@ -19,8 +19,6 @@ import spp.processor.live.LiveInstrumentProcessor
 import spp.processor.live.LiveViewProcessor
 import spp.processor.live.impl.LiveInstrumentProcessorImpl
 import spp.processor.live.impl.LiveViewProcessorImpl
-import spp.processor.logging.LoggingProcessor
-import spp.processor.logging.impl.LoggingProcessorImpl
 import spp.protocol.processor.ProcessorAddress
 import kotlin.system.exitProcess
 
@@ -29,12 +27,10 @@ class SourceProcessorVerticle : CoroutineVerticle() {
     companion object {
         private val log = LoggerFactory.getLogger(SourceProcessorVerticle::class.java)
 
-        val loggingProcessor = LoggingProcessorImpl()
         val liveViewProcessor = LiveViewProcessorImpl()
         val liveInstrumentProcessor = LiveInstrumentProcessorImpl()
     }
 
-    private var loggingRecord: Record? = null
     private var liveInstrumentRecord: Record? = null
     private var liveViewRecord: Record? = null
 
@@ -58,27 +54,8 @@ class SourceProcessorVerticle : CoroutineVerticle() {
         module.addDeserializer(Instant::class.java, KSerializers.KotlinInstantDeserializer())
         DatabindCodec.mapper().registerModule(module)
 
-        vertx.deployVerticle(loggingProcessor).await()
         vertx.deployVerticle(liveViewProcessor).await()
         vertx.deployVerticle(liveInstrumentProcessor).await()
-
-        ServiceBinder(vertx).setIncludeDebugInfo(true)
-            .setAddress(ProcessorAddress.LOGGING_PROCESSOR.address)
-            .register(LoggingProcessor::class.java, loggingProcessor)
-        loggingRecord = EventBusService.createRecord(
-            ProcessorAddress.LOGGING_PROCESSOR.address,
-            ProcessorAddress.LOGGING_PROCESSOR.address,
-            LoggingProcessor::class.java,
-            JsonObject().put("INSTANCE_ID", INSTANCE_ID)
-        )
-        SourceProcessor.discovery.publish(loggingRecord) {
-            if (it.succeeded()) {
-                log.info("Logging processor published")
-            } else {
-                log.error("Failed to publish logging processor", it.cause())
-                exitProcess(-1)
-            }
-        }
 
         ServiceBinder(vertx).setIncludeDebugInfo(true)
             .setAddress(ProcessorAddress.LIVE_INSTRUMENT_PROCESSOR.address)
@@ -119,13 +96,6 @@ class SourceProcessorVerticle : CoroutineVerticle() {
 
     override suspend fun stop() {
         log.info("Stopping SourceProcessorVerticle")
-        SourceProcessor.discovery.unpublish(loggingRecord!!.registration).onComplete {
-            if (it.succeeded()) {
-                log.info("Logging processor unpublished")
-            } else {
-                log.error("Failed to unpublish logging processor", it.cause())
-            }
-        }.await()
         SourceProcessor.discovery.unpublish(liveInstrumentRecord!!.registration).onComplete {
             if (it.succeeded()) {
                 log.info("Live instrument processor unpublished")
