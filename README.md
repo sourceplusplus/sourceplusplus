@@ -67,7 +67,9 @@ The Source++ documentation is available [here](https://docs.sourceplusplus.com).
     ├── probes              # Live coding probes
         ├── jvm             # JVM support
         └── python          # Python support
-    ├── processor           # Live instrument processing
+    ├── processors          # Live coding processors
+        ├── instrument      # Live instrument processing
+        └── log-summary     # Log summary processing
     └── protocol            # Communication protocol
 
 ## License
