@@ -32,7 +32,7 @@ subprojects {
     val commonsIoVersion: String by project
     val logbackVersion: String by project
     val auth0JwtVersion: String by project
-    val vertxVersion = "4.0.3" //todo: consolidate with main project
+    val vertxVersion = "4.2.1" //todo: consolidate with main project
 
     repositories {
         mavenCentral()
