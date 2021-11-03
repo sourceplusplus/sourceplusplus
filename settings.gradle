@@ -29,5 +29,7 @@ include 'platform:services'
 include ':probes:jvm:control'
 include ':probes:jvm:services'
 
+include ':probes:python'
+
 include ':processors:instrument'
 include ':processors:log-summary'
