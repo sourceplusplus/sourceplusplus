@@ -9,9 +9,9 @@ pluginManagement {
         id 'org.jetbrains.kotlin.plugin.noarg' version kotlinVersion apply false
         id 'com.avast.gradle.docker-compose' version "0.14.9" apply false
         id 'io.gitlab.arturbosch.detekt' version "1.18.1" apply false
-        id 'com.github.johnrengelman.shadow' version "7.1.0"
-        id 'com.palantir.graal' version "0.10.0"
-        id 'com.apollographql.apollo' version "2.5.9"
+        id 'com.github.johnrengelman.shadow' version "7.1.0" apply false
+        id 'com.palantir.graal' version "0.10.0" apply false
+        id 'com.apollographql.apollo' version "2.5.9" apply false
     }
 }
 
@@ -28,6 +28,8 @@ include 'platform:services'
 
 include ':probes:jvm:control'
 include ':probes:jvm:services'
+
+include ':probes:python'
 
 include ':processors:instrument'
 include ':processors:log-summary'
