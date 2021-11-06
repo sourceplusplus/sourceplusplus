@@ -1,9 +1,9 @@
 package spp.platform.util
 
-import com.sourceplusplus.protocol.service.live.LiveInstrumentServiceVertxProxyHandler
-import com.sourceplusplus.protocol.service.live.LiveViewServiceVertxProxyHandler
-import com.sourceplusplus.protocol.service.logging.LogCountIndicatorServiceVertxProxyHandler
-import com.sourceplusplus.protocol.service.tracing.LocalTracingServiceVertxProxyHandler
+import spp.protocol.service.live.LiveInstrumentServiceVertxProxyHandler
+import spp.protocol.service.live.LiveViewServiceVertxProxyHandler
+import spp.protocol.service.logging.LogCountIndicatorServiceVertxProxyHandler
+import spp.protocol.service.tracing.LocalTracingServiceVertxProxyHandler
 import kotlin.concurrent.getOrSet
 
 object RequestContext {
