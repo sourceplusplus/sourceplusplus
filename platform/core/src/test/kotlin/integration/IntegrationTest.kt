@@ -1,8 +1,8 @@
 package integration
 
-import com.sourceplusplus.protocol.SourceMarkerServices
-import com.sourceplusplus.protocol.SourceMarkerServices.Utilize
-import com.sourceplusplus.protocol.status.MarkerConnection
+import spp.protocol.SourceMarkerServices
+import spp.protocol.SourceMarkerServices.Utilize
+import spp.protocol.status.MarkerConnection
 import io.vertx.core.AsyncResult
 import io.vertx.core.Promise
 import io.vertx.core.Vertx

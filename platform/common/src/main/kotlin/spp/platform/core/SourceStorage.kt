@@ -1,6 +1,6 @@
 package spp.platform.core
 
-import com.sourceplusplus.protocol.developer.Developer
+import spp.protocol.developer.Developer
 import io.vertx.core.json.JsonObject
 import io.vertx.kotlin.coroutines.await
 import io.vertx.redis.client.RedisAPI

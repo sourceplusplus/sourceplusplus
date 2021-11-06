@@ -1,7 +1,7 @@
 package spp.platform.marker
 
-import com.sourceplusplus.protocol.SourceMarkerServices
-import com.sourceplusplus.protocol.status.MarkerConnection
+import spp.protocol.SourceMarkerServices
+import spp.protocol.status.MarkerConnection
 import io.vertx.core.Vertx
 import io.vertx.core.eventbus.Message
 import io.vertx.core.json.Json

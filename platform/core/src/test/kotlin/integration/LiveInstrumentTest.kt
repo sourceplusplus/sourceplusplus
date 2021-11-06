@@ -1,15 +1,15 @@
 package integration
 
-import com.sourceplusplus.protocol.SourceMarkerServices
-import com.sourceplusplus.protocol.SourceMarkerServices.Provide
-import com.sourceplusplus.protocol.instrument.LiveInstrumentBatch
-import com.sourceplusplus.protocol.instrument.LiveInstrumentEvent
-import com.sourceplusplus.protocol.instrument.LiveInstrumentEventType
-import com.sourceplusplus.protocol.instrument.LiveSourceLocation
-import com.sourceplusplus.protocol.instrument.breakpoint.LiveBreakpoint
-import com.sourceplusplus.protocol.instrument.breakpoint.event.LiveBreakpointHit
-import com.sourceplusplus.protocol.instrument.log.LiveLog
-import com.sourceplusplus.protocol.service.live.LiveInstrumentService
+import spp.protocol.SourceMarkerServices
+import spp.protocol.SourceMarkerServices.Provide
+import spp.protocol.instrument.LiveInstrumentBatch
+import spp.protocol.instrument.LiveInstrumentEvent
+import spp.protocol.instrument.LiveInstrumentEventType
+import spp.protocol.instrument.LiveSourceLocation
+import spp.protocol.instrument.breakpoint.LiveBreakpoint
+import spp.protocol.instrument.breakpoint.event.LiveBreakpointHit
+import spp.protocol.instrument.log.LiveLog
+import spp.protocol.service.live.LiveInstrumentService
 import io.vertx.core.json.Json
 import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxExtension

@@ -1,13 +1,13 @@
 package spp.service.live.providers
 
-import com.sourceplusplus.protocol.error.MissingRemoteException
-import com.sourceplusplus.protocol.instrument.LiveInstrument
-import com.sourceplusplus.protocol.instrument.LiveInstrumentBatch
-import com.sourceplusplus.protocol.instrument.LiveSourceLocation
-import com.sourceplusplus.protocol.instrument.breakpoint.LiveBreakpoint
-import com.sourceplusplus.protocol.instrument.log.LiveLog
-import com.sourceplusplus.protocol.instrument.meter.LiveMeter
-import com.sourceplusplus.protocol.service.live.LiveInstrumentService
+import spp.protocol.error.MissingRemoteException
+import spp.protocol.instrument.LiveInstrument
+import spp.protocol.instrument.LiveInstrumentBatch
+import spp.protocol.instrument.LiveSourceLocation
+import spp.protocol.instrument.breakpoint.LiveBreakpoint
+import spp.protocol.instrument.log.LiveLog
+import spp.protocol.instrument.meter.LiveMeter
+import spp.protocol.service.live.LiveInstrumentService
 import io.vertx.core.*
 import io.vertx.core.json.JsonObject
 import io.vertx.kotlin.coroutines.await
