@@ -980,7 +980,7 @@
     "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]
   },
   {
-    "name": "com.sourceplusplus.protocol.status.MarkerConnection",
+    "name": "spp.protocol.status.MarkerConnection",
     "fields":[
       {"name":"markerId", "allowWrite":true},
       {"name":"connectionTime", "allowWrite":true},
@@ -1032,7 +1032,7 @@
     "name": "kotlin.KotlinVersion$Companion[]"
   },
   {
-    "name": "com.sourceplusplus.protocol.status.MarkerConnection[]",
+    "name": "spp.protocol.status.MarkerConnection[]",
     "allDeclaredConstructors" : true,
     "allPublicConstructors" : true,
     "allDeclaredMethods" : true,
@@ -1105,7 +1105,7 @@
     "allPublicClasses" : true
   },
   {
-    "name": "com.sourceplusplus.protocol.artifact.log.LogResult$Companion",
+    "name": "spp.protocol.artifact.log.LogResult$Companion",
     "allDeclaredConstructors" : true,
     "allPublicConstructors" : true,
     "allDeclaredMethods" : true,
@@ -1114,7 +1114,7 @@
     "allPublicClasses" : true
   },
   {
-    "name": "com.sourceplusplus.protocol.artifact.log.LogResult$Companion[]",
+    "name": "spp.protocol.artifact.log.LogResult$Companion[]",
     "allDeclaredConstructors" : true,
     "allPublicConstructors" : true,
     "allDeclaredMethods" : true,
@@ -1123,7 +1123,7 @@
     "allPublicClasses" : true
   },
   {
-    "name": "com.sourceplusplus.protocol.instrument.breakpoint.LiveBreakpoint$Companion",
+    "name": "spp.protocol.instrument.breakpoint.LiveBreakpoint$Companion",
     "allDeclaredConstructors" : true,
     "allPublicConstructors" : true,
     "allDeclaredMethods" : true,
@@ -1132,7 +1132,7 @@
     "allPublicClasses" : true
   },
   {
-    "name": "com.sourceplusplus.protocol.instrument.LiveInstrument$Companion",
+    "name": "spp.protocol.instrument.LiveInstrument$Companion",
     "allDeclaredConstructors" : true,
     "allPublicConstructors" : true,
     "allDeclaredMethods" : true,
@@ -1141,7 +1141,7 @@
     "allPublicClasses" : true
   },
   {
-    "name": "com.sourceplusplus.protocol.instrument.LiveSourceLocation$Companion",
+    "name": "spp.protocol.instrument.LiveSourceLocation$Companion",
     "allDeclaredConstructors" : true,
     "allPublicConstructors" : true,
     "allDeclaredMethods" : true,
@@ -1150,7 +1150,7 @@
     "allPublicClasses" : true
   },
   {
-    "name": "com.sourceplusplus.protocol.instrument.InstrumentThrottle$Companion",
+    "name": "spp.protocol.instrument.InstrumentThrottle$Companion",
     "allDeclaredConstructors" : true,
     "allPublicConstructors" : true,
     "allDeclaredMethods" : true,
@@ -1159,7 +1159,7 @@
     "allPublicClasses" : true
   },
   {
-    "name": "com.sourceplusplus.protocol.instrument.LiveInstrumentEvent$Companion",
+    "name": "spp.protocol.instrument.LiveInstrumentEvent$Companion",
     "allDeclaredConstructors" : true,
     "allPublicConstructors" : true,
     "allDeclaredMethods" : true,
@@ -1168,7 +1168,7 @@
     "allPublicClasses" : true
   },
   {
-    "name": "com.sourceplusplus.protocol.instrument.breakpoint.event.LiveBreakpointRemoved$Companion",
+    "name": "spp.protocol.instrument.breakpoint.event.LiveBreakpointRemoved$Companion",
     "allDeclaredConstructors" : true,
     "allPublicConstructors" : true,
     "allDeclaredMethods" : true,
@@ -1177,7 +1177,7 @@
     "allPublicClasses" : true
   },
   {
-    "name": "com.sourceplusplus.protocol.instrument.breakpoint.event.LiveBreakpointHit$Companion",
+    "name": "spp.protocol.instrument.breakpoint.event.LiveBreakpointHit$Companion",
     "allDeclaredConstructors" : true,
     "allPublicConstructors" : true,
     "allDeclaredMethods" : true,
@@ -1186,7 +1186,7 @@
     "allPublicClasses" : true
   },
   {
-    "name": "com.sourceplusplus.protocol.instrument.log.event.LiveLogRemoved$Companion",
+    "name": "spp.protocol.instrument.log.event.LiveLogRemoved$Companion",
     "allDeclaredConstructors" : true,
     "allPublicConstructors" : true,
     "allDeclaredMethods" : true,
@@ -1195,7 +1195,7 @@
     "allPublicClasses" : true
   },
   {
-    "name": "com.sourceplusplus.protocol.instrument.log.event.LiveLogHit$Companion",
+    "name": "spp.protocol.instrument.log.event.LiveLogHit$Companion",
     "allDeclaredConstructors" : true,
     "allPublicConstructors" : true,
     "allDeclaredMethods" : true,
@@ -1204,7 +1204,7 @@
     "allPublicClasses" : true
   },
   {
-    "name": "com.sourceplusplus.protocol.instrument.LiveVariable$Companion",
+    "name": "spp.protocol.instrument.LiveVariable$Companion",
     "allDeclaredConstructors" : true,
     "allPublicConstructors" : true,
     "allDeclaredMethods" : true,
@@ -1213,7 +1213,7 @@
     "allPublicClasses" : true
   },
   {
-    "name": "com.sourceplusplus.protocol.instrument.log.LiveLog$Companion",
+    "name": "spp.protocol.instrument.log.LiveLog$Companion",
     "allDeclaredConstructors" : true,
     "allPublicConstructors" : true,
     "allDeclaredMethods" : true,
@@ -1222,7 +1222,7 @@
     "allPublicClasses" : true
   },
   {
-    "name": "com.sourceplusplus.protocol.artifact.log.Log$Companion",
+    "name": "spp.protocol.artifact.log.Log$Companion",
     "allDeclaredConstructors" : true,
     "allPublicConstructors" : true,
     "allDeclaredMethods" : true,
@@ -1263,7 +1263,7 @@
     "allPublicClasses" : true
   },
   {
-    "name": "com.sourceplusplus.protocol.artifact.exception.LiveStackTrace[]",
+    "name": "spp.protocol.artifact.exception.LiveStackTrace[]",
     "allDeclaredConstructors" : true,
     "allPublicConstructors" : true,
     "allDeclaredMethods" : true,
@@ -1272,7 +1272,7 @@
     "allPublicClasses" : true
   },
   {
-    "name": "com.sourceplusplus.protocol.artifact.exception.LiveStackTrace",
+    "name": "spp.protocol.artifact.exception.LiveStackTrace",
     "fields":[
       {"name":"exceptionType", "allowWrite":true},
       {"name":"message", "allowWrite":true},
@@ -1287,7 +1287,7 @@
     "allPublicClasses" : true
   },
   {
-    "name": "com.sourceplusplus.protocol.artifact.exception.LiveStackTraceElement[]",
+    "name": "spp.protocol.artifact.exception.LiveStackTraceElement[]",
     "allDeclaredConstructors" : true,
     "allPublicConstructors" : true,
     "allDeclaredMethods" : true,
@@ -1296,7 +1296,7 @@
     "allPublicClasses" : true
   },
   {
-    "name": "com.sourceplusplus.protocol.artifact.exception.LiveStackTraceElement",
+    "name": "spp.protocol.artifact.exception.LiveStackTraceElement",
     "fields":[
       {"name":"method", "allowWrite":true},
       {"name":"source", "allowWrite":true},
@@ -1319,7 +1319,7 @@
     "allPublicClasses" : true
   },
   {
-    "name": "com.sourceplusplus.protocol.artifact.log.LogCountSummary",
+    "name": "spp.protocol.artifact.log.LogCountSummary",
     "fields":[
       {"name":"timestamp", "allowWrite":true},
       {"name":"logCounts", "allowWrite":true}
@@ -1332,23 +1332,23 @@
     "allPublicClasses" : true
   },
   {
-    "name":"com.sourceplusplus.protocol.service.logging.LogCountIndicatorServiceVertxProxyHandler",
-    "methods":[{"name":"<init>","parameterTypes":["io.vertx.core.Vertx","com.sourceplusplus.protocol.service.logging.LogCountIndicatorService","boolean","long","boolean"] }]
+    "name":"spp.protocol.service.logging.LogCountIndicatorServiceVertxProxyHandler",
+    "methods":[{"name":"<init>","parameterTypes":["io.vertx.core.Vertx","spp.protocol.service.logging.LogCountIndicatorService","boolean","long","boolean"] }]
   },
   {
-    "name":"com.sourceplusplus.protocol.service.tracing.LocalTracingServiceVertxProxyHandler",
-    "methods":[{"name":"<init>","parameterTypes":["io.vertx.core.Vertx","com.sourceplusplus.protocol.service.tracing.LocalTracingService","boolean","long","boolean"] }]
+    "name":"spp.protocol.service.tracing.LocalTracingServiceVertxProxyHandler",
+    "methods":[{"name":"<init>","parameterTypes":["io.vertx.core.Vertx","spp.protocol.service.tracing.LocalTracingService","boolean","long","boolean"] }]
   },
   {
-    "name":"com.sourceplusplus.protocol.service.live.LiveInstrumentServiceVertxProxyHandler",
-    "methods":[{"name":"<init>","parameterTypes":["io.vertx.core.Vertx","com.sourceplusplus.protocol.service.live.LiveInstrumentService","boolean","long","boolean"] }]
+    "name":"spp.protocol.service.live.LiveInstrumentServiceVertxProxyHandler",
+    "methods":[{"name":"<init>","parameterTypes":["io.vertx.core.Vertx","spp.protocol.service.live.LiveInstrumentService","boolean","long","boolean"] }]
   },
   {
-    "name":"com.sourceplusplus.protocol.service.live.LiveViewServiceVertxProxyHandler",
-    "methods":[{"name":"<init>","parameterTypes":["io.vertx.core.Vertx","com.sourceplusplus.protocol.service.live.LiveViewService","boolean","long","boolean"] }]
+    "name":"spp.protocol.service.live.LiveViewServiceVertxProxyHandler",
+    "methods":[{"name":"<init>","parameterTypes":["io.vertx.core.Vertx","spp.protocol.service.live.LiveViewService","boolean","long","boolean"] }]
   },
   {
-    "name": "com.sourceplusplus.protocol.service.tracing.LocalTracingService",
+    "name": "spp.protocol.service.tracing.LocalTracingService",
     "allDeclaredConstructors" : true,
     "allPublicConstructors" : true,
     "allDeclaredMethods" : true,
@@ -1357,7 +1357,7 @@
     "allPublicClasses" : true
   },
   {
-    "name": "com.sourceplusplus.protocol.service.logging.LogCountIndicatorService",
+    "name": "spp.protocol.service.logging.LogCountIndicatorService",
     "allDeclaredConstructors" : true,
     "allPublicConstructors" : true,
     "allDeclaredMethods" : true,
@@ -1366,7 +1366,7 @@
     "allPublicClasses" : true
   },
   {
-    "name": "com.sourceplusplus.protocol.service.live.LiveInstrumentService",
+    "name": "spp.protocol.service.live.LiveInstrumentService",
     "allDeclaredConstructors" : true,
     "allPublicConstructors" : true,
     "allDeclaredMethods" : true,
@@ -1375,7 +1375,7 @@
     "allPublicClasses" : true
   },
   {
-    "name": "com.sourceplusplus.protocol.service.live.LiveViewService",
+    "name": "spp.protocol.service.live.LiveViewService",
     "allDeclaredConstructors" : true,
     "allPublicConstructors" : true,
     "allDeclaredMethods" : true,
@@ -1384,7 +1384,7 @@
     "allPublicClasses" : true
   },
   {
-    "name": "com.sourceplusplus.protocol.service.logging.LogCountIndicatorServiceVertxEBProxy",
+    "name": "spp.protocol.service.logging.LogCountIndicatorServiceVertxEBProxy",
     "allDeclaredConstructors" : true,
     "allPublicConstructors" : true,
     "allDeclaredMethods" : true,
@@ -1393,7 +1393,7 @@
     "allPublicClasses" : true
   },
   {
-    "name": "com.sourceplusplus.protocol.service.tracing.LocalTracingServiceVertxEBProxy",
+    "name": "spp.protocol.service.tracing.LocalTracingServiceVertxEBProxy",
     "allDeclaredConstructors" : true,
     "allPublicConstructors" : true,
     "allDeclaredMethods" : true,
@@ -1402,7 +1402,7 @@
     "allPublicClasses" : true
   },
   {
-    "name": "com.sourceplusplus.protocol.service.live.LiveInstrumentServiceVertxEBProxy",
+    "name": "spp.protocol.service.live.LiveInstrumentServiceVertxEBProxy",
     "allDeclaredConstructors" : true,
     "allPublicConstructors" : true,
     "allDeclaredMethods" : true,
@@ -1411,7 +1411,7 @@
     "allPublicClasses" : true
   },
   {
-    "name": "com.sourceplusplus.protocol.service.live.LiveViewServiceVertxEBProxy",
+    "name": "spp.protocol.service.live.LiveViewServiceVertxEBProxy",
     "allDeclaredConstructors" : true,
     "allPublicConstructors" : true,
     "allDeclaredMethods" : true,
@@ -1456,7 +1456,7 @@
     "allPublicClasses" : true
   },
   {
-    "name": "com.sourceplusplus.protocol.developer.Developer",
+    "name": "spp.protocol.developer.Developer",
     "fields":[
       {"name":"id", "allowWrite":true},
       {"name":"accessToken", "allowWrite":true}
@@ -1469,7 +1469,7 @@
     "allPublicClasses" : true
   },
   {
-    "name": "com.sourceplusplus.protocol.artifact.log.LogCountSummary[]",
+    "name": "spp.protocol.artifact.log.LogCountSummary[]",
     "allDeclaredConstructors" : true,
     "allPublicConstructors" : true,
     "allDeclaredMethods" : true,
@@ -1478,7 +1478,7 @@
     "allPublicClasses" : true
   },
   {
-    "name": "com.sourceplusplus.protocol.artifact.ArtifactQualifiedName",
+    "name": "spp.protocol.artifact.ArtifactQualifiedName",
     "fields":[
       {"name":"identifier", "allowWrite":true},
       {"name":"commitId", "allowWrite":true},
@@ -1494,7 +1494,7 @@
     "allPublicClasses" : true
   },
   {
-    "name": "com.sourceplusplus.protocol.artifact.ArtifactQualifiedName[]",
+    "name": "spp.protocol.artifact.ArtifactQualifiedName[]",
     "allDeclaredConstructors" : true,
     "allPublicConstructors" : true,
     "allDeclaredMethods" : true,
@@ -1503,7 +1503,7 @@
     "allPublicClasses" : true
   },
   {
-    "name": "com.sourceplusplus.protocol.artifact.trace.TraceResult[]",
+    "name": "spp.protocol.artifact.trace.TraceResult[]",
     "allDeclaredConstructors" : true,
     "allPublicConstructors" : true,
     "allDeclaredMethods" : true,
@@ -1512,7 +1512,7 @@
     "allPublicClasses" : true
   },
   {
-    "name": "com.sourceplusplus.protocol.artifact.trace.TraceResult",
+    "name": "spp.protocol.artifact.trace.TraceResult",
     "fields":[
       {"name":"appUuid", "allowWrite":true},
       {"name":"artifactQualifiedName", "allowWrite":true},
@@ -1532,7 +1532,7 @@
     "allPublicClasses" : true
   },
   {
-    "name": "com.sourceplusplus.protocol.artifact.trace.Trace[]",
+    "name": "spp.protocol.artifact.trace.Trace[]",
     "allDeclaredConstructors" : true,
     "allPublicConstructors" : true,
     "allDeclaredMethods" : true,
@@ -1541,7 +1541,7 @@
     "allPublicClasses" : true
   },
   {
-    "name": "com.sourceplusplus.protocol.artifact.trace.Trace",
+    "name": "spp.protocol.artifact.trace.Trace",
     "fields":[
       {"name":"key", "allowWrite":true},
       {"name":"operationNames", "allowWrite":true},
@@ -1641,7 +1641,7 @@
     "allPublicMethods" : true
   },
   {
-    "name": "com.sourceplusplus.protocol.instrument.LiveSourceLocation",
+    "name": "spp.protocol.instrument.LiveSourceLocation",
     "fields":[
       {"name":"source", "allowWrite":true},
       {"name":"line", "allowWrite":true},
@@ -1656,7 +1656,7 @@
     "allPublicMethods" : true
   },
   {
-    "name": "com.sourceplusplus.protocol.instrument.LiveSourceLocation[]",
+    "name": "spp.protocol.instrument.LiveSourceLocation[]",
     "allDeclaredConstructors" : true,
     "allPublicConstructors" : true,
     "allDeclaredFields" : true,
@@ -1665,7 +1665,7 @@
     "allPublicMethods" : true
   },
   {
-    "name": "com.sourceplusplus.protocol.instrument.LiveInstrument",
+    "name": "spp.protocol.instrument.LiveInstrument",
     "allDeclaredConstructors" : true,
     "allPublicConstructors" : true,
     "allDeclaredFields" : true,
@@ -1674,7 +1674,7 @@
     "allPublicMethods" : true
   },
   {
-    "name": "com.sourceplusplus.protocol.instrument.LiveInstrumentBatch",
+    "name": "spp.protocol.instrument.LiveInstrumentBatch",
     "fields":[
       {"name":"instruments", "allowWrite":true}
     ],
@@ -1686,7 +1686,7 @@
     "allPublicMethods" : true
   },
   {
-    "name": "com.sourceplusplus.protocol.instrument.LiveInstrumentBatch[]",
+    "name": "spp.protocol.instrument.LiveInstrumentBatch[]",
     "allDeclaredConstructors" : true,
     "allPublicConstructors" : true,
     "allDeclaredFields" : true,
@@ -1695,7 +1695,7 @@
     "allPublicMethods" : true
   },
   {
-    "name": "com.sourceplusplus.protocol.instrument.LiveInstrumentEvent",
+    "name": "spp.protocol.instrument.LiveInstrumentEvent",
     "allDeclaredConstructors" : true,
     "allPublicConstructors" : true,
     "allDeclaredFields" : true,
@@ -1704,7 +1704,7 @@
     "allPublicMethods" : true
   },
   {
-    "name": "com.sourceplusplus.protocol.instrument.LiveInstrumentEvent[]",
+    "name": "spp.protocol.instrument.LiveInstrumentEvent[]",
     "allDeclaredConstructors" : true,
     "allPublicConstructors" : true,
     "allDeclaredFields" : true,
@@ -1713,7 +1713,7 @@
     "allPublicMethods" : true
   },
   {
-    "name": "com.sourceplusplus.protocol.instrument.LiveVariable",
+    "name": "spp.protocol.instrument.LiveVariable",
     "fields":[
       {"name":"name", "allowWrite":true},
       {"name":"value", "allowWrite":true},
@@ -1728,7 +1728,7 @@
     "allPublicMethods" : true
   },
   {
-    "name": "com.sourceplusplus.protocol.instrument.LiveVariable[]",
+    "name": "spp.protocol.instrument.LiveVariable[]",
     "allDeclaredConstructors" : true,
     "allPublicConstructors" : true,
     "allDeclaredFields" : true,
@@ -1737,7 +1737,7 @@
     "allPublicMethods" : true
   },
   {
-    "name": "com.sourceplusplus.protocol.instrument.breakpoint.LiveBreakpoint",
+    "name": "spp.protocol.instrument.breakpoint.LiveBreakpoint",
     "fields":[
       {"name":"location", "allowWrite":true},
       {"name":"condition", "allowWrite":true},
@@ -1759,7 +1759,7 @@
     "allPublicMethods" : true
   },
   {
-    "name": "com.sourceplusplus.protocol.instrument.breakpoint.LiveBreakpoint[]",
+    "name": "spp.protocol.instrument.breakpoint.LiveBreakpoint[]",
     "allDeclaredConstructors" : true,
     "allPublicConstructors" : true,
     "allDeclaredFields" : true,
@@ -1768,7 +1768,7 @@
     "allPublicMethods" : true
   },
   {
-    "name": "com.sourceplusplus.protocol.instrument.log.LiveLog",
+    "name": "spp.protocol.instrument.log.LiveLog",
     "fields":[
       {"name":"logFormat", "allowWrite":true},
       {"name":"logArguments", "allowWrite":true},
@@ -1792,7 +1792,7 @@
     "allPublicMethods" : true
   },
   {
-    "name": "com.sourceplusplus.protocol.instrument.log.LiveLog[]",
+    "name": "spp.protocol.instrument.log.LiveLog[]",
     "allDeclaredConstructors" : true,
     "allPublicConstructors" : true,
     "allDeclaredFields" : true,
@@ -1801,7 +1801,7 @@
     "allPublicMethods" : true
   },
   {
-    "name": "com.sourceplusplus.protocol.instrument.breakpoint.event.LiveBreakpointHit",
+    "name": "spp.protocol.instrument.breakpoint.event.LiveBreakpointHit",
     "fields":[
       {"name":"breakpointId", "allowWrite":true},
       {"name":"traceId", "allowWrite":true},
@@ -1818,7 +1818,7 @@
     "allPublicMethods" : true
   },
   {
-    "name": "com.sourceplusplus.protocol.instrument.breakpoint.event.LiveBreakpointHit[]",
+    "name": "spp.protocol.instrument.breakpoint.event.LiveBreakpointHit[]",
     "allDeclaredConstructors" : true,
     "allPublicConstructors" : true,
     "allDeclaredFields" : true,
@@ -1827,7 +1827,7 @@
     "allPublicMethods" : true
   },
   {
-    "name": "com.sourceplusplus.protocol.instrument.log.event.LiveLogHit",
+    "name": "spp.protocol.instrument.log.event.LiveLogHit",
     "fields":[
       {"name":"logId", "allowWrite":true},
       {"name":"occurredAt", "allowWrite":true},
@@ -1843,7 +1843,7 @@
     "allPublicMethods" : true
   },
   {
-    "name": "com.sourceplusplus.protocol.instrument.log.event.LiveLogHit[]",
+    "name": "spp.protocol.instrument.log.event.LiveLogHit[]",
     "allDeclaredConstructors" : true,
     "allPublicConstructors" : true,
     "allDeclaredFields" : true,
@@ -1852,7 +1852,7 @@
     "allPublicMethods" : true
   },
   {
-    "name": "com.sourceplusplus.protocol.artifact.log.LogResult",
+    "name": "spp.protocol.artifact.log.LogResult",
     "fields":[
       {"name":"artifactQualifiedName", "allowWrite":true},
       {"name":"orderType", "allowWrite":true},
@@ -1868,7 +1868,7 @@
     "allPublicMethods" : true
   },
   {
-    "name": "com.sourceplusplus.protocol.artifact.log.LogResult[]",
+    "name": "spp.protocol.artifact.log.LogResult[]",
     "allDeclaredConstructors" : true,
     "allPublicConstructors" : true,
     "allDeclaredFields" : true,
@@ -1877,7 +1877,7 @@
     "allPublicMethods" : true
   },
   {
-    "name": "com.sourceplusplus.protocol.artifact.log.Log",
+    "name": "spp.protocol.artifact.log.Log",
     "fields":[
       {"name":"timestamp", "allowWrite":true},
       {"name":"content", "allowWrite":true},
@@ -1895,7 +1895,7 @@
     "allPublicMethods" : true
   },
   {
-    "name": "com.sourceplusplus.protocol.artifact.log.Log[]",
+    "name": "spp.protocol.artifact.log.Log[]",
     "allDeclaredConstructors" : true,
     "allPublicConstructors" : true,
     "allDeclaredFields" : true,
@@ -1904,7 +1904,7 @@
     "allPublicMethods" : true
   },
   {
-    "name": "com.sourceplusplus.protocol.instrument.breakpoint.event.LiveBreakpointRemoved",
+    "name": "spp.protocol.instrument.breakpoint.event.LiveBreakpointRemoved",
     "fields":[
       {"name":"breakpointId", "allowWrite":true},
       {"name":"occurredAt", "allowWrite":true},
@@ -1918,7 +1918,7 @@
     "allPublicMethods" : true
   },
   {
-    "name": "com.sourceplusplus.protocol.instrument.breakpoint.event.LiveBreakpointRemoved[]",
+    "name": "spp.protocol.instrument.breakpoint.event.LiveBreakpointRemoved[]",
     "allDeclaredConstructors" : true,
     "allPublicConstructors" : true,
     "allDeclaredFields" : true,
@@ -1927,7 +1927,7 @@
     "allPublicMethods" : true
   },
   {
-    "name": "com.sourceplusplus.protocol.instrument.log.event.LiveLogRemoved",
+    "name": "spp.protocol.instrument.log.event.LiveLogRemoved",
     "fields":[
       {"name":"logId", "allowWrite":true},
       {"name":"occurredAt", "allowWrite":true},
@@ -1942,7 +1942,7 @@
     "allPublicMethods" : true
   },
   {
-    "name": "com.sourceplusplus.protocol.instrument.log.event.LiveLogRemoved[]",
+    "name": "spp.protocol.instrument.log.event.LiveLogRemoved[]",
     "allDeclaredConstructors" : true,
     "allPublicConstructors" : true,
     "allDeclaredFields" : true,
@@ -1951,7 +1951,7 @@
     "allPublicMethods" : true
   },
   {
-    "name": "com.sourceplusplus.protocol.instrument.InstrumentThrottle",
+    "name": "spp.protocol.instrument.InstrumentThrottle",
     "fields":[
       {"name":"limit", "allowWrite":true},
       {"name":"step", "allowWrite":true}
@@ -1964,7 +1964,7 @@
     "allPublicMethods" : true
   },
   {
-    "name": "com.sourceplusplus.protocol.instrument.InstrumentThrottle[]",
+    "name": "spp.protocol.instrument.InstrumentThrottle[]",
     "allDeclaredConstructors" : true,
     "allPublicConstructors" : true,
     "allDeclaredFields" : true,
