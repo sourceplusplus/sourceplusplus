@@ -121,7 +121,7 @@ class LiveInstrumentController(private val vertx: Vertx) {
                 bpData.getString("breakpoint_id"),
                 bpData.getString("trace_id"),
                 Instant.fromEpochMilliseconds(bpData.getLong("occurred_at")),
-                bpData.getString("service_host"),
+                bpData.getString("service_instance"),
                 bpData.getString("service"),
                 stackTrace
             )
