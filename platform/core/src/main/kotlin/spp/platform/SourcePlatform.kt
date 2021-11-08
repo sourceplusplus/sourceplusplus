@@ -5,9 +5,9 @@ import ch.qos.logback.classic.LoggerContext
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.module.SimpleModule
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper
-import com.sourceplusplus.protocol.ProtocolMarshaller
-import com.sourceplusplus.protocol.ProtocolMarshaller.ProtocolMessageCodec
-import com.sourceplusplus.protocol.SourceMarkerServices.Utilize
+import spp.protocol.ProtocolMarshaller
+import spp.protocol.ProtocolMarshaller.ProtocolMessageCodec
+import spp.protocol.SourceMarkerServices.Utilize
 import io.vertx.core.DeploymentOptions
 import io.vertx.core.Promise
 import io.vertx.core.Vertx

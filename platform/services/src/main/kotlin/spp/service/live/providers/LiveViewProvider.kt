@@ -1,10 +1,10 @@
 package spp.service.live.providers
 
-import com.sourceplusplus.protocol.SourceMarkerServices.Provide.LIVE_VIEW_SUBSCRIBER
-import com.sourceplusplus.protocol.error.MissingRemoteException
-import com.sourceplusplus.protocol.service.live.LiveViewService
-import com.sourceplusplus.protocol.view.LiveViewEvent
-import com.sourceplusplus.protocol.view.LiveViewSubscription
+import spp.protocol.SourceMarkerServices.Provide.LIVE_VIEW_SUBSCRIBER
+import spp.protocol.error.MissingRemoteException
+import spp.protocol.service.live.LiveViewService
+import spp.protocol.view.LiveViewEvent
+import spp.protocol.view.LiveViewSubscription
 import io.vertx.core.*
 import io.vertx.core.json.Json
 import io.vertx.core.json.JsonArray

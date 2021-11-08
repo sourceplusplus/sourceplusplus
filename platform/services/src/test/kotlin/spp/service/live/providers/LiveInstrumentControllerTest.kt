@@ -1,9 +1,9 @@
 package spp.service.live.providers
 
 import com.google.common.io.Resources
-import com.sourceplusplus.protocol.instrument.LiveSourceLocation
-import com.sourceplusplus.protocol.instrument.LiveVariable
-import com.sourceplusplus.protocol.instrument.breakpoint.LiveBreakpoint
+import spp.protocol.instrument.LiveSourceLocation
+import spp.protocol.instrument.LiveVariable
+import spp.protocol.instrument.breakpoint.LiveBreakpoint
 import io.vertx.core.Vertx
 import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxExtension
@@ -22,7 +22,7 @@ class LiveInstrumentControllerTest {
 
     @Test
     fun expiredPendingInstrument(vertx: Vertx, testContext: VertxTestContext) {
-        vertx.eventBus().consumer<Any>(ProbeAddress.LIVE_BREAKPOINT_REMOTE.address) {
+        vertx.eventBus().consumer<Any>(ProbeAddress.LIVE_BREAKPOINT_REMOTE.address + ":" + "probeId") {
             //ignore
         }
 
