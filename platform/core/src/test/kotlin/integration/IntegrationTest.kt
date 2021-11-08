@@ -68,6 +68,7 @@ open class IntegrationTest {
         val vertx = Vertx.vertx()!!
         lateinit var tcpSocket: NetSocket
         lateinit var discovery: ServiceDiscovery
+        val platformHost = System.getenv("SPP_PLATFORM_HOST") ?: "localhost"
 
         private val parser = FrameParser { event: AsyncResult<JsonObject> ->
             if (event.failed()) {
@@ -212,7 +213,6 @@ open class IntegrationTest {
         @BeforeAll
         @JvmStatic
         fun setup() {
-            val platformHost = System.getenv("SPP_PLATFORM_HOST") ?: "localhost"
             val platformPort = 5455
             val useSsl = true
             val trustAll = true
