@@ -464,14 +464,12 @@ class LiveInstrumentController(private val vertx: Vertx) {
         location: LiveSourceLocation,
         debuggerCommand: LiveInstrumentCommand
     ) = runBlocking(vertx.dispatcher()) {
-        ProbeTracker.getActiveProbes(vertx)
-            .filter {
-                (location.service == null || it.meta["service"] == location.service) &&
-                        (location.serviceInstance == null || it.meta["service_instance"] == location.serviceInstance)
-            }
-            .forEach {
-                vertx.eventBus().send(address.address + ":" + it.probeId, JsonObject.mapFrom(debuggerCommand))
-            }
+        ProbeTracker.getActiveProbes(vertx).filter {
+            (location.service == null || it.meta["service"] == location.service) &&
+                    (location.serviceInstance == null || it.meta["service_instance"] == location.serviceInstance)
+        }.forEach {
+            vertx.eventBus().send(address.address + ":" + it.probeId, JsonObject.mapFrom(debuggerCommand))
+        }
     }
 
     fun getLiveInstrumentById(id: String): LiveInstrument? {
