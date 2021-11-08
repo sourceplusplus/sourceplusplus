@@ -1,8 +1,8 @@
 package spp.service.logging.providers
 
-import com.sourceplusplus.protocol.artifact.log.LogCountSummary
-import com.sourceplusplus.protocol.error.MissingRemoteException
-import com.sourceplusplus.protocol.service.logging.LogCountIndicatorService
+import spp.protocol.artifact.log.LogCountSummary
+import spp.protocol.error.MissingRemoteException
+import spp.protocol.service.logging.LogCountIndicatorService
 import io.vertx.core.AsyncResult
 import io.vertx.core.Future
 import io.vertx.core.Handler

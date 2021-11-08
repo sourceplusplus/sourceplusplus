@@ -1,9 +1,9 @@
 package integration
 
-import com.sourceplusplus.protocol.SourceMarkerServices
-import com.sourceplusplus.protocol.instrument.LiveSourceLocation
-import com.sourceplusplus.protocol.instrument.breakpoint.LiveBreakpoint
-import com.sourceplusplus.protocol.service.live.LiveInstrumentService
+import spp.protocol.SourceMarkerServices
+import spp.protocol.instrument.LiveSourceLocation
+import spp.protocol.instrument.breakpoint.LiveBreakpoint
+import spp.protocol.service.live.LiveInstrumentService
 import io.vertx.junit5.VertxExtension
 import io.vertx.junit5.VertxTestContext
 import io.vertx.serviceproxy.ServiceProxyBuilder

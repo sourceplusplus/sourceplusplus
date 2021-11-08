@@ -1,9 +1,9 @@
 package spp.platform.marker
 
-import com.sourceplusplus.protocol.SourceMarkerServices.Provide
-import com.sourceplusplus.protocol.SourceMarkerServices.Status
-import com.sourceplusplus.protocol.SourceMarkerServices.Utilize
-import com.sourceplusplus.protocol.status.MarkerConnection
+import spp.protocol.SourceMarkerServices.Provide
+import spp.protocol.SourceMarkerServices.Status
+import spp.protocol.SourceMarkerServices.Utilize
+import spp.protocol.status.MarkerConnection
 import io.vertx.core.buffer.Buffer
 import io.vertx.core.http.ClientAuth
 import io.vertx.core.json.Json
