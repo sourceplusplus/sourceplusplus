@@ -10,7 +10,8 @@ import io.vertx.core.json.Json
 import io.vertx.core.json.JsonObject
 import io.vertx.kotlin.core.json.get
 import io.vertx.kotlin.coroutines.dispatcher
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import org.slf4j.LoggerFactory
@@ -463,7 +464,8 @@ class LiveInstrumentController(private val vertx: Vertx) {
         address: ProbeAddress,
         location: LiveSourceLocation,
         debuggerCommand: LiveInstrumentCommand
-    ) = runBlocking(vertx.dispatcher()) {
+    ) = GlobalScope.launch(vertx.dispatcher()) {
+        log.debug("Dispatching command: {}", debuggerCommand)
         ProbeTracker.getActiveProbes(vertx).filter {
             (location.service == null || it.meta["service"] == location.service) &&
                     (location.serviceInstance == null || it.meta["service_instance"] == location.serviceInstance)
