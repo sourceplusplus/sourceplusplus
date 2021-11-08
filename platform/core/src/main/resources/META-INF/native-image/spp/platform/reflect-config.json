@@ -1644,6 +1644,8 @@
     "fields":[
       {"name":"source", "allowWrite":true},
       {"name":"line", "allowWrite":true},
+      {"name":"service", "allowWrite":true},
+      {"name":"serviceInstance", "allowWrite":true},
       {"name":"commitId", "allowWrite":true},
       {"name":"fileChecksum", "allowWrite":true}
     ],
