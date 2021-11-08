@@ -150,12 +150,12 @@ class LiveInstrumentController(private val vertx: Vertx) {
         }
 
         //send active instruments on probe connection
-        vertx.eventBus().consumer<JsonObject>(ProbeAddress.REMOTE_REGISTERED.address) {
+        vertx.eventBus().consumer<JsonObject>(REMOTE_REGISTERED.address) {
             //todo: impl batch instrument add
             //todo: more efficient to just send batch add to specific probe instead of publish to all per connection
             //todo: probably need to redo pending boolean. it doesn't make sense here since pending just means
             // it has been applied to any instrument at all at any point
-            val remote = it.body().getString("address")
+            val remote = it.body().getString("address").substringBefore(":")
             if (remote == LIVE_BREAKPOINT_REMOTE.address) {
                 log.debug("Live breakpoint remote registered. Sending active live breakpoints")
                 liveInstruments.filter { it.instrument is LiveBreakpoint }.forEach {
