@@ -388,7 +388,7 @@ class LiveInstrumentController(private val vertx: Vertx) {
         val devMeter = DeveloperInstrument(selfId, meter)
         liveInstruments.add(devMeter)
         try {
-            dispatchCommand(LIVE_METER_REMOTE, debuggerCommand)
+            dispatchCommand(LIVE_METER_REMOTE, meter.location, debuggerCommand)
         } catch (ex: ReplyException) {
             return if (ex.failureType() == ReplyFailure.NO_HANDLERS) {
                 if (meter.applyImmediately) {
@@ -430,7 +430,7 @@ class LiveInstrumentController(private val vertx: Vertx) {
         val devBreakpoint = DeveloperInstrument(selfId, breakpoint)
         liveInstruments.add(devBreakpoint)
         try {
-            dispatchCommand(LIVE_BREAKPOINT_REMOTE, debuggerCommand)
+            dispatchCommand(LIVE_BREAKPOINT_REMOTE, breakpoint.location, debuggerCommand)
         } catch (ex: ReplyException) {
             return if (ex.failureType() == ReplyFailure.NO_HANDLERS) {
                 if (breakpoint.applyImmediately) {
@@ -460,12 +460,18 @@ class LiveInstrumentController(private val vertx: Vertx) {
     }
 
     private fun dispatchCommand(
-        address: ProbeAddress, debuggerCommand: LiveInstrumentCommand
+        address: ProbeAddress,
+        location: LiveSourceLocation,
+        debuggerCommand: LiveInstrumentCommand
     ) = runBlocking(vertx.dispatcher()) {
-        //todo: filter based on location
-        ProbeTracker.getActiveProbes(vertx).forEach {
-            vertx.eventBus().send(address.address + ":" + it.probeId, JsonObject.mapFrom(debuggerCommand))
-        }
+        ProbeTracker.getActiveProbes(vertx)
+            .filter {
+                (location.service == null || it.meta["service"] == location.service) &&
+                        (location.serviceInstance == null || it.meta["service_instance"] == location.serviceInstance)
+            }
+            .forEach {
+                vertx.eventBus().send(address.address + ":" + it.probeId, JsonObject.mapFrom(debuggerCommand))
+            }
     }
 
     fun getLiveInstrumentById(id: String): LiveInstrument? {
@@ -489,7 +495,7 @@ class LiveInstrumentController(private val vertx: Vertx) {
         val devLog = DeveloperInstrument(selfId, liveLog)
         liveInstruments.add(devLog)
         try {
-            dispatchCommand(LIVE_LOG_REMOTE, logCommand)
+            dispatchCommand(LIVE_LOG_REMOTE, liveLog.location, logCommand)
         } catch (ex: ReplyException) {
             return if (ex.failureType() == ReplyFailure.NO_HANDLERS) {
                 if (liveLog.applyImmediately) {
@@ -528,7 +534,7 @@ class LiveInstrumentController(private val vertx: Vertx) {
             LiveInstrumentContext()
         )
         debuggerCommand.context.addLiveInstrument(breakpoint)
-        dispatchCommand(LIVE_BREAKPOINT_REMOTE, debuggerCommand)
+        dispatchCommand(LIVE_BREAKPOINT_REMOTE, breakpoint.location, debuggerCommand)
 
         val jvmCause = if (cause == null) null else LiveStackTrace.fromString(cause)
         val waitingHandler = waitingApply.remove(breakpoint.id)
@@ -569,7 +575,7 @@ class LiveInstrumentController(private val vertx: Vertx) {
             LiveInstrumentContext()
         )
         debuggerCommand.context.addLiveInstrument(liveLog)
-        dispatchCommand(LIVE_LOG_REMOTE, debuggerCommand)
+        dispatchCommand(LIVE_LOG_REMOTE, liveLog.location, debuggerCommand)
 
         val jvmCause = if (cause == null) null else LiveStackTrace.fromString(cause)
         val waitingHandler = waitingApply.remove(liveLog.id)
@@ -610,7 +616,7 @@ class LiveInstrumentController(private val vertx: Vertx) {
             LiveInstrumentContext()
         )
         debuggerCommand.context.addLiveInstrument(meter)
-        dispatchCommand(LIVE_METER_REMOTE, debuggerCommand)
+        dispatchCommand(LIVE_METER_REMOTE, meter.location, debuggerCommand)
 
         val jvmCause = if (cause == null) null else LiveStackTrace.fromString(cause)
         val waitingHandler = waitingApply.remove(meter.id)
@@ -682,7 +688,7 @@ class LiveInstrumentController(private val vertx: Vertx) {
         if (result.isEmpty()) {
             log.info("Could not find live breakpoint(s) at: $location")
         } else {
-            dispatchCommand(LIVE_BREAKPOINT_REMOTE, debuggerCommand)
+            dispatchCommand(LIVE_BREAKPOINT_REMOTE, location, debuggerCommand)
             log.debug("Removed live breakpoint(s) at: $location")
 
             vertx.eventBus().publish(
@@ -708,7 +714,7 @@ class LiveInstrumentController(private val vertx: Vertx) {
         if (result.isEmpty()) {
             log.info("Could not find live log(s) at: $location")
         } else {
-            dispatchCommand(LIVE_LOG_REMOTE, debuggerCommand)
+            dispatchCommand(LIVE_LOG_REMOTE, location, debuggerCommand)
             log.debug("Removed live log(s) at: $location")
 
             vertx.eventBus().publish(
@@ -734,7 +740,7 @@ class LiveInstrumentController(private val vertx: Vertx) {
         if (result.isEmpty()) {
             log.info("Could not find live meter(s) at: $location")
         } else {
-            dispatchCommand(LIVE_METER_REMOTE, debuggerCommand)
+            dispatchCommand(LIVE_METER_REMOTE, location, debuggerCommand)
             log.debug("Removed live meter(s) at: $location")
 
             vertx.eventBus().publish(
