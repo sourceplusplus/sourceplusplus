@@ -39,7 +39,7 @@ class ProbeTracker : CoroutineVerticle() {
             }
         }
         vertx.eventBus().consumer<JsonObject>(ProbeAddress.REMOTE_REGISTERED.address) {
-            val remote = it.body().getString("address")
+            val remote = it.body().getString("address").substringBefore(":")
             val probeId = it.headers().get("probe_id")
             activeProbes[probeId]!!.remotes.add(remote)
             log.trace { msg("Probe {} registered {}", probeId, remote) }
