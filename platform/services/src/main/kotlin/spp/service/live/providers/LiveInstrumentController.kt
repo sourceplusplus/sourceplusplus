@@ -1,18 +1,5 @@
 package spp.service.live.providers
 
-import spp.protocol.SourceMarkerServices
-import spp.protocol.artifact.exception.LiveStackTrace
-import spp.protocol.artifact.exception.LiveStackTraceElement
-import spp.protocol.artifact.exception.sourceAsLineNumber
-import spp.protocol.error.MissingRemoteException
-import spp.protocol.instrument.breakpoint.LiveBreakpoint
-import spp.protocol.instrument.breakpoint.event.LiveBreakpointHit
-import spp.protocol.instrument.breakpoint.event.LiveBreakpointRemoved
-import spp.protocol.instrument.log.LiveLog
-import spp.protocol.instrument.log.event.LiveLogHit
-import spp.protocol.instrument.log.event.LiveLogRemoved
-import spp.protocol.instrument.meter.LiveMeter
-import spp.protocol.instrument.meter.event.LiveMeterRemoved
 import io.vertx.core.AsyncResult
 import io.vertx.core.Future
 import io.vertx.core.Handler
@@ -22,10 +9,26 @@ import io.vertx.core.eventbus.ReplyFailure
 import io.vertx.core.json.Json
 import io.vertx.core.json.JsonObject
 import io.vertx.kotlin.core.json.get
+import io.vertx.kotlin.coroutines.dispatcher
+import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import org.slf4j.LoggerFactory
+import spp.platform.probe.ProbeTracker
+import spp.protocol.SourceMarkerServices
+import spp.protocol.artifact.exception.LiveStackTrace
+import spp.protocol.artifact.exception.LiveStackTraceElement
+import spp.protocol.artifact.exception.sourceAsLineNumber
+import spp.protocol.error.MissingRemoteException
 import spp.protocol.instrument.*
+import spp.protocol.instrument.breakpoint.LiveBreakpoint
+import spp.protocol.instrument.breakpoint.event.LiveBreakpointHit
+import spp.protocol.instrument.breakpoint.event.LiveBreakpointRemoved
+import spp.protocol.instrument.log.LiveLog
+import spp.protocol.instrument.log.event.LiveLogHit
+import spp.protocol.instrument.log.event.LiveLogRemoved
+import spp.protocol.instrument.meter.LiveMeter
+import spp.protocol.instrument.meter.event.LiveMeterRemoved
 import spp.protocol.platform.PlatformAddress
 import spp.protocol.platform.error.EventBusUtil
 import spp.protocol.probe.ProbeAddress
@@ -385,7 +388,7 @@ class LiveInstrumentController(private val vertx: Vertx) {
         val devMeter = DeveloperInstrument(selfId, meter)
         liveInstruments.add(devMeter)
         try {
-            vertx.eventBus().publish(LIVE_METER_REMOTE.address, JsonObject.mapFrom(debuggerCommand))
+            dispatchCommand(LIVE_METER_REMOTE, debuggerCommand)
         } catch (ex: ReplyException) {
             return if (ex.failureType() == ReplyFailure.NO_HANDLERS) {
                 if (meter.applyImmediately) {
@@ -427,7 +430,7 @@ class LiveInstrumentController(private val vertx: Vertx) {
         val devBreakpoint = DeveloperInstrument(selfId, breakpoint)
         liveInstruments.add(devBreakpoint)
         try {
-            vertx.eventBus().publish(LIVE_BREAKPOINT_REMOTE.address, JsonObject.mapFrom(debuggerCommand))
+            dispatchCommand(LIVE_BREAKPOINT_REMOTE, debuggerCommand)
         } catch (ex: ReplyException) {
             return if (ex.failureType() == ReplyFailure.NO_HANDLERS) {
                 if (breakpoint.applyImmediately) {
@@ -456,6 +459,15 @@ class LiveInstrumentController(private val vertx: Vertx) {
         return Future.succeededFuture(breakpoint)
     }
 
+    private fun dispatchCommand(
+        address: ProbeAddress, debuggerCommand: LiveInstrumentCommand
+    ) = runBlocking(vertx.dispatcher()) {
+        //todo: filter based on location
+        ProbeTracker.getActiveProbes(vertx).forEach {
+            vertx.eventBus().send(address.address + ":" + it.probeId, JsonObject.mapFrom(debuggerCommand))
+        }
+    }
+
     fun getLiveInstrumentById(id: String): LiveInstrument? {
         return liveInstruments.find { it.instrument.id == id }?.instrument
     }
@@ -477,7 +489,7 @@ class LiveInstrumentController(private val vertx: Vertx) {
         val devLog = DeveloperInstrument(selfId, liveLog)
         liveInstruments.add(devLog)
         try {
-            vertx.eventBus().publish(LIVE_LOG_REMOTE.address, JsonObject.mapFrom(logCommand))
+            dispatchCommand(LIVE_LOG_REMOTE, logCommand)
         } catch (ex: ReplyException) {
             return if (ex.failureType() == ReplyFailure.NO_HANDLERS) {
                 if (liveLog.applyImmediately) {
@@ -516,7 +528,7 @@ class LiveInstrumentController(private val vertx: Vertx) {
             LiveInstrumentContext()
         )
         debuggerCommand.context.addLiveInstrument(breakpoint)
-        vertx.eventBus().publish(LIVE_BREAKPOINT_REMOTE.address, JsonObject.mapFrom(debuggerCommand))
+        dispatchCommand(LIVE_BREAKPOINT_REMOTE, debuggerCommand)
 
         val jvmCause = if (cause == null) null else LiveStackTrace.fromString(cause)
         val waitingHandler = waitingApply.remove(breakpoint.id)
@@ -557,7 +569,7 @@ class LiveInstrumentController(private val vertx: Vertx) {
             LiveInstrumentContext()
         )
         debuggerCommand.context.addLiveInstrument(liveLog)
-        vertx.eventBus().publish(LIVE_LOG_REMOTE.address, JsonObject.mapFrom(debuggerCommand))
+        dispatchCommand(LIVE_LOG_REMOTE, debuggerCommand)
 
         val jvmCause = if (cause == null) null else LiveStackTrace.fromString(cause)
         val waitingHandler = waitingApply.remove(liveLog.id)
@@ -598,7 +610,7 @@ class LiveInstrumentController(private val vertx: Vertx) {
             LiveInstrumentContext()
         )
         debuggerCommand.context.addLiveInstrument(meter)
-        vertx.eventBus().publish(LIVE_METER_REMOTE.address, JsonObject.mapFrom(debuggerCommand))
+        dispatchCommand(LIVE_METER_REMOTE, debuggerCommand)
 
         val jvmCause = if (cause == null) null else LiveStackTrace.fromString(cause)
         val waitingHandler = waitingApply.remove(meter.id)
@@ -670,7 +682,7 @@ class LiveInstrumentController(private val vertx: Vertx) {
         if (result.isEmpty()) {
             log.info("Could not find live breakpoint(s) at: $location")
         } else {
-            vertx.eventBus().publish(LIVE_BREAKPOINT_REMOTE.address, JsonObject.mapFrom(debuggerCommand))
+            dispatchCommand(LIVE_BREAKPOINT_REMOTE, debuggerCommand)
             log.debug("Removed live breakpoint(s) at: $location")
 
             vertx.eventBus().publish(
@@ -685,18 +697,18 @@ class LiveInstrumentController(private val vertx: Vertx) {
 
     fun removeLogs(selfId: String, location: LiveSourceLocation): AsyncResult<List<LiveInstrument>> {
         log.debug("Removing live log(s): $location")
-        val liveInstrumentCommand = LiveInstrumentCommand(
+        val debuggerCommand = LiveInstrumentCommand(
             LiveInstrumentCommand.CommandType.REMOVE_LIVE_INSTRUMENT,
             LiveInstrumentContext()
         )
-        liveInstrumentCommand.context.addLocation(location)
+        debuggerCommand.context.addLocation(location)
 
         val result = liveInstruments.filter { it.instrument.location == location && it.instrument is LiveLog }
         liveInstruments.removeAll(result.toSet())
         if (result.isEmpty()) {
             log.info("Could not find live log(s) at: $location")
         } else {
-            vertx.eventBus().request<JsonObject>(LIVE_LOG_REMOTE.address, JsonObject.mapFrom(liveInstrumentCommand))
+            dispatchCommand(LIVE_LOG_REMOTE, debuggerCommand)
             log.debug("Removed live log(s) at: $location")
 
             vertx.eventBus().publish(
@@ -711,18 +723,18 @@ class LiveInstrumentController(private val vertx: Vertx) {
 
     fun removeMeters(selfId: String, location: LiveSourceLocation): AsyncResult<List<LiveInstrument>> {
         log.debug("Removing live meter(s): $location")
-        val liveInstrumentCommand = LiveInstrumentCommand(
+        val debuggerCommand = LiveInstrumentCommand(
             LiveInstrumentCommand.CommandType.REMOVE_LIVE_INSTRUMENT,
             LiveInstrumentContext()
         )
-        liveInstrumentCommand.context.addLocation(location)
+        debuggerCommand.context.addLocation(location)
 
         val result = liveInstruments.filter { it.instrument.location == location && it.instrument is LiveMeter }
         liveInstruments.removeAll(result.toSet())
         if (result.isEmpty()) {
             log.info("Could not find live meter(s) at: $location")
         } else {
-            vertx.eventBus().request<JsonObject>(LIVE_METER_REMOTE.address, JsonObject.mapFrom(liveInstrumentCommand))
+            dispatchCommand(LIVE_METER_REMOTE, debuggerCommand)
             log.debug("Removed live meter(s) at: $location")
 
             vertx.eventBus().publish(
