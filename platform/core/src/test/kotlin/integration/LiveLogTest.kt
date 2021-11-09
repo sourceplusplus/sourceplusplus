@@ -23,7 +23,7 @@ import java.util.*
 import java.util.concurrent.TimeUnit
 
 @ExtendWith(VertxExtension::class)
-class LiveLogTest : IntegrationTest() {
+class LiveLogTest : PlatformIntegrationTest() {
 
     private val log = LoggerFactory.getLogger(LiveLogTest::class.java)
 

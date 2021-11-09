@@ -24,7 +24,7 @@ import java.util.*
 import java.util.concurrent.TimeUnit
 
 @ExtendWith(VertxExtension::class)
-class LiveBreakpointTest : IntegrationTest() {
+class LiveBreakpointTest : PlatformIntegrationTest() {
 
     private val log = LoggerFactory.getLogger(LiveBreakpointTest::class.java)
 

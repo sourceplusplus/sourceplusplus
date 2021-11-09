@@ -22,7 +22,7 @@ import spp.platform.core.auth.error.InstrumentAccessDenied
 import java.util.concurrent.TimeUnit
 
 @ExtendWith(VertxExtension::class)
-class JWTTest : IntegrationTest() {
+class JWTTest : PlatformIntegrationTest() {
 
     private val log = LoggerFactory.getLogger(JWTTest::class.java)
 

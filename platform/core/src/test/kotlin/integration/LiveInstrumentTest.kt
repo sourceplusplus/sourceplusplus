@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory
 import java.util.concurrent.TimeUnit
 
 @ExtendWith(VertxExtension::class)
-class LiveInstrumentTest : IntegrationTest() {
+class LiveInstrumentTest : PlatformIntegrationTest() {
 
     private val log = LoggerFactory.getLogger(LiveInstrumentTest::class.java)
 
