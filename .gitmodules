@@ -13,12 +13,12 @@
 [submodule "interfaces/cli"]
 	path = interfaces/cli
 	url = https://github.com/sourceplusplus/interface-cli
+[submodule "interfaces/jetbrains"]
+	path = interfaces/jetbrains
+	url = https://github.com/sourceplusplus/interface-jetbrains
 [submodule "processors/instrument"]
 	path = processors/instrument
 	url = https://github.com/sourceplusplus/processor-instrument
 [submodule "processors/log-summary"]
 	path = processors/log-summary
 	url = https://github.com/sourceplusplus/processor-log-summary
-[submodule "interfaces/jetbrains"]
-	path = interfaces/jetbrains
-	url = https://github.com/sourceplusplus/interface-jetbrains
