@@ -57,8 +57,6 @@ jobs:
 
       - name: Run integration tests
         run: ./gradlew -p platform test -Dtest.profile=integration -Dbuild.profile=debian
-      - name: Build S++ Plugin
-        run: ./gradlew buildPlugin
 
       - run: ./gradlew :platform:composeLogs
         if: ${{ always() }}
@@ -82,11 +80,6 @@ jobs:
         with:
           name: spp-platform-${{ env.SPP_PLATFORM_VERSION }}-linux-amd64.tar.gz
           path: ./spp-platform-${{ env.SPP_PLATFORM_VERSION }}-linux-amd64.tar.gz
-      - name: Upload S++ Plugin
-        uses: actions/upload-artifact@v2
-        with:
-          name: spp-plugin-${{ env.SPP_PLATFORM_VERSION }}.zip
-          path: ./interfaces/marker/build/spp-plugin-${{ env.SPP_PLATFORM_VERSION }}.zip
 
       - name: Zip S++ processors
         run: find docker/e2e -name 'spp-processor-*' | zip -j spp-processors.zip -@
@@ -124,21 +117,6 @@ jobs:
           release_name: v${{ needs.debian-build.outputs.version }}
           body: ${{ needs.build.outputs.changelog }}
           draft: true
-
-      - name: Download Source++ Plugin artifact
-        uses: actions/download-artifact@v2
-        with:
-          name: spp-plugin-${{ needs.debian-build.outputs.version }}.zip
-
-      - name: Upload Source++ Plugin asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.createDraft.outputs.upload_url }}
-          asset_path: ./spp-plugin-${{ needs.debian-build.outputs.version }}.zip
-          asset_name: spp-plugin-${{ needs.debian-build.outputs.version }}.zip
-          asset_content_type: application/zip
 
       - name: Download S++ processors artifact
         uses: actions/download-artifact@v2
@@ -230,11 +208,6 @@ jobs:
         uses: geekyeggo/delete-artifact@v1
         with:
           name: spp-platform-${{ needs.debian-build.outputs.version }}-linux-amd64.tar.gz
-
-      - name: Delete Source++ Plugin
-        uses: geekyeggo/delete-artifact@v1
-        with:
-          name: spp-plugin-${{ needs.debian-build.outputs.version }}.zip
 
       - name: Delete Source++ processors
         uses: geekyeggo/delete-artifact@v1
