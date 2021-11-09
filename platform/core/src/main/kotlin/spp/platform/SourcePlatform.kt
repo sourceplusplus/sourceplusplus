@@ -5,9 +5,6 @@ import ch.qos.logback.classic.LoggerContext
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.module.SimpleModule
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper
-import spp.protocol.ProtocolMarshaller
-import spp.protocol.ProtocolMarshaller.ProtocolMessageCodec
-import spp.protocol.SourceMarkerServices.Utilize
 import io.vertx.core.DeploymentOptions
 import io.vertx.core.Promise
 import io.vertx.core.Vertx
@@ -69,6 +66,9 @@ import spp.platform.util.CertsToJksOptionsConverter
 import spp.platform.util.KSerializers
 import spp.platform.util.Msg.msg
 import spp.platform.util.RequestContext
+import spp.protocol.ProtocolMarshaller
+import spp.protocol.ProtocolMarshaller.ProtocolMessageCodec
+import spp.protocol.SourceMarkerServices.Utilize
 import spp.protocol.platform.PlatformAddress
 import spp.protocol.probe.ProbeAddress
 import spp.protocol.processor.ProcessorAddress
@@ -447,14 +447,21 @@ class SourcePlatform : CoroutineVerticle() {
         log.debug("Generating signed probe")
         val platformHost = System.getenv("SPP_CLUSTER_URL") ?: "localhost"
         val platformName = System.getenv("SPP_CLUSTER_NAME") ?: "unknown"
-        val config = SourceProbeConfig(platformHost, platformName)
-        vertx.eventBus().request<String>(PlatformAddress.GENERATE_PROBE.address, config) {
+        val probeVersion = route.queryParam("version")
+        val config = if (probeVersion.isNotEmpty()) {
+            SourceProbeConfig(platformHost, platformName, probeVersion = probeVersion[0])
+        } else {
+            SourceProbeConfig(platformHost, platformName, probeVersion = "latest")
+        }
+
+        vertx.eventBus().request<JsonObject>(PlatformAddress.GENERATE_PROBE.address, config) {
             if (it.succeeded()) {
-                val signedProbe = File(it.result().body())
                 GlobalScope.launch(vertx.dispatcher()) {
-                    route.response()
-                        .putHeader("content-disposition", "attachment; filename=${signedProbe.name}")
-                        .sendFile(it.result().body())
+                    val genProbe = it.result().body()
+                    route.response().putHeader(
+                        "content-disposition",
+                        "attachment; filename=spp-probe-${genProbe.getString("probe_version")}.jar"
+                    ).sendFile(genProbe.getString("file_location"))
                     log.info("Signed probe downloaded")
                 }
             } else {
