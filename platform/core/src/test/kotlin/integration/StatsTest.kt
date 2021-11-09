@@ -10,7 +10,7 @@ import org.junit.jupiter.api.extension.ExtendWith
 import java.util.concurrent.TimeUnit
 
 @ExtendWith(VertxExtension::class)
-class StatsTest : IntegrationTest() {
+class StatsTest : PlatformIntegrationTest() {
 
     @Test
     fun verifyStats() {
