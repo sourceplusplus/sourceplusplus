@@ -22,10 +22,6 @@ Powered by [Apache SkyWalking](https://github.com/apache/skywalking), Source++ e
 - Feedback whitelist/blacklist
 - PII redaction
 
-## Architecture
-
-![](.github/media/sourcepp_architecture.jpg)
-
 ## Get Started
 
 <!-- - [Get Source++](https://sourceplusplus.com/get/) -->
