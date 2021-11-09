@@ -47,7 +47,7 @@ Follow this [document](https://github.com/sourceplusplus/documentation/blob/mast
 
 The Source++ documentation is available [here](https://docs.sourceplusplus.com).
 
-## Directory Structure
+## Platform Structure
 
     .
     ├── config              # Development setup, Detekt, etc.
