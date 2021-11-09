@@ -19,3 +19,6 @@
 [submodule "processors/log-summary"]
 	path = processors/log-summary
 	url = https://github.com/sourceplusplus/processor-log-summary
+[submodule "interfaces/jetbrains"]
+	path = interfaces/jetbrains
+	url = https://github.com/sourceplusplus/interface-jetbrains
