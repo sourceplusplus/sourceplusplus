@@ -51,6 +51,9 @@ The Source++ documentation is available [here](https://docs.sourceplusplus.com).
 
     .
     ├── config              # Development setup, Detekt, etc.
+    ├── deploy              # Deployment configurations
+        ├── docker          # Docker setup (for dev)
+        └── kubernetes      # Kubernetes setup (for prod)
     ├── docker              # Docker setup files
         ├── e2e             # End-to-end testing environment
         ├── spp-oap-server  # SkyWalking OAP (incl. Source++ processor) image
@@ -59,7 +62,7 @@ The Source++ documentation is available [here](https://docs.sourceplusplus.com).
     ├── gradle              # Gradle wrapper
     ├── interfaces          # Live coding clients
         ├── cli             # Command-line interface
-        └── marker          # IDE plugin
+        └── jetbrains       # JetBrains IDE plugin
     ├── platform            # Live coding server
         ├── common          # Common code
         ├── core            # Core code
