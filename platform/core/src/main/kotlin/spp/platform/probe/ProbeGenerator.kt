@@ -9,16 +9,18 @@ import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import mu.KotlinLogging
+import org.apache.commons.io.FileUtils
 import org.apache.commons.io.IOUtils
 import org.bouncycastle.cert.X509CertificateHolder
 import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter
 import org.bouncycastle.openssl.PEMParser
 import org.bouncycastle.openssl.jcajce.JcaPEMWriter
+import org.kohsuke.github.GitHub
 import org.zeroturnaround.zip.ZipUtil
 import spp.platform.probe.config.SourceProbeConfig
 import spp.protocol.platform.PlatformAddress
 import java.io.*
-import java.nio.file.NoSuchFileException
+import java.net.URL
 import java.security.cert.X509Certificate
 import java.util.*
 import java.util.zip.ZipEntry
@@ -30,22 +32,30 @@ class ProbeGenerator : AbstractVerticle() {
     private val log = KotlinLogging.logger {}
     private val objectMapper = ObjectMapper()
     private val yamlMapper = YAMLMapper()
-    private val generatedProbes = mutableMapOf<SourceProbeConfig, File>()
+    private val generatedProbes = mutableMapOf<SourceProbeConfig, JsonObject>()
+    private val githubApi by lazy { GitHub.connectAnonymously() }
 
     override fun start() {
         vertx.eventBus().consumer<SourceProbeConfig>(PlatformAddress.GENERATE_PROBE.address) {
-            val config = it.body()
-            try {
-                val fileLocation = generateProbe(config)
-                it.reply(fileLocation)
-            } catch (ignored: NoSuchFileException) {
-                val missingPath = File("${config.probeLocation}/spp-probe-${config.probeVersion}.jar").absolutePath
-                log.error("Missing probe: $missingPath")
-                it.fail(404, "Missing probe: $missingPath")
-            } catch (ex: Throwable) {
-                ex.printStackTrace()
-                it.fail(500, ex.message)
+            var config = it.body()
+            val probeRelease = if (config.probeVersion == "latest") {
+                val probeRelease = githubApi.getRepository("sourceplusplus/probe-jvm").latestRelease
+                config = config.copy(probeVersion = probeRelease.tagName)
+                probeRelease
+            } else {
+                githubApi.getRepository("sourceplusplus/probe-jvm").getReleaseByTagName(config.probeVersion)
             }
+            if (probeRelease == null) {
+                log.error { "Probe release not found: ${config.probeVersion}" }
+                it.fail(404, "Probe release not found: ${config.probeVersion}")
+                return@consumer
+            }
+
+            val downloadUrl = probeRelease.listAssets()
+                .find { it.name.contains("spp-probe.jar") }!!.browserDownloadUrl
+            val destFile = File(Files.createTempDir(), "spp-probe-${probeRelease.tagName}.jar")
+            FileUtils.copyURLToFile(URL(downloadUrl), destFile)
+            it.reply(generateProbe(destFile, config))
         }
 
         //pre-generate default configuration probe
@@ -54,32 +64,40 @@ class ProbeGenerator : AbstractVerticle() {
             val platformName = System.getenv("SPP_CLUSTER_NAME")
             if (!platformHost.isNullOrEmpty() && !platformName.isNullOrEmpty()) {
                 log.debug("Pre-generating default configuration probe")
-                val config = SourceProbeConfig(platformHost, platformName)
-                generateProbe(config)
+                val probeRelease = githubApi.getRepository("sourceplusplus/probe-jvm").latestRelease
+                val downloadUrl = probeRelease.listAssets()
+                    .find { it.name.contains("spp-probe.jar") }!!.browserDownloadUrl
+                val destFile = File(Files.createTempDir(), "spp-probe-${probeRelease.tagName}.jar")
+                FileUtils.copyURLToFile(URL(downloadUrl), destFile)
+
+                val config = SourceProbeConfig(platformHost, platformName, probeVersion = probeRelease.tagName)
+                generateProbe(destFile, config)
             } else {
                 log.warn("Skipped pre-generating default configuration probe")
             }
         }
     }
 
-    private fun generateProbe(config: SourceProbeConfig): String {
-        return if (generatedProbes[config]?.exists() == true) {
-            generatedProbes[config]!!.absolutePath
-        } else {
-            generatedProbes.remove(config)
-            val crtFileData = File("config/spp-platform.crt").readText()
-            val crtParser = PEMParser(StringReader(crtFileData))
-            val crtHolder = crtParser.readObject() as X509CertificateHolder
-            val certificate = JcaX509CertificateConverter().getCertificate(crtHolder)
-            val probePath = generateProbe(config, certificate)
-            generatedProbes[config] = probePath
-            return probePath.absolutePath
+    private fun generateProbe(baseProbe: File, config: SourceProbeConfig): JsonObject {
+        val existingProbe = generatedProbes[config]
+        if (existingProbe != null && File(existingProbe.getString("file_location")).exists()) {
+            return existingProbe
         }
+
+        generatedProbes.remove(config)
+        val crtFileData = File("config/spp-platform.crt").readText()
+        val crtParser = PEMParser(StringReader(crtFileData))
+        val crtHolder = crtParser.readObject() as X509CertificateHolder
+        val certificate = JcaX509CertificateConverter().getCertificate(crtHolder)
+        val probePath = generateProbe(baseProbe, config, certificate)
+        val cache = JsonObject().put("probe_version", config.probeVersion).put("file_location", probePath.absolutePath)
+        generatedProbes[config] = cache
+        return cache
     }
 
-    private fun generateProbe(config: SourceProbeConfig, certificate: X509Certificate): File {
+    private fun generateProbe(baseProbe: File, config: SourceProbeConfig, certificate: X509Certificate): File {
         val tempDir = Files.createTempDir()
-        unzip(File("${config.probeLocation}/spp-probe-${config.probeVersion}.jar"), tempDir)
+        unzip(baseProbe, tempDir)
 
         val crt = StringWriter()
         val writer = JcaPEMWriter(crt)
