@@ -14,7 +14,7 @@ import org.junit.jupiter.api.extension.ExtendWith
 import java.util.concurrent.TimeUnit
 
 @ExtendWith(VertxExtension::class)
-class MetaTest : IntegrationTest() {
+class MetaTest : PlatformIntegrationTest() {
 
     @Test
     fun multipleMetaAttributes() {

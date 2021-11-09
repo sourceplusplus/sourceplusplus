@@ -38,7 +38,7 @@ import java.io.File
 import java.util.*
 
 @ExtendWith(VertxExtension::class)
-open class IntegrationTest {
+open class PlatformIntegrationTest {
 
     companion object {
         const val SYSTEM_JWT_TOKEN =
@@ -63,7 +63,7 @@ open class IntegrationTest {
                     "GD34CjXerSSBHyp_Em1K7lM1wWZBWFQDUr6Je7OZnl2uPUkmGNpm-lxhx2w9_Za9Ylq9vuCCV2u7TfWTBY0-nBB-f0sMjrbeaq" +
                     "M2NYTigNAY8PqDKn5IiLBNiGkdGgdQNRiiz0vuxPumt268aa6_Kf_EY"
 
-        private val log = LoggerFactory.getLogger(IntegrationTest::class.java)
+        private val log = LoggerFactory.getLogger(PlatformIntegrationTest::class.java)
         private val INSTANCE_ID = UUID.randomUUID().toString()
         val vertx = Vertx.vertx()!!
         lateinit var tcpSocket: NetSocket
