@@ -53,7 +53,10 @@ jobs:
           until $(curl --header "Authorization: Bearer ${{ env.SPP_JWT_TOKEN }}" --insecure --output /dev/null --silent --fail https://localhost:5445/health); do printf '.'; sleep 5; done
       - run: sleep 30s
 
-      - name: Run integration tests
+      - name: Run unit tests
+        run: ./gradlew test
+
+      - name: Run platform integration tests
         run: ./gradlew -p platform test -Dtest.profile=integration -Dbuild.profile=jvm
 
       - run: ./gradlew :platform:composeLogs
