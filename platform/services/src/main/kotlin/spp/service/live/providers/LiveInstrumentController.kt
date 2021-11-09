@@ -14,8 +14,9 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
-import org.slf4j.LoggerFactory
+import mu.KotlinLogging
 import spp.platform.probe.ProbeTracker
+import spp.platform.util.Msg.msg
 import spp.protocol.SourceMarkerServices
 import spp.protocol.artifact.exception.LiveStackTrace
 import spp.protocol.artifact.exception.LiveStackTraceElement
@@ -45,7 +46,7 @@ import java.util.concurrent.atomic.AtomicInteger
 class LiveInstrumentController(private val vertx: Vertx) {
 
     companion object {
-        private val log = LoggerFactory.getLogger(LiveInstrumentController::class.java)
+        private val log = KotlinLogging.logger {}
 
         private fun toLiveVariable(varName: String, scope: LiveVariableScope?, varData: JsonObject): LiveVariable {
             val liveClass = varData.getString("@class")
@@ -465,11 +466,19 @@ class LiveInstrumentController(private val vertx: Vertx) {
         location: LiveSourceLocation,
         debuggerCommand: LiveInstrumentCommand
     ) = GlobalScope.launch(vertx.dispatcher()) {
-        log.debug("Dispatching command: {}", debuggerCommand)
-        ProbeTracker.getActiveProbes(vertx).filter {
+        val sendToProbes = ProbeTracker.getActiveProbes(vertx).filter {
             (location.service == null || it.meta["service"] == location.service) &&
                     (location.serviceInstance == null || it.meta["service_instance"] == location.serviceInstance)
-        }.forEach {
+        }
+        if (sendToProbes.isEmpty()) {
+            log.warn("No active probes found to receive command")
+            return@launch
+        } else {
+            log.debug("Dispatching {} to {} probes", debuggerCommand.commandType, sendToProbes.size)
+        }
+
+        sendToProbes.forEach {
+            log.trace { msg("Dispatching command to probe: {}", it.probeId) }
             vertx.eventBus().send(address.address + ":" + it.probeId, JsonObject.mapFrom(debuggerCommand))
         }
     }

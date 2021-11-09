@@ -45,7 +45,7 @@ class TestServiceDiscoveryBackend : ServiceDiscoveryBackend {
         }
         FrameHelper.sendFrame(
             BridgeEventType.SEND.name.toLowerCase(), "get-records",
-            replyAddress, JsonObject(), true, JsonObject(), IntegrationTest.tcpSocket
+            replyAddress, JsonObject(), true, JsonObject(), PlatformIntegrationTest.tcpSocket
         )
     }
 
