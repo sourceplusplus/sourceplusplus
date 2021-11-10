@@ -103,7 +103,7 @@ tasks.register("clean") {
 }
 
 tasks.register<Copy>("updateDockerFiles") {
-    dependsOn(":platform:core:build", ":processors:instrument:build", ":processors:log-summary:build")
+    dependsOn(":platform:core:jar", ":processors:instrument:jar", ":processors:log-summary:jar")
     if (System.getProperty("build.profile") == "debian") {
         doFirst {
             if (!File(projectDir, "core/build/graal/spp-platform").exists()) {
