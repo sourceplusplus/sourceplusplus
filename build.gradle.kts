@@ -3,6 +3,7 @@ import java.net.URL
 
 plugins {
     id("com.dorongold.task-tree") version "2.1.0"
+    id("org.jetbrains.kotlin.plugin.noarg") apply false
 }
 
 val platformVersion: String by project
