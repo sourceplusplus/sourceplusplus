@@ -40,8 +40,13 @@ jobs:
           VERSION="$(echo "$PROPERTIES" | grep "^version:" | cut -f2- -d ' ')"
           echo "::set-output name=version::$VERSION"
           echo "SPP_PLATFORM_VERSION=$VERSION" >> $GITHUB_ENV
-      - name: Build & start platform
-        run: ./gradlew -p platform assemble nativeImage updateDockerFiles composeUp -Dbuild.profile=debian
+
+      - name: Assemble everything
+        run: ./gradlew assemble
+
+      - name: Start platform
+        run: ./gradlew -p platform nativeImage updateDockerFiles composeUp -Dbuild.profile=debian
+
       - name: Compress platform
         run: curl -O -J -L https://github.com/upx/upx/releases/download/v3.96/upx-3.96-amd64_linux.tar.xz && tar -xJf upx-3.96-amd64_linux.tar.xz && ./upx-3.96-amd64_linux/upx platform/core/build/graal/spp-platform
       - name: Docker IPs
@@ -56,7 +61,7 @@ jobs:
       - run: sleep 30s
 
       - name: Run unit tests
-        run: ./gradlew test
+        run: ./gradlew test -x :interfaces:jetbrains:test
 
       - name: Run platform integration tests
         run: ./gradlew -p platform test -Dtest.profile=integration -Dbuild.profile=debian
