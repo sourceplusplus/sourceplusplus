@@ -77,7 +77,7 @@ tasks.getByName<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("sha
     configurations.add(project.configurations.runtimeClasspath.get())
     configurations.add(project.configurations.shadow.get())
 }
-tasks.getByName("build").dependsOn("shadowJar")
+tasks.getByName("jar").dependsOn("shadowJar")
 
 tasks.getByName<Test>("test") {
     failFast = true
