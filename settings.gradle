@@ -11,7 +11,7 @@ pluginManagement {
         id 'io.gitlab.arturbosch.detekt' version "1.18.1" apply false
         id 'com.github.johnrengelman.shadow' version "7.1.0" apply false
         id 'com.palantir.graal' version "0.10.0" apply false
-        id 'com.apollographql.apollo' version "2.5.9" apply false
+        id 'com.apollographql.apollo' version "2.5.10" apply false
     }
 }
 
@@ -19,7 +19,14 @@ rootProject.buildFileName = "build.gradle.kts"
 rootProject.name = 'spp-platform'
 
 include 'interfaces:cli'
-include 'interfaces:marker'
+include 'interfaces:jetbrains'
+include 'interfaces:jetbrains:mapper'
+include 'interfaces:jetbrains:marker'
+include 'interfaces:jetbrains:marker:jvm-marker'
+include 'interfaces:jetbrains:marker:py-marker'
+include 'interfaces:jetbrains:monitor:skywalking'
+include 'interfaces:jetbrains:plugin:jetbrains'
+include 'interfaces:portal'
 include 'platform'
 include 'protocol'
 include 'platform:core'
