@@ -61,7 +61,7 @@ jobs:
       - run: sleep 30s
 
       - name: Run unit tests
-        run: ./gradlew test -x :interfaces:jetbrains:test
+        run: ./gradlew test
 
       - name: Run platform integration tests
         run: ./gradlew -p platform test -Dtest.profile=integration -Dbuild.profile=debian
