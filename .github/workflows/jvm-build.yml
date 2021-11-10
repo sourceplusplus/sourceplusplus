@@ -20,7 +20,7 @@ jobs:
     if: ${{ !contains(github.event.pull_request.head.ref, '#docs') && !(startsWith(github.event.head_commit.message, 'Merge pull request') && contains(github.event.head_commit.message, '#docs')) }}
 
     runs-on: ubuntu-latest
-    timeout-minutes: 17
+    timeout-minutes: 15
     concurrency: 
       group: ${{ github.workflow }}-${{ github.ref }}
       cancel-in-progress: true
@@ -39,8 +39,11 @@ jobs:
           echo "::set-output name=version::$VERSION"
           echo "SPP_PLATFORM_VERSION=$VERSION" >> $GITHUB_ENV
 
-      - name: Build & start platform
-        run: ./gradlew -p platform assemble updateDockerFiles composeUp -Dbuild.profile=jvm
+      - name: Assemble platform
+        run: ./gradlew -p platform assemble
+
+      - name: Start platform
+        run: ./gradlew -p platform updateDockerFiles composeUp -Dbuild.profile=jvm
 
       - name: Docker IPs
         run: docker inspect --format='{{.Name}} - {{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $(docker ps -aq)
@@ -52,9 +55,6 @@ jobs:
         run: |
           until $(curl --header "Authorization: Bearer ${{ env.SPP_JWT_TOKEN }}" --insecure --output /dev/null --silent --fail https://localhost:5445/health); do printf '.'; sleep 5; done
       - run: sleep 30s
-
-      - name: Run unit tests
-        run: ./gradlew test
 
       - name: Run platform integration tests
         run: ./gradlew -p platform test -Dtest.profile=integration -Dbuild.profile=jvm
