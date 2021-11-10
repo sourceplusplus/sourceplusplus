@@ -28,6 +28,7 @@ version = platformVersion
 dependencies {
     implementation(project(":platform:services"))
     implementation(project(":platform:common"))
+    implementation("org.kohsuke:github-api:1.135")
 
     shadow(project(":processors:instrument")) //todo: figure out why extra configurations.add() and this are needed
     shadow(project(":processors:log-summary")) //todo: figure out why extra configurations.add() and this are needed
@@ -76,7 +77,7 @@ tasks.getByName<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("sha
     configurations.add(project.configurations.runtimeClasspath.get())
     configurations.add(project.configurations.shadow.get())
 }
-tasks.getByName("build").dependsOn("shadowJar")
+tasks.getByName("jar").dependsOn("shadowJar")
 
 tasks.getByName<Test>("test") {
     failFast = true

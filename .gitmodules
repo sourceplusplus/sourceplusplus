@@ -1,9 +1,6 @@
 [submodule "documentation"]
 	path = documentation
 	url = https://github.com/sourceplusplus/documentation
-[submodule "interfaces/marker/SourceMarker"]
-	path = interfaces/marker/SourceMarker
-	url = https://github.com/sourceplusplus/SourceMarker
 [submodule "protocol"]
 	path = protocol
 	url = https://github.com/sourceplusplus/protocol
@@ -16,6 +13,12 @@
 [submodule "interfaces/cli"]
 	path = interfaces/cli
 	url = https://github.com/sourceplusplus/interface-cli
+[submodule "interfaces/jetbrains"]
+	path = interfaces/jetbrains
+	url = https://github.com/sourceplusplus/interface-jetbrains
+[submodule "interfaces/portal"]
+	path = interfaces/portal
+	url = https://github.com/sourceplusplus/interface-portal
 [submodule "processors/instrument"]
 	path = processors/instrument
 	url = https://github.com/sourceplusplus/processor-instrument
