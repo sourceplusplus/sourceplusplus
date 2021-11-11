@@ -38,5 +38,6 @@ include ':probes:jvm:services'
 
 include ':probes:python'
 
+include ':processors:dependencies'
 include ':processors:instrument'
 include ':processors:log-summary'

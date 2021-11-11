@@ -8,6 +8,7 @@ plugins {
 
 val platformGroup: String by project
 val platformVersion: String by project
+val processorDependenciesVersion: String by project
 val instrumentProcessorVersion: String by project
 val logSummaryProcessorVersion: String by project
 
@@ -103,7 +104,10 @@ tasks.register("clean") {
 }
 
 tasks.register<Copy>("updateDockerFiles") {
-    dependsOn(":platform:core:jar", ":processors:instrument:jar", ":processors:log-summary:jar")
+    dependsOn(
+        ":platform:core:jar", ":processors:dependencies:jar",
+        ":processors:instrument:jar", ":processors:log-summary:jar"
+    )
     if (System.getProperty("build.profile") == "debian") {
         doFirst {
             if (!File(projectDir, "core/build/graal/spp-platform").exists()) {
@@ -122,6 +126,9 @@ tasks.register<Copy>("updateDockerFiles") {
             .into(File(projectDir, "../docker/e2e"))
     }
     doFirst {
+        if (!File(projectDir, "../processors/dependencies/build/libs/spp-processor-dependencies-$processorDependenciesVersion.jar").exists()) {
+            throw GradleException("Missing spp-processor-dependencies-$processorDependenciesVersion.jar")
+        }
         if (!File(projectDir, "../processors/instrument/build/libs/spp-processor-instrument-$instrumentProcessorVersion.jar").exists()) {
             throw GradleException("Missing spp-processor-instrument-$instrumentProcessorVersion.jar")
         }
@@ -130,6 +137,8 @@ tasks.register<Copy>("updateDockerFiles") {
         }
     }
 
+    from(File(projectDir, "../processors/dependencies/build/libs/spp-processor-dependencies-$processorDependenciesVersion.jar"))
+        .into(File(projectDir, "../docker/e2e"))
     from(File(projectDir, "../processors/instrument/build/libs/spp-processor-instrument-$instrumentProcessorVersion.jar"))
         .into(File(projectDir, "../docker/e2e"))
     from(File(projectDir, "../processors/log-summary/build/libs/spp-processor-log-summary-$logSummaryProcessorVersion.jar"))
