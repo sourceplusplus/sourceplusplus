@@ -14,7 +14,10 @@ version = platformVersion
 subprojects {
     configurations.all {
         resolutionStrategy.dependencySubstitution {
-            substitute(module("com.github.sourceplusplus.protocol:protocol")).using(project(":protocol"))
+            substitute(module("com.github.sourceplusplus.protocol:protocol"))
+                .using(project(":protocol"))
+            substitute(module("com.github.sourceplusplus.interface-portal:portal-jvm"))
+                .using(project(":interfaces:portal"))
         }
     }
 
