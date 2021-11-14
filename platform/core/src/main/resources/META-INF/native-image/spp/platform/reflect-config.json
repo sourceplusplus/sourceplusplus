@@ -2222,5 +2222,109 @@
     "allPublicFields" : true,
     "allDeclaredMethods" : true,
     "allPublicMethods" : true
+  },
+  {
+    "name":"org.kohsuke.github.GHRepository",
+    "methods":[{"name":"<init>","parameterTypes":[] }],
+    "fields":[
+      {"name":"owner", "allowWrite":true}
+    ],
+    "allDeclaredConstructors" : true,
+    "allPublicConstructors" : true,
+    "allDeclaredFields" : true,
+    "allPublicFields" : true,
+    "allDeclaredMethods" : true,
+    "allPublicMethods" : true
+  },
+  {
+    "name":"org.kohsuke.github.GHUser",
+    "methods":[{"name":"<init>","parameterTypes":[] }],
+    "allDeclaredConstructors" : true,
+    "allPublicConstructors" : true,
+    "allDeclaredFields" : true,
+    "allPublicFields" : true,
+    "allDeclaredMethods" : true,
+    "allPublicMethods" : true
+  },
+  {
+    "name":"org.kohsuke.github.GHPerson",
+    "methods":[{"name":"<init>","parameterTypes":[] }],
+    "allDeclaredConstructors" : true,
+    "allPublicConstructors" : true,
+    "allDeclaredFields" : true,
+    "allPublicFields" : true,
+    "allDeclaredMethods" : true,
+    "allPublicMethods" : true
+  },
+  {
+    "name":"org.kohsuke.github.GHLicense",
+    "methods":[{"name":"<init>","parameterTypes":[] }],
+    "allDeclaredConstructors" : true,
+    "allPublicConstructors" : true,
+    "allDeclaredFields" : true,
+    "allPublicFields" : true,
+    "allDeclaredMethods" : true,
+    "allPublicMethods" : true
+  },
+  {
+    "name":"org.kohsuke.github.GitHubInteractiveObject",
+    "methods":[{"name":"<init>","parameterTypes":[] }],
+    "fields":[
+      {"name":"root", "allowWrite":true}
+    ],
+    "allDeclaredConstructors" : true,
+    "allPublicConstructors" : true,
+    "allDeclaredFields" : true,
+    "allPublicFields" : true,
+    "allDeclaredMethods" : true,
+    "allPublicMethods" : true
+  },
+  {
+    "name":"org.kohsuke.github.GHAsset",
+    "methods":[{"name":"<init>","parameterTypes":[] }],
+    "allDeclaredConstructors" : true,
+    "allPublicConstructors" : true,
+    "allDeclaredFields" : true,
+    "allPublicFields" : true,
+    "allDeclaredMethods" : true,
+    "allPublicMethods" : true
+  },
+  {
+    "name":"org.kohsuke.github.GHAsset[]",
+    "allDeclaredConstructors" : true,
+    "allPublicConstructors" : true,
+    "allDeclaredFields" : true,
+    "allPublicFields" : true,
+    "allDeclaredMethods" : true,
+    "allPublicMethods" : true
+  },
+  {
+    "name":"org.kohsuke.github.GHObject",
+    "methods":[{"name":"<init>","parameterTypes":[] }],
+    "allDeclaredConstructors" : true,
+    "allPublicConstructors" : true,
+    "allDeclaredFields" : true,
+    "allPublicFields" : true,
+    "allDeclaredMethods" : true,
+    "allPublicMethods" : true
+  },
+  {
+    "name":"org.kohsuke.github.GHRelease",
+    "methods":[{"name":"<init>","parameterTypes":[] }],
+    "allDeclaredConstructors" : true,
+    "allPublicConstructors" : true,
+    "allDeclaredFields" : true,
+    "allPublicFields" : true,
+    "allDeclaredMethods" : true,
+    "allPublicMethods" : true
+  },
+  {
+    "name":"org.kohsuke.github.GHRelease[]",
+    "allDeclaredConstructors" : true,
+    "allPublicConstructors" : true,
+    "allDeclaredFields" : true,
+    "allPublicFields" : true,
+    "allDeclaredMethods" : true,
+    "allPublicMethods" : true
   }
 ]
