@@ -12,3 +12,7 @@ skywalking:
     service_name: "spp"
   collector:
     backend_service: "skywalking-oap:11800"
+  plugin:
+    toolkit:
+      log:
+        transmit_formatted: false
