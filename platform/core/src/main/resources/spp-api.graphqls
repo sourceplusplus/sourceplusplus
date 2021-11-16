@@ -52,7 +52,7 @@ enum ThrottleStep {
 }
 
 enum MeterType {
-    COUNTER,
+    COUNT,
     GAUGE,
     HISTOGRAM
 }
