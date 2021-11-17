@@ -71,12 +71,17 @@ class LiveViewProvider(
             handler.handle(Future.failedFuture(IllegalStateException("Missing self id")))
             return
         }
+        val markerId = requestCtx["marker_id"]
+        if (markerId == null) {
+            handler.handle(Future.failedFuture(IllegalStateException("Missing marker id")))
+            return
+        }
         log.info("Add live view subscription request. Developer: {} - Subscription: {}", selfId, subscription)
 
         GlobalScope.launch {
             if (!init(handler)) return@launch
             if (log.isTraceEnabled) log.trace("Adding live view subscription")
-            liveViewProcessor.addLiveViewSubscription(selfId, JsonObject.mapFrom(subscription)) {
+            liveViewProcessor.addLiveViewSubscription(markerId, JsonObject.mapFrom(subscription)) {
                 if (it.succeeded()) {
                     handler.handle(
                         Future.succeededFuture(
@@ -100,12 +105,17 @@ class LiveViewProvider(
             handler.handle(Future.failedFuture(IllegalStateException("Missing self id")))
             return
         }
+        val markerId = requestCtx["marker_id"]
+        if (markerId == null) {
+            handler.handle(Future.failedFuture(IllegalStateException("Missing marker id")))
+            return
+        }
         log.info("Remove live view subscription request. Developer: {} - Subscription: {}", selfId, subscriptionId)
 
         GlobalScope.launch {
             if (!init(handler)) return@launch
             if (log.isTraceEnabled) log.trace("Removing live view subscription")
-            liveViewProcessor.removeLiveViewSubscription(selfId, subscriptionId) {
+            liveViewProcessor.removeLiveViewSubscription(markerId, subscriptionId) {
                 if (it.succeeded()) {
                     handler.handle(
                         Future.succeededFuture(
@@ -127,12 +137,17 @@ class LiveViewProvider(
             handler.handle(Future.failedFuture(IllegalStateException("Missing self id")))
             return
         }
+        val markerId = requestCtx["marker_id"]
+        if (markerId == null) {
+            handler.handle(Future.failedFuture(IllegalStateException("Missing marker id")))
+            return
+        }
         log.info("Clear live view subscriptions request. Developer: {}", selfId)
 
         GlobalScope.launch {
             if (!init(handler)) return@launch
             if (log.isTraceEnabled) log.trace("Clearing live view subscriptions")
-            liveViewProcessor.clearLiveViewSubscriptions(selfId) {
+            liveViewProcessor.clearLiveViewSubscriptions(markerId) {
                 if (it.succeeded()) {
                     val subs = toList(it.result().getString("body").toString(), LiveViewSubscription::class)
                     handler.handle(Future.succeededFuture(subs))

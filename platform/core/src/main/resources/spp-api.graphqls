@@ -52,7 +52,7 @@ enum ThrottleStep {
 }
 
 enum MeterType {
-    COUNTER,
+    COUNT,
     GAUGE,
     HISTOGRAM
 }
@@ -64,14 +64,12 @@ enum MetricValueType {
 
 type MetricValue {
     valueType: MetricValueType!
-    number: String
-    supplier: String
+    value: String
 }
 
 input MetricValueInput {
     valueType: MetricValueType!
-    number: String
-    supplier: String
+    value: String
 }
 
 type InstrumentThrottle {
