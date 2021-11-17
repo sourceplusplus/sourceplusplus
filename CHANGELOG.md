@@ -1,3 +1,7 @@
+# 0.2.0 (2021-11-17)
+- Modularized platform
+- Removed Elasticsearch requirement
+
 # 0.1.19 (2021-10-25)
 - Improved CLI default config
 
