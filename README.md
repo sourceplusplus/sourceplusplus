@@ -35,7 +35,7 @@ Powered by [Apache SkyWalking](https://github.com/apache/skywalking), Source++ e
 - Probes
   - [JVM](https://github.com/sourceplusplus/probe-jvm)
   - [Python](https://github.com/sourceplusplus/probe-python)
-- Clients
+- Interfaces
   - [JetBrains Plugin](https://docs.sourceplusplus.com/implementation/tools/clients/jetbrains-plugin/)
   - [Admin CLI](https://docs.sourceplusplus.com/implementation/tools/clients/cli/admin/) / [Developer CLI](https://docs.sourceplusplus.com/implementation/tools/clients/cli/developer/)
 
@@ -59,7 +59,7 @@ The Source++ documentation is available [here](https://docs.sourceplusplus.com).
     ├── gradle              # Gradle wrapper
     ├── interfaces          # Live coding clients
         ├── cli             # Command-line interface
-        └── marker          # IDE plugin
+        └── jetbrains       # JetBrains IDE plugin
     ├── platform            # Live coding server
         ├── common          # Common code
         ├── core            # Core code
