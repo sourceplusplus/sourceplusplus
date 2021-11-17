@@ -25,28 +25,8 @@ services:
     image: sourceplusplus/spp-oap-server:0.1.19
     container_name: skywalking-oap
     hostname: skywalking-oap
-    depends_on:
-      - es-server
-    links:
-      - es-server
     restart: on-failure
     environment:
-      - SW_STORAGE=elasticsearch
-      - SW_STORAGE_ES_CLUSTER_NODES=es-server:9200
       - SPP_PLATFORM_HOST=spp-platform
       - SPP_PLATFORM_PORT=5460
       - SPP_DISABLE_TLS=true
-  es-server:
-    image: blacktop/elasticsearch:7.0.0
-    container_name: es-server
-    hostname: es-server
-    cap_add:
-      - IPC_LOCK
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
-      nofile:
-        soft: 65536
-        hard: 65536
-    command: -E cluster.name=es-skywalking -E path.data=data -E path.logs=logs -E network.host=0.0.0.0 -E node.name=node-1
