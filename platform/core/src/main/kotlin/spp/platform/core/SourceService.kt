@@ -1204,8 +1204,7 @@ object SourceService {
             val metricValueInput = input.getJsonObject("metricValue")
             val metricValue = MetricValue(
                 MetricValueType.valueOf(metricValueInput.getString("valueType")),
-                metricValueInput.getString("number"),
-                metricValueInput.getString("supplier")
+                metricValueInput.getString("value")
             )
 
             val condition = input.getString("condition")
