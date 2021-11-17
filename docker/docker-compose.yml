@@ -25,7 +25,6 @@ services:
     image: sourceplusplus/spp-oap-server:0.1.19
     container_name: skywalking-oap
     hostname: skywalking-oap
-    restart: on-failure
     environment:
       - SPP_PLATFORM_HOST=spp-platform
       - SPP_PLATFORM_PORT=5460

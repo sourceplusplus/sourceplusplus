@@ -31,7 +31,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile-skywalking-oap
-    restart: on-failure
 #    environment:
 #      - JAVA_OPTS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5106
   spp-example-webapp:
