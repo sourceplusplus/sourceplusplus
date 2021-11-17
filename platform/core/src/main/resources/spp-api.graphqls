@@ -266,5 +266,6 @@ scalar Long
 enum LiveInstrumentType {
     BREAKPOINT,
     LOG,
-    METER
+    METER,
+    SPAN
 }
