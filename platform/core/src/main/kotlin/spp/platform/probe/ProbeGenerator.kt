@@ -135,6 +135,16 @@ class ProbeGenerator : AbstractVerticle() {
                         "collector", JsonObject()
                             .put("backend_service", config.skywalkingBackendService)
                     )
+                    .put(
+                        "plugin", JsonObject()
+                            .put(
+                                "toolkit", JsonObject()
+                                    .put(
+                                        "log", JsonObject()
+                                            .put("transmit_formatted", false)
+                                    )
+                            )
+                    )
             )
 
         //load build.properties
