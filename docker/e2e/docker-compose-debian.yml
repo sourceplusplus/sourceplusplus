@@ -32,15 +32,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile-skywalking-oap
-    depends_on:
-      - es-server
-    links:
-      - es-server
-    restart: on-failure
-    environment:
-      - SW_STORAGE=elasticsearch
-      - SW_STORAGE_ES_CLUSTER_NODES=es-server:9200
-      #- JAVA_OPTS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5106
+#    environment:
+#      - JAVA_OPTS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5106
   spp-example-webapp:
     container_name: spp-example-webapp
     hostname: spp-example-webapp
@@ -53,23 +46,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile-spp-example-webapp
-  es-server:
-    image: blacktop/elasticsearch:7.0.0
-    container_name: es-server
-    hostname: es-server
-    ports:
-      - "9200:9200"
-      - "9300:9300"
-    cap_add:
-      - IPC_LOCK
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
-      nofile:
-        soft: 65536
-        hard: 65536
-    command: -E cluster.name=es-skywalking -E path.data=data -E path.logs=logs -E network.host=0.0.0.0 -E node.name=node-1
 #  skywalking-ui:
 #    image: apache/skywalking-ui:8.8.1
 #    container_name: skywalking-ui
