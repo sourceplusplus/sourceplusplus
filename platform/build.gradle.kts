@@ -135,6 +135,12 @@ tasks.register<Copy>("updateDockerFiles") {
         if (!File(projectDir, "../processors/log-summary/build/libs/spp-processor-log-summary-$logSummaryProcessorVersion.jar").exists()) {
             throw GradleException("Missing spp-processor-log-summary-$logSummaryProcessorVersion.jar")
         }
+
+        File(projectDir, "../docker/e2e").listFiles()?.forEach {
+            if (it.name.startsWith("spp-platform-") || it.name.startsWith("spp-processor-")) {
+                it.delete()
+            }
+        }
     }
 
     from(File(projectDir, "../processors/dependencies/build/libs/spp-processor-dependencies-$processorDependenciesVersion.jar"))
