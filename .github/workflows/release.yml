@@ -33,12 +33,12 @@ jobs:
           out-file-path: ./docker/spp-platform
           token: ${{ secrets.GITHUB_TOKEN }}
           
-      - name: Download Source++ SkyWalking processor
+      - name: Download spp-processorS.zip
         uses: robinraju/release-downloader@v1
         with:
           repository: sourceplusplus/live-platform
           tag: v${{ env.SPP_PLATFORM_VERSION }}
-          fileName: spp-processor-${{ env.SPP_PLATFORM_VERSION }}.jar
+          fileName: spp-processors.zip
           out-file-path: ./docker/spp-oap-server
           token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -62,6 +62,9 @@ jobs:
           readme-filepath: ./docker/spp-platform/README.md
 
       # Push spp-oap-server
+
+      - name: Unzip spp-processors.zip
+        run: cd ./docker/spp-oap-server && unzip spp-processors.zip
 
       - name: Build spp-oap-server tagged Docker image
         run: cd ./docker/spp-oap-server && docker build . --file Dockerfile --tag sourceplusplus/spp-oap-server:${{ env.SPP_PLATFORM_VERSION }}
