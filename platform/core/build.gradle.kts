@@ -28,7 +28,7 @@ version = platformVersion
 dependencies {
     implementation(project(":platform:services"))
     implementation(project(":platform:common"))
-    implementation("org.kohsuke:github-api:1.135")
+    implementation("org.kohsuke:github-api:1.300")
 
     shadow(project(":processors:instrument")) //todo: figure out why extra configurations.add() and this are needed
     shadow(project(":processors:log-summary")) //todo: figure out why extra configurations.add() and this are needed
