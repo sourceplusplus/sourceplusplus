@@ -11,7 +11,6 @@ val platformGroup: String by project
 val platformVersion: String by project
 val graalVersion: String by project
 val jacksonVersion: String by project
-val sourceMarkerVersion: String by project
 val commonsLang3Version: String by project
 val cliktVersion: String by project
 val bouncycastleVersion: String by project
