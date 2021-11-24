@@ -31,7 +31,7 @@ Powered by [Apache SkyWalking](https://github.com/apache/skywalking), Source++ e
 <!-- - [Get Source++](https://sourceplusplus.com/get/) -->
 - Tutorials
   - [JVM](https://github.com/sourceplusplus/tutorial-java)
-  - Python
+  - [Python](https://github.com/sourceplusplus/tutorial-python)
 - Probes
   - [JVM](https://github.com/sourceplusplus/probe-jvm)
   - [Python](https://github.com/sourceplusplus/probe-python)
