@@ -63,7 +63,7 @@ import spp.platform.probe.util.SelfSignedCertGenerator
 import spp.platform.processor.ProcessorTracker
 import spp.platform.processor.ProcessorVerticle
 import spp.platform.util.CertsToJksOptionsConverter
-import spp.platform.util.KSerializers
+import spp.protocol.util.KSerializers
 import spp.platform.util.Msg.msg
 import spp.platform.util.RequestContext
 import spp.protocol.ProtocolMarshaller
