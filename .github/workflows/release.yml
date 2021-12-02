@@ -28,7 +28,7 @@ jobs:
         uses: robinraju/release-downloader@v1
         with:
           repository: sourceplusplus/live-platform
-          tag: v${{ env.SPP_PLATFORM_VERSION }}
+          tag: ${{ env.SPP_PLATFORM_VERSION }}
           fileName: spp-platform-${{ env.SPP_PLATFORM_VERSION }}-linux-amd64.tar.gz
           out-file-path: ./docker/spp-platform
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -37,7 +37,7 @@ jobs:
         uses: robinraju/release-downloader@v1
         with:
           repository: sourceplusplus/live-platform
-          tag: v${{ env.SPP_PLATFORM_VERSION }}
+          tag: ${{ env.SPP_PLATFORM_VERSION }}
           fileName: spp-processors.zip
           out-file-path: ./docker/spp-oap-server
           token: ${{ secrets.GITHUB_TOKEN }}
