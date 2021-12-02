@@ -1,3 +1,7 @@
+# 0.2.1 (2021-12-02)
+- Code refactoring
+- Dependency upgrades
+
 # 0.2.0 (2021-11-17)
 - Modularized platform
 - Added Python probe
