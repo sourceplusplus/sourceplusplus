@@ -25,21 +25,21 @@ jobs:
       # Download release artifacts
 
       - name: Download spp-platform (Linux)
-        uses: robinraju/release-downloader@v1
+        uses: dsaltares/fetch-gh-release-asset@master
         with:
-          repository: sourceplusplus/live-platform
-          tag: ${{ env.SPP_PLATFORM_VERSION }}
-          fileName: spp-platform-${{ env.SPP_PLATFORM_VERSION }}-linux-amd64.tar.gz
-          out-file-path: ./docker/spp-platform
+          repo: sourceplusplus/live-platform
+          version: tags/${{ env.SPP_PLATFORM_VERSION }}
+          file: spp-platform-${{ env.SPP_PLATFORM_VERSION }}-linux-amd64.tar.gz
+          target: ./docker/spp-platform/spp-platform-${{ env.SPP_PLATFORM_VERSION }}-linux-amd64.tar.gz
           token: ${{ secrets.GITHUB_TOKEN }}
-          
+
       - name: Download spp-processorS.zip
-        uses: robinraju/release-downloader@v1
+        uses: dsaltares/fetch-gh-release-asset@master
         with:
-          repository: sourceplusplus/live-platform
-          tag: ${{ env.SPP_PLATFORM_VERSION }}
-          fileName: spp-processors.zip
-          out-file-path: ./docker/spp-oap-server
+          repo: sourceplusplus/live-platform
+          version: tags/${{ env.SPP_PLATFORM_VERSION }}
+          file: spp-processors.zip
+          target: ./docker/spp-oap-server/spp-processors.zip
           token: ${{ secrets.GITHUB_TOKEN }}
 
       # Push spp-platform
