@@ -1,10 +1,7 @@
 package spp.platform.processor
 
-import io.vertx.core.buffer.Buffer
-import io.vertx.core.http.ClientAuth
 import io.vertx.core.json.Json
 import io.vertx.core.net.NetServerOptions
-import io.vertx.core.net.PemKeyCertOptions
 import io.vertx.ext.bridge.BridgeEventType
 import io.vertx.ext.bridge.BridgeOptions
 import io.vertx.ext.bridge.PermittedOptions
@@ -19,7 +16,7 @@ import spp.protocol.platform.PlatformAddress.MARKER_DISCONNECTED
 import spp.protocol.processor.ProcessorAddress.*
 import spp.protocol.processor.status.ProcessorConnection
 
-class ProcessorBridge(private val sppTlsKey: String, private val sppTlsCert: String) : CoroutineVerticle() {
+class ProcessorBridge(private val netServerOptions: NetServerOptions) : CoroutineVerticle() {
 
     private val log = LoggerFactory.getLogger(ProcessorBridge::class.java)
 
@@ -41,16 +38,7 @@ class ProcessorBridge(private val sppTlsKey: String, private val sppTlsCert: Str
                 .addOutboundPermitted(PermittedOptions().setAddress(LIVE_VIEW_PROCESSOR.address))
                 .addOutboundPermitted(PermittedOptions().setAddress(LIVE_INSTRUMENT_PROCESSOR.address))
                 .addOutboundPermitted(PermittedOptions().setAddress(SET_LOG_PUBLISH_RATE_LIMIT.address)),
-            NetServerOptions()
-                .removeEnabledSecureTransportProtocol("SSLv2Hello")
-                .removeEnabledSecureTransportProtocol("TLSv1")
-                .removeEnabledSecureTransportProtocol("TLSv1.1")
-                .setSsl(System.getenv("SPP_DISABLE_TLS") != "true").setClientAuth(ClientAuth.REQUEST)
-                .setPemKeyCertOptions(
-                    PemKeyCertOptions()
-                        .setKeyValue(Buffer.buffer(sppTlsKey))
-                        .setCertValue(Buffer.buffer(sppTlsCert))
-                )
+            netServerOptions
         ) {
             if (it.type() == BridgeEventType.SEND) {
                 val address = it.rawMessage.getString("address")

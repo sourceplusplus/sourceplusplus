@@ -1,12 +1,12 @@
 package spp.platform.probe
 
 import io.vertx.core.DeploymentOptions
+import io.vertx.core.net.NetServerOptions
 import io.vertx.kotlin.coroutines.CoroutineVerticle
 import io.vertx.kotlin.coroutines.await
 
 class ProbeVerticle(
-    private val sppTlsKey: String,
-    private val sppTlsCert: String
+    private val netServerOptions: NetServerOptions
 ) : CoroutineVerticle() {
 
     override suspend fun start() {
@@ -15,7 +15,7 @@ class ProbeVerticle(
 
         //bridge
         vertx.deployVerticle(
-            ProbeBridge(sppTlsKey, sppTlsCert), DeploymentOptions().setConfig(config)
+            ProbeBridge(netServerOptions), DeploymentOptions().setConfig(config)
         ).await()
 
         //functionality
