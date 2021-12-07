@@ -9,12 +9,16 @@ import io.vertx.core.DeploymentOptions
 import io.vertx.core.Promise
 import io.vertx.core.Vertx
 import io.vertx.core.VertxOptions
+import io.vertx.core.buffer.Buffer
 import io.vertx.core.eventbus.ReplyException
+import io.vertx.core.http.ClientAuth
 import io.vertx.core.http.HttpServerOptions
 import io.vertx.core.json.Json
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import io.vertx.core.json.jackson.DatabindCodec
+import io.vertx.core.net.NetServerOptions
+import io.vertx.core.net.PemKeyCertOptions
 import io.vertx.ext.auth.JWTOptions
 import io.vertx.ext.auth.PubSecKeyOptions
 import io.vertx.ext.auth.jwt.JWTAuth
@@ -63,7 +67,6 @@ import spp.platform.probe.util.SelfSignedCertGenerator
 import spp.platform.processor.ProcessorTracker
 import spp.platform.processor.ProcessorVerticle
 import spp.platform.util.CertsToJksOptionsConverter
-import spp.protocol.util.KSerializers
 import spp.platform.util.Msg.msg
 import spp.platform.util.RequestContext
 import spp.protocol.ProtocolMarshaller
@@ -72,6 +75,7 @@ import spp.protocol.SourceMarkerServices.Utilize
 import spp.protocol.platform.PlatformAddress
 import spp.protocol.probe.ProbeAddress
 import spp.protocol.processor.ProcessorAddress
+import spp.protocol.util.KSerializers
 import spp.service.ServiceProvider
 import java.io.File
 import java.io.FileWriter
@@ -170,54 +174,38 @@ class SourcePlatform : CoroutineVerticle() {
 
         val keyFile = File("config/spp-platform.key")
         val certFile = File("config/spp-platform.crt")
-        if (!keyFile.exists() || !certFile.exists()) {
-            log.info("Generating security certificates")
-            if (keyFile.exists()) keyFile.renameTo(
-                File(keyFile.parentFile, keyFile.name + ".bak-" + System.nanoTime())
-            )
-            if (certFile.exists()) certFile.renameTo(
-                File(certFile.parentFile, certFile.name + ".bak-" + System.nanoTime())
-            )
-
-            val keyPair = SelfSignedCertGenerator.generateKeyPair(4096)
-            val certificate = SelfSignedCertGenerator.generate(
-                keyPair, "SHA256WithRSAEncryption", "localhost", 365
-            )
-
-            keyFile.parentFile.mkdirs()
-            val crt = FileWriter(certFile)
-            var writer = JcaPEMWriter(crt)
-            writer.writeObject(certificate)
-            writer.close()
-            val key = FileWriter(keyFile)
-            writer = JcaPEMWriter(key)
-            writer.writeObject(keyPair)
-            writer.close()
-            log.info("Security certificates generated")
+        if ("true".equals(System.getenv("SPP_DISABLE_TLS"), true)) {
+            if ("true".equals(System.getenv("SPP_DISABLE_JWT"), true)) {
+                log.warn("Skipped generating security certificates")
+            } else if (keyFile.exists() && certFile.exists()) {
+                log.info("Using existing security certificates")
+            }
+        } else if (!keyFile.exists() || !certFile.exists()) {
+            generateSecurityCertificates(keyFile, certFile)
         } else {
             log.info("Using existing security certificates")
         }
-
-        val sppTlsKey = keyFile.readText()
-        val sppTlsCert = certFile.readText()
-
-        val keyPair = PEMParser(StringReader(File("config/spp-platform.key").readText())).use {
-            JcaPEMKeyConverter().getKeyPair(it.readObject() as PEMKeyPair)
-        }
-
-        val publicKey = StringWriter()
-        var writer = JcaPEMWriter(publicKey)
-        writer.writeObject(keyPair.public)
-        writer.close()
-        val privateKey = StringWriter()
-        writer = JcaPEMWriter(privateKey)
-        writer.writeObject(keyPair.private)
-        writer.close()
 
         val jwt: JWTAuth?
         if ("true".equals(System.getenv("SPP_DISABLE_JWT"), true)) {
             jwt = null
         } else {
+            if (!keyFile.exists() || !certFile.exists()) {
+                generateSecurityCertificates(keyFile, certFile)
+            }
+            val keyPair = PEMParser(StringReader(keyFile.readText())).use {
+                JcaPEMKeyConverter().getKeyPair(it.readObject() as PEMKeyPair)
+            }
+
+            val publicKey = StringWriter()
+            var writer = JcaPEMWriter(publicKey)
+            writer.writeObject(keyPair.public)
+            writer.close()
+            val privateKey = StringWriter()
+            writer = JcaPEMWriter(privateKey)
+            writer.writeObject(keyPair.private)
+            writer.close()
+
             jwt = JWTAuth.create(
                 vertx, JWTAuthOptions()
                     .addPubSecKey(
@@ -396,17 +384,30 @@ class SourcePlatform : CoroutineVerticle() {
             }
         }
 
+        val netServerOptions = NetServerOptions()
+            .removeEnabledSecureTransportProtocol("SSLv2Hello")
+            .removeEnabledSecureTransportProtocol("TLSv1")
+            .removeEnabledSecureTransportProtocol("TLSv1.1")
+            .setSsl(System.getenv("SPP_DISABLE_TLS") != "true").setClientAuth(ClientAuth.REQUEST)
+            .apply {
+                if (System.getenv("SPP_DISABLE_TLS") != "true") {
+                    pemKeyCertOptions = PemKeyCertOptions()
+                        .setKeyValue(Buffer.buffer(keyFile.readText()))
+                        .setCertValue(Buffer.buffer(certFile.readText()))
+                }
+            }
+
         //Start platform
         vertx.deployVerticle(
-            ProbeVerticle(sppTlsKey, sppTlsCert),
+            ProbeVerticle(netServerOptions),
             DeploymentOptions().setConfig(config.getJsonObject("spp-platform").getJsonObject("probe"))
         ).await()
         vertx.deployVerticle(
-            MarkerVerticle(jwt, sppTlsKey, sppTlsCert),
+            MarkerVerticle(jwt, netServerOptions),
             DeploymentOptions().setConfig(config.getJsonObject("spp-platform").getJsonObject("marker"))
         ).await()
         vertx.deployVerticle(
-            ProcessorVerticle(sppTlsKey, sppTlsCert),
+            ProcessorVerticle(netServerOptions),
             DeploymentOptions().setConfig(config.getJsonObject("spp-platform").getJsonObject("processor"))
         ).await()
 
@@ -423,8 +424,10 @@ class SourcePlatform : CoroutineVerticle() {
         val httpPort = vertx.sharedData().getLocalMap<String, Int>("spp.core")
             .getOrDefault("http.port", config.getJsonObject("spp-platform").getInteger("port"))
         val httpOptions = HttpServerOptions().setSsl(System.getenv("SPP_DISABLE_TLS") != "true")
-        val jksOptions = CertsToJksOptionsConverter(certFile.absolutePath, keyFile.absolutePath).createJksOptions()
-        httpOptions.setKeyStoreOptions(jksOptions)
+        if (System.getenv("SPP_DISABLE_TLS") != "true") {
+            val jksOptions = CertsToJksOptionsConverter(certFile.absolutePath, keyFile.absolutePath).createJksOptions()
+            httpOptions.setKeyStoreOptions(jksOptions)
+        }
         val server = vertx.createHttpServer(httpOptions)
             .requestHandler(router)
             .listen(httpPort, config.getJsonObject("spp-platform").getString("host")).await()
@@ -441,6 +444,32 @@ class SourcePlatform : CoroutineVerticle() {
             }
         }
         log.debug("Source++ Platform initialized")
+    }
+
+    private fun generateSecurityCertificates(keyFile: File, certFile: File) {
+        log.info("Generating security certificates")
+        if (keyFile.exists()) keyFile.renameTo(
+            File(keyFile.parentFile, keyFile.name + ".bak-" + System.nanoTime())
+        )
+        if (certFile.exists()) certFile.renameTo(
+            File(certFile.parentFile, certFile.name + ".bak-" + System.nanoTime())
+        )
+
+        val keyPair = SelfSignedCertGenerator.generateKeyPair(4096)
+        val certificate = SelfSignedCertGenerator.generate(
+            keyPair, "SHA256WithRSAEncryption", "localhost", 365
+        )
+
+        keyFile.parentFile.mkdirs()
+        val crt = FileWriter(certFile)
+        var writer = JcaPEMWriter(crt)
+        writer.writeObject(certificate)
+        writer.close()
+        val key = FileWriter(keyFile)
+        writer = JcaPEMWriter(key)
+        writer.writeObject(keyPair)
+        writer.close()
+        log.info("Security certificates generated")
     }
 
     private fun doProbeGeneration(route: RoutingContext) {

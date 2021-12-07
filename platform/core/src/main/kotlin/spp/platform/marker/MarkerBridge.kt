@@ -4,11 +4,8 @@ import spp.protocol.SourceMarkerServices.Provide
 import spp.protocol.SourceMarkerServices.Status
 import spp.protocol.SourceMarkerServices.Utilize
 import spp.protocol.status.MarkerConnection
-import io.vertx.core.buffer.Buffer
-import io.vertx.core.http.ClientAuth
 import io.vertx.core.json.Json
 import io.vertx.core.net.NetServerOptions
-import io.vertx.core.net.PemKeyCertOptions
 import io.vertx.ext.bridge.BridgeEventType
 import io.vertx.ext.bridge.BridgeOptions
 import io.vertx.ext.bridge.PermittedOptions
@@ -23,8 +20,7 @@ import spp.platform.core.SourceSubscriber
 import spp.protocol.platform.PlatformAddress
 
 class MarkerBridge(
-    private val sppTlsKey: String,
-    private val sppTlsCert: String
+    private val netServerOptions: NetServerOptions
 ) : CoroutineVerticle() {
 
     companion object {
@@ -48,16 +44,7 @@ class MarkerBridge(
                 .addOutboundPermitted(
                     PermittedOptions().setAddressRegex(Provide.LIVE_VIEW_SUBSCRIBER + "\\..+")
                 ),
-            NetServerOptions()
-                .removeEnabledSecureTransportProtocol("SSLv2Hello")
-                .removeEnabledSecureTransportProtocol("TLSv1")
-                .removeEnabledSecureTransportProtocol("TLSv1.1")
-                .setSsl(System.getenv("SPP_DISABLE_TLS") != "true").setClientAuth(ClientAuth.REQUEST)
-                .setPemKeyCertOptions(
-                    PemKeyCertOptions()
-                        .setKeyValue(Buffer.buffer(sppTlsKey))
-                        .setCertValue(Buffer.buffer(sppTlsCert))
-                )
+            netServerOptions
         ) {
             if (it.type() == BridgeEventType.SEND) {
                 if (it.rawMessage.getString("address") == Status.MARKER_CONNECTED) {
