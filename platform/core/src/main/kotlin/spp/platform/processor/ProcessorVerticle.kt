@@ -1,12 +1,12 @@
 package spp.platform.processor
 
 import io.vertx.core.DeploymentOptions
+import io.vertx.core.net.NetServerOptions
 import io.vertx.kotlin.coroutines.CoroutineVerticle
 import io.vertx.kotlin.coroutines.await
 
 class ProcessorVerticle(
-    private val sppTlsKey: String,
-    private val sppTlsCert: String
+    private val netServerOptions: NetServerOptions
 ) : CoroutineVerticle() {
 
     override suspend fun start() {
@@ -15,7 +15,7 @@ class ProcessorVerticle(
 
         //bridge
         vertx.deployVerticle(
-            ProcessorBridge(sppTlsKey, sppTlsCert), DeploymentOptions().setConfig(config)
+            ProcessorBridge(netServerOptions), DeploymentOptions().setConfig(config)
         ).await()
     }
 }

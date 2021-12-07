@@ -1,14 +1,14 @@
 package spp.platform.marker
 
 import io.vertx.core.DeploymentOptions
+import io.vertx.core.net.NetServerOptions
 import io.vertx.ext.auth.jwt.JWTAuth
 import io.vertx.kotlin.coroutines.CoroutineVerticle
 import io.vertx.kotlin.coroutines.await
 
 class MarkerVerticle(
     private val jwtAuth: JWTAuth?,
-    private val sppTlsKey: String,
-    private val sppTlsCert: String
+    private val netServerOptions: NetServerOptions
 ) : CoroutineVerticle() {
 
     override suspend fun start() {
@@ -17,7 +17,7 @@ class MarkerVerticle(
 
         //bridge
         vertx.deployVerticle(
-            MarkerBridge(sppTlsKey, sppTlsCert), DeploymentOptions().setConfig(config)
+            MarkerBridge(netServerOptions), DeploymentOptions().setConfig(config)
         ).await()
     }
 }

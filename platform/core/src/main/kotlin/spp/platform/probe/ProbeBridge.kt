@@ -1,11 +1,8 @@
 package spp.platform.probe
 
-import io.vertx.core.buffer.Buffer
 import io.vertx.core.eventbus.DeliveryOptions
-import io.vertx.core.http.ClientAuth
 import io.vertx.core.json.Json
 import io.vertx.core.net.NetServerOptions
-import io.vertx.core.net.PemKeyCertOptions
 import io.vertx.ext.bridge.BridgeEventType
 import io.vertx.ext.bridge.BridgeOptions
 import io.vertx.ext.bridge.PermittedOptions
@@ -21,7 +18,7 @@ import spp.protocol.platform.PlatformAddress
 import spp.protocol.probe.ProbeAddress
 import spp.protocol.probe.status.ProbeConnection
 
-class ProbeBridge(private val sppTlsKey: String, private val sppTlsCert: String) : CoroutineVerticle() {
+class ProbeBridge(private val netServerOptions: NetServerOptions) : CoroutineVerticle() {
 
     private val log = LoggerFactory.getLogger(ProbeBridge::class.java)
 
@@ -33,16 +30,7 @@ class ProbeBridge(private val sppTlsKey: String, private val sppTlsCert: String)
                 .addInboundPermitted(PermittedOptions().setAddressRegex("spp\\.platform\\.status\\..+"))
                 .addInboundPermitted(PermittedOptions().setAddressRegex("spp\\.probe\\.status\\..+"))
                 .addOutboundPermitted(PermittedOptions().setAddressRegex("spp\\.probe\\.command\\..+")),
-            NetServerOptions()
-                .removeEnabledSecureTransportProtocol("SSLv2Hello")
-                .removeEnabledSecureTransportProtocol("TLSv1")
-                .removeEnabledSecureTransportProtocol("TLSv1.1")
-                .setSsl(System.getenv("SPP_DISABLE_TLS") != "true").setClientAuth(ClientAuth.REQUEST)
-                .setPemKeyCertOptions(
-                    PemKeyCertOptions()
-                        .setKeyValue(Buffer.buffer(sppTlsKey))
-                        .setCertValue(Buffer.buffer(sppTlsCert))
-                )
+            netServerOptions
         ) {
             if (it.type() == BridgeEventType.SEND) {
                 if (it.rawMessage.getString("address") == PlatformAddress.PROBE_CONNECTED.address) {
