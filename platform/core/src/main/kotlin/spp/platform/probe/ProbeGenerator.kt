@@ -66,7 +66,7 @@ class ProbeGenerator : AbstractVerticle() {
                 log.debug("Pre-generating default configuration probe")
                 val probeRelease = githubApi.getRepository("sourceplusplus/probe-jvm").latestRelease
                 val downloadUrl = probeRelease.listAssets()
-                    .find { it.name.contains("spp-probe.jar") }!!.browserDownloadUrl
+                    .find { it.name.contains("spp-probe") }!!.browserDownloadUrl
                 val destFile = File(Files.createTempDir(), "spp-probe-${probeRelease.tagName}.jar")
                 FileUtils.copyURLToFile(URL(downloadUrl), destFile)
 
