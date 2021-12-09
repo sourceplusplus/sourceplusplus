@@ -162,9 +162,6 @@ dockerCompose {
 }
 tasks.getByName("composeUp").mustRunAfter("updateDockerFiles")
 
-tasks {
-    register("assembleUp") {
-        dependsOn("updateDockerFiles", "composeUp")
-    }
-    getByName("composeUp").mustRunAfter("updateDockerFiles")
+tasks.register("assembleUp") {
+    dependsOn("updateDockerFiles", "composeUp")
 }
