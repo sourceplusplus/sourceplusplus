@@ -31,6 +31,7 @@ class LiveLogTest : PlatformIntegrationTest() {
     fun addHitRemove() {
         val testContext = VertxTestContext()
         var gotAdded = false
+        var gotApplied = false
         var gotHit = false
         var gotRemoved = false
         val instrumentId = UUID.randomUUID().toString()
@@ -46,6 +47,13 @@ class LiveLogTest : PlatformIntegrationTest() {
                         assertEquals(instrumentId, JsonObject(liveEvent.data).getString("id"))
                     }
                     gotAdded = true
+                }
+                LiveInstrumentEventType.LOG_APPLIED -> {
+                    log.info("Got applied")
+                    testContext.verify {
+                        assertEquals(instrumentId, JsonObject(liveEvent.data).getString("id"))
+                    }
+                    gotApplied = true
                 }
                 LiveInstrumentEventType.LOG_HIT -> {
                     log.info("Got hit")
@@ -100,6 +108,7 @@ class LiveLogTest : PlatformIntegrationTest() {
             if (testContext.failed()) {
                 consumer.unregister()
                 log.info("Got added: $gotAdded")
+                log.info("Got applied: $gotApplied")
                 log.info("Got hit: $gotHit")
                 log.info("Got removed: $gotRemoved")
                 throw testContext.causeOfFailure()
@@ -107,6 +116,7 @@ class LiveLogTest : PlatformIntegrationTest() {
         } else {
             consumer.unregister()
             log.info("Got added: $gotAdded")
+            log.info("Got applied: $gotApplied")
             log.info("Got hit: $gotHit")
             log.info("Got removed: $gotRemoved")
             throw RuntimeException("Test timed out")
