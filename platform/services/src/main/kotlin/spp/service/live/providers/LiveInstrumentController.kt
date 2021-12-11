@@ -17,12 +17,13 @@ import kotlinx.datetime.Instant
 import mu.KotlinLogging
 import spp.platform.probe.ProbeTracker
 import spp.platform.util.Msg.msg
-import spp.protocol.SourceMarkerServices
+import spp.protocol.SourceMarkerServices.Provide
 import spp.protocol.artifact.exception.LiveStackTrace
 import spp.protocol.artifact.exception.LiveStackTraceElement
 import spp.protocol.artifact.exception.sourceAsLineNumber
 import spp.protocol.error.MissingRemoteException
 import spp.protocol.instrument.*
+import spp.protocol.instrument.LiveInstrumentEventType.*
 import spp.protocol.instrument.breakpoint.LiveBreakpoint
 import spp.protocol.instrument.breakpoint.event.LiveBreakpointHit
 import spp.protocol.instrument.breakpoint.event.LiveBreakpointRemoved
@@ -200,6 +201,12 @@ class LiveInstrumentController(private val vertx: Vertx) {
                     liveInstruments.add(devInstrument)
 
                     waitingApply.remove(appliedBp.id)?.handle(Future.succeededFuture(devInstrument))
+
+                    vertx.eventBus().publish(
+                        Provide.LIVE_INSTRUMENT_SUBSCRIBER,
+                        JsonObject.mapFrom(LiveInstrumentEvent(BREAKPOINT_APPLIED, Json.encode(appliedBp)))
+                    )
+                    if (log.isTraceEnabled) log.trace("Published live breakpoint applied")
                     return@forEach
                 }
             }
@@ -238,8 +245,8 @@ class LiveInstrumentController(private val vertx: Vertx) {
             }
 
             vertx.eventBus().publish(
-                SourceMarkerServices.Provide.LIVE_INSTRUMENT_SUBSCRIBER,
-                JsonObject.mapFrom(LiveInstrumentEvent(LiveInstrumentEventType.BREAKPOINT_HIT, Json.encode(bpHit)))
+                Provide.LIVE_INSTRUMENT_SUBSCRIBER,
+                JsonObject.mapFrom(LiveInstrumentEvent(BREAKPOINT_HIT, Json.encode(bpHit)))
             )
             if (log.isTraceEnabled) log.trace("Published live breakpoint hit")
         }
@@ -259,8 +266,8 @@ class LiveInstrumentController(private val vertx: Vertx) {
             }
 
             vertx.eventBus().publish(
-                SourceMarkerServices.Provide.LIVE_INSTRUMENT_SUBSCRIBER,
-                JsonObject.mapFrom(LiveInstrumentEvent(LiveInstrumentEventType.LOG_HIT, it.body().toString()))
+                Provide.LIVE_INSTRUMENT_SUBSCRIBER,
+                JsonObject.mapFrom(LiveInstrumentEvent(LOG_HIT, it.body().toString()))
             )
             if (log.isTraceEnabled) log.trace("Published live log hit")
         }
@@ -280,6 +287,12 @@ class LiveInstrumentController(private val vertx: Vertx) {
                     liveInstruments.add(devInstrument)
 
                     waitingApply.remove(appliedLog.id)?.handle(Future.succeededFuture(devInstrument))
+
+                    vertx.eventBus().publish(
+                        Provide.LIVE_INSTRUMENT_SUBSCRIBER,
+                        JsonObject.mapFrom(LiveInstrumentEvent(LOG_APPLIED, Json.encode(appliedLog)))
+                    )
+                    if (log.isTraceEnabled) log.trace("Published live log applied")
                     return@forEach
                 }
             }
@@ -324,6 +337,12 @@ class LiveInstrumentController(private val vertx: Vertx) {
                     liveInstruments.add(devInstrument)
 
                     waitingApply.remove(appliedMeter.id)?.handle(Future.succeededFuture(devInstrument))
+
+                    vertx.eventBus().publish(
+                        Provide.LIVE_INSTRUMENT_SUBSCRIBER,
+                        JsonObject.mapFrom(LiveInstrumentEvent(METER_APPLIED, Json.encode(appliedMeter)))
+                    )
+                    if (log.isTraceEnabled) log.trace("Published live meter applied")
                     return@forEach
                 }
             }
@@ -410,9 +429,9 @@ class LiveInstrumentController(private val vertx: Vertx) {
 
         if (alertSubscribers) {
             vertx.eventBus().publish(
-                SourceMarkerServices.Provide.LIVE_INSTRUMENT_SUBSCRIBER,
+                Provide.LIVE_INSTRUMENT_SUBSCRIBER,
                 JsonObject.mapFrom(
-                    LiveInstrumentEvent(LiveInstrumentEventType.METER_ADDED, Json.encode(meter))
+                    LiveInstrumentEvent(METER_ADDED, Json.encode(meter))
                 )
             )
         }
@@ -452,9 +471,9 @@ class LiveInstrumentController(private val vertx: Vertx) {
 
         if (alertSubscribers) {
             vertx.eventBus().publish(
-                SourceMarkerServices.Provide.LIVE_INSTRUMENT_SUBSCRIBER,
+                Provide.LIVE_INSTRUMENT_SUBSCRIBER,
                 JsonObject.mapFrom(
-                    LiveInstrumentEvent(LiveInstrumentEventType.BREAKPOINT_ADDED, Json.encode(breakpoint))
+                    LiveInstrumentEvent(BREAKPOINT_ADDED, Json.encode(breakpoint))
                 )
             )
         }
@@ -524,9 +543,9 @@ class LiveInstrumentController(private val vertx: Vertx) {
 
         if (alertSubscribers) {
             vertx.eventBus().publish(
-                SourceMarkerServices.Provide.LIVE_INSTRUMENT_SUBSCRIBER,
+                Provide.LIVE_INSTRUMENT_SUBSCRIBER,
                 JsonObject.mapFrom(
-                    LiveInstrumentEvent(LiveInstrumentEventType.LOG_ADDED, Json.encode(liveLog))
+                    LiveInstrumentEvent(LOG_ADDED, Json.encode(liveLog))
                 )
             )
         }
@@ -556,10 +575,10 @@ class LiveInstrumentController(private val vertx: Vertx) {
             }
         } else {
             vertx.eventBus().publish(
-                SourceMarkerServices.Provide.LIVE_INSTRUMENT_SUBSCRIBER,
+                Provide.LIVE_INSTRUMENT_SUBSCRIBER,
                 JsonObject.mapFrom(
                     LiveInstrumentEvent(
-                        LiveInstrumentEventType.BREAKPOINT_REMOVED,
+                        BREAKPOINT_REMOVED,
                         //todo: could send whole breakpoint instead of just id
                         Json.encode(LiveBreakpointRemoved(breakpoint.id!!, occurredAt, jvmCause))
                     )
@@ -597,10 +616,10 @@ class LiveInstrumentController(private val vertx: Vertx) {
             }
         } else {
             vertx.eventBus().publish(
-                SourceMarkerServices.Provide.LIVE_INSTRUMENT_SUBSCRIBER,
+                Provide.LIVE_INSTRUMENT_SUBSCRIBER,
                 JsonObject.mapFrom(
                     LiveInstrumentEvent(
-                        LiveInstrumentEventType.LOG_REMOVED,
+                        LOG_REMOVED,
                         //todo: could send whole log instead of just id
                         Json.encode(LiveLogRemoved(liveLog.id!!, occurredAt, jvmCause, liveLog))
                     )
@@ -638,10 +657,10 @@ class LiveInstrumentController(private val vertx: Vertx) {
             }
         } else {
             vertx.eventBus().publish(
-                SourceMarkerServices.Provide.LIVE_INSTRUMENT_SUBSCRIBER,
+                Provide.LIVE_INSTRUMENT_SUBSCRIBER,
                 JsonObject.mapFrom(
                     LiveInstrumentEvent(
-                        LiveInstrumentEventType.METER_REMOVED,
+                        METER_REMOVED,
                         //todo: could send whole meter instead of just id
                         Json.encode(LiveMeterRemoved(meter.id!!, occurredAt, jvmCause))
                     )
@@ -701,9 +720,9 @@ class LiveInstrumentController(private val vertx: Vertx) {
             log.debug("Removed live breakpoint(s) at: $location")
 
             vertx.eventBus().publish(
-                SourceMarkerServices.Provide.LIVE_INSTRUMENT_SUBSCRIBER,
+                Provide.LIVE_INSTRUMENT_SUBSCRIBER,
                 JsonObject.mapFrom(
-                    LiveInstrumentEvent(LiveInstrumentEventType.BREAKPOINT_REMOVED, Json.encode(result))
+                    LiveInstrumentEvent(BREAKPOINT_REMOVED, Json.encode(result))
                 )
             )
         }
@@ -727,9 +746,9 @@ class LiveInstrumentController(private val vertx: Vertx) {
             log.debug("Removed live log(s) at: $location")
 
             vertx.eventBus().publish(
-                SourceMarkerServices.Provide.LIVE_INSTRUMENT_SUBSCRIBER,
+                Provide.LIVE_INSTRUMENT_SUBSCRIBER,
                 JsonObject.mapFrom(
-                    LiveInstrumentEvent(LiveInstrumentEventType.LOG_REMOVED, Json.encode(result))
+                    LiveInstrumentEvent(LOG_REMOVED, Json.encode(result))
                 )
             )
         }
@@ -753,9 +772,9 @@ class LiveInstrumentController(private val vertx: Vertx) {
             log.debug("Removed live meter(s) at: $location")
 
             vertx.eventBus().publish(
-                SourceMarkerServices.Provide.LIVE_INSTRUMENT_SUBSCRIBER,
+                Provide.LIVE_INSTRUMENT_SUBSCRIBER,
                 JsonObject.mapFrom(
-                    LiveInstrumentEvent(LiveInstrumentEventType.METER_REMOVED, Json.encode(result))
+                    LiveInstrumentEvent(METER_REMOVED, Json.encode(result))
                 )
             )
         }
