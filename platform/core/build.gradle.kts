@@ -10,16 +10,6 @@ plugins {
 val platformGroup: String by project
 val platformVersion: String by project
 val graalVersion: String by project
-val jacksonVersion: String by project
-val commonsLang3Version: String by project
-val cliktVersion: String by project
-val bouncycastleVersion: String by project
-val jupiterVersion: String by project
-val apolloVersion: String by project
-val commonsIoVersion: String by project
-val logbackVersion: String by project
-val auth0JwtVersion: String by project
-val protocolVersion: String by project
 
 group = platformGroup
 version = platformVersion
