@@ -43,12 +43,13 @@ tasks.create("createProperties") {
 tasks["processResources"].dependsOn("createProperties")
 
 graal {
-    //graalVersion(project.properties["graalVersion"] as String)
-    javaVersion("11")
+    graalVersion(project.properties["graalVersion"] as String)
+    //javaVersion("11")
     mainClass("spp.platform.SourcePlatform")
     outputName("spp-platform")
     option("-H:+PrintClassInitialization")
     option("-H:+ReportExceptionStackTraces")
+    option("-H:+TraceClassInitialization")
     option("-H:IncludeResourceBundles=build")
 }
 
