@@ -37,7 +37,6 @@ subprojects {
 
     repositories {
         mavenCentral()
-        jcenter()
     }
 
     dependencies {
@@ -162,3 +161,7 @@ dockerCompose {
     }
 }
 tasks.getByName("composeUp").mustRunAfter("updateDockerFiles")
+
+tasks.register("assembleUp") {
+    dependsOn("updateDockerFiles", "composeUp")
+}

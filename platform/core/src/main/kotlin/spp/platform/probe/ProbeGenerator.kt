@@ -85,24 +85,30 @@ class ProbeGenerator : AbstractVerticle() {
         }
 
         generatedProbes.remove(config)
-        val crtFileData = File("config/spp-platform.crt").readText()
-        val crtParser = PEMParser(StringReader(crtFileData))
-        val crtHolder = crtParser.readObject() as X509CertificateHolder
-        val certificate = JcaX509CertificateConverter().getCertificate(crtHolder)
-        val probePath = generateProbe(baseProbe, config, certificate)
+        val crtFile = File("config/spp-platform.crt")
+        val probePath = if (crtFile.exists()) {
+            val crtParser = PEMParser(StringReader(crtFile.readText()))
+            val crtHolder = crtParser.readObject() as X509CertificateHolder
+            val certificate = JcaX509CertificateConverter().getCertificate(crtHolder)
+            generateProbe(baseProbe, config, certificate)
+        } else {
+            generateProbe(baseProbe, config, null)
+        }
         val cache = JsonObject().put("probe_version", config.probeVersion).put("file_location", probePath.absolutePath)
         generatedProbes[config] = cache
         return cache
     }
 
-    private fun generateProbe(baseProbe: File, config: SourceProbeConfig, certificate: X509Certificate): File {
+    private fun generateProbe(baseProbe: File, config: SourceProbeConfig, certificate: X509Certificate?): File {
         val tempDir = Files.createTempDir()
         unzip(baseProbe, tempDir)
 
         val crt = StringWriter()
-        val writer = JcaPEMWriter(crt)
-        writer.writeObject(certificate)
-        writer.close()
+        if (certificate != null) {
+            val writer = JcaPEMWriter(crt)
+            writer.writeObject(certificate)
+            writer.close()
+        }
 
         val jsonObject = JsonObject()
             .put(
@@ -110,7 +116,7 @@ class ProbeGenerator : AbstractVerticle() {
                     .put("platform_host", config.platformHost)
                     .put("platform_port", config.platformPort)
                     .apply {
-                        if (System.getenv("SPP_DISABLE_JWT") != "true") {
+                        if (certificate != null) {
                             put(
                                 "platform_certificate", crt.toString()
                                     .replace("-----BEGIN CERTIFICATE-----", "")

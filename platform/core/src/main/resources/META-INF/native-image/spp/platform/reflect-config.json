@@ -1569,6 +1569,10 @@
   },
   {
     "name": "spp.protocol.probe.command.LiveInstrumentCommand",
+    "fields":[
+      {"name":"commandType", "allowWrite":true},
+      {"name":"context", "allowWrite":true}
+    ],
     "allDeclaredConstructors" : true,
     "allPublicConstructors" : true,
     "allDeclaredFields" : true,
