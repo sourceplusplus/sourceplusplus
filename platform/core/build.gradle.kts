@@ -49,6 +49,7 @@ graal {
     outputName("spp-platform")
     option("-H:+PrintClassInitialization")
     option("-H:+ReportExceptionStackTraces")
+    option("-H:+TraceClassInitialization")
     option("-H:IncludeResourceBundles=build")
 }
 
