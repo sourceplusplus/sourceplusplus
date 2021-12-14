@@ -1,16 +1,5 @@
 package spp.platform.core
 
-import spp.protocol.developer.Developer
-import spp.protocol.instrument.InstrumentThrottle
-import spp.protocol.instrument.LiveInstrument
-import spp.protocol.instrument.LiveSourceLocation
-import spp.protocol.instrument.ThrottleStep
-import spp.protocol.instrument.breakpoint.LiveBreakpoint
-import spp.protocol.instrument.log.LiveLog
-import spp.protocol.instrument.meter.LiveMeter
-import spp.protocol.instrument.meter.MeterType
-import spp.protocol.instrument.meter.MetricValue
-import spp.protocol.instrument.meter.MetricValueType
 import graphql.GraphQL
 import graphql.Scalars
 import graphql.schema.DataFetchingEnvironment
@@ -29,6 +18,17 @@ import spp.platform.core.auth.RolePermission.*
 import spp.platform.core.auth.error.InstrumentAccessDenied
 import spp.platform.core.auth.error.PermissionAccessDenied
 import spp.platform.util.RequestContext
+import spp.protocol.developer.Developer
+import spp.protocol.instrument.InstrumentThrottle
+import spp.protocol.instrument.LiveInstrument
+import spp.protocol.instrument.LiveSourceLocation
+import spp.protocol.instrument.ThrottleStep
+import spp.protocol.instrument.breakpoint.LiveBreakpoint
+import spp.protocol.instrument.log.LiveLog
+import spp.protocol.instrument.meter.LiveMeter
+import spp.protocol.instrument.meter.MeterType
+import spp.protocol.instrument.meter.MetricValue
+import spp.protocol.instrument.meter.MetricValueType
 import spp.service.ServiceProvider
 import java.util.*
 import java.util.concurrent.CompletableFuture
@@ -110,6 +110,9 @@ object SourceService {
                 ).dataFetcher(
                     "getLiveMeters",
                     this::getLiveMeters
+                ).dataFetcher(
+                    "getSelf",
+                    this::getSelf
                 )
             }
             .type(
@@ -442,6 +445,24 @@ object SourceService {
             }
 
             completableFuture.complete(SourceStorage.getDevelopers())
+        }
+        return completableFuture
+    }
+
+    private fun getSelf(env: DataFetchingEnvironment): CompletableFuture<Map<Any, Any>> {
+        val completableFuture = CompletableFuture<Map<Any, Any>>()
+        GlobalScope.launch {
+            if (System.getenv("SPP_DISABLE_JWT") != "true") {
+                val selfId = env.getContext<RoutingContextImpl>().user().principal().getString("developer_id")
+                completableFuture.complete(mutableMapOf<Any, Any>().apply {
+                    put("developer", Developer(selfId))
+                    put("roles", SourceStorage.getDeveloperRoles(selfId))
+                    put("permissions", SourceStorage.getDeveloperPermissions(selfId))
+                    put("access", SourceStorage.getDeveloperAccessPermissions(selfId))
+                })
+            } else {
+                completableFuture.completeExceptionally(IllegalStateException("JWT disabled"))
+            }
         }
         return completableFuture
     }
