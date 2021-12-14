@@ -1,3 +1,10 @@
+type Self {
+    developer: Developer!
+    roles: [DeveloperRole!]
+    permissions: [RolePermission!]
+    access: [AccessPermission!]
+}
+
 type Developer {
     id: String!
     accessToken: String
@@ -228,6 +235,7 @@ type Query {
     getLiveBreakpoints: [LiveBreakpoint!]!
     getLiveLogs: [LiveLog!]!
     getLiveMeters: [LiveMeter!]!
+    getSelf: Self!
 }
 
 type Mutation {
