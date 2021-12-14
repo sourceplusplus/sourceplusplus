@@ -1,8 +1,10 @@
 package spp.platform.core
 
 import graphql.GraphQL
-import graphql.Scalars
+import graphql.schema.Coercing
+import graphql.schema.CoercingParseValueException
 import graphql.schema.DataFetchingEnvironment
+import graphql.schema.GraphQLScalarType
 import graphql.schema.idl.*
 import io.vertx.core.Vertx
 import io.vertx.core.json.JsonArray
@@ -42,7 +44,32 @@ object SourceService {
         val schemaParser = SchemaParser()
         val typeDefinitionRegistry: TypeDefinitionRegistry = schemaParser.parse(schema)
         val runtimeWiring = RuntimeWiring.newRuntimeWiring()
-            .scalar(Scalars.GraphQLLong)
+            .scalar(
+                GraphQLScalarType.newScalar().name("Long")
+                    .coercing(object : Coercing<Long, Long> {
+                        override fun serialize(dataFetcherResult: Any): Long {
+                            return dataFetcherResult as Long
+                        }
+
+                        override fun parseValue(input: Any): Long {
+                            return when (input) {
+                                is Number -> input.toLong()
+                                is String -> {
+                                    try {
+                                        return input.toLong()
+                                    } catch (e: NumberFormatException) {
+                                        throw CoercingParseValueException("Invalid long value: $input")
+                                    }
+                                }
+                                else -> throw CoercingParseValueException("Expected Number or String")
+                            }
+                        }
+
+                        override fun parseLiteral(input: Any): Long {
+                            return input as Long
+                        }
+                    }).build()
+            )
             .type(TypeRuntimeWiring.newTypeWiring("LiveInstrument").typeResolver {
                 if ((it.getObject() as Any) is LiveBreakpoint ||
                     (it.getObject() as Map<String, Any>)["type"] == "BREAKPOINT"
