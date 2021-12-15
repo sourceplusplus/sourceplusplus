@@ -819,6 +819,9 @@
   "allPublicClasses":true}
 ,
 {
+  "name":"java.util.List"}
+,
+{
   "name":"java.util.Map"}
 ,
 {
