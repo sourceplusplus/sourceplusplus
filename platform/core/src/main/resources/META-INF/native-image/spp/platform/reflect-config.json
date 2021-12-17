@@ -1,2334 +1,2845 @@
 [
-  {
-    "name": "io.vertx.core.impl.launcher.commands.RunCommand",
-    "allDeclaredConstructors": true,
-    "allDeclaredMethods": true
-  },
-  {
-    "name": "io.vertx.core.impl.launcher.commands.VertxIsolatedDeployer",
-    "allDeclaredConstructors": true,
-    "allDeclaredMethods": true
-  },
-  {
-    "name": "java.lang.Long",
-    "allDeclaredConstructors": true
-  },
-  {
-    "name": "java.lang.Integer",
-    "allDeclaredConstructors": true
-  },
-  {
-    "name": "spp.platform.SourcePlatform",
-    "allDeclaredConstructors": true,
-    "allDeclaredMethods": true
-  },
-  {
-    "name": "org.apache.logging.log4j.message.DefaultFlowMessageFactory",
-    "allDeclaredConstructors": true,
-    "allDeclaredMethods": true
-  },
-  {
-    "name": "org.apache.logging.log4j.core.impl.Log4jContextFactory",
-    "allDeclaredConstructors": true,
-    "allDeclaredMethods": true
-  },
-  {
-    "name": "org.apache.logging.log4j.message.ParameterizedMessageFactory",
-    "allDeclaredConstructors": true,
-    "allDeclaredMethods": true
-  },
-  {
-    "name": "org.apache.logging.log4j.core.util.ExecutorServices",
-    "allDeclaredConstructors": true,
-    "allDeclaredMethods": true
-  },
-  {
-    "name": "sun.security.rsa.RSASignature$SHA256withRSA",
-    "allDeclaredConstructors": true,
-    "allDeclaredMethods": true
-  },
-  {
-    "name" : "org.bouncycastle.jcajce.provider.asymmetric.RSA$Mappings",
-    "allPublicConstructors" : true,
-    "allPublicMethods" : true
-  },
-  {
-    "name" : "org.bouncycastle.jcajce.provider.asymmetric.rsa.KeyFactorySpi",
-    "allPublicConstructors" : true,
-    "allPublicMethods" : true
-  },
-  {
-    "name":"com.sun.crypto.provider.PBEKeyFactory$PBEWithMD5AndDES",
-    "methods":[{"name":"<init>","parameterTypes":[] }]
-  },
-  {
-    "name":"com.sun.crypto.provider.PBEParameters",
-    "methods":[{"name":"<init>","parameterTypes":[] }]
-  },
-  {
-    "name":"com.sun.crypto.provider.PKCS12PBECipherCore$PBEWithSHA1AndDESede",
-    "methods":[{"name":"<init>","parameterTypes":[] }]
-  },
-  {
-    "name":"com.sun.crypto.provider.TlsMasterSecretGenerator",
-    "methods":[{"name":"<init>","parameterTypes":[] }]
-  },
-  {
-    "name":"java.security.AlgorithmParametersSpi"
-  },
-  {
-    "name":"java.security.AllPermission"
-  },
-  {
-    "name":"java.security.KeyStoreSpi"
-  },
-  {
-    "name":"java.security.MessageDigestSpi"
-  },
-  {
-    "name":"java.security.SecureRandomParameters"
-  },
-  {
-    "name":"java.security.SecurityPermission"
-  },
-  {
-    "name":"javax.security.auth.x500.X500Principal",
-    "fields":[{"name":"thisX500Name"}],
-    "methods":[{"name":"<init>","parameterTypes":["sun.security.x509.X500Name"] }]
-  },
-  {
-    "name":"sun.security.pkcs.SignerInfo[]"
-  },
-  {
-    "name":"sun.security.pkcs12.PKCS12KeyStore",
-    "methods":[{"name":"<init>","parameterTypes":[] }]
-  },
-  {
-    "name":"sun.security.pkcs12.PKCS12KeyStore$DualFormatPKCS12",
-    "methods":[{"name":"<init>","parameterTypes":[] }]
-  },
-  {
-    "name":"sun.security.provider.JavaKeyStore$JKS",
-    "methods":[{"name":"<init>","parameterTypes":[] }]
-  },
-  {
-    "name":"sun.security.provider.NativePRNG",
-    "methods":[{"name":"<init>","parameterTypes":[] }]
-  },
-  {
-    "name":"sun.security.provider.SHA",
-    "methods":[{"name":"<init>","parameterTypes":[] }]
-  },
-  {
-    "name":"sun.security.provider.X509Factory",
-    "methods":[{"name":"<init>","parameterTypes":[] }]
-  },
-  {
-    "name":"sun.security.rsa.RSAKeyFactory$Legacy",
-    "methods":[{"name":"<init>","parameterTypes":[] }]
-  },
-  {
-    "name":"sun.security.ssl.KeyManagerFactoryImpl$SunX509",
-    "methods":[{"name":"<init>","parameterTypes":[] }]
-  },
-  {
-    "name":"sun.security.ssl.SSLContextImpl$TLSContext",
-    "methods":[{"name":"<init>","parameterTypes":[] }]
-  },
-  {
-    "name":"sun.security.ssl.TrustManagerFactoryImpl$PKIXFactory",
-    "methods":[{"name":"<init>","parameterTypes":[] }]
-  },
-  {
-    "name":"sun.security.util.ObjectIdentifier"
-  },
-  {
-    "name":"sun.security.x509.AuthorityInfoAccessExtension",
-    "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]
-  },
-  {
-    "name":"sun.security.x509.AuthorityKeyIdentifierExtension",
-    "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]
-  },
-  {
-    "name":"sun.security.x509.BasicConstraintsExtension",
-    "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]
-  },
-  {
-    "name":"sun.security.x509.CRLDistributionPointsExtension",
-    "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]
-  },
-  {
-    "name":"sun.security.x509.CertificateExtensions"
-  },
-  {
-    "name":"sun.security.x509.CertificatePoliciesExtension",
-    "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]
-  },
-  {
-    "name":"sun.security.x509.ExtendedKeyUsageExtension",
-    "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]
-  },
-  {
-    "name":"sun.security.x509.IssuerAlternativeNameExtension",
-    "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]
-  },
-  {
-    "name":"sun.security.x509.KeyUsageExtension",
-    "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]
-  },
-  {
-    "name":"sun.security.x509.NetscapeCertTypeExtension",
-    "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]
-  },
-  {
-    "name":"sun.security.x509.PrivateKeyUsageExtension",
-    "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]
-  },
-  {
-    "name":"sun.security.x509.SubjectAlternativeNameExtension",
-    "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]
-  },
-  {
-    "name":"sun.security.x509.SubjectKeyIdentifierExtension",
-    "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]
-  },
-  {
-    "name": "org.bouncycastle.jcajce.provider.asymmetric.rsa.DigestSignatureSpi$SHA256",
-    "allPublicConstructors" : true,
-    "allPublicMethods" : true
-  },
-  {
-    "name":"com.fasterxml.jackson.core.JsonParser"
-  },
-  {
-    "name":"com.fasterxml.jackson.databind.JsonNode"
-  },
-  {
-    "name":"com.fasterxml.jackson.databind.ObjectMapper"
-  },
-  {
-    "name":"com.fasterxml.jackson.databind.deser.Deserializers[]"
-  },
-  {
-    "name":"com.fasterxml.jackson.databind.deser.KeyDeserializers[]"
-  },
-  {
-    "name":"com.fasterxml.jackson.databind.deser.ValueInstantiators[]"
-  },
-  {
-    "name":"com.fasterxml.jackson.databind.ext.Java7SupportImpl",
-    "methods":[{"name":"<init>","parameterTypes":[] }]
-  },
-  {
-    "name":"com.fasterxml.jackson.databind.ser.BeanSerializerModifier[]"
-  },
-  {
-    "name":"com.fasterxml.jackson.databind.ser.Serializers[]"
-  },
-  {
-    "name":"com.fasterxml.jackson.databind.type.TypeModifier[]"
-  },
-  {
-    "name":"com.fasterxml.jackson.dataformat.yaml.YAMLFactory"
-  }
+{
+  "name":"[B"}
+,
+{
+  "name":"[Lcom.fasterxml.jackson.databind.deser.Deserializers;"}
+,
+{
+  "name":"[Lcom.fasterxml.jackson.databind.deser.KeyDeserializers;"}
+,
+{
+  "name":"[Lcom.fasterxml.jackson.databind.deser.ValueInstantiators;"}
+,
+{
+  "name":"[Lcom.fasterxml.jackson.databind.ser.BeanSerializerModifier;"}
+,
+{
+  "name":"[Lcom.fasterxml.jackson.databind.ser.Serializers;"}
+,
+{
+  "name":"[Lcom.fasterxml.jackson.databind.type.TypeModifier;"}
+,
+{
+  "name":"[Ljava.lang.Object;"}
+,
+{
+  "name":"[Ljava.lang.String;"}
+,
+{
+  "name":"[Ljava.util.concurrent.CompletableFuture;"}
+,
+{
+  "name":"[Lsun.security.pkcs.SignerInfo;"}
+,
+{
+  "name":"boolean[]"}
+,
+{
+  "name":"byte[]"}
+,
+{
+  "name":"ch.qos.logback.classic.encoder.PatternLayoutEncoder",
+  "allPublicMethods":true,
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"ch.qos.logback.classic.pattern.DateConverter",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"ch.qos.logback.classic.pattern.LevelConverter",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"ch.qos.logback.classic.pattern.LineSeparatorConverter",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"ch.qos.logback.classic.pattern.LoggerConverter",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"ch.qos.logback.classic.pattern.MessageConverter",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"ch.qos.logback.classic.pattern.ThreadConverter",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"ch.qos.logback.classic.pattern.ThrowableProxyConverter",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"ch.qos.logback.classic.pattern.color.HighlightingCompositeConverter",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"ch.qos.logback.core.ConsoleAppender",
+  "allPublicMethods":true,
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"ch.qos.logback.core.OutputStreamAppender",
+  "methods":[{"name":"setEncoder","parameterTypes":["ch.qos.logback.core.encoder.Encoder"] }]}
+,
+{
+  "name":"ch.qos.logback.core.encoder.LayoutWrappingEncoder",
+  "methods":[{"name":"setParent","parameterTypes":["ch.qos.logback.core.spi.ContextAware"] }]}
+,
+{
+  "name":"ch.qos.logback.core.pattern.PatternLayoutEncoderBase",
+  "methods":[{"name":"setPattern","parameterTypes":["java.lang.String"] }]}
+,
+{
+  "name":"ch.qos.logback.core.pattern.color.BlackCompositeConverter",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"ch.qos.logback.core.pattern.color.YellowCompositeConverter",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP",
+  "allPublicMethods":true,
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"ch.qos.logback.core.rolling.TimeBasedRollingPolicy",
+  "allPublicMethods":true,
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"ch.qos.logback.core.rolling.helper.DateTokenConverter",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"ch.qos.logback.core.rolling.helper.IntegerTokenConverter",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"ch.qos.logback.core.status.NopStatusListener",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"ch.qos.logback.core.util.FileSize",
+  "methods":[{"name":"valueOf","parameterTypes":["java.lang.String"] }]}
+,
+{
+  "name":"char[]"}
+,
+{
+  "name":"com.fasterxml.jackson.core.JsonParser"}
+,
+{
+  "name":"com.fasterxml.jackson.databind.JsonNode"}
+,
+{
+  "name":"com.fasterxml.jackson.databind.ObjectMapper"}
+,
+{
+  "name":"com.fasterxml.jackson.databind.deser.Deserializers[]"}
+,
+{
+  "name":"com.fasterxml.jackson.databind.deser.KeyDeserializers[]"}
+,
+{
+  "name":"com.fasterxml.jackson.databind.deser.ValueInstantiators[]"}
+,
+{
+  "name":"com.fasterxml.jackson.databind.ext.Java7HandlersImpl",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"com.fasterxml.jackson.databind.ext.Java7SupportImpl",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"com.fasterxml.jackson.databind.ser.BeanSerializerModifier[]"}
+,
+{
+  "name":"com.fasterxml.jackson.databind.ser.Serializers[]"}
+,
+{
+  "name":"com.fasterxml.jackson.databind.ser.std.StdJdkSerializers$AtomicIntegerSerializer",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"com.fasterxml.jackson.databind.type.TypeModifier[]"}
+,
+{
+  "name":"com.fasterxml.jackson.dataformat.yaml.YAMLFactory"}
+,
+{
+  "name":"com.intellij.rt.execution.application.AppMainV2$Agent",
+  "methods":[{"name":"premain","parameterTypes":["java.lang.String","java.lang.instrument.Instrumentation"] }]}
+,
+{
+  "name":"com.sun.crypto.provider.AESCipher$General",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"com.sun.crypto.provider.DHParameters",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"com.sun.crypto.provider.HmacCore$HmacSHA256",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"com.sun.crypto.provider.PBEKeyFactory$PBEWithMD5AndDES",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"com.sun.crypto.provider.PBEParameters",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"com.sun.crypto.provider.PBES2Core$HmacSHA256AndAES_256",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"com.sun.crypto.provider.PBES2Parameters$General",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"com.sun.crypto.provider.PBES2Parameters$HmacSHA256AndAES_256",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"com.sun.crypto.provider.PKCS12PBECipherCore$PBEWithSHA1AndDESede",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"com.sun.crypto.provider.TlsKeyMaterialGenerator",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"com.sun.crypto.provider.TlsMasterSecretGenerator",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"com.sun.crypto.provider.TlsPrfGenerator$V12",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"com.sun.management.GarbageCollectorMXBean",
+  "allPublicMethods":true}
+,
+{
+  "name":"com.sun.management.GcInfo",
+  "allPublicMethods":true}
+,
+{
+  "name":"com.sun.management.HotSpotDiagnosticMXBean",
+  "allPublicMethods":true}
+,
+{
+  "name":"com.sun.management.ThreadMXBean",
+  "allPublicMethods":true}
+,
+{
+  "name":"com.sun.management.UnixOperatingSystemMXBean",
+  "allPublicMethods":true}
+,
+{
+  "name":"com.sun.management.VMOption",
+  "allPublicMethods":true}
+,
+{
+  "name":"com.sun.management.internal.GarbageCollectorExtImpl",
+  "allPublicConstructors":true}
+,
+{
+  "name":"com.sun.management.internal.HotSpotDiagnostic",
+  "allPublicConstructors":true}
+,
+{
+  "name":"com.sun.management.internal.HotSpotThreadImpl",
+  "allPublicConstructors":true}
+,
+{
+  "name":"com.sun.management.internal.OperatingSystemImpl",
+  "allPublicConstructors":true}
+,
+{
+  "name":"com.sun.org.apache.xerces.internal.jaxp.SAXParserFactoryImpl",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"double[]"}
+,
+{
+  "name":"float[]"}
+,
+{
+  "name":"graphql.schema.GraphQLArgument",
+  "methods":[{"name":"getType","parameterTypes":[] }]}
+,
+{
+  "name":"graphql.schema.GraphQLEnumValueDefinition",
+  "methods":[{"name":"getDeprecationReason","parameterTypes":[] }]}
+,
+{
+  "name":"graphql.schema.GraphQLFieldDefinition",
+  "methods":[
+    {"name":"getDeprecationReason","parameterTypes":[] }, 
+    {"name":"getType","parameterTypes":[] }
+  ]}
+,
+{
+  "name":"graphql.schema.GraphQLInputObjectField",
+  "methods":[{"name":"getType","parameterTypes":[] }]}
+,
+{
+  "name":"int[]"}
+,
+{
+  "name":"io.netty.bootstrap.ServerBootstrap$1"}
+,
+{
+  "name":"io.netty.bootstrap.ServerBootstrap$ServerBootstrapAcceptor",
+  "methods":[
+    {"name":"channelRead","parameterTypes":["io.netty.channel.ChannelHandlerContext","java.lang.Object"] }, 
+    {"name":"exceptionCaught","parameterTypes":["io.netty.channel.ChannelHandlerContext","java.lang.Throwable"] }
+  ]}
+,
+{
+  "name":"io.netty.buffer.AbstractByteBufAllocator",
+  "allDeclaredMethods":true}
+,
+{
+  "name":"io.netty.buffer.AbstractReferenceCountedByteBuf",
+  "fields":[{"name":"refCnt"}]}
+,
+{
+  "name":"io.netty.channel.ChannelDuplexHandler",
+  "methods":[
+    {"name":"bind","parameterTypes":["io.netty.channel.ChannelHandlerContext","java.net.SocketAddress","io.netty.channel.ChannelPromise"] }, 
+    {"name":"connect","parameterTypes":["io.netty.channel.ChannelHandlerContext","java.net.SocketAddress","java.net.SocketAddress","io.netty.channel.ChannelPromise"] }, 
+    {"name":"deregister","parameterTypes":["io.netty.channel.ChannelHandlerContext","io.netty.channel.ChannelPromise"] }, 
+    {"name":"disconnect","parameterTypes":["io.netty.channel.ChannelHandlerContext","io.netty.channel.ChannelPromise"] }, 
+    {"name":"flush","parameterTypes":["io.netty.channel.ChannelHandlerContext"] }, 
+    {"name":"read","parameterTypes":["io.netty.channel.ChannelHandlerContext"] }, 
+    {"name":"write","parameterTypes":["io.netty.channel.ChannelHandlerContext","java.lang.Object","io.netty.channel.ChannelPromise"] }
+  ],
+  "queriedMethods":[{"name":"close","parameterTypes":["io.netty.channel.ChannelHandlerContext","io.netty.channel.ChannelPromise"] }]}
+,
+{
+  "name":"io.netty.channel.ChannelHandlerAdapter",
+  "methods":[{"name":"exceptionCaught","parameterTypes":["io.netty.channel.ChannelHandlerContext","java.lang.Throwable"] }]}
+,
+{
+  "name":"io.netty.channel.ChannelInboundHandlerAdapter",
+  "methods":[
+    {"name":"channelActive","parameterTypes":["io.netty.channel.ChannelHandlerContext"] }, 
+    {"name":"channelInactive","parameterTypes":["io.netty.channel.ChannelHandlerContext"] }, 
+    {"name":"channelRead","parameterTypes":["io.netty.channel.ChannelHandlerContext","java.lang.Object"] }, 
+    {"name":"channelReadComplete","parameterTypes":["io.netty.channel.ChannelHandlerContext"] }, 
+    {"name":"channelRegistered","parameterTypes":["io.netty.channel.ChannelHandlerContext"] }, 
+    {"name":"channelUnregistered","parameterTypes":["io.netty.channel.ChannelHandlerContext"] }, 
+    {"name":"channelWritabilityChanged","parameterTypes":["io.netty.channel.ChannelHandlerContext"] }, 
+    {"name":"exceptionCaught","parameterTypes":["io.netty.channel.ChannelHandlerContext","java.lang.Throwable"] }, 
+    {"name":"userEventTriggered","parameterTypes":["io.netty.channel.ChannelHandlerContext","java.lang.Object"] }
+  ]}
+,
+{
+  "name":"io.netty.channel.ChannelInitializer",
+  "methods":[
+    {"name":"channelRegistered","parameterTypes":["io.netty.channel.ChannelHandlerContext"] }, 
+    {"name":"exceptionCaught","parameterTypes":["io.netty.channel.ChannelHandlerContext","java.lang.Throwable"] }
+  ]}
+,
+{
+  "name":"io.netty.channel.ChannelOutboundHandlerAdapter",
+  "methods":[
+    {"name":"bind","parameterTypes":["io.netty.channel.ChannelHandlerContext","java.net.SocketAddress","io.netty.channel.ChannelPromise"] }, 
+    {"name":"close","parameterTypes":["io.netty.channel.ChannelHandlerContext","io.netty.channel.ChannelPromise"] }, 
+    {"name":"connect","parameterTypes":["io.netty.channel.ChannelHandlerContext","java.net.SocketAddress","java.net.SocketAddress","io.netty.channel.ChannelPromise"] }, 
+    {"name":"deregister","parameterTypes":["io.netty.channel.ChannelHandlerContext","io.netty.channel.ChannelPromise"] }, 
+    {"name":"disconnect","parameterTypes":["io.netty.channel.ChannelHandlerContext","io.netty.channel.ChannelPromise"] }, 
+    {"name":"flush","parameterTypes":["io.netty.channel.ChannelHandlerContext"] }, 
+    {"name":"read","parameterTypes":["io.netty.channel.ChannelHandlerContext"] }
+  ]}
+,
+{
+  "name":"io.netty.channel.DefaultChannelPipeline$HeadContext",
+  "methods":[
+    {"name":"bind","parameterTypes":["io.netty.channel.ChannelHandlerContext","java.net.SocketAddress","io.netty.channel.ChannelPromise"] }, 
+    {"name":"channelActive","parameterTypes":["io.netty.channel.ChannelHandlerContext"] }, 
+    {"name":"channelInactive","parameterTypes":["io.netty.channel.ChannelHandlerContext"] }, 
+    {"name":"channelRead","parameterTypes":["io.netty.channel.ChannelHandlerContext","java.lang.Object"] }, 
+    {"name":"channelReadComplete","parameterTypes":["io.netty.channel.ChannelHandlerContext"] }, 
+    {"name":"channelRegistered","parameterTypes":["io.netty.channel.ChannelHandlerContext"] }, 
+    {"name":"channelUnregistered","parameterTypes":["io.netty.channel.ChannelHandlerContext"] }, 
+    {"name":"channelWritabilityChanged","parameterTypes":["io.netty.channel.ChannelHandlerContext"] }, 
+    {"name":"close","parameterTypes":["io.netty.channel.ChannelHandlerContext","io.netty.channel.ChannelPromise"] }, 
+    {"name":"connect","parameterTypes":["io.netty.channel.ChannelHandlerContext","java.net.SocketAddress","java.net.SocketAddress","io.netty.channel.ChannelPromise"] }, 
+    {"name":"deregister","parameterTypes":["io.netty.channel.ChannelHandlerContext","io.netty.channel.ChannelPromise"] }, 
+    {"name":"disconnect","parameterTypes":["io.netty.channel.ChannelHandlerContext","io.netty.channel.ChannelPromise"] }, 
+    {"name":"exceptionCaught","parameterTypes":["io.netty.channel.ChannelHandlerContext","java.lang.Throwable"] }, 
+    {"name":"flush","parameterTypes":["io.netty.channel.ChannelHandlerContext"] }, 
+    {"name":"read","parameterTypes":["io.netty.channel.ChannelHandlerContext"] }, 
+    {"name":"userEventTriggered","parameterTypes":["io.netty.channel.ChannelHandlerContext","java.lang.Object"] }, 
+    {"name":"write","parameterTypes":["io.netty.channel.ChannelHandlerContext","java.lang.Object","io.netty.channel.ChannelPromise"] }
+  ]}
+,
+{
+  "name":"io.netty.channel.DefaultChannelPipeline$TailContext",
+  "methods":[
+    {"name":"channelActive","parameterTypes":["io.netty.channel.ChannelHandlerContext"] }, 
+    {"name":"channelInactive","parameterTypes":["io.netty.channel.ChannelHandlerContext"] }, 
+    {"name":"channelRead","parameterTypes":["io.netty.channel.ChannelHandlerContext","java.lang.Object"] }, 
+    {"name":"channelReadComplete","parameterTypes":["io.netty.channel.ChannelHandlerContext"] }, 
+    {"name":"channelRegistered","parameterTypes":["io.netty.channel.ChannelHandlerContext"] }, 
+    {"name":"channelUnregistered","parameterTypes":["io.netty.channel.ChannelHandlerContext"] }, 
+    {"name":"channelWritabilityChanged","parameterTypes":["io.netty.channel.ChannelHandlerContext"] }, 
+    {"name":"exceptionCaught","parameterTypes":["io.netty.channel.ChannelHandlerContext","java.lang.Throwable"] }, 
+    {"name":"userEventTriggered","parameterTypes":["io.netty.channel.ChannelHandlerContext","java.lang.Object"] }
+  ]}
+,
+{
+  "name":"io.netty.handler.codec.ByteToMessageDecoder",
+  "queriedMethods":[
+    {"name":"channelInactive","parameterTypes":["io.netty.channel.ChannelHandlerContext"] }, 
+    {"name":"channelRead","parameterTypes":["io.netty.channel.ChannelHandlerContext","java.lang.Object"] }, 
+    {"name":"channelReadComplete","parameterTypes":["io.netty.channel.ChannelHandlerContext"] }, 
+    {"name":"userEventTriggered","parameterTypes":["io.netty.channel.ChannelHandlerContext","java.lang.Object"] }
+  ]}
+,
+{
+  "name":"io.netty.handler.codec.MessageToMessageDecoder",
+  "methods":[{"name":"channelRead","parameterTypes":["io.netty.channel.ChannelHandlerContext","java.lang.Object"] }]}
+,
+{
+  "name":"io.netty.handler.codec.MessageToMessageEncoder",
+  "methods":[{"name":"write","parameterTypes":["io.netty.channel.ChannelHandlerContext","java.lang.Object","io.netty.channel.ChannelPromise"] }]}
+,
+{
+  "name":"io.netty.handler.codec.dns.DatagramDnsQueryEncoder"}
+,
+{
+  "name":"io.netty.handler.codec.http.HttpObjectDecoder",
+  "queriedMethods":[{"name":"userEventTriggered","parameterTypes":["io.netty.channel.ChannelHandlerContext","java.lang.Object"] }]}
+,
+{
+  "name":"io.netty.handler.codec.http.websocketx.extensions.WebSocketServerExtensionHandler",
+  "queriedMethods":[
+    {"name":"channelRead","parameterTypes":["io.netty.channel.ChannelHandlerContext","java.lang.Object"] }, 
+    {"name":"write","parameterTypes":["io.netty.channel.ChannelHandlerContext","java.lang.Object","io.netty.channel.ChannelPromise"] }
+  ]}
+,
+{
+  "name":"io.netty.handler.ssl.SslHandler",
+  "queriedMethods":[
+    {"name":"bind","parameterTypes":["io.netty.channel.ChannelHandlerContext","java.net.SocketAddress","io.netty.channel.ChannelPromise"] }, 
+    {"name":"channelActive","parameterTypes":["io.netty.channel.ChannelHandlerContext"] }, 
+    {"name":"channelInactive","parameterTypes":["io.netty.channel.ChannelHandlerContext"] }, 
+    {"name":"channelReadComplete","parameterTypes":["io.netty.channel.ChannelHandlerContext"] }, 
+    {"name":"close","parameterTypes":["io.netty.channel.ChannelHandlerContext","io.netty.channel.ChannelPromise"] }, 
+    {"name":"connect","parameterTypes":["io.netty.channel.ChannelHandlerContext","java.net.SocketAddress","java.net.SocketAddress","io.netty.channel.ChannelPromise"] }, 
+    {"name":"deregister","parameterTypes":["io.netty.channel.ChannelHandlerContext","io.netty.channel.ChannelPromise"] }, 
+    {"name":"disconnect","parameterTypes":["io.netty.channel.ChannelHandlerContext","io.netty.channel.ChannelPromise"] }, 
+    {"name":"exceptionCaught","parameterTypes":["io.netty.channel.ChannelHandlerContext","java.lang.Throwable"] }, 
+    {"name":"flush","parameterTypes":["io.netty.channel.ChannelHandlerContext"] }, 
+    {"name":"read","parameterTypes":["io.netty.channel.ChannelHandlerContext"] }, 
+    {"name":"write","parameterTypes":["io.netty.channel.ChannelHandlerContext","java.lang.Object","io.netty.channel.ChannelPromise"] }
+  ]}
+,
+{
+  "name":"io.netty.handler.stream.ChunkedWriteHandler",
+  "queriedMethods":[
+    {"name":"channelInactive","parameterTypes":["io.netty.channel.ChannelHandlerContext"] }, 
+    {"name":"channelWritabilityChanged","parameterTypes":["io.netty.channel.ChannelHandlerContext"] }, 
+    {"name":"flush","parameterTypes":["io.netty.channel.ChannelHandlerContext"] }, 
+    {"name":"write","parameterTypes":["io.netty.channel.ChannelHandlerContext","java.lang.Object","io.netty.channel.ChannelPromise"] }
+  ]}
+,
+{
+  "name":"io.netty.resolver.dns.DnsNameResolver$1"}
+,
+{
+  "name":"io.netty.resolver.dns.DnsNameResolver$3"}
+,
+{
+  "name":"io.netty.resolver.dns.DnsNameResolver$DnsResponseHandler",
+  "methods":[
+    {"name":"channelActive","parameterTypes":["io.netty.channel.ChannelHandlerContext"] }, 
+    {"name":"channelRead","parameterTypes":["io.netty.channel.ChannelHandlerContext","java.lang.Object"] }, 
+    {"name":"exceptionCaught","parameterTypes":["io.netty.channel.ChannelHandlerContext","java.lang.Throwable"] }
+  ]}
+,
+{
+  "name":"io.netty.util.ReferenceCountUtil",
+  "allDeclaredMethods":true}
+,
+{
+  "name":"io.netty.util.internal.shaded.org.jctools.queues.BaseMpscLinkedArrayQueueColdProducerFields",
+  "fields":[{"name":"producerLimit"}]}
+,
+{
+  "name":"io.netty.util.internal.shaded.org.jctools.queues.BaseMpscLinkedArrayQueueConsumerFields",
+  "fields":[{"name":"consumerIndex"}]}
+,
+{
+  "name":"io.netty.util.internal.shaded.org.jctools.queues.BaseMpscLinkedArrayQueueProducerFields",
+  "fields":[{"name":"producerIndex"}]}
+,
+{
+  "name":"io.netty.util.internal.shaded.org.jctools.queues.MpscArrayQueueConsumerIndexField",
+  "fields":[{"name":"consumerIndex"}]}
+,
+{
+  "name":"io.netty.util.internal.shaded.org.jctools.queues.MpscArrayQueueProducerIndexField",
+  "fields":[{"name":"producerIndex"}]}
+,
+{
+  "name":"io.netty.util.internal.shaded.org.jctools.queues.MpscArrayQueueProducerLimitField",
+  "fields":[{"name":"producerLimit"}]}
+,
+{
+  "name":"io.vertx.core.eventbus.ReplyException",
+  "allDeclaredMethods":true,
+  "allDeclaredConstructors":true}
+,
+{
+  "name":"io.vertx.core.http.impl.VertxHttpRequestDecoder"}
+,
+{
+  "name":"io.vertx.core.http.impl.VertxHttpResponseEncoder"}
+,
+{
+  "name":"io.vertx.core.impl.launcher.commands.RunCommand",
+  "allDeclaredMethods":true,
+  "allDeclaredConstructors":true}
+,
+{
+  "name":"io.vertx.core.impl.launcher.commands.VertxIsolatedDeployer",
+  "allDeclaredMethods":true,
+  "allDeclaredConstructors":true}
+,
+{
+  "name":"io.vertx.core.logging.Log4j2LogDelegateFactory",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"io.vertx.core.logging.SLF4JLogDelegateFactory",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"io.vertx.core.net.impl.ChannelProvider$2"}
+,
+{
+  "name":"io.vertx.core.net.impl.ServerChannelLoadBalancer"}
+,
+{
+  "name":"io.vertx.core.net.impl.SslHandshakeCompletionHandler",
+  "queriedMethods":[
+    {"name":"exceptionCaught","parameterTypes":["io.netty.channel.ChannelHandlerContext","java.lang.Throwable"] }, 
+    {"name":"userEventTriggered","parameterTypes":["io.netty.channel.ChannelHandlerContext","java.lang.Object"] }
+  ]}
+,
+{
+  "name":"io.vertx.core.net.impl.VertxHandler",
+  "methods":[
+    {"name":"channelInactive","parameterTypes":["io.netty.channel.ChannelHandlerContext"] }, 
+    {"name":"channelRead","parameterTypes":["io.netty.channel.ChannelHandlerContext","java.lang.Object"] }, 
+    {"name":"channelReadComplete","parameterTypes":["io.netty.channel.ChannelHandlerContext"] }, 
+    {"name":"channelWritabilityChanged","parameterTypes":["io.netty.channel.ChannelHandlerContext"] }, 
+    {"name":"close","parameterTypes":["io.netty.channel.ChannelHandlerContext","io.netty.channel.ChannelPromise"] }, 
+    {"name":"exceptionCaught","parameterTypes":["io.netty.channel.ChannelHandlerContext","java.lang.Throwable"] }, 
+    {"name":"userEventTriggered","parameterTypes":["io.netty.channel.ChannelHandlerContext","java.lang.Object"] }
+  ]}
+,
+{
+  "name":"io.vertx.serviceproxy.ServiceException",
+  "allDeclaredMethods":true,
+  "allDeclaredConstructors":true}
+,
+{
+  "name":"java.io.FilePermission"}
+,
+{
+  "name":"java.io.ObjectInputStream",
+  "allPublicMethods":true}
+,
+{
+  "name":"java.io.Serializable",
+  "allDeclaredFields":true,
+  "allDeclaredClasses":true,
+  "queryAllDeclaredMethods":true}
+,
+{
+  "name":"java.lang.Boolean",
+  "fields":[{"name":"TYPE"}]}
+,
+{
+  "name":"java.lang.Byte",
+  "fields":[{"name":"TYPE"}]}
+,
+{
+  "name":"java.lang.Character",
+  "fields":[{"name":"TYPE"}]}
+,
+{
+  "name":"java.lang.Class"}
+,
+{
+  "name":"java.lang.Comparable",
+  "allDeclaredFields":true,
+  "allDeclaredClasses":true,
+  "queryAllDeclaredMethods":true}
+,
+{
+  "name":"java.lang.Double",
+  "fields":[{"name":"TYPE"}]}
+,
+{
+  "name":"java.lang.Enum",
+  "allDeclaredFields":true,
+  "allDeclaredClasses":true,
+  "queryAllDeclaredMethods":true}
+,
+{
+  "name":"java.lang.Float",
+  "fields":[{"name":"TYPE"}]}
+,
+{
+  "name":"java.lang.Integer",
+  "allDeclaredConstructors":true,
+  "fields":[{"name":"TYPE"}]}
+,
+{
+  "name":"java.lang.Long",
+  "allDeclaredConstructors":true,
+  "fields":[{"name":"TYPE"}]}
+,
+{
+  "name":"java.lang.Number",
+  "allDeclaredFields":true,
+  "queryAllDeclaredMethods":true}
+,
+{
+  "name":"java.lang.Object",
+  "queriedMethods":[
+    {"name":"equals","parameterTypes":["java.lang.Object"] }, 
+    {"name":"hashCode","parameterTypes":[] }, 
+    {"name":"toString","parameterTypes":[] }
+  ]}
+,
+{
+  "name":"java.lang.RuntimePermission"}
+,
+{
+  "name":"java.lang.Short",
+  "fields":[{"name":"TYPE"}]}
+,
+{
+  "name":"java.lang.StackTraceElement",
+  "allPublicMethods":true}
+,
+{
+  "name":"java.lang.String"}
+,
+{
+  "name":"java.lang.String[]"}
+,
+{
+  "name":"java.lang.Void",
+  "fields":[{"name":"TYPE"}]}
+,
+{
+  "name":"java.lang.management.BufferPoolMXBean",
+  "allPublicMethods":true}
+,
+{
+  "name":"java.lang.management.ClassLoadingMXBean",
+  "allPublicMethods":true}
+,
+{
+  "name":"java.lang.management.CompilationMXBean",
+  "allPublicMethods":true}
+,
+{
+  "name":"java.lang.management.LockInfo",
+  "allPublicMethods":true}
+,
+{
+  "name":"java.lang.management.ManagementFactory",
+  "methods":[{"name":"getRuntimeMXBean","parameterTypes":[] }]}
+,
+{
+  "name":"java.lang.management.ManagementPermission",
+  "methods":[{"name":"<init>","parameterTypes":["java.lang.String"] }]}
+,
+{
+  "name":"java.lang.management.MemoryMXBean",
+  "allPublicMethods":true}
+,
+{
+  "name":"java.lang.management.MemoryManagerMXBean",
+  "allPublicMethods":true}
+,
+{
+  "name":"java.lang.management.MemoryPoolMXBean",
+  "allPublicMethods":true}
+,
+{
+  "name":"java.lang.management.MemoryUsage",
+  "allPublicMethods":true}
+,
+{
+  "name":"java.lang.management.MonitorInfo",
+  "allPublicMethods":true}
+,
+{
+  "name":"java.lang.management.PlatformLoggingMXBean",
+  "allPublicMethods":true}
+,
+{
+  "name":"java.lang.management.RuntimeMXBean",
+  "allPublicMethods":true}
+,
+{
+  "name":"java.lang.management.ThreadInfo",
+  "allPublicMethods":true}
+,
+{
+  "name":"java.lang.reflect.Executable",
+  "methods":[{"name":"getParameters","parameterTypes":[] }]}
+,
+{
+  "name":"java.lang.reflect.Method"}
+,
+{
+  "name":"java.lang.reflect.Parameter",
+  "methods":[{"name":"getName","parameterTypes":[] }]}
+,
+{
+  "name":"java.math.BigDecimal"}
+,
+{
+  "name":"java.math.BigInteger"}
+,
+{
+  "name":"java.net.NetPermission"}
+,
+{
+  "name":"java.net.SocketOption"}
+,
+{
+  "name":"java.net.SocketPermission"}
+,
+{
+  "name":"java.net.StandardSocketOptions",
+  "fields":[
+    {"name":"IP_MULTICAST_IF"}, 
+    {"name":"IP_MULTICAST_LOOP"}, 
+    {"name":"IP_MULTICAST_TTL"}
+  ]}
+,
+{
+  "name":"java.net.URLPermission",
+  "methods":[{"name":"<init>","parameterTypes":["java.lang.String","java.lang.String"] }]}
+,
+{
+  "name":"java.nio.Bits",
+  "fields":[{"name":"UNALIGNED"}]}
+,
+{
+  "name":"java.nio.Buffer",
+  "fields":[{"name":"address"}]}
+,
+{
+  "name":"java.nio.ByteBuffer",
+  "queriedMethods":[{"name":"alignedSlice","parameterTypes":["int"] }]}
+,
+{
+  "name":"java.nio.DirectByteBuffer",
+  "methods":[{"name":"<init>","parameterTypes":["long","int"] }]}
+,
+{
+  "name":"java.nio.channels.NetworkChannel",
+  "methods":[
+    {"name":"getOption","parameterTypes":["java.net.SocketOption"] }, 
+    {"name":"setOption","parameterTypes":["java.net.SocketOption","java.lang.Object"] }
+  ]}
+,
+{
+  "name":"java.security.AlgorithmParametersSpi"}
+,
+{
+  "name":"java.security.AllPermission"}
+,
+{
+  "name":"java.security.KeyStoreSpi"}
+,
+{
+  "name":"java.security.MessageDigestSpi"}
+,
+{
+  "name":"java.security.SecureRandomParameters"}
+,
+{
+  "name":"java.security.SecurityPermission"}
+,
+{
+  "name":"java.security.cert.PKIXRevocationChecker"}
+,
+{
+  "name":"java.security.interfaces.RSAPrivateKey"}
+,
+{
+  "name":"java.security.interfaces.RSAPublicKey"}
+,
+{
+  "name":"java.sql.Date"}
+,
+{
+  "name":"java.sql.Timestamp"}
+,
+{
+  "name":"java.util.Collection[]"}
+,
+{
+  "name":"java.util.Date"}
+,
+{
+  "name":"java.util.HashSet",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"java.util.Iterator[]",
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "allDeclaredClasses":true,
+  "allPublicClasses":true}
+,
+{
+  "name":"java.util.List"}
+,
+{
+  "name":"java.util.Map"}
+,
+{
+  "name":"java.util.PropertyPermission",
+  "methods":[{"name":"<init>","parameterTypes":["java.lang.String","java.lang.String"] }]}
+,
+{
+  "name":"java.util.Set[]"}
+,
+{
+  "name":"java.util.concurrent.ScheduledThreadPoolExecutor",
+  "methods":[{"name":"setRemoveOnCancelPolicy","parameterTypes":["boolean"] }]}
+,
+{
+  "name":"java.util.concurrent.atomic.AtomicInteger",
+  "allDeclaredFields":true,
+  "queryAllDeclaredMethods":true,
+  "queryAllDeclaredConstructors":true}
+,
+{
+  "name":"java.util.logging.LogManager",
+  "methods":[{"name":"getLoggingMXBean","parameterTypes":[] }]}
+,
+{
+  "name":"java.util.logging.LoggingMXBean",
+  "allPublicMethods":true}
+,
+{
+  "name":"javax.management.MBeanOperationInfo",
+  "allPublicMethods":true}
+,
+{
+  "name":"javax.management.MBeanServerBuilder",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"javax.management.NotificationBroadcasterSupport",
+  "methods":[{"name":"getNotificationInfo","parameterTypes":[] }]}
+,
+{
+  "name":"javax.management.ObjectName"}
+,
+{
+  "name":"javax.management.openmbean.CompositeData"}
+,
+{
+  "name":"javax.management.openmbean.CompositeData[]"}
+,
+{
+  "name":"javax.management.openmbean.OpenMBeanOperationInfoSupport"}
+,
+{
+  "name":"javax.management.openmbean.TabularData"}
+,
+{
+  "name":"javax.security.auth.x500.X500Principal",
+  "fields":[{"name":"thisX500Name"}],
+  "methods":[{"name":"<init>","parameterTypes":["sun.security.x509.X500Name"] }]}
+,
+{
+  "name":"jdk.internal.misc.Unsafe",
+  "methods":[{"name":"getUnsafe","parameterTypes":[] }]}
+,
+{
+  "name":"jdk.management.jfr.ConfigurationInfo",
+  "allPublicMethods":true}
+,
+{
+  "name":"jdk.management.jfr.EventTypeInfo",
+  "allPublicMethods":true}
+,
+{
+  "name":"jdk.management.jfr.FlightRecorderMXBean",
+  "allPublicMethods":true}
+,
+{
+  "name":"jdk.management.jfr.FlightRecorderMXBeanImpl",
+  "allPublicConstructors":true}
+,
+{
+  "name":"jdk.management.jfr.RecordingInfo",
+  "allPublicMethods":true}
+,
+{
+  "name":"jdk.management.jfr.SettingDescriptorInfo",
+  "allPublicMethods":true}
+,
+{
+  "name":"kotlin.Deprecated",
+  "queryAllDeclaredMethods":true,
+  "methods":[
+    {"name":"level","parameterTypes":[] }, 
+    {"name":"message","parameterTypes":[] }, 
+    {"name":"replaceWith","parameterTypes":[] }
+  ]}
+,
+{
+  "name":"kotlin.KotlinVersion",
+  "allDeclaredFields":true,
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true}
+,
+{
+  "name":"kotlin.KotlinVersion$Companion"}
+,
+{
+  "name":"kotlin.KotlinVersion$Companion[]"}
+,
+{
+  "name":"kotlin.KotlinVersion[]"}
+,
+{
+  "name":"kotlin.Metadata",
+  "queryAllDeclaredMethods":true,
+  "methods":[
+    {"name":"bv","parameterTypes":[] }, 
+    {"name":"d1","parameterTypes":[] }, 
+    {"name":"d2","parameterTypes":[] }, 
+    {"name":"k","parameterTypes":[] }, 
+    {"name":"mv","parameterTypes":[] }, 
+    {"name":"pn","parameterTypes":[] }, 
+    {"name":"xi","parameterTypes":[] }, 
+    {"name":"xs","parameterTypes":[] }
+  ]}
+,
+{
+  "name":"kotlin.ReplaceWith",
+  "queryAllDeclaredMethods":true,
+  "methods":[
+    {"name":"expression","parameterTypes":[] }, 
+    {"name":"imports","parameterTypes":[] }
+  ]}
+,
+{
+  "name":"kotlin.Unit"}
+,
+{
+  "name":"kotlin.internal.jdk8.JDK8PlatformImplementations",
+  "allDeclaredFields":true,
+  "allPublicFields":true,
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true}
+,
+{
+  "name":"kotlin.jvm.JvmStatic",
+  "queryAllDeclaredMethods":true}
+,
+{
+  "name":"kotlin.jvm.internal.DefaultConstructorMarker"}
+,
+{
+  "name":"kotlin.reflect.jvm.internal.ReflectionFactoryImpl",
+  "allDeclaredConstructors":true}
+,
+{
+  "name":"kotlin.reflect.jvm.internal.impl.resolve.scopes.DescriptorKindFilter",
+  "allPublicFields":true}
+,
+{
+  "name":"kotlinx.datetime.Instant[]",
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "allDeclaredClasses":true,
+  "allPublicClasses":true}
+,
+{
+  "name":"kotlinx.serialization.Contextual"}
+,
+{
+  "name":"kotlinx.serialization.KSerializer"}
+,
+{
+  "name":"kotlinx.serialization.descriptors.SerialDescriptor"}
+,
+{
+  "name":"kotlinx.serialization.encoding.CompositeEncoder"}
+,
+{
+  "name":"kotlinx.serialization.encoding.CompositeEncoder[]",
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "allDeclaredClasses":true,
+  "allPublicClasses":true}
+,
+{
+  "name":"kotlinx.serialization.internal.SerializationConstructorMarker"}
+,
+{
+  "name":"long[]"}
+,
+{
+  "name":"org.apache.logging.log4j.core.impl.Log4jContextFactory",
+  "allDeclaredMethods":true,
+  "allDeclaredConstructors":true}
+,
+{
+  "name":"org.apache.logging.log4j.core.util.ExecutorServices",
+  "allDeclaredMethods":true,
+  "allDeclaredConstructors":true}
+,
+{
+  "name":"org.apache.logging.log4j.message.DefaultFlowMessageFactory",
+  "allDeclaredMethods":true,
+  "allDeclaredConstructors":true}
+,
+{
+  "name":"org.apache.logging.log4j.message.ParameterizedMessageFactory",
+  "allDeclaredMethods":true,
+  "allDeclaredConstructors":true}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.asymmetric.COMPOSITE$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.asymmetric.DH$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.asymmetric.DSA$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.asymmetric.DSTU4145$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.asymmetric.EC$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.asymmetric.ECGOST$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.asymmetric.EdEC$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.asymmetric.ElGamal$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.asymmetric.GM$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.asymmetric.GOST$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.asymmetric.IES$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.asymmetric.RSA$Mappings",
+  "allPublicMethods":true,
+  "allPublicConstructors":true,
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.asymmetric.X509$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.asymmetric.edec.SignatureSpi$Ed25519",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.asymmetric.edec.SignatureSpi$Ed448",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.asymmetric.rsa.DigestSignatureSpi$SHA256",
+  "allPublicMethods":true,
+  "allPublicConstructors":true}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.asymmetric.rsa.KeyFactorySpi",
+  "allPublicMethods":true,
+  "allPublicConstructors":true}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.digest.Blake2b$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.digest.Blake2s$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.digest.DSTU7564$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.digest.GOST3411$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.digest.Haraka$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.digest.Keccak$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.digest.MD2$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.digest.MD4$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.digest.MD5$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.digest.RIPEMD128$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.digest.RIPEMD160$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.digest.RIPEMD256$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.digest.RIPEMD320$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.digest.SHA1$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.digest.SHA224$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.digest.SHA256$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.digest.SHA3$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.digest.SHA384$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.digest.SHA512$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.digest.SM3$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.digest.Skein$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.digest.Tiger$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.digest.Whirlpool$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.drbg.DRBG$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.keystore.BC$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.keystore.BCFKS$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.keystore.PKCS12$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.symmetric.AES$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.symmetric.ARC4$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.symmetric.ARIA$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.symmetric.Blowfish$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.symmetric.CAST5$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.symmetric.CAST6$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.symmetric.Camellia$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.symmetric.ChaCha$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.symmetric.DES$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.symmetric.DESede$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.symmetric.DSTU7624$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.symmetric.GOST28147$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.symmetric.GOST3412_2015$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.symmetric.Grain128$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.symmetric.Grainv1$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.symmetric.HC128$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.symmetric.HC256$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.symmetric.IDEA$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.symmetric.Noekeon$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.symmetric.OpenSSLPBKDF$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.symmetric.PBEPBKDF1$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.symmetric.PBEPBKDF2$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.symmetric.PBEPKCS12$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.symmetric.Poly1305$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.symmetric.RC2$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.symmetric.RC5$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.symmetric.RC6$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.symmetric.Rijndael$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.symmetric.SCRYPT$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.symmetric.SEED$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.symmetric.SM4$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.symmetric.Salsa20$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.symmetric.Serpent$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.symmetric.Shacal2$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.symmetric.SipHash$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.symmetric.SipHash128$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.symmetric.Skipjack$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.symmetric.TEA$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.symmetric.TLSKDF$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.symmetric.Threefish$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.symmetric.Twofish$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.symmetric.VMPC$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.symmetric.VMPCKSA3$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.symmetric.XSalsa20$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.symmetric.XTEA$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.bouncycastle.jcajce.provider.symmetric.Zuc$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.kohsuke.github.GHAsset",
+  "allDeclaredFields":true,
+  "allPublicFields":true,
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.kohsuke.github.GHAsset[]",
+  "allDeclaredFields":true,
+  "allPublicFields":true,
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true}
+,
+{
+  "name":"org.kohsuke.github.GHLicense",
+  "allDeclaredFields":true,
+  "allPublicFields":true,
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.kohsuke.github.GHObject",
+  "allDeclaredFields":true,
+  "allPublicFields":true,
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.kohsuke.github.GHPerson",
+  "allDeclaredFields":true,
+  "allPublicFields":true,
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.kohsuke.github.GHRelease",
+  "allDeclaredFields":true,
+  "allPublicFields":true,
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.kohsuke.github.GHRelease[]",
+  "allDeclaredFields":true,
+  "allPublicFields":true,
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true}
+,
+{
+  "name":"org.kohsuke.github.GHRepository",
+  "allDeclaredFields":true,
+  "allPublicFields":true,
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "fields":[{"name":"owner", "allowWrite":true}],
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.kohsuke.github.GHUser",
+  "allDeclaredFields":true,
+  "allPublicFields":true,
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"org.kohsuke.github.GitHubInteractiveObject",
+  "allDeclaredFields":true,
+  "allPublicFields":true,
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "fields":[{"name":"root", "allowWrite":true}],
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"short[]"}
+,
+{
+  "name":"spp.platform.SourcePlatform",
+  "allDeclaredMethods":true,
+  "allDeclaredConstructors":true}
+,
+{
+  "name":"spp.platform.core.auth.AccessPermission",
+  "allDeclaredFields":true,
+  "allPublicFields":true,
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "fields":[
+    {"name":"id", "allowWrite":true}, 
+    {"name":"locationPatterns", "allowWrite":true}, 
+    {"name":"type", "allowWrite":true}
+  ]}
+,
+{
+  "name":"spp.platform.core.auth.AccessPermission[]",
+  "allDeclaredFields":true,
+  "allPublicFields":true,
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true}
+,
+{
+  "name":"spp.platform.core.auth.DataRedaction",
+  "allDeclaredFields":true,
+  "allPublicFields":true,
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "fields":[
+    {"name":"id", "allowWrite":true}, 
+    {"name":"redactionPattern", "allowWrite":true}
+  ]}
+,
+{
+  "name":"spp.platform.core.auth.DataRedaction[]",
+  "allDeclaredFields":true,
+  "allPublicFields":true,
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true}
+,
+{
+  "name":"spp.platform.core.auth.DeveloperRole",
+  "allDeclaredFields":true,
+  "allPublicFields":true,
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "fields":[{"name":"roleName", "allowWrite":true}]}
+,
+{
+  "name":"spp.platform.core.auth.DeveloperRole[]",
+  "allDeclaredFields":true,
+  "allPublicFields":true,
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true}
+,
+{
+  "name":"spp.platform.core.auth.RolePermission",
+  "allDeclaredFields":true,
+  "allPublicFields":true,
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "fields":[{"name":"manager", "allowWrite":true}]}
+,
+{
+  "name":"spp.platform.core.auth.RolePermission[]",
+  "allDeclaredFields":true,
+  "allPublicFields":true,
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true}
+,
+{
+  "name":"spp.platform.core.auth.error.InstrumentAccessDenied",
+  "allDeclaredFields":true,
+  "allPublicFields":true,
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "fields":[{"name":"instrumentLocation", "allowWrite":true}]}
+,
+{
+  "name":"spp.platform.core.auth.error.InstrumentAccessDenied[]",
+  "allDeclaredFields":true,
+  "allPublicFields":true,
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true}
+,
+{
+  "name":"spp.platform.core.auth.error.PermissionAccessDenied",
+  "allDeclaredFields":true,
+  "allPublicFields":true,
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "fields":[{"name":"permission", "allowWrite":true}]}
+,
+{
+  "name":"spp.platform.core.auth.error.PermissionAccessDenied[]",
+  "allDeclaredFields":true,
+  "allPublicFields":true,
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true}
+,
+{
+  "name":"spp.platform.util.LazyInitRollingFileAppender",
+  "allPublicMethods":true,
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"spp.processor.live.LiveInstrumentProcessor",
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "allDeclaredClasses":true,
+  "allPublicClasses":true}
+,
+{
+  "name":"spp.processor.live.LiveInstrumentProcessorVertxEBProxy",
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "allDeclaredClasses":true,
+  "allPublicClasses":true}
+,
+{
+  "name":"spp.processor.live.LiveViewProcessor",
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "allDeclaredClasses":true,
+  "allPublicClasses":true}
+,
+{
+  "name":"spp.processor.live.LiveViewProcessorVertxEBProxy",
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "allDeclaredClasses":true,
+  "allPublicClasses":true}
+,
+{
+  "name":"spp.processor.logging.LoggingProcessor",
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "allDeclaredClasses":true,
+  "allPublicClasses":true}
+,
+{
+  "name":"spp.processor.logging.LoggingProcessorVertxEBProxy",
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "allDeclaredClasses":true,
+  "allPublicClasses":true}
+,
+{
+  "name":"spp.processor.tracing.TracingProcessor",
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "allDeclaredClasses":true,
+  "allPublicClasses":true}
+,
+{
+  "name":"spp.processor.tracing.TracingProcessorVertxEBProxy",
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "allDeclaredClasses":true,
+  "allPublicClasses":true}
+,
+{
+  "name":"spp.protocol.artifact.ArtifactQualifiedName",
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "allDeclaredClasses":true,
+  "allPublicClasses":true,
+  "fields":[
+    {"name":"commitId", "allowWrite":true}, 
+    {"name":"identifier", "allowWrite":true}, 
+    {"name":"lineNumber", "allowWrite":true}, 
+    {"name":"operationName", "allowWrite":true}, 
+    {"name":"type", "allowWrite":true}
+  ]}
+,
+{
+  "name":"spp.protocol.artifact.ArtifactQualifiedName[]",
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "allDeclaredClasses":true,
+  "allPublicClasses":true}
+,
+{
+  "name":"spp.protocol.artifact.exception.LiveStackTrace",
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "allDeclaredClasses":true,
+  "allPublicClasses":true,
+  "fields":[
+    {"name":"causedBy", "allowWrite":true}, 
+    {"name":"elements", "allowWrite":true}, 
+    {"name":"exceptionType", "allowWrite":true}, 
+    {"name":"message", "allowWrite":true}
+  ]}
+,
+{
+  "name":"spp.protocol.artifact.exception.LiveStackTraceElement",
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "allDeclaredClasses":true,
+  "allPublicClasses":true,
+  "fields":[
+    {"name":"method", "allowWrite":true}, 
+    {"name":"source", "allowWrite":true}, 
+    {"name":"variables", "allowWrite":true}
+  ]}
+,
+{
+  "name":"spp.protocol.artifact.exception.LiveStackTraceElement[]",
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "allDeclaredClasses":true,
+  "allPublicClasses":true}
+,
+{
+  "name":"spp.protocol.artifact.exception.LiveStackTrace[]",
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "allDeclaredClasses":true,
+  "allPublicClasses":true}
+,
+{
+  "name":"spp.protocol.artifact.log.Log",
+  "allDeclaredFields":true,
+  "allPublicFields":true,
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "fields":[
+    {"name":"arguments", "allowWrite":true}, 
+    {"name":"content", "allowWrite":true}, 
+    {"name":"exception", "allowWrite":true}, 
+    {"name":"level", "allowWrite":true}, 
+    {"name":"logger", "allowWrite":true}, 
+    {"name":"thread", "allowWrite":true}, 
+    {"name":"timestamp", "allowWrite":true}
+  ]}
+,
+{
+  "name":"spp.protocol.artifact.log.Log$Companion",
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "allDeclaredClasses":true,
+  "allPublicClasses":true}
+,
+{
+  "name":"spp.protocol.artifact.log.LogCountSummary",
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "allDeclaredClasses":true,
+  "allPublicClasses":true,
+  "fields":[
+    {"name":"logCounts", "allowWrite":true}, 
+    {"name":"timestamp", "allowWrite":true}
+  ]}
+,
+{
+  "name":"spp.protocol.artifact.log.LogCountSummary[]",
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "allDeclaredClasses":true,
+  "allPublicClasses":true}
+,
+{
+  "name":"spp.protocol.artifact.log.LogResult",
+  "allDeclaredFields":true,
+  "allPublicFields":true,
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "fields":[
+    {"name":"artifactQualifiedName", "allowWrite":true}, 
+    {"name":"logs", "allowWrite":true}, 
+    {"name":"orderType", "allowWrite":true}, 
+    {"name":"timestamp", "allowWrite":true}, 
+    {"name":"total", "allowWrite":true}
+  ]}
+,
+{
+  "name":"spp.protocol.artifact.log.LogResult$Companion",
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "allDeclaredClasses":true,
+  "allPublicClasses":true}
+,
+{
+  "name":"spp.protocol.artifact.log.LogResult$Companion[]",
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "allDeclaredClasses":true,
+  "allPublicClasses":true}
+,
+{
+  "name":"spp.protocol.artifact.log.LogResult[]",
+  "allDeclaredFields":true,
+  "allPublicFields":true,
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true}
+,
+{
+  "name":"spp.protocol.artifact.log.Log[]",
+  "allDeclaredFields":true,
+  "allPublicFields":true,
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true}
+,
+{
+  "name":"spp.protocol.artifact.trace.Trace",
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "allDeclaredClasses":true,
+  "allPublicClasses":true,
+  "fields":[
+    {"name":"duration", "allowWrite":true}, 
+    {"name":"error", "allowWrite":true}, 
+    {"name":"key", "allowWrite":true}, 
+    {"name":"operationNames", "allowWrite":true}, 
+    {"name":"partial", "allowWrite":true}, 
+    {"name":"segmentId", "allowWrite":true}, 
+    {"name":"start", "allowWrite":true}, 
+    {"name":"traceIds", "allowWrite":true}
+  ]}
+,
+{
+  "name":"spp.protocol.artifact.trace.TraceResult",
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "allDeclaredClasses":true,
+  "allPublicClasses":true,
+  "fields":[
+    {"name":"artifactQualifiedName", "allowWrite":true}, 
+    {"name":"artifactSimpleName", "allowWrite":true}, 
+    {"name":"orderType", "allowWrite":true}, 
+    {"name":"start", "allowWrite":true}, 
+    {"name":"step", "allowWrite":true}, 
+    {"name":"stop", "allowWrite":true}, 
+    {"name":"total", "allowWrite":true}, 
+    {"name":"traces", "allowWrite":true}
+  ]}
+,
+{
+  "name":"spp.protocol.artifact.trace.TraceResult[]",
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "allDeclaredClasses":true,
+  "allPublicClasses":true}
+,
+{
+  "name":"spp.protocol.artifact.trace.Trace[]",
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "allDeclaredClasses":true,
+  "allPublicClasses":true}
+,
+{
+  "name":"spp.protocol.developer.Developer",
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "allDeclaredClasses":true,
+  "allPublicClasses":true,
+  "fields":[
+    {"name":"accessToken", "allowWrite":true}, 
+    {"name":"id", "allowWrite":true}
+  ]}
+,
+{
+  "name":"spp.protocol.instrument.InstrumentThrottle",
+  "allDeclaredFields":true,
+  "allPublicFields":true,
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "fields":[
+    {"name":"limit", "allowWrite":true}, 
+    {"name":"step", "allowWrite":true}
+  ]}
+,
+{
+  "name":"spp.protocol.instrument.InstrumentThrottle$$serializer"}
+,
+{
+  "name":"spp.protocol.instrument.InstrumentThrottle$Companion",
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "allDeclaredClasses":true,
+  "allPublicClasses":true}
+,
+{
+  "name":"spp.protocol.instrument.InstrumentThrottle[]",
+  "allDeclaredFields":true,
+  "allPublicFields":true,
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true}
+,
+{
+  "name":"spp.protocol.instrument.LiveInstrument",
+  "allDeclaredFields":true,
+  "allPublicFields":true,
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true}
+,
+{
+  "name":"spp.protocol.instrument.LiveInstrument$Companion",
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "allDeclaredClasses":true,
+  "allPublicClasses":true}
+,
+{
+  "name":"spp.protocol.instrument.LiveInstrumentBatch",
+  "allDeclaredFields":true,
+  "allPublicFields":true,
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "fields":[{"name":"instruments", "allowWrite":true}]}
+,
+{
+  "name":"spp.protocol.instrument.LiveInstrumentBatch[]",
+  "allDeclaredFields":true,
+  "allPublicFields":true,
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true}
+,
+{
+  "name":"spp.protocol.instrument.LiveInstrumentEvent",
+  "allDeclaredFields":true,
+  "allPublicFields":true,
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true}
+,
+{
+  "name":"spp.protocol.instrument.LiveInstrumentEvent$$serializer"}
+,
+{
+  "name":"spp.protocol.instrument.LiveInstrumentEvent$Companion",
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "allDeclaredClasses":true,
+  "allPublicClasses":true}
+,
+{
+  "name":"spp.protocol.instrument.LiveInstrumentEventType",
+  "allDeclaredFields":true,
+  "queryAllDeclaredMethods":true}
+,
+{
+  "name":"spp.protocol.instrument.LiveInstrumentEvent[]",
+  "allDeclaredFields":true,
+  "allPublicFields":true,
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true}
+,
+{
+  "name":"spp.protocol.instrument.LiveInstrumentType",
+  "allDeclaredFields":true,
+  "queryAllDeclaredMethods":true}
+,
+{
+  "name":"spp.protocol.instrument.LiveSourceLocation",
+  "allDeclaredFields":true,
+  "allPublicFields":true,
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "fields":[
+    {"name":"commitId", "allowWrite":true}, 
+    {"name":"fileChecksum", "allowWrite":true}, 
+    {"name":"line", "allowWrite":true}, 
+    {"name":"service", "allowWrite":true}, 
+    {"name":"serviceInstance", "allowWrite":true}, 
+    {"name":"source", "allowWrite":true}
+  ]}
+,
+{
+  "name":"spp.protocol.instrument.LiveSourceLocation$$serializer"}
+,
+{
+  "name":"spp.protocol.instrument.LiveSourceLocation$Companion",
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "allDeclaredClasses":true,
+  "allPublicClasses":true}
+,
+{
+  "name":"spp.protocol.instrument.LiveSourceLocation[]",
+  "allDeclaredFields":true,
+  "allPublicFields":true,
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true}
+,
+{
+  "name":"spp.protocol.instrument.LiveVariable",
+  "allDeclaredFields":true,
+  "allPublicFields":true,
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "fields":[
+    {"name":"lineNumber", "allowWrite":true}, 
+    {"name":"name", "allowWrite":true}, 
+    {"name":"scope", "allowWrite":true}, 
+    {"name":"value", "allowWrite":true}
+  ]}
+,
+{
+  "name":"spp.protocol.instrument.LiveVariable$Companion",
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "allDeclaredClasses":true,
+  "allPublicClasses":true}
+,
+{
+  "name":"spp.protocol.instrument.LiveVariable[]",
+  "allDeclaredFields":true,
+  "allPublicFields":true,
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true}
+,
+{
+  "name":"spp.protocol.instrument.ThrottleStep",
+  "allDeclaredFields":true,
+  "queryAllDeclaredMethods":true}
+,
+{
+  "name":"spp.protocol.instrument.breakpoint.LiveBreakpoint",
+  "allDeclaredFields":true,
+  "allPublicFields":true,
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "fields":[
+    {"name":"applied", "allowWrite":true}, 
+    {"name":"applyImmediately", "allowWrite":true}, 
+    {"name":"condition", "allowWrite":true}, 
+    {"name":"expiresAt", "allowWrite":true}, 
+    {"name":"hitLimit", "allowWrite":true}, 
+    {"name":"id", "allowWrite":true}, 
+    {"name":"location", "allowWrite":true}, 
+    {"name":"meta", "allowWrite":true}, 
+    {"name":"pending", "allowWrite":true}, 
+    {"name":"throttle", "allowWrite":true}, 
+    {"name":"type", "allowWrite":true}
+  ]}
+,
+{
+  "name":"spp.protocol.instrument.breakpoint.LiveBreakpoint$$serializer"}
+,
+{
+  "name":"spp.protocol.instrument.breakpoint.LiveBreakpoint$Companion",
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "allDeclaredClasses":true,
+  "allPublicClasses":true}
+,
+{
+  "name":"spp.protocol.instrument.breakpoint.LiveBreakpoint[]",
+  "allDeclaredFields":true,
+  "allPublicFields":true,
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true}
+,
+{
+  "name":"spp.protocol.instrument.breakpoint.event.LiveBreakpointHit",
+  "allDeclaredFields":true,
+  "allPublicFields":true,
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "fields":[
+    {"name":"application", "allowWrite":true}, 
+    {"name":"breakpointId", "allowWrite":true}, 
+    {"name":"host", "allowWrite":true}, 
+    {"name":"occurredAt", "allowWrite":true}, 
+    {"name":"stackTrace", "allowWrite":true}, 
+    {"name":"traceId", "allowWrite":true}
+  ]}
+,
+{
+  "name":"spp.protocol.instrument.breakpoint.event.LiveBreakpointHit$Companion",
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "allDeclaredClasses":true,
+  "allPublicClasses":true}
+,
+{
+  "name":"spp.protocol.instrument.breakpoint.event.LiveBreakpointHit[]",
+  "allDeclaredFields":true,
+  "allPublicFields":true,
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true}
+,
+{
+  "name":"spp.protocol.instrument.breakpoint.event.LiveBreakpointRemoved",
+  "allDeclaredFields":true,
+  "allPublicFields":true,
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "fields":[
+    {"name":"breakpointId", "allowWrite":true}, 
+    {"name":"cause", "allowWrite":true}, 
+    {"name":"occurredAt", "allowWrite":true}
+  ]}
+,
+{
+  "name":"spp.protocol.instrument.breakpoint.event.LiveBreakpointRemoved$Companion",
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "allDeclaredClasses":true,
+  "allPublicClasses":true}
+,
+{
+  "name":"spp.protocol.instrument.breakpoint.event.LiveBreakpointRemoved[]",
+  "allDeclaredFields":true,
+  "allPublicFields":true,
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true}
+,
+{
+  "name":"spp.protocol.instrument.log.LiveLog",
+  "allDeclaredFields":true,
+  "allPublicFields":true,
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "fields":[
+    {"name":"applied", "allowWrite":true}, 
+    {"name":"applyImmediately", "allowWrite":true}, 
+    {"name":"condition", "allowWrite":true}, 
+    {"name":"expiresAt", "allowWrite":true}, 
+    {"name":"hitLimit", "allowWrite":true}, 
+    {"name":"id", "allowWrite":true}, 
+    {"name":"location", "allowWrite":true}, 
+    {"name":"logArguments", "allowWrite":true}, 
+    {"name":"logFormat", "allowWrite":true}, 
+    {"name":"meta", "allowWrite":true}, 
+    {"name":"pending", "allowWrite":true}, 
+    {"name":"throttle", "allowWrite":true}, 
+    {"name":"type", "allowWrite":true}
+  ]}
+,
+{
+  "name":"spp.protocol.instrument.log.LiveLog$Companion",
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "allDeclaredClasses":true,
+  "allPublicClasses":true}
+,
+{
+  "name":"spp.protocol.instrument.log.LiveLog[]",
+  "allDeclaredFields":true,
+  "allPublicFields":true,
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true}
+,
+{
+  "name":"spp.protocol.instrument.log.event.LiveLogHit",
+  "allDeclaredFields":true,
+  "allPublicFields":true,
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "fields":[
+    {"name":"logId", "allowWrite":true}, 
+    {"name":"logResult", "allowWrite":true}, 
+    {"name":"occurredAt", "allowWrite":true}, 
+    {"name":"service", "allowWrite":true}, 
+    {"name":"serviceInstance", "allowWrite":true}
+  ]}
+,
+{
+  "name":"spp.protocol.instrument.log.event.LiveLogHit$Companion",
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "allDeclaredClasses":true,
+  "allPublicClasses":true}
+,
+{
+  "name":"spp.protocol.instrument.log.event.LiveLogHit[]",
+  "allDeclaredFields":true,
+  "allPublicFields":true,
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true}
+,
+{
+  "name":"spp.protocol.instrument.log.event.LiveLogRemoved",
+  "allDeclaredFields":true,
+  "allPublicFields":true,
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "fields":[
+    {"name":"cause", "allowWrite":true}, 
+    {"name":"liveLog", "allowWrite":true}, 
+    {"name":"logId", "allowWrite":true}, 
+    {"name":"occurredAt", "allowWrite":true}
+  ]}
+,
+{
+  "name":"spp.protocol.instrument.log.event.LiveLogRemoved$Companion",
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "allDeclaredClasses":true,
+  "allPublicClasses":true}
+,
+{
+  "name":"spp.protocol.instrument.log.event.LiveLogRemoved[]",
+  "allDeclaredFields":true,
+  "allPublicFields":true,
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true}
+,
+{
+  "name":"spp.protocol.platform.client.ActiveMarker",
+  "allDeclaredFields":true,
+  "allPublicFields":true,
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "fields":[
+    {"name":"connectedAt", "allowWrite":true}, 
+    {"name":"meta", "allowWrite":true}, 
+    {"name":"processorId", "allowWrite":true}
+  ]}
+,
+{
+  "name":"spp.protocol.platform.client.ActiveProbe",
+  "allDeclaredFields":true,
+  "allPublicFields":true,
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "fields":[
+    {"name":"connectedAt", "allowWrite":true}, 
+    {"name":"meta", "allowWrite":true}, 
+    {"name":"processorId", "allowWrite":true}
+  ]}
+,
+{
+  "name":"spp.protocol.platform.client.ActiveProcessor",
+  "allDeclaredFields":true,
+  "allPublicFields":true,
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "fields":[
+    {"name":"connectedAt", "allowWrite":true}, 
+    {"name":"meta", "allowWrite":true}, 
+    {"name":"processorId", "allowWrite":true}
+  ]}
+,
+{
+  "name":"spp.protocol.probe.command.LiveInstrumentCommand",
+  "allDeclaredFields":true,
+  "allPublicFields":true,
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "fields":[
+    {"name":"commandType", "allowWrite":true}, 
+    {"name":"context", "allowWrite":true}
+  ]}
+,
+{
+  "name":"spp.protocol.probe.command.LiveInstrumentCommand$CommandType",
+  "allDeclaredFields":true,
+  "allPublicFields":true,
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true}
+,
+{
+  "name":"spp.protocol.probe.command.LiveInstrumentCommand$Response",
+  "allDeclaredFields":true,
+  "allPublicFields":true,
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true}
+,
+{
+  "name":"spp.protocol.probe.command.LiveInstrumentCommand[]",
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "allDeclaredClasses":true,
+  "allPublicClasses":true}
+,
+{
+  "name":"spp.protocol.probe.command.LiveInstrumentContext",
+  "allDeclaredFields":true,
+  "allPublicFields":true,
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true}
+,
+{
+  "name":"spp.protocol.probe.command.LiveInstrumentContext[]",
+  "allDeclaredFields":true,
+  "allPublicFields":true,
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true}
+,
+{
+  "name":"spp.protocol.probe.command.LocalTracingCommand",
+  "allDeclaredFields":true,
+  "allPublicFields":true,
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true}
+,
+{
+  "name":"spp.protocol.probe.command.TraceClass",
+  "allDeclaredFields":true,
+  "allPublicFields":true,
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true}
+,
+{
+  "name":"spp.protocol.probe.command.TraceContext",
+  "allDeclaredFields":true,
+  "allPublicFields":true,
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true}
+,
+{
+  "name":"spp.protocol.probe.command.TraceMethod",
+  "allDeclaredFields":true,
+  "allPublicFields":true,
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true}
+,
+{
+  "name":"spp.protocol.probe.status.ProbeConnection",
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "allDeclaredClasses":true,
+  "allPublicClasses":true,
+  "fields":[
+    {"name":"connectionTime", "allowWrite":true}, 
+    {"name":"meta", "allowWrite":true}, 
+    {"name":"probeId", "allowWrite":true}
+  ],
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"spp.protocol.probe.status.ProbeConnection[]",
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "allDeclaredClasses":true,
+  "allPublicClasses":true}
+,
+{
+  "name":"spp.protocol.processor.status.ProcessorConnection",
+  "allDeclaredFields":true,
+  "allPublicFields":true,
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "allDeclaredClasses":true,
+  "allPublicClasses":true,
+  "fields":[
+    {"name":"connectionTime", "allowWrite":true}, 
+    {"name":"meta", "allowWrite":true}, 
+    {"name":"processorId", "allowWrite":true}
+  ],
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"spp.protocol.processor.status.ProcessorConnection[]",
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "allDeclaredClasses":true,
+  "allPublicClasses":true}
+,
+{
+  "name":"spp.protocol.service.live.LiveInstrumentService",
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "allDeclaredClasses":true,
+  "allPublicClasses":true}
+,
+{
+  "name":"spp.protocol.service.live.LiveInstrumentServiceVertxEBProxy",
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "allDeclaredClasses":true,
+  "allPublicClasses":true}
+,
+{
+  "name":"spp.protocol.service.live.LiveInstrumentServiceVertxProxyHandler",
+  "methods":[{"name":"<init>","parameterTypes":["io.vertx.core.Vertx","spp.protocol.service.live.LiveInstrumentService","boolean","long","boolean"] }]}
+,
+{
+  "name":"spp.protocol.service.live.LiveViewService",
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "allDeclaredClasses":true,
+  "allPublicClasses":true}
+,
+{
+  "name":"spp.protocol.service.live.LiveViewServiceVertxEBProxy",
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "allDeclaredClasses":true,
+  "allPublicClasses":true}
+,
+{
+  "name":"spp.protocol.service.live.LiveViewServiceVertxProxyHandler",
+  "methods":[{"name":"<init>","parameterTypes":["io.vertx.core.Vertx","spp.protocol.service.live.LiveViewService","boolean","long","boolean"] }]}
+,
+{
+  "name":"spp.protocol.service.logging.LogCountIndicatorService",
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "allDeclaredClasses":true,
+  "allPublicClasses":true}
+,
+{
+  "name":"spp.protocol.service.logging.LogCountIndicatorServiceVertxEBProxy",
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "allDeclaredClasses":true,
+  "allPublicClasses":true}
+,
+{
+  "name":"spp.protocol.service.logging.LogCountIndicatorServiceVertxProxyHandler",
+  "methods":[{"name":"<init>","parameterTypes":["io.vertx.core.Vertx","spp.protocol.service.logging.LogCountIndicatorService","boolean","long","boolean"] }]}
+,
+{
+  "name":"spp.protocol.service.tracing.LocalTracingService",
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "allDeclaredClasses":true,
+  "allPublicClasses":true}
+,
+{
+  "name":"spp.protocol.service.tracing.LocalTracingServiceVertxEBProxy",
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "allDeclaredClasses":true,
+  "allPublicClasses":true}
+,
+{
+  "name":"spp.protocol.service.tracing.LocalTracingServiceVertxProxyHandler",
+  "methods":[{"name":"<init>","parameterTypes":["io.vertx.core.Vertx","spp.protocol.service.tracing.LocalTracingService","boolean","long","boolean"] }]}
+,
+{
+  "name":"spp.protocol.status.MarkerConnection",
+  "allDeclaredMethods":true,
+  "allDeclaredConstructors":true,
+  "fields":[
+    {"name":"connectionTime", "allowWrite":true}, 
+    {"name":"markerId", "allowWrite":true}, 
+    {"name":"meta", "allowWrite":true}
+  ],
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"spp.protocol.status.MarkerConnection[]",
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "allDeclaredClasses":true,
+  "allPublicClasses":true}
+,
+{
+  "name":"sun.management.ClassLoadingImpl",
+  "allPublicConstructors":true}
+,
+{
+  "name":"sun.management.CompilationImpl",
+  "allPublicConstructors":true}
+,
+{
+  "name":"sun.management.ManagementFactoryHelper$1",
+  "allPublicConstructors":true}
+,
+{
+  "name":"sun.management.ManagementFactoryHelper$PlatformLoggingImpl",
+  "allPublicConstructors":true}
+,
+{
+  "name":"sun.management.MemoryImpl",
+  "allPublicConstructors":true}
+,
+{
+  "name":"sun.management.MemoryManagerImpl",
+  "allPublicConstructors":true}
+,
+{
+  "name":"sun.management.MemoryPoolImpl",
+  "allPublicConstructors":true}
+,
+{
+  "name":"sun.management.RuntimeImpl",
+  "allPublicConstructors":true}
+,
+{
+  "name":"sun.misc.Unsafe",
+  "fields":[{"name":"theUnsafe"}],
+  "methods":[
+    {"name":"copyMemory","parameterTypes":["java.lang.Object","long","java.lang.Object","long","long"] }, 
+    {"name":"getAndAddLong","parameterTypes":["java.lang.Object","long","long"] }, 
+    {"name":"getAndSetObject","parameterTypes":["java.lang.Object","long","java.lang.Object"] }, 
+    {"name":"invokeCleaner","parameterTypes":["java.nio.ByteBuffer"] }
+  ]}
+,
+{
+  "name":"sun.nio.ch.SelectorImpl",
+  "fields":[
+    {"name":"publicSelectedKeys"}, 
+    {"name":"selectedKeys"}
+  ]}
+,
+{
+  "name":"sun.security.pkcs.SignerInfo[]"}
+,
+{
+  "name":"sun.security.pkcs12.PKCS12KeyStore",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"sun.security.pkcs12.PKCS12KeyStore$DualFormatPKCS12",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"sun.security.provider.DSA$SHA224withDSA",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"sun.security.provider.DSA$SHA256withDSA",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"sun.security.provider.JavaKeyStore$DualFormatJKS",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"sun.security.provider.JavaKeyStore$JKS",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"sun.security.provider.NativePRNG",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"sun.security.provider.SHA",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"sun.security.provider.SHA2$SHA224",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"sun.security.provider.SHA2$SHA256",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"sun.security.provider.SHA5$SHA384",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"sun.security.provider.SHA5$SHA512",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"sun.security.provider.X509Factory",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"sun.security.rsa.PSSParameters",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"sun.security.rsa.RSAKeyFactory$Legacy",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"sun.security.rsa.RSAPSSSignature",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"sun.security.rsa.RSASignature$SHA224withRSA",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"sun.security.rsa.RSASignature$SHA256withRSA",
+  "allDeclaredMethods":true,
+  "allDeclaredConstructors":true}
+,
+{
+  "name":"sun.security.ssl.KeyManagerFactoryImpl$SunX509",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"sun.security.ssl.SSLContextImpl$TLSContext",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"sun.security.ssl.TrustManagerFactoryImpl$PKIXFactory",
+  "methods":[{"name":"<init>","parameterTypes":[] }]}
+,
+{
+  "name":"sun.security.util.ObjectIdentifier"}
+,
+{
+  "name":"sun.security.x509.AuthorityInfoAccessExtension",
+  "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]}
+,
+{
+  "name":"sun.security.x509.AuthorityKeyIdentifierExtension",
+  "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]}
+,
+{
+  "name":"sun.security.x509.BasicConstraintsExtension",
+  "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]}
+,
+{
+  "name":"sun.security.x509.CRLDistributionPointsExtension",
+  "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]}
+,
+{
+  "name":"sun.security.x509.CertificateExtensions"}
+,
+{
+  "name":"sun.security.x509.CertificatePoliciesExtension",
+  "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]}
+,
+{
+  "name":"sun.security.x509.ExtendedKeyUsageExtension",
+  "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]}
+,
+{
+  "name":"sun.security.x509.IssuerAlternativeNameExtension",
+  "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]}
+,
+{
+  "name":"sun.security.x509.KeyUsageExtension",
+  "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]}
+,
+{
+  "name":"sun.security.x509.NetscapeCertTypeExtension",
+  "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]}
+,
+{
+  "name":"sun.security.x509.PrivateKeyUsageExtension",
+  "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]}
+,
+{
+  "name":"sun.security.x509.SubjectAlternativeNameExtension",
+  "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]}
+,
+{
+  "name":"sun.security.x509.SubjectKeyIdentifierExtension",
+  "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]}
 
-
-
-
-  ,{
-  "name":"boolean[]"
-},
-  {
-    "name":"byte[]"
-  },
-  {
-    "name":"ch.qos.logback.classic.encoder.PatternLayoutEncoder",
-    "allPublicMethods":true,
-    "methods":[{"name":"<init>","parameterTypes":[] }]
-  },
-  {
-    "name":"ch.qos.logback.classic.pattern.DateConverter",
-    "methods":[{"name":"<init>","parameterTypes":[] }]
-  },
-  {
-    "name":"ch.qos.logback.classic.pattern.LevelConverter",
-    "methods":[{"name":"<init>","parameterTypes":[] }]
-  },
-  {
-    "name":"ch.qos.logback.classic.pattern.LineSeparatorConverter",
-    "methods":[{"name":"<init>","parameterTypes":[] }]
-  },
-  {
-    "name":"ch.qos.logback.classic.pattern.LoggerConverter",
-    "methods":[{"name":"<init>","parameterTypes":[] }]
-  },
-  {
-    "name":"ch.qos.logback.classic.pattern.MessageConverter",
-    "methods":[{"name":"<init>","parameterTypes":[] }]
-  },
-  {
-    "name":"ch.qos.logback.classic.pattern.ThreadConverter",
-    "methods":[{"name":"<init>","parameterTypes":[] }]
-  },
-  {
-    "name":"ch.qos.logback.core.ConsoleAppender",
-    "allPublicMethods":true,
-    "methods":[{"name":"<init>","parameterTypes":[] }]
-  },
-  {
-    "name":"char[]"
-  },
-  {
-    "name":"com.fasterxml.jackson.core.JsonParser"
-  },
-  {
-    "name":"com.fasterxml.jackson.databind.JsonNode"
-  },
-  {
-    "name":"com.fasterxml.jackson.databind.ObjectMapper"
-  },
-  {
-    "name":"com.fasterxml.jackson.databind.deser.Deserializers[]"
-  },
-  {
-    "name":"com.fasterxml.jackson.databind.deser.KeyDeserializers[]"
-  },
-  {
-    "name":"com.fasterxml.jackson.databind.deser.ValueInstantiators[]"
-  },
-  {
-    "name":"com.fasterxml.jackson.databind.ext.Java7SupportImpl",
-    "methods":[{"name":"<init>","parameterTypes":[] }]
-  },
-  {
-    "name":"com.fasterxml.jackson.databind.ser.BeanSerializerModifier[]"
-  },
-  {
-    "name":"com.fasterxml.jackson.databind.ser.Serializers[]"
-  },
-  {
-    "name":"com.fasterxml.jackson.databind.ser.std.StdJdkSerializers$AtomicIntegerSerializer",
-    "methods":[{"name":"<init>","parameterTypes":[] }]
-  },
-  {
-    "name":"com.fasterxml.jackson.databind.type.TypeModifier[]"
-  },
-  {
-    "name":"com.fasterxml.jackson.dataformat.yaml.YAMLFactory"
-  },
-  {
-    "name":"com.intellij.rt.execution.application.AppMainV2$Agent",
-    "methods":[{"name":"premain","parameterTypes":["java.lang.String","java.lang.instrument.Instrumentation"] }]
-  },
-  {
-    "name":"com.sun.crypto.provider.PBEKeyFactory$PBEWithMD5AndDES",
-    "methods":[{"name":"<init>","parameterTypes":[] }]
-  },
-  {
-    "name":"com.sun.crypto.provider.PBEParameters",
-    "methods":[{"name":"<init>","parameterTypes":[] }]
-  },
-  {
-    "name":"com.sun.crypto.provider.PKCS12PBECipherCore$PBEWithSHA1AndDESede",
-    "methods":[{"name":"<init>","parameterTypes":[] }]
-  },
-  {
-    "name":"com.sun.crypto.provider.TlsMasterSecretGenerator",
-    "methods":[{"name":"<init>","parameterTypes":[] }]
-  },
-  {
-    "name":"com.sun.management.GarbageCollectorMXBean",
-    "allPublicMethods":true
-  },
-  {
-    "name":"com.sun.management.GcInfo",
-    "allPublicMethods":true
-  },
-  {
-    "name":"com.sun.management.HotSpotDiagnosticMXBean",
-    "allPublicMethods":true
-  },
-  {
-    "name":"com.sun.management.ThreadMXBean",
-    "allPublicMethods":true
-  },
-  {
-    "name":"com.sun.management.UnixOperatingSystemMXBean",
-    "allPublicMethods":true
-  },
-  {
-    "name":"com.sun.management.VMOption",
-    "allPublicMethods":true
-  },
-  {
-    "name":"com.sun.management.internal.GarbageCollectorExtImpl",
-    "allPublicConstructors":true
-  },
-  {
-    "name":"com.sun.management.internal.HotSpotDiagnostic",
-    "allPublicConstructors":true
-  },
-  {
-    "name":"com.sun.management.internal.HotSpotThreadImpl",
-    "allPublicConstructors":true
-  },
-  {
-    "name":"com.sun.management.internal.OperatingSystemImpl",
-    "allPublicConstructors":true
-  },
-  {
-    "name":"com.sun.org.apache.xerces.internal.jaxp.SAXParserFactoryImpl",
-    "methods":[{"name":"<init>","parameterTypes":[] }]
-  },
-  {
-    "name":"double[]"
-  },
-  {
-    "name":"float[]"
-  },
-  {
-    "name":"int[]"
-  },
-  {
-    "name":"io.netty.bootstrap.ServerBootstrap$1"
-  },
-  {
-    "name":"io.netty.bootstrap.ServerBootstrap$ServerBootstrapAcceptor",
-    "methods":[
-      {"name":"channelRead","parameterTypes":["io.netty.channel.ChannelHandlerContext","java.lang.Object"] },
-      {"name":"exceptionCaught","parameterTypes":["io.netty.channel.ChannelHandlerContext","java.lang.Throwable"] }
-    ]
-  },
-  {
-    "name":"io.netty.buffer.AbstractByteBufAllocator",
-    "allDeclaredMethods":true
-  },
-  {
-    "name":"io.netty.buffer.AbstractReferenceCountedByteBuf",
-    "fields":[{"name":"refCnt", "allowUnsafeAccess":true}]
-  },
-  {
-    "name":"io.netty.channel.ChannelDuplexHandler",
-    "methods":[
-      {"name":"bind","parameterTypes":["io.netty.channel.ChannelHandlerContext","java.net.SocketAddress","io.netty.channel.ChannelPromise"] },
-      {"name":"connect","parameterTypes":["io.netty.channel.ChannelHandlerContext","java.net.SocketAddress","java.net.SocketAddress","io.netty.channel.ChannelPromise"] },
-      {"name":"deregister","parameterTypes":["io.netty.channel.ChannelHandlerContext","io.netty.channel.ChannelPromise"] },
-      {"name":"disconnect","parameterTypes":["io.netty.channel.ChannelHandlerContext","io.netty.channel.ChannelPromise"] },
-      {"name":"flush","parameterTypes":["io.netty.channel.ChannelHandlerContext"] },
-      {"name":"read","parameterTypes":["io.netty.channel.ChannelHandlerContext"] },
-      {"name":"write","parameterTypes":["io.netty.channel.ChannelHandlerContext","java.lang.Object","io.netty.channel.ChannelPromise"] }
-    ]
-  },
-  {
-    "name":"io.netty.channel.ChannelHandlerAdapter",
-    "methods":[{"name":"exceptionCaught","parameterTypes":["io.netty.channel.ChannelHandlerContext","java.lang.Throwable"] }]
-  },
-  {
-    "name":"io.netty.channel.ChannelInboundHandlerAdapter",
-    "methods":[
-      {"name":"channelActive","parameterTypes":["io.netty.channel.ChannelHandlerContext"] },
-      {"name":"channelInactive","parameterTypes":["io.netty.channel.ChannelHandlerContext"] },
-      {"name":"channelRead","parameterTypes":["io.netty.channel.ChannelHandlerContext","java.lang.Object"] },
-      {"name":"channelReadComplete","parameterTypes":["io.netty.channel.ChannelHandlerContext"] },
-      {"name":"channelRegistered","parameterTypes":["io.netty.channel.ChannelHandlerContext"] },
-      {"name":"channelUnregistered","parameterTypes":["io.netty.channel.ChannelHandlerContext"] },
-      {"name":"channelWritabilityChanged","parameterTypes":["io.netty.channel.ChannelHandlerContext"] },
-      {"name":"exceptionCaught","parameterTypes":["io.netty.channel.ChannelHandlerContext","java.lang.Throwable"] },
-      {"name":"userEventTriggered","parameterTypes":["io.netty.channel.ChannelHandlerContext","java.lang.Object"] }
-    ]
-  },
-  {
-    "name":"io.netty.channel.ChannelInitializer",
-    "methods":[
-      {"name":"channelRegistered","parameterTypes":["io.netty.channel.ChannelHandlerContext"] },
-      {"name":"exceptionCaught","parameterTypes":["io.netty.channel.ChannelHandlerContext","java.lang.Throwable"] }
-    ]
-  },
-  {
-    "name":"io.netty.channel.ChannelOutboundHandlerAdapter",
-    "methods":[
-      {"name":"bind","parameterTypes":["io.netty.channel.ChannelHandlerContext","java.net.SocketAddress","io.netty.channel.ChannelPromise"] },
-      {"name":"close","parameterTypes":["io.netty.channel.ChannelHandlerContext","io.netty.channel.ChannelPromise"] },
-      {"name":"connect","parameterTypes":["io.netty.channel.ChannelHandlerContext","java.net.SocketAddress","java.net.SocketAddress","io.netty.channel.ChannelPromise"] },
-      {"name":"deregister","parameterTypes":["io.netty.channel.ChannelHandlerContext","io.netty.channel.ChannelPromise"] },
-      {"name":"disconnect","parameterTypes":["io.netty.channel.ChannelHandlerContext","io.netty.channel.ChannelPromise"] },
-      {"name":"flush","parameterTypes":["io.netty.channel.ChannelHandlerContext"] },
-      {"name":"read","parameterTypes":["io.netty.channel.ChannelHandlerContext"] }
-    ]
-  },
-  {
-    "name":"io.netty.channel.DefaultChannelPipeline$HeadContext",
-    "methods":[
-      {"name":"bind","parameterTypes":["io.netty.channel.ChannelHandlerContext","java.net.SocketAddress","io.netty.channel.ChannelPromise"] },
-      {"name":"channelActive","parameterTypes":["io.netty.channel.ChannelHandlerContext"] },
-      {"name":"channelInactive","parameterTypes":["io.netty.channel.ChannelHandlerContext"] },
-      {"name":"channelRead","parameterTypes":["io.netty.channel.ChannelHandlerContext","java.lang.Object"] },
-      {"name":"channelReadComplete","parameterTypes":["io.netty.channel.ChannelHandlerContext"] },
-      {"name":"channelRegistered","parameterTypes":["io.netty.channel.ChannelHandlerContext"] },
-      {"name":"channelUnregistered","parameterTypes":["io.netty.channel.ChannelHandlerContext"] },
-      {"name":"channelWritabilityChanged","parameterTypes":["io.netty.channel.ChannelHandlerContext"] },
-      {"name":"close","parameterTypes":["io.netty.channel.ChannelHandlerContext","io.netty.channel.ChannelPromise"] },
-      {"name":"connect","parameterTypes":["io.netty.channel.ChannelHandlerContext","java.net.SocketAddress","java.net.SocketAddress","io.netty.channel.ChannelPromise"] },
-      {"name":"deregister","parameterTypes":["io.netty.channel.ChannelHandlerContext","io.netty.channel.ChannelPromise"] },
-      {"name":"disconnect","parameterTypes":["io.netty.channel.ChannelHandlerContext","io.netty.channel.ChannelPromise"] },
-      {"name":"exceptionCaught","parameterTypes":["io.netty.channel.ChannelHandlerContext","java.lang.Throwable"] },
-      {"name":"flush","parameterTypes":["io.netty.channel.ChannelHandlerContext"] },
-      {"name":"read","parameterTypes":["io.netty.channel.ChannelHandlerContext"] },
-      {"name":"userEventTriggered","parameterTypes":["io.netty.channel.ChannelHandlerContext","java.lang.Object"] },
-      {"name":"write","parameterTypes":["io.netty.channel.ChannelHandlerContext","java.lang.Object","io.netty.channel.ChannelPromise"] }
-    ]
-  },
-  {
-    "name":"io.netty.channel.DefaultChannelPipeline$TailContext",
-    "methods":[
-      {"name":"channelActive","parameterTypes":["io.netty.channel.ChannelHandlerContext"] },
-      {"name":"channelInactive","parameterTypes":["io.netty.channel.ChannelHandlerContext"] },
-      {"name":"channelRead","parameterTypes":["io.netty.channel.ChannelHandlerContext","java.lang.Object"] },
-      {"name":"channelReadComplete","parameterTypes":["io.netty.channel.ChannelHandlerContext"] },
-      {"name":"channelRegistered","parameterTypes":["io.netty.channel.ChannelHandlerContext"] },
-      {"name":"channelUnregistered","parameterTypes":["io.netty.channel.ChannelHandlerContext"] },
-      {"name":"channelWritabilityChanged","parameterTypes":["io.netty.channel.ChannelHandlerContext"] },
-      {"name":"exceptionCaught","parameterTypes":["io.netty.channel.ChannelHandlerContext","java.lang.Throwable"] },
-      {"name":"userEventTriggered","parameterTypes":["io.netty.channel.ChannelHandlerContext","java.lang.Object"] }
-    ]
-  },
-  {
-    "name":"io.netty.handler.codec.MessageToMessageDecoder",
-    "methods":[{"name":"channelRead","parameterTypes":["io.netty.channel.ChannelHandlerContext","java.lang.Object"] }]
-  },
-  {
-    "name":"io.netty.handler.codec.MessageToMessageEncoder",
-    "methods":[{"name":"write","parameterTypes":["io.netty.channel.ChannelHandlerContext","java.lang.Object","io.netty.channel.ChannelPromise"] }]
-  },
-  {
-    "name":"io.netty.handler.codec.dns.DatagramDnsQueryEncoder"
-  },
-  {
-    "name":"io.netty.resolver.dns.DnsNameResolver$1"
-  },
-  {
-    "name":"io.netty.resolver.dns.DnsNameResolver$3"
-  },
-  {
-    "name":"io.netty.resolver.dns.DnsNameResolver$DnsResponseHandler",
-    "methods":[
-      {"name":"channelActive","parameterTypes":["io.netty.channel.ChannelHandlerContext"] },
-      {"name":"channelRead","parameterTypes":["io.netty.channel.ChannelHandlerContext","java.lang.Object"] },
-      {"name":"exceptionCaught","parameterTypes":["io.netty.channel.ChannelHandlerContext","java.lang.Throwable"] }
-    ]
-  },
-  {
-    "name":"io.netty.util.ReferenceCountUtil",
-    "allDeclaredMethods":true
-  },
-  {
-    "name":"io.netty.util.internal.shaded.org.jctools.queues.BaseMpscLinkedArrayQueueColdProducerFields",
-    "fields":[{"name":"producerLimit", "allowUnsafeAccess":true}]
-  },
-  {
-    "name":"io.netty.util.internal.shaded.org.jctools.queues.BaseMpscLinkedArrayQueueConsumerFields",
-    "fields":[{"name":"consumerIndex", "allowUnsafeAccess":true}]
-  },
-  {
-    "name":"io.netty.util.internal.shaded.org.jctools.queues.BaseMpscLinkedArrayQueueProducerFields",
-    "fields":[{"name":"producerIndex", "allowUnsafeAccess":true}]
-  },
-  {
-    "name":"io.netty.util.internal.shaded.org.jctools.queues.MpscArrayQueueConsumerIndexField",
-    "fields":[{"name":"consumerIndex", "allowUnsafeAccess":true}]
-  },
-  {
-    "name":"io.netty.util.internal.shaded.org.jctools.queues.MpscArrayQueueProducerIndexField",
-    "fields":[{"name":"producerIndex", "allowUnsafeAccess":true}]
-  },
-  {
-    "name":"io.netty.util.internal.shaded.org.jctools.queues.MpscArrayQueueProducerLimitField",
-    "fields":[{"name":"producerLimit", "allowUnsafeAccess":true}]
-  },
-  {
-    "name":"io.vertx.core.logging.Log4j2LogDelegateFactory",
-    "methods":[{"name":"<init>","parameterTypes":[] }]
-  },
-  {
-    "name":"io.vertx.core.net.impl.ChannelProvider$2"
-  },
-  {
-    "name":"io.vertx.core.net.impl.VertxHandler",
-    "methods":[
-      {"name":"channelInactive","parameterTypes":["io.netty.channel.ChannelHandlerContext"] },
-      {"name":"channelRead","parameterTypes":["io.netty.channel.ChannelHandlerContext","java.lang.Object"] },
-      {"name":"channelReadComplete","parameterTypes":["io.netty.channel.ChannelHandlerContext"] },
-      {"name":"channelWritabilityChanged","parameterTypes":["io.netty.channel.ChannelHandlerContext"] },
-      {"name":"close","parameterTypes":["io.netty.channel.ChannelHandlerContext","io.netty.channel.ChannelPromise"] },
-      {"name":"exceptionCaught","parameterTypes":["io.netty.channel.ChannelHandlerContext","java.lang.Throwable"] },
-      {"name":"userEventTriggered","parameterTypes":["io.netty.channel.ChannelHandlerContext","java.lang.Object"] }
-    ]
-  },
-  {
-    "name":"java.io.FilePermission"
-  },
-  {
-    "name":"java.io.ObjectInputStream",
-    "allPublicMethods":true
-  },
-  {
-    "name":"java.lang.Boolean",
-    "fields":[{"name":"TYPE"}]
-  },
-  {
-    "name":"java.lang.Byte",
-    "fields":[{"name":"TYPE"}]
-  },
-  {
-    "name":"java.lang.Character",
-    "fields":[{"name":"TYPE"}]
-  },
-  {
-    "name":"java.lang.Double",
-    "fields":[{"name":"TYPE"}]
-  },
-  {
-    "name":"java.lang.Float",
-    "fields":[{"name":"TYPE"}]
-  },
-  {
-    "name":"java.lang.Integer",
-    "fields":[{"name":"TYPE"}]
-  },
-  {
-    "name":"java.lang.Long",
-    "fields":[{"name":"TYPE"}]
-  },
-  {
-    "name":"java.lang.RuntimePermission"
-  },
-  {
-    "name":"java.lang.Short",
-    "fields":[{"name":"TYPE"}]
-  },
-  {
-    "name":"java.lang.StackTraceElement",
-    "allPublicMethods":true
-  },
-  {
-    "name":"java.lang.String"
-  },
-  {
-    "name":"java.lang.String[]"
-  },
-  {
-    "name":"java.lang.Void",
-    "fields":[{"name":"TYPE"}]
-  },
-  {
-    "name":"java.lang.management.BufferPoolMXBean",
-    "allPublicMethods":true
-  },
-  {
-    "name":"java.lang.management.ClassLoadingMXBean",
-    "allPublicMethods":true
-  },
-  {
-    "name":"java.lang.management.CompilationMXBean",
-    "allPublicMethods":true
-  },
-  {
-    "name":"java.lang.management.LockInfo",
-    "allPublicMethods":true
-  },
-  {
-    "name":"java.lang.management.ManagementFactory",
-    "methods":[{"name":"getRuntimeMXBean","parameterTypes":[] }]
-  },
-  {
-    "name":"java.lang.management.ManagementPermission",
-    "methods":[{"name":"<init>","parameterTypes":["java.lang.String"] }]
-  },
-  {
-    "name":"java.lang.management.MemoryMXBean",
-    "allPublicMethods":true
-  },
-  {
-    "name":"java.lang.management.MemoryManagerMXBean",
-    "allPublicMethods":true
-  },
-  {
-    "name":"java.lang.management.MemoryPoolMXBean",
-    "allPublicMethods":true
-  },
-  {
-    "name":"java.lang.management.MemoryUsage",
-    "allPublicMethods":true
-  },
-  {
-    "name":"java.lang.management.MonitorInfo",
-    "allPublicMethods":true
-  },
-  {
-    "name":"java.lang.management.PlatformLoggingMXBean",
-    "allPublicMethods":true
-  },
-  {
-    "name":"java.lang.management.RuntimeMXBean",
-    "allPublicMethods":true,
-    "methods":[{"name":"getInputArguments","parameterTypes":[] }]
-  },
-  {
-    "name":"java.lang.management.ThreadInfo",
-    "allPublicMethods":true
-  },
-  {
-    "name":"java.math.BigDecimal"
-  },
-  {
-    "name":"java.math.BigInteger"
-  },
-  {
-    "name":"java.net.NetPermission"
-  },
-  {
-    "name":"java.net.SocketOption"
-  },
-  {
-    "name":"java.net.SocketPermission"
-  },
-  {
-    "name":"java.net.StandardSocketOptions",
-    "fields":[
-      {"name":"IP_MULTICAST_IF"},
-      {"name":"IP_MULTICAST_LOOP"},
-      {"name":"IP_MULTICAST_TTL"}
-    ]
-  },
-  {
-    "name":"java.net.URLPermission",
-    "methods":[{"name":"<init>","parameterTypes":["java.lang.String","java.lang.String"] }]
-  },
-  {
-    "name":"java.nio.Bits",
-    "fields":[{"name":"UNALIGNED"}]
-  },
-  {
-    "name":"java.nio.Buffer",
-    "fields":[{"name":"address", "allowUnsafeAccess":true}]
-  },
-  {
-    "name":"java.nio.DirectByteBuffer",
-    "methods":[{"name":"<init>","parameterTypes":["long","int"] }]
-  },
-  {
-    "name":"java.nio.channels.NetworkChannel",
-    "methods":[
-      {"name":"getOption","parameterTypes":["java.net.SocketOption"] },
-      {"name":"setOption","parameterTypes":["java.net.SocketOption","java.lang.Object"] }
-    ]
-  },
-  {
-    "name":"java.security.AlgorithmParametersSpi"
-  },
-  {
-    "name":"java.security.AllPermission"
-  },
-  {
-    "name":"java.security.KeyStoreSpi"
-  },
-  {
-    "name":"java.security.MessageDigestSpi"
-  },
-  {
-    "name":"java.security.SecureRandomParameters"
-  },
-  {
-    "name":"java.security.SecurityPermission"
-  },
-  {
-    "name":"java.util.Set[]"
-  },
-  {
-    "name":"java.util.Collection[]"
-  },
-  {
-    "name":"java.util.Date"
-  },
-  {
-    "name":"java.util.PropertyPermission",
-    "methods":[{"name":"<init>","parameterTypes":["java.lang.String","java.lang.String"] }]
-  },
-  {
-    "name":"java.util.concurrent.ScheduledThreadPoolExecutor",
-    "methods":[{"name":"setRemoveOnCancelPolicy","parameterTypes":["boolean"] }]
-  },
-  {
-    "name":"java.util.logging.LogManager",
-    "methods":[{"name":"getLoggingMXBean","parameterTypes":[] }]
-  },
-  {
-    "name":"java.util.logging.LoggingMXBean",
-    "allPublicMethods":true
-  },
-  {
-    "name":"javax.management.MBeanOperationInfo",
-    "allPublicMethods":true
-  },
-  {
-    "name":"javax.management.MBeanServerBuilder",
-    "methods":[{"name":"<init>","parameterTypes":[] }]
-  },
-  {
-    "name":"javax.management.NotificationBroadcasterSupport",
-    "methods":[{"name":"getNotificationInfo","parameterTypes":[] }]
-  },
-  {
-    "name":"javax.management.ObjectName"
-  },
-  {
-    "name":"javax.management.openmbean.CompositeData"
-  },
-  {
-    "name":"javax.management.openmbean.CompositeData[]"
-  },
-  {
-    "name":"javax.management.openmbean.OpenMBeanOperationInfoSupport"
-  },
-  {
-    "name":"javax.management.openmbean.TabularData"
-  },
-  {
-    "name":"javax.security.auth.x500.X500Principal",
-    "fields":[{"name":"thisX500Name"}],
-    "methods":[{"name":"<init>","parameterTypes":["sun.security.x509.X500Name"] }]
-  },
-  {
-    "name":"jdk.internal.misc.Unsafe",
-    "methods":[{"name":"getUnsafe","parameterTypes":[] }]
-  },
-  {
-    "name":"jdk.management.jfr.ConfigurationInfo",
-    "allPublicMethods":true
-  },
-  {
-    "name":"jdk.management.jfr.EventTypeInfo",
-    "allPublicMethods":true
-  },
-  {
-    "name":"jdk.management.jfr.FlightRecorderMXBean",
-    "allPublicMethods":true
-  },
-  {
-    "name":"jdk.management.jfr.FlightRecorderMXBeanImpl",
-    "allPublicConstructors":true
-  },
-  {
-    "name":"jdk.management.jfr.RecordingInfo",
-    "allPublicMethods":true
-  },
-  {
-    "name":"jdk.management.jfr.SettingDescriptorInfo",
-    "allPublicMethods":true
-  },
-  {
-    "name":"long[]"
-  },
-  {
-    "name":"short[]"
-  },
-  {
-    "name":"sun.management.ClassLoadingImpl",
-    "allPublicConstructors":true
-  },
-  {
-    "name":"sun.management.CompilationImpl",
-    "allPublicConstructors":true
-  },
-  {
-    "name":"sun.management.ManagementFactoryHelper$1",
-    "allPublicConstructors":true
-  },
-  {
-    "name":"sun.management.ManagementFactoryHelper$PlatformLoggingImpl",
-    "allPublicConstructors":true
-  },
-  {
-    "name":"sun.management.MemoryImpl",
-    "allPublicConstructors":true
-  },
-  {
-    "name":"sun.management.MemoryManagerImpl",
-    "allPublicConstructors":true
-  },
-  {
-    "name":"sun.management.MemoryPoolImpl",
-    "allPublicConstructors":true
-  },
-  {
-    "name":"sun.management.RuntimeImpl",
-    "allPublicConstructors":true
-  },
-  {
-    "name":"sun.misc.Unsafe",
-    "fields":[{"name":"theUnsafe"}],
-    "methods":[
-      {"name":"copyMemory","parameterTypes":["java.lang.Object","long","java.lang.Object","long","long"] },
-      {"name":"getAndAddLong","parameterTypes":["java.lang.Object","long","long"] },
-      {"name":"getAndSetObject","parameterTypes":["java.lang.Object","long","java.lang.Object"] },
-      {"name":"invokeCleaner","parameterTypes":["java.nio.ByteBuffer"] }
-    ]
-  },
-  {
-    "name":"sun.nio.ch.SelectorImpl",
-    "fields":[
-      {"name":"publicSelectedKeys", "allowUnsafeAccess":true},
-      {"name":"selectedKeys", "allowUnsafeAccess":true}
-    ]
-  },
-  {
-    "name":"sun.security.pkcs.SignerInfo[]"
-  },
-  {
-    "name":"sun.security.pkcs12.PKCS12KeyStore",
-    "methods":[{"name":"<init>","parameterTypes":[] }]
-  },
-  {
-    "name":"sun.security.pkcs12.PKCS12KeyStore$DualFormatPKCS12",
-    "methods":[{"name":"<init>","parameterTypes":[] }]
-  },
-  {
-    "name":"sun.security.provider.JavaKeyStore$JKS",
-    "methods":[{"name":"<init>","parameterTypes":[] }]
-  },
-  {
-    "name":"sun.security.provider.NativePRNG",
-    "methods":[{"name":"<init>","parameterTypes":[] }]
-  },
-  {
-    "name":"sun.security.provider.SHA",
-    "methods":[{"name":"<init>","parameterTypes":[] }]
-  },
-  {
-    "name":"sun.security.provider.X509Factory",
-    "methods":[{"name":"<init>","parameterTypes":[] }]
-  },
-  {
-    "name":"sun.security.rsa.RSAKeyFactory$Legacy",
-    "methods":[{"name":"<init>","parameterTypes":[] }]
-  },
-  {
-    "name":"sun.security.ssl.KeyManagerFactoryImpl$SunX509",
-    "methods":[{"name":"<init>","parameterTypes":[] }]
-  },
-  {
-    "name":"sun.security.ssl.SSLContextImpl$TLSContext",
-    "methods":[{"name":"<init>","parameterTypes":[] }]
-  },
-  {
-    "name":"sun.security.ssl.TrustManagerFactoryImpl$PKIXFactory",
-    "methods":[{"name":"<init>","parameterTypes":[] }]
-  },
-  {
-    "name":"sun.security.util.ObjectIdentifier"
-  },
-  {
-    "name":"sun.security.x509.AuthorityInfoAccessExtension",
-    "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]
-  },
-  {
-    "name":"sun.security.x509.AuthorityKeyIdentifierExtension",
-    "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]
-  },
-  {
-    "name":"sun.security.x509.BasicConstraintsExtension",
-    "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]
-  },
-  {
-    "name":"sun.security.x509.CRLDistributionPointsExtension",
-    "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]
-  },
-  {
-    "name":"sun.security.x509.CertificateExtensions"
-  },
-  {
-    "name":"sun.security.x509.CertificatePoliciesExtension",
-    "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]
-  },
-  {
-    "name":"sun.security.x509.ExtendedKeyUsageExtension",
-    "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]
-  },
-  {
-    "name":"sun.security.x509.IssuerAlternativeNameExtension",
-    "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]
-  },
-  {
-    "name":"sun.security.x509.KeyUsageExtension",
-    "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]
-  },
-  {
-    "name":"sun.security.x509.NetscapeCertTypeExtension",
-    "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]
-  },
-  {
-    "name":"sun.security.x509.PrivateKeyUsageExtension",
-    "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]
-  },
-  {
-    "name":"sun.security.x509.SubjectAlternativeNameExtension",
-    "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]
-  },
-  {
-    "name":"sun.security.x509.SubjectKeyIdentifierExtension",
-    "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]
-  },
-  {
-    "name": "spp.protocol.status.MarkerConnection",
-    "fields":[
-      {"name":"markerId", "allowWrite":true},
-      {"name":"connectionTime", "allowWrite":true},
-      {"name":"meta", "allowWrite":true}
-    ],
-    "methods": [
-      { "name": "<init>", "parameterTypes": [] }
-    ],
-    "allDeclaredConstructors": true,
-    "allDeclaredMethods": true
-  },
-  {
-    "name": "io.vertx.core.eventbus.ReplyException",
-    "allDeclaredConstructors": true,
-    "allDeclaredMethods": true
-  },
-  {
-    "name": "io.vertx.serviceproxy.ServiceException",
-    "allDeclaredConstructors": true,
-    "allDeclaredMethods": true
-  },
-  {
-    "name" : "kotlin.internal.jdk8.JDK8PlatformImplementations",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredFields" : true,
-    "allPublicFields" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true
-  },
-  {
-    "name": "kotlin.reflect.jvm.internal.ReflectionFactoryImpl",
-    "allDeclaredConstructors":true
-  },
-  {
-    "name": "kotlin.KotlinVersion",
-    "allPublicMethods": true,
-    "allDeclaredFields":true,
-    "allDeclaredMethods":true,
-    "allDeclaredConstructors":true
-  },
-  {
-    "name": "kotlin.KotlinVersion[]"
-  },
-  {
-    "name": "kotlin.KotlinVersion$Companion"
-  },
-  {
-    "name": "kotlin.KotlinVersion$Companion[]"
-  },
-  {
-    "name": "spp.protocol.status.MarkerConnection[]",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true,
-    "allDeclaredClasses" : true,
-    "allPublicClasses" : true
-  },
-  {
-    "name": "kotlinx.serialization.encoding.CompositeEncoder[]",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true,
-    "allDeclaredClasses" : true,
-    "allPublicClasses" : true
-  },
-  {
-    "name": "spp.protocol.processor.status.ProcessorConnection",
-    "fields":[
-      {"name":"processorId", "allowWrite":true},
-      {"name":"connectionTime", "allowWrite":true},
-      {"name":"meta", "allowWrite":true}
-    ],
-    "methods": [
-      { "name": "<init>", "parameterTypes": [] }
-    ],
-    "allPublicFields": true,
-    "allDeclaredFields": true,
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true,
-    "allDeclaredClasses" : true,
-    "allPublicClasses" : true
-  },
-  {
-    "name": "spp.processor.logging.LoggingProcessorVertxEBProxy",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true,
-    "allDeclaredClasses" : true,
-    "allPublicClasses" : true
-  },
-  {
-    "name": "spp.processor.tracing.TracingProcessorVertxEBProxy",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true,
-    "allDeclaredClasses" : true,
-    "allPublicClasses" : true
-  },
-  {
-    "name": "spp.processor.live.LiveInstrumentProcessorVertxEBProxy",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true,
-    "allDeclaredClasses" : true,
-    "allPublicClasses" : true
-  },
-  {
-    "name": "spp.processor.live.LiveViewProcessorVertxEBProxy",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true,
-    "allDeclaredClasses" : true,
-    "allPublicClasses" : true
-  },
-  {
-    "name": "spp.protocol.artifact.log.LogResult$Companion",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true,
-    "allDeclaredClasses" : true,
-    "allPublicClasses" : true
-  },
-  {
-    "name": "spp.protocol.artifact.log.LogResult$Companion[]",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true,
-    "allDeclaredClasses" : true,
-    "allPublicClasses" : true
-  },
-  {
-    "name": "spp.protocol.instrument.breakpoint.LiveBreakpoint$Companion",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true,
-    "allDeclaredClasses" : true,
-    "allPublicClasses" : true
-  },
-  {
-    "name": "spp.protocol.instrument.LiveInstrument$Companion",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true,
-    "allDeclaredClasses" : true,
-    "allPublicClasses" : true
-  },
-  {
-    "name": "spp.protocol.instrument.LiveSourceLocation$Companion",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true,
-    "allDeclaredClasses" : true,
-    "allPublicClasses" : true
-  },
-  {
-    "name": "spp.protocol.instrument.InstrumentThrottle$Companion",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true,
-    "allDeclaredClasses" : true,
-    "allPublicClasses" : true
-  },
-  {
-    "name": "spp.protocol.instrument.LiveInstrumentEvent$Companion",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true,
-    "allDeclaredClasses" : true,
-    "allPublicClasses" : true
-  },
-  {
-    "name": "spp.protocol.instrument.breakpoint.event.LiveBreakpointRemoved$Companion",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true,
-    "allDeclaredClasses" : true,
-    "allPublicClasses" : true
-  },
-  {
-    "name": "spp.protocol.instrument.breakpoint.event.LiveBreakpointHit$Companion",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true,
-    "allDeclaredClasses" : true,
-    "allPublicClasses" : true
-  },
-  {
-    "name": "spp.protocol.instrument.log.event.LiveLogRemoved$Companion",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true,
-    "allDeclaredClasses" : true,
-    "allPublicClasses" : true
-  },
-  {
-    "name": "spp.protocol.instrument.log.event.LiveLogHit$Companion",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true,
-    "allDeclaredClasses" : true,
-    "allPublicClasses" : true
-  },
-  {
-    "name": "spp.protocol.instrument.LiveVariable$Companion",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true,
-    "allDeclaredClasses" : true,
-    "allPublicClasses" : true
-  },
-  {
-    "name": "spp.protocol.instrument.log.LiveLog$Companion",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true,
-    "allDeclaredClasses" : true,
-    "allPublicClasses" : true
-  },
-  {
-    "name": "spp.protocol.artifact.log.Log$Companion",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true,
-    "allDeclaredClasses" : true,
-    "allPublicClasses" : true
-  },
-  {
-    "name": "spp.protocol.probe.status.ProbeConnection",
-    "fields":[
-      {"name":"probeId", "allowWrite":true},
-      {"name":"connectionTime", "allowWrite":true},
-      {"name":"meta", "allowWrite":true}
-    ],
-    "methods": [
-      { "name": "<init>", "parameterTypes": [] }
-    ],
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true,
-    "allDeclaredClasses" : true,
-    "allPublicClasses" : true
-  },
-  {
-    "name": "java.util.HashSet",
-    "methods": [
-      { "name": "<init>", "parameterTypes": [] }
-    ]
-  },
-  {
-    "name": "kotlinx.datetime.Instant[]",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true,
-    "allDeclaredClasses" : true,
-    "allPublicClasses" : true
-  },
-  {
-    "name": "spp.protocol.artifact.exception.LiveStackTrace[]",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true,
-    "allDeclaredClasses" : true,
-    "allPublicClasses" : true
-  },
-  {
-    "name": "spp.protocol.artifact.exception.LiveStackTrace",
-    "fields":[
-      {"name":"exceptionType", "allowWrite":true},
-      {"name":"message", "allowWrite":true},
-      {"name":"elements", "allowWrite":true},
-      {"name":"causedBy", "allowWrite":true}
-    ],
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true,
-    "allDeclaredClasses" : true,
-    "allPublicClasses" : true
-  },
-  {
-    "name": "spp.protocol.artifact.exception.LiveStackTraceElement[]",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true,
-    "allDeclaredClasses" : true,
-    "allPublicClasses" : true
-  },
-  {
-    "name": "spp.protocol.artifact.exception.LiveStackTraceElement",
-    "fields":[
-      {"name":"method", "allowWrite":true},
-      {"name":"source", "allowWrite":true},
-      {"name":"variables", "allowWrite":true}
-    ],
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true,
-    "allDeclaredClasses" : true,
-    "allPublicClasses" : true
-  },
-  {
-    "name": "java.util.Iterator[]",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true,
-    "allDeclaredClasses" : true,
-    "allPublicClasses" : true
-  },
-  {
-    "name": "spp.protocol.artifact.log.LogCountSummary",
-    "fields":[
-      {"name":"timestamp", "allowWrite":true},
-      {"name":"logCounts", "allowWrite":true}
-    ],
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true,
-    "allDeclaredClasses" : true,
-    "allPublicClasses" : true
-  },
-  {
-    "name":"spp.protocol.service.logging.LogCountIndicatorServiceVertxProxyHandler",
-    "methods":[{"name":"<init>","parameterTypes":["io.vertx.core.Vertx","spp.protocol.service.logging.LogCountIndicatorService","boolean","long","boolean"] }]
-  },
-  {
-    "name":"spp.protocol.service.tracing.LocalTracingServiceVertxProxyHandler",
-    "methods":[{"name":"<init>","parameterTypes":["io.vertx.core.Vertx","spp.protocol.service.tracing.LocalTracingService","boolean","long","boolean"] }]
-  },
-  {
-    "name":"spp.protocol.service.live.LiveInstrumentServiceVertxProxyHandler",
-    "methods":[{"name":"<init>","parameterTypes":["io.vertx.core.Vertx","spp.protocol.service.live.LiveInstrumentService","boolean","long","boolean"] }]
-  },
-  {
-    "name":"spp.protocol.service.live.LiveViewServiceVertxProxyHandler",
-    "methods":[{"name":"<init>","parameterTypes":["io.vertx.core.Vertx","spp.protocol.service.live.LiveViewService","boolean","long","boolean"] }]
-  },
-  {
-    "name": "spp.protocol.service.tracing.LocalTracingService",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true,
-    "allDeclaredClasses" : true,
-    "allPublicClasses" : true
-  },
-  {
-    "name": "spp.protocol.service.logging.LogCountIndicatorService",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true,
-    "allDeclaredClasses" : true,
-    "allPublicClasses" : true
-  },
-  {
-    "name": "spp.protocol.service.live.LiveInstrumentService",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true,
-    "allDeclaredClasses" : true,
-    "allPublicClasses" : true
-  },
-  {
-    "name": "spp.protocol.service.live.LiveViewService",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true,
-    "allDeclaredClasses" : true,
-    "allPublicClasses" : true
-  },
-  {
-    "name": "spp.protocol.service.logging.LogCountIndicatorServiceVertxEBProxy",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true,
-    "allDeclaredClasses" : true,
-    "allPublicClasses" : true
-  },
-  {
-    "name": "spp.protocol.service.tracing.LocalTracingServiceVertxEBProxy",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true,
-    "allDeclaredClasses" : true,
-    "allPublicClasses" : true
-  },
-  {
-    "name": "spp.protocol.service.live.LiveInstrumentServiceVertxEBProxy",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true,
-    "allDeclaredClasses" : true,
-    "allPublicClasses" : true
-  },
-  {
-    "name": "spp.protocol.service.live.LiveViewServiceVertxEBProxy",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true,
-    "allDeclaredClasses" : true,
-    "allPublicClasses" : true
-  },
-  {
-    "name": "spp.processor.tracing.TracingProcessor",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true,
-    "allDeclaredClasses" : true,
-    "allPublicClasses" : true
-  },
-  {
-    "name": "spp.processor.logging.LoggingProcessor",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true,
-    "allDeclaredClasses" : true,
-    "allPublicClasses" : true
-  },
-  {
-    "name": "spp.processor.live.LiveInstrumentProcessor",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true,
-    "allDeclaredClasses" : true,
-    "allPublicClasses" : true
-  },
-  {
-    "name": "spp.processor.live.LiveViewProcessor",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true,
-    "allDeclaredClasses" : true,
-    "allPublicClasses" : true
-  },
-  {
-    "name": "spp.protocol.developer.Developer",
-    "fields":[
-      {"name":"id", "allowWrite":true},
-      {"name":"accessToken", "allowWrite":true}
-    ],
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true,
-    "allDeclaredClasses" : true,
-    "allPublicClasses" : true
-  },
-  {
-    "name": "spp.protocol.artifact.log.LogCountSummary[]",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true,
-    "allDeclaredClasses" : true,
-    "allPublicClasses" : true
-  },
-  {
-    "name": "spp.protocol.artifact.ArtifactQualifiedName",
-    "fields":[
-      {"name":"identifier", "allowWrite":true},
-      {"name":"commitId", "allowWrite":true},
-      {"name":"type", "allowWrite":true},
-      {"name":"lineNumber", "allowWrite":true},
-      {"name":"operationName", "allowWrite":true}
-    ],
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true,
-    "allDeclaredClasses" : true,
-    "allPublicClasses" : true
-  },
-  {
-    "name": "spp.protocol.artifact.ArtifactQualifiedName[]",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true,
-    "allDeclaredClasses" : true,
-    "allPublicClasses" : true
-  },
-  {
-    "name": "spp.protocol.artifact.trace.TraceResult[]",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true,
-    "allDeclaredClasses" : true,
-    "allPublicClasses" : true
-  },
-  {
-    "name": "spp.protocol.artifact.trace.TraceResult",
-    "fields":[
-      {"name":"artifactQualifiedName", "allowWrite":true},
-      {"name":"artifactSimpleName", "allowWrite":true},
-      {"name":"orderType", "allowWrite":true},
-      {"name":"start", "allowWrite":true},
-      {"name":"stop", "allowWrite":true},
-      {"name":"step", "allowWrite":true},
-      {"name":"traces", "allowWrite":true},
-      {"name":"total", "allowWrite":true}
-    ],
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true,
-    "allDeclaredClasses" : true,
-    "allPublicClasses" : true
-  },
-  {
-    "name": "spp.protocol.artifact.trace.Trace[]",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true,
-    "allDeclaredClasses" : true,
-    "allPublicClasses" : true
-  },
-  {
-    "name": "spp.protocol.artifact.trace.Trace",
-    "fields":[
-      {"name":"key", "allowWrite":true},
-      {"name":"operationNames", "allowWrite":true},
-      {"name":"duration", "allowWrite":true},
-      {"name":"start", "allowWrite":true},
-      {"name":"error", "allowWrite":true},
-      {"name":"traceIds", "allowWrite":true},
-      {"name":"partial", "allowWrite":true},
-      {"name":"segmentId", "allowWrite":true}
-    ],
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true,
-    "allDeclaredClasses" : true,
-    "allPublicClasses" : true
-  },
-  {
-    "name": "spp.protocol.probe.command.LiveInstrumentCommand$Response",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredFields" : true,
-    "allPublicFields" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true
-  },
-  {
-    "name": "spp.protocol.probe.command.LiveInstrumentCommand",
-    "fields":[
-      {"name":"commandType", "allowWrite":true},
-      {"name":"context", "allowWrite":true}
-    ],
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredFields" : true,
-    "allPublicFields" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true
-  },
-  {
-    "name": "spp.protocol.probe.command.LiveInstrumentCommand$CommandType",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredFields" : true,
-    "allPublicFields" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true
-  },
-  {
-    "name": "spp.protocol.probe.command.LiveInstrumentContext[]",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredFields" : true,
-    "allPublicFields" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true
-  },
-  {
-    "name": "spp.protocol.probe.command.LocalTracingCommand",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredFields" : true,
-    "allPublicFields" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true
-  },
-  {
-    "name": "spp.protocol.probe.command.LiveInstrumentContext",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredFields" : true,
-    "allPublicFields" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true
-  },
-  {
-    "name": "spp.protocol.probe.command.TraceClass",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredFields" : true,
-    "allPublicFields" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true
-  },
-  {
-    "name": "spp.protocol.probe.command.TraceContext",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredFields" : true,
-    "allPublicFields" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true
-  },
-  {
-    "name": "spp.protocol.probe.command.TraceMethod",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredFields" : true,
-    "allPublicFields" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true
-  },
-  {
-    "name": "spp.protocol.instrument.LiveSourceLocation",
-    "fields":[
-      {"name":"source", "allowWrite":true},
-      {"name":"line", "allowWrite":true},
-      {"name":"service", "allowWrite":true},
-      {"name":"serviceInstance", "allowWrite":true},
-      {"name":"commitId", "allowWrite":true},
-      {"name":"fileChecksum", "allowWrite":true}
-    ],
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredFields" : true,
-    "allPublicFields" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true
-  },
-  {
-    "name": "spp.protocol.instrument.LiveSourceLocation[]",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredFields" : true,
-    "allPublicFields" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true
-  },
-  {
-    "name": "spp.protocol.instrument.LiveInstrument",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredFields" : true,
-    "allPublicFields" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true
-  },
-  {
-    "name": "spp.protocol.instrument.LiveInstrumentBatch",
-    "fields":[
-      {"name":"instruments", "allowWrite":true}
-    ],
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredFields" : true,
-    "allPublicFields" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true
-  },
-  {
-    "name": "spp.protocol.instrument.LiveInstrumentBatch[]",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredFields" : true,
-    "allPublicFields" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true
-  },
-  {
-    "name": "spp.protocol.instrument.LiveInstrumentEvent",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredFields" : true,
-    "allPublicFields" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true
-  },
-  {
-    "name": "spp.protocol.instrument.LiveInstrumentEvent[]",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredFields" : true,
-    "allPublicFields" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true
-  },
-  {
-    "name": "spp.protocol.instrument.LiveVariable",
-    "fields":[
-      {"name":"name", "allowWrite":true},
-      {"name":"value", "allowWrite":true},
-      {"name":"lineNumber", "allowWrite":true},
-      {"name":"scope", "allowWrite":true}
-    ],
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredFields" : true,
-    "allPublicFields" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true
-  },
-  {
-    "name": "spp.protocol.instrument.LiveVariable[]",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredFields" : true,
-    "allPublicFields" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true
-  },
-  {
-    "name": "spp.protocol.instrument.breakpoint.LiveBreakpoint",
-    "fields":[
-      {"name":"location", "allowWrite":true},
-      {"name":"condition", "allowWrite":true},
-      {"name":"expiresAt", "allowWrite":true},
-      {"name":"hitLimit", "allowWrite":true},
-      {"name":"id", "allowWrite":true},
-      {"name":"type", "allowWrite":true},
-      {"name":"applyImmediately", "allowWrite":true},
-      {"name":"applied", "allowWrite":true},
-      {"name":"pending", "allowWrite":true},
-      {"name":"throttle", "allowWrite":true},
-      {"name":"meta", "allowWrite":true}
-    ],
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredFields" : true,
-    "allPublicFields" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true
-  },
-  {
-    "name": "spp.protocol.instrument.breakpoint.LiveBreakpoint[]",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredFields" : true,
-    "allPublicFields" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true
-  },
-  {
-    "name": "spp.protocol.instrument.log.LiveLog",
-    "fields":[
-      {"name":"logFormat", "allowWrite":true},
-      {"name":"logArguments", "allowWrite":true},
-      {"name":"location", "allowWrite":true},
-      {"name":"condition", "allowWrite":true},
-      {"name":"expiresAt", "allowWrite":true},
-      {"name":"hitLimit", "allowWrite":true},
-      {"name":"id", "allowWrite":true},
-      {"name":"type", "allowWrite":true},
-      {"name":"applyImmediately", "allowWrite":true},
-      {"name":"applied", "allowWrite":true},
-      {"name":"pending", "allowWrite":true},
-      {"name":"throttle", "allowWrite":true},
-      {"name":"meta", "allowWrite":true}
-    ],
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredFields" : true,
-    "allPublicFields" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true
-  },
-  {
-    "name": "spp.protocol.instrument.log.LiveLog[]",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredFields" : true,
-    "allPublicFields" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true
-  },
-  {
-    "name": "spp.protocol.instrument.breakpoint.event.LiveBreakpointHit",
-    "fields":[
-      {"name":"breakpointId", "allowWrite":true},
-      {"name":"traceId", "allowWrite":true},
-      {"name":"occurredAt", "allowWrite":true},
-      {"name":"host", "allowWrite":true},
-      {"name":"application", "allowWrite":true},
-      {"name":"stackTrace", "allowWrite":true}
-    ],
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredFields" : true,
-    "allPublicFields" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true
-  },
-  {
-    "name": "spp.protocol.instrument.breakpoint.event.LiveBreakpointHit[]",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredFields" : true,
-    "allPublicFields" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true
-  },
-  {
-    "name": "spp.protocol.instrument.log.event.LiveLogHit",
-    "fields":[
-      {"name":"logId", "allowWrite":true},
-      {"name":"occurredAt", "allowWrite":true},
-      {"name":"serviceInstance", "allowWrite":true},
-      {"name":"service", "allowWrite":true},
-      {"name":"logResult", "allowWrite":true}
-    ],
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredFields" : true,
-    "allPublicFields" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true
-  },
-  {
-    "name": "spp.protocol.instrument.log.event.LiveLogHit[]",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredFields" : true,
-    "allPublicFields" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true
-  },
-  {
-    "name": "spp.protocol.artifact.log.LogResult",
-    "fields":[
-      {"name":"artifactQualifiedName", "allowWrite":true},
-      {"name":"orderType", "allowWrite":true},
-      {"name":"timestamp", "allowWrite":true},
-      {"name":"logs", "allowWrite":true},
-      {"name":"total", "allowWrite":true}
-    ],
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredFields" : true,
-    "allPublicFields" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true
-  },
-  {
-    "name": "spp.protocol.artifact.log.LogResult[]",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredFields" : true,
-    "allPublicFields" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true
-  },
-  {
-    "name": "spp.protocol.artifact.log.Log",
-    "fields":[
-      {"name":"timestamp", "allowWrite":true},
-      {"name":"content", "allowWrite":true},
-      {"name":"level", "allowWrite":true},
-      {"name":"logger", "allowWrite":true},
-      {"name":"thread", "allowWrite":true},
-      {"name":"exception", "allowWrite":true},
-      {"name":"arguments", "allowWrite":true}
-    ],
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredFields" : true,
-    "allPublicFields" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true
-  },
-  {
-    "name": "spp.protocol.artifact.log.Log[]",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredFields" : true,
-    "allPublicFields" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true
-  },
-  {
-    "name": "spp.protocol.instrument.breakpoint.event.LiveBreakpointRemoved",
-    "fields":[
-      {"name":"breakpointId", "allowWrite":true},
-      {"name":"occurredAt", "allowWrite":true},
-      {"name":"cause", "allowWrite":true}
-    ],
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredFields" : true,
-    "allPublicFields" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true
-  },
-  {
-    "name": "spp.protocol.instrument.breakpoint.event.LiveBreakpointRemoved[]",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredFields" : true,
-    "allPublicFields" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true
-  },
-  {
-    "name": "spp.protocol.instrument.log.event.LiveLogRemoved",
-    "fields":[
-      {"name":"logId", "allowWrite":true},
-      {"name":"occurredAt", "allowWrite":true},
-      {"name":"cause", "allowWrite":true},
-      {"name":"liveLog", "allowWrite":true}
-    ],
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredFields" : true,
-    "allPublicFields" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true
-  },
-  {
-    "name": "spp.protocol.instrument.log.event.LiveLogRemoved[]",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredFields" : true,
-    "allPublicFields" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true
-  },
-  {
-    "name": "spp.protocol.instrument.InstrumentThrottle",
-    "fields":[
-      {"name":"limit", "allowWrite":true},
-      {"name":"step", "allowWrite":true}
-    ],
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredFields" : true,
-    "allPublicFields" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true
-  },
-  {
-    "name": "spp.protocol.instrument.InstrumentThrottle[]",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredFields" : true,
-    "allPublicFields" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true
-  },
-  {
-    "name": "spp.platform.core.auth.DeveloperRole",
-    "fields":[
-      {"name":"roleName", "allowWrite":true}
-    ],
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredFields" : true,
-    "allPublicFields" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true
-  },
-  {
-    "name": "spp.platform.core.auth.DeveloperRole[]",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredFields" : true,
-    "allPublicFields" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true
-  },
-  {
-    "name": "spp.platform.core.auth.RolePermission",
-    "fields":[
-      {"name":"manager", "allowWrite":true}
-    ],
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredFields" : true,
-    "allPublicFields" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true
-  },
-  {
-    "name": "spp.platform.core.auth.RolePermission[]",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredFields" : true,
-    "allPublicFields" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true
-  },
-  {
-    "name": "spp.platform.core.auth.error.PermissionAccessDenied",
-    "fields":[
-      {"name":"permission", "allowWrite":true}
-    ],
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredFields" : true,
-    "allPublicFields" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true
-  },
-  {
-    "name": "spp.platform.core.auth.error.PermissionAccessDenied[]",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredFields" : true,
-    "allPublicFields" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true
-  },
-  {
-    "name": "spp.platform.core.auth.error.InstrumentAccessDenied",
-    "fields":[
-      {"name":"instrumentLocation", "allowWrite":true}
-    ],
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredFields" : true,
-    "allPublicFields" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true
-  },
-  {
-    "name": "spp.platform.core.auth.error.InstrumentAccessDenied[]",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredFields" : true,
-    "allPublicFields" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true
-  },
-  {
-    "name": "spp.platform.core.auth.AccessPermission",
-    "fields":[
-      {"name":"id", "allowWrite":true},
-      {"name":"locationPatterns", "allowWrite":true},
-      {"name":"type", "allowWrite":true}
-    ],
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredFields" : true,
-    "allPublicFields" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true
-  },
-  {
-    "name": "spp.platform.core.auth.AccessPermission[]",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredFields" : true,
-    "allPublicFields" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true
-  },
-  {
-    "name": "spp.platform.core.auth.DataRedaction",
-    "fields":[
-      {"name":"id", "allowWrite":true},
-      {"name":"redactionPattern", "allowWrite":true}
-    ],
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredFields" : true,
-    "allPublicFields" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true
-  },
-  {
-    "name": "spp.platform.core.auth.DataRedaction[]",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredFields" : true,
-    "allPublicFields" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true
-  },
-  {
-    "name": "spp.protocol.probe.status.ProbeConnection[]",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true,
-    "allDeclaredClasses" : true,
-    "allPublicClasses" : true
-  },
-  {
-    "name": "spp.protocol.processor.status.ProcessorConnection[]",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true,
-    "allDeclaredClasses" : true,
-    "allPublicClasses" : true
-  },
-  {
-    "name": "spp.protocol.probe.command.LiveInstrumentCommand[]",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true,
-    "allDeclaredClasses" : true,
-    "allPublicClasses" : true
-  },
-  {
-    "name":"spp.platform.util.LazyInitRollingFileAppender",
-    "allPublicMethods":true,
-    "methods":[{"name":"<init>","parameterTypes":[] }]
-  },
-  {
-    "name":"ch.qos.logback.core.util.FileSize",
-    "methods":[{"name":"valueOf","parameterTypes":["java.lang.String"] }]
-  },
-  {
-    "name":"ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP",
-    "allPublicMethods":true,
-    "methods":[{"name":"<init>","parameterTypes":[] }]
-  },
-  {
-    "name":"ch.qos.logback.core.rolling.TimeBasedRollingPolicy",
-    "allPublicMethods":true,
-    "methods":[{"name":"<init>","parameterTypes":[] }]
-  },
-  {
-    "name":"ch.qos.logback.core.rolling.helper.DateTokenConverter",
-    "methods":[{"name":"<init>","parameterTypes":[] }]
-  },
-  {
-    "name":"ch.qos.logback.core.rolling.helper.IntegerTokenConverter",
-    "methods":[{"name":"<init>","parameterTypes":[] }]
-  },
-  {
-    "name":"ch.qos.logback.classic.encoder.PatternLayoutEncoder",
-    "allPublicMethods":true,
-    "methods":[{"name":"<init>","parameterTypes":[] }]
-  },
-  {
-    "name":"ch.qos.logback.classic.pattern.ThrowableProxyConverter",
-    "methods":[{"name":"<init>","parameterTypes":[] }]
-  },
-  {
-    "name":"ch.qos.logback.classic.pattern.color.HighlightingCompositeConverter",
-    "methods":[{"name":"<init>","parameterTypes":[] }]
-  },
-  {
-    "name":"ch.qos.logback.core.pattern.color.BlackCompositeConverter",
-    "methods":[{"name":"<init>","parameterTypes":[] }]
-  },
-  {
-    "name":"ch.qos.logback.core.pattern.color.YellowCompositeConverter",
-    "methods":[{"name":"<init>","parameterTypes":[] }]
-  },
-  {
-    "name":"ch.qos.logback.core.status.NopStatusListener",
-    "methods":[{"name":"<init>","parameterTypes":[] }]
-  },
-  {
-    "name": "spp.protocol.platform.client.ActiveMarker",
-    "fields":[
-      {"name":"processorId", "allowWrite":true},
-      {"name":"connectedAt", "allowWrite":true},
-      {"name":"meta", "allowWrite":true}
-    ],
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredFields" : true,
-    "allPublicFields" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true
-  },
-  {
-    "name": "spp.protocol.platform.client.ActiveProbe",
-    "fields":[
-      {"name":"processorId", "allowWrite":true},
-      {"name":"connectedAt", "allowWrite":true},
-      {"name":"meta", "allowWrite":true}
-    ],
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredFields" : true,
-    "allPublicFields" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true
-  },
-  {
-    "name": "spp.protocol.platform.client.ActiveProcessor",
-    "fields":[
-      {"name":"processorId", "allowWrite":true},
-      {"name":"connectedAt", "allowWrite":true},
-      {"name":"meta", "allowWrite":true}
-    ],
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredFields" : true,
-    "allPublicFields" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true
-  },
-  {
-    "name":"org.kohsuke.github.GHRepository",
-    "methods":[{"name":"<init>","parameterTypes":[] }],
-    "fields":[
-      {"name":"owner", "allowWrite":true}
-    ],
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredFields" : true,
-    "allPublicFields" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true
-  },
-  {
-    "name":"org.kohsuke.github.GHUser",
-    "methods":[{"name":"<init>","parameterTypes":[] }],
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredFields" : true,
-    "allPublicFields" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true
-  },
-  {
-    "name":"org.kohsuke.github.GHPerson",
-    "methods":[{"name":"<init>","parameterTypes":[] }],
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredFields" : true,
-    "allPublicFields" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true
-  },
-  {
-    "name":"org.kohsuke.github.GHLicense",
-    "methods":[{"name":"<init>","parameterTypes":[] }],
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredFields" : true,
-    "allPublicFields" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true
-  },
-  {
-    "name":"org.kohsuke.github.GitHubInteractiveObject",
-    "methods":[{"name":"<init>","parameterTypes":[] }],
-    "fields":[
-      {"name":"root", "allowWrite":true}
-    ],
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredFields" : true,
-    "allPublicFields" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true
-  },
-  {
-    "name":"org.kohsuke.github.GHAsset",
-    "methods":[{"name":"<init>","parameterTypes":[] }],
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredFields" : true,
-    "allPublicFields" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true
-  },
-  {
-    "name":"org.kohsuke.github.GHAsset[]",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredFields" : true,
-    "allPublicFields" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true
-  },
-  {
-    "name":"org.kohsuke.github.GHObject",
-    "methods":[{"name":"<init>","parameterTypes":[] }],
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredFields" : true,
-    "allPublicFields" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true
-  },
-  {
-    "name":"org.kohsuke.github.GHRelease",
-    "methods":[{"name":"<init>","parameterTypes":[] }],
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredFields" : true,
-    "allPublicFields" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true
-  },
-  {
-    "name":"org.kohsuke.github.GHRelease[]",
-    "allDeclaredConstructors" : true,
-    "allPublicConstructors" : true,
-    "allDeclaredFields" : true,
-    "allPublicFields" : true,
-    "allDeclaredMethods" : true,
-    "allPublicMethods" : true
-  }
 ]

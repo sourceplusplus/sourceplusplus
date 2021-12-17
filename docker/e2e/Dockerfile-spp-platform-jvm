@@ -11,5 +11,5 @@ ADD ./config/spp-platform.yml /opt/sourceplusplus/config
 
 ADD ./spp-platform-*.jar /opt/sourceplusplus
 
-CMD java -jar /opt/sourceplusplus/spp-platform-*.jar
-#CMD java -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5107 -jar /opt/sourceplusplus/spp-platform-*.jar
+#CMD java -jar /opt/sourceplusplus/spp-platform-*.jar
+CMD java -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5107 -jar /opt/sourceplusplus/spp-platform-*.jar
