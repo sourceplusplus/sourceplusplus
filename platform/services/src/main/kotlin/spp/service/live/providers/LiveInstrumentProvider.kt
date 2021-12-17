@@ -120,7 +120,7 @@ class LiveInstrumentProvider(
                     }
                 }
             } catch (throwable: Throwable) {
-                log.warn("Add live instrument failed. Reason: {}", throwable.message)
+                log.warn("Add live instrument failed", throwable)
                 handler.handle(Future.failedFuture(throwable))
             }
         }
@@ -149,7 +149,7 @@ class LiveInstrumentProvider(
                 }
                 handler.handle(Future.succeededFuture(results))
             } catch (throwable: Throwable) {
-                log.warn("Add live instruments failed. Reason: {}", throwable.message)
+                log.warn("Add live instruments failed", throwable)
                 handler.handle(Future.failedFuture(throwable))
             }
         }
@@ -180,7 +180,7 @@ class LiveInstrumentProvider(
             try {
                 handler.handle(controller.removeLiveInstrument(selfId, id))
             } catch (throwable: Throwable) {
-                log.warn("Remove live instrument failed. Reason: {}", throwable.message)
+                log.warn("Remove live instrument failed", throwable)
                 handler.handle(Future.failedFuture(throwable))
             }
         }
@@ -214,7 +214,7 @@ class LiveInstrumentProvider(
                     )
                 }
             } catch (throwable: Throwable) {
-                log.warn("Remove live instruments failed. Reason: {}", throwable.message)
+                log.warn("Remove live instruments failed", throwable)
                 handler.handle(Future.failedFuture(throwable))
             }
         }
@@ -301,7 +301,7 @@ class LiveInstrumentProvider(
             try {
                 handler.handle(controller.clearLiveInstruments(selfId))
             } catch (throwable: Throwable) {
-                log.warn("Clear live instruments failed. Reason: {}", throwable.message)
+                log.warn("Clear live instruments failed", throwable)
                 handler.handle(Future.failedFuture(throwable))
             }
         }
@@ -320,7 +320,7 @@ class LiveInstrumentProvider(
             try {
                 handler.handle(controller.clearLiveBreakpoints(selfId))
             } catch (throwable: Throwable) {
-                log.warn("Clear live breakpoints failed. Reason: {}", throwable.message)
+                log.warn("Clear live breakpoints failed", throwable)
                 handler.handle(Future.failedFuture(throwable))
             }
         }
@@ -339,7 +339,7 @@ class LiveInstrumentProvider(
             try {
                 handler.handle(controller.clearLiveLogs(selfId))
             } catch (throwable: Throwable) {
-                log.warn("Clear live logs failed. Reason: {}", throwable.message)
+                log.warn("Clear live logs failed", throwable)
                 handler.handle(Future.failedFuture(throwable))
             }
         }
@@ -358,7 +358,7 @@ class LiveInstrumentProvider(
             try {
                 handler.handle(controller.clearLiveMeters(selfId))
             } catch (throwable: Throwable) {
-                log.warn("Clear live meters failed. Reason: {}", throwable.message)
+                log.warn("Clear live meters failed", throwable)
                 handler.handle(Future.failedFuture(throwable))
             }
         }
