@@ -1,14 +1,5 @@
 package integration
 
-import spp.protocol.SourceMarkerServices
-import spp.protocol.SourceMarkerServices.Provide
-import spp.protocol.instrument.LiveInstrumentBatch
-import spp.protocol.instrument.LiveInstrumentEvent
-import spp.protocol.instrument.LiveInstrumentEventType
-import spp.protocol.instrument.LiveSourceLocation
-import spp.protocol.instrument.breakpoint.LiveBreakpoint
-import spp.protocol.instrument.breakpoint.event.LiveBreakpointHit
-import spp.protocol.service.live.LiveInstrumentService
 import io.vertx.core.json.Json
 import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxExtension
@@ -19,7 +10,16 @@ import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.slf4j.LoggerFactory
+import spp.protocol.SourceMarkerServices
+import spp.protocol.SourceMarkerServices.Provide
+import spp.protocol.instrument.LiveInstrumentBatch
+import spp.protocol.instrument.LiveInstrumentEvent
+import spp.protocol.instrument.LiveInstrumentEventType
+import spp.protocol.instrument.LiveSourceLocation
+import spp.protocol.instrument.breakpoint.LiveBreakpoint
+import spp.protocol.instrument.breakpoint.event.LiveBreakpointHit
 import spp.protocol.probe.error.LiveInstrumentException
+import spp.protocol.service.live.LiveInstrumentService
 import java.util.*
 import java.util.concurrent.TimeUnit
 
@@ -46,6 +46,7 @@ class LiveBreakpointTest : PlatformIntegrationTest() {
                     log.info("Got added")
                     testContext.verify {
                         assertEquals(instrumentId, JsonObject(liveEvent.data).getString("id"))
+                        assertFalse(gotAdded)
                     }
                     gotAdded = true
                 }
@@ -53,6 +54,7 @@ class LiveBreakpointTest : PlatformIntegrationTest() {
                     log.info("Got applied")
                     testContext.verify {
                         assertEquals(instrumentId, JsonObject(liveEvent.data).getString("id"))
+                        assertFalse(gotApplied)
                     }
                     gotApplied = true
                 }
@@ -60,6 +62,7 @@ class LiveBreakpointTest : PlatformIntegrationTest() {
                     log.info("Got removed")
                     testContext.verify {
                         assertEquals(instrumentId, JsonObject(liveEvent.data).getString("breakpointId"))
+                        assertFalse(gotRemoved)
                     }
                     gotRemoved = true
                 }
@@ -67,6 +70,7 @@ class LiveBreakpointTest : PlatformIntegrationTest() {
                     log.info("Got hit")
                     testContext.verify {
                         assertEquals(instrumentId, JsonObject(liveEvent.data).getString("breakpointId"))
+                        assertFalse(gotHit)
                     }
                     gotHit = true
 
@@ -142,6 +146,9 @@ class LiveBreakpointTest : PlatformIntegrationTest() {
                 )
             ) {
                 if (it.failed()) {
+                    testContext.verify {
+                        assertEquals(1, it.result().hitLimit)
+                    }
                     testContext.failNow(it.cause())
                 }
             }
