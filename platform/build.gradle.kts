@@ -52,7 +52,7 @@ subprojects {
             compileOnly(project(":platform:common"))
         }
 
-        implementation("io.github.microutils:kotlin-logging-jvm:2.1.16")
+        implementation("io.github.microutils:kotlin-logging-jvm:2.1.20")
         implementation("org.apache.commons:commons-lang3:$commonsLang3Version")
         implementation("com.github.ajalt.clikt:clikt:$cliktVersion")
         implementation("ch.qos.logback:logback-classic:$logbackVersion")
@@ -83,7 +83,7 @@ subprojects {
         implementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:$jacksonVersion")
         implementation("com.fasterxml.jackson.datatype:jackson-datatype-guava:$jacksonVersion")
         implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
-        implementation("io.dropwizard.metrics:metrics-core:4.2.5")
+        implementation("io.dropwizard.metrics:metrics-core:4.2.6")
         implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.3.1")
 
         testImplementation("org.junit.jupiter:junit-jupiter-engine:$jupiterVersion")
