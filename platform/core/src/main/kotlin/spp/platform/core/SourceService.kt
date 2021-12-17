@@ -12,6 +12,7 @@ import io.vertx.core.json.JsonObject
 import io.vertx.ext.web.impl.RoutingContextImpl
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import kotlinx.serialization.encodeToString
 import org.apache.commons.lang3.EnumUtils
 import org.apache.commons.lang3.RandomStringUtils
 import org.slf4j.LoggerFactory
@@ -31,6 +32,7 @@ import spp.protocol.instrument.meter.LiveMeter
 import spp.protocol.instrument.meter.MeterType
 import spp.protocol.instrument.meter.MetricValue
 import spp.protocol.instrument.meter.MetricValueType
+import spp.protocol.util.KSerializers
 import spp.service.ServiceProvider
 import java.util.*
 import java.util.concurrent.CompletableFuture
@@ -1302,7 +1304,7 @@ object SourceService {
 
     @Suppress("UNCHECKED_CAST")
     private fun fixJsonMaps(liveInstrument: LiveInstrument): Map<String, Any> {
-        val rtnMap = (JsonObject.mapFrom(liveInstrument).map as Map<String, Any>).toMutableMap()
+        val rtnMap = (JsonObject(KSerializers.json.encodeToString(liveInstrument)).map as Map<String, Any>).toMutableMap()
         val meta = rtnMap["meta"] as LinkedHashMap<String, String>
         rtnMap["meta"] = meta.map { mapOf("name" to it.key, "value" to it.value) }.toTypedArray()
         return rtnMap

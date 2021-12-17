@@ -33,7 +33,7 @@ subprojects {
     val commonsIoVersion: String by project
     val logbackVersion: String by project
     val auth0JwtVersion: String by project
-    val vertxVersion = "4.2.2" //todo: consolidate with main project
+    val vertxVersion: String by project
 
     repositories {
         mavenCentral()
@@ -74,6 +74,7 @@ subprojects {
         implementation("com.apollographql.apollo:apollo-runtime:$apolloVersion")
         implementation("org.zeroturnaround:zt-zip:1.14")
         implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2")
+        implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.1")
         implementation("io.vertx:vertx-core:$vertxVersion")
         implementation("io.vertx:vertx-lang-kotlin:$vertxVersion")
         implementation("io.vertx:vertx-lang-kotlin-coroutines:$vertxVersion")

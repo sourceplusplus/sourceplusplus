@@ -7,6 +7,7 @@ import io.vertx.core.Vertx
 import io.vertx.core.eventbus.ReplyException
 import io.vertx.core.eventbus.ReplyFailure
 import io.vertx.core.json.Json
+import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import io.vertx.kotlin.core.json.get
 import io.vertx.kotlin.coroutines.dispatcher
@@ -14,6 +15,8 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
 import mu.KotlinLogging
 import spp.platform.probe.ProbeTracker
 import spp.platform.util.Msg.msg
@@ -39,6 +42,7 @@ import spp.protocol.probe.ProbeAddress.*
 import spp.protocol.probe.command.LiveInstrumentCommand
 import spp.protocol.probe.command.LiveInstrumentContext
 import spp.protocol.processor.ProcessorAddress
+import spp.protocol.util.KSerializers
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
@@ -186,7 +190,7 @@ class LiveInstrumentController(private val vertx: Vertx) {
     private fun listenForLiveBreakpoints() {
         vertx.eventBus().consumer<JsonObject>(PlatformAddress.LIVE_BREAKPOINT_APPLIED.address) {
             if (log.isTraceEnabled) log.trace("Got live breakpoint applied: {}", it.body())
-            val bp = Json.decodeValue(it.body().toString(), LiveBreakpoint::class.java)
+            val bp = KSerializers.json.decodeFromString<LiveBreakpoint>(it.body().toString())
             liveInstruments.forEach {
                 if (it.instrument.id == bp.id) {
                     log.info("Live breakpoint applied. Id: {}", it.instrument.id)
@@ -204,7 +208,14 @@ class LiveInstrumentController(private val vertx: Vertx) {
 
                     vertx.eventBus().publish(
                         Provide.LIVE_INSTRUMENT_SUBSCRIBER,
-                        JsonObject.mapFrom(LiveInstrumentEvent(BREAKPOINT_APPLIED, Json.encode(appliedBp)))
+                        JsonObject(
+                            KSerializers.json.encodeToString(
+                                LiveInstrumentEvent(
+                                    BREAKPOINT_APPLIED,
+                                    KSerializers.json.encodeToString(LiveBreakpoint.serializer(), appliedBp)
+                                )
+                            )
+                        )
                     )
                     if (log.isTraceEnabled) log.trace("Published live breakpoint applied")
                     return@forEach
@@ -246,7 +257,14 @@ class LiveInstrumentController(private val vertx: Vertx) {
 
             vertx.eventBus().publish(
                 Provide.LIVE_INSTRUMENT_SUBSCRIBER,
-                JsonObject.mapFrom(LiveInstrumentEvent(BREAKPOINT_HIT, Json.encode(bpHit)))
+                JsonObject(
+                    KSerializers.json.encodeToString(
+                        LiveInstrumentEvent(
+                            BREAKPOINT_HIT,
+                            KSerializers.json.encodeToString(bpHit)
+                        )
+                    )
+                )
             )
             if (log.isTraceEnabled) log.trace("Published live breakpoint hit")
         }
@@ -472,8 +490,13 @@ class LiveInstrumentController(private val vertx: Vertx) {
         if (alertSubscribers) {
             vertx.eventBus().publish(
                 Provide.LIVE_INSTRUMENT_SUBSCRIBER,
-                JsonObject.mapFrom(
-                    LiveInstrumentEvent(BREAKPOINT_ADDED, Json.encode(breakpoint))
+                JsonObject(
+                    KSerializers.json.encodeToString(
+                        LiveInstrumentEvent(
+                            BREAKPOINT_ADDED,
+                            KSerializers.json.encodeToString(LiveBreakpoint.serializer(), breakpoint)
+                        )
+                    )
                 )
             )
         }
@@ -499,6 +522,7 @@ class LiveInstrumentController(private val vertx: Vertx) {
         sendToProbes.forEach {
             log.trace { msg("Dispatching command to probe: {}", it.probeId) }
             vertx.eventBus().send(address.address + ":" + it.probeId, JsonObject.mapFrom(debuggerCommand))
+            log.trace { msg("Command: {}", JsonObject.mapFrom(debuggerCommand).toString()) }
         }
     }
 
@@ -576,11 +600,15 @@ class LiveInstrumentController(private val vertx: Vertx) {
         } else {
             vertx.eventBus().publish(
                 Provide.LIVE_INSTRUMENT_SUBSCRIBER,
-                JsonObject.mapFrom(
-                    LiveInstrumentEvent(
-                        BREAKPOINT_REMOVED,
-                        //todo: could send whole breakpoint instead of just id
-                        Json.encode(LiveBreakpointRemoved(breakpoint.id!!, occurredAt, jvmCause))
+                JsonObject(
+                    KSerializers.json.encodeToString(
+                        LiveInstrumentEvent(
+                            BREAKPOINT_REMOVED,
+                            //todo: could send whole breakpoint instead of just id
+                            KSerializers.json.encodeToString(
+                                LiveBreakpointRemoved(breakpoint.id!!, occurredAt, jvmCause)
+                            )
+                        )
                     )
                 )
             )
@@ -719,10 +747,21 @@ class LiveInstrumentController(private val vertx: Vertx) {
             dispatchCommand(LIVE_BREAKPOINT_REMOTE, location, debuggerCommand)
             log.debug("Removed live breakpoint(s) at: $location")
 
+            val jsonArray = JsonArray()
+            result.forEach {
+                jsonArray.add(
+                    KSerializers.json.encodeToString(
+                        LiveBreakpoint.serializer(),
+                        it.instrument as LiveBreakpoint
+                    )
+                )
+            }
             vertx.eventBus().publish(
                 Provide.LIVE_INSTRUMENT_SUBSCRIBER,
-                JsonObject.mapFrom(
-                    LiveInstrumentEvent(BREAKPOINT_REMOVED, Json.encode(result))
+                JsonObject(
+                    KSerializers.json.encodeToString(
+                        LiveInstrumentEvent(BREAKPOINT_REMOVED, result.toString())
+                    )
                 )
             )
         }

@@ -829,6 +829,18 @@
   "methods":[{"name":"<init>","parameterTypes":["java.lang.String","java.lang.String"] }]}
 ,
 {
+  "name":"spp.service.live.providers.LiveInstrumentController$DeveloperInstrument"}
+,
+{
+  "name":"kotlinx.datetime.Instant"}
+,
+{
+  "name":"java.util.Collection"}
+,
+{
+  "name":"java.util.Set"}
+,
+{
   "name":"java.util.Set[]"}
 ,
 {
@@ -2146,6 +2158,8 @@
   "allPublicMethods":true,
   "allDeclaredConstructors":true,
   "allPublicConstructors":true,
+  "allDeclaredClasses":true,
+  "allPublicClasses":true,
   "fields":[
     {"name":"applied", "allowWrite":true}, 
     {"name":"applyImmediately", "allowWrite":true}, 
@@ -2161,10 +2175,20 @@
   ]}
 ,
 {
-  "name":"spp.protocol.instrument.breakpoint.LiveBreakpoint$$serializer"}
+  "name":"spp.protocol.instrument.breakpoint.LiveBreakpoint$$serializer",
+  "allDeclaredFields":true,
+  "allPublicFields":true,
+  "allDeclaredMethods":true,
+  "allPublicMethods":true,
+  "allDeclaredConstructors":true,
+  "allPublicConstructors":true,
+  "allDeclaredClasses":true,
+  "allPublicClasses":true}
 ,
 {
   "name":"spp.protocol.instrument.breakpoint.LiveBreakpoint$Companion",
+  "allDeclaredFields":true,
+  "allPublicFields":true,
   "allDeclaredMethods":true,
   "allPublicMethods":true,
   "allDeclaredConstructors":true,
