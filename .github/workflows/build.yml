@@ -1,4 +1,4 @@
-name: JVM Build
+name: Build platform
 
 on:
   pull_request:
