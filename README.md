@@ -2,7 +2,7 @@
 
 [![License](https://img.shields.io/github/license/sourceplusplus/live-platform)](LICENSE)
 ![GitHub release](https://img.shields.io/github/v/release/sourceplusplus/live-platform?include_prereleases)
-[![Build](https://github.com/sourceplusplus/live-platform/actions/workflows/debian-build.yml/badge.svg)](https://github.com/sourceplusplus/live-platform/actions/workflows/debian-build.yml)
+[![Build](https://github.com/sourceplusplus/live-platform/actions/workflows/build.yml/badge.svg)](https://github.com/sourceplusplus/live-platform/actions/workflows/build.yml)
 
 Source++ is an open-source live coding platform. Add breakpoints, logs, metrics, and distributed tracing to live production software in real-time on-demand, right from your IDE or CLI.
 

@@ -106,23 +106,15 @@ tasks.register<Copy>("updateDockerFiles") {
         ":platform:core:jar", ":processors:dependencies:jar",
         ":processors:instrument:jar", ":processors:log-summary:jar"
     )
-    if (System.getProperty("build.profile") == "debian") {
-        doFirst {
-            if (!File(projectDir, "core/build/graal/spp-platform").exists()) {
-                throw GradleException("Missing spp-platform")
-            }
+
+    doFirst {
+        if (!File(projectDir, "core/build/libs/spp-platform-$version.jar").exists()) {
+            throw GradleException("Missing spp-platform-$version.jar")
         }
-        from(File(projectDir, "core/build/graal/spp-platform"))
-            .into(File(projectDir, "../docker/e2e"))
-    } else {
-        doFirst {
-            if (!File(projectDir, "core/build/libs/spp-platform-$version.jar").exists()) {
-                throw GradleException("Missing spp-platform-$version.jar")
-            }
-        }
-        from(File(projectDir, "core/build/libs/spp-platform-$version.jar"))
-            .into(File(projectDir, "../docker/e2e"))
     }
+    from(File(projectDir, "core/build/libs/spp-platform-$version.jar"))
+        .into(File(projectDir, "../docker/e2e"))
+
     doFirst {
         if (!File(projectDir, "../processors/dependencies/build/libs/spp-processor-dependencies-$processorDependenciesVersion.jar").exists()) {
             throw GradleException("Missing spp-processor-dependencies-$processorDependenciesVersion.jar")
@@ -153,12 +145,6 @@ dockerCompose {
     dockerComposeWorkingDirectory.set(File("../docker/e2e"))
     removeVolumes.set(true)
     waitForTcpPorts.set(false)
-
-    if (System.getProperty("build.profile") == "debian") {
-        useComposeFiles.set(listOf("docker-compose-debian.yml"))
-    } else {
-        useComposeFiles.set(listOf("docker-compose-jvm.yml"))
-    }
 }
 tasks.getByName("composeUp").mustRunAfter("updateDockerFiles")
 
