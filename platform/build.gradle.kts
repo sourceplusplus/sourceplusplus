@@ -145,8 +145,6 @@ dockerCompose {
     dockerComposeWorkingDirectory.set(File("../docker/e2e"))
     removeVolumes.set(true)
     waitForTcpPorts.set(false)
-
-    //useComposeFiles.set(listOf("docker-compose.yml"))
 }
 tasks.getByName("composeUp").mustRunAfter("updateDockerFiles")
 
