@@ -5,14 +5,12 @@ on:
 #     paths-ignore:
 #       - '**.md'
 #       - '**.svg'
-#       - '.github/workflows/debian-build.yml'
   push:
     branches:
       - master
     paths-ignore:
       - '**.md'
       - '**.svg'
-      - '.github/workflows/debian-build.yml'
   workflow_dispatch:
 
 jobs:
@@ -43,7 +41,7 @@ jobs:
         run: ./gradlew -p platform assemble
 
       - name: Start platform
-        run: ./gradlew -p platform updateDockerFiles composeUp -Dbuild.profile=jvm
+        run: ./gradlew -p platform updateDockerFiles composeUp -Dbuild.profile=release
 
       - name: Docker IPs
         run: docker inspect --format='{{.Name}} - {{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $(docker ps -aq)
@@ -57,7 +55,7 @@ jobs:
       - run: sleep 30s
 
       - name: Run platform integration tests
-        run: ./gradlew -p platform test -Dtest.profile=integration -Dbuild.profile=jvm
+        run: ./gradlew -p platform test -Dtest.profile=integration
 
       - run: ./gradlew :platform:composeLogs
         if: ${{ always() }}
