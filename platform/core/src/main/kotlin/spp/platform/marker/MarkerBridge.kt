@@ -35,8 +35,9 @@ class MarkerBridge(
                 //from marker
                 .addInboundPermitted(PermittedOptions().setAddress("get-records")) //todo: name like others
                 .addInboundPermitted(PermittedOptions().setAddress(Status.MARKER_CONNECTED))
-                .addInboundPermitted(PermittedOptions().setAddress(Utilize.LIVE_VIEW))
+                .addInboundPermitted(PermittedOptions().setAddress(Utilize.LIVE_SERVICE))
                 .addInboundPermitted(PermittedOptions().setAddress(Utilize.LIVE_INSTRUMENT))
+                .addInboundPermitted(PermittedOptions().setAddress(Utilize.LIVE_VIEW))
                 .addInboundPermitted(PermittedOptions().setAddress(Utilize.LOG_COUNT_INDICATOR))
                 //to marker
                 .addOutboundPermitted(PermittedOptions().setAddress(Provide.LIVE_INSTRUMENT_SUBSCRIBER))

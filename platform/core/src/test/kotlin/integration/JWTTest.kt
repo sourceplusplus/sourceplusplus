@@ -18,7 +18,7 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.slf4j.LoggerFactory
-import spp.platform.core.auth.error.InstrumentAccessDenied
+import spp.protocol.auth.error.InstrumentAccessDenied
 import java.util.concurrent.TimeUnit
 
 @ExtendWith(VertxExtension::class)

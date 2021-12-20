@@ -29,8 +29,8 @@ import kotlinx.coroutines.withTimeout
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.extension.ExtendWith
 import org.slf4j.LoggerFactory
-import spp.platform.core.auth.error.AccessDenied
-import spp.platform.core.auth.error.InstrumentAccessDenied
+import spp.protocol.auth.error.AccessDenied
+import spp.protocol.auth.error.InstrumentAccessDenied
 import spp.protocol.probe.error.LiveInstrumentException
 import spp.protocol.probe.error.LiveInstrumentException.ErrorType
 import spp.protocol.probe.error.MissingRemoteException

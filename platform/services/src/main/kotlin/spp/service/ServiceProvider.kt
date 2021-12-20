@@ -1,10 +1,5 @@
 package spp.service
 
-import spp.protocol.SourceMarkerServices.Utilize
-import spp.protocol.SourceMarkerServices.Utilize.LIVE_INSTRUMENT
-import spp.protocol.service.live.LiveInstrumentService
-import spp.protocol.service.live.LiveViewService
-import spp.protocol.service.logging.LogCountIndicatorService
 import io.vertx.core.Future
 import io.vertx.core.Promise
 import io.vertx.core.eventbus.Message
@@ -24,9 +19,14 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
 import spp.platform.core.SourceStorage
-import spp.platform.core.auth.error.AccessDenied
-import spp.platform.core.auth.error.InstrumentAccessDenied
 import spp.platform.util.RequestContext
+import spp.protocol.SourceMarkerServices.Utilize
+import spp.protocol.auth.error.AccessDenied
+import spp.protocol.auth.error.InstrumentAccessDenied
+import spp.protocol.service.LiveService
+import spp.protocol.service.live.LiveInstrumentService
+import spp.protocol.service.live.LiveViewService
+import spp.protocol.service.logging.LogCountIndicatorService
 import spp.service.live.LiveProviders
 import spp.service.logging.LoggingProviders
 import kotlin.system.exitProcess
@@ -40,8 +40,9 @@ class ServiceProvider(private val jwtAuth: JWTAuth?) : CoroutineVerticle() {
     }
 
     private var discovery: ServiceDiscovery? = null
-    private var logCountIndicator: Record? = null
+    private var liveService: Record? = null
     private var liveInstrument: Record? = null
+    private var logCountIndicator: Record? = null
     private var liveView: Record? = null
 
     override suspend fun start() {
@@ -59,149 +60,82 @@ class ServiceProvider(private val jwtAuth: JWTAuth?) : CoroutineVerticle() {
             loggingProviders = LoggingProviders(vertx, discovery!!)
             liveProviders = LiveProviders(vertx, discovery!!)
 
-            //log count indicator
-            ServiceBinder(vertx).setIncludeDebugInfo(true).setAddress(Utilize.LOG_COUNT_INDICATOR).apply {
-                if (System.getenv("SPP_DISABLE_JWT") != "true") {
-                    addInterceptor { msg ->
-                        if (log.isTraceEnabled) log.trace("Validating log count indicator access")
-
-                        val promise = Promise.promise<Message<JsonObject>>()
-                        jwtAuth!!.authenticate(JsonObject().put("token", msg.headers().get("auth-token"))).onComplete {
-                            GlobalScope.launch {
-                                if (it.succeeded()) {
-                                    val selfId = it.result().principal().getString("developer_id")
-                                    msg.headers().add("self_id", selfId)
-                                    RequestContext.put("self_id", selfId)
-
-                                    promise.complete(msg)
-                                } else {
-                                    log.error("Unauthorized log count indicator access. Reason: {}", it.cause().message)
-                                    val replyEx = ReplyException(
-                                        ReplyFailure.RECIPIENT_FAILURE, 401,
-                                        Json.encode(AccessDenied(it.cause().message!!).toEventBusException())
-                                    )
-                                    promise.fail(replyEx)
-                                }
-                            }
-                        }
-                        return@addInterceptor promise.future()
-                    }
-                } else {
-                    addInterceptor { msg ->
-                        if (log.isTraceEnabled) log.trace("Skipping log count indicator access validation")
-
-                        val selfId = "system"
-                        msg.headers().add("self_id", selfId)
-                        RequestContext.put("self_id", selfId)
-                        return@addInterceptor Future.succeededFuture(msg)
-                    }
-                }
-            }.register(LogCountIndicatorService::class.java, loggingProviders.logCountIndicator)
-            logCountIndicator = EventBusService.createRecord(
-                Utilize.LOG_COUNT_INDICATOR, Utilize.LOG_COUNT_INDICATOR, LogCountIndicatorService::class.java,
-                JsonObject().put("INSTANCE_ID", config.getString("SPP_INSTANCE_ID"))
+            liveService = publishService(
+                Utilize.LIVE_SERVICE,
+                LiveService::class.java,
+                liveProviders.liveService
             )
-            discovery!!.publish(logCountIndicator).await()
-            log.info("Log count indicator service enabled")
-
-            //live instruments
-            ServiceBinder(vertx).setIncludeDebugInfo(true).setAddress(LIVE_INSTRUMENT).apply {
-                if (System.getenv("SPP_DISABLE_JWT") != "true") {
-                    addInterceptor { msg ->
-                        if (log.isTraceEnabled) log.trace("Validating live instrument access")
-
-                        val promise = Promise.promise<Message<JsonObject>>()
-                        jwtAuth!!.authenticate(JsonObject().put("token", msg.headers().get("auth-token"))).onComplete {
-                            GlobalScope.launch {
-                                if (it.succeeded()) {
-                                    val selfId = it.result().principal().getString("developer_id")
-                                    msg.headers().add("self_id", selfId)
-                                    RequestContext.put("self_id", selfId)
-
-                                    if (msg.headers().get("action").startsWith("addLiveInstrument")) {
-                                        validateInstrumentAccess(selfId, msg, promise)
-                                    } else {
-                                        promise.complete(msg)
-                                    }
-                                } else {
-                                    log.error("Unauthorized live instrument access. Reason: {}", it.cause().message)
-                                    val replyEx = ReplyException(
-                                        ReplyFailure.RECIPIENT_FAILURE, 401,
-                                        Json.encode(AccessDenied(it.cause().message!!).toEventBusException())
-                                    )
-                                    promise.fail(replyEx)
-                                }
-                            }
-                        }
-                        return@addInterceptor promise.future()
-                    }
-                } else {
-                    addInterceptor { msg ->
-                        if (log.isTraceEnabled) log.trace("Skipping live instrument access validation")
-
-                        val selfId = "system"
-                        msg.headers().add("self_id", selfId)
-                        RequestContext.put("self_id", selfId)
-                        return@addInterceptor Future.succeededFuture(msg)
-                    }
-                }
-            }.register(LiveInstrumentService::class.java, liveProviders.liveInstrument)
-            liveInstrument = EventBusService.createRecord(
-                LIVE_INSTRUMENT, LIVE_INSTRUMENT, LiveInstrumentService::class.java,
-                JsonObject().put("INSTANCE_ID", config.getString("SPP_INSTANCE_ID"))
+            liveInstrument = publishService(
+                Utilize.LIVE_INSTRUMENT,
+                LiveInstrumentService::class.java,
+                liveProviders.liveInstrument
             )
-            discovery!!.publish(liveInstrument).await()
-            log.info("Live instrument service enabled")
-
-            //live view
-            ServiceBinder(vertx).setIncludeDebugInfo(true).setAddress(Utilize.LIVE_VIEW).apply {
-                if (System.getenv("SPP_DISABLE_JWT") != "true") {
-                    addInterceptor { msg ->
-                        if (log.isTraceEnabled) log.trace("Validating live view access")
-
-                        val promise = Promise.promise<Message<JsonObject>>()
-                        jwtAuth!!.authenticate(JsonObject().put("token", msg.headers().get("auth-token"))).onComplete {
-                            GlobalScope.launch {
-                                if (it.succeeded()) {
-                                    val selfId = it.result().principal().getString("developer_id")
-                                    msg.headers().add("self_id", selfId)
-                                    RequestContext.put("self_id", selfId)
-
-                                    promise.complete(msg)
-                                } else {
-                                    log.error("Unauthorized live view access. Reason: {}", it.cause().message)
-                                    val replyEx = ReplyException(
-                                        ReplyFailure.RECIPIENT_FAILURE, 401,
-                                        Json.encode(AccessDenied(it.cause().message!!).toEventBusException())
-                                    )
-                                    promise.fail(replyEx)
-                                }
-                            }
-                        }
-                        return@addInterceptor promise.future()
-                    }
-                } else {
-                    addInterceptor { msg ->
-                        if (log.isTraceEnabled) log.trace("Skipping live view access validation")
-
-                        val selfId = "system"
-                        msg.headers().add("self_id", selfId)
-                        RequestContext.put("self_id", selfId)
-                        return@addInterceptor Future.succeededFuture(msg)
-                    }
-                }
-            }.register(LiveViewService::class.java, liveProviders.liveView)
-            liveView = EventBusService.createRecord(
-                Utilize.LIVE_VIEW, Utilize.LIVE_VIEW, LiveViewService::class.java,
-                JsonObject().put("INSTANCE_ID", config.getString("SPP_INSTANCE_ID"))
+            liveView = publishService(
+                Utilize.LIVE_VIEW,
+                LiveViewService::class.java,
+                liveProviders.liveView
             )
-            discovery!!.publish(liveView).await()
-            log.info("Live view service enabled")
+            logCountIndicator = publishService(
+                Utilize.LOG_COUNT_INDICATOR,
+                LogCountIndicatorService::class.java,
+                loggingProviders.logCountIndicator
+            )
         } catch (throwable: Throwable) {
             throwable.printStackTrace()
             log.error("Failed to start SkyWalking provider", throwable)
             exitProcess(-1)
         }
+    }
+
+    private suspend fun <T> publishService(address: String, clazz: Class<T>, service: T): Record {
+        ServiceBinder(vertx).setIncludeDebugInfo(true).setAddress(address).apply {
+            if (System.getenv("SPP_DISABLE_JWT") != "true") {
+                addInterceptor { msg ->
+                    if (log.isTraceEnabled) log.trace("Validating $address access")
+
+                    val promise = Promise.promise<Message<JsonObject>>()
+                    jwtAuth!!.authenticate(JsonObject().put("token", msg.headers().get("auth-token"))).onComplete {
+                        GlobalScope.launch {
+                            if (it.succeeded()) {
+                                val selfId = it.result().principal().getString("developer_id")
+                                msg.headers().add("self_id", selfId)
+                                RequestContext.put("self_id", selfId)
+
+                                if (msg.headers().get("action").startsWith("addLiveInstrument")) {
+                                    validateInstrumentAccess(selfId, msg, promise)
+                                } else {
+                                    promise.complete(msg)
+                                }
+                            } else {
+                                log.error("Unauthorized $address access", it.cause())
+                                val replyEx = ReplyException(
+                                    ReplyFailure.RECIPIENT_FAILURE, 401,
+                                    Json.encode(AccessDenied(it.cause().message!!).toEventBusException())
+                                )
+                                promise.fail(replyEx)
+                            }
+                        }
+                    }
+                    return@addInterceptor promise.future()
+                }
+            } else {
+                addInterceptor { msg ->
+                    if (log.isTraceEnabled) log.trace("Skipping $address access validation")
+
+                    val selfId = "system"
+                    msg.headers().add("self_id", selfId)
+                    RequestContext.put("self_id", selfId)
+                    return@addInterceptor Future.succeededFuture(msg)
+                }
+            }
+        }.register(clazz, service)
+        val record = EventBusService.createRecord(
+            address, address, clazz,
+            JsonObject().put("INSTANCE_ID", config.getString("SPP_INSTANCE_ID"))
+        )
+        discovery!!.publish(record).await()
+        log.info("$address service enabled")
+        return record
     }
 
     private suspend fun validateInstrumentAccess(
