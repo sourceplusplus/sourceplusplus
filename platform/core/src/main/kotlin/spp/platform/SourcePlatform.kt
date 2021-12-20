@@ -73,8 +73,8 @@ import spp.protocol.ProtocolMarshaller
 import spp.protocol.ProtocolMarshaller.ProtocolMessageCodec
 import spp.protocol.SourceMarkerServices.Utilize
 import spp.protocol.platform.PlatformAddress
-import spp.protocol.probe.ProbeAddress
-import spp.protocol.processor.ProcessorAddress
+import spp.protocol.probe.ProbeAddress.*
+import spp.protocol.processor.ProcessorAddress.*
 import spp.protocol.util.KSerializers
 import spp.service.ServiceProvider
 import java.io.File
@@ -327,11 +327,12 @@ class SourcePlatform : CoroutineVerticle() {
 
         //Health checks
         val checks = HealthChecks.create(vertx)
-        addServiceCheck(checks, ProcessorAddress.LIVE_VIEW_PROCESSOR.address)
-        addServiceCheck(checks, ProcessorAddress.LIVE_INSTRUMENT_PROCESSOR.address)
-        addServiceCheck(checks, ProcessorAddress.LOGGING_PROCESSOR.address)
-        addServiceCheck(checks, Utilize.LIVE_VIEW)
+        addServiceCheck(checks, LIVE_VIEW_PROCESSOR.address)
+        addServiceCheck(checks, LIVE_INSTRUMENT_PROCESSOR.address)
+        addServiceCheck(checks, LOGGING_PROCESSOR.address)
+        addServiceCheck(checks, Utilize.LIVE_SERVICE)
         addServiceCheck(checks, Utilize.LIVE_INSTRUMENT)
+        addServiceCheck(checks, Utilize.LIVE_VIEW)
         addServiceCheck(checks, Utilize.LOG_COUNT_INDICATOR)
         router["/health"].handler(HealthCheckHandler.createWithHealthChecks(checks))
         router["/stats"].handler(this::getStats)
@@ -503,7 +504,7 @@ class SourcePlatform : CoroutineVerticle() {
     }
 
     private fun addServiceCheck(checks: HealthChecks, serviceName: String) {
-        val registeredName = "services/${serviceName.replace("sm.", "spp.").replace(".", "/")}"
+        val registeredName = "services/${serviceName.replace(".", "/")}"
         checks.register(registeredName) { promise ->
             discovery.getRecord({ rec -> serviceName == rec.name }
             ) { record ->
@@ -602,43 +603,38 @@ class SourcePlatform : CoroutineVerticle() {
                         "core",
                         JsonObject()
                             .put(
-                                Utilize.LIVE_INSTRUMENT.replace("sm.", "spp."),
-                                vertx.sharedData()
-                                    .getLocalCounter(Utilize.LIVE_INSTRUMENT)
-                                    .await().get().await()
+                                Utilize.LIVE_SERVICE,
+                                vertx.sharedData().getLocalCounter(Utilize.LIVE_SERVICE).await().get().await()
                             )
                             .put(
-                                Utilize.LIVE_VIEW.replace("sm.", "spp."),
-                                vertx.sharedData()
-                                    .getLocalCounter(Utilize.LIVE_VIEW)
-                                    .await().get().await()
+                                Utilize.LIVE_INSTRUMENT,
+                                vertx.sharedData().getLocalCounter(Utilize.LIVE_INSTRUMENT).await().get().await()
                             )
                             .put(
-                                Utilize.LOG_COUNT_INDICATOR.replace("sm.", "spp."),
-                                vertx.sharedData()
-                                    .getLocalCounter(Utilize.LOG_COUNT_INDICATOR)
-                                    .await().get().await()
+                                Utilize.LIVE_VIEW,
+                                vertx.sharedData().getLocalCounter(Utilize.LIVE_VIEW).await().get().await()
+                            )
+                            .put(
+                                Utilize.LOG_COUNT_INDICATOR,
+                                vertx.sharedData().getLocalCounter(Utilize.LOG_COUNT_INDICATOR).await().get().await()
                             )
                     )
                     .put(
                         "processor",
                         JsonObject()
                             .put(
-                                ProcessorAddress.LIVE_INSTRUMENT_PROCESSOR.address,
-                                vertx.sharedData()
-                                    .getLocalCounter(ProcessorAddress.LIVE_INSTRUMENT_PROCESSOR.address)
+                                LIVE_INSTRUMENT_PROCESSOR.address,
+                                vertx.sharedData().getLocalCounter(LIVE_INSTRUMENT_PROCESSOR.address)
                                     .await().get().await()
                             )
                             .put(
-                                ProcessorAddress.LIVE_VIEW_PROCESSOR.address,
-                                vertx.sharedData()
-                                    .getLocalCounter(ProcessorAddress.LIVE_VIEW_PROCESSOR.address)
+                                LIVE_VIEW_PROCESSOR.address,
+                                vertx.sharedData().getLocalCounter(LIVE_VIEW_PROCESSOR.address)
                                     .await().get().await()
                             )
                             .put(
-                                ProcessorAddress.LOGGING_PROCESSOR.address,
-                                vertx.sharedData()
-                                    .getLocalCounter(ProcessorAddress.LOGGING_PROCESSOR.address)
+                                LOGGING_PROCESSOR.address,
+                                vertx.sharedData().getLocalCounter(LOGGING_PROCESSOR.address)
                                     .await().get().await()
                             )
                     )
@@ -646,21 +642,18 @@ class SourcePlatform : CoroutineVerticle() {
                         "probe",
                         JsonObject()
                             .put(
-                                ProbeAddress.LIVE_BREAKPOINT_REMOTE.address,
-                                vertx.sharedData()
-                                    .getLocalCounter(ProbeAddress.LIVE_BREAKPOINT_REMOTE.address)
+                                LIVE_BREAKPOINT_REMOTE.address,
+                                vertx.sharedData().getLocalCounter(LIVE_BREAKPOINT_REMOTE.address)
                                     .await().get().await()
                             )
                             .put(
-                                ProbeAddress.LIVE_LOG_REMOTE.address,
-                                vertx.sharedData()
-                                    .getLocalCounter(ProbeAddress.LIVE_LOG_REMOTE.address)
+                                LIVE_LOG_REMOTE.address,
+                                vertx.sharedData().getLocalCounter(LIVE_LOG_REMOTE.address)
                                     .await().get().await()
                             )
                             .put(
-                                ProbeAddress.LIVE_METER_REMOTE.address,
-                                vertx.sharedData()
-                                    .getLocalCounter(ProbeAddress.LIVE_METER_REMOTE.address)
+                                LIVE_METER_REMOTE.address,
+                                vertx.sharedData().getLocalCounter(LIVE_METER_REMOTE.address)
                                     .await().get().await()
                             )
                     )

@@ -6,7 +6,7 @@ import io.vertx.kotlin.coroutines.await
 import io.vertx.redis.client.RedisAPI
 import org.apache.commons.lang3.RandomStringUtils
 import org.slf4j.LoggerFactory
-import spp.platform.core.auth.*
+import spp.protocol.auth.*
 import java.nio.charset.StandardCharsets
 
 object SourceStorage {
