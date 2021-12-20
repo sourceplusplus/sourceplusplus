@@ -52,7 +52,7 @@ subprojects {
             compileOnly(project(":platform:common"))
         }
 
-        implementation("io.github.microutils:kotlin-logging-jvm:2.1.20")
+        implementation("io.github.microutils:kotlin-logging-jvm:2.1.21")
         implementation("org.apache.commons:commons-lang3:$commonsLang3Version")
         implementation("com.github.ajalt.clikt:clikt:$cliktVersion")
         implementation("ch.qos.logback:logback-classic:$logbackVersion")
