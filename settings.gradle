@@ -16,7 +16,7 @@ pluginManagement {
 }
 
 rootProject.buildFileName = "build.gradle.kts"
-rootProject.name = 'spp-platform'
+rootProject.name = 'live-platform'
 
 include 'interfaces:cli'
 include 'interfaces:jetbrains'
