@@ -15,11 +15,11 @@ import kotlinx.coroutines.launch
 import org.apache.commons.lang3.EnumUtils
 import org.apache.commons.lang3.RandomStringUtils
 import org.slf4j.LoggerFactory
-import spp.platform.core.auth.*
-import spp.platform.core.auth.RolePermission.*
-import spp.platform.core.auth.error.InstrumentAccessDenied
-import spp.platform.core.auth.error.PermissionAccessDenied
+import spp.protocol.auth.RolePermission.*
+import spp.protocol.auth.error.InstrumentAccessDenied
+import spp.protocol.auth.error.PermissionAccessDenied
 import spp.platform.util.RequestContext
+import spp.protocol.auth.*
 import spp.protocol.developer.Developer
 import spp.protocol.instrument.InstrumentThrottle
 import spp.protocol.instrument.LiveInstrument
