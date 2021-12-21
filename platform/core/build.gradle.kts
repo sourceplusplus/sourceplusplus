@@ -3,7 +3,6 @@ import java.util.*
 plugins {
     id("io.gitlab.arturbosch.detekt")
     id("com.github.johnrengelman.shadow")
-    id("com.palantir.graal")
     id("org.jetbrains.kotlin.jvm")
 }
 
@@ -41,16 +40,6 @@ tasks.create("createProperties") {
     }
 }
 tasks["processResources"].dependsOn("createProperties")
-
-graal {
-    graalVersion(project.properties["graalVersion"] as String)
-    javaVersion("11")
-    mainClass("spp.platform.SourcePlatform")
-    outputName("spp-platform")
-    option("-H:+PrintClassInitialization")
-    option("-H:+ReportExceptionStackTraces")
-    option("-H:IncludeResourceBundles=build")
-}
 
 tasks.getByName<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar") {
     archiveBaseName.set("spp-platform")

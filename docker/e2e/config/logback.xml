@@ -8,7 +8,7 @@
         </encoder>
     </appender>
 
-    <appender name="FILE" class="spp.platform.util.LazyInitRollingFileAppender">
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>logs/spp-platform.log</file>
         <append>true</append>
         <encoder>

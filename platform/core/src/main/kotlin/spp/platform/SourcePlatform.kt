@@ -53,7 +53,6 @@ import org.bouncycastle.openssl.PEMKeyPair
 import org.bouncycastle.openssl.PEMParser
 import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter
 import org.bouncycastle.openssl.jcajce.JcaPEMWriter
-import org.graalvm.nativeimage.ImageInfo
 import org.slf4j.LoggerFactory
 import spp.platform.core.SourceService
 import spp.platform.core.SourceServiceDiscovery
@@ -94,7 +93,7 @@ class SourcePlatform : CoroutineVerticle() {
         private var USE_DEFAULT_LOGGING_CONFIGURATION = true
 
         init {
-            if (!ImageInfo.inImageBuildtimeCode() && File("config/logback.xml").exists()) {
+            if (File("config/logback.xml").exists()) {
                 USE_DEFAULT_LOGGING_CONFIGURATION = false
                 System.setProperty("logback.configurationFile", File("config/logback.xml").absoluteFile.absolutePath)
                 val context = LoggerFactory.getILoggerFactory() as LoggerContext
