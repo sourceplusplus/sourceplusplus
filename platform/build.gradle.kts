@@ -20,10 +20,8 @@ subprojects {
     apply(plugin = "org.jetbrains.kotlin.jvm")
     if (name == "core") {
         apply(plugin = "com.github.johnrengelman.shadow")
-        apply(plugin = "com.palantir.graal")
     }
 
-    val graalVersion: String by project
     val jacksonVersion: String by project
     val commonsLang3Version: String by project
     val cliktVersion: String by project
@@ -43,7 +41,6 @@ subprojects {
         val implementation by configurations
         val testImplementation by configurations
 
-        implementation("org.graalvm.sdk:graal-sdk:$graalVersion")
         implementation(project(":protocol"))
         implementation(project(":processors:instrument"))
         implementation(project(":processors:log-summary"))
