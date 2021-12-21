@@ -21,6 +21,7 @@ import spp.protocol.auth.RolePermission.*
 import spp.protocol.auth.error.InstrumentAccessDenied
 import spp.protocol.auth.error.PermissionAccessDenied
 import spp.protocol.developer.Developer
+import spp.protocol.general.Service
 import spp.protocol.instrument.InstrumentThrottle
 import spp.protocol.instrument.LiveInstrument
 import spp.protocol.instrument.LiveSourceLocation
@@ -140,6 +141,9 @@ object SourceService {
                 ).dataFetcher(
                     "getSelf",
                     this::getSelf
+                ).dataFetcher(
+                    "getServices",
+                    this::getServices
                 )
             }
             .type(
@@ -503,6 +507,26 @@ object SourceService {
                 })
             } else {
                 completableFuture.completeExceptionally(IllegalStateException("JWT disabled"))
+            }
+        }
+        return completableFuture
+    }
+
+    private fun getServices(env: DataFetchingEnvironment): CompletableFuture<List<Service>> {
+        val completableFuture = CompletableFuture<List<Service>>()
+        GlobalScope.launch {
+            val selfId = if (System.getenv("SPP_DISABLE_JWT") != "true") {
+                env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                    .user().principal().getString("developer_id")
+            } else "system"
+
+            RequestContext.put("self_id", selfId)
+            ServiceProvider.liveProviders.liveService.getServices {
+                if (it.succeeded()) {
+                    completableFuture.complete(it.result())
+                } else {
+                    completableFuture.completeExceptionally(it.cause())
+                }
             }
         }
         return completableFuture
