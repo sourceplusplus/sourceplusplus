@@ -69,7 +69,7 @@ subprojects {
         implementation("commons-io:commons-io:$commonsIoVersion")
         implementation("com.apollographql.apollo:apollo-runtime:$apolloVersion")
         implementation("org.zeroturnaround:zt-zip:1.14")
-        implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2")
+        implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0")
         implementation("io.vertx:vertx-core:$vertxVersion")
         implementation("io.vertx:vertx-lang-kotlin:$vertxVersion")
         implementation("io.vertx:vertx-lang-kotlin-coroutines:$vertxVersion")
