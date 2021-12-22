@@ -29,8 +29,8 @@ jobs:
         with:
           repo: sourceplusplus/live-platform
           version: tags/${{ env.SPP_PLATFORM_VERSION }}
-          file: spp-platform-${{ env.SPP_PLATFORM_VERSION }}-linux-amd64.tar.gz
-          target: ./docker/spp-platform/spp-platform-${{ env.SPP_PLATFORM_VERSION }}-linux-amd64.tar.gz
+          file: spp-platform-${{ env.SPP_PLATFORM_VERSION }}.tar.gz
+          target: ./docker/spp-platform/spp-platform-${{ env.SPP_PLATFORM_VERSION }}.tar.gz
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Download spp-processorS.zip
@@ -45,7 +45,7 @@ jobs:
       # Push spp-platform
 
       - name: Untar spp-platform
-        run: cd ./docker/spp-platform && tar -zxvf spp-platform-${{ env.SPP_PLATFORM_VERSION }}-linux-amd64.tar.gz --strip-components=1
+        run: cd ./docker/spp-platform && tar -zxvf spp-platform-${{ env.SPP_PLATFORM_VERSION }}.tar.gz --strip-components=1
 
       - name: Build spp-platform tagged Docker image
         run: cd ./docker/spp-platform && docker build . --file Dockerfile --tag sourceplusplus/spp-platform:${{ env.SPP_PLATFORM_VERSION }}
