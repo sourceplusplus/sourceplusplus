@@ -74,7 +74,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: spp-platform-${{ env.SPP_PLATFORM_VERSION }}.tar.gz
-          path: ./spp-platform-${{ env.SPP_PLATFORM_VERSION }}.tar.gz
+          path: ./dist/spp-platform-${{ env.SPP_PLATFORM_VERSION }}.tar.gz
 
       - name: Zip S++ processors
         run: find docker/e2e -name 'spp-processor-*' | zip -j spp-processors.zip -@
