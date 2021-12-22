@@ -30,7 +30,7 @@ subprojects {
 }
 
 tasks {
-    register("makeDist") {
+    register("buildDist") {
         //todo: use gradle copy task
         dependsOn(":platform:core:build")
         doLast {
@@ -40,6 +40,17 @@ tasks {
             file("platform/core/build/libs/spp-platform-$version.jar")
                 .copyTo(file("dist/spp-platform-$version/spp-platform-$version.jar"))
         }
+    }
+    register<Tar>("makeDist") {
+        dependsOn(":buildDist")
+        mustRunAfter(":buildDist")
+
+        into("spp-platform-${project.version}") {
+            from("dist/spp-platform-${project.version}")
+        }
+        destinationDirectory.set(file("dist"))
+        compression = Compression.GZIP
+        archiveFileName.set("spp-platform-${project.version}.tar.gz")
     }
 
     register("downloadSkywalking") {
