@@ -66,6 +66,24 @@ jobs:
         with:
           name: docker-logs
           path: ./platform/build/containers-logs
+
+      - run: ./gradlew makeDist
+
+      - name: Upload spp-platform
+        uses: actions/upload-artifact@v2
+        with:
+          name: spp-platform-${{ env.SPP_PLATFORM_VERSION }}.tar.gz
+          path: ./spp-platform-${{ env.SPP_PLATFORM_VERSION }}.tar.gz
+
+      - name: Zip S++ processors
+        run: find docker/e2e -name 'spp-processor-*' | zip -j spp-processors.zip -@
+
+      - name: Upload S++ processors
+        uses: actions/upload-artifact@v2
+        with:
+          name: spp-processors.zip
+          path: ./spp-processors.zip
+
   releaseDraft:
     name: Release Draft
     needs: [jvm-build]
