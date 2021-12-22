@@ -12,6 +12,7 @@ import io.vertx.core.VertxOptions
 import io.vertx.core.buffer.Buffer
 import io.vertx.core.eventbus.ReplyException
 import io.vertx.core.http.ClientAuth
+import io.vertx.core.http.HttpMethod
 import io.vertx.core.http.HttpServerOptions
 import io.vertx.core.json.Json
 import io.vertx.core.json.JsonArray
@@ -53,7 +54,6 @@ import org.bouncycastle.openssl.PEMKeyPair
 import org.bouncycastle.openssl.PEMParser
 import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter
 import org.bouncycastle.openssl.jcajce.JcaPEMWriter
-import org.graalvm.nativeimage.ImageInfo
 import org.slf4j.LoggerFactory
 import spp.platform.core.SourceService
 import spp.platform.core.SourceServiceDiscovery
@@ -94,7 +94,7 @@ class SourcePlatform : CoroutineVerticle() {
         private var USE_DEFAULT_LOGGING_CONFIGURATION = true
 
         init {
-            if (!ImageInfo.inImageBuildtimeCode() && File("config/logback.xml").exists()) {
+            if (File("config/logback.xml").exists()) {
                 USE_DEFAULT_LOGGING_CONFIGURATION = false
                 System.setProperty("logback.configurationFile", File("config/logback.xml").absoluteFile.absolutePath)
                 val context = LoggerFactory.getILoggerFactory() as LoggerContext
@@ -235,7 +235,7 @@ class SourcePlatform : CoroutineVerticle() {
             }
             val accessTokenParam = ctx.queryParam("access_token")
             if (accessTokenParam.isEmpty()) {
-                log.debug("Invalid token request")
+                log.warn("Invalid token request")
                 ctx.response().setStatusCode(401).end()
                 return@handler
             }
@@ -303,25 +303,52 @@ class SourcePlatform : CoroutineVerticle() {
             config.getJsonObject("skywalking-oap").getInteger("port")
         )
         val httpClient = vertx.createHttpClient()
-        router.route("/graphql/skywalking").handler(BodyHandler.create()).handler { req ->
+        vertx.eventBus().consumer<JsonObject>("skywalking-forwarder") { req ->
+            val request = req.body()
+            val body = request.getString("body")!!
+            val headers: JsonObject? = request.getJsonObject("headers")
+            val method = HttpMethod.valueOf(request.getString("method"))!!
+            log.trace { msg("Forwarding SkyWalking request: {}", body) }
+
             GlobalScope.launch(vertx.dispatcher()) {
-                log.trace { msg("Forwarding SkyWalking request: {}", req.bodyAsString) }
                 val forward = httpClient.request(
-                    req.request().method(), skywalkingPort, skywalkingHost, "/graphql"
+                    method, skywalkingPort, skywalkingHost, "/graphql"
                 ).await()
 
                 forward.response().onComplete { resp ->
                     resp.result().body().onComplete {
                         val respBody = it.result()
                         log.trace { msg("Forwarding SkyWalking response: {}", respBody.toString()) }
-                        req.response().setStatusCode(resp.result().statusCode()).end(respBody)
+                        val respOb = JsonObject()
+                        respOb.put("status", resp.result().statusCode())
+                        respOb.put("body", respBody.toString())
+                        req.reply(respOb)
                     }
                 }
 
-                req.request().headers().names().forEach {
-                    forward.putHeader(it, req.request().headers().get(it))
+                headers?.fieldNames()?.forEach {
+                    forward.putHeader(it, headers.getValue(it).toString())
                 }
-                forward.end(req.body).await()
+                forward.end(body).await()
+            }
+        }
+
+        router.route("/graphql/skywalking").handler(BodyHandler.create()).handler { req ->
+            val forward = JsonObject()
+            forward.put("body", req.bodyAsString)
+            val headers = JsonObject()
+            req.request().headers().names().forEach {
+                headers.put(it, req.request().headers().get(it))
+            }
+            forward.put("headers", headers)
+            forward.put("method", req.request().method().name())
+            vertx.eventBus().request<JsonObject>("skywalking-forwarder", forward) {
+                if (it.succeeded()) {
+                    val resp = it.result().body()
+                    req.response().setStatusCode(resp.getInteger("status")).end(resp.getString("body"))
+                } else {
+                    log.error("Failed to forward SkyWalking request", it.cause())
+                }
             }
         }
 
