@@ -2,7 +2,6 @@ plugins {
     id("com.avast.gradle.docker-compose")
     id("io.gitlab.arturbosch.detekt") apply false
     id("com.github.johnrengelman.shadow") apply false
-    id("com.palantir.graal") apply false
     id("org.jetbrains.kotlin.jvm") apply false
 }
 
