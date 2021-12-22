@@ -8,7 +8,6 @@ plugins {
 
 val platformGroup: String by project
 val platformVersion: String by project
-val graalVersion: String by project
 
 group = platformGroup
 version = platformVersion
