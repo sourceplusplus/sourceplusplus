@@ -19,10 +19,12 @@ jobs:
 
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    concurrency: 
+    concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}
       cancel-in-progress: true
 
+    outputs:
+      version: ${{ steps.properties.outputs.version }}
     steps:
       - uses: docker-practice/actions-setup-docker@master
       - uses: actions/checkout@v2
@@ -52,7 +54,6 @@ jobs:
       - name: Wait for skywalking
         run: |
           until $(curl --header "Authorization: Bearer ${{ env.SPP_JWT_TOKEN }}" --insecure --output /dev/null --silent --fail https://localhost:5445/health); do printf '.'; sleep 5; done
-      - run: sleep 30s
 
       - name: Run platform integration tests
         run: ./gradlew -p platform test -Dtest.profile=integration
@@ -66,6 +67,24 @@ jobs:
         with:
           name: docker-logs
           path: ./platform/build/containers-logs
+
+      - run: ./gradlew makeDist
+
+      - name: Upload spp-platform
+        uses: actions/upload-artifact@v2
+        with:
+          name: spp-platform-${{ env.SPP_PLATFORM_VERSION }}.tar.gz
+          path: ./spp-platform-${{ env.SPP_PLATFORM_VERSION }}.tar.gz
+
+      - name: Zip S++ processors
+        run: find docker/e2e -name 'spp-processor-*' | zip -j spp-processors.zip -@
+
+      - name: Upload S++ processors
+        uses: actions/upload-artifact@v2
+        with:
+          name: spp-processors.zip
+          path: ./spp-processors.zip
+
   releaseDraft:
     name: Release Draft
     needs: [jvm-build]
