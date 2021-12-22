@@ -53,7 +53,7 @@ object SelfSignedCertGenerator {
         val notAfter = Date.from(now.plus(Duration.ofDays(days.toLong())))
         val contentSigner = JcaContentSignerBuilder(hashAlgorithm).build(keyPair.private)
         val x500Name = X500Name("CN=$cn")
-        val certificateBuilder: X509v3CertificateBuilder = JcaX509v3CertificateBuilder(
+        val certificateBuilder = JcaX509v3CertificateBuilder(
             x500Name,
             BigInteger.valueOf(now.toEpochMilli()),
             notBefore,

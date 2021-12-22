@@ -9,18 +9,19 @@ import graphql.schema.idl.*
 import io.vertx.core.Vertx
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
-import io.vertx.ext.web.impl.RoutingContextImpl
+import io.vertx.ext.web.RoutingContext
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.apache.commons.lang3.EnumUtils
 import org.apache.commons.lang3.RandomStringUtils
 import org.slf4j.LoggerFactory
+import spp.platform.util.RequestContext
+import spp.protocol.auth.*
 import spp.protocol.auth.RolePermission.*
 import spp.protocol.auth.error.InstrumentAccessDenied
 import spp.protocol.auth.error.PermissionAccessDenied
-import spp.platform.util.RequestContext
-import spp.protocol.auth.*
 import spp.protocol.developer.Developer
+import spp.protocol.general.Service
 import spp.protocol.instrument.InstrumentThrottle
 import spp.protocol.instrument.LiveInstrument
 import spp.protocol.instrument.LiveSourceLocation
@@ -140,6 +141,9 @@ object SourceService {
                 ).dataFetcher(
                     "getSelf",
                     this::getSelf
+                ).dataFetcher(
+                    "getServices",
+                    this::getServices
                 )
             }
             .type(
@@ -228,7 +232,8 @@ object SourceService {
         val completableFuture = CompletableFuture<List<AccessPermission>>()
         GlobalScope.launch {
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
-                val selfId = env.getContext<RoutingContextImpl>().user().principal().getString("developer_id")
+                val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                    .user().principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(selfId, GET_ACCESS_PERMISSIONS)) {
                     completableFuture.completeExceptionally(PermissionAccessDenied(GET_ACCESS_PERMISSIONS))
                     return@launch
@@ -243,7 +248,8 @@ object SourceService {
         val completableFuture = CompletableFuture<AccessPermission>()
         GlobalScope.launch {
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
-                val selfId = env.getContext<RoutingContextImpl>().user().principal().getString("developer_id")
+                val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                    .user().principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(selfId, GET_ACCESS_PERMISSIONS)) {
                     completableFuture.completeExceptionally(PermissionAccessDenied(GET_ACCESS_PERMISSIONS))
                     return@launch
@@ -264,7 +270,8 @@ object SourceService {
         val completableFuture = CompletableFuture<List<AccessPermission>>()
         GlobalScope.launch {
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
-                val selfId = env.getContext<RoutingContextImpl>().user().principal().getString("developer_id")
+                val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                    .user().principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(selfId, GET_ACCESS_PERMISSIONS)) {
                     completableFuture.completeExceptionally(PermissionAccessDenied(GET_ACCESS_PERMISSIONS))
                     return@launch
@@ -286,7 +293,8 @@ object SourceService {
         val completableFuture = CompletableFuture<List<AccessPermission>>()
         GlobalScope.launch {
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
-                val selfId = env.getContext<RoutingContextImpl>().user().principal().getString("developer_id")
+                val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                    .user().principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(selfId, GET_ACCESS_PERMISSIONS)) {
                     completableFuture.completeExceptionally(PermissionAccessDenied(GET_ACCESS_PERMISSIONS))
                     return@launch
@@ -307,7 +315,8 @@ object SourceService {
         val completableFuture = CompletableFuture<List<DataRedaction>>()
         GlobalScope.launch {
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
-                val selfId = env.getContext<RoutingContextImpl>().user().principal().getString("developer_id")
+                val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                    .user().principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(selfId, GET_DATA_REDACTIONS)) {
                     completableFuture.completeExceptionally(PermissionAccessDenied(GET_DATA_REDACTIONS))
                     return@launch
@@ -322,7 +331,8 @@ object SourceService {
         val completableFuture = CompletableFuture<DataRedaction>()
         GlobalScope.launch {
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
-                val selfId = env.getContext<RoutingContextImpl>().user().principal().getString("developer_id")
+                val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                    .user().principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(selfId, GET_DATA_REDACTIONS)) {
                     completableFuture.completeExceptionally(PermissionAccessDenied(GET_DATA_REDACTIONS))
                     return@launch
@@ -343,7 +353,8 @@ object SourceService {
         val completableFuture = CompletableFuture<List<DataRedaction>>()
         GlobalScope.launch {
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
-                val selfId = env.getContext<RoutingContextImpl>().user().principal().getString("developer_id")
+                val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                    .user().principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(selfId, GET_DATA_REDACTIONS)) {
                     completableFuture.completeExceptionally(PermissionAccessDenied(GET_DATA_REDACTIONS))
                     return@launch
@@ -365,7 +376,8 @@ object SourceService {
         val completableFuture = CompletableFuture<List<DataRedaction>>()
         GlobalScope.launch {
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
-                val selfId = env.getContext<RoutingContextImpl>().user().principal().getString("developer_id")
+                val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                    .user().principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(selfId, GET_DATA_REDACTIONS)) {
                     completableFuture.completeExceptionally(PermissionAccessDenied(GET_DATA_REDACTIONS))
                     return@launch
@@ -386,7 +398,8 @@ object SourceService {
         val completableFuture = CompletableFuture<List<DeveloperRole>>()
         GlobalScope.launch {
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
-                val selfId = env.getContext<RoutingContextImpl>().user().principal().getString("developer_id")
+                val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                    .user().principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(selfId, GET_ROLES)) {
                     completableFuture.completeExceptionally(PermissionAccessDenied(GET_ROLES))
                     return@launch
@@ -402,7 +415,8 @@ object SourceService {
         GlobalScope.launch {
             val role = env.getArgument<String>("role")
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
-                val selfId = env.getContext<RoutingContextImpl>().user().principal().getString("developer_id")
+                val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                    .user().principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(selfId, GET_ROLE_PERMISSIONS)) {
                     completableFuture.completeExceptionally(PermissionAccessDenied(GET_ROLE_PERMISSIONS))
                     return@launch
@@ -423,7 +437,8 @@ object SourceService {
         GlobalScope.launch {
             val id = env.getArgument<String>("id").toLowerCase().replace(" ", "")
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
-                val selfId = env.getContext<RoutingContextImpl>().user().principal().getString("developer_id")
+                val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                    .user().principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(selfId, GET_DEVELOPER_ROLES)) {
                     completableFuture.completeExceptionally(PermissionAccessDenied(GET_DEVELOPER_ROLES))
                     return@launch
@@ -444,7 +459,8 @@ object SourceService {
         GlobalScope.launch {
             val id = env.getArgument<String>("id").toLowerCase().replace(" ", "")
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
-                val selfId = env.getContext<RoutingContextImpl>().user().principal().getString("developer_id")
+                val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                    .user().principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(selfId, GET_DEVELOPER_PERMISSIONS)) {
                     completableFuture.completeExceptionally(PermissionAccessDenied(GET_DEVELOPER_PERMISSIONS))
                     return@launch
@@ -464,7 +480,8 @@ object SourceService {
         val completableFuture = CompletableFuture<List<Developer>>()
         GlobalScope.launch {
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
-                val selfId = env.getContext<RoutingContextImpl>().user().principal().getString("developer_id")
+                val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                    .user().principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(selfId, GET_DEVELOPERS)) {
                     completableFuture.completeExceptionally(PermissionAccessDenied(GET_DEVELOPERS))
                     return@launch
@@ -480,7 +497,8 @@ object SourceService {
         val completableFuture = CompletableFuture<Map<Any, Any>>()
         GlobalScope.launch {
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
-                val selfId = env.getContext<RoutingContextImpl>().user().principal().getString("developer_id")
+                val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                    .user().principal().getString("developer_id")
                 completableFuture.complete(mutableMapOf<Any, Any>().apply {
                     put("developer", Developer(selfId))
                     put("roles", SourceStorage.getDeveloperRoles(selfId))
@@ -494,11 +512,32 @@ object SourceService {
         return completableFuture
     }
 
+    private fun getServices(env: DataFetchingEnvironment): CompletableFuture<List<Service>> {
+        val completableFuture = CompletableFuture<List<Service>>()
+        GlobalScope.launch {
+            val selfId = if (System.getenv("SPP_DISABLE_JWT") != "true") {
+                env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                    .user().principal().getString("developer_id")
+            } else "system"
+
+            RequestContext.put("self_id", selfId)
+            ServiceProvider.liveProviders.liveService.getServices {
+                if (it.succeeded()) {
+                    completableFuture.complete(it.result())
+                } else {
+                    completableFuture.completeExceptionally(it.cause())
+                }
+            }
+        }
+        return completableFuture
+    }
+
     private fun refreshDeveloperToken(env: DataFetchingEnvironment): CompletableFuture<Developer> {
         val completableFuture = CompletableFuture<Developer>()
         GlobalScope.launch {
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
-                val selfId = env.getContext<RoutingContextImpl>().user().principal().getString("developer_id")
+                val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                    .user().principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(selfId, REFRESH_DEVELOPER_TOKEN)) {
                     completableFuture.completeExceptionally(PermissionAccessDenied(REFRESH_DEVELOPER_TOKEN))
                     return@launch
@@ -521,7 +560,8 @@ object SourceService {
         val completableFuture = CompletableFuture<List<Map<String, Any>>>()
         GlobalScope.launch {
             val selfId = if (System.getenv("SPP_DISABLE_JWT") != "true") {
-                val devId = env.getContext<RoutingContextImpl>().user().principal().getString("developer_id")
+                val devId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                    .user().principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(devId, GET_LIVE_INSTRUMENTS)) {
                     completableFuture.completeExceptionally(PermissionAccessDenied(GET_LIVE_INSTRUMENTS))
                     return@launch
@@ -545,7 +585,8 @@ object SourceService {
         val completableFuture = CompletableFuture<List<Map<String, Any>>>()
         GlobalScope.launch {
             val selfId = if (System.getenv("SPP_DISABLE_JWT") != "true") {
-                val devId = env.getContext<RoutingContextImpl>().user().principal().getString("developer_id")
+                val devId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                    .user().principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(devId, GET_LIVE_BREAKPOINTS)) {
                     completableFuture.completeExceptionally(PermissionAccessDenied(GET_LIVE_BREAKPOINTS))
                     return@launch
@@ -569,7 +610,8 @@ object SourceService {
         val completableFuture = CompletableFuture<List<Map<String, Any>>>()
         GlobalScope.launch {
             val selfId = if (System.getenv("SPP_DISABLE_JWT") != "true") {
-                val devId = env.getContext<RoutingContextImpl>().user().principal().getString("developer_id")
+                val devId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                    .user().principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(devId, GET_LIVE_LOGS)) {
                     completableFuture.completeExceptionally(PermissionAccessDenied(GET_LIVE_LOGS))
                     return@launch
@@ -593,7 +635,8 @@ object SourceService {
         val completableFuture = CompletableFuture<List<Map<String, Any>>>()
         GlobalScope.launch {
             val selfId = if (System.getenv("SPP_DISABLE_JWT") != "true") {
-                val devId = env.getContext<RoutingContextImpl>().user().principal().getString("developer_id")
+                val devId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                    .user().principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(devId, GET_LIVE_METERS)) {
                     completableFuture.completeExceptionally(PermissionAccessDenied(GET_LIVE_METERS))
                     return@launch
@@ -617,7 +660,8 @@ object SourceService {
         val completableFuture = CompletableFuture<Boolean>()
         GlobalScope.launch {
             val selfId = if (System.getenv("SPP_DISABLE_JWT") != "true") {
-                val devId = env.getContext<RoutingContextImpl>().user().principal().getString("developer_id")
+                val devId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                    .user().principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(devId, RESET)) {
                     completableFuture.completeExceptionally(PermissionAccessDenied(RESET))
                     return@launch
@@ -638,7 +682,8 @@ object SourceService {
         val completableFuture = CompletableFuture<DataRedaction>()
         GlobalScope.launch {
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
-                val selfId = env.getContext<RoutingContextImpl>().user().principal().getString("developer_id")
+                val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                    .user().principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(selfId, ADD_DATA_REDACTION)) {
                     completableFuture.completeExceptionally(PermissionAccessDenied(ADD_DATA_REDACTION))
                     return@launch
@@ -657,7 +702,8 @@ object SourceService {
         val completableFuture = CompletableFuture<Boolean>()
         GlobalScope.launch {
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
-                val selfId = env.getContext<RoutingContextImpl>().user().principal().getString("developer_id")
+                val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                    .user().principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(selfId, REMOVE_DATA_REDACTION)) {
                     completableFuture.completeExceptionally(PermissionAccessDenied(REMOVE_DATA_REDACTION))
                     return@launch
@@ -679,7 +725,8 @@ object SourceService {
         val completableFuture = CompletableFuture<Boolean>()
         GlobalScope.launch {
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
-                val selfId = env.getContext<RoutingContextImpl>().user().principal().getString("developer_id")
+                val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                    .user().principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(selfId, ADD_DATA_REDACTION)) {
                     completableFuture.completeExceptionally(PermissionAccessDenied(ADD_DATA_REDACTION))
                     return@launch
@@ -704,7 +751,8 @@ object SourceService {
         val completableFuture = CompletableFuture<Boolean>()
         GlobalScope.launch {
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
-                val selfId = env.getContext<RoutingContextImpl>().user().principal().getString("developer_id")
+                val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                    .user().principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(selfId, REMOVE_DATA_REDACTION)) {
                     completableFuture.completeExceptionally(PermissionAccessDenied(REMOVE_DATA_REDACTION))
                     return@launch
@@ -729,7 +777,8 @@ object SourceService {
         val completableFuture = CompletableFuture<AccessPermission>()
         GlobalScope.launch {
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
-                val selfId = env.getContext<RoutingContextImpl>().user().principal().getString("developer_id")
+                val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                    .user().principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(selfId, ADD_ACCESS_PERMISSION)) {
                     completableFuture.completeExceptionally(PermissionAccessDenied(ADD_ACCESS_PERMISSION))
                     return@launch
@@ -749,7 +798,8 @@ object SourceService {
         val completableFuture = CompletableFuture<Boolean>()
         GlobalScope.launch {
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
-                val selfId = env.getContext<RoutingContextImpl>().user().principal().getString("developer_id")
+                val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                    .user().principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(selfId, REMOVE_ACCESS_PERMISSION)) {
                     completableFuture.completeExceptionally(PermissionAccessDenied(REMOVE_ACCESS_PERMISSION))
                     return@launch
@@ -771,7 +821,8 @@ object SourceService {
         val completableFuture = CompletableFuture<Boolean>()
         GlobalScope.launch {
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
-                val selfId = env.getContext<RoutingContextImpl>().user().principal().getString("developer_id")
+                val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                    .user().principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(selfId, ADD_ACCESS_PERMISSION)) {
                     completableFuture.completeExceptionally(PermissionAccessDenied(ADD_ACCESS_PERMISSION))
                     return@launch
@@ -796,7 +847,8 @@ object SourceService {
         val completableFuture = CompletableFuture<Boolean>()
         GlobalScope.launch {
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
-                val selfId = env.getContext<RoutingContextImpl>().user().principal().getString("developer_id")
+                val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                    .user().principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(selfId, REMOVE_ACCESS_PERMISSION)) {
                     completableFuture.completeExceptionally(PermissionAccessDenied(REMOVE_ACCESS_PERMISSION))
                     return@launch
@@ -821,7 +873,8 @@ object SourceService {
         val completableFuture = CompletableFuture<Boolean>()
         GlobalScope.launch {
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
-                val selfId = env.getContext<RoutingContextImpl>().user().principal().getString("developer_id")
+                val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                    .user().principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(selfId, ADD_ROLE)) {
                     completableFuture.completeExceptionally(PermissionAccessDenied(ADD_ROLE))
                     return@launch
@@ -842,7 +895,8 @@ object SourceService {
         val completableFuture = CompletableFuture<Boolean>()
         GlobalScope.launch {
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
-                val selfId = env.getContext<RoutingContextImpl>().user().principal().getString("developer_id")
+                val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                    .user().principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(selfId, REMOVE_ROLE)) {
                     completableFuture.completeExceptionally(PermissionAccessDenied(REMOVE_ROLE))
                     return@launch
@@ -868,7 +922,8 @@ object SourceService {
         val completableFuture = CompletableFuture<Boolean>()
         GlobalScope.launch {
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
-                val selfId = env.getContext<RoutingContextImpl>().user().principal().getString("developer_id")
+                val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                    .user().principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(selfId, ADD_ROLE_PERMISSION)) {
                     completableFuture.completeExceptionally(PermissionAccessDenied(ADD_ROLE_PERMISSION))
                     return@launch
@@ -904,7 +959,8 @@ object SourceService {
         val completableFuture = CompletableFuture<Boolean>()
         GlobalScope.launch {
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
-                val selfId = env.getContext<RoutingContextImpl>().user().principal().getString("developer_id")
+                val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                    .user().principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(selfId, REMOVE_ROLE_PERMISSION)) {
                     completableFuture.completeExceptionally(PermissionAccessDenied(REMOVE_ROLE_PERMISSION))
                     return@launch
@@ -940,7 +996,8 @@ object SourceService {
         val completableFuture = CompletableFuture<Boolean>()
         GlobalScope.launch {
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
-                val selfId = env.getContext<RoutingContextImpl>().user().principal().getString("developer_id")
+                val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                    .user().principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(selfId, ADD_DEVELOPER_ROLE)) {
                     completableFuture.completeExceptionally(PermissionAccessDenied(ADD_DEVELOPER_ROLE))
                     return@launch
@@ -965,7 +1022,8 @@ object SourceService {
         val completableFuture = CompletableFuture<Boolean>()
         GlobalScope.launch {
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
-                val selfId = env.getContext<RoutingContextImpl>().user().principal().getString("developer_id")
+                val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                    .user().principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(selfId, REMOVE_DEVELOPER_ROLE)) {
                     completableFuture.completeExceptionally(PermissionAccessDenied(REMOVE_DEVELOPER_ROLE))
                     return@launch
@@ -990,7 +1048,8 @@ object SourceService {
         val completableFuture = CompletableFuture<Developer>()
         GlobalScope.launch {
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
-                val selfId = env.getContext<RoutingContextImpl>().user().principal().getString("developer_id")
+                val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                    .user().principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(selfId, ADD_DEVELOPER)) {
                     completableFuture.completeExceptionally(PermissionAccessDenied(ADD_DEVELOPER))
                     return@launch
@@ -1011,7 +1070,8 @@ object SourceService {
         val completableFuture = CompletableFuture<Boolean>()
         GlobalScope.launch {
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
-                val selfId = env.getContext<RoutingContextImpl>().user().principal().getString("developer_id")
+                val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                    .user().principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(selfId, REMOVE_DEVELOPER)) {
                     completableFuture.completeExceptionally(PermissionAccessDenied(REMOVE_DEVELOPER))
                     return@launch
@@ -1036,7 +1096,8 @@ object SourceService {
         val completableFuture = CompletableFuture<Map<String, Any>?>()
         GlobalScope.launch {
             val selfId = if (System.getenv("SPP_DISABLE_JWT") != "true") {
-                val devId = env.getContext<RoutingContextImpl>().user().principal().getString("developer_id")
+                val devId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                    .user().principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(devId, REMOVE_LIVE_INSTRUMENT)) {
                     completableFuture.completeExceptionally(PermissionAccessDenied(REMOVE_LIVE_INSTRUMENT))
                     return@launch
@@ -1065,7 +1126,8 @@ object SourceService {
         val completableFuture = CompletableFuture<List<Map<String, Any>>>()
         GlobalScope.launch {
             val selfId = if (System.getenv("SPP_DISABLE_JWT") != "true") {
-                val devId = env.getContext<RoutingContextImpl>().user().principal().getString("developer_id")
+                val devId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                    .user().principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(devId, REMOVE_LIVE_INSTRUMENT)) {
                     completableFuture.completeExceptionally(PermissionAccessDenied(REMOVE_LIVE_INSTRUMENT))
                     return@launch
@@ -1094,7 +1156,8 @@ object SourceService {
         val completableFuture = CompletableFuture<Boolean>()
         GlobalScope.launch {
             val selfId = if (System.getenv("SPP_DISABLE_JWT") != "true") {
-                val devId = env.getContext<RoutingContextImpl>().user().principal().getString("developer_id")
+                val devId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                    .user().principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(devId, REMOVE_LIVE_INSTRUMENT)) {
                     completableFuture.completeExceptionally(PermissionAccessDenied(REMOVE_LIVE_INSTRUMENT))
                     return@launch
@@ -1118,7 +1181,8 @@ object SourceService {
         val completableFuture = CompletableFuture<Map<String, Any>>()
         GlobalScope.launch {
             val selfId = if (System.getenv("SPP_DISABLE_JWT") != "true") {
-                val devId = env.getContext<RoutingContextImpl>().user().principal().getString("developer_id")
+                val devId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                    .user().principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(devId, ADD_LIVE_BREAKPOINT)) {
                     completableFuture.completeExceptionally(PermissionAccessDenied(ADD_LIVE_BREAKPOINT))
                     return@launch
@@ -1172,7 +1236,8 @@ object SourceService {
         val completableFuture = CompletableFuture<Map<String, Any>>()
         GlobalScope.launch {
             val selfId = if (System.getenv("SPP_DISABLE_JWT") != "true") {
-                val devId = env.getContext<RoutingContextImpl>().user().principal().getString("developer_id")
+                val devId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                    .user().principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(devId, ADD_LIVE_LOG)) {
                     completableFuture.completeExceptionally(PermissionAccessDenied(ADD_LIVE_LOG))
                     return@launch
@@ -1231,7 +1296,8 @@ object SourceService {
         val completableFuture = CompletableFuture<Map<String, Any>>()
         GlobalScope.launch {
             val selfId = if (System.getenv("SPP_DISABLE_JWT") != "true") {
-                val devId = env.getContext<RoutingContextImpl>().user().principal().getString("developer_id")
+                val devId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                    .user().principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(devId, ADD_LIVE_METER)) {
                     completableFuture.completeExceptionally(PermissionAccessDenied(ADD_LIVE_METER))
                     return@launch
