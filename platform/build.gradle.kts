@@ -26,7 +26,6 @@ subprojects {
     val cliktVersion: String by project
     val bouncycastleVersion: String by project
     val jupiterVersion: String by project
-    val apolloVersion: String by project
     val commonsIoVersion: String by project
     val logbackVersion: String by project
     val auth0JwtVersion: String by project
@@ -67,7 +66,6 @@ subprojects {
         implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
         implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:$jacksonVersion")
         implementation("commons-io:commons-io:$commonsIoVersion")
-        implementation("com.apollographql.apollo:apollo-runtime:$apolloVersion")
         implementation("org.zeroturnaround:zt-zip:1.14")
         implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0")
         implementation("io.vertx:vertx-core:$vertxVersion")
