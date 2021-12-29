@@ -2,7 +2,6 @@ package spp.platform.util
 
 import io.vertx.core.buffer.Buffer
 import io.vertx.core.net.JksOptions
-import okio.ByteString.Companion.decodeBase64
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo
 import org.bouncycastle.jcajce.provider.asymmetric.x509.CertificateFactory
 import org.bouncycastle.openssl.PEMKeyPair
@@ -48,7 +47,7 @@ class CertsToJksOptionsConverter(private val certificatePath: String, private va
         while (s != null) {
             if (s.contains("END CERTIFICATE")) {
                 val hexString = b.toString()
-                val bytes = hexString.decodeBase64()!!.toByteArray()
+                val bytes = Base64.getDecoder().decode(hexString)
                 val cert = generateCertificateFromDER(bytes)
                 result.add(cert)
                 b = StringBuilder()
