@@ -33,6 +33,8 @@ tasks.create("createProperties") {
 
         buildBuildFile.writer().use {
             val p = Properties()
+            p["build_id"] = UUID.randomUUID().toString()
+            p["build_date"] = Date().toInstant().toString()
             p["build_version"] = project.version.toString()
             p.store(it, null)
         }
