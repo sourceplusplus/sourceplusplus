@@ -7,6 +7,7 @@ plugins {
 
 val platformGroup: String by project
 val platformVersion: String by project
+val probeJvmVersion: String by project
 val processorDependenciesVersion: String by project
 val instrumentProcessorVersion: String by project
 val logSummaryProcessorVersion: String by project
@@ -97,8 +98,8 @@ tasks.register("clean") {
 
 tasks.register<Copy>("updateDockerFiles") {
     dependsOn(
-        ":platform:core:jar", ":processors:dependencies:jar",
-        ":processors:instrument:jar", ":processors:log-summary:jar"
+        ":platform:core:jar", ":probes:jvm:control:jar",
+        ":processors:dependencies:jar", ":processors:instrument:jar", ":processors:log-summary:jar"
     )
 
     doFirst {
@@ -107,6 +108,14 @@ tasks.register<Copy>("updateDockerFiles") {
         }
     }
     from(File(projectDir, "core/build/libs/spp-platform-$version.jar"))
+        .into(File(projectDir, "../docker/e2e"))
+
+    doFirst {
+        if (!File(projectDir, "../probes/jvm/control/build/libs/spp-probe-$probeJvmVersion.jar").exists()) {
+            throw GradleException("Missing spp-probe-$probeJvmVersion.jar")
+        }
+    }
+    from(File(projectDir, "../probes/jvm/control/build/libs/spp-probe-$probeJvmVersion.jar"))
         .into(File(projectDir, "../docker/e2e"))
 
     doFirst {
