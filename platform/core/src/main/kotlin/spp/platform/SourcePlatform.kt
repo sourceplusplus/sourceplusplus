@@ -145,6 +145,8 @@ class SourcePlatform : CoroutineVerticle() {
                 }
             }
             log.info("Booting Source++ Platform [v${BUILD.getString("build_version")}]")
+            log.trace { "Build id: " + BUILD.getString("build_id") }
+            log.trace { "Build date: " + BUILD.getString("build_date") }
 
             runBlocking {
                 try {
