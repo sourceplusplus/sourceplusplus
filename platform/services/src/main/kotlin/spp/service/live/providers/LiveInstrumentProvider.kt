@@ -19,6 +19,7 @@ import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
 import spp.platform.util.RequestContext
 import spp.processor.live.LiveInstrumentProcessor
+import spp.protocol.instrument.span.LiveSpan
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -113,6 +114,28 @@ class LiveInstrumentProvider(
                             controller.addMeter(selfId, pendingMeter)
                         } else {
                             handler.handle(controller.addMeter(selfId, pendingMeter))
+                        }
+                    }
+                    is LiveSpan -> {
+                        val pendingSpan = if (instrument.id == null) {
+                            instrument.copy(id = UUID.randomUUID().toString())
+                        } else {
+                            instrument
+                        }.copy(
+                            pending = true,
+                            applied = false,
+                            meta = instrument.meta.toMutableMap().apply {
+                                put("created_at", System.currentTimeMillis().toString())
+                                put("created_by", selfId)
+                                put("hit_count", AtomicInteger())
+                            }
+                        )
+
+                        if (pendingSpan.applyImmediately) {
+                            controller.addApplyImmediatelyHandler(pendingSpan.id!!, handler)
+                            controller.addSpan(selfId, pendingSpan)
+                        } else {
+                            handler.handle(controller.addSpan(selfId, pendingSpan))
                         }
                     }
                     else -> {
@@ -280,6 +303,18 @@ class LiveInstrumentProvider(
         handler.handle(Future.succeededFuture(controller.getActiveLiveMeters()))
     }
 
+    override fun getLiveSpans(handler: Handler<AsyncResult<List<LiveSpan>>>) {
+        val requestCtx = RequestContext.get()
+        val selfId = requestCtx["self_id"]
+        if (selfId == null) {
+            handler.handle(Future.failedFuture(IllegalStateException("Missing self id")))
+            return
+        }
+        log.info("Received get live spans request. Developer: {}", selfId)
+
+        handler.handle(Future.succeededFuture(controller.getActiveLiveSpans()))
+    }
+
     fun clearAllLiveInstruments() {
         val requestCtx = RequestContext.get()
         val selfId = requestCtx["self_id"] ?: throw IllegalStateException("Missing self id")
@@ -359,6 +394,25 @@ class LiveInstrumentProvider(
                 handler.handle(controller.clearLiveMeters(selfId))
             } catch (throwable: Throwable) {
                 log.warn("Clear live meters failed", throwable)
+                handler.handle(Future.failedFuture(throwable))
+            }
+        }
+    }
+
+    override fun clearLiveSpans(handler: Handler<AsyncResult<Boolean>>) {
+        val requestCtx = RequestContext.get()
+        val selfId = requestCtx["self_id"]
+        if (selfId == null) {
+            handler.handle(Future.failedFuture(IllegalStateException("Missing self id")))
+            return
+        }
+        log.info("Received clear live spans request. Developer: {}", selfId)
+
+        GlobalScope.launch(vertx.dispatcher()) {
+            try {
+                handler.handle(controller.clearLiveSpans(selfId))
+            } catch (throwable: Throwable) {
+                log.warn("Clear live spans failed", throwable)
                 handler.handle(Future.failedFuture(throwable))
             }
         }

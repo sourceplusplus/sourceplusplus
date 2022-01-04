@@ -32,6 +32,7 @@ import spp.protocol.instrument.log.event.LiveLogHit
 import spp.protocol.instrument.log.event.LiveLogRemoved
 import spp.protocol.instrument.meter.LiveMeter
 import spp.protocol.instrument.meter.event.LiveMeterRemoved
+import spp.protocol.instrument.span.LiveSpan
 import spp.protocol.platform.PlatformAddress
 import spp.protocol.platform.error.EventBusUtil
 import spp.protocol.probe.ProbeAddress
@@ -396,6 +397,10 @@ class LiveInstrumentController(private val vertx: Vertx) {
         return liveInstruments.map { it.instrument }.filterIsInstance(LiveMeter::class.java).filter { !it.pending }
     }
 
+    fun getActiveLiveSpans(): List<LiveSpan> {
+        return liveInstruments.map { it.instrument }.filterIsInstance(LiveSpan::class.java).filter { !it.pending }
+    }
+
     fun addMeter(
         selfId: String, meter: LiveMeter, alertSubscribers: Boolean = true
     ): AsyncResult<LiveInstrument> {
@@ -478,6 +483,48 @@ class LiveInstrumentController(private val vertx: Vertx) {
             )
         }
         return Future.succeededFuture(breakpoint)
+    }
+
+    fun addSpan(
+        selfId: String, span: LiveSpan, alertSubscribers: Boolean = true
+    ): AsyncResult<LiveInstrument> {
+        log.debug("Adding live span: $span")
+        val debuggerCommand = LiveInstrumentCommand(
+            LiveInstrumentCommand.CommandType.ADD_LIVE_INSTRUMENT,
+            LiveInstrumentContext()
+        )
+        debuggerCommand.context.addLiveInstrument(span)
+
+        val devSpan = DeveloperInstrument(selfId, span)
+        liveInstruments.add(devSpan)
+        try {
+            dispatchCommand(LIVE_SPAN_REMOTE, span.location, debuggerCommand)
+        } catch (ex: ReplyException) {
+            return if (ex.failureType() == ReplyFailure.NO_HANDLERS) {
+                if (span.applyImmediately) {
+                    liveInstruments.remove(devSpan)
+                    log.warn("Live span failed due to missing remote(s)")
+                    Future.failedFuture(MissingRemoteException(LIVE_SPAN_REMOTE.address).toEventBusException())
+                } else {
+                    log.info("Live span pending application on probe connection")
+                    Future.succeededFuture(span)
+                }
+            } else {
+                liveInstruments.remove(devSpan)
+                log.warn("Failed to add live span: Reason: {}", ex.message)
+                Future.failedFuture(ex)
+            }
+        }
+
+        if (alertSubscribers) {
+            vertx.eventBus().publish(
+                Provide.LIVE_INSTRUMENT_SUBSCRIBER,
+                JsonObject.mapFrom(
+                    LiveInstrumentEvent(SPAN_ADDED, Json.encode(span))
+                )
+            )
+        }
+        return Future.succeededFuture(span)
     }
 
     private fun dispatchCommand(
@@ -818,6 +865,14 @@ class LiveInstrumentController(private val vertx: Vertx) {
 
     fun clearLiveMeters(selfId: String): AsyncResult<Boolean> {
         val devMeters = liveInstruments.filter { it.selfId == selfId && it.instrument is LiveMeter }
+        devMeters.forEach {
+            removeLiveInstrument(selfId, it.instrument.id!!)
+        }
+        return Future.succeededFuture(true)
+    }
+
+    fun clearLiveSpans(selfId: String): AsyncResult<Boolean> {
+        val devMeters = liveInstruments.filter { it.selfId == selfId && it.instrument is LiveSpan }
         devMeters.forEach {
             removeLiveInstrument(selfId, it.instrument.id!!)
         }
