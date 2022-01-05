@@ -33,6 +33,7 @@ import spp.protocol.instrument.log.event.LiveLogRemoved
 import spp.protocol.instrument.meter.LiveMeter
 import spp.protocol.instrument.meter.event.LiveMeterRemoved
 import spp.protocol.instrument.span.LiveSpan
+import spp.protocol.instrument.span.event.LiveSpanRemoved
 import spp.protocol.platform.PlatformAddress
 import spp.protocol.platform.error.EventBusUtil
 import spp.protocol.probe.ProbeAddress
@@ -177,11 +178,18 @@ class LiveInstrumentController(private val vertx: Vertx) {
                     addMeter(it.selfId, it.instrument as LiveMeter, false)
                 }
             }
+            if (remote == LIVE_SPAN_REMOTE.address) {
+                log.debug("Live span remote registered. Sending active live spans")
+                liveInstruments.filter { it.instrument is LiveSpan }.forEach {
+                    addSpan(it.selfId, it.instrument as LiveSpan, false)
+                }
+            }
         }
 
         listenForLiveBreakpoints()
         listenForLiveLogs()
         listenForLiveMeters()
+        listenForLiveSpans()
     }
 
     private fun listenForLiveBreakpoints() {
@@ -365,6 +373,56 @@ class LiveInstrumentController(private val vertx: Vertx) {
                     instrumentRemoval.selfId,
                     Instant.fromEpochMilliseconds(it.body().getLong("occurredAt")),
                     instrumentRemoval.instrument as LiveMeter,
+                    it.body().getString("cause")
+                )
+            }
+        }
+    }
+
+    private fun listenForLiveSpans() {
+        vertx.eventBus().consumer<JsonObject>(PlatformAddress.LIVE_SPAN_APPLIED.address) {
+            val liveSpan = Json.decodeValue(it.body().toString(), LiveSpan::class.java)
+            liveInstruments.forEach {
+                if (it.instrument.id == liveSpan.id) {
+                    log.info("Live span applied. Id: {}", it.instrument.id)
+                    val appliedSpan = (it.instrument as LiveSpan).copy(
+                        applied = true,
+                        pending = false
+                    )
+                    (appliedSpan.meta as MutableMap<String, Any>)["applied_at"] = System.currentTimeMillis().toString()
+
+                    val devInstrument = DeveloperInstrument(it.selfId, appliedSpan)
+                    liveInstruments.remove(it)
+                    liveInstruments.add(devInstrument)
+
+                    waitingApply.remove(appliedSpan.id)?.handle(Future.succeededFuture(devInstrument))
+
+                    vertx.eventBus().publish(
+                        Provide.LIVE_INSTRUMENT_SUBSCRIBER,
+                        JsonObject.mapFrom(LiveInstrumentEvent(SPAN_APPLIED, Json.encode(appliedSpan)))
+                    )
+                    if (log.isTraceEnabled) log.trace("Published live span applied")
+                    return@forEach
+                }
+            }
+        }
+        vertx.eventBus().consumer<JsonObject>(PlatformAddress.LIVE_SPAN_REMOVED.address) {
+            if (log.isTraceEnabled) log.trace("Got live span removed: {}", it.body())
+            val spanCommand = it.body().getString("command")
+            val spanData = if (spanCommand != null) {
+                val command = Json.decodeValue(spanCommand, LiveInstrumentCommand::class.java)
+                JsonObject(command.context.liveInstruments[0]) //todo: check for multiple
+            } else {
+                JsonObject(it.body().getString("span"))
+            }
+
+            val instrumentRemoval = liveInstruments.find { find -> find.instrument.id == spanData.getString("id") }
+            if (instrumentRemoval != null) {
+                //publish remove command to all probes & markers
+                removeLiveSpan(
+                    instrumentRemoval.selfId,
+                    Instant.fromEpochMilliseconds(it.body().getLong("occurredAt")),
+                    instrumentRemoval.instrument as LiveSpan,
                     it.body().getString("cause")
                 )
             }
@@ -722,6 +780,47 @@ class LiveInstrumentController(private val vertx: Vertx) {
         }
     }
 
+    private fun removeLiveSpan(selfId: String, occurredAt: Instant, span: LiveSpan, cause: String?) {
+        log.debug("Removing live span: ${span.id}")
+        val devMeter = DeveloperInstrument(selfId, span)
+        liveInstruments.remove(devMeter)
+
+        val debuggerCommand = LiveInstrumentCommand(
+            LiveInstrumentCommand.CommandType.REMOVE_LIVE_INSTRUMENT,
+            LiveInstrumentContext()
+        )
+        debuggerCommand.context.addLiveInstrument(span)
+        dispatchCommand(LIVE_SPAN_REMOTE, span.location, debuggerCommand)
+
+        val jvmCause = if (cause == null) null else LiveStackTrace.fromString(cause)
+        val waitingHandler = waitingApply.remove(span.id)
+        if (waitingHandler != null) {
+            if (cause?.startsWith("EventBusException") == true) {
+                val ebException = EventBusUtil.fromEventBusException(cause)
+                waitingHandler.handle(Future.failedFuture(ebException))
+            } else {
+                TODO("$cause")
+            }
+        } else {
+            vertx.eventBus().publish(
+                Provide.LIVE_INSTRUMENT_SUBSCRIBER,
+                JsonObject.mapFrom(
+                    LiveInstrumentEvent(
+                        SPAN_REMOVED,
+                        //todo: could send whole span instead of just id
+                        Json.encode(LiveSpanRemoved(span.id!!, occurredAt, jvmCause))
+                    )
+                )
+            )
+        }
+
+        if (jvmCause != null) {
+            log.warn("Publish live span removed. Cause: {}", jvmCause.message)
+        } else {
+            log.info("Published live span removed")
+        }
+    }
+
     fun removeLiveInstrument(selfId: String, instrumentId: String): AsyncResult<LiveInstrument?> {
         if (log.isTraceEnabled) log.trace("Removing live instrument: $instrumentId")
         val instrumentRemoval = liveInstruments.find { it.instrument.id == instrumentId }
@@ -744,6 +843,7 @@ class LiveInstrumentController(private val vertx: Vertx) {
             is LiveBreakpoint -> removeLiveBreakpoint(selfId, Clock.System.now(), instrumentRemoval.instrument, null)
             is LiveLog -> removeLiveLog(selfId, Clock.System.now(), instrumentRemoval.instrument, null)
             is LiveMeter -> removeLiveMeter(selfId, Clock.System.now(), instrumentRemoval.instrument, null)
+            is LiveSpan -> removeLiveSpan(selfId, Clock.System.now(), instrumentRemoval.instrument, null)
             else -> TODO()
         }
 
