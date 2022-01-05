@@ -972,8 +972,8 @@ class LiveInstrumentController(private val vertx: Vertx) {
     }
 
     fun clearLiveSpans(selfId: String): AsyncResult<Boolean> {
-        val devMeters = liveInstruments.filter { it.selfId == selfId && it.instrument is LiveSpan }
-        devMeters.forEach {
+        val devSpans = liveInstruments.filter { it.selfId == selfId && it.instrument is LiveSpan }
+        devSpans.forEach {
             removeLiveInstrument(selfId, it.instrument.id!!)
         }
         return Future.succeededFuture(true)
