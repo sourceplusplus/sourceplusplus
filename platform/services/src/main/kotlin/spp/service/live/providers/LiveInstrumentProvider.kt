@@ -127,7 +127,6 @@ class LiveInstrumentProvider(
                             meta = instrument.meta.toMutableMap().apply {
                                 put("created_at", System.currentTimeMillis().toString())
                                 put("created_by", selfId)
-                                put("hit_count", AtomicInteger())
                             }
                         )
 
