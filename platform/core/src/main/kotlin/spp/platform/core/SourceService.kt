@@ -32,6 +32,7 @@ import spp.protocol.instrument.meter.LiveMeter
 import spp.protocol.instrument.meter.MeterType
 import spp.protocol.instrument.meter.MetricValue
 import spp.protocol.instrument.meter.MetricValueType
+import spp.protocol.instrument.span.LiveSpan
 import spp.service.ServiceProvider
 import java.util.*
 import java.util.concurrent.CompletableFuture
@@ -80,8 +81,12 @@ object SourceService {
                     (it.getObject() as Map<String, Any>)["type"] == "LOG"
                 ) {
                     it.schema.getObjectType("LiveLog")
-                } else {
+                } else if ((it.getObject() as Any) is LiveMeter ||
+                    (it.getObject() as Map<String, Any>)["type"] == "METER"
+                ) {
                     it.schema.getObjectType("LiveMeter")
+                } else {
+                    it.schema.getObjectType("LiveSpan")
                 }
             }.build())
             .type(
@@ -138,6 +143,9 @@ object SourceService {
                 ).dataFetcher(
                     "getLiveMeters",
                     this::getLiveMeters
+                ).dataFetcher(
+                    "getLiveSpans",
+                    this::getLiveSpans
                 ).dataFetcher(
                     "getSelf",
                     this::getSelf
@@ -221,6 +229,9 @@ object SourceService {
                 ).dataFetcher(
                     "addLiveMeter",
                     this::addLiveMeter
+                ).dataFetcher(
+                    "addLiveSpan",
+                    this::addLiveSpan
                 )
             }.build()
         val schemaGenerator = SchemaGenerator()
@@ -646,6 +657,31 @@ object SourceService {
 
             RequestContext.put("self_id", selfId)
             ServiceProvider.liveProviders.liveInstrument.getLiveMeters {
+                if (it.succeeded()) {
+                    completableFuture.complete(it.result().map { fixJsonMaps(it) })
+                } else {
+                    completableFuture.completeExceptionally(it.cause())
+                }
+            }
+        }
+        return completableFuture
+    }
+
+    private fun getLiveSpans(env: DataFetchingEnvironment): CompletableFuture<List<Map<String, Any>>> {
+        val completableFuture = CompletableFuture<List<Map<String, Any>>>()
+        GlobalScope.launch {
+            val selfId = if (System.getenv("SPP_DISABLE_JWT") != "true") {
+                val devId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                    .user().principal().getString("developer_id")
+                if (!SourceStorage.hasPermission(devId, GET_LIVE_SPANS)) {
+                    completableFuture.completeExceptionally(PermissionAccessDenied(GET_LIVE_SPANS))
+                    return@launch
+                }
+                devId
+            } else "system"
+
+            RequestContext.put("self_id", selfId)
+            ServiceProvider.liveProviders.liveInstrument.getLiveSpans {
                 if (it.succeeded()) {
                     completableFuture.complete(it.result().map { fixJsonMaps(it) })
                 } else {
@@ -1338,6 +1374,63 @@ object SourceService {
                     meterName = input.getString("meterName"),
                     meterType = MeterType.valueOf(input.getString("meterType")),
                     metricValue = metricValue,
+                    location = LiveSourceLocation(locationSource, locationLine),
+                    condition = condition,
+                    expiresAt = expiresAt,
+                    hitLimit = hitLimit ?: -1,
+                    throttle = throttle,
+                    meta = toJsonMap(input.getJsonArray("meta"))
+                )
+            ) {
+                if (it.succeeded()) {
+                    completableFuture.complete(fixJsonMaps(it.result()))
+                } else {
+                    completableFuture.completeExceptionally(it.cause())
+                }
+            }
+        }
+        return completableFuture
+    }
+
+    private fun addLiveSpan(env: DataFetchingEnvironment): CompletableFuture<Map<String, Any>> {
+        val completableFuture = CompletableFuture<Map<String, Any>>()
+        GlobalScope.launch {
+            val selfId = if (System.getenv("SPP_DISABLE_JWT") != "true") {
+                val devId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                    .user().principal().getString("developer_id")
+                if (!SourceStorage.hasPermission(devId, ADD_LIVE_SPAN)) {
+                    completableFuture.completeExceptionally(PermissionAccessDenied(ADD_LIVE_SPAN))
+                    return@launch
+                }
+                devId
+            } else "system"
+
+            val input = JsonObject.mapFrom(env.getArgument("input"))
+            val operationName = input.getString("operationName")
+            val location = input.getJsonObject("location")
+            val locationSource = location.getString("source")
+            val locationLine = location.getInteger("line")
+            if (!SourceStorage.hasInstrumentAccess(selfId, locationSource)) {
+                log.warn("Rejected developer {} unauthorized instrument access to: {}", selfId, locationSource)
+                completableFuture.completeExceptionally(InstrumentAccessDenied(locationSource))
+                return@launch
+            }
+
+            val condition = input.getString("condition")
+            val expiresAt = input.getLong("expiresAt")
+            val hitLimit = input.getInteger("hitLimit")
+            val throttleOb = input.getJsonObject("throttle")
+            val throttle = if (throttleOb != null) {
+                InstrumentThrottle(
+                    throttleOb.getInteger("limit"),
+                    ThrottleStep.valueOf(throttleOb.getString("step"))
+                )
+            } else InstrumentThrottle.DEFAULT
+
+            RequestContext.put("self_id", selfId)
+            ServiceProvider.liveProviders.liveInstrument.addLiveInstrument(
+                LiveSpan(
+                    operationName = operationName,
                     location = LiveSourceLocation(locationSource, locationLine),
                     condition = condition,
                     expiresAt = expiresAt,
