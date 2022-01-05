@@ -81,8 +81,12 @@ object SourceService {
                     (it.getObject() as Map<String, Any>)["type"] == "LOG"
                 ) {
                     it.schema.getObjectType("LiveLog")
-                } else {
+                } else if ((it.getObject() as Any) is LiveMeter ||
+                    (it.getObject() as Map<String, Any>)["type"] == "METER"
+                ) {
                     it.schema.getObjectType("LiveMeter")
+                } else {
+                    it.schema.getObjectType("LiveSpan")
                 }
             }.build())
             .type(
@@ -1402,6 +1406,7 @@ object SourceService {
             } else "system"
 
             val input = JsonObject.mapFrom(env.getArgument("input"))
+            val operationName = input.getString("operationName")
             val location = input.getJsonObject("location")
             val locationSource = location.getString("source")
             val locationLine = location.getInteger("line")
@@ -1425,6 +1430,7 @@ object SourceService {
             RequestContext.put("self_id", selfId)
             ServiceProvider.liveProviders.liveInstrument.addLiveInstrument(
                 LiveSpan(
+                    operationName = operationName,
                     location = LiveSourceLocation(locationSource, locationLine),
                     condition = condition,
                     expiresAt = expiresAt,

@@ -187,6 +187,7 @@ input LiveBreakpointInput {
 
 type LiveSpan implements LiveInstrument {
     id: String!
+    operationName: String!
     location: LiveSourceLocation!
     condition: String
     expiresAt: Long
@@ -199,6 +200,7 @@ type LiveSpan implements LiveInstrument {
 }
 
 input LiveSpanInput {
+    operationName: String!
     location: LiveSourceLocationInput!
     condition: String
     expiresAt: Long
@@ -270,7 +272,7 @@ type Query {
     getLiveBreakpoints: [LiveBreakpoint!]!
     getLiveLogs: [LiveLog!]!
     getLiveMeters: [LiveMeter!]!
-    getLiveSpans: [LiveMeter!]!
+    getLiveSpans: [LiveSpan!]!
 
     getSelf: Self!
     getServices: [Service!]!
