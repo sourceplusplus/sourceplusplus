@@ -43,11 +43,13 @@ enum RolePermission {
     ADD_LIVE_BREAKPOINT,
     ADD_LIVE_LOG,
     ADD_LIVE_METER,
+    ADD_LIVE_SPAN
 
     GET_LIVE_INSTRUMENTS,
     GET_LIVE_BREAKPOINTS,
     GET_LIVE_LOGS,
     GET_LIVE_METERS,
+    GET_LIVE_SPANS,
     REMOVE_LIVE_INSTRUMENT
 }
 
@@ -183,6 +185,30 @@ input LiveBreakpointInput {
     meta: [MetaInfoInput]
 }
 
+type LiveSpan implements LiveInstrument {
+    id: String!
+    operationName: String!
+    location: LiveSourceLocation!
+    condition: String
+    expiresAt: Long
+    hitLimit: Int
+    applied: Boolean
+    pending: Boolean
+    throttle: InstrumentThrottle
+    type: LiveInstrumentType
+    meta: [MetaInfo]
+}
+
+input LiveSpanInput {
+    operationName: String!
+    location: LiveSourceLocationInput!
+    condition: String
+    expiresAt: Long
+    hitLimit: Int
+    throttle: InstrumentThrottleInput
+    meta: [MetaInfoInput]
+}
+
 input MetaInfoInput {
     name: String!
     value: String!
@@ -196,6 +222,11 @@ type LiveSourceLocation {
 input LiveSourceLocationInput {
     source: String!
     line: Int!
+}
+
+input LiveSpanSourceLocationInput {
+    source: String!
+    method: String
 }
 
 enum AccessType {
@@ -241,6 +272,7 @@ type Query {
     getLiveBreakpoints: [LiveBreakpoint!]!
     getLiveLogs: [LiveLog!]!
     getLiveMeters: [LiveMeter!]!
+    getLiveSpans: [LiveSpan!]!
 
     getSelf: Self!
     getServices: [Service!]!
@@ -275,6 +307,7 @@ type Mutation {
     addLiveBreakpoint(input: LiveBreakpointInput!): LiveBreakpoint!
     addLiveLog(input: LiveLogInput!): LiveLog!
     addLiveMeter(input: LiveMeterInput!): LiveMeter!
+    addLiveSpan(input: LiveSpanInput!): LiveSpan!
 }
 
 scalar Long
