@@ -37,8 +37,6 @@ import io.vertx.ext.web.handler.graphql.GraphQLHandler
 import io.vertx.kotlin.coroutines.CoroutineVerticle
 import io.vertx.kotlin.coroutines.await
 import io.vertx.kotlin.coroutines.dispatcher
-import io.vertx.redis.client.Redis
-import io.vertx.redis.client.RedisAPI
 import io.vertx.servicediscovery.Record
 import io.vertx.servicediscovery.ServiceDiscovery
 import io.vertx.servicediscovery.ServiceDiscoveryOptions
@@ -59,6 +57,7 @@ import spp.platform.core.SourceService
 import spp.platform.core.SourceServiceDiscovery
 import spp.platform.core.SourceStorage
 import spp.platform.core.storage.MemoryStorage
+import spp.platform.core.storage.RedisStorage
 import spp.platform.marker.MarkerTracker
 import spp.platform.marker.MarkerVerticle
 import spp.platform.probe.ProbeTracker
@@ -362,11 +361,23 @@ class SourcePlatform : CoroutineVerticle() {
         router["/stats"].handler(this::getStats)
         router["/clients"].handler(this::getClients)
 
-        log.info("Connecting to storage")
-//        val sdHost = System.getenv("SPP_REDIS_HOST") ?: config.getJsonObject("redis").getString("host")
-//        val sdPort = System.getenv("SPP_REDIS_PORT") ?: config.getJsonObject("redis").getInteger("port")
-//        val redisClient = Redis.createClient(vertx, "redis://$sdHost:$sdPort").connect().await()
-//        redis = RedisAPI.api(redisClient)
+        //Setup storage
+        when (val storageSelector = config.getJsonObject("storage").getString("selector")) {
+            "memory" -> {
+                log.info("Using in-memory storage")
+                SourceStorage.setup(MemoryStorage(vertx), config)
+            }
+            "redis" -> {
+                log.info("Using Redis storage")
+                val redisStorage = RedisStorage()
+                redisStorage.init(vertx, config)
+                SourceStorage.setup(redisStorage, config)
+            }
+            else -> {
+                log.error("Unknown storage selector: $storageSelector")
+                throw IllegalArgumentException("Unknown storage selector: $storageSelector")
+            }
+        }
 
         log.info("Starting service discovery")
         discovery = ServiceDiscovery.create(
@@ -458,8 +469,6 @@ class SourcePlatform : CoroutineVerticle() {
             .listen(httpPort, config.getJsonObject("spp-platform").getString("host")).await()
         vertx.sharedData().getLocalMap<String, Int>("spp.core")["http.port"] = server.actualPort()
         log.info("API server started. Port: {}", server.actualPort())
-
-        SourceStorage.setup(MemoryStorage(vertx), config)
         log.debug("Source++ Platform initialized")
     }
 
