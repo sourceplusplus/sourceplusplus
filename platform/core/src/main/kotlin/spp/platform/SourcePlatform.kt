@@ -128,7 +128,6 @@ class SourcePlatform : CoroutineVerticle() {
         }
 
         lateinit var discovery: ServiceDiscovery
-        //lateinit var redis: RedisAPI
 
         @JvmStatic
         fun main(args: Array<String>) {
