@@ -16,7 +16,7 @@ class MemoryStorage(val vertx: Vertx) : CoreStorage {
     }
 
     override suspend fun getDeveloperByAccessToken(token: String): Developer? {
-        TODO("Not yet implemented")
+        return getDevelopers().find { getAccessToken(it.id) == token }
     }
 
     override suspend fun hasRole(roleName: String): Boolean {
@@ -70,6 +70,11 @@ class MemoryStorage(val vertx: Vertx) : CoreStorage {
     override suspend fun setAccessToken(id: String, accessToken: String) {
         val developerStorage = vertx.sharedData().getAsyncMap<String, Any>("developer:$id").await()
         developerStorage.put("accessToken", accessToken).await()
+    }
+
+    private suspend fun getAccessToken(developerId: String): String {
+        val developerStorage = vertx.sharedData().getAsyncMap<String, Any>("developer:$developerId").await()
+        return developerStorage.get("accessToken").await() as String
     }
 
     override suspend fun getDeveloperRoles(developerId: String): List<DeveloperRole> {
