@@ -1092,7 +1092,7 @@ object SourceService {
                 }
             }
 
-            val id = env.getArgument<String>("id").toLowerCase().replace(" ", "")
+            val id = env.getArgument<String>("id").lowercase().replace(" ", "")
             if (SourceStorage.hasDeveloper(id)) {
                 completableFuture.completeExceptionally(IllegalStateException("Existing developer: $id"))
             } else {

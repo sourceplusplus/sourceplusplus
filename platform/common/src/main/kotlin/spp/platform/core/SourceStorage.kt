@@ -1,22 +1,34 @@
 package spp.platform.core
 
-import spp.protocol.developer.Developer
 import io.vertx.core.json.JsonObject
-import io.vertx.kotlin.coroutines.await
-import io.vertx.redis.client.RedisAPI
 import org.apache.commons.lang3.RandomStringUtils
 import org.slf4j.LoggerFactory
+import spp.platform.core.storage.CoreStorage
 import spp.protocol.auth.*
-import java.nio.charset.StandardCharsets
+import spp.protocol.developer.Developer
 
 object SourceStorage {
 
     private val log = LoggerFactory.getLogger(SourceStorage::class.java)
 
-    lateinit var redis: RedisAPI
+    lateinit var storage: CoreStorage
+    lateinit var systemAccessToken: String
 
-    suspend fun setup(redis: RedisAPI) {
-        this.redis = redis
+    suspend fun setup(storage: CoreStorage, config: JsonObject) {
+        this.storage = storage
+
+        //todo: if clustered, check if defaults are already set
+        systemAccessToken = if (!System.getenv("SPP_SYSTEM_ACCESS_TOKEN").isNullOrBlank()) {
+            System.getenv("SPP_SYSTEM_ACCESS_TOKEN")
+        } else {
+            val systemAccessToken = config.getJsonObject("spp-platform").getString("access_token")
+            if (systemAccessToken != null) {
+                systemAccessToken
+            } else {
+                log.warn("No system access token provided. Using default: {}", "change-me")
+                "change-me"
+            }
+        }
         installDefaults()
     }
 
@@ -24,6 +36,7 @@ object SourceStorage {
         //set default roles and permissions
         addRole(DeveloperRole.ROLE_MANAGER.roleName)
         addRole(DeveloperRole.ROLE_USER.roleName)
+        addDeveloper("system", systemAccessToken)
         addRoleToDeveloper("system", DeveloperRole.ROLE_MANAGER)
         RolePermission.values().forEach {
             addPermissionToRole(DeveloperRole.ROLE_MANAGER, it)
@@ -44,39 +57,27 @@ object SourceStorage {
     }
 
     suspend fun getDevelopers(): List<Developer> {
-        val devIds = redis.smembers("developers:ids").await()
-        return devIds.map { Developer(it.toString(StandardCharsets.UTF_8)) }
+        return storage.getDevelopers()
     }
 
     suspend fun getDeveloperByAccessToken(token: String): Developer? {
-        val devId = redis.get("developers:access_tokens:$token").await()
-            ?.toString(StandardCharsets.UTF_8) ?: return null
-        return Developer(devId)
-    }
-
-    suspend fun hasAccessToken(token: String): Boolean {
-        return redis.sismember("developers:access_tokens", token).await().toBoolean()
+        return storage.getDeveloperByAccessToken(token)
     }
 
     suspend fun hasRole(roleName: String): Boolean {
-        val role = DeveloperRole.fromString(roleName)
-        return redis.sismember("roles", role.roleName).await().toBoolean()
+        return storage.hasRole(roleName)
     }
 
     suspend fun removeRole(role: DeveloperRole): Boolean {
-        getRolePermissions(role).forEach {
-            removePermissionFromRole(role, it)
-        }
-        return redis.srem(listOf("roles", role.roleName)).await().toBoolean()
+        return storage.removeRole(role)
     }
 
     suspend fun addRole(roleName: String): Boolean {
-        val role = DeveloperRole.fromString(roleName)
-        return redis.sadd(listOf("roles", role.roleName)).await().toBoolean()
+        return storage.addRole(roleName)
     }
 
     suspend fun hasDeveloper(id: String): Boolean {
-        return redis.sismember("developers:ids", id).await().toBoolean()
+        return storage.hasDeveloper(id)
     }
 
     suspend fun addDeveloper(id: String): Developer {
@@ -84,52 +85,19 @@ object SourceStorage {
     }
 
     suspend fun addDeveloper(id: String, token: String): Developer {
-        redis.sadd(listOf("developers:ids", id)).await()
-        redis.set(listOf("developers:access_tokens:$token", id)).await()
-        redis.sadd(listOf("developers:access_tokens", token)).await()
-        redis.set(listOf("developers:ids:$id:access_token", token)).await()
-        addRoleToDeveloper(id, DeveloperRole.ROLE_USER)
-        return Developer(id, token)
+        return storage.addDeveloper(id, token)
     }
 
     suspend fun removeDeveloper(id: String) {
-        val accessToken = getAccessToken(id)
-        redis.srem(listOf("developers:ids", id)).await()
-        redis.del(listOf("developers:access_tokens:$accessToken")).await()
-        redis.srem(listOf("developers:access_tokens", accessToken)).await()
-        redis.del(listOf("developers:ids:$id:access_token")).await()
-        redis.del(listOf("developers:$id:roles")).await()
-    }
-
-    suspend fun getAccessToken(id: String): String {
-        return redis.get("developers:ids:$id:access_token").await().toString(StandardCharsets.UTF_8)
+        return storage.removeDeveloper(id)
     }
 
     suspend fun setAccessToken(id: String, accessToken: String) {
-        //remove existing token
-        val existingToken = redis.get("developers:ids:$id:access_token").await()
-        if (existingToken != null) {
-            val existingTokenStr = existingToken.toString(StandardCharsets.UTF_8)
-            if (existingTokenStr.equals(accessToken)) {
-                return //no change in access token; ignore
-            } else {
-                redis.srem(listOf("developers:access_tokens", existingTokenStr)).await()
-                redis.del(listOf("developers:access_tokens:$existingToken")).await()
-            }
-        } else {
-            //add developer first
-            redis.sadd(listOf("developers:ids", id)).await()
-        }
-
-        //set new token
-        redis.set(listOf("developers:access_tokens:$accessToken", id)).await()
-        redis.sadd(listOf("developers:access_tokens", accessToken)).await()
-        redis.set(listOf("developers:ids:$id:access_token", accessToken)).await()
+        return storage.setAccessToken(id, accessToken)
     }
 
     suspend fun getDeveloperRoles(developerId: String): List<DeveloperRole> {
-        return redis.smembers("developers:$developerId:roles").await()
-            .map { DeveloperRole.fromString(it.toString(StandardCharsets.UTF_8)) }
+        return storage.getDeveloperRoles(developerId)
     }
 
     suspend fun getDeveloperAccessPermissions(developerId: String): List<AccessPermission> {
@@ -171,56 +139,35 @@ object SourceStorage {
     }
 
     suspend fun getRoleAccessPermissions(role: DeveloperRole): Set<AccessPermission> {
-        val accessPermissions = redis.smembers("roles:${role.roleName}:access_permissions").await()
-        return accessPermissions.map { getAccessPermission(it.toString(StandardCharsets.UTF_8)) }.toSet()
+        return storage.getRoleAccessPermissions(role)
     }
 
     suspend fun getAccessPermissions(): Set<AccessPermission> {
-        val accessPermissions = redis.smembers("access_permissions").await()
-        return accessPermissions.map { getAccessPermission(it.toString(StandardCharsets.UTF_8)) }.toSet()
+        return storage.getAccessPermissions()
     }
 
     suspend fun hasAccessPermission(id: String): Boolean {
-        return redis.sismember("access_permissions", id).await().toBoolean()
+        return storage.hasAccessPermission(id)
     }
 
     suspend fun getAccessPermission(id: String): AccessPermission {
-        val accessPermissions = redis.get("access_permissions:$id").await()
-        val dataObject = JsonObject(accessPermissions.toString(StandardCharsets.UTF_8))
-        return AccessPermission(
-            id,
-            dataObject.getJsonArray("locationPatterns").map { it.toString() },
-            AccessType.valueOf(dataObject.getString("type"))
-        )
+        return storage.getAccessPermission(id)
     }
 
     suspend fun addAccessPermission(id: String, locationPatterns: List<String>, type: AccessType) {
-        redis.sadd(listOf("access_permissions", id)).await()
-        redis.set(
-            listOf(
-                "access_permissions:$id",
-                JsonObject()
-                    .put("locationPatterns", locationPatterns)
-                    .put("type", type.name)
-                    .toString()
-            )
-        ).await()
+        return storage.addAccessPermission(id, locationPatterns, type)
     }
 
     suspend fun removeAccessPermission(id: String) {
-        getRoles().forEach {
-            removeAccessPermissionFromRole(id, it)
-        }
-        redis.srem(listOf("access_permissions", id)).await()
-        redis.del(listOf("access_permissions:$id")).await()
+        return storage.removeAccessPermission(id)
     }
 
     suspend fun addAccessPermissionToRole(id: String, role: DeveloperRole) {
-        redis.sadd(listOf("roles:${role.roleName}:access_permissions", id)).await()
+        return storage.addAccessPermissionToRole(id, role)
     }
 
     suspend fun removeAccessPermissionFromRole(id: String, role: DeveloperRole) {
-        redis.srem(listOf("roles:${role.roleName}:access_permissions", id)).await()
+        return storage.removeAccessPermissionFromRole(id, role)
     }
 
     suspend fun getDeveloperDataRedactions(developerId: String): List<DataRedaction> {
@@ -228,73 +175,59 @@ object SourceStorage {
     }
 
     suspend fun getDataRedactions(): Set<DataRedaction> {
-        val roles = redis.smembers("data_redactions").await()
-        return roles.map { getDataRedaction(it.toString(StandardCharsets.UTF_8)) }.toSet()
+        return storage.getDataRedactions()
     }
 
     suspend fun hasDataRedaction(id: String): Boolean {
-        return redis.sismember("data_redactions", id).await().toBoolean()
+        return storage.hasDataRedaction(id)
     }
 
     suspend fun getDataRedaction(id: String): DataRedaction {
-        val permission = redis.get("data_redactions:$id").await()
-        return DataRedaction(
-            id,
-            permission.toString(StandardCharsets.UTF_8)
-        )
+        return storage.getDataRedaction(id)
     }
 
     suspend fun addDataRedaction(id: String, redactionPattern: String) {
-        redis.sadd(listOf("data_redactions", id)).await()
-        redis.set(listOf("data_redactions:$id", redactionPattern)).await()
+        return storage.addDataRedaction(id, redactionPattern)
     }
 
     suspend fun removeDataRedaction(id: String) {
-        getRoles().forEach {
-            removeDataRedactionFromRole(id, it)
-        }
-        redis.srem(listOf("data_redactions", id)).await()
-        redis.del(listOf("data_redactions:$id")).await()
+        return storage.removeDataRedaction(id)
     }
 
     suspend fun addDataRedactionToRole(id: String, role: DeveloperRole) {
-        redis.sadd(listOf("roles:${role.roleName}:data_redactions", id)).await()
+        return storage.addDataRedactionToRole(id, role)
     }
 
     suspend fun removeDataRedactionFromRole(id: String, role: DeveloperRole) {
-        redis.srem(listOf("roles:${role.roleName}:data_redactions", id)).await()
+        return storage.removeDataRedactionFromRole(id, role)
     }
 
     suspend fun getRoleDataRedactions(role: DeveloperRole): Set<DataRedaction> {
-        val dataRedactions = redis.smembers("roles:${role.roleName}:data_redactions").await()
-        return dataRedactions.map { getDataRedaction(it.toString(StandardCharsets.UTF_8)) }.toSet()
+        return storage.getRoleDataRedactions(role)
     }
 
     suspend fun getRoles(): Set<DeveloperRole> {
-        val roles = redis.smembers("roles").await()
-        return roles.map { DeveloperRole.fromString(it.toString(StandardCharsets.UTF_8)) }.toSet()
+        return storage.getRoles()
     }
 
     suspend fun addRoleToDeveloper(id: String, role: DeveloperRole) {
-        redis.sadd(listOf("developers:$id:roles", role.roleName)).await()
+        return storage.addRoleToDeveloper(id, role)
     }
 
     suspend fun removeRoleFromDeveloper(id: String, role: DeveloperRole) {
-        redis.srem(listOf("developers:$id:roles", role.roleName)).await()
+        return storage.removeRoleFromDeveloper(id, role)
     }
 
     suspend fun addPermissionToRole(role: DeveloperRole, permission: RolePermission) {
-        redis.sadd(listOf("roles", role.roleName)).await()
-        redis.sadd(listOf("roles:${role.roleName}:permissions", permission.name)).await()
+        return storage.addPermissionToRole(role, permission)
     }
 
     suspend fun removePermissionFromRole(role: DeveloperRole, permission: RolePermission) {
-        redis.srem(listOf("roles:${role.roleName}:permissions", permission.name)).await()
+        return storage.removePermissionFromRole(role, permission)
     }
 
     suspend fun getRolePermissions(role: DeveloperRole): Set<RolePermission> {
-        val permissions = redis.smembers("roles:${role.roleName}:permissions").await()
-        return permissions.map { RolePermission.valueOf(it.toString(StandardCharsets.UTF_8)) }.toSet()
+        return storage.getRolePermissions(role)
     }
 
     suspend fun getDeveloperPermissions(id: String): Set<RolePermission> {
