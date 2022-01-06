@@ -58,6 +58,7 @@ import org.slf4j.LoggerFactory
 import spp.platform.core.SourceService
 import spp.platform.core.SourceServiceDiscovery
 import spp.platform.core.SourceStorage
+import spp.platform.core.storage.MemoryStorage
 import spp.platform.marker.MarkerTracker
 import spp.platform.marker.MarkerVerticle
 import spp.platform.probe.ProbeTracker
@@ -128,7 +129,7 @@ class SourcePlatform : CoroutineVerticle() {
         }
 
         lateinit var discovery: ServiceDiscovery
-        lateinit var redis: RedisAPI
+        //lateinit var redis: RedisAPI
 
         @JvmStatic
         fun main(args: Array<String>) {
@@ -280,16 +281,10 @@ class SourcePlatform : CoroutineVerticle() {
 
             val token = route.request().getParam("access_token")
             log.info("Probe download request. Verifying access token: {}", token)
-            redis.sismember("developers:access_tokens", token).onComplete {
-                if (it.succeeded() && it.result().toBoolean()) {
+            GlobalScope.launch {
+                SourceStorage.getDeveloperByAccessToken(token)?.let {
                     doProbeGeneration(route)
-                } else if (it.succeeded()) {
-                    log.warn("Rejected invalid access token: {}", token)
-                    route.response().setStatusCode(401).end()
-                } else {
-                    log.error("Failed to query access tokens", it.cause())
-                    route.response().setStatusCode(500).end(it.cause().message)
-                }
+                } ?: route.response().setStatusCode(401).end()
             }
         }
 
@@ -368,10 +363,10 @@ class SourcePlatform : CoroutineVerticle() {
         router["/clients"].handler(this::getClients)
 
         log.info("Connecting to storage")
-        val sdHost = System.getenv("SPP_REDIS_HOST") ?: config.getJsonObject("redis").getString("host")
-        val sdPort = System.getenv("SPP_REDIS_PORT") ?: config.getJsonObject("redis").getInteger("port")
-        val redisClient = Redis.createClient(vertx, "redis://$sdHost:$sdPort").connect().await()
-        redis = RedisAPI.api(redisClient)
+//        val sdHost = System.getenv("SPP_REDIS_HOST") ?: config.getJsonObject("redis").getString("host")
+//        val sdPort = System.getenv("SPP_REDIS_PORT") ?: config.getJsonObject("redis").getInteger("port")
+//        val redisClient = Redis.createClient(vertx, "redis://$sdHost:$sdPort").connect().await()
+//        redis = RedisAPI.api(redisClient)
 
         log.info("Starting service discovery")
         discovery = ServiceDiscovery.create(
@@ -464,15 +459,7 @@ class SourcePlatform : CoroutineVerticle() {
         vertx.sharedData().getLocalMap<String, Int>("spp.core")["http.port"] = server.actualPort()
         log.info("API server started. Port: {}", server.actualPort())
 
-        SourceStorage.setup(redis)
-        if (!System.getenv("SPP_SYSTEM_ACCESS_TOKEN").isNullOrBlank()) {
-            SourceStorage.setAccessToken("system", System.getenv("SPP_SYSTEM_ACCESS_TOKEN"))
-        } else {
-            val systemAccessToken = config.getJsonObject("spp-platform").getString("access_token")
-            if (systemAccessToken != null) {
-                SourceStorage.setAccessToken("system", systemAccessToken)
-            }
-        }
+        SourceStorage.setup(MemoryStorage(vertx), config)
         log.debug("Source++ Platform initialized")
     }
 

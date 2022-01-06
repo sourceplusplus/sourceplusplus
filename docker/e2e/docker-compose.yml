@@ -11,16 +11,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile-spp-platform
-    depends_on:
-      - redis
-    links:
-      - redis
-  redis:
-    image: redis:6.2.1
-    container_name: redis
-    hostname: redis
-    ports:
-      - "6379:6379"
   skywalking-oap:
     container_name: skywalking-oap
     hostname: skywalking-oap
