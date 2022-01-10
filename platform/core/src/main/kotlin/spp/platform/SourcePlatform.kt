@@ -297,12 +297,8 @@ class SourcePlatform : CoroutineVerticle() {
             .handler(GraphQLHandler.create(SourceService.setupGraphQL(vertx)))
 
         //SkyWalking Graphql
-        val skywalkingHost = System.getenv("SPP_SKYWALKING_HOST")
-            ?: config.getJsonObject("skywalking-oap").getString("host")
-        val skywalkingPort = NumberUtils.toInt(
-            System.getenv("SPP_SKYWALKING_PORT"),
-            config.getJsonObject("skywalking-oap").getInteger("port")
-        )
+        val skywalkingHost = config.getJsonObject("skywalking-oap").getString("host")
+        val skywalkingPort = config.getJsonObject("skywalking-oap").getInteger("port")
         val httpClient = vertx.createHttpClient()
         vertx.eventBus().consumer<JsonObject>("skywalking-forwarder") { req ->
             val request = req.body()
