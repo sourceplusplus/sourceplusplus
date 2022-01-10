@@ -133,11 +133,11 @@ class SourcePlatform : CoroutineVerticle() {
 
         @JvmStatic
         fun main(args: Array<String>) {
-            val yamlMapper = YAMLMapper()
-            val yaml = yamlMapper.readValue(File("config/spp-platform.yml"), Object::class.java)
             val sppConfig = JsonObject(
                 StringSubstitutor(StringLookupFactory.INSTANCE.environmentVariableStringLookup()).replace(
-                    ObjectMapper().writeValueAsString(yaml)
+                    ObjectMapper().writeValueAsString(
+                        YAMLMapper().readValue(File("config/spp-platform.yml"), Object::class.java)
+                    )
                 )
             )
 
