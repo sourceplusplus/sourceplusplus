@@ -1,3 +1,5 @@
+import org.apache.tools.ant.taskdefs.condition.Os
+
 plugins {
     id("com.avast.gradle.docker-compose")
     id("io.gitlab.arturbosch.detekt") apply false
@@ -96,6 +98,16 @@ tasks.register("clean") {
     }
 }
 
+tasks.register<Exec>("buildExampleWebApp") {
+    workingDir = File("../docker/e2e/example-web-app")
+
+    if (Os.isFamily(Os.FAMILY_UNIX)) {
+        commandLine("./gradlew", "build")
+    } else {
+        commandLine("cmd", "/c", "gradlew.bat", "build")
+    }
+}
+
 tasks.register<Copy>("updateDockerFiles") {
     dependsOn(
         ":platform:core:jar", ":probes:jvm:control:jar",
@@ -149,8 +161,8 @@ dockerCompose {
     removeVolumes.set(true)
     waitForTcpPorts.set(false)
 }
-tasks.getByName("composeUp").mustRunAfter("updateDockerFiles")
+tasks.getByName("composeUp").mustRunAfter("updateDockerFiles", "buildExampleWebApp")
 
 tasks.register("assembleUp") {
-    dependsOn("updateDockerFiles", "composeUp")
+    dependsOn("updateDockerFiles", "buildExampleWebApp", "composeUp")
 }
