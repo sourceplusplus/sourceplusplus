@@ -47,6 +47,8 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Instant
 import mu.KotlinLogging
 import org.apache.commons.lang3.math.NumberUtils
+import org.apache.commons.text.StringSubstitutor
+import org.apache.commons.text.lookup.StringLookupFactory
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.bouncycastle.openssl.PEMKeyPair
 import org.bouncycastle.openssl.PEMParser
@@ -131,9 +133,13 @@ class SourcePlatform : CoroutineVerticle() {
 
         @JvmStatic
         fun main(args: Array<String>) {
-            val yamlMapper = YAMLMapper()
-            val yaml = yamlMapper.readValue(File("config/spp-platform.yml"), Object::class.java)
-            val sppConfig = JsonObject(ObjectMapper().writeValueAsString(yaml))
+            val sppConfig = JsonObject(
+                StringSubstitutor(StringLookupFactory.INSTANCE.environmentVariableStringLookup()).replace(
+                    ObjectMapper().writeValueAsString(
+                        YAMLMapper().readValue(File("config/spp-platform.yml"), Object::class.java)
+                    )
+                )
+            )
 
             if (USE_DEFAULT_LOGGING_CONFIGURATION) {
                 val loggerContext = LoggerFactory.getILoggerFactory() as LoggerContext
@@ -291,12 +297,8 @@ class SourcePlatform : CoroutineVerticle() {
             .handler(GraphQLHandler.create(SourceService.setupGraphQL(vertx)))
 
         //SkyWalking Graphql
-        val skywalkingHost = System.getenv("SPP_SKYWALKING_HOST")
-            ?: config.getJsonObject("skywalking-oap").getString("host")
-        val skywalkingPort = NumberUtils.toInt(
-            System.getenv("SPP_SKYWALKING_PORT"),
-            config.getJsonObject("skywalking-oap").getInteger("port")
-        )
+        val skywalkingHost = config.getJsonObject("skywalking-oap").getString("host")
+        val skywalkingPort = config.getJsonObject("skywalking-oap").getString("port").toInt()
         val httpClient = vertx.createHttpClient()
         vertx.eventBus().consumer<JsonObject>("skywalking-forwarder") { req ->
             val request = req.body()
@@ -457,7 +459,7 @@ class SourcePlatform : CoroutineVerticle() {
         }
 
         val httpPort = vertx.sharedData().getLocalMap<String, Int>("spp.core")
-            .getOrDefault("http.port", config.getJsonObject("spp-platform").getInteger("port"))
+            .getOrDefault("http.port", config.getJsonObject("spp-platform").getString("port").toInt())
         val httpOptions = HttpServerOptions().setSsl(System.getenv("SPP_DISABLE_TLS") != "true")
         if (System.getenv("SPP_DISABLE_TLS") != "true") {
             val jksOptions = CertsToJksOptionsConverter(certFile.absolutePath, keyFile.absolutePath).createJksOptions()

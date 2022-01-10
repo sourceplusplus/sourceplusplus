@@ -48,10 +48,8 @@ class ServiceProvider(private val jwtAuth: JWTAuth?) : CoroutineVerticle() {
     override suspend fun start() {
         try {
             discovery = if (config.getJsonObject("storage").getString("selector") == "redis") {
-                val sdHost = System.getenv("SPP_REDIS_HOST") ?: config
-                    .getJsonObject("storage").getJsonObject("redis").getString("host")
-                val sdPort = System.getenv("SPP_REDIS_PORT") ?: config
-                    .getJsonObject("storage").getJsonObject("redis").getInteger("port")
+                val sdHost = config.getJsonObject("storage").getJsonObject("redis").getString("host")
+                val sdPort = config.getJsonObject("storage").getJsonObject("redis").getString("port")
                 ServiceDiscovery.create(
                     vertx, ServiceDiscoveryOptions().setBackendConfiguration(
                         JsonObject()

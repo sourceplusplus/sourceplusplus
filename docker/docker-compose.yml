@@ -1,28 +1,16 @@
 version: '3.3'
 services:
   spp-platform:
-    image: sourceplusplus/spp-platform:0.2.0
+    image: sourceplusplus/spp-platform:latest
     container_name: spp-platform
     hostname: spp-platform
     ports:
       - "5445:5445"
-    depends_on:
-      - redis
-    links:
-      - redis
     environment:
-      - SPP_CLUSTER_URL=localhost
-      - SPP_CLUSTER_NAME=docker
-      - SPP_REDIS_HOST=redis
-      - SPP_SKYWALKING_HOST=skywalking-oap
       - SPP_DISABLE_TLS=true
       - SPP_DISABLE_JWT=true
-  redis:
-    image: redis:6.2.1
-    container_name: redis
-    hostname: redis
   skywalking-oap:
-    image: sourceplusplus/spp-oap-server:0.2.0
+    image: sourceplusplus/spp-oap-server:latest
     container_name: skywalking-oap
     hostname: skywalking-oap
     environment:
