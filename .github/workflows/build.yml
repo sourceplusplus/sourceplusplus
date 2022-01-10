@@ -39,11 +39,8 @@ jobs:
           echo "::set-output name=version::$VERSION"
           echo "SPP_PLATFORM_VERSION=$VERSION" >> $GITHUB_ENV
 
-      - name: Assemble platform
-        run: ./gradlew -p platform assemble
-
       - name: Start platform
-        run: ./gradlew -p platform updateDockerFiles composeUp -Dbuild.profile=release
+        run: ./gradlew -p platform assembleUp -Dbuild.profile=release
 
       - name: Docker IPs
         run: docker inspect --format='{{.Name}} - {{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $(docker ps -aq)

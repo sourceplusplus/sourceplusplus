@@ -1,5 +1,5 @@
 FROM openjdk:11-jre
-ADD ./spp-example-webapp-boot-1.0-SNAPSHOT.zip /
+ADD ./example-web-app/build/distributions/spp-example-webapp-boot-1.0-SNAPSHOT.zip /spp-example-webapp-boot-1.0-SNAPSHOT.zip
 
 RUN mkdir -p /tmp/spp-probe/ca
 ADD ./config/spp-platform.crt /tmp/spp-probe/ca/ca.crt

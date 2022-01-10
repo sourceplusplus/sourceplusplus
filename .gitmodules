@@ -28,3 +28,6 @@
 [submodule "processors/dependencies"]
 	path = processors/dependencies
 	url = https://github.com/sourceplusplus/processor-dependencies
+[submodule "docker/e2e/example-web-app"]
+	path = docker/e2e/example-web-app
+	url = https://github.com/sourceplusplus/example-web-app
