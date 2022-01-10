@@ -298,7 +298,7 @@ class SourcePlatform : CoroutineVerticle() {
 
         //SkyWalking Graphql
         val skywalkingHost = config.getJsonObject("skywalking-oap").getString("host")
-        val skywalkingPort = config.getJsonObject("skywalking-oap").getInteger("port")
+        val skywalkingPort = config.getJsonObject("skywalking-oap").getString("port").toInt()
         val httpClient = vertx.createHttpClient()
         vertx.eventBus().consumer<JsonObject>("skywalking-forwarder") { req ->
             val request = req.body()
@@ -459,7 +459,7 @@ class SourcePlatform : CoroutineVerticle() {
         }
 
         val httpPort = vertx.sharedData().getLocalMap<String, Int>("spp.core")
-            .getOrDefault("http.port", config.getJsonObject("spp-platform").getInteger("port"))
+            .getOrDefault("http.port", config.getJsonObject("spp-platform").getString("port").toInt())
         val httpOptions = HttpServerOptions().setSsl(System.getenv("SPP_DISABLE_TLS") != "true")
         if (System.getenv("SPP_DISABLE_TLS") != "true") {
             val jksOptions = CertsToJksOptionsConverter(certFile.absolutePath, keyFile.absolutePath).createJksOptions()
