@@ -98,16 +98,6 @@ tasks.register("clean") {
     }
 }
 
-tasks.register<Exec>("buildExampleWebApp") {
-    workingDir = File("../docker/e2e/example-web-app")
-
-    if (Os.isFamily(Os.FAMILY_UNIX)) {
-        commandLine("./gradlew", "build")
-    } else {
-        commandLine("cmd", "/c", "gradlew.bat", "build")
-    }
-}
-
 tasks.register<Copy>("updateDockerFiles") {
     dependsOn(
         ":platform:core:jar", ":probes:jvm:control:jar",
@@ -161,8 +151,8 @@ dockerCompose {
     removeVolumes.set(true)
     waitForTcpPorts.set(false)
 }
-tasks.getByName("composeUp").mustRunAfter("updateDockerFiles", "buildExampleWebApp")
+tasks.getByName("composeUp").mustRunAfter("updateDockerFiles", ":example-web-app:build")
 
 tasks.register("assembleUp") {
-    dependsOn("updateDockerFiles", "buildExampleWebApp", "composeUp")
+    dependsOn("updateDockerFiles", ":example-web-app:build", "composeUp")
 }
