@@ -1,5 +1,3 @@
-import org.apache.tools.ant.taskdefs.condition.Os
-
 plugins {
     id("com.avast.gradle.docker-compose")
     id("io.gitlab.arturbosch.detekt") apply false
