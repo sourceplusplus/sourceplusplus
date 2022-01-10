@@ -47,6 +47,8 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Instant
 import mu.KotlinLogging
 import org.apache.commons.lang3.math.NumberUtils
+import org.apache.commons.text.StringSubstitutor
+import org.apache.commons.text.lookup.StringLookupFactory
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.bouncycastle.openssl.PEMKeyPair
 import org.bouncycastle.openssl.PEMParser
@@ -133,7 +135,11 @@ class SourcePlatform : CoroutineVerticle() {
         fun main(args: Array<String>) {
             val yamlMapper = YAMLMapper()
             val yaml = yamlMapper.readValue(File("config/spp-platform.yml"), Object::class.java)
-            val sppConfig = JsonObject(ObjectMapper().writeValueAsString(yaml))
+            val sppConfig = JsonObject(
+                StringSubstitutor(StringLookupFactory.INSTANCE.environmentVariableStringLookup()).replace(
+                    ObjectMapper().writeValueAsString(yaml)
+                )
+            )
 
             if (USE_DEFAULT_LOGGING_CONFIGURATION) {
                 val loggerContext = LoggerFactory.getILoggerFactory() as LoggerContext
