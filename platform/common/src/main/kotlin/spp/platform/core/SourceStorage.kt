@@ -18,16 +18,11 @@ object SourceStorage {
         this.storage = storage
 
         //todo: if clustered, check if defaults are already set
-        systemAccessToken = if (!System.getenv("SPP_SYSTEM_ACCESS_TOKEN").isNullOrBlank()) {
-            System.getenv("SPP_SYSTEM_ACCESS_TOKEN")
+        systemAccessToken = if (config.getJsonObject("spp-platform").getString("access_token").isNullOrEmpty()) {
+            log.warn("No system access token provided. Using default: {}", "change-me")
+            "change-me"
         } else {
-            val systemAccessToken = config.getJsonObject("spp-platform").getString("access_token")
-            if (systemAccessToken != null) {
-                systemAccessToken
-            } else {
-                log.warn("No system access token provided. Using default: {}", "change-me")
-                "change-me"
-            }
+            config.getJsonObject("spp-platform").getString("access_token")
         }
         installDefaults()
     }

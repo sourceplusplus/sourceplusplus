@@ -70,6 +70,6 @@ class ProbeBridge(private val netServerOptions: NetServerOptions) : CoroutineVer
                 }
             }
             it.complete(true)
-        }.listen(config.getInteger("bridge_port")).await()
+        }.listen(config.getString("bridge_port").toInt()).await()
     }
 }
