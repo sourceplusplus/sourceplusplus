@@ -70,6 +70,6 @@ class MarkerBridge(
                 }
             }
             it.complete(true)
-        }.listen(config.getInteger("bridge_port")).await()
+        }.listen(config.getString("bridge_port").toInt()).await()
     }
 }
