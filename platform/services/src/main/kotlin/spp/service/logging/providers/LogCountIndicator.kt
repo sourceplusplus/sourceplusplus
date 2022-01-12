@@ -1,21 +1,23 @@
 package spp.service.logging.providers
 
-import spp.protocol.artifact.log.LogCountSummary
-import spp.protocol.error.MissingRemoteException
-import spp.protocol.service.logging.LogCountIndicatorService
 import io.vertx.core.AsyncResult
 import io.vertx.core.Future
 import io.vertx.core.Handler
 import io.vertx.core.Promise
+import io.vertx.core.json.JsonObject
 import io.vertx.kotlin.coroutines.await
 import io.vertx.servicediscovery.ServiceDiscovery
 import io.vertx.servicediscovery.types.EventBusService
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 import org.slf4j.LoggerFactory
-import spp.processor.logging.LoggingProcessor
 import spp.platform.util.RequestContext
+import spp.processor.logging.LoggingProcessor
+import spp.protocol.artifact.log.LogCountSummary
+import spp.protocol.error.MissingRemoteException
+import spp.protocol.instrument.DurationStep
+import spp.protocol.service.logging.LogCountIndicatorService
 
 class LogCountIndicator(private val discovery: ServiceDiscovery) : LogCountIndicatorService {
 
@@ -25,14 +27,21 @@ class LogCountIndicator(private val discovery: ServiceDiscovery) : LogCountIndic
 
     lateinit var loggingProcessor: LoggingProcessor
 
-    override fun getLogCountSummary(handler: Handler<AsyncResult<LogCountSummary>>) {
+    override fun getPatternOccurrences(
+        logPatterns: List<String>,
+        serviceName: String?,
+        start: Instant,
+        stop: Instant,
+        step: DurationStep,
+        handler: Handler<AsyncResult<JsonObject>>
+    ) {
         val requestCtx = RequestContext.get()
         val selfId = requestCtx["self_id"]
         if (selfId == null) {
             handler.handle(Future.failedFuture(IllegalStateException("Missing self id")))
             return
         }
-        log.info("Get log count summary request. Developer: {}", selfId)
+        log.info("Getting log count occurrence patterns. Patterns: {}", logPatterns)
 
         GlobalScope.launch {
             if (!::loggingProcessor.isInitialized) {
@@ -53,15 +62,17 @@ class LogCountIndicator(private val discovery: ServiceDiscovery) : LogCountIndic
             }
 
             if (log.isTraceEnabled) log.trace("Getting log pattern occurrences")
-            loggingProcessor.getPatternOccurredCounts {
+            loggingProcessor.getPatternOccurrences(logPatterns, serviceName, start, stop, step) {
                 if (it.succeeded()) {
-                    if (log.isTraceEnabled) log.trace("Sent log pattern occurrences")
-                    handler.handle(Future.succeededFuture(LogCountSummary(Clock.System.now(), it.result())))
+                    handler.handle(Future.succeededFuture(it.result()))
                 } else {
-                    log.warn("Get log count summary failed. Reason: {}", it.cause().message)
                     handler.handle(Future.failedFuture(it.cause()))
                 }
             }
         }
+    }
+
+    override fun getLogCountSummary(handler: Handler<AsyncResult<LogCountSummary>>) {
+        TODO()
     }
 }
