@@ -50,7 +50,11 @@ enum RolePermission {
     GET_LIVE_LOGS,
     GET_LIVE_METERS,
     GET_LIVE_SPANS,
-    REMOVE_LIVE_INSTRUMENT
+    REMOVE_LIVE_INSTRUMENT,
+
+    VIEW_ACTIVITY,
+    VIEW_TRACES,
+    VIEW_LOGS
 }
 
 enum ThrottleStep {
