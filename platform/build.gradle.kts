@@ -78,7 +78,7 @@ subprojects {
         implementation("com.fasterxml.jackson.datatype:jackson-datatype-guava:$jacksonVersion")
         implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
         implementation("io.dropwizard.metrics:metrics-core:4.2.7")
-        implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.3.1")
+        implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.3.2")
         implementation("org.apache.commons:commons-text:1.9")
 
         testImplementation("org.junit.jupiter:junit-jupiter-engine:$jupiterVersion")
