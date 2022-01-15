@@ -1409,7 +1409,7 @@ object SourceService {
             val operationName = input.getString("operationName")
             val location = input.getJsonObject("location")
             val locationSource = location.getString("source")
-            val locationLine = location.getInteger("line")
+            val locationLine = -1 //location.getInteger("line")
             if (!SourceStorage.hasInstrumentAccess(selfId, locationSource)) {
                 log.warn("Rejected developer {} unauthorized instrument access to: {}", selfId, locationSource)
                 completableFuture.completeExceptionally(InstrumentAccessDenied(locationSource))
