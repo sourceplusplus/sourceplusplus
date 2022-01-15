@@ -205,11 +205,11 @@ type LiveSpan implements LiveInstrument {
 
 input LiveSpanInput {
     operationName: String!
-    location: LiveSourceLocationInput!
-    condition: String
-    expiresAt: Long
-    hitLimit: Int
-    throttle: InstrumentThrottleInput
+    location: LiveSpanLocationInput!
+    #condition: String #todo: impl
+    #expiresAt: Long #todo: impl
+    #hitLimit: Int #todo: impl
+    #throttle: InstrumentThrottleInput #todo: impl
     meta: [MetaInfoInput]
 }
 
@@ -226,6 +226,10 @@ type LiveSourceLocation {
 input LiveSourceLocationInput {
     source: String!
     line: Int!
+}
+
+input LiveSpanLocationInput {
+    source: String!
 }
 
 input LiveSpanSourceLocationInput {
