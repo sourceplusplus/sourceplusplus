@@ -10,6 +10,7 @@ import io.vertx.core.json.Json
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import io.vertx.kotlin.coroutines.await
+import io.vertx.kotlin.coroutines.dispatcher
 import io.vertx.servicediscovery.ServiceDiscovery
 import io.vertx.servicediscovery.types.EventBusService
 import kotlinx.coroutines.GlobalScope
@@ -71,17 +72,12 @@ class LiveViewProvider(
             handler.handle(Future.failedFuture(IllegalStateException("Missing self id")))
             return
         }
-        val markerId = requestCtx["marker_id"]
-        if (markerId == null) {
-            handler.handle(Future.failedFuture(IllegalStateException("Missing marker id")))
-            return
-        }
         log.info("Add live view subscription request. Developer: {} - Subscription: {}", selfId, subscription)
 
         GlobalScope.launch {
             if (!init(handler)) return@launch
             if (log.isTraceEnabled) log.trace("Adding live view subscription")
-            liveViewProcessor.addLiveViewSubscription(markerId, JsonObject.mapFrom(subscription)) {
+            liveViewProcessor.addLiveViewSubscription(selfId, JsonObject.mapFrom(subscription)) {
                 if (it.succeeded()) {
                     handler.handle(
                         Future.succeededFuture(
@@ -105,17 +101,12 @@ class LiveViewProvider(
             handler.handle(Future.failedFuture(IllegalStateException("Missing self id")))
             return
         }
-        val markerId = requestCtx["marker_id"]
-        if (markerId == null) {
-            handler.handle(Future.failedFuture(IllegalStateException("Missing marker id")))
-            return
-        }
         log.info("Remove live view subscription request. Developer: {} - Subscription: {}", selfId, subscriptionId)
 
         GlobalScope.launch {
             if (!init(handler)) return@launch
             if (log.isTraceEnabled) log.trace("Removing live view subscription")
-            liveViewProcessor.removeLiveViewSubscription(markerId, subscriptionId) {
+            liveViewProcessor.removeLiveViewSubscription(selfId, subscriptionId) {
                 if (it.succeeded()) {
                     handler.handle(
                         Future.succeededFuture(
@@ -137,22 +128,41 @@ class LiveViewProvider(
             handler.handle(Future.failedFuture(IllegalStateException("Missing self id")))
             return
         }
-        val markerId = requestCtx["marker_id"]
-        if (markerId == null) {
-            handler.handle(Future.failedFuture(IllegalStateException("Missing marker id")))
-            return
-        }
         log.info("Clear live view subscriptions request. Developer: {}", selfId)
 
         GlobalScope.launch {
             if (!init(handler)) return@launch
             if (log.isTraceEnabled) log.trace("Clearing live view subscriptions")
-            liveViewProcessor.clearLiveViewSubscriptions(markerId) {
+            liveViewProcessor.clearLiveViewSubscriptions(selfId) {
                 if (it.succeeded()) {
                     val subs = toList(it.result().getString("body").toString(), LiveViewSubscription::class)
                     handler.handle(Future.succeededFuture(subs))
                 } else {
                     log.warn("Clear live view subscriptions failed. Reason: {}", it.cause().message)
+                    handler.handle(Future.failedFuture(it.cause()))
+                }
+            }
+        }
+    }
+
+    override fun getLiveViewSubscriptions(handler: Handler<AsyncResult<List<LiveViewSubscription>>>) {
+        val requestCtx = RequestContext.get()
+        val selfId = requestCtx["self_id"]
+        if (selfId == null) {
+            handler.handle(Future.failedFuture(IllegalStateException("Missing self id")))
+            return
+        }
+        log.info("Get live view subscriptions request. Developer: {}", selfId)
+
+        GlobalScope.launch(vertx.dispatcher()) {
+            if (!init(handler)) return@launch
+            if (log.isTraceEnabled) log.trace("Getting live view subscriptions")
+            liveViewProcessor.getLiveViewSubscriptions(selfId) {
+                if (it.succeeded()) {
+                    val subs = toList(it.result().getString("body").toString(), LiveViewSubscription::class)
+                    handler.handle(Future.succeededFuture(subs))
+                } else {
+                    log.warn("Get live view subscriptions failed. Reason: {}", it.cause().message)
                     handler.handle(Future.failedFuture(it.cause()))
                 }
             }
