@@ -1,10 +1,5 @@
 package spp.platform.marker
 
-import spp.protocol.SourceMarkerServices.Provide
-import spp.protocol.SourceMarkerServices.Status
-import spp.protocol.SourceMarkerServices.Utilize
-import spp.protocol.status.MarkerConnection
-import io.vertx.core.json.Json
 import io.vertx.core.net.NetServerOptions
 import io.vertx.ext.bridge.BridgeEventType
 import io.vertx.ext.bridge.BridgeOptions
@@ -16,7 +11,9 @@ import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import mu.KotlinLogging
-import spp.platform.core.SourceSubscriber
+import spp.protocol.SourceMarkerServices.Provide
+import spp.protocol.SourceMarkerServices.Status
+import spp.protocol.SourceMarkerServices.Utilize
 import spp.protocol.platform.PlatformAddress
 
 class MarkerBridge(
@@ -50,10 +47,6 @@ class MarkerBridge(
             if (it.type() == BridgeEventType.SEND) {
                 if (it.rawMessage.getString("address") == Status.MARKER_CONNECTED) {
                     GlobalScope.launch(vertx.dispatcher()) {
-                        val conn = Json.decodeValue(
-                            it.rawMessage.getJsonObject("body").toString(), MarkerConnection::class.java
-                        )
-                        SourceSubscriber.addSubscriber(it.socket().writeHandlerID(), conn.markerId)
                         it.socket().closeHandler { _ ->
                             vertx.eventBus().publish(
                                 PlatformAddress.MARKER_DISCONNECTED.address,
@@ -61,12 +54,6 @@ class MarkerBridge(
                             )
                         }
                     }
-                }
-
-                //auto-add marker id to headers
-                val markerId = SourceSubscriber.getSubscriber(it.socket().writeHandlerID())
-                if (markerId != null && it.rawMessage.containsKey("headers")) {
-                    it.rawMessage.getJsonObject("headers").put("marker_id", markerId)
                 }
             }
             it.complete(true)

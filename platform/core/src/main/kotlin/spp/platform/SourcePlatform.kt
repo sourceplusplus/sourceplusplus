@@ -11,7 +11,6 @@ import io.vertx.core.Vertx
 import io.vertx.core.VertxOptions
 import io.vertx.core.buffer.Buffer
 import io.vertx.core.eventbus.ReplyException
-import io.vertx.core.http.ClientAuth
 import io.vertx.core.http.HttpMethod
 import io.vertx.core.http.HttpServerOptions
 import io.vertx.core.json.Json
@@ -46,7 +45,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Instant
 import mu.KotlinLogging
-import org.apache.commons.lang3.math.NumberUtils
 import org.apache.commons.text.StringSubstitutor
 import org.apache.commons.text.lookup.StringLookupFactory
 import org.bouncycastle.jce.provider.BouncyCastleProvider
@@ -425,7 +423,7 @@ class SourcePlatform : CoroutineVerticle() {
             .removeEnabledSecureTransportProtocol("SSLv2Hello")
             .removeEnabledSecureTransportProtocol("TLSv1")
             .removeEnabledSecureTransportProtocol("TLSv1.1")
-            .setSsl(System.getenv("SPP_DISABLE_TLS") != "true").setClientAuth(ClientAuth.REQUEST)
+            .setSsl(System.getenv("SPP_DISABLE_TLS") != "true")
             .apply {
                 if (System.getenv("SPP_DISABLE_TLS") != "true") {
                     pemKeyCertOptions = PemKeyCertOptions()
