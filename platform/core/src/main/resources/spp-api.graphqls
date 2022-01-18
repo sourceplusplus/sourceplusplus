@@ -1,3 +1,54 @@
+enum ArtifactType {
+    CLASS,
+    METHOD,
+    STATEMENT,
+    EXPRESSION,
+    ENDPOINT
+}
+
+type ArtifactQualifiedName {
+    identifier: String
+    commitId: String
+    artifactType: ArtifactType
+    lineNumber: Int
+    operationName: String
+}
+
+input ArtifactQualifiedNameInput {
+    identifier: String
+    commitId: String
+    artifactType: ArtifactType
+    lineNumber: Int
+    operationName: String
+}
+
+type LiveViewConfig {
+    viewName: String!
+    userDefined: Boolean!
+    viewMetrics: [String!]
+    refreshRateLimit: Int!
+}
+
+input LiveViewConfigInput {
+    viewName: String!
+    viewMetrics: [String!]
+    refreshRateLimit: Int!
+}
+
+type LiveViewSubscription {
+    subscriptionId: String
+    entityIds: [String!]
+    artifactQualifiedName: ArtifactQualifiedName
+    artifactLocation: LiveSourceLocation
+    liveViewConfig: LiveViewConfig
+}
+
+input LiveViewSubscriptionInput {
+    entityIds: [String!]!
+    #artifactQualifiedName: ArtifactQualifiedNameInput!
+    #liveViewConfig: LiveViewConfigInput!
+}
+
 type Self {
     developer: Developer!
     roles: [DeveloperRole!]
@@ -52,6 +103,9 @@ enum RolePermission {
     GET_LIVE_SPANS,
     REMOVE_LIVE_INSTRUMENT,
 
+    ADD_LIVE_VIEW_SUBSCRIPTION,
+    REMOVE_LIVE_VIEW_SUBSCRIPTION,
+    GET_LIVE_VIEW_SUBSCRIPTIONS,
     VIEW_ACTIVITY,
     VIEW_TRACES,
     VIEW_LOGS
@@ -284,6 +338,8 @@ type Query {
 
     getSelf: Self!
     getServices: [Service!]!
+
+    getLiveViewSubscriptions: [LiveViewSubscription!]!
 }
 
 type Mutation {
@@ -316,6 +372,9 @@ type Mutation {
     addLiveLog(input: LiveLogInput!): LiveLog!
     addLiveMeter(input: LiveMeterInput!): LiveMeter!
     addLiveSpan(input: LiveSpanInput!): LiveSpan!
+
+    addLiveViewSubscription(input: LiveViewSubscriptionInput!): LiveViewSubscription!
+    clearLiveViewSubscriptions: Boolean!
 }
 
 scalar Long
