@@ -40,6 +40,7 @@ import io.vertx.servicediscovery.Record
 import io.vertx.servicediscovery.ServiceDiscovery
 import io.vertx.servicediscovery.ServiceDiscoveryOptions
 import io.vertx.servicediscovery.Status
+import io.vertx.servicediscovery.types.EventBusService
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -68,13 +69,13 @@ import spp.platform.processor.ProcessorTracker
 import spp.platform.processor.ProcessorVerticle
 import spp.platform.util.CertsToJksOptionsConverter
 import spp.platform.util.Msg.msg
-import spp.platform.util.RequestContext
 import spp.protocol.ProtocolMarshaller
 import spp.protocol.ProtocolMarshaller.ProtocolMessageCodec
 import spp.protocol.SourceMarkerServices.Utilize
 import spp.protocol.platform.PlatformAddress
 import spp.protocol.probe.ProbeAddress.*
 import spp.protocol.processor.ProcessorAddress.*
+import spp.protocol.service.live.LiveViewService
 import spp.protocol.util.KSerializers
 import spp.service.ServiceProvider
 import java.io.File
@@ -583,6 +584,7 @@ class SourcePlatform : CoroutineVerticle() {
 
     private fun getStats(ctx: RoutingContext) {
         var selfId = ctx.user()?.principal()?.getString("developer_id")
+        val accessToken: String? = ctx.user()?.principal()?.getString("access_token")
         if (selfId == null) {
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
                 ctx.response().setStatusCode(500).end("Missing self id")
@@ -595,8 +597,16 @@ class SourcePlatform : CoroutineVerticle() {
 
         GlobalScope.launch(vertx.dispatcher()) {
             val promise = Promise.promise<JsonObject>()
-            RequestContext.put("self_id", selfId)
-            ServiceProvider.liveProviders.liveView.getLiveViewSubscriptionStats(promise)
+            EventBusService.getProxy(
+                discovery, LiveViewService::class.java,
+                JsonObject().put("headers", JsonObject().put("auth-token", accessToken))
+            ) {
+                if (it.succeeded()) {
+                    it.result().getLiveViewSubscriptionStats(promise)
+                } else {
+                    promise.fail(it.cause())
+                }
+            }
             val subStats = try {
                 promise.future().await()
             } catch (ex: Throwable) {
