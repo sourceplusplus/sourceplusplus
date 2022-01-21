@@ -74,11 +74,11 @@ class ServiceProvider(private val jwtAuth: JWTAuth?) : CoroutineVerticle() {
                 LiveInstrumentService::class.java,
                 liveProviders.liveInstrument
             )
-            liveView = publishService(
-                Utilize.LIVE_VIEW,
-                LiveViewService::class.java,
-                liveProviders.liveView
-            )
+//            liveView = publishService(
+//                Utilize.LIVE_VIEW,
+//                LiveViewService::class.java,
+//                liveProviders.liveView
+//            )
             logCountIndicator = publishService(
                 Utilize.LOG_COUNT_INDICATOR,
                 LogCountIndicatorService::class.java,

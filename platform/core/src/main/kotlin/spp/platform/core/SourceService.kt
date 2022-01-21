@@ -10,11 +10,13 @@ import io.vertx.core.Vertx
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import io.vertx.ext.web.RoutingContext
+import io.vertx.servicediscovery.types.EventBusService
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.apache.commons.lang3.EnumUtils
 import org.apache.commons.lang3.RandomStringUtils
 import org.slf4j.LoggerFactory
+import spp.platform.SourcePlatform
 import spp.platform.util.RequestContext
 import spp.protocol.artifact.ArtifactQualifiedName
 import spp.protocol.artifact.ArtifactType
@@ -35,6 +37,7 @@ import spp.protocol.instrument.meter.MeterType
 import spp.protocol.instrument.meter.MetricValue
 import spp.protocol.instrument.meter.MetricValueType
 import spp.protocol.instrument.span.LiveSpan
+import spp.protocol.service.live.LiveViewService
 import spp.protocol.view.LiveViewConfig
 import spp.protocol.view.LiveViewSubscription
 import spp.service.ServiceProvider
@@ -546,31 +549,6 @@ object SourceService {
 
             RequestContext.put("self_id", selfId)
             ServiceProvider.liveProviders.liveService.getServices {
-                if (it.succeeded()) {
-                    completableFuture.complete(it.result())
-                } else {
-                    completableFuture.completeExceptionally(it.cause())
-                }
-            }
-        }
-        return completableFuture
-    }
-
-    private fun getLiveViewSubscriptions(env: DataFetchingEnvironment): CompletableFuture<List<LiveViewSubscription>> {
-        val completableFuture = CompletableFuture<List<LiveViewSubscription>>()
-        GlobalScope.launch {
-            val selfId = if (System.getenv("SPP_DISABLE_JWT") != "true") {
-                val devId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
-                    .user().principal().getString("developer_id")
-                if (!SourceStorage.hasPermission(devId, GET_LIVE_VIEW_SUBSCRIPTIONS)) {
-                    completableFuture.completeExceptionally(PermissionAccessDenied(GET_LIVE_VIEW_SUBSCRIPTIONS))
-                    return@launch
-                }
-                devId
-            } else "system"
-
-            RequestContext.put("self_id", selfId)
-            ServiceProvider.liveProviders.liveView.getLiveViewSubscriptions {
                 if (it.succeeded()) {
                     completableFuture.complete(it.result())
                 } else {
@@ -1489,16 +1467,17 @@ object SourceService {
 
     private fun addLiveViewSubscription(env: DataFetchingEnvironment): CompletableFuture<LiveViewSubscription> {
         val completableFuture = CompletableFuture<LiveViewSubscription>()
+        var accessToken: String? = null
         GlobalScope.launch {
-            val selfId = if (System.getenv("SPP_DISABLE_JWT") != "true") {
-                val devId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
-                    .user().principal().getString("developer_id")
+            if (System.getenv("SPP_DISABLE_JWT") != "true") {
+                val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
+                val devId = user.principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(devId, ADD_LIVE_VIEW_SUBSCRIPTION)) {
                     completableFuture.completeExceptionally(PermissionAccessDenied(ADD_LIVE_VIEW_SUBSCRIPTION))
                     return@launch
                 }
-                devId
-            } else "system"
+                accessToken = user.principal().getString("access_token")
+            }
 
             val input = JsonObject.mapFrom(env.getArgument("input"))
             val subscription = LiveViewSubscription(
@@ -1508,10 +1487,52 @@ object SourceService {
                 liveViewConfig = LiveViewConfig("LOGS", false, listOf("endpoint_logs"))
             )
 
-            RequestContext.put("self_id", selfId)
-            ServiceProvider.liveProviders.liveView.addLiveViewSubscription(subscription) {
+            EventBusService.getProxy(
+                SourcePlatform.discovery, LiveViewService::class.java,
+                JsonObject().put("headers", JsonObject().put("auth-token", accessToken))
+            ) {
                 if (it.succeeded()) {
-                    completableFuture.complete(it.result())
+                    it.result().addLiveViewSubscription(subscription) {
+                        if (it.succeeded()) {
+                            completableFuture.complete(it.result())
+                        } else {
+                            completableFuture.completeExceptionally(it.cause())
+                        }
+                    }
+                } else {
+                    completableFuture.completeExceptionally(it.cause())
+                }
+            }
+        }
+        return completableFuture
+    }
+
+    private fun getLiveViewSubscriptions(env: DataFetchingEnvironment): CompletableFuture<List<LiveViewSubscription>> {
+        val completableFuture = CompletableFuture<List<LiveViewSubscription>>()
+        var accessToken: String? = null
+        GlobalScope.launch {
+            if (System.getenv("SPP_DISABLE_JWT") != "true") {
+                val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
+                val devId = user.principal().getString("developer_id")
+                if (!SourceStorage.hasPermission(devId, GET_LIVE_VIEW_SUBSCRIPTIONS)) {
+                    completableFuture.completeExceptionally(PermissionAccessDenied(GET_LIVE_VIEW_SUBSCRIPTIONS))
+                    return@launch
+                }
+                accessToken = user.principal().getString("access_token")
+            }
+
+            EventBusService.getProxy(
+                SourcePlatform.discovery, LiveViewService::class.java,
+                JsonObject().put("headers", JsonObject().put("auth-token", accessToken))
+            ) {
+                if (it.succeeded()) {
+                    it.result().getLiveViewSubscriptions {
+                        if (it.succeeded()) {
+                            completableFuture.complete(it.result())
+                        } else {
+                            completableFuture.completeExceptionally(it.cause())
+                        }
+                    }
                 } else {
                     completableFuture.completeExceptionally(it.cause())
                 }
@@ -1522,21 +1543,30 @@ object SourceService {
 
     private fun clearLiveViewSubscriptions(env: DataFetchingEnvironment): CompletableFuture<Boolean> {
         val completableFuture = CompletableFuture<Boolean>()
+        var accessToken: String? = null
         GlobalScope.launch {
-            val selfId = if (System.getenv("SPP_DISABLE_JWT") != "true") {
-                val devId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
-                    .user().principal().getString("developer_id")
+            if (System.getenv("SPP_DISABLE_JWT") != "true") {
+                val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
+                val devId = user.principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(devId, REMOVE_LIVE_VIEW_SUBSCRIPTION)) {
                     completableFuture.completeExceptionally(PermissionAccessDenied(REMOVE_LIVE_VIEW_SUBSCRIPTION))
                     return@launch
                 }
-                devId
-            } else "system"
+                accessToken = user.principal().getString("access_token")
+            }
 
-            RequestContext.put("self_id", selfId)
-            ServiceProvider.liveProviders.liveView.clearLiveViewSubscriptions {
+            EventBusService.getProxy(
+                SourcePlatform.discovery, LiveViewService::class.java,
+                JsonObject().put("headers", JsonObject().put("auth-token", accessToken))
+            ) {
                 if (it.succeeded()) {
-                    completableFuture.complete(true)
+                    it.result().clearLiveViewSubscriptions {
+                        if (it.succeeded()) {
+                            completableFuture.complete(true)
+                        } else {
+                            completableFuture.completeExceptionally(it.cause())
+                        }
+                    }
                 } else {
                     completableFuture.completeExceptionally(it.cause())
                 }

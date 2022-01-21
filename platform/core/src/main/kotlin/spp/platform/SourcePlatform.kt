@@ -390,7 +390,7 @@ class SourcePlatform : CoroutineVerticle() {
             val record = Record(it.body())
             if (record.status == Status.UP) {
                 GlobalScope.launch(vertx.dispatcher()) {
-                    if (record.name.startsWith("sw.")) {
+                    if (record.name.startsWith("sw.") || record.name.equals("spp.service.live-view")) {
                         //todo: this feels hacky
                         SourceServiceDiscovery.INSTANCE.store(record) {
                             if (it.failed()) {

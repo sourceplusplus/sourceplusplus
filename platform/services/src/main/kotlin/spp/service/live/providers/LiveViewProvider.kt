@@ -24,7 +24,7 @@ import kotlin.reflect.KClass
 class LiveViewProvider(
     private val vertx: Vertx,
     private val discovery: ServiceDiscovery
-) : LiveViewService {
+) {
 
     companion object {
         private val log = LoggerFactory.getLogger(LiveViewProvider::class.java)
@@ -62,7 +62,7 @@ class LiveViewProvider(
         }
     }
 
-    override fun addLiveViewSubscription(
+    fun addLiveViewSubscription(
         subscription: LiveViewSubscription,
         handler: Handler<AsyncResult<LiveViewSubscription>>
     ) {
@@ -92,7 +92,7 @@ class LiveViewProvider(
         }
     }
 
-    override fun removeLiveViewSubscription(
+    fun removeLiveViewSubscription(
         subscriptionId: String, handler: Handler<AsyncResult<LiveViewSubscription>>
     ) {
         val requestCtx = RequestContext.get()
@@ -121,7 +121,7 @@ class LiveViewProvider(
         }
     }
 
-    override fun clearLiveViewSubscriptions(handler: Handler<AsyncResult<List<LiveViewSubscription>>>) {
+    fun clearLiveViewSubscriptions(handler: Handler<AsyncResult<List<LiveViewSubscription>>>) {
         val requestCtx = RequestContext.get()
         val selfId = requestCtx["self_id"]
         if (selfId == null) {
@@ -145,7 +145,7 @@ class LiveViewProvider(
         }
     }
 
-    override fun getLiveViewSubscriptions(handler: Handler<AsyncResult<List<LiveViewSubscription>>>) {
+    fun getLiveViewSubscriptions(handler: Handler<AsyncResult<List<LiveViewSubscription>>>) {
         val requestCtx = RequestContext.get()
         val selfId = requestCtx["self_id"]
         if (selfId == null) {
