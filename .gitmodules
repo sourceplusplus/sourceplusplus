@@ -22,6 +22,9 @@
 [submodule "processors/instrument"]
 	path = processors/instrument
 	url = https://github.com/sourceplusplus/processor-instrument
+[submodule "processors/live-view"]
+	path = processors/live-view
+	url = https://github.com/sourceplusplus/processor-live-view
 [submodule "processors/log-summary"]
 	path = processors/log-summary
 	url = https://github.com/sourceplusplus/processor-log-summary
