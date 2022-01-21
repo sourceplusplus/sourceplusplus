@@ -25,7 +25,6 @@ import spp.protocol.auth.error.AccessDenied
 import spp.protocol.auth.error.InstrumentAccessDenied
 import spp.protocol.service.LiveService
 import spp.protocol.service.live.LiveInstrumentService
-import spp.protocol.service.live.LiveViewService
 import spp.protocol.service.logging.LogCountIndicatorService
 import spp.service.live.LiveProviders
 import spp.service.logging.LoggingProviders
@@ -43,7 +42,6 @@ class ServiceProvider(private val jwtAuth: JWTAuth?) : CoroutineVerticle() {
     private var liveService: Record? = null
     private var liveInstrument: Record? = null
     private var logCountIndicator: Record? = null
-    private var liveView: Record? = null
 
     override suspend fun start() {
         try {
@@ -74,11 +72,6 @@ class ServiceProvider(private val jwtAuth: JWTAuth?) : CoroutineVerticle() {
                 LiveInstrumentService::class.java,
                 liveProviders.liveInstrument
             )
-//            liveView = publishService(
-//                Utilize.LIVE_VIEW,
-//                LiveViewService::class.java,
-//                liveProviders.liveView
-//            )
             logCountIndicator = publishService(
                 Utilize.LOG_COUNT_INDICATOR,
                 LogCountIndicatorService::class.java,
@@ -190,13 +183,6 @@ class ServiceProvider(private val jwtAuth: JWTAuth?) : CoroutineVerticle() {
                 log.info("Live instrument service unpublished")
             } else {
                 log.error("Failed to unpublish live instrument service", it.cause())
-            }
-        }.await()
-        discovery!!.unpublish(liveView!!.registration).onComplete {
-            if (it.succeeded()) {
-                log.info("Live view service unpublished")
-            } else {
-                log.error("Failed to unpublish live view service", it.cause())
             }
         }.await()
         discovery!!.close()
