@@ -59,7 +59,7 @@ subprojects {
         implementation("io.vertx:vertx-auth-jwt:$vertxVersion")
         implementation("io.vertx:vertx-redis-client:$vertxVersion")
         implementation("io.vertx:vertx-web-graphql:${vertxVersion}")
-        implementation(files("../.ext/vertx-tcp-eventbus-bridge-4.0.3-SNAPSHOT.jar"))
+        implementation("io.vertx:vertx-tcp-eventbus-bridge:$vertxVersion")
         implementation("com.auth0:java-jwt:$auth0JwtVersion")
         implementation("com.auth0:jwks-rsa:0.20.1")
         implementation("org.bouncycastle:bcprov-jdk15on:$bouncycastleVersion")

@@ -11,6 +11,7 @@ import io.vertx.kotlin.coroutines.await
 import io.vertx.servicediscovery.ServiceDiscoveryOptions
 import org.slf4j.LoggerFactory
 import spp.platform.core.SourceSubscriber
+import spp.protocol.SourceMarkerServices
 import spp.protocol.platform.PlatformAddress
 import spp.protocol.platform.PlatformAddress.MARKER_DISCONNECTED
 import spp.protocol.processor.ProcessorAddress.*
@@ -35,7 +36,7 @@ class ProcessorBridge(private val netServerOptions: NetServerOptions) : Coroutin
                 //to processor
                 .addOutboundPermitted(PermittedOptions().setAddress(MARKER_DISCONNECTED.address))
                 .addOutboundPermitted(PermittedOptions().setAddress(LOGGING_PROCESSOR.address))
-                .addOutboundPermitted(PermittedOptions().setAddress(LIVE_VIEW_PROCESSOR.address))
+                .addOutboundPermitted(PermittedOptions().setAddress(SourceMarkerServices.Utilize.LIVE_VIEW))
                 .addOutboundPermitted(PermittedOptions().setAddress(LIVE_INSTRUMENT_PROCESSOR.address))
                 .addOutboundPermitted(PermittedOptions().setAddress(SET_LOG_PUBLISH_RATE_LIMIT.address)),
             netServerOptions
