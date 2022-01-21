@@ -1,8 +1,6 @@
 package spp.platform.util
 
 import spp.protocol.service.live.LiveInstrumentServiceVertxProxyHandler
-import spp.protocol.service.live.LiveViewServiceVertxProxyHandler
-import spp.protocol.service.logging.LogCountIndicatorServiceVertxProxyHandler
 import spp.protocol.service.tracing.LocalTracingServiceVertxProxyHandler
 import kotlin.concurrent.getOrSet
 
@@ -29,12 +27,8 @@ object RequestContext {
         //services
         LiveInstrumentServiceVertxProxyHandler._headers.get()?.entries()?.forEach { globalCtx[it.key] = it.value }
         LiveInstrumentServiceVertxProxyHandler._headers.remove()
-        LiveViewServiceVertxProxyHandler._headers.get()?.entries()?.forEach { globalCtx[it.key] = it.value }
-        LiveViewServiceVertxProxyHandler._headers.remove()
         LocalTracingServiceVertxProxyHandler._headers.get()?.entries()?.forEach { globalCtx[it.key] = it.value }
         LocalTracingServiceVertxProxyHandler._headers.remove()
-        LogCountIndicatorServiceVertxProxyHandler._headers.get()?.entries()?.forEach { globalCtx[it.key] = it.value }
-        LogCountIndicatorServiceVertxProxyHandler._headers.remove()
         return globalCtx
     }
 }
