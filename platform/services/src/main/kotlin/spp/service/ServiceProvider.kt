@@ -25,23 +25,19 @@ import spp.protocol.auth.error.AccessDenied
 import spp.protocol.auth.error.InstrumentAccessDenied
 import spp.protocol.service.LiveService
 import spp.protocol.service.live.LiveInstrumentService
-import spp.protocol.service.logging.LogCountIndicatorService
 import spp.service.live.LiveProviders
-import spp.service.logging.LoggingProviders
 import kotlin.system.exitProcess
 
 class ServiceProvider(private val jwtAuth: JWTAuth?) : CoroutineVerticle() {
 
     companion object {
         private val log = LoggerFactory.getLogger(ServiceProvider::class.java)
-        lateinit var loggingProviders: LoggingProviders
         lateinit var liveProviders: LiveProviders
     }
 
     private var discovery: ServiceDiscovery? = null
     private var liveService: Record? = null
     private var liveInstrument: Record? = null
-    private var logCountIndicator: Record? = null
 
     override suspend fun start() {
         try {
@@ -59,7 +55,6 @@ class ServiceProvider(private val jwtAuth: JWTAuth?) : CoroutineVerticle() {
                 ServiceDiscovery.create(vertx, ServiceDiscoveryOptions())
             }
 
-            loggingProviders = LoggingProviders(vertx, discovery!!)
             liveProviders = LiveProviders(vertx, discovery!!)
 
             liveService = publishService(
@@ -71,11 +66,6 @@ class ServiceProvider(private val jwtAuth: JWTAuth?) : CoroutineVerticle() {
                 Utilize.LIVE_INSTRUMENT,
                 LiveInstrumentService::class.java,
                 liveProviders.liveInstrument
-            )
-            logCountIndicator = publishService(
-                Utilize.LOG_COUNT_INDICATOR,
-                LogCountIndicatorService::class.java,
-                loggingProviders.logCountIndicator
             )
         } catch (throwable: Throwable) {
             throwable.printStackTrace()
@@ -171,13 +161,6 @@ class ServiceProvider(private val jwtAuth: JWTAuth?) : CoroutineVerticle() {
     }
 
     override suspend fun stop() {
-        discovery!!.unpublish(logCountIndicator!!.registration).onComplete {
-            if (it.succeeded()) {
-                log.info("Log count indicator service unpublished")
-            } else {
-                log.error("Failed to unpublish log count indicator service", it.cause())
-            }
-        }.await()
         discovery!!.unpublish(liveInstrument!!.registration).onComplete {
             if (it.succeeded()) {
                 log.info("Live instrument service unpublished")
