@@ -41,6 +41,7 @@ include ':probes:python'
 
 include ':processors:dependencies'
 include ':processors:instrument'
+include ':processors:live-view'
 include ':processors:log-summary'
 
 include 'example-web-app'

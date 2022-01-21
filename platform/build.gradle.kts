@@ -10,6 +10,7 @@ val platformVersion: String by project
 val probeJvmVersion: String by project
 val processorDependenciesVersion: String by project
 val instrumentProcessorVersion: String by project
+val liveViewProcessorVersion: String by project
 val logSummaryProcessorVersion: String by project
 
 group = platformGroup
@@ -42,6 +43,7 @@ subprojects {
 
         implementation(project(":protocol"))
         implementation(project(":processors:instrument"))
+        implementation(project(":processors:live-view"))
         implementation(project(":processors:log-summary"))
         if (name == "services") {
             val compileOnly by configurations
@@ -100,7 +102,10 @@ tasks.register("clean") {
 tasks.register<Copy>("updateDockerFiles") {
     dependsOn(
         ":platform:core:jar", ":probes:jvm:control:jar",
-        ":processors:dependencies:jar", ":processors:instrument:jar", ":processors:log-summary:jar"
+        ":processors:dependencies:jar",
+        ":processors:instrument:jar",
+        ":processors:live-view:jar",
+        ":processors:log-summary:jar"
     )
 
     doFirst {
@@ -126,6 +131,9 @@ tasks.register<Copy>("updateDockerFiles") {
         if (!File(projectDir, "../processors/instrument/build/libs/spp-processor-instrument-$instrumentProcessorVersion.jar").exists()) {
             throw GradleException("Missing spp-processor-instrument-$instrumentProcessorVersion.jar")
         }
+        if (!File(projectDir, "../processors/live-view/build/libs/spp-processor-live-view-$liveViewProcessorVersion.jar").exists()) {
+            throw GradleException("Missing spp-processor-live-view-$liveViewProcessorVersion.jar")
+        }
         if (!File(projectDir, "../processors/log-summary/build/libs/spp-processor-log-summary-$logSummaryProcessorVersion.jar").exists()) {
             throw GradleException("Missing spp-processor-log-summary-$logSummaryProcessorVersion.jar")
         }
@@ -140,6 +148,8 @@ tasks.register<Copy>("updateDockerFiles") {
     from(File(projectDir, "../processors/dependencies/build/libs/spp-processor-dependencies-$processorDependenciesVersion.jar"))
         .into(File(projectDir, "../docker/e2e"))
     from(File(projectDir, "../processors/instrument/build/libs/spp-processor-instrument-$instrumentProcessorVersion.jar"))
+        .into(File(projectDir, "../docker/e2e"))
+    from(File(projectDir, "../processors/live-view/build/libs/spp-processor-live-view-$liveViewProcessorVersion.jar"))
         .into(File(projectDir, "../docker/e2e"))
     from(File(projectDir, "../processors/log-summary/build/libs/spp-processor-log-summary-$logSummaryProcessorVersion.jar"))
         .into(File(projectDir, "../docker/e2e"))
