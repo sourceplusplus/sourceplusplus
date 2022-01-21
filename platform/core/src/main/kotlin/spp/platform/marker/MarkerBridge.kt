@@ -38,7 +38,6 @@ class MarkerBridge(
                 .addInboundPermitted(PermittedOptions().setAddress(Utilize.LOG_COUNT_INDICATOR))
                 //to marker
                 .addOutboundPermitted(PermittedOptions().setAddress(Provide.LIVE_INSTRUMENT_SUBSCRIBER))
-                .addOutboundPermitted(PermittedOptions().setAddress(Provide.LIVE_VIEW_SUBSCRIBER))
                 .addOutboundPermitted(
                     PermittedOptions().setAddressRegex(Provide.LIVE_VIEW_SUBSCRIBER + "\\..+")
                 ),
