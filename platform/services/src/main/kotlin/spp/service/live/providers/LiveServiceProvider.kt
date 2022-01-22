@@ -12,6 +12,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
 import spp.platform.core.SourceStorage
+import spp.platform.probe.ProbeTracker
 import spp.platform.util.RequestContext
 import spp.protocol.developer.Developer
 import spp.protocol.developer.SelfInfo
@@ -102,6 +103,8 @@ class LiveServiceProvider(
     }
 
     override fun getActiveProbes(handler: Handler<AsyncResult<List<ActiveProbe>>>) {
-        TODO("Not yet implemented")
+        GlobalScope.launch(vertx.dispatcher()) {
+            handler.handle(Future.succeededFuture(ProbeTracker.getActiveProbes(vertx)))
+        }
     }
 }
