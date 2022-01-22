@@ -68,7 +68,7 @@ open class PlatformIntegrationTest {
             val platformPort = 5455
             val useSsl = true
             val trustAll = true
-            val platformCertificateFile = "../../config/spp-platform.crt"
+            val platformCertificateFile = "../config/spp-platform.crt"
             val myCaAsABuffer = Buffer.buffer(File(platformCertificateFile).readText())
             val options = when {
                 myCaAsABuffer != null -> NetClientOptions()
