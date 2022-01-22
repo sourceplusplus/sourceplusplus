@@ -16,6 +16,7 @@ import spp.platform.util.RequestContext
 import spp.protocol.developer.Developer
 import spp.protocol.developer.SelfInfo
 import spp.protocol.general.Service
+import spp.protocol.platform.client.ActiveProbe
 import spp.protocol.service.LiveService
 import java.time.Instant
 import java.time.ZoneId
@@ -98,5 +99,9 @@ class LiveServiceProvider(
                 handler.handle(Future.failedFuture(it.cause()))
             }
         }
+    }
+
+    override fun getActiveProbes(handler: Handler<AsyncResult<List<ActiveProbe>>>) {
+        TODO("Not yet implemented")
     }
 }

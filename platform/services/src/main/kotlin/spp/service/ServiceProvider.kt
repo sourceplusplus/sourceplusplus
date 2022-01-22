@@ -24,7 +24,6 @@ import spp.protocol.SourceMarkerServices.Utilize
 import spp.protocol.auth.error.AccessDenied
 import spp.protocol.auth.error.InstrumentAccessDenied
 import spp.protocol.service.LiveService
-import spp.protocol.service.live.LiveInstrumentService
 import spp.service.live.LiveProviders
 import kotlin.system.exitProcess
 
@@ -37,7 +36,6 @@ class ServiceProvider(private val jwtAuth: JWTAuth?) : CoroutineVerticle() {
 
     private var discovery: ServiceDiscovery? = null
     private var liveService: Record? = null
-    private var liveInstrument: Record? = null
 
     override suspend fun start() {
         try {
@@ -61,11 +59,6 @@ class ServiceProvider(private val jwtAuth: JWTAuth?) : CoroutineVerticle() {
                 Utilize.LIVE_SERVICE,
                 LiveService::class.java,
                 liveProviders.liveService
-            )
-            liveInstrument = publishService(
-                Utilize.LIVE_INSTRUMENT,
-                LiveInstrumentService::class.java,
-                liveProviders.liveInstrument
             )
         } catch (throwable: Throwable) {
             throwable.printStackTrace()
@@ -161,11 +154,11 @@ class ServiceProvider(private val jwtAuth: JWTAuth?) : CoroutineVerticle() {
     }
 
     override suspend fun stop() {
-        discovery!!.unpublish(liveInstrument!!.registration).onComplete {
+        discovery!!.unpublish(liveService!!.registration).onComplete {
             if (it.succeeded()) {
-                log.info("Live instrument service unpublished")
+                log.info("Live service unpublished")
             } else {
-                log.error("Failed to unpublish live instrument service", it.cause())
+                log.error("Failed to unpublish live service", it.cause())
             }
         }.await()
         discovery!!.close()
