@@ -35,6 +35,7 @@ class ProcessorBridge(private val netServerOptions: NetServerOptions) : Coroutin
                 .addInboundPermitted(
                     PermittedOptions().setAddressRegex(SourceMarkerServices.Provide.LIVE_VIEW_SUBSCRIBER + "\\..+")
                 )
+                .addInboundPermitted(PermittedOptions().setAddress(SourceMarkerServices.Utilize.LIVE_SERVICE))
                 //to processor
                 .addOutboundPermitted(PermittedOptions().setAddress(MARKER_DISCONNECTED.address))
                 .addOutboundPermitted(PermittedOptions().setAddress(SourceMarkerServices.Utilize.LOG_COUNT_INDICATOR))
