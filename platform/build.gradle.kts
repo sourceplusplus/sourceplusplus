@@ -32,6 +32,7 @@ subprojects {
     val logbackVersion: String by project
     val auth0JwtVersion: String by project
     val vertxVersion: String by project
+    val joorVersion: String by project
 
     repositories {
         mavenCentral()
@@ -50,6 +51,7 @@ subprojects {
             compileOnly(project(":platform:common"))
         }
 
+        implementation("org.jooq:joor:$joorVersion")
         implementation("io.github.microutils:kotlin-logging-jvm:2.1.21")
         implementation("org.apache.commons:commons-lang3:$commonsLang3Version")
         implementation("com.github.ajalt.clikt:clikt:$cliktVersion")

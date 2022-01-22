@@ -19,7 +19,6 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
 import spp.platform.core.SourceStorage
-import spp.platform.util.RequestContext
 import spp.protocol.SourceMarkerServices.Utilize
 import spp.protocol.auth.error.AccessDenied
 import spp.protocol.auth.error.InstrumentAccessDenied
@@ -79,7 +78,6 @@ class ServiceProvider(private val jwtAuth: JWTAuth?) : CoroutineVerticle() {
                             if (it.succeeded()) {
                                 val selfId = it.result().principal().getString("developer_id")
                                 msg.headers().add("self_id", selfId)
-                                RequestContext.put("self_id", selfId)
 
                                 if (msg.headers().get("action").startsWith("addLiveInstrument")) {
                                     validateInstrumentAccess(selfId, msg, promise)
@@ -104,7 +102,6 @@ class ServiceProvider(private val jwtAuth: JWTAuth?) : CoroutineVerticle() {
 
                     val selfId = "system"
                     msg.headers().add("self_id", selfId)
-                    RequestContext.put("self_id", selfId)
                     return@addInterceptor Future.succeededFuture(msg)
                 }
             }

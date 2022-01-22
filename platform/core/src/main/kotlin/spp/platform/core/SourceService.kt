@@ -17,7 +17,6 @@ import org.apache.commons.lang3.EnumUtils
 import org.apache.commons.lang3.RandomStringUtils
 import org.slf4j.LoggerFactory
 import spp.platform.SourcePlatform
-import spp.platform.util.RequestContext
 import spp.protocol.artifact.ArtifactQualifiedName
 import spp.protocol.artifact.ArtifactType
 import spp.protocol.auth.*
@@ -25,6 +24,7 @@ import spp.protocol.auth.RolePermission.*
 import spp.protocol.auth.error.InstrumentAccessDenied
 import spp.protocol.auth.error.PermissionAccessDenied
 import spp.protocol.developer.Developer
+import spp.protocol.developer.SelfInfo
 import spp.protocol.general.Service
 import spp.protocol.instrument.InstrumentThrottle
 import spp.protocol.instrument.LiveInstrument
@@ -37,6 +37,7 @@ import spp.protocol.instrument.meter.MeterType
 import spp.protocol.instrument.meter.MetricValue
 import spp.protocol.instrument.meter.MetricValueType
 import spp.protocol.instrument.span.LiveSpan
+import spp.protocol.service.LiveService
 import spp.protocol.service.live.LiveInstrumentService
 import spp.protocol.service.live.LiveViewService
 import spp.protocol.view.LiveViewConfig
@@ -521,20 +522,30 @@ object SourceService {
         return completableFuture
     }
 
-    private fun getSelf(env: DataFetchingEnvironment): CompletableFuture<Map<Any, Any>> {
-        val completableFuture = CompletableFuture<Map<Any, Any>>()
+    private fun getSelf(env: DataFetchingEnvironment): CompletableFuture<SelfInfo> {
+        val completableFuture = CompletableFuture<SelfInfo>()
+        var accessToken: String? = null
         GlobalScope.launch {
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
-                val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
-                    .user().principal().getString("developer_id")
-                completableFuture.complete(mutableMapOf<Any, Any>().apply {
-                    put("developer", Developer(selfId))
-                    put("roles", SourceStorage.getDeveloperRoles(selfId))
-                    put("permissions", SourceStorage.getDeveloperPermissions(selfId))
-                    put("access", SourceStorage.getDeveloperAccessPermissions(selfId))
-                })
-            } else {
-                completableFuture.completeExceptionally(IllegalStateException("JWT disabled"))
+                val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
+                accessToken = user.principal().getString("access_token")
+            }
+
+            EventBusService.getProxy(
+                SourcePlatform.discovery, LiveService::class.java,
+                JsonObject().put("headers", JsonObject().put("auth-token", accessToken))
+            ) {
+                if (it.succeeded()) {
+                    it.result().getSelf {
+                        if (it.succeeded()) {
+                            completableFuture.complete(it.result())
+                        } else {
+                            completableFuture.completeExceptionally(it.cause())
+                        }
+                    }
+                } else {
+                    completableFuture.completeExceptionally(it.cause())
+                }
             }
         }
         return completableFuture
@@ -543,12 +554,6 @@ object SourceService {
     private fun getServices(env: DataFetchingEnvironment): CompletableFuture<List<Service>> {
         val completableFuture = CompletableFuture<List<Service>>()
         GlobalScope.launch {
-            val selfId = if (System.getenv("SPP_DISABLE_JWT") != "true") {
-                env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
-                    .user().principal().getString("developer_id")
-            } else "system"
-
-            RequestContext.put("self_id", selfId)
             ServiceProvider.liveProviders.liveService.getServices {
                 if (it.succeeded()) {
                     completableFuture.complete(it.result())
