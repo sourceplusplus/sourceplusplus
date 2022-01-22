@@ -1,4 +1,4 @@
-package spp.platform.util
+package spp.platform.core.util
 
 import org.slf4j.helpers.MessageFormatter
 

@@ -42,7 +42,7 @@ import spp.protocol.service.live.LiveInstrumentService
 import spp.protocol.service.live.LiveViewService
 import spp.protocol.view.LiveViewConfig
 import spp.protocol.view.LiveViewSubscription
-import spp.service.ServiceProvider
+import spp.platform.core.service.ServiceProvider
 import java.util.*
 import java.util.concurrent.CompletableFuture
 

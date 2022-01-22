@@ -1,4 +1,4 @@
-package spp.service.live.providers
+package spp.platform.core.service.live.providers
 
 import io.vertx.core.AsyncResult
 import io.vertx.core.Future

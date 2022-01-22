@@ -1,4 +1,4 @@
-package spp.platform.util
+package spp.platform.core.util
 
 import io.vertx.core.buffer.Buffer
 import io.vertx.core.net.JksOptions
