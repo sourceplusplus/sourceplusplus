@@ -37,7 +37,7 @@ tasks {
             file("dist/spp-platform-$version/config").mkdirs()
             file("config/spp-platform.yml")
                 .copyTo(file("dist/spp-platform-$version/config/spp-platform.yml"))
-            file("platform/core/build/libs/spp-platform-$version.jar")
+            file("platform/build/libs/spp-platform-$version.jar")
                 .copyTo(file("dist/spp-platform-$version/spp-platform-$version.jar"))
         }
     }
