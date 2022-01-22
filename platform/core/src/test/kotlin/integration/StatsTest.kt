@@ -27,9 +27,6 @@ class StatsTest : PlatformIntegrationTest() {
                     services.getJsonObject("core").map.forEach {
                         assertEquals(1, it.value, "Missing ${it.key}")
                     }
-                    services.getJsonObject("processor").map.forEach {
-                        assertEquals(1, it.value, "Missing ${it.key}")
-                    }
                     services.getJsonObject("probe").map.forEach {
                         assertEquals(1, it.value, "Missing ${it.key}")
                     }

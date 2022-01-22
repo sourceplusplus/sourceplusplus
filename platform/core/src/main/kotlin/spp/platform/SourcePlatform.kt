@@ -655,25 +655,6 @@ class SourcePlatform : CoroutineVerticle() {
                             )
                     )
                     .put(
-                        "processor",
-                        JsonObject()
-                            .put(
-                                LIVE_INSTRUMENT_PROCESSOR.address,
-                                vertx.sharedData().getLocalCounter(LIVE_INSTRUMENT_PROCESSOR.address)
-                                    .await().get().await()
-                            )
-                            .put(
-                                LIVE_VIEW_PROCESSOR.address,
-                                vertx.sharedData().getLocalCounter(LIVE_VIEW_PROCESSOR.address)
-                                    .await().get().await()
-                            )
-                            .put(
-                                LOGGING_PROCESSOR.address,
-                                vertx.sharedData().getLocalCounter(LOGGING_PROCESSOR.address)
-                                    .await().get().await()
-                            )
-                    )
-                    .put(
                         "probe",
                         JsonObject()
                             .put(
