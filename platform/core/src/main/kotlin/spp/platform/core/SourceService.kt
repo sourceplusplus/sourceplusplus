@@ -37,6 +37,7 @@ import spp.protocol.instrument.meter.MeterType
 import spp.protocol.instrument.meter.MetricValue
 import spp.protocol.instrument.meter.MetricValueType
 import spp.protocol.instrument.span.LiveSpan
+import spp.protocol.service.live.LiveInstrumentService
 import spp.protocol.service.live.LiveViewService
 import spp.protocol.view.LiveViewConfig
 import spp.protocol.view.LiveViewSubscription
@@ -585,21 +586,30 @@ object SourceService {
 
     private fun getLiveInstruments(env: DataFetchingEnvironment): CompletableFuture<List<Map<String, Any>>> {
         val completableFuture = CompletableFuture<List<Map<String, Any>>>()
+        var accessToken: String? = null
         GlobalScope.launch {
-            val selfId = if (System.getenv("SPP_DISABLE_JWT") != "true") {
-                val devId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
-                    .user().principal().getString("developer_id")
+            if (System.getenv("SPP_DISABLE_JWT") != "true") {
+                val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
+                val devId = user.principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(devId, GET_LIVE_INSTRUMENTS)) {
                     completableFuture.completeExceptionally(PermissionAccessDenied(GET_LIVE_INSTRUMENTS))
                     return@launch
                 }
-                devId
-            } else "system"
+                accessToken = user.principal().getString("access_token")
+            }
 
-            RequestContext.put("self_id", selfId)
-            ServiceProvider.liveProviders.liveInstrument.getLiveInstruments {
+            EventBusService.getProxy(
+                SourcePlatform.discovery, LiveInstrumentService::class.java,
+                JsonObject().put("headers", JsonObject().put("auth-token", accessToken))
+            ) {
                 if (it.succeeded()) {
-                    completableFuture.complete(it.result().map { fixJsonMaps(it) })
+                    it.result().getLiveInstruments {
+                        if (it.succeeded()) {
+                            completableFuture.complete(it.result().map { fixJsonMaps(it) })
+                        } else {
+                            completableFuture.completeExceptionally(it.cause())
+                        }
+                    }
                 } else {
                     completableFuture.completeExceptionally(it.cause())
                 }
@@ -610,21 +620,30 @@ object SourceService {
 
     private fun getLiveBreakpoints(env: DataFetchingEnvironment): CompletableFuture<List<Map<String, Any>>> {
         val completableFuture = CompletableFuture<List<Map<String, Any>>>()
+        var accessToken: String? = null
         GlobalScope.launch {
-            val selfId = if (System.getenv("SPP_DISABLE_JWT") != "true") {
-                val devId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
-                    .user().principal().getString("developer_id")
+            if (System.getenv("SPP_DISABLE_JWT") != "true") {
+                val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
+                val devId = user.principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(devId, GET_LIVE_BREAKPOINTS)) {
                     completableFuture.completeExceptionally(PermissionAccessDenied(GET_LIVE_BREAKPOINTS))
                     return@launch
                 }
-                devId
-            } else "system"
+                accessToken = user.principal().getString("access_token")
+            }
 
-            RequestContext.put("self_id", selfId)
-            ServiceProvider.liveProviders.liveInstrument.getLiveBreakpoints {
+            EventBusService.getProxy(
+                SourcePlatform.discovery, LiveInstrumentService::class.java,
+                JsonObject().put("headers", JsonObject().put("auth-token", accessToken))
+            ) {
                 if (it.succeeded()) {
-                    completableFuture.complete(it.result().map { fixJsonMaps(it) })
+                    it.result().getLiveBreakpoints {
+                        if (it.succeeded()) {
+                            completableFuture.complete(it.result().map { fixJsonMaps(it) })
+                        } else {
+                            completableFuture.completeExceptionally(it.cause())
+                        }
+                    }
                 } else {
                     completableFuture.completeExceptionally(it.cause())
                 }
@@ -635,21 +654,30 @@ object SourceService {
 
     private fun getLiveLogs(env: DataFetchingEnvironment): CompletableFuture<List<Map<String, Any>>> {
         val completableFuture = CompletableFuture<List<Map<String, Any>>>()
+        var accessToken: String? = null
         GlobalScope.launch {
-            val selfId = if (System.getenv("SPP_DISABLE_JWT") != "true") {
-                val devId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
-                    .user().principal().getString("developer_id")
+            if (System.getenv("SPP_DISABLE_JWT") != "true") {
+                val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
+                val devId = user.principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(devId, GET_LIVE_LOGS)) {
                     completableFuture.completeExceptionally(PermissionAccessDenied(GET_LIVE_LOGS))
                     return@launch
                 }
-                devId
-            } else "system"
+                accessToken = user.principal().getString("access_token")
+            }
 
-            RequestContext.put("self_id", selfId)
-            ServiceProvider.liveProviders.liveInstrument.getLiveLogs {
+            EventBusService.getProxy(
+                SourcePlatform.discovery, LiveInstrumentService::class.java,
+                JsonObject().put("headers", JsonObject().put("auth-token", accessToken))
+            ) {
                 if (it.succeeded()) {
-                    completableFuture.complete(it.result().map { fixJsonMaps(it) })
+                    it.result().getLiveLogs {
+                        if (it.succeeded()) {
+                            completableFuture.complete(it.result().map { fixJsonMaps(it) })
+                        } else {
+                            completableFuture.completeExceptionally(it.cause())
+                        }
+                    }
                 } else {
                     completableFuture.completeExceptionally(it.cause())
                 }
@@ -660,21 +688,30 @@ object SourceService {
 
     private fun getLiveMeters(env: DataFetchingEnvironment): CompletableFuture<List<Map<String, Any>>> {
         val completableFuture = CompletableFuture<List<Map<String, Any>>>()
+        var accessToken: String? = null
         GlobalScope.launch {
-            val selfId = if (System.getenv("SPP_DISABLE_JWT") != "true") {
-                val devId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
-                    .user().principal().getString("developer_id")
+            if (System.getenv("SPP_DISABLE_JWT") != "true") {
+                val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
+                val devId = user.principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(devId, GET_LIVE_METERS)) {
                     completableFuture.completeExceptionally(PermissionAccessDenied(GET_LIVE_METERS))
                     return@launch
                 }
-                devId
-            } else "system"
+                accessToken = user.principal().getString("access_token")
+            }
 
-            RequestContext.put("self_id", selfId)
-            ServiceProvider.liveProviders.liveInstrument.getLiveMeters {
+            EventBusService.getProxy(
+                SourcePlatform.discovery, LiveInstrumentService::class.java,
+                JsonObject().put("headers", JsonObject().put("auth-token", accessToken))
+            ) {
                 if (it.succeeded()) {
-                    completableFuture.complete(it.result().map { fixJsonMaps(it) })
+                    it.result().getLiveMeters {
+                        if (it.succeeded()) {
+                            completableFuture.complete(it.result().map { fixJsonMaps(it) })
+                        } else {
+                            completableFuture.completeExceptionally(it.cause())
+                        }
+                    }
                 } else {
                     completableFuture.completeExceptionally(it.cause())
                 }
@@ -685,21 +722,30 @@ object SourceService {
 
     private fun getLiveSpans(env: DataFetchingEnvironment): CompletableFuture<List<Map<String, Any>>> {
         val completableFuture = CompletableFuture<List<Map<String, Any>>>()
+        var accessToken: String? = null
         GlobalScope.launch {
-            val selfId = if (System.getenv("SPP_DISABLE_JWT") != "true") {
-                val devId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
-                    .user().principal().getString("developer_id")
+            if (System.getenv("SPP_DISABLE_JWT") != "true") {
+                val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
+                val devId = user.principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(devId, GET_LIVE_SPANS)) {
                     completableFuture.completeExceptionally(PermissionAccessDenied(GET_LIVE_SPANS))
                     return@launch
                 }
-                devId
-            } else "system"
+                accessToken = user.principal().getString("access_token")
+            }
 
-            RequestContext.put("self_id", selfId)
-            ServiceProvider.liveProviders.liveInstrument.getLiveSpans {
+            EventBusService.getProxy(
+                SourcePlatform.discovery, LiveInstrumentService::class.java,
+                JsonObject().put("headers", JsonObject().put("auth-token", accessToken))
+            ) {
                 if (it.succeeded()) {
-                    completableFuture.complete(it.result().map { fixJsonMaps(it) })
+                    it.result().getLiveSpans {
+                        if (it.succeeded()) {
+                            completableFuture.complete(it.result().map { fixJsonMaps(it) })
+                        } else {
+                            completableFuture.completeExceptionally(it.cause())
+                        }
+                    }
                 } else {
                     completableFuture.completeExceptionally(it.cause())
                 }
@@ -710,20 +756,20 @@ object SourceService {
 
     private fun reset(env: DataFetchingEnvironment): CompletableFuture<Boolean> {
         val completableFuture = CompletableFuture<Boolean>()
+        var accessToken: String? = null
         GlobalScope.launch {
-            val selfId = if (System.getenv("SPP_DISABLE_JWT") != "true") {
-                val devId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
-                    .user().principal().getString("developer_id")
+            if (System.getenv("SPP_DISABLE_JWT") != "true") {
+                val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
+                val devId = user.principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(devId, RESET)) {
                     completableFuture.completeExceptionally(PermissionAccessDenied(RESET))
                     return@launch
                 }
-                devId
-            } else "system"
+                accessToken = user.principal().getString("access_token")
+            }
 
-            RequestContext.put("self_id", selfId)
             SourceStorage.reset()
-            ServiceProvider.liveProviders.liveInstrument.clearAllLiveInstruments()
+            TODO()
             completableFuture.complete(SourceStorage.reset())
         }
         return completableFuture
@@ -1146,25 +1192,32 @@ object SourceService {
 
     private fun removeLiveInstrument(env: DataFetchingEnvironment): CompletableFuture<Map<String, Any>?> {
         val completableFuture = CompletableFuture<Map<String, Any>?>()
+        var accessToken: String? = null
         GlobalScope.launch {
-            val selfId = if (System.getenv("SPP_DISABLE_JWT") != "true") {
-                val devId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
-                    .user().principal().getString("developer_id")
+            if (System.getenv("SPP_DISABLE_JWT") != "true") {
+                val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
+                val devId = user.principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(devId, REMOVE_LIVE_INSTRUMENT)) {
                     completableFuture.completeExceptionally(PermissionAccessDenied(REMOVE_LIVE_INSTRUMENT))
                     return@launch
                 }
-                devId
-            } else "system"
+                accessToken = user.principal().getString("access_token")
+            }
 
             val id: String = env.getArgument("id")
-            RequestContext.put("self_id", selfId)
-            ServiceProvider.liveProviders.liveInstrument.removeLiveInstrument(id) {
+            EventBusService.getProxy(
+                SourcePlatform.discovery, LiveInstrumentService::class.java,
+                JsonObject().put("headers", JsonObject().put("auth-token", accessToken))
+            ) {
                 if (it.succeeded()) {
-                    if (it.result() == null) {
-                        completableFuture.complete(null)
-                    } else {
-                        completableFuture.complete(fixJsonMaps(it.result()!!))
+                    it.result().removeLiveInstrument(id) {
+                        if (it.succeeded() && it.result() != null) {
+                            completableFuture.complete(fixJsonMaps(it.result()!!))
+                        } else if (it.succeeded() && it.result() == null) {
+                            completableFuture.complete(null)
+                        } else {
+                            completableFuture.completeExceptionally(it.cause())
+                        }
                     }
                 } else {
                     completableFuture.completeExceptionally(it.cause())
@@ -1176,26 +1229,33 @@ object SourceService {
 
     private fun removeLiveInstruments(env: DataFetchingEnvironment): CompletableFuture<List<Map<String, Any>>> {
         val completableFuture = CompletableFuture<List<Map<String, Any>>>()
+        var accessToken: String? = null
         GlobalScope.launch {
-            val selfId = if (System.getenv("SPP_DISABLE_JWT") != "true") {
-                val devId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
-                    .user().principal().getString("developer_id")
+            if (System.getenv("SPP_DISABLE_JWT") != "true") {
+                val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
+                val devId = user.principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(devId, REMOVE_LIVE_INSTRUMENT)) {
                     completableFuture.completeExceptionally(PermissionAccessDenied(REMOVE_LIVE_INSTRUMENT))
                     return@launch
                 }
-                devId
-            } else "system"
+                accessToken = user.principal().getString("access_token")
+            }
 
             val source: String = env.getArgument("source")
             val line: Int = env.getArgument("line")
 
-            RequestContext.put("self_id", selfId)
-            ServiceProvider.liveProviders.liveInstrument.removeLiveInstruments(
-                LiveSourceLocation(source, line)
+            EventBusService.getProxy(
+                SourcePlatform.discovery, LiveInstrumentService::class.java,
+                JsonObject().put("headers", JsonObject().put("auth-token", accessToken))
             ) {
                 if (it.succeeded()) {
-                    completableFuture.complete(it.result().map { fixJsonMaps(it) })
+                    it.result().removeLiveInstruments(LiveSourceLocation(source, line)) {
+                        if (it.succeeded()) {
+                            completableFuture.complete(it.result().map { fixJsonMaps(it) })
+                        } else {
+                            completableFuture.completeExceptionally(it.cause())
+                        }
+                    }
                 } else {
                     completableFuture.completeExceptionally(it.cause())
                 }
@@ -1206,21 +1266,30 @@ object SourceService {
 
     private fun clearLiveInstruments(env: DataFetchingEnvironment): CompletableFuture<Boolean> {
         val completableFuture = CompletableFuture<Boolean>()
+        var accessToken: String? = null
         GlobalScope.launch {
-            val selfId = if (System.getenv("SPP_DISABLE_JWT") != "true") {
-                val devId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
-                    .user().principal().getString("developer_id")
+            if (System.getenv("SPP_DISABLE_JWT") != "true") {
+                val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
+                val devId = user.principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(devId, REMOVE_LIVE_INSTRUMENT)) {
                     completableFuture.completeExceptionally(PermissionAccessDenied(REMOVE_LIVE_INSTRUMENT))
                     return@launch
                 }
-                devId
-            } else "system"
+                accessToken = user.principal().getString("access_token")
+            }
 
-            RequestContext.put("self_id", selfId)
-            ServiceProvider.liveProviders.liveInstrument.clearLiveInstruments {
+            EventBusService.getProxy(
+                SourcePlatform.discovery, LiveInstrumentService::class.java,
+                JsonObject().put("headers", JsonObject().put("auth-token", accessToken))
+            ) {
                 if (it.succeeded()) {
-                    completableFuture.complete(it.result())
+                    it.result().clearLiveInstruments {
+                        if (it.succeeded()) {
+                            completableFuture.complete(it.result())
+                        } else {
+                            completableFuture.completeExceptionally(it.cause())
+                        }
+                    }
                 } else {
                     completableFuture.completeExceptionally(it.cause())
                 }
@@ -1231,14 +1300,16 @@ object SourceService {
 
     private fun addLiveBreakpoint(env: DataFetchingEnvironment): CompletableFuture<Map<String, Any>> {
         val completableFuture = CompletableFuture<Map<String, Any>>()
+        var accessToken: String? = null
         GlobalScope.launch {
             val selfId = if (System.getenv("SPP_DISABLE_JWT") != "true") {
-                val devId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
-                    .user().principal().getString("developer_id")
+                val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
+                val devId = user.principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(devId, ADD_LIVE_BREAKPOINT)) {
                     completableFuture.completeExceptionally(PermissionAccessDenied(ADD_LIVE_BREAKPOINT))
                     return@launch
                 }
+                accessToken = user.principal().getString("access_token")
                 devId
             } else "system"
 
@@ -1263,19 +1334,27 @@ object SourceService {
                 )
             } else InstrumentThrottle.DEFAULT
 
-            RequestContext.put("self_id", selfId)
-            ServiceProvider.liveProviders.liveInstrument.addLiveInstrument(
-                LiveBreakpoint(
-                    location = LiveSourceLocation(locationSource, locationLine),
-                    condition = condition,
-                    expiresAt = expiresAt,
-                    hitLimit = hitLimit ?: 1,
-                    throttle = throttle,
-                    meta = toJsonMap(input.getJsonArray("meta"))
-                )
+            EventBusService.getProxy(
+                SourcePlatform.discovery, LiveInstrumentService::class.java,
+                JsonObject().put("headers", JsonObject().put("auth-token", accessToken))
             ) {
                 if (it.succeeded()) {
-                    completableFuture.complete(fixJsonMaps(it.result()))
+                    it.result().addLiveInstrument(
+                        LiveBreakpoint(
+                            location = LiveSourceLocation(locationSource, locationLine),
+                            condition = condition,
+                            expiresAt = expiresAt,
+                            hitLimit = hitLimit ?: 1,
+                            throttle = throttle,
+                            meta = toJsonMap(input.getJsonArray("meta"))
+                        )
+                    ) {
+                        if (it.succeeded()) {
+                            completableFuture.complete(fixJsonMaps(it.result()))
+                        } else {
+                            completableFuture.completeExceptionally(it.cause())
+                        }
+                    }
                 } else {
                     completableFuture.completeExceptionally(it.cause())
                 }
@@ -1286,14 +1365,16 @@ object SourceService {
 
     private fun addLiveLog(env: DataFetchingEnvironment): CompletableFuture<Map<String, Any>> {
         val completableFuture = CompletableFuture<Map<String, Any>>()
+        var accessToken: String? = null
         GlobalScope.launch {
             val selfId = if (System.getenv("SPP_DISABLE_JWT") != "true") {
-                val devId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
-                    .user().principal().getString("developer_id")
+                val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
+                val devId = user.principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(devId, ADD_LIVE_LOG)) {
                     completableFuture.completeExceptionally(PermissionAccessDenied(ADD_LIVE_LOG))
                     return@launch
                 }
+                accessToken = user.principal().getString("access_token")
                 devId
             } else "system"
 
@@ -1322,20 +1403,28 @@ object SourceService {
                 )
             } else InstrumentThrottle.DEFAULT
 
-            RequestContext.put("self_id", selfId)
-            ServiceProvider.liveProviders.liveInstrument.addLiveInstrument(
-                LiveLog(
-                    logFormat = input.getString("logFormat"), logArguments = logArguments,
-                    location = LiveSourceLocation(locationSource, locationLine),
-                    condition = condition,
-                    expiresAt = expiresAt,
-                    hitLimit = hitLimit ?: 1,
-                    throttle = throttle,
-                    meta = toJsonMap(input.getJsonArray("meta"))
-                )
+            EventBusService.getProxy(
+                SourcePlatform.discovery, LiveInstrumentService::class.java,
+                JsonObject().put("headers", JsonObject().put("auth-token", accessToken))
             ) {
                 if (it.succeeded()) {
-                    completableFuture.complete(fixJsonMaps(it.result()))
+                    it.result().addLiveInstrument(
+                        LiveLog(
+                            logFormat = input.getString("logFormat"), logArguments = logArguments,
+                            location = LiveSourceLocation(locationSource, locationLine),
+                            condition = condition,
+                            expiresAt = expiresAt,
+                            hitLimit = hitLimit ?: 1,
+                            throttle = throttle,
+                            meta = toJsonMap(input.getJsonArray("meta"))
+                        )
+                    ) {
+                        if (it.succeeded()) {
+                            completableFuture.complete(fixJsonMaps(it.result()))
+                        } else {
+                            completableFuture.completeExceptionally(it.cause())
+                        }
+                    }
                 } else {
                     completableFuture.completeExceptionally(it.cause())
                 }
@@ -1346,14 +1435,16 @@ object SourceService {
 
     private fun addLiveMeter(env: DataFetchingEnvironment): CompletableFuture<Map<String, Any>> {
         val completableFuture = CompletableFuture<Map<String, Any>>()
+        var accessToken: String? = null
         GlobalScope.launch {
             val selfId = if (System.getenv("SPP_DISABLE_JWT") != "true") {
-                val devId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
-                    .user().principal().getString("developer_id")
+                val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
+                val devId = user.principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(devId, ADD_LIVE_METER)) {
                     completableFuture.completeExceptionally(PermissionAccessDenied(ADD_LIVE_METER))
                     return@launch
                 }
+                accessToken = user.principal().getString("access_token")
                 devId
             } else "system"
 
@@ -1384,22 +1475,30 @@ object SourceService {
                 )
             } else InstrumentThrottle.DEFAULT
 
-            RequestContext.put("self_id", selfId)
-            ServiceProvider.liveProviders.liveInstrument.addLiveInstrument(
-                LiveMeter(
-                    meterName = input.getString("meterName"),
-                    meterType = MeterType.valueOf(input.getString("meterType")),
-                    metricValue = metricValue,
-                    location = LiveSourceLocation(locationSource, locationLine),
-                    condition = condition,
-                    expiresAt = expiresAt,
-                    hitLimit = hitLimit ?: -1,
-                    throttle = throttle,
-                    meta = toJsonMap(input.getJsonArray("meta"))
-                )
+            EventBusService.getProxy(
+                SourcePlatform.discovery, LiveInstrumentService::class.java,
+                JsonObject().put("headers", JsonObject().put("auth-token", accessToken))
             ) {
                 if (it.succeeded()) {
-                    completableFuture.complete(fixJsonMaps(it.result()))
+                    it.result().addLiveInstrument(
+                        LiveMeter(
+                            meterName = input.getString("meterName"),
+                            meterType = MeterType.valueOf(input.getString("meterType")),
+                            metricValue = metricValue,
+                            location = LiveSourceLocation(locationSource, locationLine),
+                            condition = condition,
+                            expiresAt = expiresAt,
+                            hitLimit = hitLimit ?: -1,
+                            throttle = throttle,
+                            meta = toJsonMap(input.getJsonArray("meta"))
+                        )
+                    ) {
+                        if (it.succeeded()) {
+                            completableFuture.complete(fixJsonMaps(it.result()))
+                        } else {
+                            completableFuture.completeExceptionally(it.cause())
+                        }
+                    }
                 } else {
                     completableFuture.completeExceptionally(it.cause())
                 }
@@ -1410,14 +1509,16 @@ object SourceService {
 
     private fun addLiveSpan(env: DataFetchingEnvironment): CompletableFuture<Map<String, Any>> {
         val completableFuture = CompletableFuture<Map<String, Any>>()
+        var accessToken: String? = null
         GlobalScope.launch {
             val selfId = if (System.getenv("SPP_DISABLE_JWT") != "true") {
-                val devId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
-                    .user().principal().getString("developer_id")
+                val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
+                val devId = user.principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(devId, ADD_LIVE_SPAN)) {
                     completableFuture.completeExceptionally(PermissionAccessDenied(ADD_LIVE_SPAN))
                     return@launch
                 }
+                accessToken = user.principal().getString("access_token")
                 devId
             } else "system"
 
@@ -1443,20 +1544,28 @@ object SourceService {
                 )
             } else InstrumentThrottle.DEFAULT
 
-            RequestContext.put("self_id", selfId)
-            ServiceProvider.liveProviders.liveInstrument.addLiveInstrument(
-                LiveSpan(
-                    operationName = operationName,
-                    location = LiveSourceLocation(locationSource, locationLine),
-                    condition = condition,
-                    expiresAt = expiresAt,
-                    hitLimit = hitLimit ?: -1,
-                    throttle = throttle,
-                    meta = toJsonMap(input.getJsonArray("meta"))
-                )
+            EventBusService.getProxy(
+                SourcePlatform.discovery, LiveInstrumentService::class.java,
+                JsonObject().put("headers", JsonObject().put("auth-token", accessToken))
             ) {
                 if (it.succeeded()) {
-                    completableFuture.complete(fixJsonMaps(it.result()))
+                    it.result().addLiveInstrument(
+                        LiveSpan(
+                            operationName = operationName,
+                            location = LiveSourceLocation(locationSource, locationLine),
+                            condition = condition,
+                            expiresAt = expiresAt,
+                            hitLimit = hitLimit ?: -1,
+                            throttle = throttle,
+                            meta = toJsonMap(input.getJsonArray("meta"))
+                        )
+                    ) {
+                        if (it.succeeded()) {
+                            completableFuture.complete(fixJsonMaps(it.result()))
+                        } else {
+                            completableFuture.completeExceptionally(it.cause())
+                        }
+                    }
                 } else {
                     completableFuture.completeExceptionally(it.cause())
                 }

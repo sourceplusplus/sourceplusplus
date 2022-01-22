@@ -39,7 +39,7 @@ class ProcessorBridge(private val netServerOptions: NetServerOptions) : Coroutin
                 .addOutboundPermitted(PermittedOptions().setAddress(MARKER_DISCONNECTED.address))
                 .addOutboundPermitted(PermittedOptions().setAddress(SourceMarkerServices.Utilize.LOG_COUNT_INDICATOR))
                 .addOutboundPermitted(PermittedOptions().setAddress(SourceMarkerServices.Utilize.LIVE_VIEW))
-                .addOutboundPermitted(PermittedOptions().setAddress(LIVE_INSTRUMENT_PROCESSOR.address))
+                .addOutboundPermitted(PermittedOptions().setAddress(SourceMarkerServices.Utilize.LIVE_INSTRUMENT))
                 .addOutboundPermitted(PermittedOptions().setAddress(SET_LOG_PUBLISH_RATE_LIMIT.address)),
             netServerOptions
         ) {

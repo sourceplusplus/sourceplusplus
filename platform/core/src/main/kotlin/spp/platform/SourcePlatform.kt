@@ -392,6 +392,7 @@ class SourcePlatform : CoroutineVerticle() {
             if (record.status == Status.UP) {
                 GlobalScope.launch(vertx.dispatcher()) {
                     if (record.name.startsWith("sw.")
+                        || record.name.equals("spp.service.live-instrument")
                         || record.name.equals("spp.service.live-view")
                         || record.name.equals("spp.service.log-count-indicator")
                     ) {
