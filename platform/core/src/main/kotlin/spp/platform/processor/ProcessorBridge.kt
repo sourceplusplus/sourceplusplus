@@ -14,6 +14,7 @@ import spp.platform.core.SourceSubscriber
 import spp.protocol.SourceMarkerServices
 import spp.protocol.platform.PlatformAddress
 import spp.protocol.platform.PlatformAddress.MARKER_DISCONNECTED
+import spp.protocol.probe.ProbeAddress
 import spp.protocol.processor.ProcessorAddress.*
 import spp.protocol.processor.status.ProcessorConnection
 
@@ -35,7 +36,23 @@ class ProcessorBridge(private val netServerOptions: NetServerOptions) : Coroutin
                 .addInboundPermitted(
                     PermittedOptions().setAddressRegex(SourceMarkerServices.Provide.LIVE_VIEW_SUBSCRIBER + "\\..+")
                 )
+                .addInboundPermitted(PermittedOptions().setAddress(SourceMarkerServices.Provide.LIVE_INSTRUMENT_SUBSCRIBER))
+                .addInboundPermitted(
+                    PermittedOptions().setAddressRegex(SourceMarkerServices.Provide.LIVE_INSTRUMENT_SUBSCRIBER + "\\..+")
+                )
                 .addInboundPermitted(PermittedOptions().setAddress(SourceMarkerServices.Utilize.LIVE_SERVICE))
+                .addInboundPermitted(
+                    PermittedOptions().setAddressRegex(ProbeAddress.LIVE_BREAKPOINT_REMOTE.address + "\\:.+")
+                )
+                .addInboundPermitted(
+                    PermittedOptions().setAddressRegex(ProbeAddress.LIVE_LOG_REMOTE.address + "\\:.+")
+                )
+                .addInboundPermitted(
+                    PermittedOptions().setAddressRegex(ProbeAddress.LIVE_METER_REMOTE.address + "\\:.+")
+                )
+                .addInboundPermitted(
+                    PermittedOptions().setAddressRegex(ProbeAddress.LIVE_SPAN_REMOTE.address + "\\:.+")
+                )
                 //to processor
                 .addOutboundPermitted(PermittedOptions().setAddress(MARKER_DISCONNECTED.address))
                 .addOutboundPermitted(PermittedOptions().setAddress(SourceMarkerServices.Utilize.LOG_COUNT_INDICATOR))
