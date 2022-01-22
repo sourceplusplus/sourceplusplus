@@ -15,6 +15,7 @@ import io.vertx.serviceproxy.ServiceProxyBuilder
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.slf4j.LoggerFactory
@@ -61,6 +62,7 @@ class JWTTest : PlatformIntegrationTest() {
         }
     }
 
+    @Disabled
     @Test
     fun verifyUnsuccessful() = runBlocking {
         val testContext = VertxTestContext()
