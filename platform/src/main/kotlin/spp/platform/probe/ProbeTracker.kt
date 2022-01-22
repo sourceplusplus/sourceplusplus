@@ -9,7 +9,7 @@ import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import mu.KotlinLogging
-import spp.platform.util.Msg.msg
+import spp.platform.core.util.Msg.msg
 import spp.protocol.platform.PlatformAddress
 import spp.protocol.platform.client.ActiveProbe
 import spp.protocol.probe.ProbeAddress

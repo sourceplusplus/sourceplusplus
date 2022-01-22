@@ -1,4 +1,4 @@
-package spp.service
+package spp.platform.core.service
 
 import io.vertx.core.Future
 import io.vertx.core.Promise
@@ -23,7 +23,7 @@ import spp.protocol.SourceMarkerServices.Utilize
 import spp.protocol.auth.error.AccessDenied
 import spp.protocol.auth.error.InstrumentAccessDenied
 import spp.protocol.service.LiveService
-import spp.service.live.LiveProviders
+import spp.platform.core.service.live.LiveProviders
 import kotlin.system.exitProcess
 
 class ServiceProvider(private val jwtAuth: JWTAuth?) : CoroutineVerticle() {
