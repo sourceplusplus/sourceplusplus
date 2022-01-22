@@ -32,7 +32,7 @@ subprojects {
 tasks {
     register("buildDist") {
         //todo: use gradle copy task
-        dependsOn(":platform:core:build")
+        dependsOn(":platform:build")
         doLast {
             file("dist/spp-platform-$version/config").mkdirs()
             file("config/spp-platform.yml")
