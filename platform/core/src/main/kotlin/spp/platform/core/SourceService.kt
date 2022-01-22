@@ -769,8 +769,24 @@ object SourceService {
             }
 
             SourceStorage.reset()
-            TODO()
-            completableFuture.complete(SourceStorage.reset())
+            EventBusService.getProxy(
+                SourcePlatform.discovery, LiveInstrumentService::class.java,
+                JsonObject().put("headers", JsonObject().put("auth-token", accessToken))
+            ) {
+                if (it.succeeded()) {
+                    it.result().clearAllLiveInstruments {
+                        if (it.succeeded()) {
+                            GlobalScope.launch {
+                                completableFuture.complete(SourceStorage.reset())
+                            }
+                        } else {
+                            completableFuture.completeExceptionally(it.cause())
+                        }
+                    }
+                } else {
+                    completableFuture.completeExceptionally(it.cause())
+                }
+            }
         }
         return completableFuture
     }

@@ -19,7 +19,7 @@ import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.slf4j.LoggerFactory
-import spp.protocol.probe.error.LiveInstrumentException
+import spp.protocol.service.error.LiveInstrumentException
 import java.util.*
 import java.util.concurrent.TimeUnit
 
