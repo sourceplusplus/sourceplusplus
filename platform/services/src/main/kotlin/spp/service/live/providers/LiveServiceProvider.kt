@@ -4,16 +4,18 @@ import io.vertx.core.AsyncResult
 import io.vertx.core.Future
 import io.vertx.core.Handler
 import io.vertx.core.Vertx
+import io.vertx.core.eventbus.impl.MessageImpl
 import io.vertx.core.http.HttpMethod
 import io.vertx.core.json.JsonObject
+import io.vertx.ext.auth.impl.jose.JWT
 import io.vertx.kotlin.coroutines.dispatcher
 import io.vertx.servicediscovery.ServiceDiscovery
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import org.joor.Reflect
 import org.slf4j.LoggerFactory
 import spp.platform.core.SourceStorage
 import spp.platform.probe.ProbeTracker
-import spp.platform.util.RequestContext
 import spp.protocol.developer.Developer
 import spp.protocol.developer.SelfInfo
 import spp.protocol.general.Service
@@ -36,11 +38,12 @@ class LiveServiceProvider(
     }
 
     override fun getSelf(handler: Handler<AsyncResult<SelfInfo>>) {
-        val requestCtx = RequestContext.get()
-        val selfId = requestCtx["self_id"]
-        if (selfId == null) {
-            handler.handle(Future.failedFuture(IllegalStateException("Missing self id")))
-            return
+        val selfId = Reflect.on(handler).get<MessageImpl<*, *>>("arg\$2").headers().let {
+            if (it.contains("auth-token")) {
+                JWT.parse(it.get("auth-token")).getJsonObject("payload").getString("developer_id")
+            } else {
+                it.get("developer_id")
+            }
         }
         log.trace("Getting self info")
 
