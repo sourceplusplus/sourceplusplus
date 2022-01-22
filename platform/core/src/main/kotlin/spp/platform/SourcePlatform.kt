@@ -350,9 +350,6 @@ class SourcePlatform : CoroutineVerticle() {
 
         //Health checks
         val checks = HealthChecks.create(vertx)
-        addServiceCheck(checks, LIVE_VIEW_PROCESSOR.address)
-        addServiceCheck(checks, LIVE_INSTRUMENT_PROCESSOR.address)
-        addServiceCheck(checks, LOGGING_PROCESSOR.address)
         addServiceCheck(checks, Utilize.LIVE_SERVICE)
         addServiceCheck(checks, Utilize.LIVE_INSTRUMENT)
         addServiceCheck(checks, Utilize.LIVE_VIEW)
