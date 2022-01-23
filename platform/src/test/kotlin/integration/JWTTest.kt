@@ -140,7 +140,7 @@ class JWTTest : PlatformIntegrationTest() {
     }
 
     @Test
-    fun verifyUnsuccessful() = runBlocking {
+    fun verifyUnsuccessfulAccess() = runBlocking {
         val testContext = VertxTestContext()
         val platformHost = System.getenv("SPP_PLATFORM_HOST") ?: "localhost"
         val client = WebClient.create(
