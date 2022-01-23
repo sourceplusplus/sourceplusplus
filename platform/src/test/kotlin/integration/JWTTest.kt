@@ -1,9 +1,5 @@
 package integration
 
-import spp.protocol.SourceMarkerServices
-import spp.protocol.instrument.LiveSourceLocation
-import spp.protocol.instrument.breakpoint.LiveBreakpoint
-import spp.protocol.service.live.LiveInstrumentService
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import io.vertx.ext.web.client.WebClient
@@ -14,11 +10,15 @@ import io.vertx.kotlin.coroutines.await
 import io.vertx.serviceproxy.ServiceProxyBuilder
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertFalse
-import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.slf4j.LoggerFactory
+import spp.protocol.SourceMarkerServices
+import spp.protocol.instrument.LiveSourceLocation
+import spp.protocol.instrument.breakpoint.LiveBreakpoint
 import spp.protocol.service.error.InstrumentAccessDenied
+import spp.protocol.service.error.PermissionAccessDenied
+import spp.protocol.service.live.LiveInstrumentService
 import java.util.concurrent.TimeUnit
 
 @ExtendWith(VertxExtension::class)
@@ -49,6 +49,84 @@ class JWTTest : PlatformIntegrationTest() {
                 }
             } else {
                 testContext.failNow(it.cause())
+            }
+        }
+
+        if (testContext.awaitCompletion(60, TimeUnit.SECONDS)) {
+            if (testContext.failed()) {
+                throw testContext.causeOfFailure()
+            }
+        } else {
+            throw RuntimeException("Test timed out")
+        }
+    }
+
+    @Test
+    fun verifyUnsuccessfulPermission() = runBlocking {
+        val testContext = VertxTestContext()
+        val platformHost = System.getenv("SPP_PLATFORM_HOST") ?: "localhost"
+        val client = WebClient.create(
+            vertx,
+            WebClientOptions().setSsl(true).setTrustAll(true).setVerifyHost(false)
+        )
+        val addDevResp = client.post(5445, platformHost, "/graphql")
+            .bearerTokenAuthentication(SYSTEM_JWT_TOKEN)
+            .sendJsonObject(
+                JsonObject().put(
+                    "query",
+                    "mutation (\$id: String!) {\n" +
+                            "  addDeveloper(id: \$id) {\n" +
+                            "    id\n" +
+                            "    accessToken\n" +
+                            "  }\n" +
+                            "}\n"
+                ).put("variables", JsonObject().put("id", "test"))
+            ).await().bodyAsJsonObject()
+        log.info("Add dev resp: {}", addDevResp)
+        assertFalse(addDevResp.containsKey("errors"))
+        val addRoleResp = client.post(5445, platformHost, "/graphql")
+            .bearerTokenAuthentication(SYSTEM_JWT_TOKEN)
+            .sendJsonObject(
+                JsonObject().put(
+                    "query",
+                    "mutation (\$role: String!) {\n" +
+                            "  addRole(role: \$role)\n" +
+                            "}\n"
+                ).put("variables", JsonObject().put("role", "tester"))
+            ).await().bodyAsJsonObject()
+        log.info("Add role resp: {}", addRoleResp)
+        assertFalse(addRoleResp.containsKey("errors"))
+        val addDeveloperRoleResp = client.post(5445, platformHost, "/graphql")
+            .bearerTokenAuthentication(SYSTEM_JWT_TOKEN)
+            .sendJsonObject(
+                JsonObject().put(
+                    "query",
+                    "mutation (\$id: String!, \$role: String!) {\n" +
+                            "  addDeveloperRole(id: \$id, role: \$role)\n" +
+                            "}\n"
+                ).put("variables", JsonObject().put("id", "test").put("role", "tester"))
+            ).await().bodyAsJsonObject()
+        log.info("Add developer role resp: {}", addDeveloperRoleResp)
+        assertFalse(addDeveloperRoleResp.containsKey("errors"))
+
+        val instrumentService = ServiceProxyBuilder(vertx)
+            .setToken(TEST_JWT_TOKEN)
+            .setAddress(SourceMarkerServices.Utilize.LIVE_INSTRUMENT)
+            .build(LiveInstrumentService::class.java)
+        instrumentService.addLiveInstrument(
+            LiveBreakpoint(
+                LiveSourceLocation("integration.JWTTest", 2),
+                condition = "-41 == -12"
+            )
+        ) {
+            if (it.failed()) {
+                if (it.cause().cause is PermissionAccessDenied) {
+                    testContext.completeNow()
+                } else {
+                    testContext.failNow(it.cause())
+                }
+            } else {
+                testContext.failNow("Got live instrument with invalid permission")
             }
         }
 
@@ -159,17 +237,7 @@ class JWTTest : PlatformIntegrationTest() {
         ) {
             if (it.failed()) {
                 if (it.cause().cause is InstrumentAccessDenied) {
-                    //verify not available
-                    instrumentService.removeLiveInstruments(LiveSourceLocation("integration.JWTTest", 2)) {
-                        if (it.succeeded()) {
-                            testContext.verify {
-                                assertTrue(it.result().isEmpty())
-                            }
-                            testContext.completeNow()
-                        } else {
-                            testContext.failNow(it.cause())
-                        }
-                    }
+                    testContext.completeNow()
                 } else {
                     testContext.failNow(it.cause())
                 }
