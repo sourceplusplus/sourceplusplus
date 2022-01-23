@@ -387,11 +387,7 @@ class SourcePlatform : CoroutineVerticle() {
             val record = Record(it.body())
             if (record.status == Status.UP) {
                 GlobalScope.launch(vertx.dispatcher()) {
-                    if (record.name.startsWith("sw.")
-                        || record.name.equals("spp.service.live-instrument")
-                        || record.name.equals("spp.service.live-view")
-                        || record.name.equals("spp.service.log-count-indicator")
-                    ) {
+                    if (record.name.startsWith("spp.")) {
                         //todo: this feels hacky
                         SourceServiceDiscovery.INSTANCE.store(record) {
                             if (it.failed()) {
@@ -449,7 +445,7 @@ class SourcePlatform : CoroutineVerticle() {
 
         //Start services
         vertx.deployVerticle(
-            ServiceProvider(jwt), DeploymentOptions().setConfig(config.put("SPP_INSTANCE_ID", SPP_INSTANCE_ID))
+            ServiceProvider(), DeploymentOptions().setConfig(config.put("SPP_INSTANCE_ID", SPP_INSTANCE_ID))
         ).await()
 
         log.debug("Starting API server")

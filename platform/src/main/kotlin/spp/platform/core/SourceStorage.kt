@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory
 import spp.platform.core.storage.CoreStorage
 import spp.protocol.auth.*
 import spp.protocol.developer.Developer
+import spp.protocol.util.AccessChecker
 
 object SourceStorage {
 
@@ -101,36 +102,7 @@ object SourceStorage {
 
     suspend fun hasInstrumentAccess(developerId: String, locationPattern: String): Boolean {
         val permissions = getDeveloperAccessPermissions(developerId)
-        if (permissions.isEmpty()) {
-            if (log.isTraceEnabled) log.trace("Developer {} has full access", developerId)
-            return true
-        } else {
-            if (log.isTraceEnabled) log.trace("Developer {} has permissions {}", developerId, permissions)
-        }
-
-        val devBlackLists = permissions.filter { it.type == AccessType.BLACK_LIST }
-        val inBlackList = devBlackLists.any { it ->
-            val patterns = it.locationPatterns.map {
-                it.replace(".", "\\.").replace("*", ".+")
-            }
-            patterns.any { locationPattern.matches(Regex(it)) }
-        }
-
-        val devWhiteLists = permissions.filter { it.type == AccessType.WHITE_LIST }
-        val inWhiteList = devWhiteLists.any { it ->
-            val patterns = it.locationPatterns.map {
-                it.replace(".", "\\.").replace("*", ".+")
-            }
-            patterns.any { locationPattern.matches(Regex(it)) }
-        }
-
-        return if (devWhiteLists.isEmpty()) {
-            !inBlackList
-        } else if (devBlackLists.isEmpty()) {
-            inWhiteList
-        } else {
-            !inBlackList || inWhiteList
-        }
+        return AccessChecker.hasInstrumentAccess(permissions, locationPattern)
     }
 
     suspend fun getRoleAccessPermissions(role: DeveloperRole): Set<AccessPermission> {
