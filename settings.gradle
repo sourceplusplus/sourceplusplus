@@ -30,9 +30,6 @@ include 'interfaces:jetbrains:plugin'
 include 'interfaces:portal'
 include 'platform'
 include 'protocol'
-include 'platform:core'
-include 'platform:common'
-include 'platform:services'
 
 include ':probes:jvm:control'
 include ':probes:jvm:services'
@@ -41,6 +38,7 @@ include ':probes:python'
 
 include ':processors:dependencies'
 include ':processors:instrument'
+include ':processors:live-view'
 include ':processors:log-summary'
 
 include 'example-web-app'
