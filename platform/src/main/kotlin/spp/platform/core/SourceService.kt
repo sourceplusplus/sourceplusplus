@@ -21,7 +21,6 @@ import spp.protocol.artifact.ArtifactQualifiedName
 import spp.protocol.artifact.ArtifactType
 import spp.protocol.auth.*
 import spp.protocol.auth.RolePermission.*
-import spp.protocol.auth.error.InstrumentAccessDenied
 import spp.protocol.auth.error.PermissionAccessDenied
 import spp.protocol.developer.Developer
 import spp.protocol.developer.SelfInfo
@@ -43,6 +42,7 @@ import spp.protocol.service.live.LiveViewService
 import spp.protocol.view.LiveViewConfig
 import spp.protocol.view.LiveViewSubscription
 import spp.platform.core.service.ServiceProvider
+import spp.protocol.service.error.InstrumentAccessDenied
 import java.util.*
 import java.util.concurrent.CompletableFuture
 
