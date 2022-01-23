@@ -78,15 +78,14 @@ dependencies {
     testImplementation("io.vertx:vertx-web-client:$vertxVersion")
 }
 
-//tasks.register("clean") {
-//    doFirst {
-//        File(projectDir, "../docker/e2e").listFiles()?.forEach {
-//            if (it.name.startsWith("spp-platform-") || it.name.startsWith("spp-processor-")) {
-//                it.delete()
-//            }
-//        }
-//    }
-//}
+tasks.register("cleanDockerSetup") {
+    doFirst {
+        File(projectDir, "../docker/e2e").listFiles()?.forEach {
+            if (it.name.endsWith(".jar")) it.delete()
+        }
+    }
+}
+tasks.getByName("clean").dependsOn("cleanDockerSetup")
 
 tasks.register<Copy>("updateDockerFiles") {
     dependsOn(
