@@ -21,7 +21,7 @@ import spp.protocol.artifact.ArtifactQualifiedName
 import spp.protocol.artifact.ArtifactType
 import spp.protocol.auth.*
 import spp.protocol.auth.RolePermission.*
-import spp.protocol.auth.error.PermissionAccessDenied
+import spp.protocol.service.error.PermissionAccessDenied
 import spp.protocol.developer.Developer
 import spp.protocol.developer.SelfInfo
 import spp.protocol.general.Service
