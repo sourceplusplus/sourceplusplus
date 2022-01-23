@@ -80,7 +80,7 @@ class JWTTest : PlatformIntegrationTest() {
                             "    accessToken\n" +
                             "  }\n" +
                             "}\n"
-                ).put("variables", JsonObject().put("id", "test"))
+                ).put("variables", JsonObject().put("id", "test2"))
             ).await().bodyAsJsonObject()
         log.info("Add dev resp: {}", addDevResp)
         assertFalse(addDevResp.containsKey("errors"))
@@ -92,7 +92,7 @@ class JWTTest : PlatformIntegrationTest() {
                     "mutation (\$role: String!) {\n" +
                             "  addRole(role: \$role)\n" +
                             "}\n"
-                ).put("variables", JsonObject().put("role", "tester"))
+                ).put("variables", JsonObject().put("role", "tester2"))
             ).await().bodyAsJsonObject()
         log.info("Add role resp: {}", addRoleResp)
         assertFalse(addRoleResp.containsKey("errors"))
@@ -104,7 +104,7 @@ class JWTTest : PlatformIntegrationTest() {
                     "mutation (\$id: String!, \$role: String!) {\n" +
                             "  addDeveloperRole(id: \$id, role: \$role)\n" +
                             "}\n"
-                ).put("variables", JsonObject().put("id", "test").put("role", "tester"))
+                ).put("variables", JsonObject().put("id", "test2").put("role", "tester2"))
             ).await().bodyAsJsonObject()
         log.info("Add developer role resp: {}", addDeveloperRoleResp)
         assertFalse(addDeveloperRoleResp.containsKey("errors"))
@@ -113,12 +113,7 @@ class JWTTest : PlatformIntegrationTest() {
             .setToken(TEST_JWT_TOKEN)
             .setAddress(SourceMarkerServices.Utilize.LIVE_INSTRUMENT)
             .build(LiveInstrumentService::class.java)
-        instrumentService.addLiveInstrument(
-            LiveBreakpoint(
-                LiveSourceLocation("integration.JWTTest", 2),
-                condition = "-41 == -12"
-            )
-        ) {
+        instrumentService.getLiveInstruments {
             if (it.failed()) {
                 if (it.cause().cause is PermissionAccessDenied) {
                     testContext.completeNow()
@@ -186,6 +181,18 @@ class JWTTest : PlatformIntegrationTest() {
             ).await().bodyAsJsonObject()
         log.info("Add developer role resp: {}", addDeveloperRoleResp)
         assertFalse(addDeveloperRoleResp.containsKey("errors"))
+        val addRolePermissionResp = client.post(5445, platformHost, "/graphql")
+            .bearerTokenAuthentication(SYSTEM_JWT_TOKEN)
+            .sendJsonObject(
+                JsonObject().put(
+                    "query",
+                    "mutation (\$role: String!, \$permission: String!) {\n" +
+                            "  addRolePermission(role: \$role, permission: \$permission)\n" +
+                            "}\n\n"
+                ).put("variables", JsonObject().put("role", "tester").put("permission", "ADD_LIVE_BREAKPOINT"))
+            ).await().bodyAsJsonObject()
+        log.info("Add role permission resp: {}", addRolePermissionResp)
+        assertFalse(addRolePermissionResp.containsKey("errors"))
         val addAccessPermissionResp = client.post(5445, platformHost, "/graphql")
             .bearerTokenAuthentication(SYSTEM_JWT_TOKEN)
             .sendJsonObject(
