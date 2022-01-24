@@ -40,7 +40,7 @@ dependencies {
     implementation("com.github.ajalt.clikt:clikt:$cliktVersion")
     implementation("ch.qos.logback:logback-classic:$logbackVersion")
     implementation("io.vertx:vertx-service-discovery:$vertxVersion")
-    implementation("io.vertx:vertx-service-proxy:4.1.5")
+    implementation("io.vertx:vertx-service-proxy:4.2.4")
     implementation("io.vertx:vertx-health-check:$vertxVersion")
     implementation("io.vertx:vertx-web-graphql:$vertxVersion")
     implementation("io.vertx:vertx-auth-jwt:$vertxVersion")
