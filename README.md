@@ -15,6 +15,11 @@ Powered by [Apache SkyWalking](https://github.com/apache/skywalking), Source++ e
   - **Live Logs**: Just-in-Time Logging
   - **Live Meters**: Real-Time KPI Monitoring
   - **Live Spans**: User-Domain Tracing
+- Live Views
+  - **Activity**
+  - **Logs**
+  - **Metrics**
+  - **Traces**
 - Multi-instance debugging
 - Role-based access control
 - Instrument conditionals
@@ -79,7 +84,9 @@ The Source++ documentation is available [here](https://docs.sourceplusplus.com).
         ├── jvm             # JVM support
         └── python          # Python support
     ├── processors          # Live coding processors
-        ├── instrument      # Live instrument processing
+        ├── dependencies    # Live processor common code
+        ├── live-instrument # Live instrument processing
+        ├── live-view       # Live view processing
         └── log-summary     # Log summary processing
     └── protocol            # Communication protocol
 
