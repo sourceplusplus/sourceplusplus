@@ -17,11 +17,11 @@ import org.apache.commons.lang3.EnumUtils
 import org.apache.commons.lang3.RandomStringUtils
 import org.slf4j.LoggerFactory
 import spp.platform.SourcePlatform
+import spp.platform.core.service.ServiceProvider
 import spp.protocol.artifact.ArtifactQualifiedName
 import spp.protocol.artifact.ArtifactType
 import spp.protocol.auth.*
 import spp.protocol.auth.RolePermission.*
-import spp.protocol.service.error.PermissionAccessDenied
 import spp.protocol.developer.Developer
 import spp.protocol.developer.SelfInfo
 import spp.protocol.general.Service
@@ -37,12 +37,12 @@ import spp.protocol.instrument.meter.MetricValue
 import spp.protocol.instrument.meter.MetricValueType
 import spp.protocol.instrument.span.LiveSpan
 import spp.protocol.service.LiveService
+import spp.protocol.service.error.InstrumentAccessDenied
+import spp.protocol.service.error.PermissionAccessDenied
 import spp.protocol.service.live.LiveInstrumentService
 import spp.protocol.service.live.LiveViewService
 import spp.protocol.view.LiveViewConfig
 import spp.protocol.view.LiveViewSubscription
-import spp.platform.core.service.ServiceProvider
-import spp.protocol.service.error.InstrumentAccessDenied
 import java.util.*
 import java.util.concurrent.CompletableFuture
 
@@ -533,7 +533,7 @@ object SourceService {
 
             EventBusService.getProxy(
                 SourcePlatform.discovery, LiveService::class.java,
-                JsonObject().put("headers", JsonObject().put("auth-token", accessToken))
+                JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("auth-token", accessToken)) } }
             ) {
                 if (it.succeeded()) {
                     it.result().getSelf {
@@ -605,7 +605,7 @@ object SourceService {
 
             EventBusService.getProxy(
                 SourcePlatform.discovery, LiveInstrumentService::class.java,
-                JsonObject().put("headers", JsonObject().put("auth-token", accessToken))
+                JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("auth-token", accessToken)) } }
             ) {
                 if (it.succeeded()) {
                     it.result().getLiveInstruments {
@@ -639,7 +639,7 @@ object SourceService {
 
             EventBusService.getProxy(
                 SourcePlatform.discovery, LiveInstrumentService::class.java,
-                JsonObject().put("headers", JsonObject().put("auth-token", accessToken))
+                JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("auth-token", accessToken)) } }
             ) {
                 if (it.succeeded()) {
                     it.result().getLiveBreakpoints {
@@ -673,7 +673,7 @@ object SourceService {
 
             EventBusService.getProxy(
                 SourcePlatform.discovery, LiveInstrumentService::class.java,
-                JsonObject().put("headers", JsonObject().put("auth-token", accessToken))
+                JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("auth-token", accessToken)) } }
             ) {
                 if (it.succeeded()) {
                     it.result().getLiveLogs {
@@ -707,7 +707,7 @@ object SourceService {
 
             EventBusService.getProxy(
                 SourcePlatform.discovery, LiveInstrumentService::class.java,
-                JsonObject().put("headers", JsonObject().put("auth-token", accessToken))
+                JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("auth-token", accessToken)) } }
             ) {
                 if (it.succeeded()) {
                     it.result().getLiveMeters {
@@ -741,7 +741,7 @@ object SourceService {
 
             EventBusService.getProxy(
                 SourcePlatform.discovery, LiveInstrumentService::class.java,
-                JsonObject().put("headers", JsonObject().put("auth-token", accessToken))
+                JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("auth-token", accessToken)) } }
             ) {
                 if (it.succeeded()) {
                     it.result().getLiveSpans {
@@ -776,7 +776,7 @@ object SourceService {
             SourceStorage.reset()
             EventBusService.getProxy(
                 SourcePlatform.discovery, LiveInstrumentService::class.java,
-                JsonObject().put("headers", JsonObject().put("auth-token", accessToken))
+                JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("auth-token", accessToken)) } }
             ) {
                 if (it.succeeded()) {
                     it.result().clearAllLiveInstruments {
@@ -1228,7 +1228,7 @@ object SourceService {
             val id: String = env.getArgument("id")
             EventBusService.getProxy(
                 SourcePlatform.discovery, LiveInstrumentService::class.java,
-                JsonObject().put("headers", JsonObject().put("auth-token", accessToken))
+                JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("auth-token", accessToken)) } }
             ) {
                 if (it.succeeded()) {
                     it.result().removeLiveInstrument(id) {
@@ -1267,7 +1267,7 @@ object SourceService {
 
             EventBusService.getProxy(
                 SourcePlatform.discovery, LiveInstrumentService::class.java,
-                JsonObject().put("headers", JsonObject().put("auth-token", accessToken))
+                JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("auth-token", accessToken)) } }
             ) {
                 if (it.succeeded()) {
                     it.result().removeLiveInstruments(LiveSourceLocation(source, line)) {
@@ -1301,7 +1301,7 @@ object SourceService {
 
             EventBusService.getProxy(
                 SourcePlatform.discovery, LiveInstrumentService::class.java,
-                JsonObject().put("headers", JsonObject().put("auth-token", accessToken))
+                JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("auth-token", accessToken)) } }
             ) {
                 if (it.succeeded()) {
                     it.result().clearLiveInstruments {
@@ -1357,7 +1357,7 @@ object SourceService {
 
             EventBusService.getProxy(
                 SourcePlatform.discovery, LiveInstrumentService::class.java,
-                JsonObject().put("headers", JsonObject().put("auth-token", accessToken))
+                JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("auth-token", accessToken)) } }
             ) {
                 if (it.succeeded()) {
                     it.result().addLiveInstrument(
@@ -1426,7 +1426,7 @@ object SourceService {
 
             EventBusService.getProxy(
                 SourcePlatform.discovery, LiveInstrumentService::class.java,
-                JsonObject().put("headers", JsonObject().put("auth-token", accessToken))
+                JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("auth-token", accessToken)) } }
             ) {
                 if (it.succeeded()) {
                     it.result().addLiveInstrument(
@@ -1498,7 +1498,7 @@ object SourceService {
 
             EventBusService.getProxy(
                 SourcePlatform.discovery, LiveInstrumentService::class.java,
-                JsonObject().put("headers", JsonObject().put("auth-token", accessToken))
+                JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("auth-token", accessToken)) } }
             ) {
                 if (it.succeeded()) {
                     it.result().addLiveInstrument(
@@ -1567,7 +1567,7 @@ object SourceService {
 
             EventBusService.getProxy(
                 SourcePlatform.discovery, LiveInstrumentService::class.java,
-                JsonObject().put("headers", JsonObject().put("auth-token", accessToken))
+                JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("auth-token", accessToken)) } }
             ) {
                 if (it.succeeded()) {
                     it.result().addLiveInstrument(
@@ -1619,7 +1619,7 @@ object SourceService {
 
             EventBusService.getProxy(
                 SourcePlatform.discovery, LiveViewService::class.java,
-                JsonObject().put("headers", JsonObject().put("auth-token", accessToken))
+                JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("auth-token", accessToken)) } }
             ) {
                 if (it.succeeded()) {
                     it.result().addLiveViewSubscription(subscription) {
@@ -1653,7 +1653,7 @@ object SourceService {
 
             EventBusService.getProxy(
                 SourcePlatform.discovery, LiveViewService::class.java,
-                JsonObject().put("headers", JsonObject().put("auth-token", accessToken))
+                JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("auth-token", accessToken)) } }
             ) {
                 if (it.succeeded()) {
                     it.result().getLiveViewSubscriptions {
@@ -1687,7 +1687,7 @@ object SourceService {
 
             EventBusService.getProxy(
                 SourcePlatform.discovery, LiveViewService::class.java,
-                JsonObject().put("headers", JsonObject().put("auth-token", accessToken))
+                JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("auth-token", accessToken)) } }
             ) {
                 if (it.succeeded()) {
                     it.result().clearLiveViewSubscriptions {
