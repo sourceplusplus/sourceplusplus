@@ -19,8 +19,8 @@
 [submodule "interfaces/portal"]
 	path = interfaces/portal
 	url = https://github.com/sourceplusplus/interface-portal
-[submodule "processors/instrument"]
-	path = processors/instrument
+[submodule "processors/live-instrument"]
+	path = processors/live-instrument
 	url = https://github.com/sourceplusplus/processor-instrument
 [submodule "processors/live-view"]
 	path = processors/live-view

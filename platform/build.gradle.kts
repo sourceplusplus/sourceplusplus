@@ -29,7 +29,7 @@ repositories {
 
 dependencies {
     implementation(project(":protocol"))
-    implementation(project(":processors:instrument"))
+    implementation(project(":processors:live-instrument"))
     implementation(project(":processors:live-view"))
     implementation(project(":processors:log-summary"))
 
@@ -86,7 +86,7 @@ tasks.register<Copy>("updateDockerFiles") {
     dependsOn(
         ":platform:jar", ":probes:jvm:control:jar",
         ":processors:dependencies:jar",
-        ":processors:instrument:jar",
+        ":processors:live-instrument:jar",
         ":processors:live-view:jar",
         ":processors:log-summary:jar"
     )
@@ -111,8 +111,8 @@ tasks.register<Copy>("updateDockerFiles") {
         if (!File(projectDir, "../processors/dependencies/build/libs/spp-processor-dependencies-$projectVersion.jar").exists()) {
             throw GradleException("Missing spp-processor-dependencies-$projectVersion.jar")
         }
-        if (!File(projectDir, "../processors/instrument/build/libs/spp-processor-instrument-$projectVersion.jar").exists()) {
-            throw GradleException("Missing spp-processor-instrument-$projectVersion.jar")
+        if (!File(projectDir, "../processors/live-instrument/build/libs/spp-processor-live-instrument-$projectVersion.jar").exists()) {
+            throw GradleException("Missing spp-processor-live-instrument-$projectVersion.jar")
         }
         if (!File(projectDir, "../processors/live-view/build/libs/spp-processor-live-view-$projectVersion.jar").exists()) {
             throw GradleException("Missing spp-processor-live-view-$projectVersion.jar")
@@ -130,7 +130,7 @@ tasks.register<Copy>("updateDockerFiles") {
 
     from(File(projectDir, "../processors/dependencies/build/libs/spp-processor-dependencies-$projectVersion.jar"))
         .into(File(projectDir, "../docker/e2e"))
-    from(File(projectDir, "../processors/instrument/build/libs/spp-processor-instrument-$projectVersion.jar"))
+    from(File(projectDir, "../processors/live-instrument/build/libs/spp-processor-live-instrument-$projectVersion.jar"))
         .into(File(projectDir, "../docker/e2e"))
     from(File(projectDir, "../processors/live-view/build/libs/spp-processor-live-view-$projectVersion.jar"))
         .into(File(projectDir, "../docker/e2e"))

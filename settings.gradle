@@ -37,7 +37,7 @@ include ':probes:jvm:services'
 include ':probes:python'
 
 include ':processors:dependencies'
-include ':processors:instrument'
+include ':processors:live-instrument'
 include ':processors:live-view'
 include ':processors:log-summary'
 
