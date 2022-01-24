@@ -6,10 +6,10 @@ plugins {
     id("org.jetbrains.kotlin.plugin.noarg") apply false
 }
 
-val platformVersion: String by project
+val projectVersion: String by project
 val skywalkingVersion: String by project
 
-version = platformVersion
+version = projectVersion
 
 subprojects {
     rootProject.properties.forEach {
@@ -40,11 +40,11 @@ tasks {
         //todo: use gradle copy task
         dependsOn(":platform:build")
         doLast {
-            file("dist/spp-platform-$version/config").mkdirs()
+            file("dist/spp-platform-$projectVersion/config").mkdirs()
             file("config/spp-platform.yml")
-                .copyTo(file("dist/spp-platform-$version/config/spp-platform.yml"))
-            file("platform/build/libs/spp-platform-$version.jar")
-                .copyTo(file("dist/spp-platform-$version/spp-platform-$version.jar"))
+                .copyTo(file("dist/spp-platform-$projectVersion/config/spp-platform.yml"))
+            file("platform/build/libs/spp-platform-$projectVersion.jar")
+                .copyTo(file("dist/spp-platform-$projectVersion/spp-platform-$projectVersion.jar"))
         }
     }
     register<Tar>("makeDist") {
