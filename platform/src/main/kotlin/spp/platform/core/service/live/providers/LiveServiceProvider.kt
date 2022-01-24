@@ -41,9 +41,7 @@ class LiveServiceProvider(
         val selfId = Reflect.on(handler).get<MessageImpl<*, *>>("arg\$2").headers().let {
             if (it.contains("auth-token")) {
                 JWT.parse(it.get("auth-token")).getJsonObject("payload").getString("developer_id")
-            } else {
-                it.get("developer_id")
-            }
+            } else "system"
         }
         log.trace("Getting self info")
 

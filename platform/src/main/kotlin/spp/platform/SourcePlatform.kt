@@ -595,7 +595,7 @@ class SourcePlatform : CoroutineVerticle() {
             val promise = Promise.promise<JsonObject>()
             EventBusService.getProxy(
                 discovery, LiveViewService::class.java,
-                JsonObject().put("headers", JsonObject().put("auth-token", accessToken))
+                JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("auth-token", accessToken)) } }
             ) {
                 if (it.succeeded()) {
                     it.result().getLiveViewSubscriptionStats(promise)
