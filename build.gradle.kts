@@ -12,6 +12,12 @@ val skywalkingVersion: String by project
 version = platformVersion
 
 subprojects {
+    rootProject.properties.forEach {
+        if (it.key.endsWith("Version") && it.value != null) {
+            project.ext.set(it.key, it.value)
+        }
+    }
+
     configurations.all {
         resolutionStrategy.dependencySubstitution {
             substitute(module("com.github.sourceplusplus.protocol:protocol"))
