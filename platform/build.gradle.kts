@@ -45,7 +45,7 @@ dependencies {
     implementation("com.github.ajalt.clikt:clikt:$cliktVersion")
     implementation("ch.qos.logback:logback-classic:$logbackVersion")
     implementation("io.vertx:vertx-service-discovery:$vertxVersion")
-    implementation("io.vertx:vertx-service-proxy:$vertxVersion")
+    implementation("io.vertx:vertx-service-proxy:4.1.5")
     implementation("io.vertx:vertx-health-check:$vertxVersion")
     implementation("io.vertx:vertx-web-graphql:$vertxVersion")
     implementation("io.vertx:vertx-auth-jwt:$vertxVersion")
@@ -78,15 +78,14 @@ dependencies {
     testImplementation("io.vertx:vertx-web-client:$vertxVersion")
 }
 
-//tasks.register("clean") {
-//    doFirst {
-//        File(projectDir, "../docker/e2e").listFiles()?.forEach {
-//            if (it.name.startsWith("spp-platform-") || it.name.startsWith("spp-processor-")) {
-//                it.delete()
-//            }
-//        }
-//    }
-//}
+tasks.register("cleanDockerSetup") {
+    doFirst {
+        File(projectDir, "../docker/e2e").listFiles()?.forEach {
+            if (it.name.endsWith(".jar")) it.delete()
+        }
+    }
+}
+tasks.getByName("clean").dependsOn("cleanDockerSetup")
 
 tasks.register<Copy>("updateDockerFiles") {
     dependsOn(
