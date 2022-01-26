@@ -12,7 +12,6 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import mu.KotlinLogging
 import spp.protocol.SourceMarkerServices.Provide
-import spp.protocol.SourceMarkerServices.Status
 import spp.protocol.SourceMarkerServices.Utilize
 import spp.protocol.platform.PlatformAddress
 
@@ -31,7 +30,7 @@ class MarkerBridge(
             BridgeOptions()
                 //from marker
                 .addInboundPermitted(PermittedOptions().setAddress("get-records")) //todo: name like others
-                .addInboundPermitted(PermittedOptions().setAddress(Status.MARKER_CONNECTED))
+                .addInboundPermitted(PermittedOptions().setAddress(PlatformAddress.MARKER_CONNECTED.address))
                 .addInboundPermitted(PermittedOptions().setAddress(Utilize.LIVE_SERVICE))
                 .addInboundPermitted(PermittedOptions().setAddress(Utilize.LIVE_INSTRUMENT))
                 .addInboundPermitted(PermittedOptions().setAddress(Utilize.LIVE_VIEW))
@@ -44,7 +43,7 @@ class MarkerBridge(
             netServerOptions
         ) {
             if (it.type() == BridgeEventType.SEND) {
-                if (it.rawMessage.getString("address") == Status.MARKER_CONNECTED) {
+                if (it.rawMessage.getString("address") == PlatformAddress.MARKER_CONNECTED.address) {
                     GlobalScope.launch(vertx.dispatcher()) {
                         it.socket().closeHandler { _ ->
                             vertx.eventBus().publish(

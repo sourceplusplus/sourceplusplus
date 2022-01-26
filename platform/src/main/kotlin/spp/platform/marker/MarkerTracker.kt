@@ -34,12 +34,12 @@ class MarkerTracker(private val jwtAuth: JWTAuth?) : CoroutineVerticle() {
             GlobalScope.launch(vertx.dispatcher()) {
                 it.reply(
                     vertx.sharedData().getLocalCounter(
-                        SourceMarkerServices.Status.MARKER_CONNECTED
+                        PlatformAddress.MARKER_CONNECTED.address
                     ).await().get().await()
                 )
             }
         }
-        vertx.eventBus().consumer<JsonObject>(SourceMarkerServices.Status.MARKER_CONNECTED) { marker ->
+        vertx.eventBus().consumer<JsonObject>(PlatformAddress.MARKER_CONNECTED.address) { marker ->
             val conn = Json.decodeValue(marker.body().toString(), MarkerConnection::class.java)
             val latency = System.currentTimeMillis() - conn.connectionTime
             log.trace { "Establishing connection with marker ${conn.markerId}" }
@@ -65,7 +65,7 @@ class MarkerTracker(private val jwtAuth: JWTAuth?) : CoroutineVerticle() {
                 log.info("Marker disconnected. Connection time: {}", Duration.between(Instant.now(), connectedAt))
 
                 GlobalScope.launch(vertx.dispatcher()) {
-                    vertx.sharedData().getLocalCounter(SourceMarkerServices.Status.MARKER_CONNECTED).await()
+                    vertx.sharedData().getLocalCounter(PlatformAddress.MARKER_CONNECTED.address).await()
                         .decrementAndGet().await()
                 }
             }
@@ -82,7 +82,7 @@ class MarkerTracker(private val jwtAuth: JWTAuth?) : CoroutineVerticle() {
         )
 
         GlobalScope.launch(vertx.dispatcher()) {
-            vertx.sharedData().getLocalCounter(SourceMarkerServices.Status.MARKER_CONNECTED).await()
+            vertx.sharedData().getLocalCounter(PlatformAddress.MARKER_CONNECTED.address).await()
                 .incrementAndGet().await()
         }
     }
