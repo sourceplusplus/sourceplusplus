@@ -25,6 +25,7 @@ import spp.protocol.ProtocolMarshaller
 import spp.protocol.SourceMarkerServices
 import spp.protocol.SourceMarkerServices.Utilize
 import spp.protocol.extend.TCPServiceFrameParser
+import spp.protocol.platform.PlatformAddress
 import spp.protocol.status.MarkerConnection
 import java.io.File
 import java.util.*
@@ -99,7 +100,7 @@ open class PlatformIntegrationTest {
                 }
 
                 FrameHelper.sendFrame(
-                    BridgeEventType.SEND.name.toLowerCase(), SourceMarkerServices.Status.MARKER_CONNECTED,
+                    BridgeEventType.SEND.name.toLowerCase(), PlatformAddress.MARKER_CONNECTED.address,
                     replyAddress, JsonObject(), true, JsonObject.mapFrom(pc), tcpSocket
                 )
                 withTimeout(5000) {
