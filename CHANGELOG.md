@@ -1,3 +1,8 @@
+# 0.3.0 (2022-01-26)
+- More platform modularization
+- Environment configurable properties
+- Added in-memory storage option
+
 # 0.2.1 (2021-12-02)
 - Code refactoring
 - Dependency upgrades
