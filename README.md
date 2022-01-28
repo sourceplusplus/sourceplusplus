@@ -81,8 +81,7 @@ The Source++ documentation is available [here](https://docs.sourceplusplus.com).
     ├── processors          # Live coding processors
         ├── dependencies    # Live processor common code
         ├── live-instrument # Live instrument processing
-        ├── live-view       # Live view processing
-        └── log-summary     # Log summary processing
+        └── live-view       # Live view processing
     └── protocol            # Communication protocol
 
 ## License

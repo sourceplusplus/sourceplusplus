@@ -39,7 +39,6 @@ include ':probes:python'
 include ':processors:dependencies'
 include ':processors:live-instrument'
 include ':processors:live-view'
-include ':processors:log-summary'
 
 include 'example-web-app'
 project(':example-web-app').projectDir = new File("docker/e2e/example-web-app")
