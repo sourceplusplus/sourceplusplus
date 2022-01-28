@@ -25,9 +25,6 @@
 [submodule "processors/live-view"]
 	path = processors/live-view
 	url = https://github.com/sourceplusplus/processor-live-view
-[submodule "processors/log-summary"]
-	path = processors/log-summary
-	url = https://github.com/sourceplusplus/processor-log-summary
 [submodule "processors/dependencies"]
 	path = processors/dependencies
 	url = https://github.com/sourceplusplus/processor-dependencies
