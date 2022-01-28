@@ -57,8 +57,11 @@ import org.slf4j.LoggerFactory
 import spp.platform.core.SourceService
 import spp.platform.core.SourceServiceDiscovery
 import spp.platform.core.SourceStorage
+import spp.platform.core.service.ServiceProvider
 import spp.platform.core.storage.MemoryStorage
 import spp.platform.core.storage.RedisStorage
+import spp.platform.core.util.CertsToJksOptionsConverter
+import spp.platform.core.util.Msg.msg
 import spp.platform.marker.MarkerTracker
 import spp.platform.marker.MarkerVerticle
 import spp.platform.probe.ProbeTracker
@@ -67,8 +70,6 @@ import spp.platform.probe.config.SourceProbeConfig
 import spp.platform.probe.util.SelfSignedCertGenerator
 import spp.platform.processor.ProcessorTracker
 import spp.platform.processor.ProcessorVerticle
-import spp.platform.core.util.CertsToJksOptionsConverter
-import spp.platform.core.util.Msg.msg
 import spp.protocol.ProtocolMarshaller
 import spp.protocol.ProtocolMarshaller.ProtocolMessageCodec
 import spp.protocol.SourceMarkerServices.Utilize
@@ -76,7 +77,6 @@ import spp.protocol.platform.PlatformAddress
 import spp.protocol.probe.ProbeAddress.*
 import spp.protocol.service.live.LiveViewService
 import spp.protocol.util.KSerializers
-import spp.platform.core.service.ServiceProvider
 import java.io.File
 import java.io.FileWriter
 import java.io.StringReader
@@ -643,10 +643,6 @@ class SourcePlatform : CoroutineVerticle() {
                             .put(
                                 Utilize.LIVE_VIEW,
                                 vertx.sharedData().getLocalCounter(Utilize.LIVE_VIEW).await().get().await()
-                            )
-                            .put(
-                                Utilize.LOG_COUNT_INDICATOR,
-                                vertx.sharedData().getLocalCounter(Utilize.LOG_COUNT_INDICATOR).await().get().await()
                             )
                     )
                     .put(
