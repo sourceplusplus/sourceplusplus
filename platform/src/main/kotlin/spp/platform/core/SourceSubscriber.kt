@@ -2,6 +2,7 @@ package spp.platform.core
 
 import java.util.concurrent.ConcurrentHashMap
 
+//todo: shouldn't need this
 object SourceSubscriber {
     private val subscriberCache = ConcurrentHashMap<String, String>()
 
