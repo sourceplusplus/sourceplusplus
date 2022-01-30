@@ -6,7 +6,6 @@ import io.vertx.core.json.JsonObject
 import io.vertx.kotlin.coroutines.CoroutineVerticle
 import io.vertx.kotlin.coroutines.await
 import io.vertx.kotlin.coroutines.dispatcher
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import mu.KotlinLogging
 import spp.platform.core.util.Msg.msg
@@ -25,12 +24,12 @@ class ProbeTracker : CoroutineVerticle() {
 
     override suspend fun start() {
         vertx.eventBus().consumer<JsonObject>(activeProbesAddress) {
-            GlobalScope.launch(vertx.dispatcher()) {
+            launch(vertx.dispatcher()) {
                 it.reply(ArrayList(activeProbes.values))
             }
         }
         vertx.eventBus().consumer<JsonObject>(connectedProbesAddress) {
-            GlobalScope.launch(vertx.dispatcher()) {
+            launch(vertx.dispatcher()) {
                 it.reply(
                     vertx.sharedData().getLocalCounter(
                         PlatformAddress.PROBE_CONNECTED.address
@@ -44,7 +43,7 @@ class ProbeTracker : CoroutineVerticle() {
             activeProbes[probeId]!!.remotes.add(remote)
             log.trace { msg("Probe {} registered {}", probeId, remote) }
 
-            GlobalScope.launch(vertx.dispatcher()) {
+            launch(vertx.dispatcher()) {
                 vertx.sharedData().getLocalCounter(remote).await()
                     .incrementAndGet().await()
             }
@@ -62,7 +61,7 @@ class ProbeTracker : CoroutineVerticle() {
                 latency, activeProbes.size
             )
 
-            GlobalScope.launch(vertx.dispatcher()) {
+            launch(vertx.dispatcher()) {
                 vertx.sharedData().getLocalCounter(PlatformAddress.PROBE_CONNECTED.address).await()
                     .incrementAndGet().await()
             }
@@ -73,7 +72,7 @@ class ProbeTracker : CoroutineVerticle() {
             val connectedAt = Instant.ofEpochMilli(activeProbe.connectedAt)
             log.info("Probe disconnected. Connection time: {}", Duration.between(Instant.now(), connectedAt))
 
-            GlobalScope.launch(vertx.dispatcher()) {
+            launch(vertx.dispatcher()) {
                 vertx.sharedData().getLocalCounter(PlatformAddress.PROBE_CONNECTED.address).await()
                     .decrementAndGet().await()
 

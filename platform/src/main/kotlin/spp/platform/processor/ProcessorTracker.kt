@@ -6,7 +6,6 @@ import io.vertx.core.json.JsonObject
 import io.vertx.kotlin.coroutines.CoroutineVerticle
 import io.vertx.kotlin.coroutines.await
 import io.vertx.kotlin.coroutines.dispatcher
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import mu.KotlinLogging
 import spp.platform.SourcePlatform
@@ -24,12 +23,12 @@ class ProcessorTracker : CoroutineVerticle() {
 
     override suspend fun start() {
         vertx.eventBus().consumer<JsonObject>(activeProcessorsAddress) {
-            GlobalScope.launch(vertx.dispatcher()) {
+            launch(vertx.dispatcher()) {
                 it.reply(ArrayList(activeProcessors.values))
             }
         }
         vertx.eventBus().consumer<JsonObject>(connectedProcessorsAddress) {
-            GlobalScope.launch(vertx.dispatcher()) {
+            launch(vertx.dispatcher()) {
                 it.reply(
                     vertx.sharedData().getLocalCounter(
                         PlatformAddress.PROCESSOR_CONNECTED.address
@@ -52,7 +51,7 @@ class ProcessorTracker : CoroutineVerticle() {
                 latency, activeProcessors.size
             )
 
-            GlobalScope.launch(vertx.dispatcher()) {
+            launch(vertx.dispatcher()) {
                 vertx.sharedData().getLocalCounter(PlatformAddress.PROCESSOR_CONNECTED.address).await()
                     .incrementAndGet().await()
             }
@@ -62,7 +61,7 @@ class ProcessorTracker : CoroutineVerticle() {
             val connectedAt = Instant.ofEpochMilli(activeProcessors.remove(conn.processorId)!!.connectedAt)
             log.info("Processor disconnected. Connection time: {}", Duration.between(Instant.now(), connectedAt))
 
-            GlobalScope.launch(vertx.dispatcher()) {
+            launch(vertx.dispatcher()) {
                 SourcePlatform.discovery.getRecords { true }.await().forEach {
                     if (it.metadata.getString("INSTANCE_ID") == conn.processorId) {
                         SourcePlatform.discovery.unpublish(it.registration)

@@ -41,7 +41,7 @@ tasks {
         dependsOn(":platform:build")
         doLast {
             file("dist/spp-platform-$projectVersion/config").mkdirs()
-            file("config/spp-platform.yml")
+            file("docker/e2e/config/spp-platform.yml")
                 .copyTo(file("dist/spp-platform-$projectVersion/config/spp-platform.yml"))
             file("platform/build/libs/spp-platform-$projectVersion.jar")
                 .copyTo(file("dist/spp-platform-$projectVersion/spp-platform-$projectVersion.jar"))

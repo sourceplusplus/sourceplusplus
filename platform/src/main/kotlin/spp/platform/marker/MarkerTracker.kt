@@ -1,6 +1,5 @@
 package spp.platform.marker
 
-import spp.protocol.SourceMarkerServices
 import spp.protocol.status.MarkerConnection
 import io.vertx.core.Vertx
 import io.vertx.core.eventbus.Message
@@ -10,7 +9,6 @@ import io.vertx.ext.auth.jwt.JWTAuth
 import io.vertx.kotlin.coroutines.CoroutineVerticle
 import io.vertx.kotlin.coroutines.await
 import io.vertx.kotlin.coroutines.dispatcher
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import mu.KotlinLogging
 import spp.protocol.platform.PlatformAddress
@@ -26,12 +24,12 @@ class MarkerTracker(private val jwtAuth: JWTAuth?) : CoroutineVerticle() {
 
     override suspend fun start() {
         vertx.eventBus().consumer<JsonObject>(activeMarkersAddress) {
-            GlobalScope.launch(vertx.dispatcher()) {
+            launch(vertx.dispatcher()) {
                 it.reply(ArrayList(activeMarkers.values))
             }
         }
         vertx.eventBus().consumer<JsonObject>(connectedMarkersAddress) {
-            GlobalScope.launch(vertx.dispatcher()) {
+            launch(vertx.dispatcher()) {
                 it.reply(
                     vertx.sharedData().getLocalCounter(
                         PlatformAddress.MARKER_CONNECTED.address
@@ -64,7 +62,7 @@ class MarkerTracker(private val jwtAuth: JWTAuth?) : CoroutineVerticle() {
                 val connectedAt = Instant.ofEpochMilli(activeMarker.connectedAt)
                 log.info("Marker disconnected. Connection time: {}", Duration.between(Instant.now(), connectedAt))
 
-                GlobalScope.launch(vertx.dispatcher()) {
+                launch(vertx.dispatcher()) {
                     vertx.sharedData().getLocalCounter(PlatformAddress.MARKER_CONNECTED.address).await()
                         .decrementAndGet().await()
                 }
@@ -81,7 +79,7 @@ class MarkerTracker(private val jwtAuth: JWTAuth?) : CoroutineVerticle() {
             latency, activeMarkers.size
         )
 
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             vertx.sharedData().getLocalCounter(PlatformAddress.MARKER_CONNECTED.address).await()
                 .incrementAndGet().await()
         }

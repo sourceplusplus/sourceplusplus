@@ -3,10 +3,9 @@ package spp.platform.probe
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper
 import com.google.common.io.Files
-import io.vertx.core.AbstractVerticle
 import io.vertx.core.json.JsonObject
+import io.vertx.kotlin.coroutines.CoroutineVerticle
 import io.vertx.kotlin.coroutines.dispatcher
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import mu.KotlinLogging
 import org.apache.commons.io.FileUtils
@@ -27,7 +26,7 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 import java.util.zip.ZipOutputStream
 
-class ProbeGenerator : AbstractVerticle() {
+class ProbeGenerator : CoroutineVerticle() {
 
     private val log = KotlinLogging.logger {}
     private val objectMapper = ObjectMapper()
@@ -35,7 +34,7 @@ class ProbeGenerator : AbstractVerticle() {
     private val generatedProbes = mutableMapOf<SourceProbeConfig, JsonObject>()
     private val githubApi by lazy { GitHub.connectAnonymously() }
 
-    override fun start() {
+    override suspend fun start() {
         vertx.eventBus().consumer<SourceProbeConfig>(PlatformAddress.GENERATE_PROBE.address) {
             var config = it.body()
             val probeRelease = if (config.probeVersion == "latest") {
@@ -59,7 +58,7 @@ class ProbeGenerator : AbstractVerticle() {
         }
 
         //pre-generate default configuration probe
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             val platformHost = System.getenv("SPP_CLUSTER_URL")
             val platformName = System.getenv("SPP_CLUSTER_NAME")
             if (!platformHost.isNullOrEmpty() && !platformName.isNullOrEmpty()) {
