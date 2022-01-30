@@ -164,6 +164,36 @@ class SourcePlatform : CoroutineVerticle() {
                 }
             }
         }
+
+        fun addServiceCheck(checks: HealthChecks, serviceName: String) {
+            val registeredName = "services/${serviceName.replace(".", "/")}"
+            checks.register(registeredName) { promise ->
+                discovery.getRecord({ rec -> serviceName == rec.name }
+                ) { record ->
+                    when {
+                        record.failed() -> promise.fail(record.cause())
+                        record.result() == null -> {
+                            val debugData = JsonObject().put("reason", "No published record(s)")
+                            promise.complete(KO(debugData))
+                        }
+                        else -> {
+                            val reference = discovery.getReference(record.result())
+                            try {
+                                reference.get<Any>()
+                                promise.complete(OK())
+                            } catch (ex: Throwable) {
+                                ex.printStackTrace()
+                                val debugData = JsonObject().put("reason", ex.message)
+                                    .put("stack_trace", ex.stackTraceToString())
+                                promise.complete(KO(debugData))
+                            } finally {
+                                reference.release()
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     @Suppress("LongMethod")
@@ -349,12 +379,9 @@ class SourcePlatform : CoroutineVerticle() {
         }
 
         //Health checks
-        val checks = HealthChecks.create(vertx)
-        addServiceCheck(checks, Utilize.LIVE_SERVICE)
-        addServiceCheck(checks, Utilize.LIVE_INSTRUMENT)
-        addServiceCheck(checks, Utilize.LIVE_VIEW)
-        addServiceCheck(checks, Utilize.LOG_COUNT_INDICATOR)
-        router["/health"].handler(HealthCheckHandler.createWithHealthChecks(checks))
+        val healthChecks = HealthChecks.create(vertx)
+        addServiceCheck(healthChecks, Utilize.LIVE_SERVICE)
+        router["/health"].handler(HealthCheckHandler.createWithHealthChecks(healthChecks))
         router["/stats"].handler(this::getStats)
         router["/clients"].handler(this::getClients)
 
@@ -440,7 +467,7 @@ class SourcePlatform : CoroutineVerticle() {
             DeploymentOptions().setConfig(config.getJsonObject("spp-platform").getJsonObject("marker"))
         ).await()
         vertx.deployVerticle(
-            ProcessorVerticle(netServerOptions),
+            ProcessorVerticle(healthChecks, netServerOptions),
             DeploymentOptions().setConfig(config.getJsonObject("spp-platform").getJsonObject("processor"))
         ).await()
 
@@ -521,36 +548,6 @@ class SourcePlatform : CoroutineVerticle() {
                 val replyEx = it.cause() as ReplyException
                 route.response().setStatusCode(replyEx.failureCode())
                     .end(it.cause().message)
-            }
-        }
-    }
-
-    private fun addServiceCheck(checks: HealthChecks, serviceName: String) {
-        val registeredName = "services/${serviceName.replace(".", "/")}"
-        checks.register(registeredName) { promise ->
-            discovery.getRecord({ rec -> serviceName == rec.name }
-            ) { record ->
-                when {
-                    record.failed() -> promise.fail(record.cause())
-                    record.result() == null -> {
-                        val debugData = JsonObject().put("reason", "No published record(s)")
-                        promise.complete(KO(debugData))
-                    }
-                    else -> {
-                        val reference = discovery.getReference(record.result())
-                        try {
-                            reference.get<Any>()
-                            promise.complete(OK())
-                        } catch (ex: Throwable) {
-                            ex.printStackTrace()
-                            val debugData = JsonObject().put("reason", ex.message)
-                                .put("stack_trace", ex.stackTraceToString())
-                            promise.complete(KO(debugData))
-                        } finally {
-                            reference.release()
-                        }
-                    }
-                }
             }
         }
     }
