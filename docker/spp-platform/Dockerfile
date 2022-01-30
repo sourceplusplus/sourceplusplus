@@ -8,4 +8,7 @@ ADD ./config/spp-platform.yml /opt/sourceplusplus/config
 
 ADD ./spp-platform-*.jar /opt/sourceplusplus
 
-ENTRYPOINT java -jar /opt/sourceplusplus/spp-platform-*.jar
+ARG JAVA_OPTS
+ENV JAVA_OPTS=$JAVA_OPTS
+
+ENTRYPOINT java ${JAVA_OPTS} -jar /opt/sourceplusplus/spp-platform-*.jar
