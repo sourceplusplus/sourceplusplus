@@ -61,7 +61,7 @@ The Source++ documentation is available [here](https://docs.sourceplusplus.com).
 ## Directory Structure
 
     .
-    ├── config              # Development setup, Detekt, etc.
+    ├── config              # Detekt
     ├── docker              # Docker setup files
         ├── e2e             # End-to-end testing environment
         ├── spp-oap-server  # SkyWalking OAP (incl. Source++ processor) image
