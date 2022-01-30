@@ -41,9 +41,10 @@ import io.vertx.servicediscovery.ServiceDiscovery
 import io.vertx.servicediscovery.ServiceDiscoveryOptions
 import io.vertx.servicediscovery.Status
 import io.vertx.servicediscovery.types.EventBusService
-import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import kotlinx.datetime.Instant
 import mu.KotlinLogging
 import org.apache.commons.text.StringSubstitutor
@@ -205,11 +206,11 @@ class SourcePlatform : CoroutineVerticle() {
             val publicKey = StringWriter()
             var writer = JcaPEMWriter(publicKey)
             writer.writeObject(keyPair.public)
-            writer.close()
+            withContext(Dispatchers.IO) { writer.close() }
             val privateKey = StringWriter()
             writer = JcaPEMWriter(privateKey)
             writer.writeObject(keyPair.private)
-            writer.close()
+            withContext(Dispatchers.IO) { writer.close() }
 
             jwt = JWTAuth.create(
                 vertx, JWTAuthOptions()
@@ -247,7 +248,7 @@ class SourcePlatform : CoroutineVerticle() {
 
             val token = accessTokenParam[0]
             log.debug("Verifying access token: $token")
-            GlobalScope.launch {
+            launch(vertx.dispatcher()) {
                 val dev = SourceStorage.getDeveloperByAccessToken(token)
                 if (dev != null) {
                     val jwtToken = jwt!!.generateToken(
@@ -283,7 +284,7 @@ class SourcePlatform : CoroutineVerticle() {
 
             val token = route.request().getParam("access_token")
             log.info("Probe download request. Verifying access token: {}", token)
-            GlobalScope.launch {
+            launch(vertx.dispatcher()) {
                 SourceStorage.getDeveloperByAccessToken(token)?.let {
                     doProbeGeneration(route)
                 } ?: route.response().setStatusCode(401).end()
@@ -305,7 +306,7 @@ class SourcePlatform : CoroutineVerticle() {
             val method = HttpMethod.valueOf(request.getString("method"))!!
             log.trace { msg("Forwarding SkyWalking request: {}", body) }
 
-            GlobalScope.launch(vertx.dispatcher()) {
+            launch(vertx.dispatcher()) {
                 val forward = httpClient.request(
                     method, skywalkingPort, skywalkingHost, "/graphql"
                 ).await()
@@ -386,7 +387,7 @@ class SourcePlatform : CoroutineVerticle() {
         vertx.eventBus().consumer<JsonObject>(ServiceDiscoveryOptions.DEFAULT_ANNOUNCE_ADDRESS) {
             val record = Record(it.body())
             if (record.status == Status.UP) {
-                GlobalScope.launch(vertx.dispatcher()) {
+                launch(vertx.dispatcher()) {
                     if (record.name.startsWith("spp.")) {
                         //todo: this feels hacky
                         SourceServiceDiscovery.INSTANCE.store(record) {
@@ -399,7 +400,7 @@ class SourcePlatform : CoroutineVerticle() {
                     log.trace { "Service UP: ${record.name}" }
                 }
             } else if (record.status == Status.DOWN) {
-                GlobalScope.launch(vertx.dispatcher()) {
+                launch(vertx.dispatcher()) {
                     vertx.sharedData().getLocalCounter(record.name).await().decrementAndGet().await()
                     log.trace { "Service DOWN: ${record.name}" }
                 }
@@ -408,7 +409,7 @@ class SourcePlatform : CoroutineVerticle() {
 
         //todo: standardize
         vertx.eventBus().consumer<JsonObject>("get-records") {
-            launch {
+            launch(vertx.dispatcher()) {
                 val records = JsonArray(discovery.getRecords { true }.await().map { it.toJson() })
                 it.reply(records)
                 log.debug("Sent currently available services")
@@ -507,7 +508,7 @@ class SourcePlatform : CoroutineVerticle() {
 
         vertx.eventBus().request<JsonObject>(PlatformAddress.GENERATE_PROBE.address, config) {
             if (it.succeeded()) {
-                GlobalScope.launch(vertx.dispatcher()) {
+                launch(vertx.dispatcher()) {
                     val genProbe = it.result().body()
                     route.response().putHeader(
                         "content-disposition",
@@ -566,7 +567,7 @@ class SourcePlatform : CoroutineVerticle() {
         }
         log.info("Get platform clients request. Developer: {}", selfId)
 
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             ctx.response().putHeader("Content-Type", "application/json")
                 .end(
                     JsonObject()
@@ -591,7 +592,7 @@ class SourcePlatform : CoroutineVerticle() {
         }
         log.info("Get platform stats request. Developer: {}", selfId)
 
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             val promise = Promise.promise<JsonObject>()
             EventBusService.getProxy(
                 discovery, LiveViewService::class.java,
