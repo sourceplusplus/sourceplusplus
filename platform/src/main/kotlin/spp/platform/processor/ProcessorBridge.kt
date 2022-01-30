@@ -29,12 +29,11 @@ class ProcessorBridge(
     private val log = LoggerFactory.getLogger(ProcessorBridge::class.java)
 
     override suspend fun start() {
-        log.debug("ProcessorBridge started")
         val liveInstrumentEnabled = config.getJsonObject("live-instrument")?.getString("enabled")?.toBoolean() ?: false
-        log.debug("Live instrument ${if (liveInstrumentEnabled) "enabled" else "disabled"}")
+        log.debug("Live instrument processor ${if (liveInstrumentEnabled) "enabled" else "disabled"}")
         if (liveInstrumentEnabled) addServiceCheck(healthChecks, Utilize.LIVE_INSTRUMENT)
         val liveViewEnabled = config.getJsonObject("live-view")?.getString("enabled")?.toBoolean() ?: false
-        log.debug("Live view ${if (liveViewEnabled) "enabled" else "disabled"}")
+        log.debug("Live view processor ${if (liveViewEnabled) "enabled" else "disabled"}")
         if (liveViewEnabled) addServiceCheck(healthChecks, Utilize.LIVE_VIEW)
 
         TcpEventBusBridge.create(

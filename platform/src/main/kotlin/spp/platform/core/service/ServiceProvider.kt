@@ -61,7 +61,6 @@ class ServiceProvider : CoroutineVerticle() {
             JsonObject().put("INSTANCE_ID", config.getString("SPP_INSTANCE_ID"))
         )
         discovery!!.publish(record).await()
-        log.info("$address service enabled")
         return record
     }
 

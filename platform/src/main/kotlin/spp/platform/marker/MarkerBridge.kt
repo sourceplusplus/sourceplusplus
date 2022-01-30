@@ -9,21 +9,13 @@ import io.vertx.kotlin.coroutines.CoroutineVerticle
 import io.vertx.kotlin.coroutines.await
 import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.launch
-import mu.KotlinLogging
 import spp.protocol.SourceMarkerServices.Provide
 import spp.protocol.SourceMarkerServices.Utilize
 import spp.protocol.platform.PlatformAddress
 
-class MarkerBridge(
-    private val netServerOptions: NetServerOptions
-) : CoroutineVerticle() {
-
-    companion object {
-        private val log = KotlinLogging.logger {}
-    }
+class MarkerBridge(private val netServerOptions: NetServerOptions) : CoroutineVerticle() {
 
     override suspend fun start() {
-        log.debug("MarkerBridge started")
         TcpEventBusBridge.create(
             vertx,
             BridgeOptions()

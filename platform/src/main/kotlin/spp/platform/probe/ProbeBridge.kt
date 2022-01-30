@@ -23,7 +23,6 @@ class ProbeBridge(private val netServerOptions: NetServerOptions) : CoroutineVer
     private val log = LoggerFactory.getLogger(ProbeBridge::class.java)
 
     override suspend fun start() {
-        log.debug("ProbeBridge started")
         TcpEventBusBridge.create(
             vertx,
             BridgeOptions()
