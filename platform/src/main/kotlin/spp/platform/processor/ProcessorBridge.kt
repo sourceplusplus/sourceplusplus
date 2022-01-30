@@ -31,8 +31,6 @@ class ProcessorBridge(private val netServerOptions: NetServerOptions) : Coroutin
                 .addInboundPermitted(PermittedOptions().setAddress(ServiceDiscoveryOptions.DEFAULT_ANNOUNCE_ADDRESS))
                 .addInboundPermitted(PermittedOptions().setAddress(ServiceDiscoveryOptions.DEFAULT_USAGE_ADDRESS))
                 .addInboundPermitted(PermittedOptions().setAddress(PlatformAddress.PROCESSOR_CONNECTED.address))
-                .addInboundPermitted(PermittedOptions().setAddress(BREAKPOINT_HIT.address))
-                .addInboundPermitted(PermittedOptions().setAddress(LOG_HIT.address))
                 .addInboundPermitted(
                     PermittedOptions().setAddressRegex(SourceMarkerServices.Provide.LIVE_VIEW_SUBSCRIBER + "\\..+")
                 )
