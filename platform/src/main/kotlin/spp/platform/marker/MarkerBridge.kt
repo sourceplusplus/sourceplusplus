@@ -8,7 +8,6 @@ import io.vertx.ext.eventbus.bridge.tcp.TcpEventBusBridge
 import io.vertx.kotlin.coroutines.CoroutineVerticle
 import io.vertx.kotlin.coroutines.await
 import io.vertx.kotlin.coroutines.dispatcher
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import mu.KotlinLogging
 import spp.protocol.SourceMarkerServices.Provide
@@ -44,7 +43,7 @@ class MarkerBridge(
         ) {
             if (it.type() == BridgeEventType.SEND) {
                 if (it.rawMessage.getString("address") == PlatformAddress.MARKER_CONNECTED.address) {
-                    GlobalScope.launch(vertx.dispatcher()) {
+                    launch(vertx.dispatcher()) {
                         it.socket().closeHandler { _ ->
                             vertx.eventBus().publish(
                                 PlatformAddress.MARKER_DISCONNECTED.address,
