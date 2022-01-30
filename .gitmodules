@@ -13,9 +13,6 @@
 [submodule "interfaces/cli"]
 	path = interfaces/cli
 	url = https://github.com/sourceplusplus/interface-cli
-[submodule "interfaces/jetbrains"]
-	path = interfaces/jetbrains
-	url = https://github.com/sourceplusplus/interface-jetbrains
 [submodule "interfaces/portal"]
 	path = interfaces/portal
 	url = https://github.com/sourceplusplus/interface-portal
