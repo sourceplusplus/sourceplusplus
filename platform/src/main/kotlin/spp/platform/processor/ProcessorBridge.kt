@@ -95,8 +95,4 @@ class ProcessorBridge(private val netServerOptions: NetServerOptions) : Coroutin
             it.complete(true)
         }.listen(config.getString("bridge_port").toInt()).await()
     }
-
-    override suspend fun stop() {
-        log.debug("ProcessorBridge stopped")
-    }
 }
