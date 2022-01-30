@@ -18,9 +18,9 @@ spp-platform:
 storage:
   selector: ${SPP_STORAGE:-memory}
   redis:
-    host: ${SPP_REDIS_HOST:-redis}
+    host: ${SPP_REDIS_HOST:-localhost}
     port: ${SPP_REDIS_PORT:-6379}
 
 skywalking-oap:
-  host: ${SPP_OAP_HOST:-skywalking-oap}
+  host: ${SPP_OAP_HOST:-localhost}
   port: ${SPP_OAP_PORT:-12800}
