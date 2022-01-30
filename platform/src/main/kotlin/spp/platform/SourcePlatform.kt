@@ -424,7 +424,7 @@ class SourcePlatform : CoroutineVerticle() {
                         }
                     }
                     vertx.sharedData().getLocalCounter(record.name).await().andIncrement.await()
-                    log.trace { "Service UP: ${record.name}" }
+                    log.debug { "Service UP: ${record.name}" }
                 }
             } else if (record.status == Status.DOWN) {
                 launch(vertx.dispatcher()) {
