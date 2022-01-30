@@ -44,7 +44,7 @@ class TestServiceDiscoveryBackend : ServiceDiscoveryBackend {
             consumer.unregister()
         }
         FrameHelper.sendFrame(
-            BridgeEventType.SEND.name.toLowerCase(), "get-records",
+            BridgeEventType.SEND.name.lowercase(), "get-records",
             replyAddress, JsonObject(), true, JsonObject(), PlatformIntegrationTest.tcpSocket
         )
     }

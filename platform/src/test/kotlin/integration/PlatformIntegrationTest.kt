@@ -69,7 +69,7 @@ open class PlatformIntegrationTest {
             val platformPort = 5455
             val useSsl = true
             val trustAll = true
-            val platformCertificateFile = "../config/spp-platform.crt"
+            val platformCertificateFile = "../docker/e2e/config/spp-platform.crt"
             val myCaAsABuffer = Buffer.buffer(File(platformCertificateFile).readText())
             val options = when {
                 myCaAsABuffer != null -> NetClientOptions()
@@ -100,7 +100,7 @@ open class PlatformIntegrationTest {
                 }
 
                 FrameHelper.sendFrame(
-                    BridgeEventType.SEND.name.toLowerCase(), PlatformAddress.MARKER_CONNECTED.address,
+                    BridgeEventType.SEND.name.lowercase(), PlatformAddress.MARKER_CONNECTED.address,
                     replyAddress, JsonObject(), true, JsonObject.mapFrom(pc), tcpSocket
                 )
                 withTimeout(5000) {
@@ -128,14 +128,14 @@ open class PlatformIntegrationTest {
                     val headers = JsonObject()
                     resp.headers().entries().forEach { headers.put(it.key, it.value) }
                     FrameHelper.sendFrame(
-                        BridgeEventType.SEND.name.toLowerCase(), forwardAddress,
+                        BridgeEventType.SEND.name.lowercase(), forwardAddress,
                         replyAddress, headers, true, forwardMessage, tcpSocket
                     )
                 }
 
                 //register listener
                 FrameHelper.sendFrame(
-                    BridgeEventType.REGISTER.name.toLowerCase(),
+                    BridgeEventType.REGISTER.name.lowercase(),
                     SourceMarkerServices.Provide.LIVE_INSTRUMENT_SUBSCRIBER, JsonObject(), tcpSocket
                 )
 

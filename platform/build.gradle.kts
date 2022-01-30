@@ -31,7 +31,6 @@ dependencies {
     implementation(project(":protocol"))
     implementation(project(":processors:live-instrument"))
     implementation(project(":processors:live-view"))
-    implementation(project(":processors:log-summary"))
 
     implementation("org.kohsuke:github-api:1.301")
     implementation("org.jooq:joor:$joorVersion")
@@ -87,8 +86,7 @@ tasks.register<Copy>("updateDockerFiles") {
         ":platform:jar", ":probes:jvm:control:jar",
         ":processors:dependencies:jar",
         ":processors:live-instrument:jar",
-        ":processors:live-view:jar",
-        ":processors:log-summary:jar"
+        ":processors:live-view:jar"
     )
 
     doFirst {
@@ -117,9 +115,6 @@ tasks.register<Copy>("updateDockerFiles") {
         if (!File(projectDir, "../processors/live-view/build/libs/spp-processor-live-view-$projectVersion.jar").exists()) {
             throw GradleException("Missing spp-processor-live-view-$projectVersion.jar")
         }
-        if (!File(projectDir, "../processors/log-summary/build/libs/spp-processor-log-summary-$projectVersion.jar").exists()) {
-            throw GradleException("Missing spp-processor-log-summary-$projectVersion.jar")
-        }
 
         File(projectDir, "../docker/e2e").listFiles()?.forEach {
             if (it.name.startsWith("spp-platform-") || it.name.startsWith("spp-processor-")) {
@@ -133,8 +128,6 @@ tasks.register<Copy>("updateDockerFiles") {
     from(File(projectDir, "../processors/live-instrument/build/libs/spp-processor-live-instrument-$projectVersion.jar"))
         .into(File(projectDir, "../docker/e2e"))
     from(File(projectDir, "../processors/live-view/build/libs/spp-processor-live-view-$projectVersion.jar"))
-        .into(File(projectDir, "../docker/e2e"))
-    from(File(projectDir, "../processors/log-summary/build/libs/spp-processor-log-summary-$projectVersion.jar"))
         .into(File(projectDir, "../docker/e2e"))
 }
 
