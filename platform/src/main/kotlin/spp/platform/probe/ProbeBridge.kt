@@ -9,6 +9,7 @@ import io.vertx.ext.bridge.PermittedOptions
 import io.vertx.ext.eventbus.bridge.tcp.TcpEventBusBridge
 import io.vertx.kotlin.coroutines.CoroutineVerticle
 import io.vertx.kotlin.coroutines.await
+import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
@@ -54,7 +55,7 @@ class ProbeBridge(private val netServerOptions: NetServerOptions) : CoroutineVer
             } else if (it.type() == BridgeEventType.REGISTERED) {
                 val probeId = SourceSubscriber.getSubscriber(it.socket().writeHandlerID())
                 if (probeId != null) {
-                    launch {
+                    launch(vertx.dispatcher()) {
                         delay(1500) //todo: this is temp fix for race condition
                         vertx.eventBus().publish(
                             ProbeAddress.REMOTE_REGISTERED.address,
