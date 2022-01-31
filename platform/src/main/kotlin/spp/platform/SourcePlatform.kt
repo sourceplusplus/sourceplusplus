@@ -562,7 +562,7 @@ class SourcePlatform : CoroutineVerticle() {
                 selfId = "system"
             }
         }
-        log.info("Get platform clients request. Developer: {}", selfId)
+        log.debug("Get platform clients request. Developer: {}", selfId)
 
         launch(vertx.dispatcher()) {
             ctx.response().putHeader("Content-Type", "application/json")
