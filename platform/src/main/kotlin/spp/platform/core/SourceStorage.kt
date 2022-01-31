@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory
 import spp.platform.core.storage.CoreStorage
 import spp.protocol.auth.*
 import spp.protocol.developer.Developer
-import spp.protocol.util.AccessChecker
+import spp.protocol.utils.AccessChecker
 
 object SourceStorage {
 
