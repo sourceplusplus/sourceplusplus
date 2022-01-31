@@ -1,6 +1,7 @@
 import java.util.*
 
 plugins {
+    id("com.diffplug.spotless")
     id("com.avast.gradle.docker-compose")
     id("io.gitlab.arturbosch.detekt")
     id("com.github.johnrengelman.shadow")
@@ -192,5 +193,11 @@ tasks.getByName<Test>("test") {
 
         outputs.upToDateWhen { false }
         showStandardStreams = true
+    }
+}
+
+spotless {
+    kotlin {
+        licenseHeaderFile(file("LICENSE-HEADER.txt"))
     }
 }
