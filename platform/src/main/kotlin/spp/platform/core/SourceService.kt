@@ -45,13 +45,9 @@ import spp.protocol.developer.SelfInfo
 import spp.protocol.general.Service
 import spp.protocol.instrument.*
 import spp.protocol.instrument.LiveInstrumentType.*
-import spp.protocol.instrument.breakpoint.LiveBreakpoint
-import spp.protocol.instrument.log.LiveLog
-import spp.protocol.instrument.meter.LiveMeter
 import spp.protocol.instrument.meter.MeterType
 import spp.protocol.instrument.meter.MetricValue
 import spp.protocol.instrument.meter.MetricValueType
-import spp.protocol.instrument.span.LiveSpan
 import spp.protocol.service.LiveService
 import spp.protocol.service.error.InstrumentAccessDenied
 import spp.protocol.service.error.PermissionAccessDenied

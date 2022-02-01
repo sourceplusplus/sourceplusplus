@@ -17,10 +17,6 @@
  */
 package integration
 
-import spp.protocol.SourceMarkerServices
-import spp.protocol.instrument.LiveSourceLocation
-import spp.protocol.instrument.breakpoint.LiveBreakpoint
-import spp.protocol.service.live.LiveInstrumentService
 import io.vertx.junit5.VertxExtension
 import io.vertx.junit5.VertxTestContext
 import io.vertx.serviceproxy.ServiceProxyBuilder
@@ -28,6 +24,10 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import spp.protocol.SourceMarkerServices
+import spp.protocol.instrument.LiveBreakpoint
+import spp.protocol.instrument.LiveSourceLocation
+import spp.protocol.service.live.LiveInstrumentService
 import java.util.concurrent.TimeUnit
 
 @ExtendWith(VertxExtension::class)

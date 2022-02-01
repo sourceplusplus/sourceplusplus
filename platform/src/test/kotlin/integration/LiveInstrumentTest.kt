@@ -17,16 +17,6 @@
  */
 package integration
 
-import spp.protocol.SourceMarkerServices
-import spp.protocol.SourceMarkerServices.Provide
-import spp.protocol.instrument.LiveInstrumentBatch
-import spp.protocol.instrument.LiveInstrumentEvent
-import spp.protocol.instrument.LiveInstrumentEventType
-import spp.protocol.instrument.LiveSourceLocation
-import spp.protocol.instrument.breakpoint.LiveBreakpoint
-import spp.protocol.instrument.breakpoint.event.LiveBreakpointHit
-import spp.protocol.instrument.log.LiveLog
-import spp.protocol.service.live.LiveInstrumentService
 import io.vertx.core.json.Json
 import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxExtension
@@ -37,6 +27,11 @@ import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.slf4j.LoggerFactory
+import spp.protocol.SourceMarkerServices
+import spp.protocol.SourceMarkerServices.Provide
+import spp.protocol.instrument.*
+import spp.protocol.instrument.breakpoint.event.LiveBreakpointHit
+import spp.protocol.service.live.LiveInstrumentService
 import java.util.concurrent.TimeUnit
 
 @ExtendWith(VertxExtension::class)
@@ -118,11 +113,9 @@ class LiveInstrumentTest : PlatformIntegrationTest() {
             .build(LiveInstrumentService::class.java)
 
         instrumentService.addLiveInstruments(
-            LiveInstrumentBatch(
-                listOf(
-                    LiveBreakpoint(LiveSourceLocation("integration.LiveInstrumentTest", 1)),
-                    LiveBreakpoint(LiveSourceLocation("integration.LiveInstrumentTest", 2))
-                )
+            listOf(
+                LiveBreakpoint(LiveSourceLocation("integration.LiveInstrumentTest", 1)),
+                LiveBreakpoint(LiveSourceLocation("integration.LiveInstrumentTest", 2))
             )
         ).onComplete {
             if (it.succeeded()) {
