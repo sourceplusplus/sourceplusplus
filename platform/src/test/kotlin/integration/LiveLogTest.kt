@@ -30,10 +30,10 @@ import org.slf4j.LoggerFactory
 import spp.protocol.ProtocolMarshaller
 import spp.protocol.SourceMarkerServices
 import spp.protocol.SourceMarkerServices.Provide
-import spp.protocol.instrument.LiveInstrumentEvent
-import spp.protocol.instrument.LiveInstrumentEventType
 import spp.protocol.instrument.LiveLog
 import spp.protocol.instrument.LiveSourceLocation
+import spp.protocol.instrument.event.LiveInstrumentEvent
+import spp.protocol.instrument.event.LiveInstrumentEventType
 import spp.protocol.service.error.LiveInstrumentException
 import spp.protocol.service.live.LiveInstrumentService
 import java.util.*

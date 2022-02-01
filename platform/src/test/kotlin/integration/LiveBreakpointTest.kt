@@ -30,8 +30,11 @@ import org.slf4j.LoggerFactory
 import spp.protocol.ProtocolMarshaller
 import spp.protocol.SourceMarkerServices
 import spp.protocol.SourceMarkerServices.Provide
-import spp.protocol.instrument.*
-import spp.protocol.instrument.breakpoint.event.LiveBreakpointHit
+import spp.protocol.instrument.LiveBreakpoint
+import spp.protocol.instrument.LiveSourceLocation
+import spp.protocol.instrument.event.LiveBreakpointHit
+import spp.protocol.instrument.event.LiveInstrumentEvent
+import spp.protocol.instrument.event.LiveInstrumentEventType
 import spp.protocol.service.error.LiveInstrumentException
 import spp.protocol.service.live.LiveInstrumentService
 import java.util.*

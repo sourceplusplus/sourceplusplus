@@ -48,6 +48,8 @@ import spp.protocol.instrument.LiveInstrumentType.*
 import spp.protocol.instrument.meter.MeterType
 import spp.protocol.instrument.meter.MetricValue
 import spp.protocol.instrument.meter.MetricValueType
+import spp.protocol.instrument.throttle.InstrumentThrottle
+import spp.protocol.instrument.throttle.ThrottleStep
 import spp.protocol.service.LiveService
 import spp.protocol.service.error.InstrumentAccessDenied
 import spp.protocol.service.error.PermissionAccessDenied
