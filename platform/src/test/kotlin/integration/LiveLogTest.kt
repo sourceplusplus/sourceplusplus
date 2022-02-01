@@ -27,6 +27,7 @@ import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.slf4j.LoggerFactory
+import spp.protocol.ProtocolMarshaller
 import spp.protocol.SourceMarkerServices
 import spp.protocol.SourceMarkerServices.Provide
 import spp.protocol.instrument.LiveInstrumentEvent
@@ -81,7 +82,8 @@ class LiveLogTest : PlatformIntegrationTest() {
                 LiveInstrumentEventType.LOG_REMOVED -> {
                     log.info("Got removed")
                     testContext.verify {
-                        assertEquals(instrumentId, JsonObject(liveEvent.data).getString("logId"))
+                        val remEvent = ProtocolMarshaller.deserializeLiveInstrumentRemoved(JsonObject(liveEvent.data))
+                        assertEquals(instrumentId, remEvent.liveInstrument.id)
                     }
                     gotRemoved = true
                 }

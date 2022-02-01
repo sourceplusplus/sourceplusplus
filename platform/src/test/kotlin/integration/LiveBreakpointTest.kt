@@ -27,12 +27,10 @@ import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.slf4j.LoggerFactory
+import spp.protocol.ProtocolMarshaller
 import spp.protocol.SourceMarkerServices
 import spp.protocol.SourceMarkerServices.Provide
-import spp.protocol.instrument.LiveBreakpoint
-import spp.protocol.instrument.LiveInstrumentEvent
-import spp.protocol.instrument.LiveInstrumentEventType
-import spp.protocol.instrument.LiveSourceLocation
+import spp.protocol.instrument.*
 import spp.protocol.instrument.breakpoint.event.LiveBreakpointHit
 import spp.protocol.service.error.LiveInstrumentException
 import spp.protocol.service.live.LiveInstrumentService
@@ -75,7 +73,8 @@ class LiveBreakpointTest : PlatformIntegrationTest() {
                 LiveInstrumentEventType.BREAKPOINT_REMOVED -> {
                     log.info("Got removed")
                     testContext.verify {
-                        assertEquals(instrumentId, JsonObject(liveEvent.data).getString("breakpointId"))
+                        val remEvent = ProtocolMarshaller.deserializeLiveInstrumentRemoved(JsonObject(liveEvent.data))
+                        assertEquals(instrumentId, remEvent.liveInstrument.id)
                     }
                     gotRemoved = true
                 }
@@ -222,7 +221,8 @@ class LiveBreakpointTest : PlatformIntegrationTest() {
                 LiveInstrumentEventType.BREAKPOINT_REMOVED -> {
                     log.info("Got removed")
                     testContext.verify {
-                        assertEquals(instrumentId, JsonObject(liveEvent.data).getString("breakpointId"))
+                        val remEvent = ProtocolMarshaller.deserializeLiveInstrumentRemoved(JsonObject(liveEvent.data))
+                        assertEquals(instrumentId, remEvent.liveInstrument.id)
                     }
                     gotRemoved = true
                 }
