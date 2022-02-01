@@ -27,8 +27,8 @@ import kotlinx.coroutines.launch
 import mu.KotlinLogging
 import spp.platform.SourcePlatform
 import spp.protocol.platform.PlatformAddress
-import spp.protocol.platform.client.ActiveProcessor
-import spp.protocol.processor.status.ProcessorConnection
+import spp.protocol.status.ActiveProcessor
+import spp.protocol.status.InstanceConnection
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.ConcurrentHashMap
@@ -54,12 +54,12 @@ class ProcessorTracker : CoroutineVerticle() {
             }
         }
         vertx.eventBus().consumer<JsonObject>(PlatformAddress.PROCESSOR_CONNECTED.address) {
-            val conn = Json.decodeValue(it.body().toString(), ProcessorConnection::class.java)
+            val conn = Json.decodeValue(it.body().toString(), InstanceConnection::class.java)
             val latency = System.currentTimeMillis() - conn.connectionTime
-            log.trace { "Establishing connection with processor ${conn.processorId}" }
+            log.trace { "Establishing connection with processor ${conn.instanceId}" }
 
-            activeProcessors[conn.processorId] = ActiveProcessor(
-                conn.processorId, System.currentTimeMillis(), meta = conn.meta
+            activeProcessors[conn.instanceId] = ActiveProcessor(
+                conn.instanceId, System.currentTimeMillis(), meta = conn.meta
             )
             it.reply(true)
 
@@ -74,13 +74,13 @@ class ProcessorTracker : CoroutineVerticle() {
             }
         }
         vertx.eventBus().consumer<JsonObject>(PlatformAddress.PROCESSOR_DISCONNECTED.address) {
-            val conn = Json.decodeValue(it.body().toString(), ProcessorConnection::class.java)
-            val connectedAt = Instant.ofEpochMilli(activeProcessors.remove(conn.processorId)!!.connectedAt)
+            val conn = Json.decodeValue(it.body().toString(), InstanceConnection::class.java)
+            val connectedAt = Instant.ofEpochMilli(activeProcessors.remove(conn.instanceId)!!.connectedAt)
             log.info("Processor disconnected. Connection time: {}", Duration.between(Instant.now(), connectedAt))
 
             launch(vertx.dispatcher()) {
                 SourcePlatform.discovery.getRecords { true }.await().forEach {
-                    if (it.metadata.getString("INSTANCE_ID") == conn.processorId) {
+                    if (it.metadata.getString("INSTANCE_ID") == conn.instanceId) {
                         SourcePlatform.discovery.unpublish(it.registration)
                     }
                 }

@@ -27,9 +27,9 @@ import kotlinx.coroutines.launch
 import mu.KotlinLogging
 import spp.platform.core.util.Msg.msg
 import spp.protocol.platform.PlatformAddress
-import spp.protocol.platform.client.ActiveProbe
+import spp.protocol.status.ActiveProbe
 import spp.protocol.probe.ProbeAddress
-import spp.protocol.probe.status.ProbeConnection
+import spp.protocol.status.InstanceConnection
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.ConcurrentHashMap
@@ -66,11 +66,11 @@ class ProbeTracker : CoroutineVerticle() {
             }
         }
         vertx.eventBus().consumer<JsonObject>(PlatformAddress.PROBE_CONNECTED.address) {
-            val conn = Json.decodeValue(it.body().toString(), ProbeConnection::class.java)
+            val conn = Json.decodeValue(it.body().toString(), InstanceConnection::class.java)
             val latency = System.currentTimeMillis() - conn.connectionTime
-            log.trace { msg("Establishing connection with probe {}", conn.probeId) }
+            log.trace { msg("Establishing connection with probe {}", conn.instanceId) }
 
-            activeProbes[conn.probeId] = ActiveProbe(conn.probeId, System.currentTimeMillis(), meta = conn.meta)
+            activeProbes[conn.instanceId] = ActiveProbe(conn.instanceId, System.currentTimeMillis(), meta = conn.meta)
             it.reply(true)
 
             log.info(
@@ -84,8 +84,8 @@ class ProbeTracker : CoroutineVerticle() {
             }
         }
         vertx.eventBus().consumer<JsonObject>(PlatformAddress.PROBE_DISCONNECTED.address) {
-            val conn = Json.decodeValue(it.body().toString(), ProbeConnection::class.java)
-            val activeProbe = activeProbes.remove(conn.probeId)!!
+            val conn = Json.decodeValue(it.body().toString(), InstanceConnection::class.java)
+            val activeProbe = activeProbes.remove(conn.instanceId)!!
             val connectedAt = Instant.ofEpochMilli(activeProbe.connectedAt)
             log.info("Probe disconnected. Connection time: {}", Duration.between(Instant.now(), connectedAt))
 

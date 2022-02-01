@@ -38,12 +38,11 @@ import kotlinx.coroutines.withTimeout
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.extension.ExtendWith
 import org.slf4j.LoggerFactory
-import spp.protocol.ProtocolMarshaller
 import spp.protocol.SourceMarkerServices
 import spp.protocol.SourceMarkerServices.Utilize
 import spp.protocol.extend.TCPServiceFrameParser
 import spp.protocol.platform.PlatformAddress
-import spp.protocol.status.MarkerConnection
+import spp.protocol.status.InstanceConnection
 import java.io.File
 import java.util.*
 
@@ -107,7 +106,7 @@ open class PlatformIntegrationTest {
 
                 //send marker connected status
                 val replyAddress = UUID.randomUUID().toString()
-                val pc = MarkerConnection(INSTANCE_ID, System.currentTimeMillis())
+                val pc = InstanceConnection(INSTANCE_ID, System.currentTimeMillis())
                 val consumer: MessageConsumer<Boolean> = vertx.eventBus().localConsumer("local.$replyAddress")
 
                 val promise = Promise.promise<Void>()

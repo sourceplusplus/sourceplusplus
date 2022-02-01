@@ -17,7 +17,7 @@
  */
 package spp.platform.marker
 
-import spp.protocol.status.MarkerConnection
+import spp.protocol.status.InstanceConnection
 import io.vertx.core.Vertx
 import io.vertx.core.eventbus.Message
 import io.vertx.core.json.Json
@@ -29,7 +29,7 @@ import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.launch
 import mu.KotlinLogging
 import spp.protocol.platform.PlatformAddress
-import spp.protocol.platform.client.ActiveMarker
+import spp.protocol.status.ActiveMarker
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.ConcurrentHashMap
@@ -55,9 +55,9 @@ class MarkerTracker(private val jwtAuth: JWTAuth?) : CoroutineVerticle() {
             }
         }
         vertx.eventBus().consumer<JsonObject>(PlatformAddress.MARKER_CONNECTED.address) { marker ->
-            val conn = Json.decodeValue(marker.body().toString(), MarkerConnection::class.java)
+            val conn = Json.decodeValue(marker.body().toString(), InstanceConnection::class.java)
             val latency = System.currentTimeMillis() - conn.connectionTime
-            log.trace { "Establishing connection with marker ${conn.markerId}" }
+            log.trace { "Establishing connection with marker ${conn.instanceId}" }
 
             if (jwtAuth != null && !marker.headers().get("token").isNullOrEmpty()) {
                 jwtAuth.authenticate(JsonObject().put("token", marker.headers().get("token"))).onComplete {
@@ -73,8 +73,8 @@ class MarkerTracker(private val jwtAuth: JWTAuth?) : CoroutineVerticle() {
             }
         }
         vertx.eventBus().consumer<JsonObject>(PlatformAddress.MARKER_DISCONNECTED.address) {
-            val conn = Json.decodeValue(it.body().toString(), MarkerConnection::class.java)
-            val activeMarker = activeMarkers.remove(conn.markerId)
+            val conn = Json.decodeValue(it.body().toString(), InstanceConnection::class.java)
+            val activeMarker = activeMarkers.remove(conn.instanceId)
             if (activeMarker != null) {
                 val connectedAt = Instant.ofEpochMilli(activeMarker.connectedAt)
                 log.info("Marker disconnected. Connection time: {}", Duration.between(Instant.now(), connectedAt))
@@ -87,8 +87,8 @@ class MarkerTracker(private val jwtAuth: JWTAuth?) : CoroutineVerticle() {
         }
     }
 
-    private fun addActiveMarker(selfId: String, conn: MarkerConnection, marker: Message<JsonObject>, latency: Long) {
-        activeMarkers[conn.markerId] = ActiveMarker(conn.markerId, System.currentTimeMillis(), selfId, meta = conn.meta)
+    private fun addActiveMarker(selfId: String, conn: InstanceConnection, marker: Message<JsonObject>, latency: Long) {
+        activeMarkers[conn.instanceId] = ActiveMarker(conn.instanceId, System.currentTimeMillis(), selfId, meta = conn.meta)
         marker.reply(true)
 
         log.info(

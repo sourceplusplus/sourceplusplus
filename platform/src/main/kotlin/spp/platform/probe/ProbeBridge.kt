@@ -33,7 +33,7 @@ import org.slf4j.LoggerFactory
 import spp.platform.core.SourceSubscriber
 import spp.protocol.platform.PlatformAddress
 import spp.protocol.probe.ProbeAddress
-import spp.protocol.probe.status.ProbeConnection
+import spp.protocol.status.InstanceConnection
 
 class ProbeBridge(private val netServerOptions: NetServerOptions) : CoroutineVerticle() {
 
@@ -51,9 +51,9 @@ class ProbeBridge(private val netServerOptions: NetServerOptions) : CoroutineVer
             if (it.type() == BridgeEventType.SEND) {
                 if (it.rawMessage.getString("address") == PlatformAddress.PROBE_CONNECTED.address) {
                     val conn = Json.decodeValue(
-                        it.rawMessage.getJsonObject("body").toString(), ProbeConnection::class.java
+                        it.rawMessage.getJsonObject("body").toString(), InstanceConnection::class.java
                     )
-                    SourceSubscriber.addSubscriber(it.socket().writeHandlerID(), conn.probeId)
+                    SourceSubscriber.addSubscriber(it.socket().writeHandlerID(), conn.instanceId)
 
                     it.socket().closeHandler { _ ->
                         vertx.eventBus().publish(

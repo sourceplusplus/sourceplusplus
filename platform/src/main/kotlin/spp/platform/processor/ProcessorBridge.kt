@@ -36,7 +36,7 @@ import spp.protocol.platform.PlatformAddress
 import spp.protocol.platform.PlatformAddress.MARKER_DISCONNECTED
 import spp.protocol.probe.ProbeAddress
 import spp.protocol.processor.ProcessorAddress.SET_LOG_PUBLISH_RATE_LIMIT
-import spp.protocol.processor.status.ProcessorConnection
+import spp.protocol.status.InstanceConnection
 
 class ProcessorBridge(
     private val healthChecks: HealthChecks,
@@ -74,9 +74,9 @@ class ProcessorBridge(
                 val address = it.rawMessage.getString("address")
                 if (address == PlatformAddress.PROCESSOR_CONNECTED.address) {
                     val conn = Json.decodeValue(
-                        it.rawMessage.getJsonObject("body").toString(), ProcessorConnection::class.java
+                        it.rawMessage.getJsonObject("body").toString(), InstanceConnection::class.java
                     )
-                    SourceSubscriber.addSubscriber(it.socket().writeHandlerID(), conn.processorId)
+                    SourceSubscriber.addSubscriber(it.socket().writeHandlerID(), conn.instanceId)
 
                     it.socket().closeHandler { _ ->
                         vertx.eventBus().publish(
