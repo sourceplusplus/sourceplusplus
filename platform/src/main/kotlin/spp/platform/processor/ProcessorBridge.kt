@@ -103,14 +103,8 @@ class ProcessorBridge(
     }
 
     private fun BridgeOptions.addLiveInstrumentOutbound() {
-        addOutboundPermitted(PermittedOptions().setAddress(PlatformAddress.LIVE_BREAKPOINT_APPLIED.address))
-            .addOutboundPermitted(PermittedOptions().setAddress(PlatformAddress.LIVE_BREAKPOINT_REMOVED.address))
-            .addOutboundPermitted(PermittedOptions().setAddress(PlatformAddress.LIVE_LOG_APPLIED.address))
-            .addOutboundPermitted(PermittedOptions().setAddress(PlatformAddress.LIVE_LOG_REMOVED.address))
-            .addOutboundPermitted(PermittedOptions().setAddress(PlatformAddress.LIVE_METER_APPLIED.address))
-            .addOutboundPermitted(PermittedOptions().setAddress(PlatformAddress.LIVE_METER_REMOVED.address))
-            .addOutboundPermitted(PermittedOptions().setAddress(PlatformAddress.LIVE_SPAN_APPLIED.address))
-            .addOutboundPermitted(PermittedOptions().setAddress(PlatformAddress.LIVE_SPAN_REMOVED.address))
+        addOutboundPermitted(PermittedOptions().setAddress(PlatformAddress.LIVE_INSTRUMENT_APPLIED.address))
+            .addOutboundPermitted(PermittedOptions().setAddress(PlatformAddress.LIVE_INSTRUMENT_REMOVED.address))
             .addOutboundPermitted(PermittedOptions().setAddress(SET_LOG_PUBLISH_RATE_LIMIT.address))
     }
 
