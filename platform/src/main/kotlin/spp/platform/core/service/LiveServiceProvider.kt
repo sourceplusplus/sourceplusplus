@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package spp.platform.core.service.live.providers
+package spp.platform.core.service
 
 import io.vertx.core.Future
 import io.vertx.core.Promise
@@ -23,7 +23,6 @@ import io.vertx.core.Vertx
 import io.vertx.core.http.HttpMethod
 import io.vertx.core.json.JsonObject
 import io.vertx.kotlin.coroutines.dispatcher
-import io.vertx.servicediscovery.ServiceDiscovery
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
@@ -40,10 +39,7 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 
-class LiveServiceProvider(
-    private val vertx: Vertx,
-    private val discovery: ServiceDiscovery
-) : LiveService {
+class LiveServiceProvider(private val vertx: Vertx) : LiveService {
 
     companion object {
         private val log = LoggerFactory.getLogger(LiveServiceProvider::class.java)

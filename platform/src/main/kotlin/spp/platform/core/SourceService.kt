@@ -35,7 +35,6 @@ import org.apache.commons.lang3.EnumUtils
 import org.apache.commons.lang3.RandomStringUtils
 import org.slf4j.LoggerFactory
 import spp.platform.SourcePlatform
-import spp.platform.core.service.ServiceProvider
 import spp.protocol.artifact.ArtifactQualifiedName
 import spp.protocol.artifact.ArtifactType
 import spp.protocol.auth.*
@@ -50,11 +49,11 @@ import spp.protocol.instrument.meter.MetricValue
 import spp.protocol.instrument.meter.MetricValueType
 import spp.protocol.instrument.throttle.InstrumentThrottle
 import spp.protocol.instrument.throttle.ThrottleStep
+import spp.protocol.service.LiveInstrumentService
 import spp.protocol.service.LiveService
+import spp.protocol.service.LiveViewService
 import spp.protocol.service.error.InstrumentAccessDenied
 import spp.protocol.service.error.PermissionAccessDenied
-import spp.protocol.service.LiveInstrumentService
-import spp.protocol.service.LiveViewService
 import spp.protocol.view.LiveViewConfig
 import spp.protocol.view.LiveViewSubscription
 import java.util.*
@@ -541,27 +540,25 @@ object SourceService {
     private fun getSelf(env: DataFetchingEnvironment): CompletableFuture<SelfInfo> {
         val completableFuture = CompletableFuture<SelfInfo>()
         var accessToken: String? = null
-        GlobalScope.launch(vertx.dispatcher()) {
-            if (System.getenv("SPP_DISABLE_JWT") != "true") {
-                val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
-                accessToken = user.principal().getString("access_token")
-            }
+        if (System.getenv("SPP_DISABLE_JWT") != "true") {
+            val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
+            accessToken = user.principal().getString("access_token")
+        }
 
-            EventBusService.getProxy(
-                SourcePlatform.discovery, LiveService::class.java,
-                JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("auth-token", accessToken)) } }
-            ) {
-                if (it.succeeded()) {
-                    it.result().getSelf().onComplete {
-                        if (it.succeeded()) {
-                            completableFuture.complete(it.result())
-                        } else {
-                            completableFuture.completeExceptionally(it.cause())
-                        }
+        EventBusService.getProxy(
+            SourcePlatform.discovery, LiveService::class.java,
+            JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("auth-token", accessToken)) } }
+        ) {
+            if (it.succeeded()) {
+                it.result().getSelf().onComplete {
+                    if (it.succeeded()) {
+                        completableFuture.complete(it.result())
+                    } else {
+                        completableFuture.completeExceptionally(it.cause())
                     }
-                } else {
-                    completableFuture.completeExceptionally(it.cause())
                 }
+            } else {
+                completableFuture.completeExceptionally(it.cause())
             }
         }
         return completableFuture
@@ -569,13 +566,26 @@ object SourceService {
 
     private fun getServices(env: DataFetchingEnvironment): CompletableFuture<List<Service>> {
         val completableFuture = CompletableFuture<List<Service>>()
-        GlobalScope.launch(vertx.dispatcher()) {
-            ServiceProvider.liveProviders.liveService.getServices().onComplete {
-                if (it.succeeded()) {
-                    completableFuture.complete(it.result())
-                } else {
-                    completableFuture.completeExceptionally(it.cause())
+        var accessToken: String? = null
+        if (System.getenv("SPP_DISABLE_JWT") != "true") {
+            val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
+            accessToken = user.principal().getString("access_token")
+        }
+
+        EventBusService.getProxy(
+            SourcePlatform.discovery, LiveService::class.java,
+            JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("auth-token", accessToken)) } }
+        ) {
+            if (it.succeeded()) {
+                it.result().getServices().onComplete {
+                    if (it.succeeded()) {
+                        completableFuture.complete(it.result())
+                    } else {
+                        completableFuture.completeExceptionally(it.cause())
+                    }
                 }
+            } else {
+                completableFuture.completeExceptionally(it.cause())
             }
         }
         return completableFuture
