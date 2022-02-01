@@ -27,8 +27,8 @@ import kotlinx.coroutines.launch
 import mu.KotlinLogging
 import spp.platform.core.util.Msg.msg
 import spp.protocol.platform.PlatformAddress
-import spp.protocol.status.ActiveProbe
 import spp.protocol.probe.ProbeAddress
+import spp.protocol.status.ActiveProbe
 import spp.protocol.status.InstanceConnection
 import java.time.Duration
 import java.time.Instant

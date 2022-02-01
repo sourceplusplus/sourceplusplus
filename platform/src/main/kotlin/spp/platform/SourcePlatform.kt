@@ -22,7 +22,10 @@ import ch.qos.logback.classic.LoggerContext
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.module.SimpleModule
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper
-import io.vertx.core.*
+import io.vertx.core.DeploymentOptions
+import io.vertx.core.Promise
+import io.vertx.core.Vertx
+import io.vertx.core.VertxOptions
 import io.vertx.core.buffer.Buffer
 import io.vertx.core.eventbus.ReplyException
 import io.vertx.core.http.HttpMethod

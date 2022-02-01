@@ -17,7 +17,6 @@
  */
 package spp.platform.marker
 
-import spp.protocol.status.InstanceConnection
 import io.vertx.core.Vertx
 import io.vertx.core.eventbus.Message
 import io.vertx.core.json.Json
@@ -30,6 +29,7 @@ import kotlinx.coroutines.launch
 import mu.KotlinLogging
 import spp.protocol.platform.PlatformAddress
 import spp.protocol.status.ActiveMarker
+import spp.protocol.status.InstanceConnection
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.ConcurrentHashMap
