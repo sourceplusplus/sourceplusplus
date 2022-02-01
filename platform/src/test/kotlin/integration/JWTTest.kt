@@ -130,7 +130,7 @@ class JWTTest : PlatformIntegrationTest() {
             .setToken(TEST_JWT_TOKEN)
             .setAddress(SourceMarkerServices.Utilize.LIVE_INSTRUMENT)
             .build(LiveInstrumentService::class.java)
-        instrumentService.getLiveInstruments().onComplete {
+        instrumentService.getLiveInstruments(null).onComplete {
             if (it.failed()) {
                 if (it.cause().cause is PermissionAccessDenied) {
                     testContext.completeNow()

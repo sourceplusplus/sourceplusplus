@@ -176,7 +176,7 @@ class LiveInstrumentTest : PlatformIntegrationTest() {
                         assertEquals(1, topFrame.variables.size)
                     }
 
-                    instrumentService.clearLiveInstruments().onComplete {
+                    instrumentService.clearLiveInstruments(null).onComplete {
                         if (it.succeeded()) {
                             consumer.unregister {
                                 if (it.succeeded()) {
@@ -249,7 +249,7 @@ class LiveInstrumentTest : PlatformIntegrationTest() {
                         assertEquals(1, topFrame.variables.size)
                     }
 
-                    instrumentService.clearLiveInstruments().onComplete {
+                    instrumentService.clearLiveInstruments(null).onComplete {
                         if (it.succeeded()) {
                             consumer.unregister {
                                 if (it.succeeded()) {
@@ -322,7 +322,7 @@ class LiveInstrumentTest : PlatformIntegrationTest() {
                         assertEquals(1, topFrame.variables.size)
                     }
 
-                    instrumentService.clearLiveInstruments().onComplete {
+                    instrumentService.clearLiveInstruments(null).onComplete {
                         if (it.succeeded()) {
                             consumer.unregister {
                                 if (it.succeeded()) {
@@ -395,7 +395,7 @@ class LiveInstrumentTest : PlatformIntegrationTest() {
                         assertEquals(1, topFrame.variables.size)
                     }
 
-                    instrumentService.clearLiveInstruments().onComplete {
+                    instrumentService.clearLiveInstruments(null).onComplete {
                         if (it.succeeded()) {
                             consumer.unregister {
                                 if (it.succeeded()) {

@@ -43,10 +43,8 @@ import spp.protocol.auth.RolePermission.*
 import spp.protocol.developer.Developer
 import spp.protocol.developer.SelfInfo
 import spp.protocol.general.Service
-import spp.protocol.instrument.InstrumentThrottle
-import spp.protocol.instrument.LiveInstrument
-import spp.protocol.instrument.LiveSourceLocation
-import spp.protocol.instrument.ThrottleStep
+import spp.protocol.instrument.*
+import spp.protocol.instrument.LiveInstrumentType.*
 import spp.protocol.instrument.breakpoint.LiveBreakpoint
 import spp.protocol.instrument.log.LiveLog
 import spp.protocol.instrument.meter.LiveMeter
@@ -628,7 +626,7 @@ object SourceService {
                 JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("auth-token", accessToken)) } }
             ) {
                 if (it.succeeded()) {
-                    it.result().getLiveInstruments().onComplete {
+                    it.result().getLiveInstruments(null).onComplete {
                         if (it.succeeded()) {
                             completableFuture.complete(it.result().map { fixJsonMaps(it) })
                         } else {
@@ -662,7 +660,7 @@ object SourceService {
                 JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("auth-token", accessToken)) } }
             ) {
                 if (it.succeeded()) {
-                    it.result().getLiveBreakpoints().onComplete {
+                    it.result().getLiveInstruments(BREAKPOINT).onComplete {
                         if (it.succeeded()) {
                             completableFuture.complete(it.result().map { fixJsonMaps(it) })
                         } else {
@@ -696,7 +694,7 @@ object SourceService {
                 JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("auth-token", accessToken)) } }
             ) {
                 if (it.succeeded()) {
-                    it.result().getLiveLogs().onComplete {
+                    it.result().getLiveInstruments(LOG).onComplete {
                         if (it.succeeded()) {
                             completableFuture.complete(it.result().map { fixJsonMaps(it) })
                         } else {
@@ -730,7 +728,7 @@ object SourceService {
                 JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("auth-token", accessToken)) } }
             ) {
                 if (it.succeeded()) {
-                    it.result().getLiveMeters().onComplete {
+                    it.result().getLiveInstruments(METER).onComplete {
                         if (it.succeeded()) {
                             completableFuture.complete(it.result().map { fixJsonMaps(it) })
                         } else {
@@ -764,7 +762,7 @@ object SourceService {
                 JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("auth-token", accessToken)) } }
             ) {
                 if (it.succeeded()) {
-                    it.result().getLiveSpans().onComplete {
+                    it.result().getLiveInstruments(SPAN).onComplete {
                         if (it.succeeded()) {
                             completableFuture.complete(it.result().map { fixJsonMaps(it) })
                         } else {
@@ -799,7 +797,7 @@ object SourceService {
                 JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("auth-token", accessToken)) } }
             ) {
                 if (it.succeeded()) {
-                    it.result().clearAllLiveInstruments().onComplete {
+                    it.result().clearAllLiveInstruments(null).onComplete {
                         if (it.succeeded()) {
                             GlobalScope.launch(vertx.dispatcher()) {
                                 completableFuture.complete(SourceStorage.reset())
@@ -1324,7 +1322,7 @@ object SourceService {
                 JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("auth-token", accessToken)) } }
             ) {
                 if (it.succeeded()) {
-                    it.result().clearLiveInstruments().onComplete {
+                    it.result().clearLiveInstruments(null).onComplete {
                         if (it.succeeded()) {
                             completableFuture.complete(it.result())
                         } else {

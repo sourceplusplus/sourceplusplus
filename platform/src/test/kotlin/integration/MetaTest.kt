@@ -91,7 +91,7 @@ class MetaTest : PlatformIntegrationTest() {
             )
         ).onComplete {
             if (it.succeeded()) {
-                instrumentService.getLiveInstruments().onComplete {
+                instrumentService.getLiveInstruments(null).onComplete {
                     if (it.succeeded()) {
                         testContext.verify {
                             assertEquals(1, it.result().size)
