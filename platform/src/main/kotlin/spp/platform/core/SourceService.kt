@@ -1634,7 +1634,7 @@ object SourceService {
                 entityIds = input.getJsonArray("entityIds").list.map { it as String },
                 artifactQualifiedName = ArtifactQualifiedName("todo", type = ArtifactType.CLASS),
                 artifactLocation = LiveSourceLocation("todo", -1),
-                liveViewConfig = LiveViewConfig("LOGS", false, listOf("endpoint_logs"))
+                liveViewConfig = LiveViewConfig("LOGS", listOf("endpoint_logs"))
             )
 
             EventBusService.getProxy(
