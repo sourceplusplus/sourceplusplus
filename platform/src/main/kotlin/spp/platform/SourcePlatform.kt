@@ -57,6 +57,7 @@ import io.vertx.servicediscovery.Record
 import io.vertx.servicediscovery.ServiceDiscovery
 import io.vertx.servicediscovery.ServiceDiscoveryOptions
 import io.vertx.servicediscovery.Status
+import io.vertx.servicediscovery.impl.DefaultServiceDiscoveryBackend
 import io.vertx.servicediscovery.types.EventBusService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -71,9 +72,9 @@ import org.bouncycastle.openssl.PEMKeyPair
 import org.bouncycastle.openssl.PEMParser
 import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter
 import org.bouncycastle.openssl.jcajce.JcaPEMWriter
+import org.joor.Reflect
 import org.slf4j.LoggerFactory
 import spp.platform.core.SourceService
-import spp.platform.core.SourceServiceDiscovery
 import spp.platform.core.SourceStorage
 import spp.platform.core.service.ServiceProvider
 import spp.platform.core.storage.MemoryStorage
@@ -416,12 +417,7 @@ class SourcePlatform : CoroutineVerticle() {
         }
 
         log.info("Starting service discovery")
-        discovery = ServiceDiscovery.create(
-            vertx,
-            ServiceDiscoveryOptions().setBackendConfiguration(
-                JsonObject().put("backend-name", "spp.platform.core.SourceServiceDiscovery")
-            )
-        )
+        discovery = ServiceDiscovery.create(vertx)
 
         vertx.eventBus().consumer<JsonObject>(ServiceDiscoveryOptions.DEFAULT_ANNOUNCE_ADDRESS) {
             val record = Record(it.body())
@@ -429,7 +425,7 @@ class SourcePlatform : CoroutineVerticle() {
                 launch(vertx.dispatcher()) {
                     if (record.name.startsWith("spp.")) {
                         //todo: this feels hacky
-                        SourceServiceDiscovery.INSTANCE.store(record) {
+                        Reflect.on(discovery).get<DefaultServiceDiscoveryBackend>("backend").store(record) {
                             if (it.failed()) {
                                 it.cause().printStackTrace()
                             }
