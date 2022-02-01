@@ -46,7 +46,7 @@ class MetaTest : PlatformIntegrationTest() {
                 location = LiveSourceLocation("MetaTest", 42),
                 meta = mutableMapOf("key1" to "value1", "key2" to "value2")
             )
-        ) {
+        ).onComplete {
             if (it.succeeded()) {
                 testContext.verify {
                     assertNotNull(it.result())
@@ -55,7 +55,7 @@ class MetaTest : PlatformIntegrationTest() {
                     assertEquals(instrument.meta["key2"], "value2")
                 }
 
-                instrumentService.removeLiveInstrument(it.result().id!!) {
+                instrumentService.removeLiveInstrument(it.result().id!!).onComplete {
                     if (it.succeeded()) {
                         testContext.completeNow()
                     } else {
@@ -89,9 +89,9 @@ class MetaTest : PlatformIntegrationTest() {
                 location = LiveSourceLocation("MetaTest", 42),
                 meta = mutableMapOf("key1" to "value1", "key2" to "value2")
             )
-        ) {
+        ).onComplete {
             if (it.succeeded()) {
-                instrumentService.getLiveInstruments {
+                instrumentService.getLiveInstruments().onComplete {
                     if (it.succeeded()) {
                         testContext.verify {
                             assertEquals(1, it.result().size)
@@ -99,7 +99,7 @@ class MetaTest : PlatformIntegrationTest() {
                             assertEquals(instrument.meta["key1"], "value1")
                             assertEquals(instrument.meta["key2"], "value2")
                         }
-                        instrumentService.removeLiveInstrument(it.result()[0].id!!) {
+                        instrumentService.removeLiveInstrument(it.result()[0].id!!).onComplete {
                             if (it.succeeded()) {
                                 testContext.completeNow()
                             } else {

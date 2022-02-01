@@ -114,7 +114,7 @@ class LiveLogTest : PlatformIntegrationTest() {
                     location = LiveSourceLocation("spp.example.webapp.model.User", 42),
                     logFormat = "addHitRemove"
                 )
-            ) {
+            ).onComplete {
                 if (!it.succeeded()) {
                     testContext.failNow(it.cause())
                 }
@@ -154,10 +154,10 @@ class LiveLogTest : PlatformIntegrationTest() {
                 condition = "1==2",
                 logFormat = "removeById"
             )
-        ) {
+        ).onComplete {
             if (it.succeeded()) {
                 val originalId = it.result().id!!
-                instrumentService.removeLiveInstrument(originalId) {
+                instrumentService.removeLiveInstrument(originalId).onComplete {
                     if (it.succeeded()) {
                         testContext.verify {
                             assertEquals(originalId, it.result()!!.id!!)
@@ -195,12 +195,12 @@ class LiveLogTest : PlatformIntegrationTest() {
                 condition = "1==2",
                 logFormat = "removeByLocation"
             )
-        ) {
+        ).onComplete {
             if (it.succeeded()) {
                 val originalId = it.result().id!!
                 instrumentService.removeLiveInstruments(
                     LiveSourceLocation("spp.example.webapp.model.User", 42)
-                ) {
+                ).onComplete {
                     if (it.succeeded()) {
                         testContext.verify {
                             assertEquals(1, it.result().size)
@@ -248,12 +248,12 @@ class LiveLogTest : PlatformIntegrationTest() {
                     )
                 )
             )
-        ) {
+        ).onComplete {
             if (it.succeeded()) {
                 testContext.verify { assertEquals(2, it.result().size) }
                 instrumentService.removeLiveInstruments(
                     LiveSourceLocation("spp.example.webapp.model.User", 42)
-                ) {
+                ).onComplete {
                     if (it.succeeded()) {
                         testContext.verify {
                             assertEquals(2, it.result().size)
@@ -292,7 +292,7 @@ class LiveLogTest : PlatformIntegrationTest() {
                 logFormat = "addLogWithInvalidCondition",
                 applyImmediately = true
             )
-        ) {
+        ).onComplete {
             if (it.failed()) {
                 if (it.cause().cause is LiveInstrumentException) {
                     testContext.verify {
@@ -331,7 +331,7 @@ class LiveLogTest : PlatformIntegrationTest() {
                 logFormat = "applyImmediatelyWithInvalidClass",
                 applyImmediately = true
             )
-        ) {
+        ).onComplete {
             if (it.failed()) {
                 testContext.verify {
                     assertNotNull(it.cause().cause)

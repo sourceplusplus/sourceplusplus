@@ -55,9 +55,9 @@ class JWTTest : PlatformIntegrationTest() {
                 LiveSourceLocation("integration.JWTTest", 1),
                 condition = "1 == 2"
             )
-        ) {
+        ).onComplete {
             if (it.succeeded()) {
-                instrumentService.removeLiveInstrument(it.result().id!!) {
+                instrumentService.removeLiveInstrument(it.result().id!!).onComplete {
                     if (it.succeeded()) {
                         testContext.completeNow()
                     } else {
@@ -130,7 +130,7 @@ class JWTTest : PlatformIntegrationTest() {
             .setToken(TEST_JWT_TOKEN)
             .setAddress(SourceMarkerServices.Utilize.LIVE_INSTRUMENT)
             .build(LiveInstrumentService::class.java)
-        instrumentService.getLiveInstruments {
+        instrumentService.getLiveInstruments().onComplete {
             if (it.failed()) {
                 if (it.cause().cause is PermissionAccessDenied) {
                     testContext.completeNow()
@@ -258,7 +258,7 @@ class JWTTest : PlatformIntegrationTest() {
                 LiveSourceLocation("integration.JWTTest", 2),
                 condition = "-41 == -12"
             )
-        ) {
+        ).onComplete {
             if (it.failed()) {
                 if (it.cause().cause is InstrumentAccessDenied) {
                     testContext.completeNow()
