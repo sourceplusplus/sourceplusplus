@@ -52,7 +52,7 @@ class LiveInstrumentTest : PlatformIntegrationTest() {
             .setAddress(SourceMarkerServices.Utilize.LIVE_INSTRUMENT)
             .build(LiveInstrumentService::class.java)
 
-        instrumentService.getLiveInstrumentById("whatever") {
+        instrumentService.getLiveInstrumentById("whatever").onComplete {
             if (it.succeeded()) {
                 testContext.verify {
                     assertNull(it.result())
@@ -82,10 +82,10 @@ class LiveInstrumentTest : PlatformIntegrationTest() {
 
         instrumentService.addLiveInstrument(
             LiveBreakpoint(LiveSourceLocation("integration.LiveInstrumentTest", 1))
-        ) {
+        ).onComplete {
             if (it.succeeded()) {
                 val originalId = it.result().id!!
-                instrumentService.getLiveInstrumentById(originalId) {
+                instrumentService.getLiveInstrumentById(originalId).onComplete {
                     if (it.succeeded()) {
                         testContext.verify {
                             assertEquals(originalId, it.result()!!.id!!)
@@ -124,10 +124,10 @@ class LiveInstrumentTest : PlatformIntegrationTest() {
                     LiveBreakpoint(LiveSourceLocation("integration.LiveInstrumentTest", 2))
                 )
             )
-        ) {
+        ).onComplete {
             if (it.succeeded()) {
                 val originalIds = it.result().map { it.id!! }
-                instrumentService.getLiveInstrumentsByIds(originalIds) {
+                instrumentService.getLiveInstrumentsByIds(originalIds).onComplete {
                     if (it.succeeded()) {
                         testContext.verify {
                             assertEquals(2, it.result()!!.size)
@@ -176,7 +176,7 @@ class LiveInstrumentTest : PlatformIntegrationTest() {
                         assertEquals(1, topFrame.variables.size)
                     }
 
-                    instrumentService.clearLiveInstruments {
+                    instrumentService.clearLiveInstruments().onComplete {
                         if (it.succeeded()) {
                             consumer.unregister {
                                 if (it.succeeded()) {
@@ -201,14 +201,14 @@ class LiveInstrumentTest : PlatformIntegrationTest() {
                 hitLimit = Int.MAX_VALUE,
                 applyImmediately = true
             )
-        ) {
+        ).onComplete {
             if (it.succeeded()) {
                 instrumentService.addLiveInstrument(
                     LiveBreakpoint(
                         LiveSourceLocation("spp.example.webapp.controller.LiveInstrumentController", 16),
                         applyImmediately = true
                     )
-                ) {
+                ).onComplete {
                     if (it.failed()) {
                         testContext.failNow(it.cause())
                     }
@@ -249,7 +249,7 @@ class LiveInstrumentTest : PlatformIntegrationTest() {
                         assertEquals(1, topFrame.variables.size)
                     }
 
-                    instrumentService.clearLiveInstruments {
+                    instrumentService.clearLiveInstruments().onComplete {
                         if (it.succeeded()) {
                             consumer.unregister {
                                 if (it.succeeded()) {
@@ -274,14 +274,14 @@ class LiveInstrumentTest : PlatformIntegrationTest() {
                 "1==2",
                 applyImmediately = true
             )
-        ) {
+        ).onComplete {
             if (it.succeeded()) {
                 instrumentService.addLiveInstrument(
                     LiveBreakpoint(
                         LiveSourceLocation("spp.example.webapp.controller.LiveInstrumentController", 16),
                         applyImmediately = true
                     )
-                ) {
+                ).onComplete {
                     if (it.failed()) {
                         testContext.failNow(it.cause())
                     }
@@ -322,7 +322,7 @@ class LiveInstrumentTest : PlatformIntegrationTest() {
                         assertEquals(1, topFrame.variables.size)
                     }
 
-                    instrumentService.clearLiveInstruments {
+                    instrumentService.clearLiveInstruments().onComplete {
                         if (it.succeeded()) {
                             consumer.unregister {
                                 if (it.succeeded()) {
@@ -347,14 +347,14 @@ class LiveInstrumentTest : PlatformIntegrationTest() {
                 hitLimit = Int.MAX_VALUE,
                 applyImmediately = true
             )
-        ) {
+        ).onComplete {
             if (it.succeeded()) {
                 instrumentService.addLiveInstrument(
                     LiveBreakpoint(
                         LiveSourceLocation("spp.example.webapp.edge.SingleThread", 28),
                         applyImmediately = true
                     )
-                ) {
+                ).onComplete {
                     if (it.failed()) {
                         testContext.failNow(it.cause())
                     }
@@ -395,7 +395,7 @@ class LiveInstrumentTest : PlatformIntegrationTest() {
                         assertEquals(1, topFrame.variables.size)
                     }
 
-                    instrumentService.clearLiveInstruments {
+                    instrumentService.clearLiveInstruments().onComplete {
                         if (it.succeeded()) {
                             consumer.unregister {
                                 if (it.succeeded()) {
@@ -420,14 +420,14 @@ class LiveInstrumentTest : PlatformIntegrationTest() {
                 "1==2",
                 applyImmediately = true
             )
-        ) {
+        ).onComplete {
             if (it.succeeded()) {
                 instrumentService.addLiveInstrument(
                     LiveBreakpoint(
                         LiveSourceLocation("spp.example.webapp.edge.SingleThread", 28),
                         applyImmediately = true
                     )
-                ) {
+                ).onComplete {
                     if (it.failed()) {
                         testContext.failNow(it.cause())
                     }

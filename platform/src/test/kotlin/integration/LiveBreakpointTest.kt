@@ -157,7 +157,7 @@ class LiveBreakpointTest : PlatformIntegrationTest() {
                     id = instrumentId,
                     location = LiveSourceLocation("spp.example.webapp.controller.LiveInstrumentController", 25),
                 )
-            ) {
+            ).onComplete {
                 if (it.failed()) {
                     testContext.failNow(it.cause())
                 }
@@ -256,7 +256,7 @@ class LiveBreakpointTest : PlatformIntegrationTest() {
                     location = LiveSourceLocation("spp.example.webapp.model.User", 42),
                     condition = "2==2"
                 )
-            ) {
+            ).onComplete {
                 if (it.failed()) {
                     testContext.failNow(it.cause())
                 }
@@ -295,10 +295,10 @@ class LiveBreakpointTest : PlatformIntegrationTest() {
                 LiveSourceLocation("spp.example.webapp.model.User", 42),
                 condition = "1==2"
             )
-        ) {
+        ).onComplete {
             if (it.succeeded()) {
                 val originalId = it.result().id!!
-                instrumentService.removeLiveInstrument(originalId) {
+                instrumentService.removeLiveInstrument(originalId).onComplete {
                     if (it.succeeded()) {
                         testContext.verify {
                             assertEquals(originalId, it.result()!!.id!!)
@@ -335,12 +335,12 @@ class LiveBreakpointTest : PlatformIntegrationTest() {
                 LiveSourceLocation("spp.example.webapp.model.User", 42),
                 condition = "1==2"
             )
-        ) {
+        ).onComplete {
             if (it.succeeded()) {
                 val originalId = it.result().id!!
                 instrumentService.removeLiveInstruments(
                     LiveSourceLocation("spp.example.webapp.model.User", 42)
-                ) {
+                ).onComplete {
                     if (it.succeeded()) {
                         testContext.verify {
                             assertEquals(1, it.result().size)
@@ -386,12 +386,12 @@ class LiveBreakpointTest : PlatformIntegrationTest() {
                     )
                 )
             )
-        ) {
+        ).onComplete {
             if (it.succeeded()) {
                 testContext.verify { assertEquals(2, it.result().size) }
                 instrumentService.removeLiveInstruments(
                     LiveSourceLocation("spp.example.webapp.model.User", 42)
-                ) {
+                ).onComplete {
                     if (it.succeeded()) {
                         testContext.verify {
                             assertEquals(2, it.result().size)
@@ -429,7 +429,7 @@ class LiveBreakpointTest : PlatformIntegrationTest() {
                 condition = "1===2",
                 applyImmediately = true
             )
-        ) {
+        ).onComplete {
             if (it.failed()) {
                 if (it.cause().cause is LiveInstrumentException) {
                     testContext.verify {
@@ -467,7 +467,7 @@ class LiveBreakpointTest : PlatformIntegrationTest() {
                 LiveSourceLocation("bad.Clazz", 48),
                 applyImmediately = true
             )
-        ) {
+        ).onComplete {
             if (it.failed()) {
                 testContext.verify {
                     assertNotNull(it.cause().cause)

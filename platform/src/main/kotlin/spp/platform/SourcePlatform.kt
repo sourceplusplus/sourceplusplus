@@ -22,10 +22,7 @@ import ch.qos.logback.classic.LoggerContext
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.module.SimpleModule
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper
-import io.vertx.core.DeploymentOptions
-import io.vertx.core.Promise
-import io.vertx.core.Vertx
-import io.vertx.core.VertxOptions
+import io.vertx.core.*
 import io.vertx.core.buffer.Buffer
 import io.vertx.core.eventbus.ReplyException
 import io.vertx.core.http.HttpMethod
@@ -313,12 +310,7 @@ class SourcePlatform : CoroutineVerticle() {
         }
 
         if (System.getenv("SPP_DISABLE_JWT") != "true") {
-            val authHandler = JWTAuthHandler.create(jwt)
-            router.route("/clients").handler(authHandler)
-            router.route("/stats").handler(authHandler)
-            router.route("/health").handler(authHandler)
-            router.route("/api/*").handler(authHandler)
-            router.route("/graphql/*").handler(authHandler)
+            router.route("/*").handler(JWTAuthHandler.create(jwt))
         } else {
             log.warn("JWT authentication disabled")
         }
@@ -490,7 +482,7 @@ class SourcePlatform : CoroutineVerticle() {
 
         //Start services
         vertx.deployVerticle(
-            ServiceProvider(), DeploymentOptions().setConfig(config.put("SPP_INSTANCE_ID", SPP_INSTANCE_ID))
+            ServiceProvider(jwt), DeploymentOptions().setConfig(config.put("SPP_INSTANCE_ID", SPP_INSTANCE_ID))
         ).await()
 
         log.debug("Starting API server")
@@ -613,7 +605,13 @@ class SourcePlatform : CoroutineVerticle() {
                 JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("auth-token", accessToken)) } }
             ) {
                 if (it.succeeded()) {
-                    it.result().getLiveViewSubscriptionStats(promise)
+                    it.result().getLiveViewSubscriptionStats().onComplete {
+                        if (it.succeeded()) {
+                            promise.complete(it.result())
+                        } else {
+                            promise.fail(it.cause())
+                        }
+                    }
                 } else {
                     promise.fail(it.cause())
                 }

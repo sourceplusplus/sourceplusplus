@@ -556,7 +556,7 @@ object SourceService {
                 JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("auth-token", accessToken)) } }
             ) {
                 if (it.succeeded()) {
-                    it.result().getSelf {
+                    it.result().getSelf().onComplete {
                         if (it.succeeded()) {
                             completableFuture.complete(it.result())
                         } else {
@@ -574,7 +574,7 @@ object SourceService {
     private fun getServices(env: DataFetchingEnvironment): CompletableFuture<List<Service>> {
         val completableFuture = CompletableFuture<List<Service>>()
         GlobalScope.launch(vertx.dispatcher()) {
-            ServiceProvider.liveProviders.liveService.getServices {
+            ServiceProvider.liveProviders.liveService.getServices().onComplete {
                 if (it.succeeded()) {
                     completableFuture.complete(it.result())
                 } else {
@@ -628,7 +628,7 @@ object SourceService {
                 JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("auth-token", accessToken)) } }
             ) {
                 if (it.succeeded()) {
-                    it.result().getLiveInstruments {
+                    it.result().getLiveInstruments().onComplete {
                         if (it.succeeded()) {
                             completableFuture.complete(it.result().map { fixJsonMaps(it) })
                         } else {
@@ -662,7 +662,7 @@ object SourceService {
                 JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("auth-token", accessToken)) } }
             ) {
                 if (it.succeeded()) {
-                    it.result().getLiveBreakpoints {
+                    it.result().getLiveBreakpoints().onComplete {
                         if (it.succeeded()) {
                             completableFuture.complete(it.result().map { fixJsonMaps(it) })
                         } else {
@@ -696,7 +696,7 @@ object SourceService {
                 JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("auth-token", accessToken)) } }
             ) {
                 if (it.succeeded()) {
-                    it.result().getLiveLogs {
+                    it.result().getLiveLogs().onComplete {
                         if (it.succeeded()) {
                             completableFuture.complete(it.result().map { fixJsonMaps(it) })
                         } else {
@@ -730,7 +730,7 @@ object SourceService {
                 JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("auth-token", accessToken)) } }
             ) {
                 if (it.succeeded()) {
-                    it.result().getLiveMeters {
+                    it.result().getLiveMeters().onComplete {
                         if (it.succeeded()) {
                             completableFuture.complete(it.result().map { fixJsonMaps(it) })
                         } else {
@@ -764,7 +764,7 @@ object SourceService {
                 JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("auth-token", accessToken)) } }
             ) {
                 if (it.succeeded()) {
-                    it.result().getLiveSpans {
+                    it.result().getLiveSpans().onComplete {
                         if (it.succeeded()) {
                             completableFuture.complete(it.result().map { fixJsonMaps(it) })
                         } else {
@@ -799,7 +799,7 @@ object SourceService {
                 JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("auth-token", accessToken)) } }
             ) {
                 if (it.succeeded()) {
-                    it.result().clearAllLiveInstruments {
+                    it.result().clearAllLiveInstruments().onComplete {
                         if (it.succeeded()) {
                             GlobalScope.launch(vertx.dispatcher()) {
                                 completableFuture.complete(SourceStorage.reset())
@@ -1251,7 +1251,7 @@ object SourceService {
                 JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("auth-token", accessToken)) } }
             ) {
                 if (it.succeeded()) {
-                    it.result().removeLiveInstrument(id) {
+                    it.result().removeLiveInstrument(id).onComplete {
                         if (it.succeeded() && it.result() != null) {
                             completableFuture.complete(fixJsonMaps(it.result()!!))
                         } else if (it.succeeded() && it.result() == null) {
@@ -1290,7 +1290,7 @@ object SourceService {
                 JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("auth-token", accessToken)) } }
             ) {
                 if (it.succeeded()) {
-                    it.result().removeLiveInstruments(LiveSourceLocation(source, line)) {
+                    it.result().removeLiveInstruments(LiveSourceLocation(source, line)).onComplete {
                         if (it.succeeded()) {
                             completableFuture.complete(it.result().map { fixJsonMaps(it) })
                         } else {
@@ -1324,7 +1324,7 @@ object SourceService {
                 JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("auth-token", accessToken)) } }
             ) {
                 if (it.succeeded()) {
-                    it.result().clearLiveInstruments {
+                    it.result().clearLiveInstruments().onComplete {
                         if (it.succeeded()) {
                             completableFuture.complete(it.result())
                         } else {
@@ -1389,7 +1389,7 @@ object SourceService {
                             throttle = throttle,
                             meta = toJsonMap(input.getJsonArray("meta"))
                         )
-                    ) {
+                    ).onComplete {
                         if (it.succeeded()) {
                             completableFuture.complete(fixJsonMaps(it.result()))
                         } else {
@@ -1459,7 +1459,7 @@ object SourceService {
                             throttle = throttle,
                             meta = toJsonMap(input.getJsonArray("meta"))
                         )
-                    ) {
+                    ).onComplete {
                         if (it.succeeded()) {
                             completableFuture.complete(fixJsonMaps(it.result()))
                         } else {
@@ -1533,7 +1533,7 @@ object SourceService {
                             throttle = throttle,
                             meta = toJsonMap(input.getJsonArray("meta"))
                         )
-                    ) {
+                    ).onComplete {
                         if (it.succeeded()) {
                             completableFuture.complete(fixJsonMaps(it.result()))
                         } else {
@@ -1600,7 +1600,7 @@ object SourceService {
                             throttle = throttle,
                             meta = toJsonMap(input.getJsonArray("meta"))
                         )
-                    ) {
+                    ).onComplete {
                         if (it.succeeded()) {
                             completableFuture.complete(fixJsonMaps(it.result()))
                         } else {
@@ -1642,7 +1642,7 @@ object SourceService {
                 JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("auth-token", accessToken)) } }
             ) {
                 if (it.succeeded()) {
-                    it.result().addLiveViewSubscription(subscription) {
+                    it.result().addLiveViewSubscription(subscription).onComplete {
                         if (it.succeeded()) {
                             completableFuture.complete(it.result())
                         } else {
@@ -1676,7 +1676,7 @@ object SourceService {
                 JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("auth-token", accessToken)) } }
             ) {
                 if (it.succeeded()) {
-                    it.result().getLiveViewSubscriptions {
+                    it.result().getLiveViewSubscriptions().onComplete {
                         if (it.succeeded()) {
                             completableFuture.complete(it.result())
                         } else {
@@ -1710,7 +1710,7 @@ object SourceService {
                 JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("auth-token", accessToken)) } }
             ) {
                 if (it.succeeded()) {
-                    it.result().clearLiveViewSubscriptions {
+                    it.result().clearLiveViewSubscriptions().onComplete {
                         if (it.succeeded()) {
                             completableFuture.complete(true)
                         } else {
