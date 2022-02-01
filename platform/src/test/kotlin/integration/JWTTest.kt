@@ -30,12 +30,12 @@ import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.slf4j.LoggerFactory
-import spp.protocol.SourceMarkerServices
+import spp.protocol.SourceServices
 import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.LiveSourceLocation
 import spp.protocol.service.error.InstrumentAccessDenied
 import spp.protocol.service.error.PermissionAccessDenied
-import spp.protocol.service.live.LiveInstrumentService
+import spp.protocol.service.LiveInstrumentService
 import java.util.concurrent.TimeUnit
 
 @ExtendWith(VertxExtension::class)
@@ -48,7 +48,7 @@ class JWTTest : PlatformIntegrationTest() {
         val testContext = VertxTestContext()
         val instrumentService = ServiceProxyBuilder(vertx)
             .setToken(SYSTEM_JWT_TOKEN)
-            .setAddress(SourceMarkerServices.Utilize.LIVE_INSTRUMENT)
+            .setAddress(SourceServices.Utilize.LIVE_INSTRUMENT)
             .build(LiveInstrumentService::class.java)
         instrumentService.addLiveInstrument(
             LiveBreakpoint(
@@ -128,7 +128,7 @@ class JWTTest : PlatformIntegrationTest() {
 
         val instrumentService = ServiceProxyBuilder(vertx)
             .setToken(TEST_JWT_TOKEN)
-            .setAddress(SourceMarkerServices.Utilize.LIVE_INSTRUMENT)
+            .setAddress(SourceServices.Utilize.LIVE_INSTRUMENT)
             .build(LiveInstrumentService::class.java)
         instrumentService.getLiveInstruments(null).onComplete {
             if (it.failed()) {
@@ -251,7 +251,7 @@ class JWTTest : PlatformIntegrationTest() {
 
         val instrumentService = ServiceProxyBuilder(vertx)
             .setToken(TEST_JWT_TOKEN)
-            .setAddress(SourceMarkerServices.Utilize.LIVE_INSTRUMENT)
+            .setAddress(SourceServices.Utilize.LIVE_INSTRUMENT)
             .build(LiveInstrumentService::class.java)
         instrumentService.addLiveInstrument(
             LiveBreakpoint(

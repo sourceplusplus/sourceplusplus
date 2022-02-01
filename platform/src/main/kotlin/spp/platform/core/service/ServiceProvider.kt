@@ -32,7 +32,7 @@ import io.vertx.serviceproxy.ServiceBinder
 import org.slf4j.LoggerFactory
 import spp.platform.core.service.live.LiveProviders
 import spp.processor.common.DeveloperAuth
-import spp.protocol.SourceMarkerServices.Utilize
+import spp.protocol.SourceServices.Utilize
 import spp.protocol.service.LiveService
 import kotlin.system.exitProcess
 

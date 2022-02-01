@@ -27,15 +27,15 @@ import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.slf4j.LoggerFactory
-import spp.protocol.SourceMarkerServices
-import spp.protocol.SourceMarkerServices.Provide
+import spp.protocol.SourceServices
+import spp.protocol.SourceServices.Provide
 import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.LiveLog
 import spp.protocol.instrument.LiveSourceLocation
 import spp.protocol.instrument.event.LiveBreakpointHit
 import spp.protocol.instrument.event.LiveInstrumentEvent
 import spp.protocol.instrument.event.LiveInstrumentEventType
-import spp.protocol.service.live.LiveInstrumentService
+import spp.protocol.service.LiveInstrumentService
 import java.util.concurrent.TimeUnit
 
 @ExtendWith(VertxExtension::class)
@@ -48,7 +48,7 @@ class LiveInstrumentTest : PlatformIntegrationTest() {
         val testContext = VertxTestContext()
         val instrumentService = ServiceProxyBuilder(vertx)
             .setToken(SYSTEM_JWT_TOKEN)
-            .setAddress(SourceMarkerServices.Utilize.LIVE_INSTRUMENT)
+            .setAddress(SourceServices.Utilize.LIVE_INSTRUMENT)
             .build(LiveInstrumentService::class.java)
 
         instrumentService.getLiveInstrumentById("whatever").onComplete {
@@ -76,7 +76,7 @@ class LiveInstrumentTest : PlatformIntegrationTest() {
         val testContext = VertxTestContext()
         val instrumentService = ServiceProxyBuilder(vertx)
             .setToken(SYSTEM_JWT_TOKEN)
-            .setAddress(SourceMarkerServices.Utilize.LIVE_INSTRUMENT)
+            .setAddress(SourceServices.Utilize.LIVE_INSTRUMENT)
             .build(LiveInstrumentService::class.java)
 
         instrumentService.addLiveInstrument(
@@ -113,7 +113,7 @@ class LiveInstrumentTest : PlatformIntegrationTest() {
         val testContext = VertxTestContext()
         val instrumentService = ServiceProxyBuilder(vertx)
             .setToken(SYSTEM_JWT_TOKEN)
-            .setAddress(SourceMarkerServices.Utilize.LIVE_INSTRUMENT)
+            .setAddress(SourceServices.Utilize.LIVE_INSTRUMENT)
             .build(LiveInstrumentService::class.java)
 
         instrumentService.addLiveInstruments(
@@ -156,7 +156,7 @@ class LiveInstrumentTest : PlatformIntegrationTest() {
         val testContext = VertxTestContext()
         val instrumentService = ServiceProxyBuilder(vertx)
             .setToken(SYSTEM_JWT_TOKEN)
-            .setAddress(SourceMarkerServices.Utilize.LIVE_INSTRUMENT)
+            .setAddress(SourceServices.Utilize.LIVE_INSTRUMENT)
             .build(LiveInstrumentService::class.java)
 
         val consumer = vertx.eventBus().localConsumer<JsonObject>("local." + Provide.LIVE_INSTRUMENT_SUBSCRIBER)
@@ -229,7 +229,7 @@ class LiveInstrumentTest : PlatformIntegrationTest() {
         val testContext = VertxTestContext()
         val instrumentService = ServiceProxyBuilder(vertx)
             .setToken(SYSTEM_JWT_TOKEN)
-            .setAddress(SourceMarkerServices.Utilize.LIVE_INSTRUMENT)
+            .setAddress(SourceServices.Utilize.LIVE_INSTRUMENT)
             .build(LiveInstrumentService::class.java)
 
         val consumer = vertx.eventBus().localConsumer<JsonObject>("local." + Provide.LIVE_INSTRUMENT_SUBSCRIBER)
@@ -302,7 +302,7 @@ class LiveInstrumentTest : PlatformIntegrationTest() {
         val testContext = VertxTestContext()
         val instrumentService = ServiceProxyBuilder(vertx)
             .setToken(SYSTEM_JWT_TOKEN)
-            .setAddress(SourceMarkerServices.Utilize.LIVE_INSTRUMENT)
+            .setAddress(SourceServices.Utilize.LIVE_INSTRUMENT)
             .build(LiveInstrumentService::class.java)
 
         val consumer = vertx.eventBus().localConsumer<JsonObject>("local." + Provide.LIVE_INSTRUMENT_SUBSCRIBER)
@@ -375,7 +375,7 @@ class LiveInstrumentTest : PlatformIntegrationTest() {
         val testContext = VertxTestContext()
         val instrumentService = ServiceProxyBuilder(vertx)
             .setToken(SYSTEM_JWT_TOKEN)
-            .setAddress(SourceMarkerServices.Utilize.LIVE_INSTRUMENT)
+            .setAddress(SourceServices.Utilize.LIVE_INSTRUMENT)
             .build(LiveInstrumentService::class.java)
 
         val consumer = vertx.eventBus().localConsumer<JsonObject>("local." + Provide.LIVE_INSTRUMENT_SUBSCRIBER)

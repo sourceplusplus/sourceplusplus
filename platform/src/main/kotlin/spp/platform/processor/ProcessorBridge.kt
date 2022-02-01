@@ -30,8 +30,8 @@ import io.vertx.servicediscovery.ServiceDiscoveryOptions
 import org.slf4j.LoggerFactory
 import spp.platform.SourcePlatform.Companion.addServiceCheck
 import spp.platform.core.SourceSubscriber
-import spp.protocol.SourceMarkerServices
-import spp.protocol.SourceMarkerServices.Utilize
+import spp.protocol.SourceServices
+import spp.protocol.SourceServices.Utilize
 import spp.protocol.platform.PlatformAddress
 import spp.protocol.platform.PlatformAddress.MARKER_DISCONNECTED
 import spp.protocol.probe.ProbeAddress
@@ -110,14 +110,14 @@ class ProcessorBridge(
 
     private fun BridgeOptions.addLiveViewInbound() {
         addInboundPermitted(
-            PermittedOptions().setAddressRegex(SourceMarkerServices.Provide.LIVE_VIEW_SUBSCRIBER + "\\..+")
+            PermittedOptions().setAddressRegex(SourceServices.Provide.LIVE_VIEW_SUBSCRIBER + "\\..+")
         )
     }
 
     private fun BridgeOptions.addLiveInstrumentInbound() {
-        addInboundPermitted(PermittedOptions().setAddress(SourceMarkerServices.Provide.LIVE_INSTRUMENT_SUBSCRIBER))
+        addInboundPermitted(PermittedOptions().setAddress(SourceServices.Provide.LIVE_INSTRUMENT_SUBSCRIBER))
             .addInboundPermitted(
-                PermittedOptions().setAddressRegex(SourceMarkerServices.Provide.LIVE_INSTRUMENT_SUBSCRIBER + "\\..+")
+                PermittedOptions().setAddressRegex(SourceServices.Provide.LIVE_INSTRUMENT_SUBSCRIBER + "\\..+")
             )
             .addInboundPermitted(
                 PermittedOptions().setAddressRegex(ProbeAddress.LIVE_BREAKPOINT_REMOTE.address + "\\:.+")

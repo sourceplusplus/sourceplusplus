@@ -53,8 +53,8 @@ import spp.protocol.instrument.throttle.ThrottleStep
 import spp.protocol.service.LiveService
 import spp.protocol.service.error.InstrumentAccessDenied
 import spp.protocol.service.error.PermissionAccessDenied
-import spp.protocol.service.live.LiveInstrumentService
-import spp.protocol.service.live.LiveViewService
+import spp.protocol.service.LiveInstrumentService
+import spp.protocol.service.LiveViewService
 import spp.protocol.view.LiveViewConfig
 import spp.protocol.view.LiveViewSubscription
 import java.util.*

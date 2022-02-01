@@ -38,8 +38,8 @@ import kotlinx.coroutines.withTimeout
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.extension.ExtendWith
 import org.slf4j.LoggerFactory
-import spp.protocol.SourceMarkerServices
-import spp.protocol.SourceMarkerServices.Utilize
+import spp.protocol.SourceServices
+import spp.protocol.SourceServices.Utilize
 import spp.protocol.extend.TCPServiceFrameParser
 import spp.protocol.platform.PlatformAddress
 import spp.protocol.status.InstanceConnection
@@ -152,7 +152,7 @@ open class PlatformIntegrationTest {
                 //register listener
                 FrameHelper.sendFrame(
                     BridgeEventType.REGISTER.name.lowercase(),
-                    SourceMarkerServices.Provide.LIVE_INSTRUMENT_SUBSCRIBER, JsonObject(), tcpSocket
+                    SourceServices.Provide.LIVE_INSTRUMENT_SUBSCRIBER, JsonObject(), tcpSocket
                 )
 
                 discovery = DiscoveryImpl(
