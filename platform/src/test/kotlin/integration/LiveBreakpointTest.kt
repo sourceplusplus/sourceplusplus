@@ -29,7 +29,7 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.slf4j.LoggerFactory
 import spp.protocol.ProtocolMarshaller
 import spp.protocol.SourceServices
-import spp.protocol.SourceServices.Provide
+import spp.protocol.SourceServices.Provide.toLiveInstrumentSubscriberAddress
 import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.LiveSourceLocation
 import spp.protocol.instrument.event.LiveBreakpointHit
@@ -54,7 +54,7 @@ class LiveBreakpointTest : PlatformIntegrationTest() {
         var gotRemoved = false
         val instrumentId = UUID.randomUUID().toString()
 
-        val consumer = vertx.eventBus().localConsumer<JsonObject>(Provide.LIVE_INSTRUMENT_SUBSCRIBER)
+        val consumer = vertx.eventBus().localConsumer<JsonObject>(toLiveInstrumentSubscriberAddress("system"))
         consumer.handler {
             log.info("Got subscription event: {}", it.body())
             val liveEvent = Json.decodeValue(it.body().toString(), LiveInstrumentEvent::class.java)
@@ -193,10 +193,8 @@ class LiveBreakpointTest : PlatformIntegrationTest() {
         var gotRemoved = false
         val instrumentId = UUID.randomUUID().toString()
 
-        val consumer = vertx.eventBus().localConsumer<JsonObject>(Provide.LIVE_INSTRUMENT_SUBSCRIBER)
-        consumer.endHandler {
-            log.info("Stopped listening at: {}", Provide.LIVE_INSTRUMENT_SUBSCRIBER)
-        }.handler {
+        val consumer = vertx.eventBus().localConsumer<JsonObject>(toLiveInstrumentSubscriberAddress("system"))
+        consumer.handler {
             log.info("Got subscription event: {}", it.body())
             val liveEvent = Json.decodeValue(it.body().toString(), LiveInstrumentEvent::class.java)
             when (liveEvent.eventType) {
@@ -242,7 +240,6 @@ class LiveBreakpointTest : PlatformIntegrationTest() {
                 }
             }
         }.completionHandler {
-            log.info("Started listening at: {}", Provide.LIVE_INSTRUMENT_SUBSCRIBER)
             if (it.failed()) {
                 testContext.failNow(it.cause());
                 return@completionHandler

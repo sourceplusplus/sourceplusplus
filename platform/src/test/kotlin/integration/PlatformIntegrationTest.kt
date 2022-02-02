@@ -38,7 +38,7 @@ import kotlinx.coroutines.withTimeout
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.extension.ExtendWith
 import org.slf4j.LoggerFactory
-import spp.protocol.SourceServices
+import spp.protocol.SourceServices.Provide.toLiveInstrumentSubscriberAddress
 import spp.protocol.SourceServices.Utilize
 import spp.protocol.extend.TCPServiceFrameParser
 import spp.protocol.platform.PlatformAddress
@@ -153,7 +153,7 @@ open class PlatformIntegrationTest {
                 //register listener
                 FrameHelper.sendFrame(
                     BridgeEventType.REGISTER.name.lowercase(),
-                    SourceServices.Provide.LIVE_INSTRUMENT_SUBSCRIBER, null,
+                    toLiveInstrumentSubscriberAddress("system"), null,
                     JsonObject().put("auth-token", SYSTEM_JWT_TOKEN), null, null, tcpSocket
                 )
 
