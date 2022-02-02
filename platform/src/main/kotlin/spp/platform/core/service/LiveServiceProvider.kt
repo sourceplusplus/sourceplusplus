@@ -27,7 +27,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
 import spp.platform.core.SourceStorage
-import spp.platform.probe.ProbeTracker
+import spp.platform.probe.ProbeBridge
 import spp.processor.common.DeveloperAuth
 import spp.protocol.developer.Developer
 import spp.protocol.developer.SelfInfo
@@ -114,7 +114,7 @@ class LiveServiceProvider(private val vertx: Vertx) : LiveService {
     override fun getActiveProbes(): Future<List<ActiveProbe>> {
         val promise = Promise.promise<List<ActiveProbe>>()
         GlobalScope.launch(vertx.dispatcher()) {
-            promise.complete(ProbeTracker.getActiveProbes(vertx))
+            promise.complete(ProbeBridge.getActiveProbes(vertx))
         }
         return promise.future()
     }

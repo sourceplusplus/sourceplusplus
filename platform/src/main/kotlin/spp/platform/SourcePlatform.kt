@@ -27,7 +27,6 @@ import io.vertx.core.Promise
 import io.vertx.core.Vertx
 import io.vertx.core.VertxOptions
 import io.vertx.core.buffer.Buffer
-import io.vertx.core.eventbus.ReplyException
 import io.vertx.core.http.HttpMethod
 import io.vertx.core.http.HttpServerOptions
 import io.vertx.core.json.Json
@@ -82,15 +81,13 @@ import spp.platform.core.storage.RedisStorage
 import spp.platform.core.util.CertsToJksOptionsConverter
 import spp.platform.core.util.Msg.msg
 import spp.platform.marker.MarkerBridge
-import spp.platform.probe.ProbeTracker
-import spp.platform.probe.ProbeVerticle
+import spp.platform.probe.ProbeBridge
 import spp.platform.probe.config.SourceProbeConfig
 import spp.platform.probe.util.SelfSignedCertGenerator
 import spp.platform.processor.ProcessorBridge
 import spp.protocol.ProtocolMarshaller
 import spp.protocol.ProtocolMarshaller.ProtocolMessageCodec
 import spp.protocol.SourceServices.Utilize
-import spp.protocol.platform.PlatformAddress
 import spp.protocol.probe.ProbeAddress.*
 import spp.protocol.service.LiveViewService
 import spp.protocol.util.KSerializers
@@ -317,21 +314,6 @@ class SourcePlatform : CoroutineVerticle() {
             log.warn("JWT authentication disabled")
         }
 
-        router["/download/spp-probe"].handler { route ->
-            if (System.getenv("SPP_DISABLE_JWT") == "true") {
-                doProbeGeneration(route)
-                return@handler
-            }
-
-            val token = route.request().getParam("access_token")
-            log.info("Probe download request. Verifying access token: {}", token)
-            launch(vertx.dispatcher()) {
-                SourceStorage.getDeveloperByAccessToken(token)?.let {
-                    doProbeGeneration(route)
-                } ?: route.response().setStatusCode(401).end()
-            }
-        }
-
         //S++ Graphql
         router.route("/graphql").handler(BodyHandler.create())
             .handler(GraphQLHandler.create(SourceService.setupGraphQL(vertx)))
@@ -463,9 +445,9 @@ class SourcePlatform : CoroutineVerticle() {
                 }
             }
 
-        //Start platform
+        //Open bridges
         vertx.deployVerticle(
-            ProbeVerticle(netServerOptions),
+            ProbeBridge(router, netServerOptions),
             DeploymentOptions().setConfig(config.getJsonObject("spp-platform").getJsonObject("probe"))
         ).await()
         vertx.deployVerticle(
@@ -528,36 +510,6 @@ class SourcePlatform : CoroutineVerticle() {
         log.info("Security certificates generated")
     }
 
-    private fun doProbeGeneration(route: RoutingContext) {
-        log.debug("Generating signed probe")
-        val platformHost = System.getenv("SPP_CLUSTER_URL") ?: "localhost"
-        val platformName = System.getenv("SPP_CLUSTER_NAME") ?: "unknown"
-        val probeVersion = route.queryParam("version")
-        val config = if (probeVersion.isNotEmpty()) {
-            SourceProbeConfig(platformHost, platformName, probeVersion = probeVersion[0])
-        } else {
-            SourceProbeConfig(platformHost, platformName, probeVersion = "latest")
-        }
-
-        vertx.eventBus().request<JsonObject>(PlatformAddress.GENERATE_PROBE.address, config) {
-            if (it.succeeded()) {
-                launch(vertx.dispatcher()) {
-                    val genProbe = it.result().body()
-                    route.response().putHeader(
-                        "content-disposition",
-                        "attachment; filename=spp-probe-${genProbe.getString("probe_version")}.jar"
-                    ).sendFile(genProbe.getString("file_location"))
-                    log.info("Signed probe downloaded")
-                }
-            } else {
-                log.error("Failed to generate signed probe", it.cause())
-                val replyEx = it.cause() as ReplyException
-                route.response().setStatusCode(replyEx.failureCode())
-                    .end(it.cause().message)
-            }
-        }
-    }
-
     private fun getClients(ctx: RoutingContext) {
         var selfId = ctx.user()?.principal()?.getString("developer_id")
         if (selfId == null) {
@@ -576,7 +528,7 @@ class SourcePlatform : CoroutineVerticle() {
                     JsonObject()
                         .put("processors", JsonArray(Json.encode(ProcessorBridge.getActiveProcessors(vertx))))
                         .put("markers", JsonArray(Json.encode(MarkerBridge.getActiveMarkers(vertx))))
-                        .put("probes", JsonArray(Json.encode(ProbeTracker.getActiveProbes(vertx))))
+                        .put("probes", JsonArray(Json.encode(ProbeBridge.getActiveProbes(vertx))))
                         .toString()
                 )
         }
@@ -635,7 +587,7 @@ class SourcePlatform : CoroutineVerticle() {
         return JsonObject()
             .put("connected-processors", ProcessorBridge.getConnectedProcessorCount(vertx))
             .put("connected-markers", MarkerBridge.getConnectedMarkerCount(vertx))
-            .put("connected-probes", ProbeTracker.getConnectedProbeCount(vertx))
+            .put("connected-probes", ProbeBridge.getConnectedProbeCount(vertx))
             .put(
                 "services",
                 JsonObject()
@@ -671,6 +623,11 @@ class SourcePlatform : CoroutineVerticle() {
                             .put(
                                 LIVE_METER_REMOTE.address,
                                 vertx.sharedData().getLocalCounter(LIVE_METER_REMOTE.address)
+                                    .await().get().await()
+                            )
+                            .put(
+                                LIVE_SPAN_REMOTE.address,
+                                vertx.sharedData().getLocalCounter(LIVE_SPAN_REMOTE.address)
                                     .await().get().await()
                             )
                     )
