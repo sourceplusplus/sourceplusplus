@@ -159,7 +159,7 @@ class LiveInstrumentTest : PlatformIntegrationTest() {
             .setAddress(SourceServices.Utilize.LIVE_INSTRUMENT)
             .build(LiveInstrumentService::class.java)
 
-        val consumer = vertx.eventBus().localConsumer<JsonObject>("local." + Provide.LIVE_INSTRUMENT_SUBSCRIBER)
+        val consumer = vertx.eventBus().localConsumer<JsonObject>(Provide.LIVE_INSTRUMENT_SUBSCRIBER)
         consumer.handler {
             log.info("Got subscription event: {}", it.body())
             val liveEvent = Json.decodeValue(it.body().toString(), LiveInstrumentEvent::class.java)
@@ -232,7 +232,7 @@ class LiveInstrumentTest : PlatformIntegrationTest() {
             .setAddress(SourceServices.Utilize.LIVE_INSTRUMENT)
             .build(LiveInstrumentService::class.java)
 
-        val consumer = vertx.eventBus().localConsumer<JsonObject>("local." + Provide.LIVE_INSTRUMENT_SUBSCRIBER)
+        val consumer = vertx.eventBus().localConsumer<JsonObject>(Provide.LIVE_INSTRUMENT_SUBSCRIBER)
         consumer.handler {
             log.info("Got subscription event: {}", it.body())
             val liveEvent = Json.decodeValue(it.body().toString(), LiveInstrumentEvent::class.java)
@@ -305,7 +305,7 @@ class LiveInstrumentTest : PlatformIntegrationTest() {
             .setAddress(SourceServices.Utilize.LIVE_INSTRUMENT)
             .build(LiveInstrumentService::class.java)
 
-        val consumer = vertx.eventBus().localConsumer<JsonObject>("local." + Provide.LIVE_INSTRUMENT_SUBSCRIBER)
+        val consumer = vertx.eventBus().localConsumer<JsonObject>(Provide.LIVE_INSTRUMENT_SUBSCRIBER)
         consumer.handler {
             log.info("Got subscription event: {}", it.body())
             val liveEvent = Json.decodeValue(it.body().toString(), LiveInstrumentEvent::class.java)
@@ -378,7 +378,7 @@ class LiveInstrumentTest : PlatformIntegrationTest() {
             .setAddress(SourceServices.Utilize.LIVE_INSTRUMENT)
             .build(LiveInstrumentService::class.java)
 
-        val consumer = vertx.eventBus().localConsumer<JsonObject>("local." + Provide.LIVE_INSTRUMENT_SUBSCRIBER)
+        val consumer = vertx.eventBus().localConsumer<JsonObject>(Provide.LIVE_INSTRUMENT_SUBSCRIBER)
         consumer.handler {
             log.info("Got subscription event: {}", it.body())
             val liveEvent = Json.decodeValue(it.body().toString(), LiveInstrumentEvent::class.java)

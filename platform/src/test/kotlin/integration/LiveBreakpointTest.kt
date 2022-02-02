@@ -35,8 +35,8 @@ import spp.protocol.instrument.LiveSourceLocation
 import spp.protocol.instrument.event.LiveBreakpointHit
 import spp.protocol.instrument.event.LiveInstrumentEvent
 import spp.protocol.instrument.event.LiveInstrumentEventType
-import spp.protocol.service.error.LiveInstrumentException
 import spp.protocol.service.LiveInstrumentService
+import spp.protocol.service.error.LiveInstrumentException
 import java.util.*
 import java.util.concurrent.TimeUnit
 
@@ -54,7 +54,7 @@ class LiveBreakpointTest : PlatformIntegrationTest() {
         var gotRemoved = false
         val instrumentId = UUID.randomUUID().toString()
 
-        val consumer = vertx.eventBus().localConsumer<JsonObject>("local." + Provide.LIVE_INSTRUMENT_SUBSCRIBER)
+        val consumer = vertx.eventBus().localConsumer<JsonObject>(Provide.LIVE_INSTRUMENT_SUBSCRIBER)
         consumer.handler {
             log.info("Got subscription event: {}", it.body())
             val liveEvent = Json.decodeValue(it.body().toString(), LiveInstrumentEvent::class.java)
@@ -193,9 +193,9 @@ class LiveBreakpointTest : PlatformIntegrationTest() {
         var gotRemoved = false
         val instrumentId = UUID.randomUUID().toString()
 
-        val consumer = vertx.eventBus().localConsumer<JsonObject>("local." + Provide.LIVE_INSTRUMENT_SUBSCRIBER)
+        val consumer = vertx.eventBus().localConsumer<JsonObject>(Provide.LIVE_INSTRUMENT_SUBSCRIBER)
         consumer.endHandler {
-            log.info("Stopped listening at: {}", "local." + Provide.LIVE_INSTRUMENT_SUBSCRIBER)
+            log.info("Stopped listening at: {}", Provide.LIVE_INSTRUMENT_SUBSCRIBER)
         }.handler {
             log.info("Got subscription event: {}", it.body())
             val liveEvent = Json.decodeValue(it.body().toString(), LiveInstrumentEvent::class.java)
@@ -242,7 +242,7 @@ class LiveBreakpointTest : PlatformIntegrationTest() {
                 }
             }
         }.completionHandler {
-            log.info("Started listening at: {}", "local." + Provide.LIVE_INSTRUMENT_SUBSCRIBER)
+            log.info("Started listening at: {}", Provide.LIVE_INSTRUMENT_SUBSCRIBER)
             if (it.failed()) {
                 testContext.failNow(it.cause());
                 return@completionHandler
@@ -376,15 +376,15 @@ class LiveBreakpointTest : PlatformIntegrationTest() {
             .build(LiveInstrumentService::class.java)
 
         instrumentService.addLiveInstruments(
-                listOf(
-                    LiveBreakpoint(
-                        LiveSourceLocation("spp.example.webapp.model.User", 42),
-                        condition = "1==2"
-                    ),
-                    LiveBreakpoint(
-                        LiveSourceLocation("spp.example.webapp.model.User", 42),
-                        condition = "1==3"
-                    )
+            listOf(
+                LiveBreakpoint(
+                    LiveSourceLocation("spp.example.webapp.model.User", 42),
+                    condition = "1==2"
+                ),
+                LiveBreakpoint(
+                    LiveSourceLocation("spp.example.webapp.model.User", 42),
+                    condition = "1==3"
+                )
             )
         ).onComplete {
             if (it.succeeded()) {
