@@ -17,7 +17,9 @@
  */
 package spp.platform.processor
 
+import io.vertx.core.Vertx
 import io.vertx.core.json.Json
+import io.vertx.core.json.JsonObject
 import io.vertx.core.net.NetServerOptions
 import io.vertx.ext.bridge.BridgeEventType
 import io.vertx.ext.bridge.BridgeOptions
@@ -26,8 +28,11 @@ import io.vertx.ext.eventbus.bridge.tcp.TcpEventBusBridge
 import io.vertx.ext.healthchecks.HealthChecks
 import io.vertx.kotlin.coroutines.CoroutineVerticle
 import io.vertx.kotlin.coroutines.await
+import io.vertx.kotlin.coroutines.dispatcher
 import io.vertx.servicediscovery.ServiceDiscoveryOptions
-import org.slf4j.LoggerFactory
+import kotlinx.coroutines.launch
+import mu.KotlinLogging
+import spp.platform.SourcePlatform
 import spp.platform.SourcePlatform.Companion.addServiceCheck
 import spp.platform.core.SourceSubscriber
 import spp.protocol.SourceServices
@@ -36,16 +41,86 @@ import spp.protocol.platform.PlatformAddress
 import spp.protocol.platform.PlatformAddress.MARKER_DISCONNECTED
 import spp.protocol.probe.ProbeAddress
 import spp.protocol.processor.ProcessorAddress.SET_LOG_PUBLISH_RATE_LIMIT
+import spp.protocol.status.ActiveProcessor
 import spp.protocol.status.InstanceConnection
+import java.time.Duration
+import java.time.Instant
+import java.util.concurrent.ConcurrentHashMap
 
 class ProcessorBridge(
     private val healthChecks: HealthChecks,
     private val netServerOptions: NetServerOptions
 ) : CoroutineVerticle() {
 
-    private val log = LoggerFactory.getLogger(ProcessorBridge::class.java)
+    companion object {
+        private val log = KotlinLogging.logger {}
+
+        private const val connectedProcessorsAddress = "get-connected-processors"
+        private const val activeProcessorsAddress = "get-active-processors"
+
+        suspend fun getConnectedProcessorCount(vertx: Vertx): Int {
+            return vertx.eventBus().request<Int>(connectedProcessorsAddress, null).await().body()
+        }
+
+        suspend fun getActiveProcessors(vertx: Vertx): List<ActiveProcessor> {
+            return vertx.eventBus().request<List<ActiveProcessor>>(activeProcessorsAddress, null).await().body()
+        }
+    }
+
+    private val activeProcessors: MutableMap<String, ActiveProcessor> = ConcurrentHashMap()
 
     override suspend fun start() {
+        vertx.eventBus().consumer<JsonObject>(activeProcessorsAddress) {
+            launch(vertx.dispatcher()) {
+                it.reply(ArrayList(activeProcessors.values))
+            }
+        }
+        vertx.eventBus().consumer<JsonObject>(connectedProcessorsAddress) {
+            launch(vertx.dispatcher()) {
+                it.reply(
+                    vertx.sharedData().getLocalCounter(
+                        PlatformAddress.PROCESSOR_CONNECTED.address
+                    ).await().get().await()
+                )
+            }
+        }
+        vertx.eventBus().consumer<JsonObject>(PlatformAddress.PROCESSOR_CONNECTED.address) {
+            val conn = Json.decodeValue(it.body().toString(), InstanceConnection::class.java)
+            val latency = System.currentTimeMillis() - conn.connectionTime
+            log.trace { "Establishing connection with processor ${conn.instanceId}" }
+
+            activeProcessors[conn.instanceId] = ActiveProcessor(
+                conn.instanceId, System.currentTimeMillis(), meta = conn.meta
+            )
+            it.reply(true)
+
+            log.info(
+                "Processor connected. Latency: {}ms - Active processors: {}",
+                latency, activeProcessors.size
+            )
+
+            launch(vertx.dispatcher()) {
+                vertx.sharedData().getLocalCounter(PlatformAddress.PROCESSOR_CONNECTED.address).await()
+                    .incrementAndGet().await()
+            }
+        }
+        vertx.eventBus().consumer<JsonObject>(PlatformAddress.PROCESSOR_DISCONNECTED.address) {
+            val conn = Json.decodeValue(it.body().toString(), InstanceConnection::class.java)
+            val connectedAt = Instant.ofEpochMilli(activeProcessors.remove(conn.instanceId)!!.connectedAt)
+            log.info("Processor disconnected. Connection time: {}", Duration.between(Instant.now(), connectedAt))
+
+            launch(vertx.dispatcher()) {
+                SourcePlatform.discovery.getRecords { true }.await().forEach {
+                    if (it.metadata.getString("INSTANCE_ID") == conn.instanceId) {
+                        SourcePlatform.discovery.unpublish(it.registration)
+                    }
+                }
+
+                vertx.sharedData().getLocalCounter(PlatformAddress.PROCESSOR_CONNECTED.address).await()
+                    .decrementAndGet().await()
+            }
+        }
+
         val liveInstrumentEnabled = config.getJsonObject("live-instrument")?.getString("enabled")?.toBoolean() ?: false
         log.debug("Live instrument processor ${if (liveInstrumentEnabled) "enabled" else "disabled"}")
         if (liveInstrumentEnabled) addServiceCheck(healthChecks, Utilize.LIVE_INSTRUMENT)

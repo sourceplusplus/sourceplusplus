@@ -81,14 +81,12 @@ import spp.platform.core.storage.MemoryStorage
 import spp.platform.core.storage.RedisStorage
 import spp.platform.core.util.CertsToJksOptionsConverter
 import spp.platform.core.util.Msg.msg
-import spp.platform.marker.MarkerTracker
-import spp.platform.marker.MarkerVerticle
+import spp.platform.marker.MarkerBridge
 import spp.platform.probe.ProbeTracker
 import spp.platform.probe.ProbeVerticle
 import spp.platform.probe.config.SourceProbeConfig
 import spp.platform.probe.util.SelfSignedCertGenerator
-import spp.platform.processor.ProcessorTracker
-import spp.platform.processor.ProcessorVerticle
+import spp.platform.processor.ProcessorBridge
 import spp.protocol.ProtocolMarshaller
 import spp.protocol.ProtocolMarshaller.ProtocolMessageCodec
 import spp.protocol.SourceServices.Utilize
@@ -471,11 +469,11 @@ class SourcePlatform : CoroutineVerticle() {
             DeploymentOptions().setConfig(config.getJsonObject("spp-platform").getJsonObject("probe"))
         ).await()
         vertx.deployVerticle(
-            MarkerVerticle(jwt, netServerOptions),
+            MarkerBridge(jwt, netServerOptions),
             DeploymentOptions().setConfig(config.getJsonObject("spp-platform").getJsonObject("marker"))
         ).await()
         vertx.deployVerticle(
-            ProcessorVerticle(healthChecks, netServerOptions),
+            ProcessorBridge(healthChecks, netServerOptions),
             DeploymentOptions().setConfig(config.getJsonObject("spp-platform").getJsonObject("processor"))
         ).await()
 
@@ -576,8 +574,8 @@ class SourcePlatform : CoroutineVerticle() {
             ctx.response().putHeader("Content-Type", "application/json")
                 .end(
                     JsonObject()
-                        .put("processors", JsonArray(Json.encode(ProcessorTracker.getActiveProcessors(vertx))))
-                        .put("markers", JsonArray(Json.encode(MarkerTracker.getActiveMarkers(vertx))))
+                        .put("processors", JsonArray(Json.encode(ProcessorBridge.getActiveProcessors(vertx))))
+                        .put("markers", JsonArray(Json.encode(MarkerBridge.getActiveMarkers(vertx))))
                         .put("probes", JsonArray(Json.encode(ProbeTracker.getActiveProbes(vertx))))
                         .toString()
                 )
@@ -635,8 +633,8 @@ class SourcePlatform : CoroutineVerticle() {
 
     private suspend fun getPlatformStats(): JsonObject {
         return JsonObject()
-            .put("connected-processors", ProcessorTracker.getConnectedProcessorCount(vertx))
-            .put("connected-markers", MarkerTracker.getConnectedMarkerCount(vertx))
+            .put("connected-processors", ProcessorBridge.getConnectedProcessorCount(vertx))
+            .put("connected-markers", MarkerBridge.getConnectedMarkerCount(vertx))
             .put("connected-probes", ProbeTracker.getConnectedProbeCount(vertx))
             .put(
                 "services",
