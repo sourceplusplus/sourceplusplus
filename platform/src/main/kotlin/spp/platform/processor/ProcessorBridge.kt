@@ -21,12 +21,12 @@ import io.vertx.core.Vertx
 import io.vertx.core.json.Json
 import io.vertx.core.json.JsonObject
 import io.vertx.core.net.NetServerOptions
+import io.vertx.ext.auth.jwt.JWTAuth
 import io.vertx.ext.bridge.BridgeEventType
 import io.vertx.ext.bridge.BridgeOptions
 import io.vertx.ext.bridge.PermittedOptions
 import io.vertx.ext.eventbus.bridge.tcp.TcpEventBusBridge
 import io.vertx.ext.healthchecks.HealthChecks
-import io.vertx.kotlin.coroutines.CoroutineVerticle
 import io.vertx.kotlin.coroutines.await
 import io.vertx.kotlin.coroutines.dispatcher
 import io.vertx.servicediscovery.ServiceDiscoveryOptions
@@ -34,6 +34,7 @@ import kotlinx.coroutines.launch
 import mu.KotlinLogging
 import spp.platform.SourcePlatform
 import spp.platform.SourcePlatform.Companion.addServiceCheck
+import spp.platform.core.InstanceBridge
 import spp.platform.core.SourceSubscriber
 import spp.protocol.SourceServices
 import spp.protocol.SourceServices.Utilize
@@ -49,8 +50,9 @@ import java.util.concurrent.ConcurrentHashMap
 
 class ProcessorBridge(
     private val healthChecks: HealthChecks,
+    jwtAuth: JWTAuth?,
     private val netServerOptions: NetServerOptions
-) : CoroutineVerticle() {
+) : InstanceBridge(jwtAuth) {
 
     companion object {
         private val log = KotlinLogging.logger {}
@@ -167,7 +169,7 @@ class ProcessorBridge(
                     it.rawMessage.getJsonObject("headers").put("processor_id", processorId)
                 }
             }
-            it.complete(true)
+            it.complete(true) //todo: validateAuth(it)
         }.listen(config.getString("bridge_port").toInt()).await()
     }
 

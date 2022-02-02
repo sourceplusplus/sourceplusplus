@@ -117,7 +117,8 @@ open class PlatformIntegrationTest {
 
                 FrameHelper.sendFrame(
                     BridgeEventType.SEND.name.lowercase(), PlatformAddress.MARKER_CONNECTED.address,
-                    replyAddress, JsonObject(), true, JsonObject.mapFrom(pc), tcpSocket
+                    replyAddress, JsonObject().put("auth-token", SYSTEM_JWT_TOKEN), true,
+                    JsonObject.mapFrom(pc), tcpSocket
                 )
                 withTimeout(5000) {
                     promise.future().await()
@@ -152,7 +153,8 @@ open class PlatformIntegrationTest {
                 //register listener
                 FrameHelper.sendFrame(
                     BridgeEventType.REGISTER.name.lowercase(),
-                    SourceServices.Provide.LIVE_INSTRUMENT_SUBSCRIBER, JsonObject(), tcpSocket
+                    SourceServices.Provide.LIVE_INSTRUMENT_SUBSCRIBER, null,
+                    JsonObject().put("auth-token", SYSTEM_JWT_TOKEN), null, null, tcpSocket
                 )
 
                 discovery = DiscoveryImpl(

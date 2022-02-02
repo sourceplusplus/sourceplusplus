@@ -22,17 +22,18 @@ import io.vertx.core.eventbus.DeliveryOptions
 import io.vertx.core.json.Json
 import io.vertx.core.json.JsonObject
 import io.vertx.core.net.NetServerOptions
+import io.vertx.ext.auth.jwt.JWTAuth
 import io.vertx.ext.bridge.BridgeEventType
 import io.vertx.ext.bridge.BridgeOptions
 import io.vertx.ext.bridge.PermittedOptions
 import io.vertx.ext.eventbus.bridge.tcp.TcpEventBusBridge
 import io.vertx.ext.web.Router
-import io.vertx.kotlin.coroutines.CoroutineVerticle
 import io.vertx.kotlin.coroutines.await
 import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import mu.KotlinLogging
+import spp.platform.core.InstanceBridge
 import spp.platform.core.SourceSubscriber
 import spp.platform.core.util.Msg
 import spp.protocol.platform.PlatformAddress
@@ -45,8 +46,9 @@ import java.util.concurrent.ConcurrentHashMap
 
 class ProbeBridge(
     private val router: Router,
+    jwtAuth: JWTAuth?,
     private val netServerOptions: NetServerOptions
-) : CoroutineVerticle() {
+) : InstanceBridge(jwtAuth) {
 
     companion object {
         private val log = KotlinLogging.logger {}
@@ -173,7 +175,7 @@ class ProbeBridge(
                     return@create
                 }
             }
-            it.complete(true)
+            it.complete(true) //todo: validateAuth(it)
         }.listen(config.getString("bridge_port").toInt()).await()
     }
 }

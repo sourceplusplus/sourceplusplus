@@ -27,11 +27,12 @@ import io.vertx.ext.bridge.BridgeEventType
 import io.vertx.ext.bridge.BridgeOptions
 import io.vertx.ext.bridge.PermittedOptions
 import io.vertx.ext.eventbus.bridge.tcp.TcpEventBusBridge
-import io.vertx.kotlin.coroutines.CoroutineVerticle
 import io.vertx.kotlin.coroutines.await
 import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.launch
 import mu.KotlinLogging
+import spp.platform.core.InstanceBridge
+import spp.processor.common.DeveloperAuth
 import spp.protocol.SourceServices.Provide
 import spp.protocol.SourceServices.Utilize
 import spp.protocol.platform.PlatformAddress
@@ -42,9 +43,9 @@ import java.time.Instant
 import java.util.concurrent.ConcurrentHashMap
 
 class MarkerBridge(
-    private val jwtAuth: JWTAuth?,
+    jwtAuth: JWTAuth?,
     private val netServerOptions: NetServerOptions
-) : CoroutineVerticle() {
+) : InstanceBridge(jwtAuth) {
 
     companion object {
         private val log = KotlinLogging.logger {}
@@ -99,18 +100,8 @@ class MarkerBridge(
             val latency = System.currentTimeMillis() - conn.connectionTime
             log.trace { "Establishing connection with marker ${conn.instanceId}" }
 
-            if (jwtAuth != null && !marker.headers().get("auth-token").isNullOrEmpty()) {
-                jwtAuth.authenticate(JsonObject().put("token", marker.headers().get("auth-token"))).onComplete {
-                    if (it.succeeded()) {
-                        addActiveMarker(it.result().principal().getString("developer_id"), conn, marker, latency)
-                    } else {
-                        log.warn("Rejected invalid marker access")
-                        marker.reply(false)
-                    }
-                }
-            } else {
-                addActiveMarker("system", conn, marker, latency)
-            }
+            val devAuth = Vertx.currentContext().get<DeveloperAuth>("developer")
+            addActiveMarker(devAuth.selfId, conn, marker, latency)
         }
         vertx.eventBus().consumer<JsonObject>(PlatformAddress.MARKER_DISCONNECTED.address) {
             val conn = Json.decodeValue(it.body().toString(), InstanceConnection::class.java)
@@ -155,7 +146,7 @@ class MarkerBridge(
                     }
                 }
             }
-            it.complete(true)
+            validateAuth(it)
         }.listen(config.getString("bridge_port").toInt()).await()
     }
 }

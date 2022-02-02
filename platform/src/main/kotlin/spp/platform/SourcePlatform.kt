@@ -88,7 +88,7 @@ import spp.platform.processor.ProcessorBridge
 import spp.protocol.ProtocolMarshaller
 import spp.protocol.ProtocolMarshaller.ProtocolMessageCodec
 import spp.protocol.SourceServices.Utilize
-import spp.protocol.probe.ProbeAddress.*
+import spp.protocol.probe.ProbeAddress.LIVE_INSTRUMENT_REMOTE
 import spp.protocol.service.LiveViewService
 import spp.protocol.util.KSerializers
 import java.io.File
@@ -447,7 +447,7 @@ class SourcePlatform : CoroutineVerticle() {
 
         //Open bridges
         vertx.deployVerticle(
-            ProbeBridge(router, netServerOptions),
+            ProbeBridge(router, jwt, netServerOptions),
             DeploymentOptions().setConfig(config.getJsonObject("spp-platform").getJsonObject("probe"))
         ).await()
         vertx.deployVerticle(
@@ -455,7 +455,7 @@ class SourcePlatform : CoroutineVerticle() {
             DeploymentOptions().setConfig(config.getJsonObject("spp-platform").getJsonObject("marker"))
         ).await()
         vertx.deployVerticle(
-            ProcessorBridge(healthChecks, netServerOptions),
+            ProcessorBridge(healthChecks, jwt, netServerOptions),
             DeploymentOptions().setConfig(config.getJsonObject("spp-platform").getJsonObject("processor"))
         ).await()
 
