@@ -24,7 +24,6 @@ input ArtifactQualifiedNameInput {
 
 type LiveViewConfig {
     viewName: String!
-    userDefined: Boolean!
     viewMetrics: [String!]
     refreshRateLimit: Int!
 }

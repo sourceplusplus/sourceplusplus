@@ -195,16 +195,7 @@ class ProcessorBridge(
                 PermittedOptions().setAddressRegex(SourceServices.Provide.LIVE_INSTRUMENT_SUBSCRIBER + "\\..+")
             )
             .addInboundPermitted(
-                PermittedOptions().setAddressRegex(ProbeAddress.LIVE_BREAKPOINT_REMOTE.address + "\\:.+")
-            )
-            .addInboundPermitted(
-                PermittedOptions().setAddressRegex(ProbeAddress.LIVE_LOG_REMOTE.address + "\\:.+")
-            )
-            .addInboundPermitted(
-                PermittedOptions().setAddressRegex(ProbeAddress.LIVE_METER_REMOTE.address + "\\:.+")
-            )
-            .addInboundPermitted(
-                PermittedOptions().setAddressRegex(ProbeAddress.LIVE_SPAN_REMOTE.address + "\\:.+")
+                PermittedOptions().setAddressRegex(ProbeAddress.LIVE_INSTRUMENT_REMOTE.address + "\\:.+")
             )
     }
 }

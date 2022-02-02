@@ -611,23 +611,8 @@ class SourcePlatform : CoroutineVerticle() {
                         "probe",
                         JsonObject()
                             .put(
-                                LIVE_BREAKPOINT_REMOTE.address,
-                                vertx.sharedData().getLocalCounter(LIVE_BREAKPOINT_REMOTE.address)
-                                    .await().get().await()
-                            )
-                            .put(
-                                LIVE_LOG_REMOTE.address,
-                                vertx.sharedData().getLocalCounter(LIVE_LOG_REMOTE.address)
-                                    .await().get().await()
-                            )
-                            .put(
-                                LIVE_METER_REMOTE.address,
-                                vertx.sharedData().getLocalCounter(LIVE_METER_REMOTE.address)
-                                    .await().get().await()
-                            )
-                            .put(
-                                LIVE_SPAN_REMOTE.address,
-                                vertx.sharedData().getLocalCounter(LIVE_SPAN_REMOTE.address)
+                                LIVE_INSTRUMENT_REMOTE.address,
+                                vertx.sharedData().getLocalCounter(LIVE_INSTRUMENT_REMOTE.address)
                                     .await().get().await()
                             )
                     )
