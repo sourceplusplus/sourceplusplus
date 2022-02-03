@@ -38,7 +38,7 @@ import spp.platform.core.SourceSubscriber
 import spp.platform.core.util.Msg
 import spp.protocol.platform.PlatformAddress
 import spp.protocol.probe.ProbeAddress
-import spp.protocol.status.ActiveProbe
+import spp.protocol.status.ActiveInstance
 import spp.protocol.status.InstanceConnection
 import java.time.Duration
 import java.time.Instant
@@ -60,12 +60,12 @@ class ProbeBridge(
             return vertx.eventBus().request<Int>(connectedProbesAddress, null).await().body()
         }
 
-        suspend fun getActiveProbes(vertx: Vertx): List<ActiveProbe> {
-            return vertx.eventBus().request<List<ActiveProbe>>(activeProbesAddress, null).await().body()
+        suspend fun getActiveProbes(vertx: Vertx): List<ActiveInstance> {
+            return vertx.eventBus().request<List<ActiveInstance>>(activeProbesAddress, null).await().body()
         }
     }
 
-    private val activeProbes: MutableMap<String, ActiveProbe> = ConcurrentHashMap()
+    private val activeProbes: MutableMap<String, ActiveInstance> = ConcurrentHashMap()
 
     override suspend fun start() {
         vertx.deployVerticle(ProbeGenerator(router)).await()
@@ -88,7 +88,8 @@ class ProbeBridge(
             val remote = it.body().getString("address")
             if (!remote.contains(":")) {
                 val probeId = it.headers().get("probe_id")
-                activeProbes[probeId]!!.remotes.add(remote)
+                activeProbes[probeId]!!.meta.putIfAbsent("remotes", mutableListOf<String>())
+                (activeProbes[probeId]!!.meta["remotes"] as MutableList<String>).add(remote)
                 log.trace { Msg.msg("Probe {} registered {}", probeId, remote) }
 
                 launch(vertx.dispatcher()) {
@@ -102,13 +103,9 @@ class ProbeBridge(
             val latency = System.currentTimeMillis() - conn.connectionTime
             log.trace { Msg.msg("Establishing connection with probe {}", conn.instanceId) }
 
-            activeProbes[conn.instanceId] = ActiveProbe(conn.instanceId, System.currentTimeMillis(), meta = conn.meta)
+            activeProbes[conn.instanceId] = ActiveInstance(conn.instanceId, System.currentTimeMillis(), conn.meta)
             it.reply(true)
-
-            log.info(
-                "Probe connected. Latency: {}ms - Probes connected: {}",
-                latency, activeProbes.size
-            )
+            log.info("Probe connected. Latency: {}ms - Probes connected: {}", latency, activeProbes.size)
 
             launch(vertx.dispatcher()) {
                 vertx.sharedData().getLocalCounter(PlatformAddress.PROBE_CONNECTED.address).await()
@@ -125,7 +122,7 @@ class ProbeBridge(
                 vertx.sharedData().getLocalCounter(PlatformAddress.PROBE_CONNECTED.address).await()
                     .decrementAndGet().await()
 
-                activeProbe.remotes.forEach {
+                (activeProbe.meta["remotes"] as List<String>?).orEmpty().forEach {
                     vertx.sharedData().getLocalCounter(it).await()
                         .decrementAndGet().await()
                 }

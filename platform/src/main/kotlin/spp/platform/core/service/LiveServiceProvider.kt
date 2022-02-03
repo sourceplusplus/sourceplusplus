@@ -33,7 +33,7 @@ import spp.protocol.developer.Developer
 import spp.protocol.developer.SelfInfo
 import spp.protocol.general.Service
 import spp.protocol.service.LiveService
-import spp.protocol.status.ActiveProbe
+import spp.protocol.status.ActiveInstance
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -111,8 +111,8 @@ class LiveServiceProvider(private val vertx: Vertx) : LiveService {
         return promise.future()
     }
 
-    override fun getActiveProbes(): Future<List<ActiveProbe>> {
-        val promise = Promise.promise<List<ActiveProbe>>()
+    override fun getActiveProbes(): Future<List<ActiveInstance>> {
+        val promise = Promise.promise<List<ActiveInstance>>()
         GlobalScope.launch(vertx.dispatcher()) {
             promise.complete(ProbeBridge.getActiveProbes(vertx))
         }
