@@ -85,14 +85,16 @@ class ProbeBridge(
             }
         }
         vertx.eventBus().consumer<JsonObject>(ProbeAddress.REMOTE_REGISTERED.address) {
-            val remote = it.body().getString("address").substringBefore(":")
-            val probeId = it.headers().get("probe_id")
-            activeProbes[probeId]!!.remotes.add(remote)
-            log.trace { Msg.msg("Probe {} registered {}", probeId, remote) }
+            val remote = it.body().getString("address")
+            if (!remote.contains(":")) {
+                val probeId = it.headers().get("probe_id")
+                activeProbes[probeId]!!.remotes.add(remote)
+                log.trace { Msg.msg("Probe {} registered {}", probeId, remote) }
 
-            launch(vertx.dispatcher()) {
-                vertx.sharedData().getLocalCounter(remote).await()
-                    .incrementAndGet().await()
+                launch(vertx.dispatcher()) {
+                    vertx.sharedData().getLocalCounter(remote).await()
+                        .incrementAndGet().await()
+                }
             }
         }
         vertx.eventBus().consumer<JsonObject>(PlatformAddress.PROBE_CONNECTED.address) {

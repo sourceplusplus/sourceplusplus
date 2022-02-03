@@ -193,10 +193,11 @@ class ProcessorBridge(
 
     private fun BridgeOptions.addLiveInstrumentInbound() {
         addInboundPermitted(
-                PermittedOptions().setAddressRegex(SourceServices.Provide.LIVE_INSTRUMENT_SUBSCRIBER + "\\:.+")
-            )
-            .addInboundPermitted(
-                PermittedOptions().setAddressRegex(ProbeAddress.LIVE_INSTRUMENT_REMOTE.address + "\\:.+")
-            )
+            PermittedOptions().setAddressRegex(SourceServices.Provide.LIVE_INSTRUMENT_SUBSCRIBER + "\\:.+")
+        ).addInboundPermitted(
+            PermittedOptions().setAddressRegex(ProbeAddress.LIVE_INSTRUMENT_REMOTE.address)
+        ).addInboundPermitted(
+            PermittedOptions().setAddressRegex(ProbeAddress.LIVE_INSTRUMENT_REMOTE.address + "\\:.+")
+        )
     }
 }
