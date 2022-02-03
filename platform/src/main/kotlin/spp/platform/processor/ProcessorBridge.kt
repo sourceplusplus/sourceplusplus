@@ -42,7 +42,7 @@ import spp.protocol.platform.PlatformAddress
 import spp.protocol.platform.PlatformAddress.MARKER_DISCONNECTED
 import spp.protocol.probe.ProbeAddress
 import spp.protocol.processor.ProcessorAddress.SET_LOG_PUBLISH_RATE_LIMIT
-import spp.protocol.status.ActiveProcessor
+import spp.protocol.status.ActiveInstance
 import spp.protocol.status.InstanceConnection
 import java.time.Duration
 import java.time.Instant
@@ -64,12 +64,12 @@ class ProcessorBridge(
             return vertx.eventBus().request<Int>(connectedProcessorsAddress, null).await().body()
         }
 
-        suspend fun getActiveProcessors(vertx: Vertx): List<ActiveProcessor> {
-            return vertx.eventBus().request<List<ActiveProcessor>>(activeProcessorsAddress, null).await().body()
+        suspend fun getActiveProcessors(vertx: Vertx): List<ActiveInstance> {
+            return vertx.eventBus().request<List<ActiveInstance>>(activeProcessorsAddress, null).await().body()
         }
     }
 
-    private val activeProcessors: MutableMap<String, ActiveProcessor> = ConcurrentHashMap()
+    private val activeProcessors: MutableMap<String, ActiveInstance> = ConcurrentHashMap()
 
     override suspend fun start() {
         vertx.eventBus().consumer<JsonObject>(activeProcessorsAddress) {
@@ -91,15 +91,9 @@ class ProcessorBridge(
             val latency = System.currentTimeMillis() - conn.connectionTime
             log.trace { "Establishing connection with processor ${conn.instanceId}" }
 
-            activeProcessors[conn.instanceId] = ActiveProcessor(
-                conn.instanceId, System.currentTimeMillis(), meta = conn.meta
-            )
+            activeProcessors[conn.instanceId] = ActiveInstance(conn.instanceId, System.currentTimeMillis(), conn.meta)
             it.reply(true)
-
-            log.info(
-                "Processor connected. Latency: {}ms - Active processors: {}",
-                latency, activeProcessors.size
-            )
+            log.info("Processor connected. Latency: {}ms - Active processors: {}", latency, activeProcessors.size)
 
             launch(vertx.dispatcher()) {
                 vertx.sharedData().getLocalCounter(PlatformAddress.PROCESSOR_CONNECTED.address).await()

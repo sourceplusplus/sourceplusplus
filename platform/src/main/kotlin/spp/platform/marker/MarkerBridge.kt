@@ -18,7 +18,6 @@
 package spp.platform.marker
 
 import io.vertx.core.Vertx
-import io.vertx.core.eventbus.Message
 import io.vertx.core.json.Json
 import io.vertx.core.json.JsonObject
 import io.vertx.core.net.NetServerOptions
@@ -32,11 +31,10 @@ import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.launch
 import mu.KotlinLogging
 import spp.platform.core.InstanceBridge
-import spp.processor.common.DeveloperAuth
 import spp.protocol.SourceServices.Provide
 import spp.protocol.SourceServices.Utilize
 import spp.protocol.platform.PlatformAddress
-import spp.protocol.status.ActiveMarker
+import spp.protocol.status.ActiveInstance
 import spp.protocol.status.InstanceConnection
 import java.time.Duration
 import java.time.Instant
@@ -57,28 +55,12 @@ class MarkerBridge(
             return vertx.eventBus().request<Int>(connectedMarkersAddress, null).await().body()
         }
 
-        suspend fun getActiveMarkers(vertx: Vertx): List<ActiveMarker> {
-            return vertx.eventBus().request<List<ActiveMarker>>(activeMarkersAddress, null).await().body()
+        suspend fun getActiveMarkers(vertx: Vertx): List<ActiveInstance> {
+            return vertx.eventBus().request<List<ActiveInstance>>(activeMarkersAddress, null).await().body()
         }
     }
 
-    private val activeMarkers: MutableMap<String, ActiveMarker> = ConcurrentHashMap()
-
-    private fun addActiveMarker(selfId: String, conn: InstanceConnection, marker: Message<JsonObject>, latency: Long) {
-        activeMarkers[conn.instanceId] =
-            ActiveMarker(conn.instanceId, System.currentTimeMillis(), selfId, meta = conn.meta)
-        marker.reply(true)
-
-        log.info(
-            "Marker connected. Latency: {}ms - Active markers: {}",
-            latency, activeMarkers.size
-        )
-
-        launch(vertx.dispatcher()) {
-            vertx.sharedData().getLocalCounter(PlatformAddress.MARKER_CONNECTED.address).await()
-                .incrementAndGet().await()
-        }
-    }
+    private val activeMarkers: MutableMap<String, ActiveInstance> = ConcurrentHashMap()
 
     override suspend fun start() {
         vertx.eventBus().consumer<JsonObject>(activeMarkersAddress) {
@@ -100,8 +82,14 @@ class MarkerBridge(
             val latency = System.currentTimeMillis() - conn.connectionTime
             log.trace { "Establishing connection with marker ${conn.instanceId}" }
 
-            val devAuth = Vertx.currentContext().get<DeveloperAuth>("developer")
-            addActiveMarker(devAuth.selfId, conn, marker, latency)
+            activeMarkers[conn.instanceId] = ActiveInstance(conn.instanceId, System.currentTimeMillis(), conn.meta)
+            marker.reply(true)
+            log.info("Marker connected. Latency: {}ms - Active markers: {}", latency, activeMarkers.size)
+
+            launch(vertx.dispatcher()) {
+                vertx.sharedData().getLocalCounter(PlatformAddress.MARKER_CONNECTED.address).await()
+                    .incrementAndGet().await()
+            }
         }
         vertx.eventBus().consumer<JsonObject>(PlatformAddress.MARKER_DISCONNECTED.address) {
             val conn = Json.decodeValue(it.body().toString(), InstanceConnection::class.java)
