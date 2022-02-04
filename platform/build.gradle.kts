@@ -48,7 +48,7 @@ dependencies {
     implementation("io.vertx:vertx-web-graphql:${vertxVersion}")
     implementation("io.vertx:vertx-tcp-eventbus-bridge:$vertxVersion")
     implementation("com.auth0:java-jwt:$auth0JwtVersion")
-    implementation("com.auth0:jwks-rsa:0.20.1")
+    implementation("com.auth0:jwks-rsa:0.20.2")
     implementation("org.bouncycastle:bcprov-jdk15on:$bouncycastleVersion")
     implementation("org.bouncycastle:bcpkix-jdk15on:$bouncycastleVersion")
     implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
@@ -64,7 +64,7 @@ dependencies {
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:$jacksonVersion")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-guava:$jacksonVersion")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
-    implementation("io.dropwizard.metrics:metrics-core:4.2.7")
+    implementation("io.dropwizard.metrics:metrics-core:4.2.8")
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.3.2")
     implementation("org.apache.commons:commons-text:1.9")
 
