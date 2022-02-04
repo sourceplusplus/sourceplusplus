@@ -85,5 +85,5 @@
 - Improved live control bar
 - Source mark visibility toggle shortcut (Ctrl+Shift+D)
 
-## [0.1.0] - 2021-09-2
+## [0.1.0] - 2021-09-20
 - First public release
