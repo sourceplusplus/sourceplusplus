@@ -4,7 +4,7 @@
 
 #### Added
 - AGPLv3 license header
-- Deployment guide
+- Release workflow
 
 #### Changed
 - Centralized changelogs
