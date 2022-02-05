@@ -38,6 +38,7 @@ import spp.platform.core.SourceSubscriber
 import spp.platform.core.util.Msg
 import spp.protocol.platform.PlatformAddress
 import spp.protocol.platform.ProbeAddress
+import spp.protocol.platform.ProcessorAddress
 import spp.protocol.platform.status.ActiveInstance
 import spp.protocol.platform.status.InstanceConnection
 import java.time.Duration
@@ -84,7 +85,7 @@ class ProbeBridge(
                 )
             }
         }
-        vertx.eventBus().consumer<JsonObject>(ProbeAddress.REMOTE_REGISTERED) {
+        vertx.eventBus().consumer<JsonObject>(ProcessorAddress.REMOTE_REGISTERED) {
             val remote = it.body().getString("address")
             if (!remote.contains(":")) {
                 val probeId = it.headers().get("probe_id")
@@ -132,9 +133,17 @@ class ProbeBridge(
         TcpEventBusBridge.create(
             vertx,
             BridgeOptions()
-                .addInboundPermitted(PermittedOptions().setAddressRegex("spp\\.platform\\.status\\..+"))
-                .addInboundPermitted(PermittedOptions().setAddressRegex("spp\\.probe\\.status\\..+"))
-                .addOutboundPermitted(PermittedOptions().setAddressRegex("spp\\.probe\\.command\\..+")),
+                //from probe
+                .addInboundPermitted(PermittedOptions().setAddress(PlatformAddress.PROBE_CONNECTED))
+                .addInboundPermitted(PermittedOptions().setAddress(ProcessorAddress.REMOTE_REGISTERED))
+                .addInboundPermitted(PermittedOptions().setAddress(ProcessorAddress.LIVE_INSTRUMENT_APPLIED))
+                .addInboundPermitted(PermittedOptions().setAddress(ProcessorAddress.LIVE_INSTRUMENT_REMOVED))
+                //to probe
+                .addOutboundPermitted(
+                    PermittedOptions().setAddressRegex(ProbeAddress.LIVE_INSTRUMENT_REMOTE)
+                ).addOutboundPermitted(
+                    PermittedOptions().setAddressRegex(ProbeAddress.LIVE_INSTRUMENT_REMOTE + "\\:.+")
+                ),
             netServerOptions
         ) {
             if (it.type() == BridgeEventType.SEND) {
@@ -163,7 +172,7 @@ class ProbeBridge(
                     launch(vertx.dispatcher()) {
                         delay(1500) //todo: this is temp fix for race condition
                         vertx.eventBus().publish(
-                            ProbeAddress.REMOTE_REGISTERED,
+                            ProcessorAddress.REMOTE_REGISTERED,
                             it.rawMessage,
                             DeliveryOptions().addHeader("probe_id", probeId)
                         )
