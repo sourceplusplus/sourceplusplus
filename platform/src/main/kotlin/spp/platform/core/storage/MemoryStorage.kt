@@ -21,8 +21,8 @@ import io.vertx.core.Vertx
 import io.vertx.core.json.JsonArray
 import io.vertx.core.shareddata.Shareable
 import io.vertx.kotlin.coroutines.await
-import spp.protocol.auth.*
-import spp.protocol.developer.Developer
+import spp.protocol.platform.auth.*
+import spp.protocol.platform.developer.Developer
 
 class MemoryStorage(val vertx: Vertx) : CoreStorage {
 

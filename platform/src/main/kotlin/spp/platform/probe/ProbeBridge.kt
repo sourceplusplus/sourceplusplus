@@ -37,9 +37,9 @@ import spp.platform.core.InstanceBridge
 import spp.platform.core.SourceSubscriber
 import spp.platform.core.util.Msg
 import spp.protocol.platform.PlatformAddress
-import spp.protocol.probe.ProbeAddress
-import spp.protocol.status.ActiveInstance
-import spp.protocol.status.InstanceConnection
+import spp.protocol.platform.ProbeAddress
+import spp.protocol.platform.status.ActiveInstance
+import spp.protocol.platform.status.InstanceConnection
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.ConcurrentHashMap

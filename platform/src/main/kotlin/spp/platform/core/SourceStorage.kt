@@ -21,9 +21,8 @@ import io.vertx.core.json.JsonObject
 import org.apache.commons.lang3.RandomStringUtils
 import org.slf4j.LoggerFactory
 import spp.platform.core.storage.CoreStorage
-import spp.protocol.auth.*
-import spp.protocol.developer.Developer
-import spp.protocol.utils.AccessChecker
+import spp.protocol.platform.auth.*
+import spp.protocol.platform.developer.Developer
 
 object SourceStorage {
 

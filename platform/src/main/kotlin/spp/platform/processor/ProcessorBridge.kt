@@ -40,10 +40,10 @@ import spp.protocol.SourceServices
 import spp.protocol.SourceServices.Utilize
 import spp.protocol.platform.PlatformAddress
 import spp.protocol.platform.PlatformAddress.MARKER_DISCONNECTED
-import spp.protocol.probe.ProbeAddress
-import spp.protocol.processor.ProcessorAddress.SET_LOG_PUBLISH_RATE_LIMIT
-import spp.protocol.status.ActiveInstance
-import spp.protocol.status.InstanceConnection
+import spp.protocol.platform.ProbeAddress
+import spp.protocol.platform.ProcessorAddress.SET_LOG_PUBLISH_RATE_LIMIT
+import spp.protocol.platform.status.ActiveInstance
+import spp.protocol.platform.status.InstanceConnection
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.ConcurrentHashMap

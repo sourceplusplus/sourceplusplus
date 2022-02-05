@@ -38,11 +38,6 @@ import org.slf4j.LoggerFactory
 import spp.platform.SourcePlatform
 import spp.protocol.artifact.ArtifactQualifiedName
 import spp.protocol.artifact.ArtifactType
-import spp.protocol.auth.*
-import spp.protocol.auth.RolePermission.*
-import spp.protocol.developer.Developer
-import spp.protocol.developer.SelfInfo
-import spp.protocol.general.Service
 import spp.protocol.instrument.*
 import spp.protocol.instrument.LiveInstrumentType.*
 import spp.protocol.instrument.meter.MeterType
@@ -50,6 +45,11 @@ import spp.protocol.instrument.meter.MetricValue
 import spp.protocol.instrument.meter.MetricValueType
 import spp.protocol.instrument.throttle.InstrumentThrottle
 import spp.protocol.instrument.throttle.ThrottleStep
+import spp.protocol.platform.auth.*
+import spp.protocol.platform.auth.RolePermission.*
+import spp.protocol.platform.developer.Developer
+import spp.protocol.platform.developer.SelfInfo
+import spp.protocol.platform.general.Service
 import spp.protocol.service.LiveInstrumentService
 import spp.protocol.service.LiveService
 import spp.protocol.service.LiveViewService

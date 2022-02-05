@@ -29,11 +29,11 @@ import org.slf4j.LoggerFactory
 import spp.platform.core.SourceStorage
 import spp.platform.probe.ProbeBridge
 import spp.processor.common.DeveloperAuth
-import spp.protocol.developer.Developer
-import spp.protocol.developer.SelfInfo
-import spp.protocol.general.Service
+import spp.protocol.platform.developer.Developer
+import spp.protocol.platform.developer.SelfInfo
+import spp.protocol.platform.general.Service
+import spp.protocol.platform.status.ActiveInstance
 import spp.protocol.service.LiveService
-import spp.protocol.status.ActiveInstance
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter

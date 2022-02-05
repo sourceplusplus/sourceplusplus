@@ -88,7 +88,7 @@ import spp.platform.processor.ProcessorBridge
 import spp.protocol.ProtocolMarshaller
 import spp.protocol.ProtocolMarshaller.ProtocolMessageCodec
 import spp.protocol.SourceServices.Utilize
-import spp.protocol.probe.ProbeAddress.LIVE_INSTRUMENT_REMOTE
+import spp.protocol.platform.ProbeAddress.LIVE_INSTRUMENT_REMOTE
 import spp.protocol.service.LiveViewService
 import spp.protocol.util.KSerializers
 import java.io.File

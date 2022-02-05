@@ -23,8 +23,8 @@ import io.vertx.kotlin.coroutines.await
 import io.vertx.redis.client.Redis
 import io.vertx.redis.client.RedisAPI
 import spp.platform.core.SourceStorage
-import spp.protocol.auth.*
-import spp.protocol.developer.Developer
+import spp.protocol.platform.auth.*
+import spp.protocol.platform.developer.Developer
 import java.nio.charset.StandardCharsets
 
 class RedisStorage : CoreStorage {

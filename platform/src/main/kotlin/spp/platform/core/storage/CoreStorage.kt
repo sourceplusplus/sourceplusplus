@@ -17,8 +17,8 @@
  */
 package spp.platform.core.storage
 
-import spp.protocol.auth.*
-import spp.protocol.developer.Developer
+import spp.protocol.platform.auth.*
+import spp.protocol.platform.developer.Developer
 
 interface CoreStorage {
 
