@@ -81,12 +81,12 @@ class ProcessorBridge(
             launch(vertx.dispatcher()) {
                 it.reply(
                     vertx.sharedData().getLocalCounter(
-                        PlatformAddress.PROCESSOR_CONNECTED.address
+                        PlatformAddress.PROCESSOR_CONNECTED
                     ).await().get().await()
                 )
             }
         }
-        vertx.eventBus().consumer<JsonObject>(PlatformAddress.PROCESSOR_CONNECTED.address) {
+        vertx.eventBus().consumer<JsonObject>(PlatformAddress.PROCESSOR_CONNECTED) {
             val conn = Json.decodeValue(it.body().toString(), InstanceConnection::class.java)
             val latency = System.currentTimeMillis() - conn.connectionTime
             log.trace { "Establishing connection with processor ${conn.instanceId}" }
@@ -96,11 +96,11 @@ class ProcessorBridge(
             log.info("Processor connected. Latency: {}ms - Active processors: {}", latency, activeProcessors.size)
 
             launch(vertx.dispatcher()) {
-                vertx.sharedData().getLocalCounter(PlatformAddress.PROCESSOR_CONNECTED.address).await()
+                vertx.sharedData().getLocalCounter(PlatformAddress.PROCESSOR_CONNECTED).await()
                     .incrementAndGet().await()
             }
         }
-        vertx.eventBus().consumer<JsonObject>(PlatformAddress.PROCESSOR_DISCONNECTED.address) {
+        vertx.eventBus().consumer<JsonObject>(PlatformAddress.PROCESSOR_DISCONNECTED) {
             val conn = Json.decodeValue(it.body().toString(), InstanceConnection::class.java)
             val connectedAt = Instant.ofEpochMilli(activeProcessors.remove(conn.instanceId)!!.connectedAt)
             log.info("Processor disconnected. Connection time: {}", Duration.between(Instant.now(), connectedAt))
@@ -112,7 +112,7 @@ class ProcessorBridge(
                     }
                 }
 
-                vertx.sharedData().getLocalCounter(PlatformAddress.PROCESSOR_CONNECTED.address).await()
+                vertx.sharedData().getLocalCounter(PlatformAddress.PROCESSOR_CONNECTED).await()
                     .decrementAndGet().await()
             }
         }
@@ -131,19 +131,19 @@ class ProcessorBridge(
                 .addInboundPermitted(PermittedOptions().setAddress(ServiceDiscoveryOptions.DEFAULT_ANNOUNCE_ADDRESS))
                 .addInboundPermitted(PermittedOptions().setAddress(ServiceDiscoveryOptions.DEFAULT_USAGE_ADDRESS))
                 .addInboundPermitted(PermittedOptions().setAddress(Utilize.LIVE_SERVICE))
-                .addInboundPermitted(PermittedOptions().setAddress(PlatformAddress.PROCESSOR_CONNECTED.address))
+                .addInboundPermitted(PermittedOptions().setAddress(PlatformAddress.PROCESSOR_CONNECTED))
                 .apply { if (liveInstrumentEnabled) addLiveInstrumentInbound() }
                 .apply { if (liveViewEnabled) addLiveViewInbound() }
                 //to processor
-                .addOutboundPermitted(PermittedOptions().setAddress(ProbeAddress.REMOTE_REGISTERED.address))
-                .addOutboundPermitted(PermittedOptions().setAddress(MARKER_DISCONNECTED.address))
+                .addOutboundPermitted(PermittedOptions().setAddress(ProbeAddress.REMOTE_REGISTERED))
+                .addOutboundPermitted(PermittedOptions().setAddress(MARKER_DISCONNECTED))
                 .apply { if (liveInstrumentEnabled) addLiveInstrumentOutbound() }
                 .apply { if (liveViewEnabled) addLiveViewOutbound() },
             netServerOptions
         ) {
             if (it.type() == BridgeEventType.SEND) {
                 val address = it.rawMessage.getString("address")
-                if (address == PlatformAddress.PROCESSOR_CONNECTED.address) {
+                if (address == PlatformAddress.PROCESSOR_CONNECTED) {
                     val conn = Json.decodeValue(
                         it.rawMessage.getJsonObject("body").toString(), InstanceConnection::class.java
                     )
@@ -151,7 +151,7 @@ class ProcessorBridge(
 
                     it.socket().closeHandler { _ ->
                         vertx.eventBus().publish(
-                            PlatformAddress.PROCESSOR_DISCONNECTED.address,
+                            PlatformAddress.PROCESSOR_DISCONNECTED,
                             it.rawMessage.getJsonObject("body")
                         )
                     }
@@ -174,9 +174,9 @@ class ProcessorBridge(
     }
 
     private fun BridgeOptions.addLiveInstrumentOutbound() {
-        addOutboundPermitted(PermittedOptions().setAddress(PlatformAddress.LIVE_INSTRUMENT_APPLIED.address))
-            .addOutboundPermitted(PermittedOptions().setAddress(PlatformAddress.LIVE_INSTRUMENT_REMOVED.address))
-            .addOutboundPermitted(PermittedOptions().setAddress(SET_LOG_PUBLISH_RATE_LIMIT.address))
+        addOutboundPermitted(PermittedOptions().setAddress(PlatformAddress.LIVE_INSTRUMENT_APPLIED))
+            .addOutboundPermitted(PermittedOptions().setAddress(PlatformAddress.LIVE_INSTRUMENT_REMOVED))
+            .addOutboundPermitted(PermittedOptions().setAddress(SET_LOG_PUBLISH_RATE_LIMIT))
     }
 
     private fun BridgeOptions.addLiveViewInbound() {
@@ -189,9 +189,9 @@ class ProcessorBridge(
         addInboundPermitted(
             PermittedOptions().setAddressRegex(SourceServices.Provide.LIVE_INSTRUMENT_SUBSCRIBER + "\\:.+")
         ).addInboundPermitted(
-            PermittedOptions().setAddressRegex(ProbeAddress.LIVE_INSTRUMENT_REMOTE.address)
+            PermittedOptions().setAddressRegex(ProbeAddress.LIVE_INSTRUMENT_REMOTE)
         ).addInboundPermitted(
-            PermittedOptions().setAddressRegex(ProbeAddress.LIVE_INSTRUMENT_REMOTE.address + "\\:.+")
+            PermittedOptions().setAddressRegex(ProbeAddress.LIVE_INSTRUMENT_REMOTE + "\\:.+")
         )
     }
 }

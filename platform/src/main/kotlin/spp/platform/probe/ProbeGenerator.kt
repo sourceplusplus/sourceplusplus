@@ -71,7 +71,7 @@ class ProbeGenerator(private val router: Router) : CoroutineVerticle() {
             }
         }
 
-        vertx.eventBus().consumer<SourceProbeConfig>(PlatformAddress.GENERATE_PROBE.address) {
+        vertx.eventBus().consumer<SourceProbeConfig>(PlatformAddress.GENERATE_PROBE) {
             var config = it.body()
             val probeRelease = if (config.probeVersion == "latest") {
                 val probeRelease = githubApi.getRepository("sourceplusplus/probe-jvm").latestRelease
@@ -124,7 +124,7 @@ class ProbeGenerator(private val router: Router) : CoroutineVerticle() {
             SourceProbeConfig(platformHost, platformName, probeVersion = "latest")
         }
 
-        vertx.eventBus().request<JsonObject>(PlatformAddress.GENERATE_PROBE.address, config) {
+        vertx.eventBus().request<JsonObject>(PlatformAddress.GENERATE_PROBE, config) {
             if (it.succeeded()) {
                 launch(vertx.dispatcher()) {
                     val genProbe = it.result().body()

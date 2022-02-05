@@ -116,7 +116,7 @@ open class PlatformIntegrationTest {
                 }
 
                 FrameHelper.sendFrame(
-                    BridgeEventType.SEND.name.lowercase(), PlatformAddress.MARKER_CONNECTED.address,
+                    BridgeEventType.SEND.name.lowercase(), PlatformAddress.MARKER_CONNECTED,
                     replyAddress, JsonObject().put("auth-token", SYSTEM_JWT_TOKEN), true,
                     JsonObject.mapFrom(pc), tcpSocket
                 )

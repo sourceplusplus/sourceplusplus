@@ -611,8 +611,8 @@ class SourcePlatform : CoroutineVerticle() {
                         "probe",
                         JsonObject()
                             .put(
-                                LIVE_INSTRUMENT_REMOTE.address,
-                                vertx.sharedData().getLocalCounter(LIVE_INSTRUMENT_REMOTE.address)
+                                LIVE_INSTRUMENT_REMOTE,
+                                vertx.sharedData().getLocalCounter(LIVE_INSTRUMENT_REMOTE)
                                     .await().get().await()
                             )
                     )

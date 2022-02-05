@@ -79,12 +79,12 @@ class ProbeBridge(
             launch(vertx.dispatcher()) {
                 it.reply(
                     vertx.sharedData().getLocalCounter(
-                        PlatformAddress.PROBE_CONNECTED.address
+                        PlatformAddress.PROBE_CONNECTED
                     ).await().get().await()
                 )
             }
         }
-        vertx.eventBus().consumer<JsonObject>(ProbeAddress.REMOTE_REGISTERED.address) {
+        vertx.eventBus().consumer<JsonObject>(ProbeAddress.REMOTE_REGISTERED) {
             val remote = it.body().getString("address")
             if (!remote.contains(":")) {
                 val probeId = it.headers().get("probe_id")
@@ -98,7 +98,7 @@ class ProbeBridge(
                 }
             }
         }
-        vertx.eventBus().consumer<JsonObject>(PlatformAddress.PROBE_CONNECTED.address) {
+        vertx.eventBus().consumer<JsonObject>(PlatformAddress.PROBE_CONNECTED) {
             val conn = Json.decodeValue(it.body().toString(), InstanceConnection::class.java)
             val latency = System.currentTimeMillis() - conn.connectionTime
             log.trace { Msg.msg("Establishing connection with probe {}", conn.instanceId) }
@@ -108,18 +108,18 @@ class ProbeBridge(
             log.info("Probe connected. Latency: {}ms - Probes connected: {}", latency, activeProbes.size)
 
             launch(vertx.dispatcher()) {
-                vertx.sharedData().getLocalCounter(PlatformAddress.PROBE_CONNECTED.address).await()
+                vertx.sharedData().getLocalCounter(PlatformAddress.PROBE_CONNECTED).await()
                     .incrementAndGet().await()
             }
         }
-        vertx.eventBus().consumer<JsonObject>(PlatformAddress.PROBE_DISCONNECTED.address) {
+        vertx.eventBus().consumer<JsonObject>(PlatformAddress.PROBE_DISCONNECTED) {
             val conn = Json.decodeValue(it.body().toString(), InstanceConnection::class.java)
             val activeProbe = activeProbes.remove(conn.instanceId)!!
             val connectedAt = Instant.ofEpochMilli(activeProbe.connectedAt)
             log.info("Probe disconnected. Connection time: {}", Duration.between(Instant.now(), connectedAt))
 
             launch(vertx.dispatcher()) {
-                vertx.sharedData().getLocalCounter(PlatformAddress.PROBE_CONNECTED.address).await()
+                vertx.sharedData().getLocalCounter(PlatformAddress.PROBE_CONNECTED).await()
                     .decrementAndGet().await()
 
                 (activeProbe.meta["remotes"] as List<String>?).orEmpty().forEach {
@@ -138,7 +138,7 @@ class ProbeBridge(
             netServerOptions
         ) {
             if (it.type() == BridgeEventType.SEND) {
-                if (it.rawMessage.getString("address") == PlatformAddress.PROBE_CONNECTED.address) {
+                if (it.rawMessage.getString("address") == PlatformAddress.PROBE_CONNECTED) {
                     val conn = Json.decodeValue(
                         it.rawMessage.getJsonObject("body").toString(), InstanceConnection::class.java
                     )
@@ -146,7 +146,7 @@ class ProbeBridge(
 
                     it.socket().closeHandler { _ ->
                         vertx.eventBus().publish(
-                            PlatformAddress.PROBE_DISCONNECTED.address,
+                            PlatformAddress.PROBE_DISCONNECTED,
                             it.rawMessage.getJsonObject("body")
                         )
                     }
@@ -163,7 +163,7 @@ class ProbeBridge(
                     launch(vertx.dispatcher()) {
                         delay(1500) //todo: this is temp fix for race condition
                         vertx.eventBus().publish(
-                            ProbeAddress.REMOTE_REGISTERED.address,
+                            ProbeAddress.REMOTE_REGISTERED,
                             it.rawMessage,
                             DeliveryOptions().addHeader("probe_id", probeId)
                         )

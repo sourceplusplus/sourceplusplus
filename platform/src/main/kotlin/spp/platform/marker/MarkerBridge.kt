@@ -72,12 +72,12 @@ class MarkerBridge(
             launch(vertx.dispatcher()) {
                 it.reply(
                     vertx.sharedData().getLocalCounter(
-                        PlatformAddress.MARKER_CONNECTED.address
+                        PlatformAddress.MARKER_CONNECTED
                     ).await().get().await()
                 )
             }
         }
-        vertx.eventBus().consumer<JsonObject>(PlatformAddress.MARKER_CONNECTED.address) { marker ->
+        vertx.eventBus().consumer<JsonObject>(PlatformAddress.MARKER_CONNECTED) { marker ->
             val conn = Json.decodeValue(marker.body().toString(), InstanceConnection::class.java)
             val latency = System.currentTimeMillis() - conn.connectionTime
             log.trace { "Establishing connection with marker ${conn.instanceId}" }
@@ -87,11 +87,11 @@ class MarkerBridge(
             log.info("Marker connected. Latency: {}ms - Active markers: {}", latency, activeMarkers.size)
 
             launch(vertx.dispatcher()) {
-                vertx.sharedData().getLocalCounter(PlatformAddress.MARKER_CONNECTED.address).await()
+                vertx.sharedData().getLocalCounter(PlatformAddress.MARKER_CONNECTED).await()
                     .incrementAndGet().await()
             }
         }
-        vertx.eventBus().consumer<JsonObject>(PlatformAddress.MARKER_DISCONNECTED.address) {
+        vertx.eventBus().consumer<JsonObject>(PlatformAddress.MARKER_DISCONNECTED) {
             val conn = Json.decodeValue(it.body().toString(), InstanceConnection::class.java)
             val activeMarker = activeMarkers.remove(conn.instanceId)
             if (activeMarker != null) {
@@ -99,7 +99,7 @@ class MarkerBridge(
                 log.info("Marker disconnected. Connection time: {}", Duration.between(Instant.now(), connectedAt))
 
                 launch(vertx.dispatcher()) {
-                    vertx.sharedData().getLocalCounter(PlatformAddress.MARKER_CONNECTED.address).await()
+                    vertx.sharedData().getLocalCounter(PlatformAddress.MARKER_CONNECTED).await()
                         .decrementAndGet().await()
                 }
             }
@@ -110,7 +110,7 @@ class MarkerBridge(
             BridgeOptions()
                 //from marker
                 .addInboundPermitted(PermittedOptions().setAddress("get-records")) //todo: name like others
-                .addInboundPermitted(PermittedOptions().setAddress(PlatformAddress.MARKER_CONNECTED.address))
+                .addInboundPermitted(PermittedOptions().setAddress(PlatformAddress.MARKER_CONNECTED))
                 .addInboundPermitted(PermittedOptions().setAddress(Utilize.LIVE_SERVICE))
                 .addInboundPermitted(PermittedOptions().setAddress(Utilize.LIVE_INSTRUMENT))
                 .addInboundPermitted(PermittedOptions().setAddress(Utilize.LIVE_VIEW))
@@ -125,11 +125,11 @@ class MarkerBridge(
             netServerOptions
         ) {
             if (it.type() == BridgeEventType.SEND) {
-                if (it.rawMessage.getString("address") == PlatformAddress.MARKER_CONNECTED.address) {
+                if (it.rawMessage.getString("address") == PlatformAddress.MARKER_CONNECTED) {
                     launch(vertx.dispatcher()) {
                         it.socket().closeHandler { _ ->
                             vertx.eventBus().publish(
-                                PlatformAddress.MARKER_DISCONNECTED.address,
+                                PlatformAddress.MARKER_DISCONNECTED,
                                 it.rawMessage.getJsonObject("body")
                             )
                         }
