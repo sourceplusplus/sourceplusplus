@@ -41,6 +41,7 @@ import spp.protocol.SourceServices.Utilize
 import spp.protocol.platform.PlatformAddress
 import spp.protocol.platform.PlatformAddress.MARKER_DISCONNECTED
 import spp.protocol.platform.ProbeAddress
+import spp.protocol.platform.ProcessorAddress
 import spp.protocol.platform.ProcessorAddress.SET_LOG_PUBLISH_RATE_LIMIT
 import spp.protocol.platform.status.ActiveInstance
 import spp.protocol.platform.status.InstanceConnection
@@ -174,8 +175,8 @@ class ProcessorBridge(
     }
 
     private fun BridgeOptions.addLiveInstrumentOutbound() {
-        addOutboundPermitted(PermittedOptions().setAddress(PlatformAddress.LIVE_INSTRUMENT_APPLIED))
-            .addOutboundPermitted(PermittedOptions().setAddress(PlatformAddress.LIVE_INSTRUMENT_REMOVED))
+        addOutboundPermitted(PermittedOptions().setAddress(ProcessorAddress.LIVE_INSTRUMENT_APPLIED))
+            .addOutboundPermitted(PermittedOptions().setAddress(ProcessorAddress.LIVE_INSTRUMENT_REMOVED))
             .addOutboundPermitted(PermittedOptions().setAddress(SET_LOG_PUBLISH_RATE_LIMIT))
     }
 
