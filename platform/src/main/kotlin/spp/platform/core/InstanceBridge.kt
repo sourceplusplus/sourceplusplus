@@ -3,6 +3,7 @@ package spp.platform.core
 import io.vertx.core.Vertx
 import io.vertx.core.json.JsonObject
 import io.vertx.ext.auth.jwt.JWTAuth
+import io.vertx.ext.bridge.BridgeEventType
 import io.vertx.ext.eventbus.bridge.tcp.BridgeEvent
 import io.vertx.kotlin.coroutines.CoroutineVerticle
 import org.slf4j.LoggerFactory
@@ -18,7 +19,11 @@ abstract class InstanceBridge(private val jwtAuth: JWTAuth?) : CoroutineVerticle
         if (jwtAuth != null) {
             val authToken = event.rawMessage.getJsonObject("headers").getString("auth-token")
             if (authToken.isNullOrEmpty()) {
-                event.fail("Rejected ${event.type()} event with missing auth token")
+                if (event.type() == BridgeEventType.SEND) {
+                    event.fail("Rejected SEND event to ${event.rawMessage.getString("address")} with missing auth token")
+                } else {
+                    event.fail("Rejected ${event.type()} event with missing auth token")
+                }
                 return
             }
 
