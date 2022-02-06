@@ -17,14 +17,6 @@
  */
 package integration
 
-import spp.protocol.SourceMarkerServices
-import spp.protocol.SourceMarkerServices.Provide
-import spp.protocol.instrument.LiveInstrumentBatch
-import spp.protocol.instrument.LiveInstrumentEvent
-import spp.protocol.instrument.LiveInstrumentEventType
-import spp.protocol.instrument.LiveSourceLocation
-import spp.protocol.instrument.log.LiveLog
-import spp.protocol.service.live.LiveInstrumentService
 import io.vertx.core.json.Json
 import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxExtension
@@ -35,6 +27,14 @@ import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.slf4j.LoggerFactory
+import spp.protocol.ProtocolMarshaller
+import spp.protocol.SourceServices
+import spp.protocol.SourceServices.Provide.toLiveInstrumentSubscriberAddress
+import spp.protocol.instrument.LiveLog
+import spp.protocol.instrument.LiveSourceLocation
+import spp.protocol.instrument.event.LiveInstrumentEvent
+import spp.protocol.instrument.event.LiveInstrumentEventType
+import spp.protocol.service.LiveInstrumentService
 import spp.protocol.service.error.LiveInstrumentException
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -53,7 +53,7 @@ class LiveLogTest : PlatformIntegrationTest() {
         var gotRemoved = false
         val instrumentId = UUID.randomUUID().toString()
 
-        val consumer = vertx.eventBus().localConsumer<JsonObject>("local." + Provide.LIVE_INSTRUMENT_SUBSCRIBER)
+        val consumer = vertx.eventBus().localConsumer<JsonObject>(toLiveInstrumentSubscriberAddress("system"))
         consumer.handler {
             log.info("Got subscription event: {}", it.body())
             val liveEvent = Json.decodeValue(it.body().toString(), LiveInstrumentEvent::class.java)
@@ -82,7 +82,8 @@ class LiveLogTest : PlatformIntegrationTest() {
                 LiveInstrumentEventType.LOG_REMOVED -> {
                     log.info("Got removed")
                     testContext.verify {
-                        assertEquals(instrumentId, JsonObject(liveEvent.data).getString("logId"))
+                        val remEvent = ProtocolMarshaller.deserializeLiveInstrumentRemoved(JsonObject(liveEvent.data))
+                        assertEquals(instrumentId, remEvent.liveInstrument.id)
                     }
                     gotRemoved = true
                 }
@@ -106,7 +107,7 @@ class LiveLogTest : PlatformIntegrationTest() {
 
             val instrumentService = ServiceProxyBuilder(vertx)
                 .setToken(SYSTEM_JWT_TOKEN)
-                .setAddress(SourceMarkerServices.Utilize.LIVE_INSTRUMENT)
+                .setAddress(SourceServices.Utilize.LIVE_INSTRUMENT)
                 .build(LiveInstrumentService::class.java)
             instrumentService.addLiveInstrument(
                 LiveLog(
@@ -114,7 +115,7 @@ class LiveLogTest : PlatformIntegrationTest() {
                     location = LiveSourceLocation("spp.example.webapp.model.User", 42),
                     logFormat = "addHitRemove"
                 )
-            ) {
+            ).onComplete {
                 if (!it.succeeded()) {
                     testContext.failNow(it.cause())
                 }
@@ -145,7 +146,7 @@ class LiveLogTest : PlatformIntegrationTest() {
         val testContext = VertxTestContext()
         val instrumentService = ServiceProxyBuilder(vertx)
             .setToken(SYSTEM_JWT_TOKEN)
-            .setAddress(SourceMarkerServices.Utilize.LIVE_INSTRUMENT)
+            .setAddress(SourceServices.Utilize.LIVE_INSTRUMENT)
             .build(LiveInstrumentService::class.java)
 
         instrumentService.addLiveInstrument(
@@ -154,10 +155,10 @@ class LiveLogTest : PlatformIntegrationTest() {
                 condition = "1==2",
                 logFormat = "removeById"
             )
-        ) {
+        ).onComplete {
             if (it.succeeded()) {
                 val originalId = it.result().id!!
-                instrumentService.removeLiveInstrument(originalId) {
+                instrumentService.removeLiveInstrument(originalId).onComplete {
                     if (it.succeeded()) {
                         testContext.verify {
                             assertEquals(originalId, it.result()!!.id!!)
@@ -186,7 +187,7 @@ class LiveLogTest : PlatformIntegrationTest() {
         val testContext = VertxTestContext()
         val instrumentService = ServiceProxyBuilder(vertx)
             .setToken(SYSTEM_JWT_TOKEN)
-            .setAddress(SourceMarkerServices.Utilize.LIVE_INSTRUMENT)
+            .setAddress(SourceServices.Utilize.LIVE_INSTRUMENT)
             .build(LiveInstrumentService::class.java)
 
         instrumentService.addLiveInstrument(
@@ -195,12 +196,12 @@ class LiveLogTest : PlatformIntegrationTest() {
                 condition = "1==2",
                 logFormat = "removeByLocation"
             )
-        ) {
+        ).onComplete {
             if (it.succeeded()) {
                 val originalId = it.result().id!!
                 instrumentService.removeLiveInstruments(
                     LiveSourceLocation("spp.example.webapp.model.User", 42)
-                ) {
+                ).onComplete {
                     if (it.succeeded()) {
                         testContext.verify {
                             assertEquals(1, it.result().size)
@@ -230,30 +231,28 @@ class LiveLogTest : PlatformIntegrationTest() {
         val testContext = VertxTestContext()
         val instrumentService = ServiceProxyBuilder(vertx)
             .setToken(SYSTEM_JWT_TOKEN)
-            .setAddress(SourceMarkerServices.Utilize.LIVE_INSTRUMENT)
+            .setAddress(SourceServices.Utilize.LIVE_INSTRUMENT)
             .build(LiveInstrumentService::class.java)
 
         instrumentService.addLiveInstruments(
-            LiveInstrumentBatch(
-                listOf(
-                    LiveLog(
-                        location = LiveSourceLocation("spp.example.webapp.model.User", 42),
-                        condition = "1==2",
-                        logFormat = "removeMultipleByLocation"
-                    ),
-                    LiveLog(
-                        location = LiveSourceLocation("spp.example.webapp.model.User", 42),
-                        condition = "1==3",
-                        logFormat = "removeMultipleByLocation"
-                    )
+            listOf(
+                LiveLog(
+                    location = LiveSourceLocation("spp.example.webapp.model.User", 42),
+                    condition = "1==2",
+                    logFormat = "removeMultipleByLocation"
+                ),
+                LiveLog(
+                    location = LiveSourceLocation("spp.example.webapp.model.User", 42),
+                    condition = "1==3",
+                    logFormat = "removeMultipleByLocation"
                 )
             )
-        ) {
+        ).onComplete {
             if (it.succeeded()) {
                 testContext.verify { assertEquals(2, it.result().size) }
                 instrumentService.removeLiveInstruments(
                     LiveSourceLocation("spp.example.webapp.model.User", 42)
-                ) {
+                ).onComplete {
                     if (it.succeeded()) {
                         testContext.verify {
                             assertEquals(2, it.result().size)
@@ -282,7 +281,7 @@ class LiveLogTest : PlatformIntegrationTest() {
         val testContext = VertxTestContext()
         val instrumentService = ServiceProxyBuilder(vertx)
             .setToken(SYSTEM_JWT_TOKEN)
-            .setAddress(SourceMarkerServices.Utilize.LIVE_INSTRUMENT)
+            .setAddress(SourceServices.Utilize.LIVE_INSTRUMENT)
             .build(LiveInstrumentService::class.java)
 
         instrumentService.addLiveInstrument(
@@ -292,7 +291,7 @@ class LiveLogTest : PlatformIntegrationTest() {
                 logFormat = "addLogWithInvalidCondition",
                 applyImmediately = true
             )
-        ) {
+        ).onComplete {
             if (it.failed()) {
                 if (it.cause().cause is LiveInstrumentException) {
                     testContext.verify {
@@ -322,7 +321,7 @@ class LiveLogTest : PlatformIntegrationTest() {
         val testContext = VertxTestContext()
         val instrumentService = ServiceProxyBuilder(vertx)
             .setToken(SYSTEM_JWT_TOKEN)
-            .setAddress(SourceMarkerServices.Utilize.LIVE_INSTRUMENT)
+            .setAddress(SourceServices.Utilize.LIVE_INSTRUMENT)
             .build(LiveInstrumentService::class.java)
 
         instrumentService.addLiveInstrument(
@@ -331,7 +330,7 @@ class LiveLogTest : PlatformIntegrationTest() {
                 logFormat = "applyImmediatelyWithInvalidClass",
                 applyImmediately = true
             )
-        ) {
+        ).onComplete {
             if (it.failed()) {
                 testContext.verify {
                     assertNotNull(it.cause().cause)

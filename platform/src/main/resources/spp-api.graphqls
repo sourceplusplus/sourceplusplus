@@ -24,7 +24,6 @@ input ArtifactQualifiedNameInput {
 
 type LiveViewConfig {
     viewName: String!
-    userDefined: Boolean!
     viewMetrics: [String!]
     refreshRateLimit: Int!
 }
@@ -161,6 +160,7 @@ interface LiveInstrument {
     condition: String
     expiresAt: Long
     hitLimit: Int
+    applyImmediately: Boolean
     applied: Boolean
     pending: Boolean
     throttle: InstrumentThrottle
@@ -177,6 +177,7 @@ type LiveMeter implements LiveInstrument {
     condition: String
     expiresAt: Long
     hitLimit: Int
+    applyImmediately: Boolean
     applied: Boolean
     pending: Boolean
     throttle: InstrumentThrottle
@@ -192,6 +193,7 @@ input LiveMeterInput {
     condition: String
     expiresAt: Long
     hitLimit: Int
+    applyImmediately: Boolean
     throttle: InstrumentThrottleInput
     meta: [MetaInfoInput]
 }
@@ -204,6 +206,7 @@ type LiveLog implements LiveInstrument {
     condition: String
     expiresAt: Long
     hitLimit: Int
+    applyImmediately: Boolean
     applied: Boolean
     pending: Boolean
     throttle: InstrumentThrottle
@@ -218,6 +221,7 @@ input LiveLogInput {
     condition: String
     expiresAt: Long
     hitLimit: Int
+    applyImmediately: Boolean
     throttle: InstrumentThrottleInput
     meta: [MetaInfoInput]
 }
@@ -228,6 +232,7 @@ type LiveBreakpoint implements LiveInstrument {
     condition: String
     expiresAt: Long
     hitLimit: Int
+    applyImmediately: Boolean
     applied: Boolean
     pending: Boolean
     throttle: InstrumentThrottle
@@ -240,6 +245,7 @@ input LiveBreakpointInput {
     condition: String
     expiresAt: Long
     hitLimit: Int
+    applyImmediately: Boolean
     throttle: InstrumentThrottleInput
     meta: [MetaInfoInput]
 }
@@ -251,6 +257,7 @@ type LiveSpan implements LiveInstrument {
     condition: String
     expiresAt: Long
     hitLimit: Int
+    applyImmediately: Boolean
     applied: Boolean
     pending: Boolean
     throttle: InstrumentThrottle
@@ -264,6 +271,7 @@ input LiveSpanInput {
     #condition: String #todo: impl
     #expiresAt: Long #todo: impl
     #hitLimit: Int #todo: impl
+    applyImmediately: Boolean
     #throttle: InstrumentThrottleInput #todo: impl
     meta: [MetaInfoInput]
 }

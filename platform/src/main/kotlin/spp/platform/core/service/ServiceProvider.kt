@@ -17,7 +17,11 @@
  */
 package spp.platform.core.service
 
+import io.vertx.core.Promise
+import io.vertx.core.Vertx
+import io.vertx.core.eventbus.Message
 import io.vertx.core.json.JsonObject
+import io.vertx.ext.auth.jwt.JWTAuth
 import io.vertx.kotlin.coroutines.CoroutineVerticle
 import io.vertx.kotlin.coroutines.await
 import io.vertx.servicediscovery.Record
@@ -26,16 +30,15 @@ import io.vertx.servicediscovery.ServiceDiscoveryOptions
 import io.vertx.servicediscovery.types.EventBusService
 import io.vertx.serviceproxy.ServiceBinder
 import org.slf4j.LoggerFactory
-import spp.platform.core.service.live.LiveProviders
-import spp.protocol.SourceMarkerServices.Utilize
+import spp.processor.common.DeveloperAuth
+import spp.protocol.SourceServices.Utilize
 import spp.protocol.service.LiveService
 import kotlin.system.exitProcess
 
-class ServiceProvider : CoroutineVerticle() {
+class ServiceProvider(private val jwtAuth: JWTAuth?) : CoroutineVerticle() {
 
     companion object {
         private val log = LoggerFactory.getLogger(ServiceProvider::class.java)
-        lateinit var liveProviders: LiveProviders
     }
 
     private var discovery: ServiceDiscovery? = null
@@ -57,12 +60,10 @@ class ServiceProvider : CoroutineVerticle() {
                 ServiceDiscovery.create(vertx, ServiceDiscoveryOptions())
             }
 
-            liveProviders = LiveProviders(vertx, discovery!!)
-
             liveService = publishService(
                 Utilize.LIVE_SERVICE,
                 LiveService::class.java,
-                liveProviders.liveService
+                LiveServiceProvider(vertx)
             )
         } catch (throwable: Throwable) {
             throwable.printStackTrace()
@@ -72,7 +73,23 @@ class ServiceProvider : CoroutineVerticle() {
     }
 
     private suspend fun <T> publishService(address: String, clazz: Class<T>, service: T): Record {
-        ServiceBinder(vertx).setIncludeDebugInfo(true).setAddress(address).register(clazz, service)
+        ServiceBinder(vertx).setIncludeDebugInfo(true).setAddress(address)
+            .addInterceptor { msg ->
+                val promise = Promise.promise<Message<JsonObject>>()
+                jwtAuth!!.authenticate(JsonObject().put("token", msg.headers().get("auth-token"))).onComplete {
+                    if (it.succeeded()) {
+                        Vertx.currentContext().put("user", it.result())
+                        val selfId = it.result().principal().getString("developer_id")
+                        val accessToken = it.result().principal().getString("access_token")
+                        Vertx.currentContext().put("developer", DeveloperAuth.from(selfId, accessToken))
+                        promise.complete(msg)
+                    } else {
+                        promise.fail(it.cause())
+                    }
+                }
+                return@addInterceptor promise.future()
+            }
+            .register(clazz, service)
         val record = EventBusService.createRecord(
             address, address, clazz,
             JsonObject().put("INSTANCE_ID", config.getString("SPP_INSTANCE_ID"))

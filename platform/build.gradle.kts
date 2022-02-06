@@ -30,6 +30,7 @@ repositories {
 
 dependencies {
     implementation(project(":protocol"))
+    implementation(project(":processors:dependencies"))
     implementation(project(":processors:live-instrument"))
     implementation(project(":processors:live-view"))
 

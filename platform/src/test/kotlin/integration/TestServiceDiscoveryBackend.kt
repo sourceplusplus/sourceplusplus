@@ -55,7 +55,7 @@ class TestServiceDiscoveryBackend : ServiceDiscoveryBackend {
 
     override fun getRecords(resultHandler: Handler<AsyncResult<MutableList<Record>>>) {
         val replyAddress = UUID.randomUUID().toString()
-        val consumer = vertx.eventBus().localConsumer<JsonArray>("local.$replyAddress")
+        val consumer = vertx.eventBus().localConsumer<JsonArray>(replyAddress)
         consumer.handler {
             resultHandler.handle(Future.succeededFuture(it.body().map { Record(it as JsonObject) }.toMutableList()))
             consumer.unregister()

@@ -15,38 +15,31 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package spp.platform.core.service.live.providers
+package spp.platform.core.service
 
-import io.vertx.core.AsyncResult
 import io.vertx.core.Future
-import io.vertx.core.Handler
+import io.vertx.core.Promise
 import io.vertx.core.Vertx
-import io.vertx.core.eventbus.impl.MessageImpl
 import io.vertx.core.http.HttpMethod
 import io.vertx.core.json.JsonObject
-import io.vertx.ext.auth.impl.jose.JWT
 import io.vertx.kotlin.coroutines.dispatcher
-import io.vertx.servicediscovery.ServiceDiscovery
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import org.joor.Reflect
 import org.slf4j.LoggerFactory
 import spp.platform.core.SourceStorage
-import spp.platform.probe.ProbeTracker
-import spp.protocol.developer.Developer
-import spp.protocol.developer.SelfInfo
-import spp.protocol.general.Service
-import spp.protocol.platform.client.ActiveProbe
+import spp.platform.probe.ProbeBridge
+import spp.processor.common.DeveloperAuth
+import spp.protocol.platform.developer.Developer
+import spp.protocol.platform.developer.SelfInfo
+import spp.protocol.platform.general.Service
+import spp.protocol.platform.status.ActiveInstance
 import spp.protocol.service.LiveService
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 
-class LiveServiceProvider(
-    private val vertx: Vertx,
-    private val discovery: ServiceDiscovery
-) : LiveService {
+class LiveServiceProvider(private val vertx: Vertx) : LiveService {
 
     companion object {
         private val log = LoggerFactory.getLogger(LiveServiceProvider::class.java)
@@ -54,29 +47,26 @@ class LiveServiceProvider(
             .withZone(ZoneId.systemDefault())
     }
 
-    override fun getSelf(handler: Handler<AsyncResult<SelfInfo>>) {
-        val selfId = Reflect.on(handler).get<MessageImpl<*, *>>("arg\$2").headers().let {
-            if (it.contains("auth-token")) {
-                JWT.parse(it.get("auth-token")).getJsonObject("payload").getString("developer_id")
-            } else "system"
-        }
+    override fun getSelf(): Future<SelfInfo> {
+        val promise = Promise.promise<SelfInfo>()
+        val selfId = Vertx.currentContext().get<DeveloperAuth>("developer").selfId
         log.trace("Getting self info")
 
         GlobalScope.launch(vertx.dispatcher()) {
-            handler.handle(
-                Future.succeededFuture(
-                    SelfInfo(
-                        developer = Developer(selfId),
-                        roles = SourceStorage.getDeveloperRoles(selfId),
-                        permissions = SourceStorage.getDeveloperPermissions(selfId).toList(),
-                        access = SourceStorage.getDeveloperAccessPermissions(selfId)
-                    )
+            promise.complete(
+                SelfInfo(
+                    developer = Developer(selfId),
+                    roles = SourceStorage.getDeveloperRoles(selfId),
+                    permissions = SourceStorage.getDeveloperPermissions(selfId).toList(),
+                    access = SourceStorage.getDeveloperAccessPermissions(selfId)
                 )
             )
         }
+        return promise.future()
     }
 
-    override fun getServices(handler: Handler<AsyncResult<List<Service>>>) {
+    override fun getServices(): Future<List<Service>> {
+        val promise = Promise.promise<List<Service>>()
         val request = JsonObject()
         request.put("method", HttpMethod.POST.name())
         request.put(
@@ -113,16 +103,19 @@ class LiveServiceProvider(
                         )
                     )
                 }
-                handler.handle(Future.succeededFuture(result))
+                promise.complete(result)
             } else {
-                handler.handle(Future.failedFuture(it.cause()))
+                promise.fail(it.cause())
             }
         }
+        return promise.future()
     }
 
-    override fun getActiveProbes(handler: Handler<AsyncResult<List<ActiveProbe>>>) {
+    override fun getActiveProbes(): Future<List<ActiveInstance>> {
+        val promise = Promise.promise<List<ActiveInstance>>()
         GlobalScope.launch(vertx.dispatcher()) {
-            handler.handle(Future.succeededFuture(ProbeTracker.getActiveProbes(vertx)))
+            promise.complete(ProbeBridge.getActiveProbes(vertx))
         }
+        return promise.future()
     }
 }

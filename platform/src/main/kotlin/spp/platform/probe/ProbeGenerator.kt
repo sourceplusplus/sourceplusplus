@@ -20,7 +20,10 @@ package spp.platform.probe
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper
 import com.google.common.io.Files
+import io.vertx.core.eventbus.ReplyException
 import io.vertx.core.json.JsonObject
+import io.vertx.ext.web.Router
+import io.vertx.ext.web.RoutingContext
 import io.vertx.kotlin.coroutines.CoroutineVerticle
 import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.launch
@@ -33,6 +36,7 @@ import org.bouncycastle.openssl.PEMParser
 import org.bouncycastle.openssl.jcajce.JcaPEMWriter
 import org.kohsuke.github.GitHub
 import org.zeroturnaround.zip.ZipUtil
+import spp.platform.core.SourceStorage
 import spp.platform.probe.config.SourceProbeConfig
 import spp.protocol.platform.PlatformAddress
 import java.io.*
@@ -43,7 +47,7 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 import java.util.zip.ZipOutputStream
 
-class ProbeGenerator : CoroutineVerticle() {
+class ProbeGenerator(private val router: Router) : CoroutineVerticle() {
 
     private val log = KotlinLogging.logger {}
     private val objectMapper = ObjectMapper()
@@ -52,7 +56,22 @@ class ProbeGenerator : CoroutineVerticle() {
     private val githubApi by lazy { GitHub.connectAnonymously() }
 
     override suspend fun start() {
-        vertx.eventBus().consumer<SourceProbeConfig>(PlatformAddress.GENERATE_PROBE.address) {
+        router["/download/spp-probe"].handler { route ->
+            if (System.getenv("SPP_DISABLE_JWT") == "true") {
+                doProbeGeneration(route)
+                return@handler
+            }
+
+            val token = route.request().getParam("access_token")
+            log.info("Probe download request. Verifying access token: {}", token)
+            launch(vertx.dispatcher()) {
+                SourceStorage.getDeveloperByAccessToken(token)?.let {
+                    doProbeGeneration(route)
+                } ?: route.response().setStatusCode(401).end()
+            }
+        }
+
+        vertx.eventBus().consumer<SourceProbeConfig>(PlatformAddress.GENERATE_PROBE) {
             var config = it.body()
             val probeRelease = if (config.probeVersion == "latest") {
                 val probeRelease = githubApi.getRepository("sourceplusplus/probe-jvm").latestRelease
@@ -90,6 +109,36 @@ class ProbeGenerator : CoroutineVerticle() {
                 generateProbe(destFile, config)
             } else {
                 log.warn("Skipped pre-generating default configuration probe")
+            }
+        }
+    }
+
+    private fun doProbeGeneration(route: RoutingContext) {
+        log.debug("Generating signed probe")
+        val platformHost = System.getenv("SPP_CLUSTER_URL") ?: "localhost"
+        val platformName = System.getenv("SPP_CLUSTER_NAME") ?: "unknown"
+        val probeVersion = route.queryParam("version")
+        val config = if (probeVersion.isNotEmpty()) {
+            SourceProbeConfig(platformHost, platformName, probeVersion = probeVersion[0])
+        } else {
+            SourceProbeConfig(platformHost, platformName, probeVersion = "latest")
+        }
+
+        vertx.eventBus().request<JsonObject>(PlatformAddress.GENERATE_PROBE, config) {
+            if (it.succeeded()) {
+                launch(vertx.dispatcher()) {
+                    val genProbe = it.result().body()
+                    route.response().putHeader(
+                        "content-disposition",
+                        "attachment; filename=spp-probe-${genProbe.getString("probe_version")}.jar"
+                    ).sendFile(genProbe.getString("file_location"))
+                    log.info("Signed probe downloaded")
+                }
+            } else {
+                log.error("Failed to generate signed probe", it.cause())
+                val replyEx = it.cause() as ReplyException
+                route.response().setStatusCode(replyEx.failureCode())
+                    .end(it.cause().message)
             }
         }
     }

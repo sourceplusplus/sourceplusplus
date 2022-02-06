@@ -17,15 +17,6 @@
  */
 package integration
 
-import spp.protocol.SourceMarkerServices
-import spp.protocol.SourceMarkerServices.Provide
-import spp.protocol.instrument.LiveInstrumentBatch
-import spp.protocol.instrument.LiveInstrumentEvent
-import spp.protocol.instrument.LiveInstrumentEventType
-import spp.protocol.instrument.LiveSourceLocation
-import spp.protocol.instrument.breakpoint.LiveBreakpoint
-import spp.protocol.instrument.breakpoint.event.LiveBreakpointHit
-import spp.protocol.service.live.LiveInstrumentService
 import io.vertx.core.json.Json
 import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxExtension
@@ -36,6 +27,15 @@ import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.slf4j.LoggerFactory
+import spp.protocol.ProtocolMarshaller
+import spp.protocol.SourceServices
+import spp.protocol.SourceServices.Provide.toLiveInstrumentSubscriberAddress
+import spp.protocol.instrument.LiveBreakpoint
+import spp.protocol.instrument.LiveSourceLocation
+import spp.protocol.instrument.event.LiveBreakpointHit
+import spp.protocol.instrument.event.LiveInstrumentEvent
+import spp.protocol.instrument.event.LiveInstrumentEventType
+import spp.protocol.service.LiveInstrumentService
 import spp.protocol.service.error.LiveInstrumentException
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -54,7 +54,7 @@ class LiveBreakpointTest : PlatformIntegrationTest() {
         var gotRemoved = false
         val instrumentId = UUID.randomUUID().toString()
 
-        val consumer = vertx.eventBus().localConsumer<JsonObject>("local." + Provide.LIVE_INSTRUMENT_SUBSCRIBER)
+        val consumer = vertx.eventBus().localConsumer<JsonObject>(toLiveInstrumentSubscriberAddress("system"))
         consumer.handler {
             log.info("Got subscription event: {}", it.body())
             val liveEvent = Json.decodeValue(it.body().toString(), LiveInstrumentEvent::class.java)
@@ -76,7 +76,8 @@ class LiveBreakpointTest : PlatformIntegrationTest() {
                 LiveInstrumentEventType.BREAKPOINT_REMOVED -> {
                     log.info("Got removed")
                     testContext.verify {
-                        assertEquals(instrumentId, JsonObject(liveEvent.data).getString("breakpointId"))
+                        val remEvent = ProtocolMarshaller.deserializeLiveInstrumentRemoved(JsonObject(liveEvent.data))
+                        assertEquals(instrumentId, remEvent.liveInstrument.id)
                     }
                     gotRemoved = true
                 }
@@ -150,14 +151,14 @@ class LiveBreakpointTest : PlatformIntegrationTest() {
 
             val instrumentService = ServiceProxyBuilder(vertx)
                 .setToken(SYSTEM_JWT_TOKEN)
-                .setAddress(SourceMarkerServices.Utilize.LIVE_INSTRUMENT)
+                .setAddress(SourceServices.Utilize.LIVE_INSTRUMENT)
                 .build(LiveInstrumentService::class.java)
             instrumentService.addLiveInstrument(
                 LiveBreakpoint(
                     id = instrumentId,
                     location = LiveSourceLocation("spp.example.webapp.controller.LiveInstrumentController", 25),
                 )
-            ) {
+            ).onComplete {
                 if (it.failed()) {
                     testContext.failNow(it.cause())
                 }
@@ -192,10 +193,8 @@ class LiveBreakpointTest : PlatformIntegrationTest() {
         var gotRemoved = false
         val instrumentId = UUID.randomUUID().toString()
 
-        val consumer = vertx.eventBus().localConsumer<JsonObject>("local." + Provide.LIVE_INSTRUMENT_SUBSCRIBER)
-        consumer.endHandler {
-            log.info("Stopped listening at: {}", "local." + Provide.LIVE_INSTRUMENT_SUBSCRIBER)
-        }.handler {
+        val consumer = vertx.eventBus().localConsumer<JsonObject>(toLiveInstrumentSubscriberAddress("system"))
+        consumer.handler {
             log.info("Got subscription event: {}", it.body())
             val liveEvent = Json.decodeValue(it.body().toString(), LiveInstrumentEvent::class.java)
             when (liveEvent.eventType) {
@@ -223,7 +222,8 @@ class LiveBreakpointTest : PlatformIntegrationTest() {
                 LiveInstrumentEventType.BREAKPOINT_REMOVED -> {
                     log.info("Got removed")
                     testContext.verify {
-                        assertEquals(instrumentId, JsonObject(liveEvent.data).getString("breakpointId"))
+                        val remEvent = ProtocolMarshaller.deserializeLiveInstrumentRemoved(JsonObject(liveEvent.data))
+                        assertEquals(instrumentId, remEvent.liveInstrument.id)
                     }
                     gotRemoved = true
                 }
@@ -240,7 +240,6 @@ class LiveBreakpointTest : PlatformIntegrationTest() {
                 }
             }
         }.completionHandler {
-            log.info("Started listening at: {}", "local." + Provide.LIVE_INSTRUMENT_SUBSCRIBER)
             if (it.failed()) {
                 testContext.failNow(it.cause());
                 return@completionHandler
@@ -248,7 +247,7 @@ class LiveBreakpointTest : PlatformIntegrationTest() {
 
             val instrumentService = ServiceProxyBuilder(vertx)
                 .setToken(SYSTEM_JWT_TOKEN)
-                .setAddress(SourceMarkerServices.Utilize.LIVE_INSTRUMENT)
+                .setAddress(SourceServices.Utilize.LIVE_INSTRUMENT)
                 .build(LiveInstrumentService::class.java)
             instrumentService.addLiveInstrument(
                 LiveBreakpoint(
@@ -256,7 +255,7 @@ class LiveBreakpointTest : PlatformIntegrationTest() {
                     location = LiveSourceLocation("spp.example.webapp.model.User", 42),
                     condition = "2==2"
                 )
-            ) {
+            ).onComplete {
                 if (it.failed()) {
                     testContext.failNow(it.cause())
                 }
@@ -287,7 +286,7 @@ class LiveBreakpointTest : PlatformIntegrationTest() {
         val testContext = VertxTestContext()
         val instrumentService = ServiceProxyBuilder(vertx)
             .setToken(SYSTEM_JWT_TOKEN)
-            .setAddress(SourceMarkerServices.Utilize.LIVE_INSTRUMENT)
+            .setAddress(SourceServices.Utilize.LIVE_INSTRUMENT)
             .build(LiveInstrumentService::class.java)
 
         instrumentService.addLiveInstrument(
@@ -295,10 +294,10 @@ class LiveBreakpointTest : PlatformIntegrationTest() {
                 LiveSourceLocation("spp.example.webapp.model.User", 42),
                 condition = "1==2"
             )
-        ) {
+        ).onComplete {
             if (it.succeeded()) {
                 val originalId = it.result().id!!
-                instrumentService.removeLiveInstrument(originalId) {
+                instrumentService.removeLiveInstrument(originalId).onComplete {
                     if (it.succeeded()) {
                         testContext.verify {
                             assertEquals(originalId, it.result()!!.id!!)
@@ -327,7 +326,7 @@ class LiveBreakpointTest : PlatformIntegrationTest() {
         val testContext = VertxTestContext()
         val instrumentService = ServiceProxyBuilder(vertx)
             .setToken(SYSTEM_JWT_TOKEN)
-            .setAddress(SourceMarkerServices.Utilize.LIVE_INSTRUMENT)
+            .setAddress(SourceServices.Utilize.LIVE_INSTRUMENT)
             .build(LiveInstrumentService::class.java)
 
         instrumentService.addLiveInstrument(
@@ -335,12 +334,12 @@ class LiveBreakpointTest : PlatformIntegrationTest() {
                 LiveSourceLocation("spp.example.webapp.model.User", 42),
                 condition = "1==2"
             )
-        ) {
+        ).onComplete {
             if (it.succeeded()) {
                 val originalId = it.result().id!!
                 instrumentService.removeLiveInstruments(
                     LiveSourceLocation("spp.example.webapp.model.User", 42)
-                ) {
+                ).onComplete {
                     if (it.succeeded()) {
                         testContext.verify {
                             assertEquals(1, it.result().size)
@@ -370,28 +369,26 @@ class LiveBreakpointTest : PlatformIntegrationTest() {
         val testContext = VertxTestContext()
         val instrumentService = ServiceProxyBuilder(vertx)
             .setToken(SYSTEM_JWT_TOKEN)
-            .setAddress(SourceMarkerServices.Utilize.LIVE_INSTRUMENT)
+            .setAddress(SourceServices.Utilize.LIVE_INSTRUMENT)
             .build(LiveInstrumentService::class.java)
 
         instrumentService.addLiveInstruments(
-            LiveInstrumentBatch(
-                listOf(
-                    LiveBreakpoint(
-                        LiveSourceLocation("spp.example.webapp.model.User", 42),
-                        condition = "1==2"
-                    ),
-                    LiveBreakpoint(
-                        LiveSourceLocation("spp.example.webapp.model.User", 42),
-                        condition = "1==3"
-                    )
+            listOf(
+                LiveBreakpoint(
+                    LiveSourceLocation("spp.example.webapp.model.User", 42),
+                    condition = "1==2"
+                ),
+                LiveBreakpoint(
+                    LiveSourceLocation("spp.example.webapp.model.User", 42),
+                    condition = "1==3"
                 )
             )
-        ) {
+        ).onComplete {
             if (it.succeeded()) {
                 testContext.verify { assertEquals(2, it.result().size) }
                 instrumentService.removeLiveInstruments(
                     LiveSourceLocation("spp.example.webapp.model.User", 42)
-                ) {
+                ).onComplete {
                     if (it.succeeded()) {
                         testContext.verify {
                             assertEquals(2, it.result().size)
@@ -420,7 +417,7 @@ class LiveBreakpointTest : PlatformIntegrationTest() {
         val testContext = VertxTestContext()
         val instrumentService = ServiceProxyBuilder(vertx)
             .setToken(SYSTEM_JWT_TOKEN)
-            .setAddress(SourceMarkerServices.Utilize.LIVE_INSTRUMENT)
+            .setAddress(SourceServices.Utilize.LIVE_INSTRUMENT)
             .build(LiveInstrumentService::class.java)
 
         instrumentService.addLiveInstrument(
@@ -429,7 +426,7 @@ class LiveBreakpointTest : PlatformIntegrationTest() {
                 condition = "1===2",
                 applyImmediately = true
             )
-        ) {
+        ).onComplete {
             if (it.failed()) {
                 if (it.cause().cause is LiveInstrumentException) {
                     testContext.verify {
@@ -459,7 +456,7 @@ class LiveBreakpointTest : PlatformIntegrationTest() {
         val testContext = VertxTestContext()
         val instrumentService = ServiceProxyBuilder(vertx)
             .setToken(SYSTEM_JWT_TOKEN)
-            .setAddress(SourceMarkerServices.Utilize.LIVE_INSTRUMENT)
+            .setAddress(SourceServices.Utilize.LIVE_INSTRUMENT)
             .build(LiveInstrumentService::class.java)
 
         instrumentService.addLiveInstrument(
@@ -467,7 +464,7 @@ class LiveBreakpointTest : PlatformIntegrationTest() {
                 LiveSourceLocation("bad.Clazz", 48),
                 applyImmediately = true
             )
-        ) {
+        ).onComplete {
             if (it.failed()) {
                 testContext.verify {
                     assertNotNull(it.cause().cause)

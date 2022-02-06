@@ -17,35 +17,104 @@
  */
 package spp.platform.processor
 
+import io.vertx.core.Vertx
 import io.vertx.core.json.Json
+import io.vertx.core.json.JsonObject
 import io.vertx.core.net.NetServerOptions
+import io.vertx.ext.auth.jwt.JWTAuth
 import io.vertx.ext.bridge.BridgeEventType
 import io.vertx.ext.bridge.BridgeOptions
 import io.vertx.ext.bridge.PermittedOptions
 import io.vertx.ext.eventbus.bridge.tcp.TcpEventBusBridge
 import io.vertx.ext.healthchecks.HealthChecks
-import io.vertx.kotlin.coroutines.CoroutineVerticle
 import io.vertx.kotlin.coroutines.await
+import io.vertx.kotlin.coroutines.dispatcher
 import io.vertx.servicediscovery.ServiceDiscoveryOptions
-import org.slf4j.LoggerFactory
+import kotlinx.coroutines.launch
+import mu.KotlinLogging
+import spp.platform.SourcePlatform
 import spp.platform.SourcePlatform.Companion.addServiceCheck
+import spp.platform.core.InstanceBridge
 import spp.platform.core.SourceSubscriber
-import spp.protocol.SourceMarkerServices
-import spp.protocol.SourceMarkerServices.Utilize
-import spp.protocol.platform.PlatformAddress
+import spp.protocol.SourceServices
+import spp.protocol.SourceServices.Utilize
 import spp.protocol.platform.PlatformAddress.MARKER_DISCONNECTED
-import spp.protocol.probe.ProbeAddress
-import spp.protocol.processor.ProcessorAddress.SET_LOG_PUBLISH_RATE_LIMIT
-import spp.protocol.processor.status.ProcessorConnection
+import spp.protocol.platform.PlatformAddress.PROCESSOR_CONNECTED
+import spp.protocol.platform.PlatformAddress.PROCESSOR_DISCONNECTED
+import spp.protocol.platform.ProbeAddress
+import spp.protocol.platform.ProcessorAddress.LIVE_INSTRUMENT_APPLIED
+import spp.protocol.platform.ProcessorAddress.LIVE_INSTRUMENT_REMOVED
+import spp.protocol.platform.ProcessorAddress.REMOTE_REGISTERED
+import spp.protocol.platform.ProcessorAddress.SET_LOG_PUBLISH_RATE_LIMIT
+import spp.protocol.platform.status.ActiveInstance
+import spp.protocol.platform.status.InstanceConnection
+import java.time.Duration
+import java.time.Instant
+import java.util.concurrent.ConcurrentHashMap
 
 class ProcessorBridge(
     private val healthChecks: HealthChecks,
+    jwtAuth: JWTAuth?,
     private val netServerOptions: NetServerOptions
-) : CoroutineVerticle() {
+) : InstanceBridge(jwtAuth) {
 
-    private val log = LoggerFactory.getLogger(ProcessorBridge::class.java)
+    companion object {
+        private val log = KotlinLogging.logger {}
+
+        private const val connectedProcessorsAddress = "get-connected-processors"
+        private const val activeProcessorsAddress = "get-active-processors"
+
+        suspend fun getConnectedProcessorCount(vertx: Vertx): Int {
+            return vertx.eventBus().request<Int>(connectedProcessorsAddress, null).await().body()
+        }
+
+        suspend fun getActiveProcessors(vertx: Vertx): List<ActiveInstance> {
+            return vertx.eventBus().request<List<ActiveInstance>>(activeProcessorsAddress, null).await().body()
+        }
+    }
+
+    private val activeProcessors: MutableMap<String, ActiveInstance> = ConcurrentHashMap()
 
     override suspend fun start() {
+        vertx.eventBus().consumer<JsonObject>(activeProcessorsAddress) {
+            launch(vertx.dispatcher()) {
+                it.reply(ArrayList(activeProcessors.values))
+            }
+        }
+        vertx.eventBus().consumer<JsonObject>(connectedProcessorsAddress) {
+            launch(vertx.dispatcher()) {
+                it.reply(vertx.sharedData().getLocalCounter(PROCESSOR_CONNECTED).await().get().await())
+            }
+        }
+        vertx.eventBus().consumer<JsonObject>(PROCESSOR_CONNECTED) {
+            val conn = Json.decodeValue(it.body().toString(), InstanceConnection::class.java)
+            val latency = System.currentTimeMillis() - conn.connectionTime
+            log.trace { "Establishing connection with processor ${conn.instanceId}" }
+
+            activeProcessors[conn.instanceId] = ActiveInstance(conn.instanceId, System.currentTimeMillis(), conn.meta)
+            it.reply(true)
+            log.info("Processor connected. Latency: {}ms - Active processors: {}", latency, activeProcessors.size)
+
+            launch(vertx.dispatcher()) {
+                vertx.sharedData().getLocalCounter(PROCESSOR_CONNECTED).await().incrementAndGet().await()
+            }
+        }
+        vertx.eventBus().consumer<JsonObject>(PROCESSOR_DISCONNECTED) {
+            val conn = Json.decodeValue(it.body().toString(), InstanceConnection::class.java)
+            val connectedAt = Instant.ofEpochMilli(activeProcessors.remove(conn.instanceId)!!.connectedAt)
+            log.info("Processor disconnected. Connection time: {}", Duration.between(Instant.now(), connectedAt))
+
+            launch(vertx.dispatcher()) {
+                SourcePlatform.discovery.getRecords { true }.await().forEach {
+                    if (it.metadata.getString("INSTANCE_ID") == conn.instanceId) {
+                        SourcePlatform.discovery.unpublish(it.registration)
+                    }
+                }
+
+                vertx.sharedData().getLocalCounter(PROCESSOR_CONNECTED).await().decrementAndGet().await()
+            }
+        }
+
         val liveInstrumentEnabled = config.getJsonObject("live-instrument")?.getString("enabled")?.toBoolean() ?: false
         log.debug("Live instrument processor ${if (liveInstrumentEnabled) "enabled" else "disabled"}")
         if (liveInstrumentEnabled) addServiceCheck(healthChecks, Utilize.LIVE_INSTRUMENT)
@@ -60,27 +129,27 @@ class ProcessorBridge(
                 .addInboundPermitted(PermittedOptions().setAddress(ServiceDiscoveryOptions.DEFAULT_ANNOUNCE_ADDRESS))
                 .addInboundPermitted(PermittedOptions().setAddress(ServiceDiscoveryOptions.DEFAULT_USAGE_ADDRESS))
                 .addInboundPermitted(PermittedOptions().setAddress(Utilize.LIVE_SERVICE))
-                .addInboundPermitted(PermittedOptions().setAddress(PlatformAddress.PROCESSOR_CONNECTED.address))
+                .addInboundPermitted(PermittedOptions().setAddress(PROCESSOR_CONNECTED))
                 .apply { if (liveInstrumentEnabled) addLiveInstrumentInbound() }
                 .apply { if (liveViewEnabled) addLiveViewInbound() }
                 //to processor
-                .addOutboundPermitted(PermittedOptions().setAddress(ProbeAddress.REMOTE_REGISTERED.address))
-                .addOutboundPermitted(PermittedOptions().setAddress(MARKER_DISCONNECTED.address))
+                .addOutboundPermitted(PermittedOptions().setAddress(REMOTE_REGISTERED))
+                .addOutboundPermitted(PermittedOptions().setAddress(MARKER_DISCONNECTED))
                 .apply { if (liveInstrumentEnabled) addLiveInstrumentOutbound() }
                 .apply { if (liveViewEnabled) addLiveViewOutbound() },
             netServerOptions
         ) {
             if (it.type() == BridgeEventType.SEND) {
                 val address = it.rawMessage.getString("address")
-                if (address == PlatformAddress.PROCESSOR_CONNECTED.address) {
+                if (address == PROCESSOR_CONNECTED) {
                     val conn = Json.decodeValue(
-                        it.rawMessage.getJsonObject("body").toString(), ProcessorConnection::class.java
+                        it.rawMessage.getJsonObject("body").toString(), InstanceConnection::class.java
                     )
-                    SourceSubscriber.addSubscriber(it.socket().writeHandlerID(), conn.processorId)
+                    SourceSubscriber.addSubscriber(it.socket().writeHandlerID(), conn.instanceId)
 
                     it.socket().closeHandler { _ ->
                         vertx.eventBus().publish(
-                            PlatformAddress.PROCESSOR_DISCONNECTED.address,
+                            PROCESSOR_DISCONNECTED,
                             it.rawMessage.getJsonObject("body")
                         )
                     }
@@ -92,7 +161,7 @@ class ProcessorBridge(
                     it.rawMessage.getJsonObject("headers").put("processor_id", processorId)
                 }
             }
-            it.complete(true)
+            it.complete(true) //todo: validateAuth(it)
         }.listen(config.getString("bridge_port").toInt()).await()
     }
 
@@ -103,39 +172,24 @@ class ProcessorBridge(
     }
 
     private fun BridgeOptions.addLiveInstrumentOutbound() {
-        addOutboundPermitted(PermittedOptions().setAddress(PlatformAddress.LIVE_BREAKPOINT_APPLIED.address))
-            .addOutboundPermitted(PermittedOptions().setAddress(PlatformAddress.LIVE_BREAKPOINT_REMOVED.address))
-            .addOutboundPermitted(PermittedOptions().setAddress(PlatformAddress.LIVE_LOG_APPLIED.address))
-            .addOutboundPermitted(PermittedOptions().setAddress(PlatformAddress.LIVE_LOG_REMOVED.address))
-            .addOutboundPermitted(PermittedOptions().setAddress(PlatformAddress.LIVE_METER_APPLIED.address))
-            .addOutboundPermitted(PermittedOptions().setAddress(PlatformAddress.LIVE_METER_REMOVED.address))
-            .addOutboundPermitted(PermittedOptions().setAddress(PlatformAddress.LIVE_SPAN_APPLIED.address))
-            .addOutboundPermitted(PermittedOptions().setAddress(PlatformAddress.LIVE_SPAN_REMOVED.address))
-            .addOutboundPermitted(PermittedOptions().setAddress(SET_LOG_PUBLISH_RATE_LIMIT.address))
+        addOutboundPermitted(PermittedOptions().setAddress(LIVE_INSTRUMENT_APPLIED))
+            .addOutboundPermitted(PermittedOptions().setAddress(LIVE_INSTRUMENT_REMOVED))
+            .addOutboundPermitted(PermittedOptions().setAddress(SET_LOG_PUBLISH_RATE_LIMIT))
     }
 
     private fun BridgeOptions.addLiveViewInbound() {
         addInboundPermitted(
-            PermittedOptions().setAddressRegex(SourceMarkerServices.Provide.LIVE_VIEW_SUBSCRIBER + "\\..+")
+            PermittedOptions().setAddressRegex(SourceServices.Provide.LIVE_VIEW_SUBSCRIBER + "\\:.+")
         )
     }
 
     private fun BridgeOptions.addLiveInstrumentInbound() {
-        addInboundPermitted(PermittedOptions().setAddress(SourceMarkerServices.Provide.LIVE_INSTRUMENT_SUBSCRIBER))
-            .addInboundPermitted(
-                PermittedOptions().setAddressRegex(SourceMarkerServices.Provide.LIVE_INSTRUMENT_SUBSCRIBER + "\\..+")
-            )
-            .addInboundPermitted(
-                PermittedOptions().setAddressRegex(ProbeAddress.LIVE_BREAKPOINT_REMOTE.address + "\\:.+")
-            )
-            .addInboundPermitted(
-                PermittedOptions().setAddressRegex(ProbeAddress.LIVE_LOG_REMOTE.address + "\\:.+")
-            )
-            .addInboundPermitted(
-                PermittedOptions().setAddressRegex(ProbeAddress.LIVE_METER_REMOTE.address + "\\:.+")
-            )
-            .addInboundPermitted(
-                PermittedOptions().setAddressRegex(ProbeAddress.LIVE_SPAN_REMOTE.address + "\\:.+")
-            )
+        addInboundPermitted(
+            PermittedOptions().setAddressRegex(SourceServices.Provide.LIVE_INSTRUMENT_SUBSCRIBER + "\\:.+")
+        ).addInboundPermitted(
+            PermittedOptions().setAddressRegex(ProbeAddress.LIVE_INSTRUMENT_REMOTE)
+        ).addInboundPermitted(
+            PermittedOptions().setAddressRegex(ProbeAddress.LIVE_INSTRUMENT_REMOTE + "\\:.+")
+        )
     }
 }
