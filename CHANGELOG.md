@@ -1,5 +1,19 @@
 ## [Unreleased]
 
+### [Live Protocol](https://github.com/sourceplusplus/protocol)
+
+#### Added
+- `LiveVariable.presentation`
+
+#### Changed
+- Tons of refactoring
+
+#### Removed
+- Portal-only DAOs
+- `Log.getFormattedMessage`
+- `LiveInstrumentContext`
+- `LiveInstrumentBatch`
+
 ## 0.3.1 (2022-02-04)
 
 #### Added
