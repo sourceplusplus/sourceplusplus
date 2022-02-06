@@ -1,5 +1,25 @@
 ## [Unreleased]
 
+### [Live Platform](https://github.com/sourceplusplus/live-platform)
+
+#### Changed
+- Consolidate instrument remotes
+- Individual subscriber events
+
+### [Live Protocol](https://github.com/sourceplusplus/protocol)
+
+#### Added
+- `LiveVariable.presentation`
+
+#### Changed
+- Tons of refactoring
+
+#### Removed
+- Portal-only DAOs
+- `Log.getFormattedMessage`
+- `LiveInstrumentContext`
+- `LiveInstrumentBatch`
+
 ## 0.3.1 (2022-02-04)
 
 #### Added
