@@ -1,5 +1,11 @@
 ## [Unreleased]
 
+### [Live Platform](https://github.com/sourceplusplus/live-platform)
+
+#### Changed
+- Consolidate instrument remotes
+- Individual subscriber events
+
 ### [Live Protocol](https://github.com/sourceplusplus/protocol)
 
 #### Added
