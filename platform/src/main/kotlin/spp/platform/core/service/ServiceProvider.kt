@@ -76,16 +76,21 @@ class ServiceProvider(private val jwtAuth: JWTAuth?) : CoroutineVerticle() {
         ServiceBinder(vertx).setIncludeDebugInfo(true).setAddress(address)
             .addInterceptor { msg ->
                 val promise = Promise.promise<Message<JsonObject>>()
-                jwtAuth!!.authenticate(JsonObject().put("token", msg.headers().get("auth-token"))).onComplete {
-                    if (it.succeeded()) {
-                        Vertx.currentContext().put("user", it.result())
-                        val selfId = it.result().principal().getString("developer_id")
-                        val accessToken = it.result().principal().getString("access_token")
-                        Vertx.currentContext().put("developer", DeveloperAuth.from(selfId, accessToken))
-                        promise.complete(msg)
-                    } else {
-                        promise.fail(it.cause())
+                if (jwtAuth != null) {
+                    jwtAuth.authenticate(JsonObject().put("token", msg.headers().get("auth-token"))).onComplete {
+                        if (it.succeeded()) {
+                            Vertx.currentContext().put("user", it.result())
+                            val selfId = it.result().principal().getString("developer_id")
+                            val accessToken = it.result().principal().getString("access_token")
+                            Vertx.currentContext().put("developer", DeveloperAuth.from(selfId, accessToken))
+                            promise.complete(msg)
+                        } else {
+                            promise.fail(it.cause())
+                        }
                     }
+                } else {
+                    Vertx.currentContext().put("developer", DeveloperAuth.from("system", null))
+                    promise.complete(msg)
                 }
                 return@addInterceptor promise.future()
             }
