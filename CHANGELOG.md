@@ -6,6 +6,11 @@
 - Consolidate instrument remotes
 - Individual subscriber events
 
+### [Live Portal](https://github.com/sourceplusplus/interface-portal)
+
+#### Added
+- Portal-only DAOs
+
 ### [Live Protocol](https://github.com/sourceplusplus/protocol)
 
 #### Added
