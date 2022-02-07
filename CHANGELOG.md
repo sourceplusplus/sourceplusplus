@@ -30,6 +30,14 @@
 - `LiveInstrumentContext`
 - `LiveInstrumentBatch`
 
+### [JetBrains Plugin](https://github.com/sourceplusplus/interface-jetbrains)
+
+#### Changed
+- Protocol update
+
+#### Removed
+- Statically linked Vertx discovery library
+
 ## 0.3.1 (2022-02-04)
 
 #### Added
