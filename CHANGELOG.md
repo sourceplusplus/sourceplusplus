@@ -37,9 +37,6 @@
 
 ### [JetBrains Plugin](https://github.com/sourceplusplus/interface-jetbrains)
 
-#### Changed
-- Protocol update
-
 #### Removed
 - Statically linked Vertx discovery library
 
