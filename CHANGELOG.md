@@ -1,10 +1,27 @@
 ## [Unreleased]
 
+## 0.4.0 (2022-02-07)
+
 ### [Live Platform](https://github.com/sourceplusplus/live-platform)
 
 #### Changed
 - Consolidate instrument remotes
 - Individual subscriber events
+
+### [Live Instrument Processor](https://github.com/sourceplusplus/processor-live-instrument)
+
+#### Added
+- JWT authentication
+
+### [Live View Processor](https://github.com/sourceplusplus/processor-live-view)
+
+#### Added
+- JWT authentication
+
+### [Live Portal](https://github.com/sourceplusplus/interface-portal)
+
+#### Added
+- Portal-only DAOs
 
 ### [Live Protocol](https://github.com/sourceplusplus/protocol)
 
@@ -19,6 +36,11 @@
 - `Log.getFormattedMessage`
 - `LiveInstrumentContext`
 - `LiveInstrumentBatch`
+
+### [JetBrains Plugin](https://github.com/sourceplusplus/interface-jetbrains)
+
+#### Removed
+- Statically linked Vertx discovery library
 
 ## 0.3.1 (2022-02-04)
 
