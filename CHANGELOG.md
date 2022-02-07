@@ -6,6 +6,11 @@
 - Consolidate instrument remotes
 - Individual subscriber events
 
+### [Live Instrument Processor](https://github.com/sourceplusplus/processor-instrument)
+
+#### Added
+- JWT authentication
+
 ### [Live Portal](https://github.com/sourceplusplus/interface-portal)
 
 #### Added
