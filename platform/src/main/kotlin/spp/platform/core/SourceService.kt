@@ -1395,7 +1395,7 @@ object SourceService {
                             condition = condition,
                             expiresAt = expiresAt,
                             hitLimit = hitLimit ?: 1,
-                            applyImmediately = applyImmediately,
+                            applyImmediately = applyImmediately ?: false,
                             throttle = throttle,
                             meta = toJsonMap(input.getJsonArray("meta"))
                         )
@@ -1467,7 +1467,7 @@ object SourceService {
                             condition = condition,
                             expiresAt = expiresAt,
                             hitLimit = hitLimit ?: 1,
-                            applyImmediately = applyImmediately,
+                            applyImmediately = applyImmediately ?: false,
                             throttle = throttle,
                             meta = toJsonMap(input.getJsonArray("meta"))
                         )
@@ -1543,7 +1543,7 @@ object SourceService {
                             condition = condition,
                             expiresAt = expiresAt,
                             hitLimit = hitLimit ?: -1,
-                            applyImmediately = applyImmediately,
+                            applyImmediately = applyImmediately ?: false,
                             throttle = throttle,
                             meta = toJsonMap(input.getJsonArray("meta"))
                         )
@@ -1612,7 +1612,7 @@ object SourceService {
                             condition = condition,
                             expiresAt = expiresAt,
                             hitLimit = hitLimit ?: -1,
-                            applyImmediately = applyImmediately,
+                            applyImmediately = applyImmediately ?: false,
                             throttle = throttle,
                             meta = toJsonMap(input.getJsonArray("meta"))
                         )
