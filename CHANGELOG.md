@@ -1,5 +1,7 @@
 ## [Unreleased]
 
+## 0.4.0 (2022-02-07)
+
 ### [Live Platform](https://github.com/sourceplusplus/live-platform)
 
 #### Changed
