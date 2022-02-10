@@ -2,6 +2,11 @@
 
 ## 0.4.1 (2022-02-09)
 
+### [Live Protocol](https://github.com/sourceplusplus/protocol)
+
+#### Added
+- Ability to build on Windows
+
 ### [JetBrains Plugin](https://github.com/sourceplusplus/interface-jetbrains)
 
 #### Fixed
