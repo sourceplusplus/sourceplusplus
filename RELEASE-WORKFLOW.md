@@ -1,7 +1,8 @@
 - Release protocol
   - Trigger JitPack artifact
-- Release processor dependencies & JVM probe
+- Release processor dependencies
   - Trigger JitPack artifact
+- Release probes
 - Release live instrument processor
 - Release live view processor
 - Release cli & portal
