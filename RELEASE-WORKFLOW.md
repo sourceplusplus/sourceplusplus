@@ -1,4 +1,3 @@
-- Bump plugin
 - Release protocol
   - Trigger JitPack artifact
 - Release processor dependencies & JVM probe
