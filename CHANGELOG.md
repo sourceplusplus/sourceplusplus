@@ -1,5 +1,20 @@
 ## [Unreleased]
 
+## 0.4.1 (2022-02-09)
+
+### [Live Protocol](https://github.com/sourceplusplus/protocol)
+
+#### Added
+- Ability to build on Windows
+
+### [JetBrains Plugin](https://github.com/sourceplusplus/interface-jetbrains)
+
+#### Fixed
+- NPE fix (#659)
+
+#### Removed
+- Internal Groovy plugin dependency in `LoggerDetector`
+
 ## 0.4.0 (2022-02-07)
 
 ### [Live Platform](https://github.com/sourceplusplus/live-platform)
