@@ -5,6 +5,8 @@
 - Release probes
 - Release live instrument processor
 - Release live view processor
-- Release cli & portal
+- Release cli
+- Release portal
+  - Trigger JitPack artifact
 - Release platform
 - Release plugin
