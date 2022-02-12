@@ -15,7 +15,7 @@ Powered by [Apache SkyWalking](https://github.com/apache/skywalking), Source++ e
   - **Live Logs**: Just-in-Time Logging
   - **Live Meters**: Real-Time KPI Monitoring
   - **Live Spans**: User-Domain Tracing
-- Multi-instance debugging
+- Multi-instance/Serverless debugging
 - Role-based access control
 - Instrument conditionals
 - Instrument TTL, sampling, rate limiting
