@@ -85,12 +85,12 @@ import spp.platform.probe.ProbeBridge
 import spp.platform.probe.config.SourceProbeConfig
 import spp.platform.probe.util.SelfSignedCertGenerator
 import spp.platform.processor.ProcessorBridge
-import spp.protocol.ProtocolMarshaller
-import spp.protocol.ProtocolMarshaller.ProtocolMessageCodec
+import spp.protocol.marshall.ProtocolMarshaller
+import spp.protocol.marshall.ProtocolMarshaller.ProtocolMessageCodec
 import spp.protocol.SourceServices.Utilize
 import spp.protocol.platform.ProbeAddress.LIVE_INSTRUMENT_REMOTE
 import spp.protocol.service.LiveViewService
-import spp.protocol.util.KSerializers
+import spp.protocol.marshall.KSerializers
 import java.io.File
 import java.io.FileWriter
 import java.io.StringReader

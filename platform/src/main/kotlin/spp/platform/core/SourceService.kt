@@ -24,7 +24,6 @@ import graphql.schema.DataFetchingEnvironment
 import graphql.schema.GraphQLScalarType
 import graphql.schema.idl.*
 import io.vertx.core.Vertx
-import io.vertx.core.eventbus.ReplyException
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import io.vertx.ext.web.RoutingContext
@@ -55,7 +54,6 @@ import spp.protocol.service.LiveService
 import spp.protocol.service.LiveViewService
 import spp.protocol.service.error.InstrumentAccessDenied
 import spp.protocol.service.error.PermissionAccessDenied
-import spp.protocol.util.ServiceExceptionConverter.fromEventBusException
 import spp.protocol.view.LiveViewConfig
 import spp.protocol.view.LiveViewSubscription
 import java.util.*
