@@ -32,7 +32,6 @@ import spp.protocol.SourceServices
 import spp.protocol.SourceServices.Provide.toLiveInstrumentSubscriberAddress
 import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.LiveSourceLocation
-import spp.protocol.instrument.event.LiveBreakpointHit
 import spp.protocol.instrument.event.LiveInstrumentEvent
 import spp.protocol.instrument.event.LiveInstrumentEventType
 import spp.protocol.service.LiveInstrumentService
@@ -88,7 +87,7 @@ class LiveBreakpointTest : PlatformIntegrationTest() {
                     }
                     gotHit = true
 
-                    val bpHit = Json.decodeValue(liveEvent.data, LiveBreakpointHit::class.java)
+                    val bpHit = ProtocolMarshaller.deserializeLiveBreakpointHit(JsonObject(liveEvent.data))
                     testContext.verify {
                         assertTrue(bpHit.stackTrace.elements.isNotEmpty())
                         val topFrame = bpHit.stackTrace.elements.first()
