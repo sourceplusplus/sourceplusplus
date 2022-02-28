@@ -72,9 +72,6 @@ The Source++ documentation is available [here](https://docs.sourceplusplus.com).
         ├── cli             # Command-line interface
         └── jetbrains       # JetBrains IDE plugin
     ├── platform            # Live coding server
-        ├── common          # Common code
-        ├── core            # Core code
-        └── services        # Services
     ├── probes              # Live coding probes
         ├── jvm             # JVM support
         └── python          # Python support
