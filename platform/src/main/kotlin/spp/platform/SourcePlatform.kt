@@ -82,6 +82,7 @@ import spp.platform.probe.ProbeBridge
 import spp.platform.probe.util.SelfSignedCertGenerator
 import spp.platform.processor.ProcessorBridge
 import spp.protocol.SourceServices.Utilize
+import spp.protocol.marshall.LocalMessageCodec
 import spp.protocol.platform.ProbeAddress.LIVE_INSTRUMENT_REMOTE
 import spp.protocol.service.LiveViewService
 import java.io.File
@@ -160,9 +161,9 @@ class SourcePlatform : CoroutineVerticle() {
 
             runBlocking {
                 try {
-                    val vertxOptions = VertxOptions()
-                    vertxOptions.blockedThreadCheckInterval = Int.MAX_VALUE.toLong()
-                    val vertx = Vertx.vertx(vertxOptions)
+                    val vertx = Vertx.vertx()
+                    vertx.eventBus().registerDefaultCodec(ArrayList::class.java, LocalMessageCodec())
+
                     vertx.deployVerticle(SourcePlatform(), DeploymentOptions().setConfig(sppConfig)).await()
                 } catch (ex: Throwable) {
                     ex.printStackTrace()
