@@ -34,7 +34,7 @@ dependencies {
     implementation(project(":processors:live-instrument"))
     implementation(project(":processors:live-view"))
 
-    implementation("org.kohsuke:github-api:1.301")
+    implementation("org.kohsuke:github-api:1.302")
     implementation("org.jooq:joor:$joorVersion")
     implementation("io.github.microutils:kotlin-logging-jvm:2.1.21")
     implementation("org.apache.commons:commons-lang3:$commonsLang3Version")
