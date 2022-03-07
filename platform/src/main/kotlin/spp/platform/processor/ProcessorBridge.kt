@@ -166,8 +166,7 @@ class ProcessorBridge(
     }
 
     private fun BridgeOptions.addLiveViewOutbound() {
-        addOutboundPermitted(PermittedOptions().setAddress(Utilize.LOG_COUNT_INDICATOR))
-            .addOutboundPermitted(PermittedOptions().setAddress(Utilize.LIVE_VIEW))
+        addOutboundPermitted(PermittedOptions().setAddress(Utilize.LIVE_VIEW))
             .addOutboundPermitted(PermittedOptions().setAddress(Utilize.LIVE_INSTRUMENT))
     }
 
