@@ -22,7 +22,6 @@ rootProject.name = 'live-platform'
 
 include 'interfaces:cli'
 include 'interfaces:jetbrains'
-include 'interfaces:jetbrains:mapper'
 include 'interfaces:jetbrains:marker'
 include 'interfaces:jetbrains:marker:jvm-marker'
 include 'interfaces:jetbrains:marker:py-marker'
