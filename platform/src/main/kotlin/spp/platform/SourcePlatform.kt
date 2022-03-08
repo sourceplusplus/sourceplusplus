@@ -24,7 +24,6 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLMapper
 import io.vertx.core.DeploymentOptions
 import io.vertx.core.Promise
 import io.vertx.core.Vertx
-import io.vertx.core.VertxOptions
 import io.vertx.core.buffer.Buffer
 import io.vertx.core.http.HttpMethod
 import io.vertx.core.http.HttpServerOptions
@@ -301,8 +300,14 @@ class SourcePlatform : CoroutineVerticle() {
         }
 
         //S++ Graphql
-        router.route("/graphql").handler(BodyHandler.create())
-            .handler(GraphQLHandler.create(SourceService.setupGraphQL(vertx)))
+        val sppGraphQLHandler = GraphQLHandler.create(SourceService.setupGraphQL(vertx))
+        router.route("/graphql").handler(BodyHandler.create()).handler {
+            if (it.request().getHeader("spp-skywalking-reroute") == "true") {
+                it.reroute("/graphql/skywalking")
+            } else {
+                sppGraphQLHandler.handle(it)
+            }
+        }
 
         //SkyWalking Graphql
         val skywalkingHost = config.getJsonObject("skywalking-oap").getString("host")
