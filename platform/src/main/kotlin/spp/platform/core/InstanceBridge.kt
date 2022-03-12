@@ -17,6 +17,9 @@
  */
 package spp.platform.core
 
+import io.vertx.core.AsyncResult
+import io.vertx.core.Future
+import io.vertx.core.Handler
 import io.vertx.core.Vertx
 import io.vertx.core.json.JsonObject
 import io.vertx.ext.auth.jwt.JWTAuth
@@ -33,13 +36,27 @@ abstract class InstanceBridge(private val jwtAuth: JWTAuth?) : CoroutineVerticle
     }
 
     fun validateAuth(event: BridgeEvent) {
+        validateAuth(event) {
+            if (it.succeeded()) {
+                event.complete(true)
+            } else {
+                event.fail(it.cause().message)
+            }
+        }
+    }
+
+    fun validateAuth(event: BridgeEvent, handler: Handler<AsyncResult<DeveloperAuth>>) {
         if (jwtAuth != null) {
             val authToken = event.rawMessage.getJsonObject("headers").getString("auth-token")
             if (authToken.isNullOrEmpty()) {
                 if (event.type() == BridgeEventType.SEND) {
-                    event.fail("Rejected SEND event to ${event.rawMessage.getString("address")} with missing auth token")
+                    handler.handle(
+                        Future.failedFuture(
+                            "Rejected SEND event to ${event.rawMessage.getString("address")} with missing auth token"
+                        )
+                    )
                 } else {
-                    event.fail("Rejected ${event.type()} event with missing auth token")
+                    handler.handle(Future.failedFuture("Rejected ${event.type()} event with missing auth token"))
                 }
                 return
             }
@@ -49,16 +66,18 @@ abstract class InstanceBridge(private val jwtAuth: JWTAuth?) : CoroutineVerticle
                     Vertx.currentContext().put("user", it.result())
                     val selfId = it.result().principal().getString("developer_id")
                     val accessToken = it.result().principal().getString("access_token")
-                    Vertx.currentContext().put("developer", DeveloperAuth.from(selfId, accessToken))
-                    event.complete(true)
+                    val developerAuth = DeveloperAuth.from(selfId, accessToken)
+                    Vertx.currentContext().put("developer", developerAuth)
+                    handler.handle(Future.succeededFuture(developerAuth))
                 } else {
                     log.warn("Failed to authenticate ${event.type()} event", it.cause())
-                    event.fail(it.cause())
+                    handler.handle(Future.failedFuture((it.cause())))
                 }
             }
         } else {
-            Vertx.currentContext().put("developer", DeveloperAuth("system"))
-            event.complete(true)
+            val developerAuth = DeveloperAuth("system")
+            Vertx.currentContext().put("developer", developerAuth)
+            handler.handle(Future.succeededFuture(developerAuth))
         }
     }
 }
