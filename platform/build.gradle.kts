@@ -31,8 +31,6 @@ repositories {
 dependencies {
     implementation(project(":protocol"))
     implementation(project(":processors:dependencies"))
-    implementation(project(":processors:live-instrument"))
-    implementation(project(":processors:live-view"))
 
     implementation("org.kohsuke:github-api:1.302")
     implementation("org.jooq:joor:$joorVersion")

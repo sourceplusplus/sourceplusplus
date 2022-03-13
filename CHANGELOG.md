@@ -1,5 +1,65 @@
 ## [Unreleased]
 
+## 0.4.2 (2022-03-13)
+
+### [JVM Probe](https://github.com/sourceplusplus/probe-jvm)
+
+#### Added
+- Added depth capping to live variable serialization
+- Added async executor to `ContextReceiver`
+
+#### Changed
+- Use `ProtocolMarshaller` instead of default marshaller for protocol messages
+
+### [Live Platform](https://github.com/sourceplusplus/live-platform)
+
+#### Added
+- Ability to reroute to SkyWalking on `/graphql` with `spp-skywalking-reroute` header
+
+#### Changed
+- Use `ProtocolMarshaller` instead of default marshaller for protocol messages
+- Send `DeveloperAuth` instead of `InstanceConnection` on marker disconnection
+
+### [Live Protocol](https://github.com/sourceplusplus/protocol)
+
+#### Changed
+- Simplified and improved marshalling protocol messages
+
+#### Fixed
+- Publish instead of sending messages over TCP without reply address
+
+### [Live Portal](https://github.com/sourceplusplus/interface-portal)
+
+#### Changed
+- Generalized and moved `PortalConfiguration` to protocol
+- Moved portal configuration code from IDE plugin to portal
+
+### [Live CLI](https://github.com/sourceplusplus/interface-cli)
+
+#### Added
+- Quick install setup scripts for Linux and Windows 
+
+#### Changed
+- Use `ProtocolMarshaller` instead of default marshaller for protocol messages
+- Modified long format commands to operate as subcommands
+
+### [Live Instrument Processor](https://github.com/sourceplusplus/processor-live-instrument)
+
+#### Added
+- Automatic live variable formatting for common types via `LiveVariable.presentation` field
+
+#### Changed
+- Use `ProtocolMarshaller` instead of default marshaller for protocol messages
+
+### [Live View Processor](https://github.com/sourceplusplus/processor-live-view)
+
+#### Changed
+- Use `ProtocolMarshaller` instead of default marshaller for protocol messages
+- Send all events on multi metric subscriptions
+
+#### Fixed
+- Clear view subscriptions on marker disconnection
+
 ## 0.4.1 (2022-02-09)
 
 ### [Live Protocol](https://github.com/sourceplusplus/protocol)

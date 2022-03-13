@@ -20,19 +20,16 @@ package spp.platform
 import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.LoggerContext
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.module.SimpleModule
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper
 import io.vertx.core.DeploymentOptions
 import io.vertx.core.Promise
 import io.vertx.core.Vertx
-import io.vertx.core.VertxOptions
 import io.vertx.core.buffer.Buffer
 import io.vertx.core.http.HttpMethod
 import io.vertx.core.http.HttpServerOptions
 import io.vertx.core.json.Json
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
-import io.vertx.core.json.jackson.DatabindCodec
 import io.vertx.core.net.NetServerOptions
 import io.vertx.core.net.PemKeyCertOptions
 import io.vertx.ext.auth.JWTOptions
@@ -62,7 +59,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
-import kotlinx.datetime.Instant
 import mu.KotlinLogging
 import org.apache.commons.text.StringSubstitutor
 import org.apache.commons.text.lookup.StringLookupFactory
@@ -82,15 +78,12 @@ import spp.platform.core.util.CertsToJksOptionsConverter
 import spp.platform.core.util.Msg.msg
 import spp.platform.marker.MarkerBridge
 import spp.platform.probe.ProbeBridge
-import spp.platform.probe.config.SourceProbeConfig
 import spp.platform.probe.util.SelfSignedCertGenerator
 import spp.platform.processor.ProcessorBridge
-import spp.protocol.ProtocolMarshaller
-import spp.protocol.ProtocolMarshaller.ProtocolMessageCodec
 import spp.protocol.SourceServices.Utilize
+import spp.protocol.marshall.LocalMessageCodec
 import spp.protocol.platform.ProbeAddress.LIVE_INSTRUMENT_REMOTE
 import spp.protocol.service.LiveViewService
-import spp.protocol.util.KSerializers
 import java.io.File
 import java.io.FileWriter
 import java.io.StringReader
@@ -167,9 +160,9 @@ class SourcePlatform : CoroutineVerticle() {
 
             runBlocking {
                 try {
-                    val vertxOptions = VertxOptions()
-                    vertxOptions.blockedThreadCheckInterval = Int.MAX_VALUE.toLong()
-                    val vertx = Vertx.vertx(vertxOptions)
+                    val vertx = Vertx.vertx()
+                    vertx.eventBus().registerDefaultCodec(ArrayList::class.java, LocalMessageCodec())
+
                     vertx.deployVerticle(SourcePlatform(), DeploymentOptions().setConfig(sppConfig)).await()
                 } catch (ex: Throwable) {
                     ex.printStackTrace()
@@ -212,14 +205,6 @@ class SourcePlatform : CoroutineVerticle() {
     @Suppress("LongMethod")
     override suspend fun start() {
         log.info("Initializing Source++ Platform")
-
-        val module = SimpleModule()
-        module.addSerializer(Instant::class.java, KSerializers.KotlinInstantSerializer())
-        module.addDeserializer(Instant::class.java, KSerializers.KotlinInstantDeserializer())
-        DatabindCodec.mapper().registerModule(module)
-        ProtocolMarshaller.setupCodecs(vertx)
-        vertx.eventBus().registerDefaultCodec(SourceProbeConfig::class.java, ProtocolMessageCodec())
-        vertx.eventBus().registerDefaultCodec(ArrayList::class.java, ProtocolMessageCodec())
 
         val keyFile = File("config/spp-platform.key")
         val certFile = File("config/spp-platform.crt")
@@ -315,8 +300,14 @@ class SourcePlatform : CoroutineVerticle() {
         }
 
         //S++ Graphql
-        router.route("/graphql").handler(BodyHandler.create())
-            .handler(GraphQLHandler.create(SourceService.setupGraphQL(vertx)))
+        val sppGraphQLHandler = GraphQLHandler.create(SourceService.setupGraphQL(vertx))
+        router.route("/graphql").handler(BodyHandler.create()).handler {
+            if (it.request().getHeader("spp-skywalking-reroute") == "true") {
+                it.reroute("/graphql/skywalking")
+            } else {
+                sppGraphQLHandler.handle(it)
+            }
+        }
 
         //SkyWalking Graphql
         val skywalkingHost = config.getJsonObject("skywalking-oap").getString("host")
