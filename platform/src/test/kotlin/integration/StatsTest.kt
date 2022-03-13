@@ -39,13 +39,13 @@ class StatsTest : PlatformIntegrationTest() {
             if (it.succeeded()) {
                 val result = it.result().bodyAsJsonObject().getJsonObject("platform")
                 testContext.verify {
-                    assertEquals(1, result.getInteger("connected-probes"))
+                    assertEquals(2, result.getInteger("connected-probes"))
                     val services = result.getJsonObject("services")
                     services.getJsonObject("core").map.forEach {
                         assertEquals(1, it.value, "Missing ${it.key}")
                     }
                     services.getJsonObject("probe").map.forEach {
-                        assertEquals(1, it.value, "Missing ${it.key}")
+                        assertEquals(2, it.value, "Missing ${it.key}")
                     }
                 }
 
