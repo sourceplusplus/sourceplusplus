@@ -1,6 +1,22 @@
 ## [Unreleased]
 
-## 0.4.2 (2022-03-13)
+## 0.4.2 (2022-03-14)
+
+### [JetBrains Plugin](https://github.com/sourceplusplus/interface-jetbrains)
+
+#### Added
+- Added `Watch Log` command
+- Activity quick stats inlay hints for method endpoints
+
+#### Changed
+- Use `ProtocolMarshaller` instead of default marshaller for protocol messages
+
+#### Fixed
+- Live log template positioning issue
+
+#### Removed
+- Unused code/modules
+- Hardcoded config
 
 ### [JVM Probe](https://github.com/sourceplusplus/probe-jvm)
 
