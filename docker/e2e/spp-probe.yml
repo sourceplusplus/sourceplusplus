@@ -7,13 +7,6 @@ skywalking:
   logging:
     level: "INFO"
   agent:
-    keep_tracing: true
-    is_cache_enhanced_class: true
-    class_cache_mode: "FILE"
     service_name: "spp"
   collector:
     backend_service: "skywalking-oap:11800"
-  plugin:
-    toolkit:
-      log:
-        transmit_formatted: false
