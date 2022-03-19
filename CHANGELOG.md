@@ -1,5 +1,47 @@
 ## [Unreleased]
 
+## 0.4.3 (2022-03-19)
+
+### [JetBrains Plugin](https://github.com/sourceplusplus/interface-jetbrains)
+
+#### Added
+- `Show/Hide Quick Stats` commands
+- Implemented LiveViewService for SkyWalking-only installations
+- Auto-display quick stats setting
+
+#### Changed
+- Moved BigInteger/Class live variable presentation to instrument processor
+- Default auto-resolve endpoint names
+
+#### Fixed
+- Compatability issues with IntelliJ 221.4994.44+
+
+### [JVM Probe](https://github.com/sourceplusplus/probe-jvm)
+
+#### Added
+- Additional default SkyWalking properties to standalone installation
+
+### [Live Protocol](https://github.com/sourceplusplus/protocol)
+
+#### Added
+- `SHOW_QUICK_STATS` role permission
+- CommandType enum to distinguish RolePermissions
+
+### [Live CLI](https://github.com/sourceplusplus/interface-cli)
+
+#### Changed
+- SubscribeView outputs entityName instead of entityId
+
+### [Live Instrument Processor](https://github.com/sourceplusplus/processor-live-instrument)
+
+#### Added
+- BigInteger/Class to automatic live variable presentation
+
+### [Live View Processor](https://github.com/sourceplusplus/processor-live-view)
+
+#### Changed
+- Output events with entity name as well as entity id
+
 ## 0.4.2 (2022-03-14)
 
 ### [JetBrains Plugin](https://github.com/sourceplusplus/interface-jetbrains)
