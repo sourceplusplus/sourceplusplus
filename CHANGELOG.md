@@ -13,6 +13,9 @@
 - Moved BigInteger/Class live variable presentation to instrument processor
 - Default auto-resolve endpoint names
 
+#### Fixed
+- Compatability issues with IntelliJ 221.4994.44+
+
 ### [JVM Probe](https://github.com/sourceplusplus/probe-jvm)
 
 #### Added
