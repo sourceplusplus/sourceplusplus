@@ -59,27 +59,27 @@ Follow this [document](https://github.com/sourceplusplus/documentation/blob/mast
 The Source++ documentation is available [here](https://docs.sourceplusplus.com).
 
 ## Directory Structure
-
-    .
-    ├── config              # Detekt
-    ├── docker              # Docker setup files
-        ├── e2e             # End-to-end testing environment
-        ├── spp-oap-server  # SkyWalking OAP (incl. Source++ processor) image
-        └── spp-platform    # Live coding server image
-    ├── documentation       # Documentation
-    ├── gradle              # Gradle wrapper
-    ├── interfaces          # Live coding clients
-        ├── cli             # Command-line interface
-        └── jetbrains       # JetBrains IDE plugin
-    ├── platform            # Live coding server
-    ├── probes              # Live coding probes
-        ├── jvm             # JVM support
-        └── python          # Python support
-    ├── processors          # Live coding processors
-        ├── dependencies    # Live processor common code
-        ├── live-instrument # Live instrument processing
-        └── live-view       # Live view processing
-    └── protocol            # Communication protocol
+```graphql
+├── config              # Detekt
+├── docker              # Docker setup files
+    ├── e2e             # End-to-end testing environment
+    ├── spp-oap-server  # SkyWalking OAP (incl. Source++ processor) image
+    └── spp-platform    # Live coding server image
+├── documentation       # Documentation
+├── gradle              # Gradle wrapper
+├── interfaces          # Live coding clients
+    ├── cli             # Command-line interface
+    └── jetbrains       # JetBrains IDE plugin
+├── platform            # Live coding server
+├── probes              # Live coding probes
+    ├── jvm             # JVM support
+    └── python          # Python support
+├── processors          # Live coding processors
+    ├── dependencies    # Live processor common code
+    ├── live-instrument # Live instrument processing
+    └── live-view       # Live view processing
+└── protocol            # Communication protocol
+```
 
 ## License
 
