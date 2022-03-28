@@ -18,7 +18,7 @@
 
 #### Fixed
 - Issue showing span tag/logs on multi-segment traces
-- Portal server isn't properly closed during configuration changes
+- Portal server properly closes during configuration changes
 
 ### [Live Protocol](https://github.com/sourceplusplus/protocol)
 
