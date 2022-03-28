@@ -1,5 +1,35 @@
 ## [Unreleased]
 
+## 0.4.4 (2022-03-28)
+
+### [JetBrains Plugin](https://github.com/sourceplusplus/interface-jetbrains)
+
+#### Added
+- Chinese (Simplified) language localization
+
+#### Changed
+- Updated icons and improved command palette UI
+
+### [Live Portal](https://github.com/sourceplusplus/interface-portal)
+
+#### Added
+- Internationalization support
+- Improved UI
+
+#### Fixed
+- Issue showing span tag/logs on multi-segment traces
+- Portal server isn't properly closed during configuration changes
+
+### [Live Protocol](https://github.com/sourceplusplus/protocol)
+
+#### Added
+- Internationalization support
+
+### [Live View Processor](https://github.com/sourceplusplus/processor-live-view)
+
+#### Added
+- Include `resolvedEndpointName` in Trace metadata
+
 ## 0.4.3 (2022-03-19)
 
 ### [JetBrains Plugin](https://github.com/sourceplusplus/interface-jetbrains)
