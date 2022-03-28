@@ -109,7 +109,9 @@ enum RolePermission {
 #    VIEW_OVERVIEW,
     VIEW_ACTIVITY,
     VIEW_TRACES,
-    VIEW_LOGS
+    VIEW_LOGS,
+
+    SHOW_QUICK_STATS #todo: should have permissions around allowed metrics instead of commands
 }
 
 enum ThrottleStep {
