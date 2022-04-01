@@ -34,8 +34,8 @@ class RedisStorage : CoreStorage {
     lateinit var redis: RedisAPI
 
     suspend fun init(vertx: Vertx, config: JsonObject) {
-        val sdHost = config.getJsonObject("redis").getString("host")
-        val sdPort = config.getJsonObject("redis").getString("port")
+        val sdHost = config.getString("host")
+        val sdPort = config.getString("port")
         val redisClient = Redis.createClient(vertx, "redis://$sdHost:$sdPort").connect().await()
         redis = RedisAPI.api(redisClient)
     }

@@ -324,7 +324,7 @@ class SourcePlatform : CoroutineVerticle() {
             "redis" -> {
                 log.info("Using Redis storage")
                 val redisStorage = RedisStorage()
-                redisStorage.init(vertx, config)
+                redisStorage.init(vertx, config.getJsonObject("storage").getJsonObject("redis"))
                 SourceStorage.setup(redisStorage, config)
             }
             else -> {
