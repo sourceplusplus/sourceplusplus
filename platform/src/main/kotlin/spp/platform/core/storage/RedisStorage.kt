@@ -24,6 +24,7 @@ import io.vertx.kotlin.coroutines.await
 import io.vertx.redis.client.Redis
 import io.vertx.redis.client.RedisAPI
 import spp.platform.core.SourceStorage
+import spp.protocol.marshall.ProtocolMarshaller
 import spp.protocol.platform.auth.*
 import spp.protocol.platform.developer.Developer
 import java.nio.charset.StandardCharsets.UTF_8
@@ -183,7 +184,9 @@ class RedisStorage : CoreStorage {
     }
 
     override suspend fun getDataRedaction(id: String): DataRedaction {
-        return Json.decodeValue(redis.get("data_redactions:$id").await().toString(UTF_8), DataRedaction::class.java)
+        return ProtocolMarshaller.deserializeDataRedaction(
+            JsonObject(redis.get("data_redactions:$id").await().toString(UTF_8))
+        )
     }
 
     override suspend fun addDataRedaction(id: String, type: RedactionType, lookup: String, replacement: String) {
