@@ -25,7 +25,6 @@ import io.vertx.core.DeploymentOptions
 import io.vertx.core.Promise
 import io.vertx.core.Vertx
 import io.vertx.core.buffer.Buffer
-import io.vertx.core.http.HttpMethod
 import io.vertx.core.http.HttpServerOptions
 import io.vertx.core.json.Json
 import io.vertx.core.json.JsonArray
@@ -69,13 +68,13 @@ import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter
 import org.bouncycastle.openssl.jcajce.JcaPEMWriter
 import org.joor.Reflect
 import org.slf4j.LoggerFactory
+import spp.platform.core.SkyWalkingInterceptor
 import spp.platform.core.SourceService
 import spp.platform.core.SourceStorage
 import spp.platform.core.service.ServiceProvider
 import spp.platform.core.storage.MemoryStorage
 import spp.platform.core.storage.RedisStorage
 import spp.platform.core.util.CertsToJksOptionsConverter
-import spp.platform.core.util.Msg.msg
 import spp.platform.marker.MarkerBridge
 import spp.platform.probe.ProbeBridge
 import spp.platform.probe.util.SelfSignedCertGenerator
@@ -309,59 +308,6 @@ class SourcePlatform : CoroutineVerticle() {
             }
         }
 
-        //SkyWalking Graphql
-        val skywalkingHost = config.getJsonObject("skywalking-oap").getString("host")
-        val skywalkingPort = config.getJsonObject("skywalking-oap").getString("port").toInt()
-        val httpClient = vertx.createHttpClient()
-        vertx.eventBus().consumer<JsonObject>("skywalking-forwarder") { req ->
-            val request = req.body()
-            val body = request.getString("body")!!
-            val headers: JsonObject? = request.getJsonObject("headers")
-            val method = HttpMethod.valueOf(request.getString("method"))!!
-            log.trace { msg("Forwarding SkyWalking request: {}", body) }
-
-            launch(vertx.dispatcher()) {
-                val forward = httpClient.request(
-                    method, skywalkingPort, skywalkingHost, "/graphql"
-                ).await()
-
-                forward.response().onComplete { resp ->
-                    resp.result().body().onComplete {
-                        val respBody = it.result()
-                        log.trace { msg("Forwarding SkyWalking response: {}", respBody.toString()) }
-                        val respOb = JsonObject()
-                        respOb.put("status", resp.result().statusCode())
-                        respOb.put("body", respBody.toString())
-                        req.reply(respOb)
-                    }
-                }
-
-                headers?.fieldNames()?.forEach {
-                    forward.putHeader(it, headers.getValue(it).toString())
-                }
-                forward.end(body).await()
-            }
-        }
-
-        router.route("/graphql/skywalking").handler(BodyHandler.create()).handler { req ->
-            val forward = JsonObject()
-            forward.put("body", req.bodyAsString)
-            val headers = JsonObject()
-            req.request().headers().names().forEach {
-                headers.put(it, req.request().headers().get(it))
-            }
-            forward.put("headers", headers)
-            forward.put("method", req.request().method().name())
-            vertx.eventBus().request<JsonObject>("skywalking-forwarder", forward) {
-                if (it.succeeded()) {
-                    val resp = it.result().body()
-                    req.response().setStatusCode(resp.getInteger("status")).end(resp.getString("body"))
-                } else {
-                    log.error("Failed to forward SkyWalking request", it.cause())
-                }
-            }
-        }
-
         //Health checks
         val healthChecks = HealthChecks.create(vertx)
         addServiceCheck(healthChecks, Utilize.LIVE_SERVICE)
@@ -453,6 +399,11 @@ class SourcePlatform : CoroutineVerticle() {
         //Start services
         vertx.deployVerticle(
             ServiceProvider(jwt), DeploymentOptions().setConfig(config.put("SPP_INSTANCE_ID", SPP_INSTANCE_ID))
+        ).await()
+
+        //Start SkyWalking proxy
+        vertx.deployVerticle(
+            SkyWalkingInterceptor(router), DeploymentOptions().setConfig(config)
         ).await()
 
         log.debug("Starting API server")

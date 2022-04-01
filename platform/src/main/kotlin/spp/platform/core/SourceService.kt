@@ -191,6 +191,9 @@ object SourceService {
                     "addDataRedaction",
                     this::addDataRedaction
                 ).dataFetcher(
+                    "updateDataRedaction",
+                    this::updateDataRedaction
+                ).dataFetcher(
                     "removeDataRedaction",
                     this::removeDataRedaction
                 ).dataFetcher(
@@ -835,10 +838,38 @@ object SourceService {
                 }
             }
 
-            val redactionPattern: String = env.getArgument("redactionPattern")
-            val id = UUID.randomUUID().toString()
-            SourceStorage.addDataRedaction(id, redactionPattern)
-            completableFuture.complete(DataRedaction(id, redactionPattern))
+            val id = env.getArgument<String>("id") ?:  UUID.randomUUID().toString()
+            val type: RedactionType = RedactionType.valueOf(env.getArgument("type"))
+            val lookup: String = env.getArgument("lookup")
+            val replacement: String = env.getArgument("replacement")
+            SourceStorage.addDataRedaction(id, type, lookup, replacement)
+            completableFuture.complete(DataRedaction(id, type, lookup, replacement))
+        }
+        return completableFuture
+    }
+
+    private fun updateDataRedaction(env: DataFetchingEnvironment): CompletableFuture<DataRedaction> {
+        val completableFuture = CompletableFuture<DataRedaction>()
+        GlobalScope.launch(vertx.dispatcher()) {
+            if (System.getenv("SPP_DISABLE_JWT") != "true") {
+                val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                    .user().principal().getString("developer_id")
+                if (!SourceStorage.hasPermission(selfId, ADD_DATA_REDACTION)) {
+                    completableFuture.completeExceptionally(PermissionAccessDenied(ADD_DATA_REDACTION))
+                    return@launch
+                }
+            }
+
+            val id = env.getArgument<String>("id")
+            if (!SourceStorage.hasDataRedaction(id)) {
+                completableFuture.completeExceptionally(IllegalStateException("Non-existing data redaction: $id"))
+            } else {
+                val type: RedactionType? = env.getArgument<String?>("type")?.let { RedactionType.valueOf(it) }
+                val lookup: String = env.getArgument("lookup")
+                val replacement: String = env.getArgument("replacement")
+                SourceStorage.updateDataRedaction(id, type, lookup, replacement)
+                completableFuture.complete(SourceStorage.getDataRedaction(id))
+            }
         }
         return completableFuture
     }

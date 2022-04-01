@@ -1,3 +1,8 @@
+enum RedactionType {
+    IDENTIFIER_MATCH,
+    VALUE_REGEX
+}
+
 enum ArtifactType {
     CLASS,
     METHOD,
@@ -316,7 +321,9 @@ type AccessPermission {
 
 type DataRedaction {
     id: String!
-    redactionPattern: String!
+    type: RedactionType!
+    lookup: String!
+    replacement: String!
 }
 
 type Service {
@@ -361,7 +368,8 @@ type Mutation {
     addRoleAccessPermission(role: String!, accessPermissionId: String!): Boolean!
     removeRoleAccessPermission(role: String!, accessPermissionId: String!): Boolean!
 
-    addDataRedaction(redactionPattern: String!): DataRedaction!
+    addDataRedaction(id: String, type: RedactionType!, lookup: String!, replacement: String!): DataRedaction!
+    updateDataRedaction(id: String!, type: RedactionType, lookup: String, replacement: String): DataRedaction!
     removeDataRedaction(id: String!): Boolean!
     addRoleDataRedaction(role: String!, dataRedactionId: String!): Boolean!
     removeRoleDataRedaction(role: String!, dataRedactionId: String!): Boolean!

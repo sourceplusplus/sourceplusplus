@@ -18,6 +18,7 @@
 package spp.platform.core.storage
 
 import io.vertx.core.Vertx
+import io.vertx.core.json.Json
 import io.vertx.core.json.JsonObject
 import io.vertx.kotlin.coroutines.await
 import io.vertx.redis.client.Redis
@@ -25,7 +26,7 @@ import io.vertx.redis.client.RedisAPI
 import spp.platform.core.SourceStorage
 import spp.protocol.platform.auth.*
 import spp.protocol.platform.developer.Developer
-import java.nio.charset.StandardCharsets
+import java.nio.charset.StandardCharsets.UTF_8
 
 class RedisStorage : CoreStorage {
 
@@ -40,12 +41,12 @@ class RedisStorage : CoreStorage {
 
     override suspend fun getDevelopers(): List<Developer> {
         val devIds = redis.smembers("developers:ids").await()
-        return devIds.map { Developer(it.toString(StandardCharsets.UTF_8)) }
+        return devIds.map { Developer(it.toString(UTF_8)) }
     }
 
     override suspend fun getDeveloperByAccessToken(token: String): Developer? {
         val devId = redis.get("developers:access_tokens:$token").await()
-            ?.toString(StandardCharsets.UTF_8) ?: return null
+            ?.toString(UTF_8) ?: return null
         return Developer(devId)
     }
 
@@ -89,14 +90,14 @@ class RedisStorage : CoreStorage {
     }
 
     private suspend fun getAccessToken(id: String): String {
-        return redis.get("developers:ids:$id:access_token").await().toString(StandardCharsets.UTF_8)
+        return redis.get("developers:ids:$id:access_token").await().toString(UTF_8)
     }
 
     override suspend fun setAccessToken(id: String, accessToken: String) {
         //remove existing token
         val existingToken = redis.get("developers:ids:$id:access_token").await()
         if (existingToken != null) {
-            val existingTokenStr = existingToken.toString(StandardCharsets.UTF_8)
+            val existingTokenStr = existingToken.toString(UTF_8)
             if (existingTokenStr.equals(accessToken)) {
                 return //no change in access token; ignore
             } else {
@@ -116,17 +117,17 @@ class RedisStorage : CoreStorage {
 
     override suspend fun getDeveloperRoles(developerId: String): List<DeveloperRole> {
         return redis.smembers("developers:$developerId:roles").await()
-            .map { DeveloperRole.fromString(it.toString(StandardCharsets.UTF_8)) }
+            .map { DeveloperRole.fromString(it.toString(UTF_8)) }
     }
 
     override suspend fun getRoleAccessPermissions(role: DeveloperRole): Set<AccessPermission> {
         val accessPermissions = redis.smembers("roles:${role.roleName}:access_permissions").await()
-        return accessPermissions.map { getAccessPermission(it.toString(StandardCharsets.UTF_8)) }.toSet()
+        return accessPermissions.map { getAccessPermission(it.toString(UTF_8)) }.toSet()
     }
 
     override suspend fun getAccessPermissions(): Set<AccessPermission> {
         val accessPermissions = redis.smembers("access_permissions").await()
-        return accessPermissions.map { getAccessPermission(it.toString(StandardCharsets.UTF_8)) }.toSet()
+        return accessPermissions.map { getAccessPermission(it.toString(UTF_8)) }.toSet()
     }
 
     override suspend fun hasAccessPermission(id: String): Boolean {
@@ -135,7 +136,7 @@ class RedisStorage : CoreStorage {
 
     override suspend fun getAccessPermission(id: String): AccessPermission {
         val accessPermissions = redis.get("access_permissions:$id").await()
-        val dataObject = JsonObject(accessPermissions.toString(StandardCharsets.UTF_8))
+        val dataObject = JsonObject(accessPermissions.toString(UTF_8))
         return AccessPermission(
             id,
             dataObject.getJsonArray("locationPatterns").map { it.toString() },
@@ -174,7 +175,7 @@ class RedisStorage : CoreStorage {
 
     override suspend fun getDataRedactions(): Set<DataRedaction> {
         val roles = redis.smembers("data_redactions").await()
-        return roles.map { getDataRedaction(it.toString(StandardCharsets.UTF_8)) }.toSet()
+        return roles.map { getDataRedaction(it.toString(UTF_8)) }.toSet()
     }
 
     override suspend fun hasDataRedaction(id: String): Boolean {
@@ -182,16 +183,16 @@ class RedisStorage : CoreStorage {
     }
 
     override suspend fun getDataRedaction(id: String): DataRedaction {
-        val permission = redis.get("data_redactions:$id").await()
-        return DataRedaction(
-            id,
-            permission.toString(StandardCharsets.UTF_8)
-        )
+        return Json.decodeValue(redis.get("data_redactions:$id").await().toString(UTF_8), DataRedaction::class.java)
     }
 
-    override suspend fun addDataRedaction(id: String, redactionPattern: String) {
+    override suspend fun addDataRedaction(id: String, type: RedactionType, lookup: String, replacement: String) {
         redis.sadd(listOf("data_redactions", id)).await()
-        redis.set(listOf("data_redactions:$id", redactionPattern)).await()
+        redis.set(listOf("data_redactions:$id", Json.encode(DataRedaction(id, type, lookup, replacement)))).await()
+    }
+
+    override suspend fun updateDataRedaction(id: String, type: RedactionType, lookup: String, replacement: String) {
+        redis.set(listOf("data_redactions:$id", Json.encode(DataRedaction(id, type, lookup, replacement)))).await()
     }
 
     override suspend fun removeDataRedaction(id: String) {
@@ -212,12 +213,12 @@ class RedisStorage : CoreStorage {
 
     override suspend fun getRoleDataRedactions(role: DeveloperRole): Set<DataRedaction> {
         val dataRedactions = redis.smembers("roles:${role.roleName}:data_redactions").await()
-        return dataRedactions.map { getDataRedaction(it.toString(StandardCharsets.UTF_8)) }.toSet()
+        return dataRedactions.map { getDataRedaction(it.toString(UTF_8)) }.toSet()
     }
 
     override suspend fun getRoles(): Set<DeveloperRole> {
         val roles = redis.smembers("roles").await()
-        return roles.map { DeveloperRole.fromString(it.toString(StandardCharsets.UTF_8)) }.toSet()
+        return roles.map { DeveloperRole.fromString(it.toString(UTF_8)) }.toSet()
     }
 
     override suspend fun addRoleToDeveloper(id: String, role: DeveloperRole) {
@@ -239,6 +240,6 @@ class RedisStorage : CoreStorage {
 
     override suspend fun getRolePermissions(role: DeveloperRole): Set<RolePermission> {
         val permissions = redis.smembers("roles:${role.roleName}:permissions").await()
-        return permissions.map { RolePermission.valueOf(it.toString(StandardCharsets.UTF_8)) }.toSet()
+        return permissions.map { RolePermission.valueOf(it.toString(UTF_8)) }.toSet()
     }
 }
