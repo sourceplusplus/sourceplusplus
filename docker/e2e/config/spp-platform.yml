@@ -35,7 +35,7 @@ spp-platform:
         replacement: "<IP>"
       - id: "url_redaction"
         type: "VALUE_REGEX"
-        lookup: '\b(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?\b'
+        lookup: '\b?^(https?|ftp|file)://[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#/%=~_|]\b?'
         replacement: "<URL>"
       - id: "credit_card_redaction"
         type: "VALUE_REGEX"
