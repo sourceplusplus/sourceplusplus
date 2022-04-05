@@ -17,11 +17,14 @@
  */
 package spp.platform.core
 
+import com.google.common.net.HttpHeaders
 import graphql.language.Field
 import graphql.language.OperationDefinition
 import graphql.language.SelectionSet
 import graphql.parser.Parser
 import io.vertx.core.http.HttpMethod
+import io.vertx.core.http.HttpServerRequest
+import io.vertx.core.http.RequestOptions
 import io.vertx.core.json.JsonObject
 import io.vertx.ext.web.Router
 import io.vertx.ext.web.handler.BodyHandler
@@ -29,7 +32,6 @@ import io.vertx.kotlin.coroutines.CoroutineVerticle
 import io.vertx.kotlin.coroutines.await
 import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import spp.platform.core.util.Msg
 import spp.protocol.platform.auth.DataRedaction
@@ -72,19 +74,19 @@ class SkyWalkingInterceptor(private val router: Router) : CoroutineVerticle() {
 
             launch(vertx.dispatcher()) {
                 val forward = httpClient.request(
-                    method, skywalkingPort, skywalkingHost, "/graphql"
+                    RequestOptions().putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
+                        .setMethod(method).setPort(skywalkingPort).setHost(skywalkingHost).setURI("/graphql")
                 ).await()
 
+                val selfId = request.getString("developer_id")
+                val redactions = SourceStorage.getDeveloperDataRedactions(selfId)
                 forward.response().onComplete { resp ->
                     resp.result().body().onComplete {
                         val respBody = it.result().toJsonObject()
                         respBody.getJsonObject("data").fieldNames().forEach {
-                            val respObject = respBody.getJsonObject("data").getJsonObject(it)
-                            if (operationAliases[it] == "queryTrace") {
-                                val selfId = request.getString("developer_id")
-                                runBlocking {
-                                    doQueryTraceRedaction(respObject, fieldAliases[it]!!, selfId)
-                                }
+                            val respObject = respBody.getJsonObject("data").getValue(it)
+                            if (operationAliases[it] == "queryTrace" && redactions.isNotEmpty()) {
+                                doQueryTraceRedaction(respObject as JsonObject, fieldAliases[it]!!, redactions)
                             }
                         }
 
@@ -104,30 +106,35 @@ class SkyWalkingInterceptor(private val router: Router) : CoroutineVerticle() {
         }
 
         router.route("/graphql/skywalking").handler(BodyHandler.create()).handler { req ->
-            val forward = JsonObject()
-            forward.put("developer_id", req.user().principal().getString("developer_id"))
-            forward.put("body", req.bodyAsString)
-            val headers = JsonObject()
-            req.request().headers().names().forEach {
-                headers.put(it, req.request().headers().get(it))
-            }
-            forward.put("headers", headers)
-            forward.put("method", req.request().method().name())
-            vertx.eventBus().request<JsonObject>("skywalking-forwarder", forward) {
-                if (it.succeeded()) {
-                    val resp = it.result().body()
-                    req.response().setStatusCode(resp.getInteger("status")).end(resp.getString("body"))
-                } else {
-                    log.error("Failed to forward SkyWalking request", it.cause())
-                }
+            forwardSkyWalkingRequest(req.bodyAsString, req.request(), req.user().principal().getString("developer_id"))
+        }
+    }
+
+    private fun forwardSkyWalkingRequest(body: String, req: HttpServerRequest, developerId: String) {
+        val forward = JsonObject()
+        forward.put("developer_id", developerId)
+        forward.put("body", body)
+        val headers = JsonObject()
+        req.headers().names().forEach {
+            headers.put(it, req.headers().get(it))
+        }
+        forward.put("headers", headers)
+        forward.put("method", req.method().name())
+        vertx.eventBus().request<JsonObject>("skywalking-forwarder", forward) {
+            if (it.succeeded()) {
+                val resp = it.result().body()
+                req.response().setStatusCode(resp.getInteger("status")).end(resp.getString("body"))
+            } else {
+                log.error("Failed to forward SkyWalking request", it.cause())
             }
         }
     }
 
-    private suspend fun doQueryTraceRedaction(data: JsonObject, fieldAliases: Map<String, String>, selfId: String) {
-        val redactions = SourceStorage.getDeveloperDataRedactions(selfId)
-        if (redactions.isEmpty()) return
-
+    private fun doQueryTraceRedaction(
+        data: JsonObject,
+        fieldAliases: Map<String, String>,
+        redactions: List<DataRedaction>
+    ) {
         data.getJsonArray(fieldAliases.getOrDefault("spans", "spans")).forEach {
             val span = it as JsonObject
             val tags = span.getJsonArray(fieldAliases.getOrDefault("tags", "tags"))

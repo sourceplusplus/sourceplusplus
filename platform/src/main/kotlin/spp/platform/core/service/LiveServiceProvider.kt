@@ -67,9 +67,10 @@ class LiveServiceProvider(private val vertx: Vertx) : LiveService {
 
     override fun getServices(): Future<List<Service>> {
         val promise = Promise.promise<List<Service>>()
-        val request = JsonObject()
-        request.put("method", HttpMethod.POST.name())
-        request.put(
+        val forward = JsonObject()
+        forward.put("developer_id", Vertx.currentContext().get<DeveloperAuth>("developer").selfId)
+        forward.put("method", HttpMethod.POST.name())
+        forward.put(
             "body", JsonObject()
                 .put(
                     "query", "query (\$durationStart: String!, \$durationEnd: String!, \$durationStep: Step!) {\n" +
@@ -87,7 +88,7 @@ class LiveServiceProvider(private val vertx: Vertx) : LiveService {
                 )
         )
 
-        vertx.eventBus().request<JsonObject>("skywalking-forwarder", request) {
+        vertx.eventBus().request<JsonObject>("skywalking-forwarder", forward) {
             if (it.succeeded()) {
                 val response = it.result().body()
                 val body = JsonObject(response.getString("body"))
