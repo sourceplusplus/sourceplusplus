@@ -865,8 +865,8 @@ object SourceService {
                 completableFuture.completeExceptionally(IllegalStateException("Non-existing data redaction: $id"))
             } else {
                 val type: RedactionType? = env.getArgument<String?>("type")?.let { RedactionType.valueOf(it) }
-                val lookup: String = env.getArgument("lookup")
-                val replacement: String = env.getArgument("replacement")
+                val lookup: String? = env.getArgument("lookup")
+                val replacement: String? = env.getArgument("replacement")
                 SourceStorage.updateDataRedaction(id, type, lookup, replacement)
                 completableFuture.complete(SourceStorage.getDataRedaction(id))
             }
