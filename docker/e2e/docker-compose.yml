@@ -13,6 +13,7 @@ services:
       - "5445:5445"
       - "5450:5450"
       - "5455:5455"
+      - "12800:12800"
       - "5107:5107"
     build:
       context: .
@@ -26,7 +27,6 @@ services:
     hostname: skywalking-oap
     ports:
       - "11800:11800"
-      - "12800:12800"
       - "5106:5106"
     build:
       context: .

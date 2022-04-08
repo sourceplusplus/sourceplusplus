@@ -30,7 +30,6 @@ import io.vertx.ext.web.Router
 import io.vertx.ext.web.handler.BodyHandler
 import io.vertx.kotlin.coroutines.CoroutineVerticle
 import io.vertx.kotlin.coroutines.await
-import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.launch
 import mu.KotlinLogging
 import spp.platform.core.util.Msg
@@ -45,6 +44,14 @@ class SkyWalkingInterceptor(private val router: Router) : CoroutineVerticle() {
     }
 
     override suspend fun start() {
+        vertx.createHttpServer()
+            .requestHandler { req ->
+                req.bodyHandler {
+                    forwardSkyWalkingRequest(it.toJsonObject().toString(), req, "system")
+                }
+            }
+            .listen(12800).await()
+
         val skywalkingHost = config.getJsonObject("skywalking-oap").getString("host")
         val skywalkingPort = config.getJsonObject("skywalking-oap").getString("port").toInt()
         val httpClient = vertx.createHttpClient()
@@ -72,7 +79,7 @@ class SkyWalkingInterceptor(private val router: Router) : CoroutineVerticle() {
             val method = HttpMethod.valueOf(request.getString("method"))!!
             log.trace { Msg.msg("Forwarding SkyWalking request: {}", body) }
 
-            launch(vertx.dispatcher()) {
+            launch {
                 val forward = httpClient.request(
                     RequestOptions().putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
                         .setMethod(method).setPort(skywalkingPort).setHost(skywalkingHost).setURI("/graphql")
