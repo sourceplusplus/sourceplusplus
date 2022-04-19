@@ -268,7 +268,7 @@ class SourcePlatform : CoroutineVerticle() {
             }
             val accessTokenParam = ctx.queryParam("access_token")
             if (accessTokenParam.isEmpty()) {
-                log.warn("Invalid token request")
+                log.warn("Invalid token request. Missing token.")
                 ctx.response().setStatusCode(401).end()
                 return@handler
             }
@@ -287,6 +287,7 @@ class SourcePlatform : CoroutineVerticle() {
                     )
                     ctx.end(jwtToken)
                 } else {
+                    log.warn("Invalid token request. Token: {}", token)
                     ctx.response().setStatusCode(401).end()
                 }
             }
