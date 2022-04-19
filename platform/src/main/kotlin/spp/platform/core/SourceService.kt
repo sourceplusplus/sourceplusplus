@@ -832,8 +832,8 @@ object SourceService {
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
                 val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
-                if (!SourceStorage.hasPermission(selfId, ADD_DATA_REDACTION)) {
-                    completableFuture.completeExceptionally(PermissionAccessDenied(ADD_DATA_REDACTION))
+                if (!SourceStorage.hasPermission(selfId, UPDATE_DATA_REDACTION)) {
+                    completableFuture.completeExceptionally(PermissionAccessDenied(UPDATE_DATA_REDACTION))
                     return@launch
                 }
             }
@@ -854,8 +854,8 @@ object SourceService {
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
                 val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
-                if (!SourceStorage.hasPermission(selfId, ADD_DATA_REDACTION)) {
-                    completableFuture.completeExceptionally(PermissionAccessDenied(ADD_DATA_REDACTION))
+                if (!SourceStorage.hasPermission(selfId, UPDATE_DATA_REDACTION)) {
+                    completableFuture.completeExceptionally(PermissionAccessDenied(UPDATE_DATA_REDACTION))
                     return@launch
                 }
             }
@@ -880,8 +880,8 @@ object SourceService {
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
                 val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
-                if (!SourceStorage.hasPermission(selfId, REMOVE_DATA_REDACTION)) {
-                    completableFuture.completeExceptionally(PermissionAccessDenied(REMOVE_DATA_REDACTION))
+                if (!SourceStorage.hasPermission(selfId, UPDATE_DATA_REDACTION)) {
+                    completableFuture.completeExceptionally(PermissionAccessDenied(UPDATE_DATA_REDACTION))
                     return@launch
                 }
             }
@@ -903,8 +903,8 @@ object SourceService {
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
                 val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
-                if (!SourceStorage.hasPermission(selfId, ADD_DATA_REDACTION)) {
-                    completableFuture.completeExceptionally(PermissionAccessDenied(ADD_DATA_REDACTION))
+                if (!SourceStorage.hasPermission(selfId, UPDATE_DATA_REDACTION)) {
+                    completableFuture.completeExceptionally(PermissionAccessDenied(UPDATE_DATA_REDACTION))
                     return@launch
                 }
             }
@@ -929,8 +929,8 @@ object SourceService {
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
                 val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
-                if (!SourceStorage.hasPermission(selfId, REMOVE_DATA_REDACTION)) {
-                    completableFuture.completeExceptionally(PermissionAccessDenied(REMOVE_DATA_REDACTION))
+                if (!SourceStorage.hasPermission(selfId, UPDATE_DATA_REDACTION)) {
+                    completableFuture.completeExceptionally(PermissionAccessDenied(UPDATE_DATA_REDACTION))
                     return@launch
                 }
             }
