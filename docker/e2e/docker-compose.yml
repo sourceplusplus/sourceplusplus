@@ -1,11 +1,11 @@
 version: '3.3'
 services:
-  redis:
-    image: redis:6.2.1
-    container_name: redis
-    hostname: redis
-    ports:
-      - "6379:6379"
+#  redis:
+#    image: redis:6.2.1
+#    container_name: redis
+#    hostname: redis
+#    ports:
+#      - "6379:6379"
   spp-platform:
     container_name: spp-platform
     hostname: spp-platform
