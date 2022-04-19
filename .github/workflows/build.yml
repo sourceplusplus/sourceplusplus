@@ -47,10 +47,10 @@ jobs:
       - name: Set SPP_PLATFORM_HOST
         run: SPP_PLATFORM_HOST=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $(docker ps -aqf "name=spp-platform")) && echo "SPP_PLATFORM_HOST=$SPP_PLATFORM_HOST" >> $GITHUB_ENV
       - name: Wait for platform
-        run: until $(curl --insecure --output /dev/null --silent --fail https://localhost:5445/api/new-token?access_token=change-me); do printf '.'; sleep 5; done && SPP_JWT_TOKEN=$(curl --insecure https://localhost:5445/api/new-token?access_token=change-me) && echo "SPP_JWT_TOKEN=$SPP_JWT_TOKEN" >> $GITHUB_ENV
+        run: until $(curl --insecure --output /dev/null --silent --fail https://localhost:12800/api/new-token?access_token=change-me); do printf '.'; sleep 5; done && SPP_JWT_TOKEN=$(curl --insecure https://localhost:12800/api/new-token?access_token=change-me) && echo "SPP_JWT_TOKEN=$SPP_JWT_TOKEN" >> $GITHUB_ENV
       - name: Wait for skywalking
         run: |
-          until $(curl --header "Authorization: Bearer ${{ env.SPP_JWT_TOKEN }}" --insecure --output /dev/null --silent --fail https://localhost:5445/health); do printf '.'; sleep 5; done
+          until $(curl --header "Authorization: Bearer ${{ env.SPP_JWT_TOKEN }}" --insecure --output /dev/null --silent --fail https://localhost:12800/health); do printf '.'; sleep 5; done
 
       - name: Run platform integration tests
         run: ./gradlew -p platform test -Dtest.profile=integration

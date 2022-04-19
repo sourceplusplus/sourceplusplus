@@ -10,7 +10,6 @@ services:
     container_name: spp-platform
     hostname: spp-platform
     ports:
-      - "5445:5445"
       - "5450:5450"
       - "5455:5455"
       - "12800:12800"

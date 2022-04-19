@@ -302,10 +302,10 @@ class SourcePlatform : CoroutineVerticle() {
         //S++ Graphql
         val sppGraphQLHandler = GraphQLHandler.create(SourceService.setupGraphQL(vertx))
         router.route("/graphql").handler(BodyHandler.create()).handler {
-            if (it.request().getHeader("spp-skywalking-reroute") == "true") {
-                it.reroute("/graphql/skywalking")
-            } else {
+            if (it.request().getHeader("spp-platform-request") == "true") {
                 sppGraphQLHandler.handle(it)
+            } else {
+                it.reroute("/graphql/skywalking")
             }
         }
 

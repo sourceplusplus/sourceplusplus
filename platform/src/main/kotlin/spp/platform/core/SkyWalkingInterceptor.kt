@@ -44,14 +44,6 @@ class SkyWalkingInterceptor(private val router: Router) : CoroutineVerticle() {
     }
 
     override suspend fun start() {
-        vertx.createHttpServer()
-            .requestHandler { req ->
-                req.bodyHandler {
-                    forwardSkyWalkingRequest(it.toJsonObject().toString(), req, "system")
-                }
-            }
-            .listen(12800).await()
-
         val skywalkingHost = config.getJsonObject("skywalking-oap").getString("host")
         val skywalkingPort = config.getJsonObject("skywalking-oap").getString("port").toInt()
         val httpClient = vertx.createHttpClient()
