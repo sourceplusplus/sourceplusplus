@@ -308,6 +308,9 @@ class SourcePlatform : CoroutineVerticle() {
                 it.reroute("/graphql/skywalking")
             }
         }
+        router.route("/graphql/spp").handler(BodyHandler.create()).handler {
+            sppGraphQLHandler.handle(it)
+        }
 
         //Health checks
         val healthChecks = HealthChecks.create(vertx)

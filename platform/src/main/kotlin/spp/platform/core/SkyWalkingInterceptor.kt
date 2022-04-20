@@ -82,7 +82,7 @@ class SkyWalkingInterceptor(private val router: Router) : CoroutineVerticle() {
                 forward.response().onComplete { resp ->
                     resp.result().body().onComplete {
                         val respBody = it.result().toJsonObject()
-                        respBody.getJsonObject("data").fieldNames().forEach {
+                        respBody.getJsonObject("data")?.fieldNames()?.forEach {
                             val respObject = respBody.getJsonObject("data").getValue(it)
                             if (operationAliases[it] == "queryTrace" && redactions.isNotEmpty()) {
                                 doQueryTraceRedaction(respObject as JsonObject, fieldAliases[it]!!, redactions)

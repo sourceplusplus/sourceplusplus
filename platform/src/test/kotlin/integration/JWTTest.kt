@@ -86,7 +86,7 @@ class JWTTest : PlatformIntegrationTest() {
             vertx,
             WebClientOptions().setSsl(true).setTrustAll(true).setVerifyHost(false)
         )
-        val addDevResp = client.post(12800, platformHost, "/graphql")
+        val addDevResp = client.post(12800, platformHost, "/graphql/spp")
             .bearerTokenAuthentication(SYSTEM_JWT_TOKEN)
             .sendJsonObject(
                 JsonObject().put(
@@ -101,7 +101,7 @@ class JWTTest : PlatformIntegrationTest() {
             ).await().bodyAsJsonObject()
         log.info("Add dev resp: {}", addDevResp)
         assertFalse(addDevResp.containsKey("errors"))
-        val addRoleResp = client.post(12800, platformHost, "/graphql")
+        val addRoleResp = client.post(12800, platformHost, "/graphql/spp")
             .bearerTokenAuthentication(SYSTEM_JWT_TOKEN)
             .sendJsonObject(
                 JsonObject().put(
@@ -113,7 +113,7 @@ class JWTTest : PlatformIntegrationTest() {
             ).await().bodyAsJsonObject()
         log.info("Add role resp: {}", addRoleResp)
         assertFalse(addRoleResp.containsKey("errors"))
-        val addDeveloperRoleResp = client.post(12800, platformHost, "/graphql")
+        val addDeveloperRoleResp = client.post(12800, platformHost, "/graphql/spp")
             .bearerTokenAuthentication(SYSTEM_JWT_TOKEN)
             .sendJsonObject(
                 JsonObject().put(
@@ -159,7 +159,7 @@ class JWTTest : PlatformIntegrationTest() {
             vertx,
             WebClientOptions().setSsl(true).setTrustAll(true).setVerifyHost(false)
         )
-        val addDevResp = client.post(12800, platformHost, "/graphql")
+        val addDevResp = client.post(12800, platformHost, "/graphql/spp")
             .bearerTokenAuthentication(SYSTEM_JWT_TOKEN)
             .sendJsonObject(
                 JsonObject().put(
@@ -174,7 +174,7 @@ class JWTTest : PlatformIntegrationTest() {
             ).await().bodyAsJsonObject()
         log.info("Add dev resp: {}", addDevResp)
         assertFalse(addDevResp.containsKey("errors"))
-        val addRoleResp = client.post(12800, platformHost, "/graphql")
+        val addRoleResp = client.post(12800, platformHost, "/graphql/spp")
             .bearerTokenAuthentication(SYSTEM_JWT_TOKEN)
             .sendJsonObject(
                 JsonObject().put(
@@ -186,7 +186,7 @@ class JWTTest : PlatformIntegrationTest() {
             ).await().bodyAsJsonObject()
         log.info("Add role resp: {}", addRoleResp)
         assertFalse(addRoleResp.containsKey("errors"))
-        val addDeveloperRoleResp = client.post(12800, platformHost, "/graphql")
+        val addDeveloperRoleResp = client.post(12800, platformHost, "/graphql/spp")
             .bearerTokenAuthentication(SYSTEM_JWT_TOKEN)
             .sendJsonObject(
                 JsonObject().put(
@@ -198,7 +198,7 @@ class JWTTest : PlatformIntegrationTest() {
             ).await().bodyAsJsonObject()
         log.info("Add developer role resp: {}", addDeveloperRoleResp)
         assertFalse(addDeveloperRoleResp.containsKey("errors"))
-        val addRolePermissionResp = client.post(12800, platformHost, "/graphql")
+        val addRolePermissionResp = client.post(12800, platformHost, "/graphql/spp")
             .bearerTokenAuthentication(SYSTEM_JWT_TOKEN)
             .sendJsonObject(
                 JsonObject().put(
@@ -210,7 +210,7 @@ class JWTTest : PlatformIntegrationTest() {
             ).await().bodyAsJsonObject()
         log.info("Add role permission resp: {}", addRolePermissionResp)
         assertFalse(addRolePermissionResp.containsKey("errors"))
-        val addAccessPermissionResp = client.post(12800, platformHost, "/graphql")
+        val addAccessPermissionResp = client.post(12800, platformHost, "/graphql/spp")
             .bearerTokenAuthentication(SYSTEM_JWT_TOKEN)
             .sendJsonObject(
                 JsonObject().put(
@@ -230,7 +230,7 @@ class JWTTest : PlatformIntegrationTest() {
             ).await().bodyAsJsonObject()
         log.info("Add access permission resp: {}", addAccessPermissionResp)
         assertFalse(addAccessPermissionResp.containsKey("errors"))
-        val addRoleAccessPermissionResp = client.post(12800, platformHost, "/graphql")
+        val addRoleAccessPermissionResp = client.post(12800, platformHost, "/graphql/spp")
             .bearerTokenAuthentication(SYSTEM_JWT_TOKEN)
             .sendJsonObject(
                 JsonObject().put(
