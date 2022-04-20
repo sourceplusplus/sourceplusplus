@@ -1,6 +1,6 @@
 spp-platform:
   host: ${SPP_PLATFORM_HOST:-0.0.0.0}
-  port: ${SPP_PLATFORM_PORT:-5445}
+  port: ${SPP_PLATFORM_PORT:-12800}
   access_token: ${SPP_SYSTEM_ACCESS_TOKEN:-change-me}
   logging:
     level: ${SPP_LOGGING_LEVEL:-info}
@@ -14,6 +14,41 @@ spp-platform:
       enabled: ${SPP_PROCESSOR_LIVE_INSTRUMENT_ENABLED:-true}
     live-view:
       enabled: ${SPP_PROCESSOR_LIVE_VIEW_ENABLED:-true}
+  pii-redaction:
+    enabled: ${SPP_PII_REDACTION_ENABLED:-true}
+    redactions:
+      - id: "phone_redaction"
+        type: "VALUE_REGEX"
+        lookup: '\b(\+\d{1,2}\s)?\(?\d{3}\)?[\s.-]\d{3}[\s.-]\d{4}\b'
+        replacement: "<Phone Number>"
+      - id: "ssn_redaction"
+        type: "VALUE_REGEX"
+        lookup: '\b\d{3}[- ]?\d{2}[- ]?\d{4}\b'
+        replacement: "<SSN>"
+      - id: "email_redaction"
+        type: "VALUE_REGEX"
+        lookup: '\b[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}\b'
+        replacement: "<Email>"
+      - id: "ip_redaction"
+        type: "VALUE_REGEX"
+        lookup: '\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b'
+        replacement: "<IP>"
+      - id: "url_redaction"
+        type: "VALUE_REGEX"
+        lookup: '\b?^(https?|ftp|file)://[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#/%=~_|]\b?'
+        replacement: "<URL>"
+      - id: "credit_card_redaction"
+        type: "VALUE_REGEX"
+        lookup: '\b\d{4}[- ]?\d{4}[- ]?\d{4}[- ]?\d{4}\b'
+        replacement: "<Credit Card>"
+      - id: "bank_account_redaction"
+        type: "VALUE_REGEX"
+        lookup: '\b\d{4}[- ]?\d{4}[- ]?\d{4}[- ]?\d{4}\b'
+        replacement: "<Bank Account>"
+      - id: "zip_code_redaction"
+        type: "VALUE_REGEX"
+        lookup: '\b\d{5}[- ]?\d{4}\b'
+        replacement: "<Zip Code>"
 
 storage:
   selector: ${SPP_STORAGE:-memory}

@@ -30,6 +30,7 @@ object SourceStorage {
 
     lateinit var storage: CoreStorage
     lateinit var systemAccessToken: String
+    private lateinit var systemRedactors: List<DataRedaction>
 
     suspend fun setup(storage: CoreStorage, config: JsonObject) {
         this.storage = storage
@@ -40,6 +41,20 @@ object SourceStorage {
             "change-me"
         } else {
             config.getJsonObject("spp-platform").getString("access_token")
+        }
+
+        val piiRedaction = config.getJsonObject("spp-platform").getJsonObject("pii-redaction")
+        if (piiRedaction.getString("enabled").toBoolean()) {
+            systemRedactors = piiRedaction.getJsonArray("redactions").list.map {
+                (it as JsonObject).let {
+                    DataRedaction(
+                        it.getString("id"),
+                        RedactionType.valueOf(it.getString("type")),
+                        it.getString("lookup"),
+                        it.getString("replacement")
+                    )
+                }
+            }
         }
         installDefaults()
     }
@@ -58,6 +73,7 @@ object SourceStorage {
                 addPermissionToRole(DeveloperRole.ROLE_USER, it)
             }
         }
+        systemRedactors.forEach { addDataRedaction(it.id, it.type, it.lookup, it.replacement) }
     }
 
     suspend fun reset(): Boolean {
@@ -169,8 +185,18 @@ object SourceStorage {
         return storage.getDataRedaction(id)
     }
 
-    suspend fun addDataRedaction(id: String, redactionPattern: String) {
-        return storage.addDataRedaction(id, redactionPattern)
+    suspend fun addDataRedaction(id: String, type: RedactionType, lookup: String, replacement: String) {
+        return storage.addDataRedaction(id, type, lookup, replacement)
+    }
+
+    suspend fun updateDataRedaction(id: String, type: RedactionType?, lookup: String?, replacement: String?) {
+        val existingDataRedaction = storage.getDataRedaction(id)
+        return storage.updateDataRedaction(
+            id,
+            type ?: existingDataRedaction.type,
+            lookup ?: existingDataRedaction.lookup,
+            replacement ?: existingDataRedaction.replacement
+        )
     }
 
     suspend fun removeDataRedaction(id: String) {

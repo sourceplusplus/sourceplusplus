@@ -179,14 +179,20 @@ class MemoryStorage(val vertx: Vertx) : CoreStorage {
         return dataRedactions.list.find { (it as DataRedaction).id == id } as DataRedaction
     }
 
-    override suspend fun addDataRedaction(id: String, redactionPattern: String) {
+    override suspend fun addDataRedaction(id: String, type: RedactionType, lookup: String, replacement: String) {
         val dataRedactionsStorage = vertx.sharedData().getAsyncMap<String, Any>("dataRedactions").await()
         val dataRedactions = dataRedactionsStorage.get("dataRedactions").await() as JsonArray? ?: JsonArray()
-        dataRedactions.add(DataRedaction(id, redactionPattern))
+        dataRedactions.add(DataRedaction(id, type, lookup, replacement))
         dataRedactionsStorage.put("dataRedactions", dataRedactions)
+    }
 
-        val dataRedactionStorage = vertx.sharedData().getAsyncMap<String, Any>("dataRedaction:$id").await()
-        dataRedactionStorage.put("redactionPattern", redactionPattern).await()
+    override suspend fun updateDataRedaction(id: String, type: RedactionType, lookup: String, replacement: String) {
+        val dataRedactionsStorage = vertx.sharedData().getAsyncMap<String, Any>("dataRedactions").await()
+        val dataRedactions = dataRedactionsStorage.get("dataRedactions").await() as JsonArray? ?: JsonArray()
+        dataRedactions.list.removeIf { (it as DataRedaction).id == id }
+
+        dataRedactions.add(DataRedaction(id, type, lookup, replacement))
+        dataRedactionsStorage.put("dataRedactions", dataRedactions)
     }
 
     override suspend fun removeDataRedaction(id: String) {
@@ -194,17 +200,14 @@ class MemoryStorage(val vertx: Vertx) : CoreStorage {
         val dataRedactions = dataRedactionsStorage.get("dataRedactions").await() as JsonArray? ?: JsonArray()
         dataRedactions.list.removeIf { (it as DataRedaction).id == id }
         dataRedactionsStorage.put("dataRedactions", dataRedactions)
-
-        val dataRedactionStorage = vertx.sharedData().getAsyncMap<String, Any>("dataRedaction:$id").await()
-        dataRedactionStorage.clear().await()
     }
 
     override suspend fun addDataRedactionToRole(id: String, role: DeveloperRole) {
         val dataRedaction = getDataRedaction(id)
         val roleStorage = vertx.sharedData().getAsyncMap<String, Any>("role:${role.roleName}").await()
         val dataRedactions = roleStorage.get("dataRedactions").await() as JsonArray? ?: JsonArray()
-        if (dataRedactions.list.find { (it as DataRedaction).id == id } == null) {
-            dataRedactions.add(dataRedaction)
+        if (dataRedactions.list.find { (it as String) == id } == null) {
+            dataRedactions.add(dataRedaction.id)
             roleStorage.put("dataRedactions", dataRedactions)
         }
     }
@@ -212,14 +215,14 @@ class MemoryStorage(val vertx: Vertx) : CoreStorage {
     override suspend fun removeDataRedactionFromRole(id: String, role: DeveloperRole) {
         val roleStorage = vertx.sharedData().getAsyncMap<String, Any>("role:${role.roleName}").await()
         val dataRedactions = roleStorage.get("dataRedactions").await() as JsonArray? ?: JsonArray()
-        dataRedactions.list.removeIf { (it as DataRedaction).id == id }
+        dataRedactions.list.removeIf { (it as String) == id }
         roleStorage.put("dataRedactions", dataRedactions)
     }
 
     override suspend fun getRoleDataRedactions(role: DeveloperRole): Set<DataRedaction> {
         val roleStorage = vertx.sharedData().getAsyncMap<String, Any>("role:${role.roleName}").await()
         val dataRedactions = roleStorage.get("dataRedactions").await() as JsonArray? ?: JsonArray()
-        return dataRedactions.list.map { it as DataRedaction }.toSet()
+        return dataRedactions.list.map { getDataRedaction(it as String) }.toSet()
     }
 
     override suspend fun getRoles(): Set<DeveloperRole> {

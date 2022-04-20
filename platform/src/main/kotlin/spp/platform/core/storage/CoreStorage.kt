@@ -43,7 +43,8 @@ interface CoreStorage {
     suspend fun getDataRedactions(): Set<DataRedaction>
     suspend fun hasDataRedaction(id: String): Boolean
     suspend fun getDataRedaction(id: String): DataRedaction
-    suspend fun addDataRedaction(id: String, redactionPattern: String)
+    suspend fun addDataRedaction(id: String, type: RedactionType, lookup: String, replacement: String)
+    suspend fun updateDataRedaction(id: String, type: RedactionType, lookup: String, replacement: String)
     suspend fun removeDataRedaction(id: String)
     suspend fun addDataRedactionToRole(id: String, role: DeveloperRole)
     suspend fun removeDataRedactionFromRole(id: String, role: DeveloperRole)
