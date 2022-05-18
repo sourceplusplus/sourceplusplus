@@ -13,7 +13,7 @@ pluginManagement {
         id 'com.palantir.graal' version "0.10.0" apply false
         id 'com.apollographql.apollo3' version "3.3.0" apply false
         id 'org.mikeneck.graalvm-native-image' version "1.4.1" apply false
-        id 'com.diffplug.spotless' version '6.5.2' apply false
+        id 'com.diffplug.spotless' version '6.6.1' apply false
     }
 }
 
