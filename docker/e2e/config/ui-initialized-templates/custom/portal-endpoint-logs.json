@@ -1,0 +1,28 @@
+[
+  {
+    "id": "Endpoint-Logs",
+    "configuration": {
+      "children": [
+        {
+          "x": 0,
+          "y": 0,
+          "w": 24,
+          "h": 41,
+          "i": "0",
+          "type": "Log",
+          "metricTypes": [
+            ""
+          ],
+          "metrics": [
+            ""
+          ],
+          "moved": false
+        }
+      ],
+      "layer": "GENERAL",
+      "entity": "Endpoint",
+      "name": "Endpoint-Logs",
+      "isRoot": false
+    }
+  }
+]

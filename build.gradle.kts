@@ -22,10 +22,10 @@ subprojects {
         resolutionStrategy.dependencySubstitution {
             substitute(module("com.github.sourceplusplus.protocol:protocol"))
                 .using(project(":protocol"))
-            substitute(module("com.github.sourceplusplus.interface-portal:portal-jvm"))
-                .using(project(":interfaces:portal"))
             substitute(module("com.github.sourceplusplus:processor-dependencies"))
                 .using(project(":processors:dependencies"))
+            substitute(module("com.github.sourceplusplus:interface-booster-ui"))
+                .using(project(":interfaces:booster-ui"))
         }
     }
 

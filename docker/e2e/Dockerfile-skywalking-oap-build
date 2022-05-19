@@ -1,27 +1,25 @@
-FROM apache/skywalking-oap-server:9.0.0
+FROM openjdk:11-jre
+
+COPY ./apache-skywalking-apm-bin.tar.gz ./apache-skywalking-apm-bin.tar.gz
+
+RUN tar -xzf apache-skywalking-apm-bin.tar.gz
+RUN mv apache-skywalking-apm-bin /skywalking
+
+RUN mkdir /skywalking/logs
+RUN touch /skywalking/logs/skywalking-oap-server.log
 
 ADD ./spp-processor-dependencies-*.jar /skywalking/ext-libs/
 
 ADD ./spp-processor-*.jar /skywalking/oap-libs/
 
-RUN printf "\nspp-live-instrument:\n  selector: \${SPP_LIVE_INSTRUMENT:default}\n  default:\n" \
-    >> /skywalking/config/application.yml
-
-RUN printf "\nexporter:\n  selector: exporter\n  exporter:\n" \
-    >> /skywalking/config/application.yml
+#RUN printf "\nspp-live-instrument:\n  selector: \${SPP_LIVE_INSTRUMENT:default}\n  default:\n" \
+#    >> /skywalking/config/application.yml
+#
+#RUN printf "\nexporter:\n  selector: exporter\n  exporter:\n" \
+#    >> /skywalking/config/application.yml
 
 ADD ./config/spp-platform.crt /skywalking
 ADD ./config/spp-platform.key /skywalking
-
-ADD ./config/ui-initialized-templates /skywalking/config/ui-initialized-templates
-
-#RUN mkdir -p /tmp/spp-probe/ca
-#ADD ./config/spp-platform.crt /tmp/spp-probe/ca/ca.crt
-#
-#ADD ./spp-probe.yml /tmp/spp-probe
-#ADD ./spp-probe-*.jar /tmp/spp-probe/spp-probe.jar
-#
-#ENV SPP_DELETE_PROBE_DIRECTORY_ON_BOOT=false
 
 #ENV SPP_PLATFORM_SSL_TRUST_ALL=true
 ENV SPP_PLATFORM_HOST=spp-platform
@@ -35,3 +33,7 @@ ENV SW_CORE_GRPC_SSL_TRUSTED_CA_PATH=/skywalking/spp-platform.crt
 ENV SW_RECEIVER_GRPC_SSL_ENABLED=true
 ENV SW_RECEIVER_GRPC_SSL_KEY_PATH=/skywalking/spp-platform.key
 ENV SW_RECEIVER_GRPC_SSL_CERT_CHAIN_PATH=/skywalking/spp-platform.crt
+
+WORKDIR /opt/apache-skywalking-apm-bin/bin
+
+CMD ["sh", "-c", "/skywalking/bin/oapService.sh && tail -f /skywalking/logs/skywalking-oap-server.log"]

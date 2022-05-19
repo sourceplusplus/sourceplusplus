@@ -26,12 +26,15 @@ services:
     hostname: skywalking-oap
     ports:
       - "11800:11800"
+      - "13800:12800"
       - "5106:5106"
     build:
       context: .
       dockerfile: Dockerfile-skywalking-oap
     environment:
       - JAVA_OPTS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5106
+      - SW_OAL_ENGINE_DEBUG=Y
+      - SW_ENABLE_UPDATE_UI_TEMPLATE=true
   spp-example-webapp:
     container_name: spp-example-webapp
     hostname: spp-example-webapp
@@ -44,15 +47,10 @@ services:
     build:
       context: .
       dockerfile: Dockerfile-spp-example-webapp
-#  skywalking-ui:
-#    image: apache/skywalking-ui:8.6.0
-#    container_name: skywalking-ui
-#    hostname: skywalking-ui
-#    ports:
-#      - "8888:8080"
-#    depends_on:
-#      - skywalking-oap
-#    links:
-#      - skywalking-oap
-#    environment:
-#      - SW_OAP_ADDRESS=skywalking-oap:12800
+
+#networks:
+#  default:
+#    driver: bridge
+#    ipam:
+#      config:
+#        - subnet: 172.16.57.0/24

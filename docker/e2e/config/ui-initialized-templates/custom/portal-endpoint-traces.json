@@ -1,0 +1,28 @@
+[
+  {
+    "id": "Endpoint-Traces",
+    "configuration": {
+      "children": [
+        {
+          "x": 0,
+          "y": 0,
+          "w": 24,
+          "h": 36,
+          "i": "0",
+          "type": "Trace",
+          "metricTypes": [
+            ""
+          ],
+          "metrics": [
+            ""
+          ],
+          "moved": false
+        }
+      ],
+      "layer": "GENERAL",
+      "entity": "Endpoint",
+      "name": "Endpoint-Traces",
+      "isRoot": false
+    }
+  }
+]

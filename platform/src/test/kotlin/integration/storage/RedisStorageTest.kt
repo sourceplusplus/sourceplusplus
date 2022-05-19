@@ -19,18 +19,22 @@ package integration.storage
 
 import io.vertx.core.Vertx
 import io.vertx.core.json.JsonObject
+import io.vertx.junit5.VertxExtension
+import io.vertx.junit5.VertxTestContext
+import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
 import spp.platform.core.storage.RedisStorage
 import spp.protocol.platform.auth.DeveloperRole
 import spp.protocol.platform.auth.RedactionType
 
+@ExtendWith(VertxExtension::class)
 class RedisStorageTest {
 
     @Test
-    fun updateDataRedactionInRole(): Unit = runBlocking {
-        val vertx = Vertx.vertx()
+    fun updateDataRedactionInRole(vertx: Vertx, context: VertxTestContext): Unit = runBlocking(vertx.dispatcher()) {
         val storage = RedisStorage()
         storage.init(vertx, JsonObject().put("host", "localhost").put("port", 6379))
 
@@ -46,6 +50,6 @@ class RedisStorageTest {
         Assertions.assertEquals(1, updatedDataRedactions.size)
         Assertions.assertEquals("value2", updatedDataRedactions.toList()[0].replacement)
 
-        vertx.close()
+        context.completeNow()
     }
 }
