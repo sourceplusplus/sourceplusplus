@@ -26,6 +26,7 @@ services:
     hostname: skywalking-oap
     ports:
       - "11800:11800"
+      - "13800:12800"
       - "5106:5106"
     build:
       context: .
