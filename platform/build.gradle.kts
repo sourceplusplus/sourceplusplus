@@ -32,7 +32,7 @@ dependencies {
     implementation(project(":protocol"))
     implementation(project(":processors:dependencies"))
 
-    implementation("org.kohsuke:github-api:1.303")
+    implementation("org.kohsuke:github-api:1.306")
     implementation("org.jooq:joor:$joorVersion")
     implementation("io.github.microutils:kotlin-logging-jvm:2.1.21")
     implementation("org.apache.commons:commons-lang3:$commonsLang3Version")
@@ -47,7 +47,7 @@ dependencies {
     implementation("io.vertx:vertx-web-graphql:${vertxVersion}")
     implementation("io.vertx:vertx-tcp-eventbus-bridge:$vertxVersion")
     implementation("com.auth0:java-jwt:$auth0JwtVersion")
-    implementation("com.auth0:jwks-rsa:0.21.0")
+    implementation("com.auth0:jwks-rsa:0.21.1")
     implementation("org.bouncycastle:bcprov-jdk15on:$bouncycastleVersion")
     implementation("org.bouncycastle:bcpkix-jdk15on:$bouncycastleVersion")
     implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
@@ -64,7 +64,7 @@ dependencies {
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-guava:$jacksonVersion")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
     implementation("io.dropwizard.metrics:metrics-core:4.2.9")
-    implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.3.2")
+    implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.3.3")
     implementation("org.apache.commons:commons-text:1.9")
 
     testImplementation("org.junit.jupiter:junit-jupiter-engine:$jupiterVersion")
