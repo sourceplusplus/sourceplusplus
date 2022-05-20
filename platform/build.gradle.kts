@@ -34,7 +34,7 @@ dependencies {
 
     implementation("org.kohsuke:github-api:1.306")
     implementation("org.jooq:joor:$joorVersion")
-    implementation("io.github.microutils:kotlin-logging-jvm:2.1.21")
+    implementation("io.github.microutils:kotlin-logging-jvm:2.1.23")
     implementation("org.apache.commons:commons-lang3:$commonsLang3Version")
     implementation("com.github.ajalt.clikt:clikt:$cliktVersion")
     implementation("ch.qos.logback:logback-classic:$logbackVersion")
