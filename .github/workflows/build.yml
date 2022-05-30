@@ -25,6 +25,7 @@ jobs:
 
     outputs:
       version: ${{ steps.properties.outputs.version }}
+      release_version: ${{ steps.properties.outputs.release_version }}
     steps:
       - uses: docker-practice/actions-setup-docker@master
       - uses: actions/checkout@v2
@@ -38,6 +39,8 @@ jobs:
           VERSION="$(echo "$PROPERTIES" | grep "^version:" | cut -f2- -d ' ')"
           echo "::set-output name=version::$VERSION"
           echo "SPP_PLATFORM_VERSION=$VERSION" >> $GITHUB_ENV
+          echo "SPP_RELEASE_VERSION=${VERSION/-SNAPSHOT/}" >> $GITHUB_ENV
+          echo "::set-output name=release_version::$SPP_RELEASE_VERSION"
 
       - name: Start platform
         run: ./gradlew -p platform assembleUp -Dbuild.profile=release
@@ -105,8 +108,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ needs.jvm-build.outputs.version }}
-          release_name: v${{ needs.jvm-build.outputs.version }}
+          tag_name: ${{ needs.jvm-build.outputs.release_version }}
+          release_name: v${{ needs.jvm-build.outputs.release_version }}
           body: ${{ needs.build.outputs.changelog }}
           draft: true
 
@@ -128,7 +131,7 @@ jobs:
       - name: Download spp-platform artifact
         uses: actions/download-artifact@v2
         with:
-          name: spp-platform-${{ needs.jvm-build.outputs.version }}.tar.gz
+          name: spp-platform-${{ needs.jvm-build.outputs.release_version }}.tar.gz
 
       - name: Upload spp-platform asset
         uses: actions/upload-release-asset@v1
@@ -136,8 +139,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.createDraft.outputs.upload_url }}
-          asset_path: ./spp-platform-${{ needs.jvm-build.outputs.version }}.tar.gz
-          asset_name: spp-platform-${{ needs.jvm-build.outputs.version }}.tar.gz
+          asset_path: ./spp-platform-${{ needs.jvm-build.outputs.release_version }}.tar.gz
+          asset_name: spp-platform-${{ needs.jvm-build.outputs.release_version }}.tar.gz
           asset_content_type: application/gzip
 
   docker-push:
@@ -156,17 +159,17 @@ jobs:
       - name: Download spp-platform artifact
         uses: actions/download-artifact@v2
         with:
-          name: spp-platform-${{ needs.jvm-build.outputs.version }}.tar.gz
+          name: spp-platform-${{ needs.jvm-build.outputs.release_version }}.tar.gz
           path: ./docker/spp-platform
 
       - name: Untar spp-platform
-        run: cd ./docker/spp-platform && tar -zxvf spp-platform-${{ needs.jvm-build.outputs.version }}.tar.gz --strip-components=1
+        run: cd ./docker/spp-platform && tar -zxvf spp-platform-${{ needs.jvm-build.outputs.release_version }}.tar.gz --strip-components=1
 
       - name: Build spp-platform tagged Docker image
-        run: cd ./docker/spp-platform && docker build . --file Dockerfile --tag sourceplusplus/spp-platform:${{ needs.jvm-build.outputs.version }}
+        run: cd ./docker/spp-platform && docker build . --file Dockerfile --tag sourceplusplus/spp-platform:${{ needs.jvm-build.outputs.release_version }}
 
       - name: Retag spp-platform tagged Docker image to latest
-        run: docker tag sourceplusplus/spp-platform:${{ needs.jvm-build.outputs.version }} sourceplusplus/spp-platform:latest
+        run: docker tag sourceplusplus/spp-platform:${{ needs.jvm-build.outputs.release_version }} sourceplusplus/spp-platform:latest
 
       - name: Push spp-platform latest Docker image
         run: docker push sourceplusplus/spp-platform:latest
@@ -181,10 +184,10 @@ jobs:
         run: cd ./docker/spp-oap-server && unzip spp-processors.zip
 
       - name: Build spp-oap-server tagged Docker image
-        run: cd ./docker/spp-oap-server && docker build . --file Dockerfile --tag sourceplusplus/spp-oap-server:${{ needs.jvm-build.outputs.version }}
+        run: cd ./docker/spp-oap-server && docker build . --file Dockerfile --tag sourceplusplus/spp-oap-server:${{ needs.jvm-build.outputs.release_version }}
 
       - name: Retag spp-oap-server tagged Docker image to latest
-        run: docker tag sourceplusplus/spp-oap-server:${{ needs.jvm-build.outputs.version }} sourceplusplus/spp-oap-server:latest
+        run: docker tag sourceplusplus/spp-oap-server:${{ needs.jvm-build.outputs.release_version }} sourceplusplus/spp-oap-server:latest
 
       - name: Push spp-oap-server latest Docker image
         run: docker push sourceplusplus/spp-oap-server:latest
@@ -199,7 +202,7 @@ jobs:
       - name: Delete spp-platform
         uses: geekyeggo/delete-artifact@v1
         with:
-          name: spp-platform-${{ needs.jvm-build.outputs.version }}.tar.gz
+          name: spp-platform-${{ needs.jvm-build.outputs.release_version }}.tar.gz
 
       - name: Delete Source++ processors
         uses: geekyeggo/delete-artifact@v1
