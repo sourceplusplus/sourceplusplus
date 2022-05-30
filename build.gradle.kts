@@ -9,7 +9,7 @@ plugins {
 val projectVersion: String by project
 val skywalkingVersion: String by project
 
-version = projectVersion
+version = project.properties["platformVersion"] as String? ?: projectVersion
 
 subprojects {
     rootProject.properties.forEach {
@@ -40,11 +40,11 @@ tasks {
         //todo: use gradle copy task
         dependsOn(":platform:build")
         doLast {
-            file("dist/spp-platform-$projectVersion/config").mkdirs()
+            file("dist/spp-platform-${project.version}/config").mkdirs()
             file("docker/e2e/config/spp-platform.yml")
-                .copyTo(file("dist/spp-platform-$projectVersion/config/spp-platform.yml"))
-            file("platform/build/libs/spp-platform-$projectVersion.jar")
-                .copyTo(file("dist/spp-platform-$projectVersion/spp-platform-$projectVersion.jar"))
+                .copyTo(file("dist/spp-platform-${project.version}/config/spp-platform.yml"))
+            file("platform/build/libs/spp-platform-${project.version}.jar")
+                .copyTo(file("dist/spp-platform-${project.version}/spp-platform-${project.version}.jar"))
         }
     }
     register<Tar>("makeDist") {
