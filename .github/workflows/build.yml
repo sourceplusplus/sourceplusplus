@@ -40,6 +40,7 @@ jobs:
           echo "::set-output name=version::$VERSION"
           echo "SPP_PLATFORM_VERSION=$VERSION" >> $GITHUB_ENV
           echo "SPP_RELEASE_VERSION=${VERSION/-SNAPSHOT/}" >> $GITHUB_ENV
+          SPP_RELEASE_VERSION=${VERSION/-SNAPSHOT/}
           echo "::set-output name=release_version::$SPP_RELEASE_VERSION"
 
       - name: Start platform
