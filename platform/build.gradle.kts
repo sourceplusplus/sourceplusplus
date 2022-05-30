@@ -22,7 +22,7 @@ val vertxVersion: String by project
 val joorVersion: String by project
 
 group = platformGroup
-version = projectVersion
+version = project.properties["platformVersion"] as String? ?: projectVersion
 
 repositories {
     mavenCentral()
@@ -90,30 +90,30 @@ tasks.register<Copy>("updateDockerFiles") {
     )
 
     doFirst {
-        if (!File(projectDir, "build/libs/spp-platform-$projectVersion.jar").exists()) {
-            throw GradleException("Missing spp-platform-$projectVersion.jar")
+        if (!File(projectDir, "build/libs/spp-platform-${project.version}.jar").exists()) {
+            throw GradleException("Missing spp-platform-${project.version}.jar")
         }
     }
-    from(File(projectDir, "build/libs/spp-platform-$projectVersion.jar"))
+    from(File(projectDir, "build/libs/spp-platform-${project.version}.jar"))
         .into(File(projectDir, "../docker/e2e"))
 
     doFirst {
-        if (!File(projectDir, "../probes/jvm/control/build/libs/spp-probe-$projectVersion.jar").exists()) {
-            throw GradleException("Missing spp-probe-$projectVersion.jar")
+        if (!File(projectDir, "../probes/jvm/control/build/libs/spp-probe-${project.version}.jar").exists()) {
+            throw GradleException("Missing spp-probe-${project.version}.jar")
         }
     }
-    from(File(projectDir, "../probes/jvm/control/build/libs/spp-probe-$projectVersion.jar"))
+    from(File(projectDir, "../probes/jvm/control/build/libs/spp-probe-${project.version}.jar"))
         .into(File(projectDir, "../docker/e2e"))
 
     doFirst {
-        if (!File(projectDir, "../processors/dependencies/build/libs/spp-processor-dependencies-$projectVersion.jar").exists()) {
-            throw GradleException("Missing spp-processor-dependencies-$projectVersion.jar")
+        if (!File(projectDir, "../processors/dependencies/build/libs/spp-processor-dependencies-${project.version}.jar").exists()) {
+            throw GradleException("Missing spp-processor-dependencies-${project.version}.jar")
         }
-        if (!File(projectDir, "../processors/live-instrument/build/libs/spp-processor-live-instrument-$projectVersion.jar").exists()) {
-            throw GradleException("Missing spp-processor-live-instrument-$projectVersion.jar")
+        if (!File(projectDir, "../processors/live-instrument/build/libs/spp-processor-live-instrument-${project.version}.jar").exists()) {
+            throw GradleException("Missing spp-processor-live-instrument-${project.version}.jar")
         }
-        if (!File(projectDir, "../processors/live-view/build/libs/spp-processor-live-view-$projectVersion.jar").exists()) {
-            throw GradleException("Missing spp-processor-live-view-$projectVersion.jar")
+        if (!File(projectDir, "../processors/live-view/build/libs/spp-processor-live-view-${project.version}.jar").exists()) {
+            throw GradleException("Missing spp-processor-live-view-${project.version}.jar")
         }
 
         File(projectDir, "../docker/e2e").listFiles()?.forEach {
@@ -123,11 +123,11 @@ tasks.register<Copy>("updateDockerFiles") {
         }
     }
 
-    from(File(projectDir, "../processors/dependencies/build/libs/spp-processor-dependencies-$projectVersion.jar"))
+    from(File(projectDir, "../processors/dependencies/build/libs/spp-processor-dependencies-${project.version}.jar"))
         .into(File(projectDir, "../docker/e2e"))
-    from(File(projectDir, "../processors/live-instrument/build/libs/spp-processor-live-instrument-$projectVersion.jar"))
+    from(File(projectDir, "../processors/live-instrument/build/libs/spp-processor-live-instrument-${project.version}.jar"))
         .into(File(projectDir, "../docker/e2e"))
-    from(File(projectDir, "../processors/live-view/build/libs/spp-processor-live-view-$projectVersion.jar"))
+    from(File(projectDir, "../processors/live-view/build/libs/spp-processor-live-view-${project.version}.jar"))
         .into(File(projectDir, "../docker/e2e"))
 }
 

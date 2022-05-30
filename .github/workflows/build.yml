@@ -44,7 +44,7 @@ jobs:
           echo "::set-output name=release_version::$SPP_RELEASE_VERSION"
 
       - name: Start platform
-        run: ./gradlew -p platform assembleUp -Dbuild.profile=release
+        run: ./gradlew -p platform assembleUp -Dbuild.profile=release -PplatformVersion=$SPP_RELEASE_VERSION
 
       - name: Docker IPs
         run: docker inspect --format='{{.Name}} - {{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $(docker ps -aq)
