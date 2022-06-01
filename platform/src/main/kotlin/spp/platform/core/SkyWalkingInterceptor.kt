@@ -105,7 +105,16 @@ class SkyWalkingInterceptor(private val router: Router) : CoroutineVerticle() {
         }
 
         router.route("/graphql/skywalking").handler(BodyHandler.create()).handler { req ->
-            forwardSkyWalkingRequest(req.bodyAsString, req.request(), req.user().principal().getString("developer_id"))
+            var selfId = req.user()?.principal()?.getString("developer_id")
+            if (selfId == null) {
+                if (System.getenv("SPP_DISABLE_JWT") != "true") {
+                    req.response().setStatusCode(500).end("Missing self id")
+                    return@handler
+                } else {
+                    selfId = "system"
+                }
+            }
+            forwardSkyWalkingRequest(req.bodyAsString, req.request(), selfId)
         }
     }
 
