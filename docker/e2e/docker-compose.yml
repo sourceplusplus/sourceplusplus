@@ -1,6 +1,7 @@
 version: '3.3'
 services:
-  apisix:
+  spp-gateway:
+    container_name: spp-gateway
     hostname: spp-gateway
     image: apache/apisix:2.14.1-alpine
     restart: always
