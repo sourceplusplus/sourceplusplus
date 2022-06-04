@@ -3,13 +3,11 @@ upstreams:
     nodes:
       "spp-platform:5450": 1
     type: roundrobin
-    sni: "spp-gateway"
     scheme: tls
   - id: 2
     nodes:
       "spp-platform:5455": 1
     type: roundrobin
-    sni: "spp-gateway"
     scheme: tls
   - id: 3
     nodes:
@@ -117,7 +115,6 @@ routes:
   -
     uri: /*
     vars: [["server_port", "==", "11800"]]
-    sni: "spp-gateway"
     upstream_id: 3
   -
     uri: /*
