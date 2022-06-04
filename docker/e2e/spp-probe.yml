@@ -1,7 +1,6 @@
 spp:
   platform_host: "spp-gateway"
   platform_port: 5450
-  quiet_mode: false
   platform_certificate: |
     MIIE/zCCAuegAwIBAgIGAYEvCiLcMA0GCSqGSIb3DQEBCwUAMBYxFDASBgNVBAMM
     C3NwcC1nYXRld2F5MB4XDTIyMDYwNDE0MDY0MloXDTIzMDYwNDE0MDY0MlowFjEU
@@ -32,7 +31,7 @@ spp:
     oMLcpPbluXOkm3BHGD+RCg8IK0CVsSYmvd8WHu5xpbN7wos=
 skywalking:
   logging:
-    level: "TRACE"
+    level: "INFO"
   agent:
     service_name: "spp"
   collector:
