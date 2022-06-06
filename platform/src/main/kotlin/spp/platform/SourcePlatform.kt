@@ -207,8 +207,6 @@ class SourcePlatform : CoroutineVerticle() {
     }
 
     private fun setupDashboard(router: Router) {
-        setupSkyWalkingProxy(router)
-
         router.post("/auth").handler(BodyHandler.create()).handler {
             val postData = it.request().params()
             val password = postData.get("password")
@@ -237,7 +235,7 @@ class SourcePlatform : CoroutineVerticle() {
         router.get("/*").handler { ctx ->
             var requestPath = ctx.request().path()
             if (requestPath.contains("/css/")) {
-               requestPath = requestPath.substring(requestPath.indexOf("/css/"))
+                requestPath = requestPath.substring(requestPath.indexOf("/css/"))
             } else if (requestPath.contains("/js/")) {
                 requestPath = requestPath.substring(requestPath.indexOf("/js/"))
             }
@@ -278,8 +276,32 @@ class SourcePlatform : CoroutineVerticle() {
             }
         }
 
-        router.route().handler { ctx ->
-            if (ctx.session().get<String>("developer_id") == null) {
+        router.route().handler(BodyHandler.create()).handler { ctx ->
+            if (ctx.request().path().startsWith("/graphql")) {
+                if (ctx.request().path() == "/graphql" && ctx.session().get<String>("developer_id") != null) {
+                    val forward = JsonObject()
+                    forward.put("developer_id", ctx.session().get<String>("developer_id"))
+                    forward.put("body", ctx.body().asJsonObject())
+                    val headers = JsonObject()
+                    ctx.request().headers().names().forEach {
+                        headers.put(it, ctx.request().headers().get(it))
+                    }
+                    forward.put("headers", headers)
+                    forward.put("method", ctx.request().method().name())
+                    vertx.eventBus().request<JsonObject>("skywalking-forwarder", forward) {
+                        if (it.succeeded()) {
+                            val resp = it.result().body()
+                            ctx.response().setStatusCode(resp.getInteger("status")).end(resp.getString("body"))
+                        } else {
+                            log.error("Failed to forward SkyWalking request", it.cause())
+                            ctx.response().setStatusCode(500).end(it.cause().message)
+                        }
+                    }
+                } else {
+                    ctx.next()
+                }
+                return@handler
+            } else if (ctx.session().get<String>("developer_id") == null) {
                 ctx.redirect("/login")
                 return@handler
             }
@@ -293,29 +315,6 @@ class SourcePlatform : CoroutineVerticle() {
                 .setStatusCode(200)
                 .putHeader("Content-Type", "text/html; charset=utf-8")
                 .end(Buffer.buffer(fileStream.readBytes()))
-        }
-    }
-
-    private fun setupSkyWalkingProxy(router: Router) {
-        router.route("/dashboard/graphql").handler(BodyHandler.create()).handler { ctx ->
-            val forward = JsonObject()
-            forward.put("developer_id", ctx.session().get<String>("developer_id"))
-            forward.put("body", ctx.body().asJsonObject())
-            val headers = JsonObject()
-            ctx.request().headers().names().forEach {
-                headers.put(it, ctx.request().headers().get(it))
-            }
-            forward.put("headers", headers)
-            forward.put("method", ctx.request().method().name())
-            vertx.eventBus().request<JsonObject>("skywalking-forwarder", forward) {
-                if (it.succeeded()) {
-                    val resp = it.result().body()
-                    ctx.response().setStatusCode(resp.getInteger("status")).end(resp.getString("body"))
-                } else {
-                    log.error("Failed to forward SkyWalking request", it.cause())
-                    ctx.response().setStatusCode(500).end(it.cause().message)
-                }
-            }
         }
     }
 
