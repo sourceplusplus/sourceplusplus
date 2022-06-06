@@ -12,8 +12,6 @@ RUN printf "\nexporter:\n  selector: exporter\n  exporter:\n" \
 
 ADD ./config/spp-platform.crt /skywalking
 ADD ./config/spp-platform.key /skywalking
-ADD ./config/skywalking-oap.crt /skywalking
-ADD ./config/skywalking-oap.key /skywalking
 
 ADD ./config/ui-initialized-templates /skywalking/config/ui-initialized-templates
 
@@ -31,9 +29,9 @@ ENV SPP_PLATFORM_PORT=5460
 ENV SPP_PLATFORM_CERTIFICATE_FILE=/skywalking/spp-platform.crt
 
 ENV SW_CORE_GRPC_SSL_ENABLED=true
-ENV SW_CORE_GRPC_SSL_KEY_PATH=/skywalking/skywalking-oap.key
-ENV SW_CORE_GRPC_SSL_CERT_CHAIN_PATH=/skywalking/skywalking-oap.crt
-ENV SW_CORE_GRPC_SSL_TRUSTED_CA_PATH=/skywalking/skywalking-oap.crt
+ENV SW_CORE_GRPC_SSL_KEY_PATH=/skywalking/spp-platform.key
+ENV SW_CORE_GRPC_SSL_CERT_CHAIN_PATH=/skywalking/spp-platform.crt
+ENV SW_CORE_GRPC_SSL_TRUSTED_CA_PATH=/skywalking/spp-platform.crt
 ENV SW_RECEIVER_GRPC_SSL_ENABLED=true
-ENV SW_RECEIVER_GRPC_SSL_KEY_PATH=/skywalking/skywalking-oap.key
-ENV SW_RECEIVER_GRPC_SSL_CERT_CHAIN_PATH=/skywalking/skywalking-oap.crt
+ENV SW_RECEIVER_GRPC_SSL_KEY_PATH=/skywalking/spp-platform.key
+ENV SW_RECEIVER_GRPC_SSL_CERT_CHAIN_PATH=/skywalking/spp-platform.crt
