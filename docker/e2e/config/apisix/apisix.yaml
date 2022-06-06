@@ -141,6 +141,19 @@ routes:
       redirect:
         http_to_https: true
   -
+    uri: /api/new-token
+    methods: ["GET"]
+    priority: 3
+    upstream_id: 4
+    plugins:
+      limit-count:
+        count: 2
+        time_window: 1
+        rejected_code: 429
+        key: remote_addr
+        key_type: constant
+        group: login-attempt
+  -
     uri: /auth
     methods: ["POST"]
     priority: 3
@@ -152,6 +165,7 @@ routes:
         rejected_code: 429
         key: remote_addr
         key_type: constant
+        group: login-attempt
 
 ssl:
   -
