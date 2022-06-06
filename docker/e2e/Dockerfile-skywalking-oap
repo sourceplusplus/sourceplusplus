@@ -16,7 +16,7 @@ ADD ./config/spp-platform.key /skywalking
 ADD ./config/ui-initialized-templates /skywalking/config/ui-initialized-templates
 
 #RUN mkdir -p /tmp/spp-probe/ca
-#ADD ./config/skywalking-oap.crt /tmp/spp-probe/ca/ca.crt
+#ADD ./config/spp-platform.crt /tmp/spp-probe/ca/ca.crt
 #
 #ADD ./spp-probe.yml /tmp/spp-probe
 #ADD ./spp-probe-*.jar /tmp/spp-probe/spp-probe.jar
