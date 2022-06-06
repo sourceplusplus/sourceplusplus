@@ -21,11 +21,13 @@ import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.LoggerContext
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper
+import com.google.common.io.Resources
 import io.vertx.core.DeploymentOptions
 import io.vertx.core.Promise
 import io.vertx.core.Vertx
 import io.vertx.core.buffer.Buffer
 import io.vertx.core.http.HttpServerOptions
+import io.vertx.core.http.impl.MimeMapping
 import io.vertx.core.json.Json
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
@@ -44,7 +46,11 @@ import io.vertx.ext.web.RoutingContext
 import io.vertx.ext.web.handler.BodyHandler
 import io.vertx.ext.web.handler.JWTAuthHandler
 import io.vertx.ext.web.handler.ResponseTimeHandler
+import io.vertx.ext.web.handler.SessionHandler
 import io.vertx.ext.web.handler.graphql.GraphQLHandler
+import io.vertx.ext.web.sstore.LocalSessionStore
+import io.vertx.ext.web.sstore.SessionStore
+import io.vertx.ext.web.sstore.redis.RedisSessionStore
 import io.vertx.kotlin.coroutines.CoroutineVerticle
 import io.vertx.kotlin.coroutines.await
 import io.vertx.kotlin.coroutines.dispatcher
@@ -68,6 +74,7 @@ import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter
 import org.bouncycastle.openssl.jcajce.JcaPEMWriter
 import org.joor.Reflect
 import org.slf4j.LoggerFactory
+import spp.booster.PortalServer
 import spp.platform.core.SkyWalkingInterceptor
 import spp.platform.core.SourceService
 import spp.platform.core.SourceStorage
@@ -83,11 +90,9 @@ import spp.protocol.SourceServices.Utilize
 import spp.protocol.marshall.LocalMessageCodec
 import spp.protocol.platform.ProbeAddress.LIVE_INSTRUMENT_REMOTE
 import spp.protocol.service.LiveViewService
-import java.io.File
-import java.io.FileWriter
-import java.io.StringReader
-import java.io.StringWriter
+import java.io.*
 import java.security.Security
+import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.*
 import javax.crypto.Cipher
@@ -201,6 +206,119 @@ class SourcePlatform : CoroutineVerticle() {
         }
     }
 
+    private fun setupDashboard(router: Router) {
+        setupSkyWalkingProxy(router)
+
+        router.post("/auth").handler(BodyHandler.create()).handler {
+            val postData = it.request().params()
+            val password = postData.get("password")
+            log.info { "Authenticating $password" }
+            if (password?.isEmpty() == true) {
+                it.redirect("/login")
+                return@handler
+            }
+
+            launch(vertx.dispatcher()) {
+                val dev = SourceStorage.getDeveloperByAccessToken(password)
+                if (dev != null) {
+                    it.session().put("developer_id", dev.id)
+                    it.redirect("/")
+                } else {
+                    it.redirect("/login")
+                }
+            }
+        }
+        router.get("/login").handler {
+            val loginHtml = Resources.toString(Resources.getResource("login.html"), Charsets.UTF_8)
+            it.response().putHeader("Content-Type", "text/html").end(loginHtml)
+        }
+
+        // Static handler
+        router.get("/*").handler { ctx ->
+            var requestPath = ctx.request().path()
+            if (requestPath.contains("/css/")) {
+               requestPath = requestPath.substring(requestPath.indexOf("/css/"))
+            } else if (requestPath.contains("/js/")) {
+                requestPath = requestPath.substring(requestPath.indexOf("/js/"))
+            }
+
+            var fileStream: InputStream?
+            val response = ctx.response().setStatusCode(200)
+            if (requestPath == "/") {
+                if (ctx.session().get<String>("developer_id") == null) {
+                    ctx.redirect("/login")
+                    return@handler
+                }
+
+                fileStream = PortalServer::class.java.classLoader.getResourceAsStream("webroot/index.html")
+                if (fileStream == null) {
+                    fileStream = PortalServer::class.java.getResourceAsStream("webroot/index.html")
+                }
+
+                response.end(Buffer.buffer(fileStream.readBytes()))
+            } else {
+                fileStream = PortalServer::class.java.classLoader.getResourceAsStream(
+                    "webroot/" + requestPath.substring(1)
+                )
+                if (fileStream == null) {
+                    fileStream = PortalServer::class.java.getResourceAsStream(
+                        "webroot/" + requestPath.substring(1)
+                    )
+                }
+                if (fileStream != null) {
+                    response.putHeader(
+                        "Content-Type",
+                        MimeMapping.getMimeTypeForExtension(requestPath.substringAfterLast("."))
+                    ).end(Buffer.buffer(fileStream.readBytes()))
+                }
+            }
+
+            if (!response.ended()) {
+                ctx.next()
+            }
+        }
+
+        router.route().handler { ctx ->
+            if (ctx.session().get<String>("developer_id") == null) {
+                ctx.redirect("/login")
+                return@handler
+            }
+
+            var fileStream = PortalServer::class.java.classLoader.getResourceAsStream("webroot/index.html")
+            if (fileStream == null) {
+                fileStream = PortalServer::class.java.getResourceAsStream("webroot/index.html")
+            }
+
+            ctx.response()
+                .setStatusCode(200)
+                .putHeader("Content-Type", "text/html; charset=utf-8")
+                .end(Buffer.buffer(fileStream.readBytes()))
+        }
+    }
+
+    private fun setupSkyWalkingProxy(router: Router) {
+        router.route("/dashboard/graphql").handler(BodyHandler.create()).handler { ctx ->
+            val forward = JsonObject()
+            forward.put("developer_id", ctx.session().get<String>("developer_id"))
+            forward.put("body", ctx.body().asJsonObject())
+            val headers = JsonObject()
+            ctx.request().headers().names().forEach {
+                headers.put(it, ctx.request().headers().get(it))
+            }
+            forward.put("headers", headers)
+            forward.put("method", ctx.request().method().name())
+            vertx.eventBus().request<JsonObject>("skywalking-forwarder", forward) {
+                if (it.succeeded()) {
+                    val resp = it.result().body()
+                    ctx.response().setStatusCode(resp.getInteger("status")).end(resp.getString("body"))
+                } else {
+                    log.error("Failed to forward SkyWalking request", it.cause())
+                    ctx.response().setStatusCode(500).end(it.cause().message)
+                }
+            }
+        }
+    }
+
     @Suppress("LongMethod")
     override suspend fun start() {
         log.info("Initializing Source++ Platform")
@@ -281,8 +399,8 @@ class SourcePlatform : CoroutineVerticle() {
                     val jwtToken = jwt!!.generateToken(
                         JsonObject()
                             .put("developer_id", dev.id)
-                            .put("created_at", java.time.Instant.now().toEpochMilli())
-                            .put("expires_at", java.time.Instant.now().plus(365, ChronoUnit.DAYS).toEpochMilli()),
+                            .put("created_at", Instant.now().toEpochMilli())
+                            .put("expires_at", Instant.now().plus(365, ChronoUnit.DAYS).toEpochMilli()),
                         JWTOptions().setAlgorithm("RS256")
                     )
                     ctx.end(jwtToken)
@@ -292,6 +410,32 @@ class SourcePlatform : CoroutineVerticle() {
                 }
             }
         }
+
+        //Setup storage
+        val sessionStore: SessionStore
+        when (val storageSelector = config.getJsonObject("storage").getString("selector")) {
+            "memory" -> {
+                log.info("Using in-memory storage")
+                SourceStorage.setup(MemoryStorage(vertx), config)
+                sessionStore = LocalSessionStore.create(vertx)
+            }
+            "redis" -> {
+                log.info("Using Redis storage")
+                val redisStorage = RedisStorage()
+                redisStorage.init(vertx, config.getJsonObject("storage").getJsonObject("redis"))
+                SourceStorage.setup(redisStorage, config)
+                sessionStore = RedisSessionStore.create(vertx, redisStorage.redisClient)
+            }
+            else -> {
+                log.error("Unknown storage selector: $storageSelector")
+                throw IllegalArgumentException("Unknown storage selector: $storageSelector")
+            }
+        }
+
+        //Setup dashboard
+        val sessionHandler = SessionHandler.create(sessionStore)
+        router.route().handler(sessionHandler)
+        setupDashboard(router)
 
         if (System.getenv("SPP_DISABLE_JWT") != "true") {
             router.route("/*").handler(JWTAuthHandler.create(jwt))
@@ -318,24 +462,6 @@ class SourcePlatform : CoroutineVerticle() {
         router["/health"].handler(HealthCheckHandler.createWithHealthChecks(healthChecks))
         router["/stats"].handler(this::getStats)
         router["/clients"].handler(this::getClients)
-
-        //Setup storage
-        when (val storageSelector = config.getJsonObject("storage").getString("selector")) {
-            "memory" -> {
-                log.info("Using in-memory storage")
-                SourceStorage.setup(MemoryStorage(vertx), config)
-            }
-            "redis" -> {
-                log.info("Using Redis storage")
-                val redisStorage = RedisStorage()
-                redisStorage.init(vertx, config.getJsonObject("storage").getJsonObject("redis"))
-                SourceStorage.setup(redisStorage, config)
-            }
-            else -> {
-                log.error("Unknown storage selector: $storageSelector")
-                throw IllegalArgumentException("Unknown storage selector: $storageSelector")
-            }
-        }
 
         log.info("Starting service discovery")
         discovery = ServiceDiscovery.create(vertx)

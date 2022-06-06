@@ -1,15 +1,18 @@
 upstreams:
-  - id: 1
+  -
+    id: 1
     nodes:
       "spp-platform:5450": 1
     type: roundrobin
     scheme: tls
-  - id: 2
+  -
+    id: 2
     nodes:
       "spp-platform:5455": 1
     type: roundrobin
     scheme: tls
-  - id: 3
+  -
+    id: 3
     nodes:
       "skywalking-oap:11800": 1
     type: roundrobin
@@ -97,17 +100,20 @@ upstreams:
         yR4iuxRXu1OgXv64n2StH/6qFYD/QTAafMdBMTnn9owDRCCiyeylsoSBhesfaUiT
         9S6OW2pHzMMO1Hvn5a7FqvrsdU/wbozcJPmWL8/3P+de4QyqLIoXMLHfqYg=
         -----END RSA PRIVATE KEY-----
-  - id: 4
+  -
+    id: 4
     nodes:
       "spp-platform:12800": 1
     type: roundrobin
     scheme: https
 
 stream_routes:
-  - server_port: 5450
+  -
+    server_port: 5450
     id: 1
     upstream_id: 1
-  - server_port: 5455
+  -
+    server_port: 5455
     id: 2
     upstream_id: 2
 
@@ -119,7 +125,33 @@ routes:
   -
     uri: /*
     vars: [["server_port", "==", "12800"]]
+    priority: 1
     upstream_id: 4
+  -
+    uri: /*
+    vars: [["server_port", "==", "443"]]
+    priority: 1
+    upstream_id: 4
+  -
+    uri: /*
+    vars: [["server_port", "==", "80"]]
+    priority: 1
+    upstream_id: 4
+    plugins:
+      redirect:
+        http_to_https: true
+  -
+    uri: /auth
+    methods: ["POST"]
+    priority: 3
+    upstream_id: 4
+    plugins:
+      limit-count:
+        count: 2
+        time_window: 1
+        rejected_code: 429
+        key: remote_addr
+        key_type: constant
 
 ssl:
   -
@@ -207,4 +239,5 @@ ssl:
       -----END RSA PRIVATE KEY-----
     snis:
       - "spp-gateway"
+      - "localhost"
 #END

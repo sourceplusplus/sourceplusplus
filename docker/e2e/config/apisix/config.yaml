@@ -1,10 +1,14 @@
 apisix:
+  node_listen:
+    - port: 80
   ssl:
     fallback_sni: "spp-gateway"
     enable: true
     listen:
+      - port: 443
       - port: 11800
         enable_http2: true
+      - port: 12800
   stream_proxy:
     only: false
     tcp:
@@ -12,8 +16,10 @@ apisix:
         tls: true
       - addr: 5455
         tls: true
-  node_listen:
-    - 12800
   enable_admin: false
   config_center: yaml
   enable_ipv6: false
+
+plugin_attr:
+  redirect:
+    https_port: 443

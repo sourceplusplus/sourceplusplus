@@ -13,11 +13,15 @@ services:
       - "5455:5455"
       - "11800:11800"
       - "12800:12800"
+      - "443:443"
+      - "80:80"
 
   redis:
     image: redis:6.2.1
     container_name: redis
     hostname: redis
+    ports:
+      - "6379:6379"
   spp-platform:
     container_name: spp-platform
     hostname: spp-platform
