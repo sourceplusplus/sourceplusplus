@@ -6,7 +6,7 @@ build:
 
 formatting:
   Indentation:
-    active: true
+    active: false
   CommentSpacing:
     active: false
   NoWildcardImports:
