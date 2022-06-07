@@ -208,7 +208,7 @@ class SourcePlatform : CoroutineVerticle() {
         }
     }
 
-    private fun setupDashboard(router: Router) {
+    private fun setupDashboardAuth(router: Router) {
         router.post("/auth").handler(BodyHandler.create()).handler {
             val postData = it.request().params()
             val password = postData.get("password")
@@ -233,11 +233,16 @@ class SourcePlatform : CoroutineVerticle() {
             it.response().putHeader("Content-Type", "text/html").end(loginHtml)
         }
         router.get("/*").handler { ctx ->
-            if (ctx.session().get<String>("developer_id") == null) {
-                ctx.redirect("/login")
-                return@handler
-            } else {
-                ctx.next()
+            when {
+                ctx.request().path() in setOf("/stats", "/clients", "/health") -> {
+                    ctx.next()
+                    return@handler
+                }
+                (ctx.session().get<String>("developer_id") == null) -> {
+                    ctx.redirect("/login")
+                    return@handler
+                }
+                else -> ctx.next()
             }
         }
         router.post("/graphql").handler(BodyHandler.create()).handler { ctx ->
@@ -264,9 +269,6 @@ class SourcePlatform : CoroutineVerticle() {
                 ctx.next()
             }
         }
-
-        PortalServer.addStaticHandler(router)
-        PortalServer.addSPAHandler(router)
     }
 
     @Suppress("LongMethod")
@@ -382,27 +384,31 @@ class SourcePlatform : CoroutineVerticle() {
             }
         }
 
-        //Setup dashboard
+        //Setup dashboard auth
         val sessionHandler = SessionHandler.create(sessionStore)
         router.route().handler(sessionHandler)
-        setupDashboard(router)
+        setupDashboardAuth(router)
 
         if (System.getenv("SPP_DISABLE_JWT") != "true") {
-            router.route("/*").handler(JWTAuthHandler.create(jwt))
+            val jwtAuthHandler = JWTAuthHandler.create(jwt)
+            router.route("/graphql*").handler(jwtAuthHandler)
+            router.route("/health").handler(jwtAuthHandler)
+            router.route("/stats").handler(jwtAuthHandler)
+            router.route("/clients").handler(jwtAuthHandler)
         } else {
             log.warn("JWT authentication disabled")
         }
 
         //S++ Graphql
         val sppGraphQLHandler = GraphQLHandler.create(SourceService.setupGraphQL(vertx))
-        router.route("/graphql").handler(BodyHandler.create()).handler {
+        router.post("/graphql").handler(BodyHandler.create()).handler {
             if (it.request().getHeader("spp-platform-request") == "true") {
                 sppGraphQLHandler.handle(it)
             } else {
                 it.reroute("/graphql/skywalking")
             }
         }
-        router.route("/graphql/spp").handler(BodyHandler.create()).handler {
+        router.post("/graphql/spp").handler(BodyHandler.create()).handler {
             sppGraphQLHandler.handle(it)
         }
 
@@ -485,6 +491,10 @@ class SourcePlatform : CoroutineVerticle() {
         vertx.deployVerticle(
             SkyWalkingInterceptor(router), DeploymentOptions().setConfig(config)
         ).await()
+
+        //Serve dashboard
+        PortalServer.addStaticHandler(router)
+        PortalServer.addSPAHandler(router)
 
         log.debug("Starting API server")
         if (System.getenv("SPP_DISABLE_TLS") == "true") {
