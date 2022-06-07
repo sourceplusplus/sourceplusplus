@@ -208,8 +208,8 @@ class SourcePlatform : CoroutineVerticle() {
         }
     }
 
-    private fun setupDashboardAuth(router: Router) {
-        router.post("/auth").handler(BodyHandler.create()).handler {
+    private fun setupDashboard(sessionHandler: SessionHandler, router: Router) {
+        router.post("/auth").handler(sessionHandler).handler(BodyHandler.create()).handler {
             val postData = it.request().params()
             val password = postData.get("password")
             log.info { "Authenticating $password" }
@@ -228,24 +228,19 @@ class SourcePlatform : CoroutineVerticle() {
                 }
             }
         }
-        router.get("/login").handler {
+        router.get("/login").handler(sessionHandler).handler {
             val loginHtml = Resources.toString(Resources.getResource("login.html"), Charsets.UTF_8)
             it.response().putHeader("Content-Type", "text/html").end(loginHtml)
         }
-        router.get("/*").handler { ctx ->
-            when {
-                ctx.request().path() in setOf("/stats", "/clients", "/health") -> {
-                    ctx.next()
-                    return@handler
-                }
-                (ctx.session().get<String>("developer_id") == null) -> {
-                    ctx.redirect("/login")
-                    return@handler
-                }
-                else -> ctx.next()
+        router.get("/*").handler(sessionHandler).handler { ctx ->
+            if (ctx.session().get<String>("developer_id") == null) {
+                ctx.redirect("/login")
+                return@handler
+            } else {
+                ctx.next()
             }
         }
-        router.post("/graphql").handler(BodyHandler.create()).handler { ctx ->
+        router.post("/graphql/dashboard").handler(sessionHandler).handler(BodyHandler.create()).handler { ctx ->
             if (ctx.session().get<String>("developer_id") != null) {
                 val forward = JsonObject()
                 forward.put("developer_id", ctx.session().get<String>("developer_id"))
@@ -266,9 +261,13 @@ class SourcePlatform : CoroutineVerticle() {
                     }
                 }
             } else {
-                ctx.next()
+                ctx.response().setStatusCode(401).end("Unauthorized")
             }
         }
+
+        //Serve dashboard
+        PortalServer.addStaticHandler(router, sessionHandler)
+        PortalServer.addSPAHandler(router, sessionHandler)
     }
 
     @Suppress("LongMethod")
@@ -384,17 +383,15 @@ class SourcePlatform : CoroutineVerticle() {
             }
         }
 
-        //Setup dashboard auth
-        val sessionHandler = SessionHandler.create(sessionStore)
-        router.route().handler(sessionHandler)
-        setupDashboardAuth(router)
-
+        //Setup JWT
         if (System.getenv("SPP_DISABLE_JWT") != "true") {
             val jwtAuthHandler = JWTAuthHandler.create(jwt)
-            router.route("/graphql*").handler(jwtAuthHandler)
-            router.route("/health").handler(jwtAuthHandler)
-            router.route("/stats").handler(jwtAuthHandler)
-            router.route("/clients").handler(jwtAuthHandler)
+            router.post("/graphql").handler(jwtAuthHandler)
+            router.post("/graphql/skywalking").handler(jwtAuthHandler)
+            router.post("/graphql/spp").handler(jwtAuthHandler)
+            router.get("/health").handler(jwtAuthHandler)
+            router.get("/stats").handler(jwtAuthHandler)
+            router.get("/clients").handler(jwtAuthHandler)
         } else {
             log.warn("JWT authentication disabled")
         }
@@ -418,6 +415,9 @@ class SourcePlatform : CoroutineVerticle() {
         router["/health"].handler(HealthCheckHandler.createWithHealthChecks(healthChecks))
         router["/stats"].handler(this::getStats)
         router["/clients"].handler(this::getClients)
+
+        //Setup dashboard
+        setupDashboard(SessionHandler.create(sessionStore), router)
 
         log.info("Starting service discovery")
         discovery = ServiceDiscovery.create(vertx)
@@ -491,10 +491,6 @@ class SourcePlatform : CoroutineVerticle() {
         vertx.deployVerticle(
             SkyWalkingInterceptor(router), DeploymentOptions().setConfig(config)
         ).await()
-
-        //Serve dashboard
-        PortalServer.addStaticHandler(router)
-        PortalServer.addSPAHandler(router)
 
         log.debug("Starting API server")
         if (System.getenv("SPP_DISABLE_TLS") == "true") {
