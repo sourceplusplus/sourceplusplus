@@ -27,7 +27,6 @@ import io.vertx.core.Promise
 import io.vertx.core.Vertx
 import io.vertx.core.buffer.Buffer
 import io.vertx.core.http.HttpServerOptions
-import io.vertx.core.http.impl.MimeMapping
 import io.vertx.core.json.Json
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
@@ -90,7 +89,10 @@ import spp.protocol.SourceServices.Utilize
 import spp.protocol.marshall.LocalMessageCodec
 import spp.protocol.platform.ProbeAddress.LIVE_INSTRUMENT_REMOTE
 import spp.protocol.service.LiveViewService
-import java.io.*
+import java.io.File
+import java.io.FileWriter
+import java.io.StringReader
+import java.io.StringWriter
 import java.security.Security
 import java.time.Instant
 import java.time.temporal.ChronoUnit
@@ -230,92 +232,41 @@ class SourcePlatform : CoroutineVerticle() {
             val loginHtml = Resources.toString(Resources.getResource("login.html"), Charsets.UTF_8)
             it.response().putHeader("Content-Type", "text/html").end(loginHtml)
         }
-
-        // Static handler
         router.get("/*").handler { ctx ->
-            var requestPath = ctx.request().path()
-            if (requestPath.contains("/css/")) {
-                requestPath = requestPath.substring(requestPath.indexOf("/css/"))
-            } else if (requestPath.contains("/js/")) {
-                requestPath = requestPath.substring(requestPath.indexOf("/js/"))
-            }
-
-            var fileStream: InputStream?
-            val response = ctx.response().setStatusCode(200)
-            if (requestPath == "/") {
-                if (ctx.session().get<String>("developer_id") == null) {
-                    ctx.redirect("/login")
-                    return@handler
-                }
-
-                fileStream = PortalServer::class.java.classLoader.getResourceAsStream("webroot/index.html")
-                if (fileStream == null) {
-                    fileStream = PortalServer::class.java.getResourceAsStream("webroot/index.html")
-                }
-
-                response.end(Buffer.buffer(fileStream.readBytes()))
+            if (ctx.session().get<String>("developer_id") == null) {
+                ctx.redirect("/login")
+                return@handler
             } else {
-                fileStream = PortalServer::class.java.classLoader.getResourceAsStream(
-                    "webroot/" + requestPath.substring(1)
-                )
-                if (fileStream == null) {
-                    fileStream = PortalServer::class.java.getResourceAsStream(
-                        "webroot/" + requestPath.substring(1)
-                    )
-                }
-                if (fileStream != null) {
-                    response.putHeader(
-                        "Content-Type",
-                        MimeMapping.getMimeTypeForExtension(requestPath.substringAfterLast("."))
-                    ).end(Buffer.buffer(fileStream.readBytes()))
-                }
+                ctx.next()
             }
-
-            if (!response.ended()) {
+        }
+        router.post("/graphql").handler(BodyHandler.create()).handler { ctx ->
+            if (ctx.session().get<String>("developer_id") != null) {
+                val forward = JsonObject()
+                forward.put("developer_id", ctx.session().get<String>("developer_id"))
+                forward.put("body", ctx.body().asJsonObject())
+                val headers = JsonObject()
+                ctx.request().headers().names().forEach {
+                    headers.put(it, ctx.request().headers().get(it))
+                }
+                forward.put("headers", headers)
+                forward.put("method", ctx.request().method().name())
+                vertx.eventBus().request<JsonObject>("skywalking-forwarder", forward) {
+                    if (it.succeeded()) {
+                        val resp = it.result().body()
+                        ctx.response().setStatusCode(resp.getInteger("status")).end(resp.getString("body"))
+                    } else {
+                        log.error("Failed to forward SkyWalking request", it.cause())
+                        ctx.response().setStatusCode(500).end(it.cause().message)
+                    }
+                }
+            } else {
                 ctx.next()
             }
         }
 
-        router.route().handler(BodyHandler.create()).handler { ctx ->
-            if (ctx.request().path().startsWith("/graphql")) {
-                if (ctx.request().path() == "/graphql" && ctx.session().get<String>("developer_id") != null) {
-                    val forward = JsonObject()
-                    forward.put("developer_id", ctx.session().get<String>("developer_id"))
-                    forward.put("body", ctx.body().asJsonObject())
-                    val headers = JsonObject()
-                    ctx.request().headers().names().forEach {
-                        headers.put(it, ctx.request().headers().get(it))
-                    }
-                    forward.put("headers", headers)
-                    forward.put("method", ctx.request().method().name())
-                    vertx.eventBus().request<JsonObject>("skywalking-forwarder", forward) {
-                        if (it.succeeded()) {
-                            val resp = it.result().body()
-                            ctx.response().setStatusCode(resp.getInteger("status")).end(resp.getString("body"))
-                        } else {
-                            log.error("Failed to forward SkyWalking request", it.cause())
-                            ctx.response().setStatusCode(500).end(it.cause().message)
-                        }
-                    }
-                } else {
-                    ctx.next()
-                }
-                return@handler
-            } else if (ctx.session().get<String>("developer_id") == null) {
-                ctx.redirect("/login")
-                return@handler
-            }
-
-            var fileStream = PortalServer::class.java.classLoader.getResourceAsStream("webroot/index.html")
-            if (fileStream == null) {
-                fileStream = PortalServer::class.java.getResourceAsStream("webroot/index.html")
-            }
-
-            ctx.response()
-                .setStatusCode(200)
-                .putHeader("Content-Type", "text/html; charset=utf-8")
-                .end(Buffer.buffer(fileStream.readBytes()))
-        }
+        PortalServer.addStaticHandler(router)
+        PortalServer.addSPAHandler(router)
     }
 
     @Suppress("LongMethod")
