@@ -1,5 +1,21 @@
 version: '3.3'
 services:
+  spp-gateway:
+    container_name: spp-gateway
+    hostname: spp-gateway
+    image: apache/apisix:2.14.1-alpine
+    restart: always
+    volumes:
+      - ./config/apisix/config.yaml:/usr/local/apisix/conf/config.yaml:ro
+      - ./config/apisix/apisix.yaml:/usr/local/apisix/conf/apisix.yaml:ro
+    ports:
+      - "5450:5450"
+      - "5455:5455"
+      - "11800:11800"
+      - "12800:12800"
+      - "443:443"
+      - "80:80"
+
   redis:
     image: redis:6.2.1
     container_name: redis
@@ -10,9 +26,6 @@ services:
     container_name: spp-platform
     hostname: spp-platform
     ports:
-      - "5450:5450"
-      - "5455:5455"
-      - "12800:12800"
       - "5107:5107"
     build:
       context: .
@@ -25,8 +38,6 @@ services:
     container_name: skywalking-oap
     hostname: skywalking-oap
     ports:
-      - "11800:11800"
-      - "13800:12800"
       - "5106:5106"
     build:
       context: .

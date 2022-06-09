@@ -21,6 +21,7 @@ import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.LoggerContext
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper
+import com.google.common.io.Resources
 import io.vertx.core.DeploymentOptions
 import io.vertx.core.Promise
 import io.vertx.core.Vertx
@@ -44,7 +45,11 @@ import io.vertx.ext.web.RoutingContext
 import io.vertx.ext.web.handler.BodyHandler
 import io.vertx.ext.web.handler.JWTAuthHandler
 import io.vertx.ext.web.handler.ResponseTimeHandler
+import io.vertx.ext.web.handler.SessionHandler
 import io.vertx.ext.web.handler.graphql.GraphQLHandler
+import io.vertx.ext.web.sstore.LocalSessionStore
+import io.vertx.ext.web.sstore.SessionStore
+import io.vertx.ext.web.sstore.redis.RedisSessionStore
 import io.vertx.kotlin.coroutines.CoroutineVerticle
 import io.vertx.kotlin.coroutines.await
 import io.vertx.kotlin.coroutines.dispatcher
@@ -68,6 +73,7 @@ import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter
 import org.bouncycastle.openssl.jcajce.JcaPEMWriter
 import org.joor.Reflect
 import org.slf4j.LoggerFactory
+import spp.booster.PortalServer
 import spp.platform.core.SkyWalkingInterceptor
 import spp.platform.core.SourceService
 import spp.platform.core.SourceStorage
@@ -88,6 +94,7 @@ import java.io.FileWriter
 import java.io.StringReader
 import java.io.StringWriter
 import java.security.Security
+import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.*
 import javax.crypto.Cipher
@@ -201,6 +208,68 @@ class SourcePlatform : CoroutineVerticle() {
         }
     }
 
+    private fun setupDashboard(sessionHandler: SessionHandler, router: Router) {
+        router.post("/auth").handler(sessionHandler).handler(BodyHandler.create()).handler {
+            val postData = it.request().params()
+            val password = postData.get("password")
+            log.info { "Authenticating $password" }
+            if (password?.isEmpty() == true) {
+                it.redirect("/login")
+                return@handler
+            }
+
+            launch(vertx.dispatcher()) {
+                val dev = SourceStorage.getDeveloperByAccessToken(password)
+                if (dev != null) {
+                    it.session().put("developer_id", dev.id)
+                    it.redirect("/")
+                } else {
+                    it.redirect("/login")
+                }
+            }
+        }
+        router.get("/login").handler(sessionHandler).handler {
+            val loginHtml = Resources.toString(Resources.getResource("login.html"), Charsets.UTF_8)
+            it.response().putHeader("Content-Type", "text/html").end(loginHtml)
+        }
+        router.get("/*").handler(sessionHandler).handler { ctx ->
+            if (ctx.session().get<String>("developer_id") == null) {
+                ctx.redirect("/login")
+                return@handler
+            } else {
+                ctx.next()
+            }
+        }
+        router.post("/graphql/dashboard").handler(sessionHandler).handler(BodyHandler.create()).handler { ctx ->
+            if (ctx.session().get<String>("developer_id") != null) {
+                val forward = JsonObject()
+                forward.put("developer_id", ctx.session().get<String>("developer_id"))
+                forward.put("body", ctx.body().asJsonObject())
+                val headers = JsonObject()
+                ctx.request().headers().names().forEach {
+                    headers.put(it, ctx.request().headers().get(it))
+                }
+                forward.put("headers", headers)
+                forward.put("method", ctx.request().method().name())
+                vertx.eventBus().request<JsonObject>("skywalking-forwarder", forward) {
+                    if (it.succeeded()) {
+                        val resp = it.result().body()
+                        ctx.response().setStatusCode(resp.getInteger("status")).end(resp.getString("body"))
+                    } else {
+                        log.error("Failed to forward SkyWalking request", it.cause())
+                        ctx.response().setStatusCode(500).end(it.cause().message)
+                    }
+                }
+            } else {
+                ctx.response().setStatusCode(401).end("Unauthorized")
+            }
+        }
+
+        //Serve dashboard
+        PortalServer.addStaticHandler(router, sessionHandler)
+        PortalServer.addSPAHandler(router, sessionHandler)
+    }
+
     @Suppress("LongMethod")
     override suspend fun start() {
         log.info("Initializing Source++ Platform")
@@ -281,8 +350,8 @@ class SourcePlatform : CoroutineVerticle() {
                     val jwtToken = jwt!!.generateToken(
                         JsonObject()
                             .put("developer_id", dev.id)
-                            .put("created_at", java.time.Instant.now().toEpochMilli())
-                            .put("expires_at", java.time.Instant.now().plus(365, ChronoUnit.DAYS).toEpochMilli()),
+                            .put("created_at", Instant.now().toEpochMilli())
+                            .put("expires_at", Instant.now().plus(365, ChronoUnit.DAYS).toEpochMilli()),
                         JWTOptions().setAlgorithm("RS256")
                     )
                     ctx.end(jwtToken)
@@ -293,22 +362,50 @@ class SourcePlatform : CoroutineVerticle() {
             }
         }
 
+        //Setup storage
+        val sessionStore: SessionStore
+        when (val storageSelector = config.getJsonObject("storage").getString("selector")) {
+            "memory" -> {
+                log.info("Using in-memory storage")
+                SourceStorage.setup(MemoryStorage(vertx), config)
+                sessionStore = LocalSessionStore.create(vertx)
+            }
+            "redis" -> {
+                log.info("Using Redis storage")
+                val redisStorage = RedisStorage()
+                redisStorage.init(vertx, config.getJsonObject("storage").getJsonObject("redis"))
+                SourceStorage.setup(redisStorage, config)
+                sessionStore = RedisSessionStore.create(vertx, redisStorage.redisClient)
+            }
+            else -> {
+                log.error("Unknown storage selector: $storageSelector")
+                throw IllegalArgumentException("Unknown storage selector: $storageSelector")
+            }
+        }
+
+        //Setup JWT
         if (System.getenv("SPP_DISABLE_JWT") != "true") {
-            router.route("/*").handler(JWTAuthHandler.create(jwt))
+            val jwtAuthHandler = JWTAuthHandler.create(jwt)
+            router.post("/graphql").handler(jwtAuthHandler)
+            router.post("/graphql/skywalking").handler(jwtAuthHandler)
+            router.post("/graphql/spp").handler(jwtAuthHandler)
+            router.get("/health").handler(jwtAuthHandler)
+            router.get("/stats").handler(jwtAuthHandler)
+            router.get("/clients").handler(jwtAuthHandler)
         } else {
             log.warn("JWT authentication disabled")
         }
 
         //S++ Graphql
         val sppGraphQLHandler = GraphQLHandler.create(SourceService.setupGraphQL(vertx))
-        router.route("/graphql").handler(BodyHandler.create()).handler {
+        router.post("/graphql").handler(BodyHandler.create()).handler {
             if (it.request().getHeader("spp-platform-request") == "true") {
                 sppGraphQLHandler.handle(it)
             } else {
                 it.reroute("/graphql/skywalking")
             }
         }
-        router.route("/graphql/spp").handler(BodyHandler.create()).handler {
+        router.post("/graphql/spp").handler(BodyHandler.create()).handler {
             sppGraphQLHandler.handle(it)
         }
 
@@ -319,23 +416,8 @@ class SourcePlatform : CoroutineVerticle() {
         router["/stats"].handler(this::getStats)
         router["/clients"].handler(this::getClients)
 
-        //Setup storage
-        when (val storageSelector = config.getJsonObject("storage").getString("selector")) {
-            "memory" -> {
-                log.info("Using in-memory storage")
-                SourceStorage.setup(MemoryStorage(vertx), config)
-            }
-            "redis" -> {
-                log.info("Using Redis storage")
-                val redisStorage = RedisStorage()
-                redisStorage.init(vertx, config.getJsonObject("storage").getJsonObject("redis"))
-                SourceStorage.setup(redisStorage, config)
-            }
-            else -> {
-                log.error("Unknown storage selector: $storageSelector")
-                throw IllegalArgumentException("Unknown storage selector: $storageSelector")
-            }
-        }
+        //Setup dashboard
+        setupDashboard(SessionHandler.create(sessionStore), router)
 
         log.info("Starting service discovery")
         discovery = ServiceDiscovery.create(vertx)

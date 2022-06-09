@@ -31,6 +31,7 @@ repositories {
 dependencies {
     implementation(project(":protocol"))
     implementation(project(":processors:dependencies"))
+    implementation(project(":interfaces:booster-ui"))
 
     implementation("org.kohsuke:github-api:1.306")
     implementation("org.jooq:joor:$joorVersion")
@@ -46,6 +47,7 @@ dependencies {
     implementation("io.vertx:vertx-redis-client:$vertxVersion")
     implementation("io.vertx:vertx-web-graphql:${vertxVersion}")
     implementation("io.vertx:vertx-tcp-eventbus-bridge:$vertxVersion")
+    implementation("io.vertx:vertx-web-sstore-redis:$vertxVersion")
     implementation("com.auth0:java-jwt:$auth0JwtVersion")
     implementation("com.auth0:jwks-rsa:0.21.1")
     implementation("org.bouncycastle:bcprov-jdk15on:$bouncycastleVersion")

@@ -134,6 +134,7 @@ class SkyWalkingInterceptor(private val router: Router) : CoroutineVerticle() {
                 req.response().setStatusCode(resp.getInteger("status")).end(resp.getString("body"))
             } else {
                 log.error("Failed to forward SkyWalking request", it.cause())
+                req.response().setStatusCode(500).end(it.cause().message)
             }
         }
     }

@@ -23,6 +23,7 @@ import io.vertx.core.json.JsonObject
 import io.vertx.kotlin.coroutines.await
 import io.vertx.redis.client.Redis
 import io.vertx.redis.client.RedisAPI
+import io.vertx.redis.client.impl.RedisClient
 import spp.platform.core.SourceStorage
 import spp.protocol.marshall.ProtocolMarshaller
 import spp.protocol.platform.auth.*
@@ -31,13 +32,14 @@ import java.nio.charset.StandardCharsets.UTF_8
 
 class RedisStorage : CoreStorage {
 
+    lateinit var redisClient: Redis
     lateinit var redis: RedisAPI
 
     suspend fun init(vertx: Vertx, config: JsonObject) {
         val sdHost = config.getString("host")
         val sdPort = config.getString("port")
-        val redisClient = Redis.createClient(vertx, "redis://$sdHost:$sdPort").connect().await()
-        redis = RedisAPI.api(redisClient)
+        redisClient = Redis.createClient(vertx, "redis://$sdHost:$sdPort")
+        redis = RedisAPI.api(redisClient.connect().await())
     }
 
     override suspend fun getDevelopers(): List<Developer> {

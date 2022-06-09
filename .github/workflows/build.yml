@@ -30,7 +30,7 @@ jobs:
       - uses: docker-practice/actions-setup-docker@master
       - uses: actions/checkout@v2
         with:
-          submodules: true
+          submodules: 'recursive'
       - name: Export Properties
         id: properties
         shell: bash
