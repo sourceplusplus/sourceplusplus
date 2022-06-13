@@ -1,4 +1,4 @@
-FROM apache/skywalking-oap-server:8.9.1
+FROM apache/skywalking-oap-server:9.0.0
 
 RUN rm /skywalking/config/log4j2.xml
 ADD ./log4j2.xml /skywalking/config/log4j2.xml
@@ -10,3 +10,5 @@ RUN printf "\nspp-live-instrument:\n  selector: \${SPP_LIVE_INSTRUMENT:default}\
 
 RUN printf "\nexporter:\n  selector: exporter\n  exporter:\n" \
     >> /skywalking/config/application.yml
+
+ADD ./config/ui-initialized-templates /skywalking/config/ui-initialized-templates

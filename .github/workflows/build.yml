@@ -175,6 +175,9 @@ jobs:
       - name: Push spp-platform latest Docker image
         run: docker push sourceplusplus/spp-platform:latest
 
+      - name: Copy ui-initialized-templates to spp-oap-server Docker image
+        run: cp -r ./docker/e2e/config/ui-initialized-templates ./docker/spp-oap-server
+
       - name: Download Source++ processors
         uses: actions/download-artifact@v2
         with:
