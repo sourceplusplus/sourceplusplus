@@ -11,4 +11,4 @@ RUN printf "\nspp-live-instrument:\n  selector: \${SPP_LIVE_INSTRUMENT:default}\
 RUN printf "\nexporter:\n  selector: exporter\n  exporter:\n" \
     >> /skywalking/config/application.yml
 
-ADD ./config/ui-initialized-templates /skywalking/config/ui-initialized-templates
+ADD ./ui-initialized-templates /skywalking/config/ui-initialized-templates
