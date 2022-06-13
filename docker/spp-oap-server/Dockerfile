@@ -1,4 +1,4 @@
-FROM apache/skywalking-oap-server:9.0.0
+FROM apache/skywalking-oap-server:9.1.0
 
 RUN rm /skywalking/config/log4j2.xml
 ADD ./log4j2.xml /skywalking/config/log4j2.xml

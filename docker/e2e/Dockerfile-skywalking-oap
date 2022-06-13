@@ -1,4 +1,4 @@
-FROM apache/skywalking-oap-server:9.0.0
+FROM apache/skywalking-oap-server:9.1.0
 
 ADD ./spp-processor-dependencies-*.jar /skywalking/ext-libs/
 
