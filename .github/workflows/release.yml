@@ -63,6 +63,9 @@ jobs:
 
       # Push spp-oap-server
 
+      - name: Copy ui-initialized-templates to spp-oap-server Docker image
+        run: cp -r ./docker/e2e/config/ui-initialized-templates ./docker/spp-oap-server
+
       - name: Unzip spp-processors.zip
         run: cd ./docker/spp-oap-server && unzip spp-processors.zip
 
