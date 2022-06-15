@@ -46,7 +46,6 @@ import io.vertx.ext.web.handler.BodyHandler
 import io.vertx.ext.web.handler.JWTAuthHandler
 import io.vertx.ext.web.handler.ResponseTimeHandler
 import io.vertx.ext.web.handler.SessionHandler
-import io.vertx.ext.web.handler.graphql.GraphQLHandler
 import io.vertx.ext.web.sstore.LocalSessionStore
 import io.vertx.ext.web.sstore.SessionStore
 import io.vertx.ext.web.sstore.redis.RedisSessionStore
@@ -59,7 +58,10 @@ import io.vertx.servicediscovery.ServiceDiscoveryOptions
 import io.vertx.servicediscovery.Status
 import io.vertx.servicediscovery.impl.DefaultServiceDiscoveryBackend
 import io.vertx.servicediscovery.types.EventBusService
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import mu.KotlinLogging
 import org.apache.commons.text.StringSubstitutor
 import org.apache.commons.text.lookup.StringLookupFactory
@@ -160,6 +162,7 @@ class SourcePlatform : CoroutineVerticle() {
             log.info("Booting Source++ Platform [v${BUILD.getString("build_version")}]")
             log.trace { "Build id: " + BUILD.getString("build_id") }
             log.trace { "Build date: " + BUILD.getString("build_date") }
+            log.trace { "Using configuration: " + sppConfig.encode() }
 
             runBlocking {
                 try {
