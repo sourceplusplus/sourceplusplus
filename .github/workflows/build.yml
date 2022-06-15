@@ -166,9 +166,6 @@ jobs:
       - name: Untar spp-platform
         run: cd ./docker/spp-platform && tar -zxvf spp-platform-${{ needs.jvm-build.outputs.release_version }}.tar.gz --strip-components=1
 
-      - name: Download spp-cli
-        run: cd ./docker/spp-platform && curl -O -J -L https://github.com/sourceplusplus/interface-cli/releases/download/${{ needs.jvm-build.outputs.release_version }}/spp-cli-${{ needs.jvm-build.outputs.release_version }}-linux64.zip && unzip spp-cli-*-linux64.zip && chmod +x spp-cli
-
       - name: Build spp-platform tagged Docker image
         run: cd ./docker/spp-platform && docker build . --file Dockerfile --tag sourceplusplus/spp-platform:${{ needs.jvm-build.outputs.release_version }}
 
