@@ -23,13 +23,16 @@ import graphql.schema.CoercingParseValueException
 import graphql.schema.DataFetchingEnvironment
 import graphql.schema.GraphQLScalarType
 import graphql.schema.idl.*
-import io.vertx.core.Vertx
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
+import io.vertx.ext.web.Router
 import io.vertx.ext.web.RoutingContext
+import io.vertx.ext.web.handler.BodyHandler
+import io.vertx.ext.web.handler.graphql.GraphQLHandler
+import io.vertx.kotlin.coroutines.CoroutineVerticle
+import io.vertx.kotlin.coroutines.await
 import io.vertx.kotlin.coroutines.dispatcher
 import io.vertx.servicediscovery.types.EventBusService
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.apache.commons.lang3.EnumUtils
 import org.apache.commons.lang3.RandomStringUtils
@@ -59,13 +62,28 @@ import spp.protocol.view.LiveViewSubscription
 import java.util.*
 import java.util.concurrent.CompletableFuture
 
-object SourceService {
+class SourceService(private val router: Router) : CoroutineVerticle() {
 
     private val log = LoggerFactory.getLogger(SourceService::class.java)
-    lateinit var vertx: Vertx
 
-    fun setupGraphQL(vertx: Vertx): GraphQL {
-        SourceService.vertx = vertx
+    override suspend fun start() {
+        val graphql = vertx.executeBlocking<GraphQL> {
+            it.complete(setupGraphQL())
+        }.await()
+        val sppGraphQLHandler = GraphQLHandler.create(graphql)
+        router.post("/graphql").handler(BodyHandler.create()).handler {
+            if (it.request().getHeader("spp-platform-request") == "true") {
+                sppGraphQLHandler.handle(it)
+            } else {
+                it.reroute("/graphql/skywalking")
+            }
+        }
+        router.post("/graphql/spp").handler(BodyHandler.create()).handler {
+            sppGraphQLHandler.handle(it)
+        }
+    }
+
+    private fun setupGraphQL(): GraphQL {
         val schema = vertx.fileSystem().readFileBlocking("spp-api.graphqls").toString()
         val schemaParser = SchemaParser()
         val typeDefinitionRegistry: TypeDefinitionRegistry = schemaParser.parse(schema)
@@ -277,7 +295,7 @@ object SourceService {
 
     private fun getAccessPermissions(env: DataFetchingEnvironment): CompletableFuture<List<AccessPermission>> {
         val completableFuture = CompletableFuture<List<AccessPermission>>()
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
                 val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
@@ -293,7 +311,7 @@ object SourceService {
 
     private fun getAccessPermission(env: DataFetchingEnvironment): CompletableFuture<AccessPermission> {
         val completableFuture = CompletableFuture<AccessPermission>()
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
                 val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
@@ -315,7 +333,7 @@ object SourceService {
 
     private fun getRoleAccessPermissions(env: DataFetchingEnvironment): CompletableFuture<List<AccessPermission>> {
         val completableFuture = CompletableFuture<List<AccessPermission>>()
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
                 val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
@@ -338,7 +356,7 @@ object SourceService {
 
     private fun getDeveloperAccessPermissions(env: DataFetchingEnvironment): CompletableFuture<List<AccessPermission>> {
         val completableFuture = CompletableFuture<List<AccessPermission>>()
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
                 val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
@@ -360,7 +378,7 @@ object SourceService {
 
     private fun getDataRedactions(env: DataFetchingEnvironment): CompletableFuture<List<DataRedaction>> {
         val completableFuture = CompletableFuture<List<DataRedaction>>()
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
                 val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
@@ -376,7 +394,7 @@ object SourceService {
 
     private fun getDataRedaction(env: DataFetchingEnvironment): CompletableFuture<DataRedaction> {
         val completableFuture = CompletableFuture<DataRedaction>()
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
                 val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
@@ -398,7 +416,7 @@ object SourceService {
 
     private fun getRoleDataRedactions(env: DataFetchingEnvironment): CompletableFuture<List<DataRedaction>> {
         val completableFuture = CompletableFuture<List<DataRedaction>>()
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
                 val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
@@ -421,7 +439,7 @@ object SourceService {
 
     private fun getDeveloperDataRedactions(env: DataFetchingEnvironment): CompletableFuture<List<DataRedaction>> {
         val completableFuture = CompletableFuture<List<DataRedaction>>()
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
                 val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
@@ -443,7 +461,7 @@ object SourceService {
 
     private fun getRoles(env: DataFetchingEnvironment): CompletableFuture<List<DeveloperRole>> {
         val completableFuture = CompletableFuture<List<DeveloperRole>>()
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
                 val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
@@ -459,7 +477,7 @@ object SourceService {
 
     private fun getRolePermissions(env: DataFetchingEnvironment): CompletableFuture<List<RolePermission>> {
         val completableFuture = CompletableFuture<List<RolePermission>>()
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             val role = env.getArgument<String>("role")
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
                 val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
@@ -481,7 +499,7 @@ object SourceService {
 
     private fun getDeveloperRoles(env: DataFetchingEnvironment): CompletableFuture<List<DeveloperRole>> {
         val completableFuture = CompletableFuture<List<DeveloperRole>>()
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             val id = env.getArgument<String>("id").lowercase().replace(" ", "")
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
                 val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
@@ -503,7 +521,7 @@ object SourceService {
 
     private fun getDeveloperPermissions(env: DataFetchingEnvironment): CompletableFuture<List<RolePermission>> {
         val completableFuture = CompletableFuture<List<RolePermission>>()
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             val id = env.getArgument<String>("id").lowercase().replace(" ", "")
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
                 val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
@@ -525,7 +543,7 @@ object SourceService {
 
     private fun getDevelopers(env: DataFetchingEnvironment): CompletableFuture<List<Developer>> {
         val completableFuture = CompletableFuture<List<Developer>>()
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
                 val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
@@ -596,7 +614,7 @@ object SourceService {
 
     private fun refreshDeveloperToken(env: DataFetchingEnvironment): CompletableFuture<Developer> {
         val completableFuture = CompletableFuture<Developer>()
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
                 val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
@@ -621,7 +639,7 @@ object SourceService {
     private fun getLiveInstruments(env: DataFetchingEnvironment): CompletableFuture<List<Map<String, Any>>> {
         val completableFuture = CompletableFuture<List<Map<String, Any>>>()
         var accessToken: String? = null
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
                 val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
                 val devId = user.principal().getString("developer_id")
@@ -655,7 +673,7 @@ object SourceService {
     private fun getLiveBreakpoints(env: DataFetchingEnvironment): CompletableFuture<List<Map<String, Any>>> {
         val completableFuture = CompletableFuture<List<Map<String, Any>>>()
         var accessToken: String? = null
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
                 val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
                 val devId = user.principal().getString("developer_id")
@@ -689,7 +707,7 @@ object SourceService {
     private fun getLiveLogs(env: DataFetchingEnvironment): CompletableFuture<List<Map<String, Any>>> {
         val completableFuture = CompletableFuture<List<Map<String, Any>>>()
         var accessToken: String? = null
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
                 val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
                 val devId = user.principal().getString("developer_id")
@@ -723,7 +741,7 @@ object SourceService {
     private fun getLiveMeters(env: DataFetchingEnvironment): CompletableFuture<List<Map<String, Any>>> {
         val completableFuture = CompletableFuture<List<Map<String, Any>>>()
         var accessToken: String? = null
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
                 val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
                 val devId = user.principal().getString("developer_id")
@@ -757,7 +775,7 @@ object SourceService {
     private fun getLiveSpans(env: DataFetchingEnvironment): CompletableFuture<List<Map<String, Any>>> {
         val completableFuture = CompletableFuture<List<Map<String, Any>>>()
         var accessToken: String? = null
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
                 val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
                 val devId = user.principal().getString("developer_id")
@@ -791,7 +809,7 @@ object SourceService {
     private fun reset(env: DataFetchingEnvironment): CompletableFuture<Boolean> {
         val completableFuture = CompletableFuture<Boolean>()
         var accessToken: String? = null
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
                 val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
                 val devId = user.principal().getString("developer_id")
@@ -810,7 +828,7 @@ object SourceService {
                 if (it.succeeded()) {
                     it.result().clearAllLiveInstruments(null).onComplete {
                         if (it.succeeded()) {
-                            GlobalScope.launch(vertx.dispatcher()) {
+                            launch(vertx.dispatcher()) {
                                 completableFuture.complete(SourceStorage.reset())
                             }
                         } else {
@@ -828,7 +846,7 @@ object SourceService {
 
     private fun addDataRedaction(env: DataFetchingEnvironment): CompletableFuture<DataRedaction> {
         val completableFuture = CompletableFuture<DataRedaction>()
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
                 val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
@@ -838,7 +856,7 @@ object SourceService {
                 }
             }
 
-            val id = env.getArgument<String>("id") ?:  UUID.randomUUID().toString()
+            val id = env.getArgument<String>("id") ?: UUID.randomUUID().toString()
             val type: RedactionType = RedactionType.valueOf(env.getArgument("type"))
             val lookup: String = env.getArgument("lookup")
             val replacement: String = env.getArgument("replacement")
@@ -850,7 +868,7 @@ object SourceService {
 
     private fun updateDataRedaction(env: DataFetchingEnvironment): CompletableFuture<DataRedaction> {
         val completableFuture = CompletableFuture<DataRedaction>()
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
                 val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
@@ -876,7 +894,7 @@ object SourceService {
 
     private fun removeDataRedaction(env: DataFetchingEnvironment): CompletableFuture<Boolean> {
         val completableFuture = CompletableFuture<Boolean>()
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
                 val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
@@ -899,7 +917,7 @@ object SourceService {
 
     private fun addRoleDataRedaction(env: DataFetchingEnvironment): CompletableFuture<Boolean> {
         val completableFuture = CompletableFuture<Boolean>()
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
                 val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
@@ -925,7 +943,7 @@ object SourceService {
 
     private fun removeRoleDataRedaction(env: DataFetchingEnvironment): CompletableFuture<Boolean> {
         val completableFuture = CompletableFuture<Boolean>()
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
                 val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
@@ -951,7 +969,7 @@ object SourceService {
 
     private fun addAccessPermission(env: DataFetchingEnvironment): CompletableFuture<AccessPermission> {
         val completableFuture = CompletableFuture<AccessPermission>()
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
                 val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
@@ -972,7 +990,7 @@ object SourceService {
 
     private fun removeAccessPermission(env: DataFetchingEnvironment): CompletableFuture<Boolean> {
         val completableFuture = CompletableFuture<Boolean>()
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
                 val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
@@ -995,7 +1013,7 @@ object SourceService {
 
     private fun addRoleAccessPermission(env: DataFetchingEnvironment): CompletableFuture<Boolean> {
         val completableFuture = CompletableFuture<Boolean>()
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
                 val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
@@ -1021,7 +1039,7 @@ object SourceService {
 
     private fun removeRoleAccessPermission(env: DataFetchingEnvironment): CompletableFuture<Boolean> {
         val completableFuture = CompletableFuture<Boolean>()
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
                 val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
@@ -1047,7 +1065,7 @@ object SourceService {
 
     private fun addRole(env: DataFetchingEnvironment): CompletableFuture<Boolean> {
         val completableFuture = CompletableFuture<Boolean>()
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
                 val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
@@ -1069,7 +1087,7 @@ object SourceService {
 
     private fun removeRole(env: DataFetchingEnvironment): CompletableFuture<Boolean> {
         val completableFuture = CompletableFuture<Boolean>()
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
                 val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
@@ -1096,7 +1114,7 @@ object SourceService {
 
     private fun addRolePermission(env: DataFetchingEnvironment): CompletableFuture<Boolean> {
         val completableFuture = CompletableFuture<Boolean>()
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
                 val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
@@ -1133,7 +1151,7 @@ object SourceService {
 
     private fun removeRolePermission(env: DataFetchingEnvironment): CompletableFuture<Boolean> {
         val completableFuture = CompletableFuture<Boolean>()
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
                 val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
@@ -1170,7 +1188,7 @@ object SourceService {
 
     private fun addDeveloperRole(env: DataFetchingEnvironment): CompletableFuture<Boolean> {
         val completableFuture = CompletableFuture<Boolean>()
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
                 val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
@@ -1196,7 +1214,7 @@ object SourceService {
 
     private fun removeDeveloperRole(env: DataFetchingEnvironment): CompletableFuture<Boolean> {
         val completableFuture = CompletableFuture<Boolean>()
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
                 val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
@@ -1222,7 +1240,7 @@ object SourceService {
 
     private fun addDeveloper(env: DataFetchingEnvironment): CompletableFuture<Developer> {
         val completableFuture = CompletableFuture<Developer>()
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
                 val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
@@ -1244,7 +1262,7 @@ object SourceService {
 
     private fun removeDeveloper(env: DataFetchingEnvironment): CompletableFuture<Boolean> {
         val completableFuture = CompletableFuture<Boolean>()
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
                 val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
@@ -1271,7 +1289,7 @@ object SourceService {
     private fun removeLiveInstrument(env: DataFetchingEnvironment): CompletableFuture<Map<String, Any>?> {
         val completableFuture = CompletableFuture<Map<String, Any>?>()
         var accessToken: String? = null
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
                 val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
                 val devId = user.principal().getString("developer_id")
@@ -1308,7 +1326,7 @@ object SourceService {
     private fun removeLiveInstruments(env: DataFetchingEnvironment): CompletableFuture<List<Map<String, Any>>> {
         val completableFuture = CompletableFuture<List<Map<String, Any>>>()
         var accessToken: String? = null
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
                 val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
                 val devId = user.principal().getString("developer_id")
@@ -1345,7 +1363,7 @@ object SourceService {
     private fun clearLiveInstruments(env: DataFetchingEnvironment): CompletableFuture<Boolean> {
         val completableFuture = CompletableFuture<Boolean>()
         var accessToken: String? = null
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
                 val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
                 val devId = user.principal().getString("developer_id")
@@ -1379,7 +1397,7 @@ object SourceService {
     private fun addLiveBreakpoint(env: DataFetchingEnvironment): CompletableFuture<Map<String, Any>> {
         val completableFuture = CompletableFuture<Map<String, Any>>()
         var accessToken: String? = null
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             val selfId = if (System.getenv("SPP_DISABLE_JWT") != "true") {
                 val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
                 val devId = user.principal().getString("developer_id")
@@ -1446,7 +1464,7 @@ object SourceService {
     private fun addLiveLog(env: DataFetchingEnvironment): CompletableFuture<Map<String, Any>> {
         val completableFuture = CompletableFuture<Map<String, Any>>()
         var accessToken: String? = null
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             val selfId = if (System.getenv("SPP_DISABLE_JWT") != "true") {
                 val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
                 val devId = user.principal().getString("developer_id")
@@ -1518,7 +1536,7 @@ object SourceService {
     private fun addLiveMeter(env: DataFetchingEnvironment): CompletableFuture<Map<String, Any>> {
         val completableFuture = CompletableFuture<Map<String, Any>>()
         var accessToken: String? = null
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             val selfId = if (System.getenv("SPP_DISABLE_JWT") != "true") {
                 val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
                 val devId = user.principal().getString("developer_id")
@@ -1594,7 +1612,7 @@ object SourceService {
     private fun addLiveSpan(env: DataFetchingEnvironment): CompletableFuture<Map<String, Any>> {
         val completableFuture = CompletableFuture<Map<String, Any>>()
         var accessToken: String? = null
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             val selfId = if (System.getenv("SPP_DISABLE_JWT") != "true") {
                 val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
                 val devId = user.principal().getString("developer_id")
@@ -1663,7 +1681,7 @@ object SourceService {
     private fun addLiveViewSubscription(env: DataFetchingEnvironment): CompletableFuture<LiveViewSubscription> {
         val completableFuture = CompletableFuture<LiveViewSubscription>()
         var accessToken: String? = null
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
                 val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
                 val devId = user.principal().getString("developer_id")
@@ -1705,7 +1723,7 @@ object SourceService {
     private fun getLiveViewSubscriptions(env: DataFetchingEnvironment): CompletableFuture<List<LiveViewSubscription>> {
         val completableFuture = CompletableFuture<List<LiveViewSubscription>>()
         var accessToken: String? = null
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
                 val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
                 val devId = user.principal().getString("developer_id")
@@ -1739,7 +1757,7 @@ object SourceService {
     private fun clearLiveViewSubscriptions(env: DataFetchingEnvironment): CompletableFuture<Boolean> {
         val completableFuture = CompletableFuture<Boolean>()
         var accessToken: String? = null
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             if (System.getenv("SPP_DISABLE_JWT") != "true") {
                 val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
                 val devId = user.principal().getString("developer_id")

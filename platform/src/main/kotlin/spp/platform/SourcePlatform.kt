@@ -59,10 +59,7 @@ import io.vertx.servicediscovery.ServiceDiscoveryOptions
 import io.vertx.servicediscovery.Status
 import io.vertx.servicediscovery.impl.DefaultServiceDiscoveryBackend
 import io.vertx.servicediscovery.types.EventBusService
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 import mu.KotlinLogging
 import org.apache.commons.text.StringSubstitutor
 import org.apache.commons.text.lookup.StringLookupFactory
@@ -397,17 +394,7 @@ class SourcePlatform : CoroutineVerticle() {
         }
 
         //S++ Graphql
-        val sppGraphQLHandler = GraphQLHandler.create(SourceService.setupGraphQL(vertx))
-        router.post("/graphql").handler(BodyHandler.create()).handler {
-            if (it.request().getHeader("spp-platform-request") == "true") {
-                sppGraphQLHandler.handle(it)
-            } else {
-                it.reroute("/graphql/skywalking")
-            }
-        }
-        router.post("/graphql/spp").handler(BodyHandler.create()).handler {
-            sppGraphQLHandler.handle(it)
-        }
+        vertx.deployVerticle(SourceService(router))
 
         //Health checks
         val healthChecks = HealthChecks.create(vertx)
