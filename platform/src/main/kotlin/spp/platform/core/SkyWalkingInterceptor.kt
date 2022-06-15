@@ -72,10 +72,16 @@ class SkyWalkingInterceptor(private val router: Router) : CoroutineVerticle() {
             log.trace { Msg.msg("Forwarding SkyWalking request: {}", body) }
 
             launch {
-                val forward = httpClient.request(
-                    RequestOptions().putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
-                        .setMethod(method).setPort(skywalkingPort).setHost(skywalkingHost).setURI("/graphql")
-                ).await()
+                val forward = try {
+                    httpClient.request(
+                        RequestOptions().putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
+                            .setMethod(method).setPort(skywalkingPort).setHost(skywalkingHost).setURI("/graphql")
+                    ).await()
+                } catch (e: Exception) {
+                    log.error(e) { Msg.msg("Failed to forward SkyWalking request: {}", body) }
+                    req.fail(500, e.message)
+                    return@launch
+                }
 
                 val selfId = request.getString("developer_id")
                 val redactions = SourceStorage.getDeveloperDataRedactions(selfId)
