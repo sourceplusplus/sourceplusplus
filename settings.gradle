@@ -11,7 +11,7 @@ pluginManagement {
         id 'io.gitlab.arturbosch.detekt' version "1.20.0" apply false
         id 'com.github.johnrengelman.shadow' version "7.1.2" apply false
         id 'com.palantir.graal' version "0.10.0" apply false
-        id 'com.apollographql.apollo3' version "3.3.1" apply false
+        id 'com.apollographql.apollo3' version "3.3.2" apply false
         id 'org.mikeneck.graalvm-native-image' version "1.4.1" apply false
         id 'com.diffplug.spotless' version '6.7.2' apply false
         id 'com.github.node-gradle.node' version '3.3.0' apply false
