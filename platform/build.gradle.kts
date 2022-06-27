@@ -33,7 +33,7 @@ dependencies {
     implementation(project(":processors:dependencies"))
     implementation(project(":interfaces:booster-ui"))
 
-    implementation("org.kohsuke:github-api:1.306")
+    implementation("org.kohsuke:github-api:1.307")
     implementation("org.jooq:joor:$joorVersion")
     implementation("io.github.microutils:kotlin-logging-jvm:2.1.23")
     implementation("org.apache.commons:commons-lang3:$commonsLang3Version")
