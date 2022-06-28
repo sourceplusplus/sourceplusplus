@@ -52,7 +52,7 @@ curl -O 'https://raw.githubusercontent.com/sourceplusplus/live-platform/master/d
 
 ## Compiling Project
 
-Follow this [document](https://github.com/sourceplusplus/documentation/blob/master/docs/guides/How-to-build.md).
+Follow this [document](https://github.com/sourceplusplus/documentation/blob/master/docs/advanced/development/How-to-build.md).
 
 ## Documentation
 
