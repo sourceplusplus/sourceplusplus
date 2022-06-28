@@ -56,7 +56,7 @@ Follow this [document](https://github.com/sourceplusplus/documentation/blob/mast
 
 ## Documentation
 
-The Source++ documentation is available [here](https://docs.sourceplusplus.com).
+The Source++ documentation is available [here](https://docs.sourceplus.plus).
 
 ## Directory Structure
 ```graphql
