@@ -828,9 +828,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
                 if (it.succeeded()) {
                     it.result().clearAllLiveInstruments(null).onComplete {
                         if (it.succeeded()) {
-                            launch(vertx.dispatcher()) {
-                                completableFuture.complete(SourceStorage.reset())
-                            }
+                            completableFuture.complete(true)
                         } else {
                             completableFuture.completeExceptionally(it.cause())
                         }
