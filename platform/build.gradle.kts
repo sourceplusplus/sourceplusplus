@@ -12,12 +12,10 @@ val platformGroup: String by project
 val projectVersion: String by project
 val jacksonVersion: String by project
 val commonsLang3Version: String by project
-val cliktVersion: String by project
 val bouncycastleVersion: String by project
 val jupiterVersion: String by project
 val commonsIoVersion: String by project
 val logbackVersion: String by project
-val auth0JwtVersion: String by project
 val vertxVersion: String by project
 val joorVersion: String by project
 
@@ -37,7 +35,6 @@ dependencies {
     implementation("org.jooq:joor:$joorVersion")
     implementation("io.github.microutils:kotlin-logging-jvm:2.1.23")
     implementation("org.apache.commons:commons-lang3:$commonsLang3Version")
-    implementation("com.github.ajalt.clikt:clikt:$cliktVersion")
     implementation("ch.qos.logback:logback-classic:$logbackVersion")
     implementation("io.vertx:vertx-service-discovery:$vertxVersion")
     implementation("io.vertx:vertx-service-proxy:$vertxVersion")
@@ -48,8 +45,6 @@ dependencies {
     implementation("io.vertx:vertx-web-graphql:${vertxVersion}")
     implementation("io.vertx:vertx-tcp-eventbus-bridge:$vertxVersion")
     implementation("io.vertx:vertx-web-sstore-redis:$vertxVersion")
-    implementation("com.auth0:java-jwt:$auth0JwtVersion")
-    implementation("com.auth0:jwks-rsa:0.21.1")
     implementation("org.bouncycastle:bcprov-jdk15on:$bouncycastleVersion")
     implementation("org.bouncycastle:bcpkix-jdk15on:$bouncycastleVersion")
     implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
