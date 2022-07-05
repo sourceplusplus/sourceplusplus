@@ -51,26 +51,26 @@ open class PlatformIntegrationTest {
 
     companion object {
         const val SYSTEM_JWT_TOKEN =
-            "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJkZXZlbG9wZXJfaWQiOiJzeXN0ZW0iLCJjcmVhdGVkX2F0IjoxNjU0NTg4MzUwMTg1L" +
-                    "CJleHBpcmVzX2F0IjoxNjg2MTI0MzUwMTg1LCJpYXQiOjE2NTQ1ODgzNTB9.M0vnTwJo9h_cGDqkvPA8cndsSZqjZHOb4Fpsel" +
-                    "xSzOBhQGlJh0xj7SJjfuPSVPKn4rRuZ6UGP5sKr323q62NEaM5T8h9dnXyyGUVxMwMKRvmyqJI36ZHELVy4egtFMGBTuEmExKF" +
-                    "PAtupgQYkjro5ZMI4yRC_KH_YK3YFiCP7tZWPGJGReK2QiErN-ECU-6J3AotK_jvvDFqBFEavW4Si0Far-mK1kNIHqbDbuZoEH" +
-                    "iUAbTyLKJJcCsRm0TZr1qMlfxz2py0iz3_fGuFu8dxLjRX-uyV0qYDpIfPjyV-706dcLjqE3fJ8jI2byrenjDuUGjbNZh9pxV6" +
-                    "ZQh8YeJ77R95N_pcIH20iLkZrRqaqyYCZUNO-v3xDyMhuNUaKqBKCfp8iCOxfjzDzSbgGGHH4KgDEN-0-kSSLZKgerViezCncX" +
-                    "JFBkvtEYOm3ZG53Ubj31buMCjaQniDuDtbrWtFYUcC4rXY31z-cQDqKM44jHf95mAYDcsc8dFL_yjYVMnZtLIXUa5qSiBqL5ZF" +
-                    "5HLHvhK5D9b-TPHltqwg7PzPmv_wYmwSD0_aCQ7ZJsKONVvFDQTvuJGXQ7tsMbjloS6qd_jr1UVajbRXu3shgzWmEPLAC651n0" +
-                    "CgCTKYpWSM5VchWbdZdMrwYTeT9lM7QlnmMRONU97kjlvgQ3wiJyShiHo"
+            "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJkZXZlbG9wZXJfaWQiOiJzeXN0ZW0iLCJjcmVhdGVkX2F0IjoxNjU3MDM5NzAzOTE1L" +
+                    "CJleHBpcmVzX2F0IjoxNjg4NTc1NzAzOTE1LCJpYXQiOjE2NTcwMzk3MDN9.hKxtqnajBWbWxL2nYoVyp9HeyDfIi5XjRRkJtI" +
+                    "wms6JOfWCWO9TG2ghW7nhv2N7c0G6JMGrelWCfXesZ33z0epz4XcJ6s05gV8EXkQjQPKzPQ770w2QHH4IenUKWBn44r0LxteAd" +
+                    "KGVmaheqJ9Gr4hDN2PzzQS5i_WM34N-ucbfUwQ79rUyQaEcDvgywnL8kUSNDlhnYb2gyVMYC5_QxNDusxCUJq6Kas1qHzmg02t" +
+                    "7ToWNzHCGxa7LWJkgx27BMhFSubq8fMUtzP6YWQs4gXLfvVzc3i5VxevJf7dFWw1VsfpW31qfdkmZp89BueaaZpJh236HMnhxM" +
+                    "CwsbCWKaIZgQqGzFL9sZzH-Aav8AM9CRJYpnN0eTl6Bsqbhh2AsS-EycV_O-9NDA4Ac8ImeaGw4kqMwZSVeSMRhSgaWiwmXASL" +
+                    "gNM6LgKVKSAgPXIKrSEPmo9_mFPMwY8uxnu-J0uGmTa1hQEtmblAXBuZbyP1CtOk_Hmydif5K-jFnOne5fyj-Ju5q7uVjz60FH" +
+                    "u5TQSJZX2U6YmpHlRVpDjs8g8EThjta7DSkmCNEPfn0YU_Cx9cSphEQkuZdyu_C8rPGzMDqyziOu1yWZYfFxK5SVMsGjfIOeB4" +
+                    "qEDARssQ8-oREcp52Q4MmmT8d0oN4I4Fm_aa9X-R6dDkeWrFGrzcVEL1o"
 
         const val TEST_JWT_TOKEN =
-            "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJkZXZlbG9wZXJfaWQiOiJ0ZXN0IiwiY3JlYXRlZF9hdCI6MTY1NDU4OTM0NTkwNywiZ" +
-                    "XhwaXJlc19hdCI6MTY4NjEyNTM0NTkwNywiaWF0IjoxNjU0NTg5MzQ1fQ.UXC-Y9puYPyYdct7aZlSSiyscUC0VgZKatEeO35l" +
-                    "kFyORpSGaJRxTS1Sbc6wOysDqIy714adpSKiS34V4WCd385-EF4UNQ2dwvCierCqW1rPgVaaFQKw1bixNolFw1Z7Gz9b_JTySE" +
-                    "X1K3I5qJfZwTHAi00tSRJx6z6mSEddltfHlcc19S14CUDc93-7wfmf8nr33OYojfj3wIjsApdIojqmrJQi40-X5IBA8gYASPNp" +
-                    "geq-ZRBgnCXxuTHD0hj3p1oIy5iYXvmwiw_Vi147cpqQBFS-don2IDwoWu3pw2lzSfP-UIZftgUsaLvRkLfKKxto9HdzV3ZXs3" +
-                    "RjI5cQUxX7TIjiT21BjE8hYK991DdisVwcWZ6fPNU49jQ3-iDcETSaBKJDdthpZP2acdAQ0453Wh0vjRyImN819_4wqgS8zHm1" +
-                    "hstmofxuyCrn7altCmnusg4AAkvdSKEsq-XFqm3Xb30eeCFCq8qxHuufdgbv3cWaHuPhFceET70dzht9cKKzXBKTYL84TXQ_Jm" +
-                    "g0WLIEq87RzuhRVA08LAin7roXpPNy2C5R8kJexakzPGHVsJdkQly9G7YbtEDN-QrjgLeZN9H7IXaFZxooVcW7FqOVzIjW3eVx" +
-                    "FLIa7es6009abAiEU1WPJoRqPO8V4SKv67hVYVhZYTc1lIwndW_7Z4w"
+            "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJkZXZlbG9wZXJfaWQiOiJ0ZXN0IiwiY3JlYXRlZF9hdCI6MTY1NzAzOTc1ODM5MiwiZ" +
+                    "XhwaXJlc19hdCI6MTY4ODU3NTc1ODM5MiwiaWF0IjoxNjU3MDM5NzU4fQ.h-fkoLkMqphwMVeXIz9weXDYe3NgLrIIWYZcEGLD" +
+                    "0DOvjlRGhXVPte2E6o_IJCUWys4g3V4TbT9LCdVTAt9ay8850ivlfAEnL-rOt3gaKxZF0AOxfdBQCb6PODOkHULhEMuM3Cy9oL" +
+                    "g7BRu8dZFoMRdbwWslihsLk9bXDyPCcuNKjdcBr8n_fFfbGUrO0HdWIhGEj7qnujzFbPk2m4CbnMTcgHXxTYma8uaxpa03EU2p" +
+                    "fZbQiauIHATsmvUvtkoGCnR5W0Vpz7M-1qo1JNphEMfxrsa_-8mbCkjG7rEXpWFvWfW6FwObKT3xs5D8jRpAmX0kCyfe9lPZ2e" +
+                    "J-Rdhy95f6LpjJoXkaPLGVQpU_lsPUk8yb410s2dTkY47FzZojTtY6gfl3IHDXnkG8FcaV6qqbTpTyz16rN9CxAynrg-7QsYdr" +
+                    "cZpT8A-6cjHuCJabgFxqKNm7Jfknu_f34q-_rZJpVyeC_2AYDETEB3AwCiWoTAurTAhPF4ZoMbfkie75TTF3Hjhbimw7PnzHg2" +
+                    "WbvSQpHyTR96rII4rjpqtFwC49CmPOCJPxLpEpa5rMW3gbvKa-M1IJRSnKN0rsPF1Yr80LIl4x1w6JZp47_MoYPe0rWNPojnBY" +
+                    "KP-1-SRBc1skSsijxtOWiYoz2UbA9xIDWUrWh6g-wUFa-xE4eAjFKgE"
 
         private val log = LoggerFactory.getLogger(PlatformIntegrationTest::class.java)
         private val INSTANCE_ID = UUID.randomUUID().toString()
