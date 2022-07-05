@@ -15,6 +15,8 @@ ADD ./config/spp-platform.key /skywalking
 
 ADD ./config/ui-initialized-templates /skywalking/config/ui-initialized-templates
 
+ADD config/self.yaml /skywalking/config/fetcher-prom-rules
+
 #RUN mkdir -p /tmp/spp-probe/ca
 #ADD ./config/spp-platform.crt /tmp/spp-probe/ca/ca.crt
 #
