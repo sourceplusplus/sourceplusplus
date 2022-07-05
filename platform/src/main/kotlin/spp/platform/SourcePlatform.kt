@@ -406,7 +406,6 @@ class SourcePlatform : CoroutineVerticle() {
 
         //Open bridges
         val netServerOptions = NetServerOptions()
-            .setTcpKeepAlive(true) //todo: confirm this is needed
             .removeEnabledSecureTransportProtocol("SSLv2Hello")
             .removeEnabledSecureTransportProtocol("TLSv1")
             .removeEnabledSecureTransportProtocol("TLSv1.1")
