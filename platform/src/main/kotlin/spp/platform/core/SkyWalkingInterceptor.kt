@@ -96,9 +96,9 @@ class SkyWalkingInterceptor(private val router: Router) : CoroutineVerticle() {
 
                 val selfId = request.getString("developer_id")
                 val redactions = SourceStorage.getDeveloperDataRedactions(selfId)
-                forward.response().onComplete { resp ->
-                    resp.result().body().onComplete {
-                        val respBody = it.result().toJsonObject()
+                forward.response().onSuccess { resp ->
+                    resp.body().onSuccess {
+                        val respBody = it.toJsonObject()
                         respBody.getJsonObject("data")?.fieldNames()?.forEach {
                             val respObject = respBody.getJsonObject("data").getValue(it)
                             if (operationAliases[it] == "queryTrace" && redactions.isNotEmpty()) {
@@ -108,10 +108,16 @@ class SkyWalkingInterceptor(private val router: Router) : CoroutineVerticle() {
 
                         log.trace { Msg.msg("Forwarding SkyWalking response: {}", respBody.toString()) }
                         val respOb = JsonObject()
-                        respOb.put("status", resp.result().statusCode())
+                        respOb.put("status", resp.statusCode())
                         respOb.put("body", respBody.toString())
                         req.reply(respOb)
+                    }.onFailure {
+                        log.error("Failed to read SkyWalking response body: {}", it.message)
+                        req.fail(500, it.message)
                     }
+                }.onFailure {
+                    log.error("Failed to forward SkyWalking response: {}", it.message)
+                    req.fail(500, it.message)
                 }
 
                 headers?.fieldNames()?.forEach {
