@@ -30,10 +30,9 @@ spp:
     +7VjhiWpBSNeUt7ENX9s2GGs0OjUCAoOFoOENDcZdu7u9hrzUIhHsFGTyL0DQ1lT
     Ip40RbmWHOunjHYEZRbJhB2Mo+hcIMGpARIq3WSYQFZnxBbchqnUnVvvo/bE5yB8
     g6TYnkFuMFHg/LvA7RX1v2Xha5YSEHBBV7V2emBmZc1Tpkk=
+  delete_probe_directory_on_boot: false
 skywalking:
   logging:
     level: "INFO"
   agent:
     service_name: "spp"
-  collector:
-    backend_service: "spp-platform:11800"
