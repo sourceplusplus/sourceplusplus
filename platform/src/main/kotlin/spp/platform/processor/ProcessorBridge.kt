@@ -92,7 +92,6 @@ class ProcessorBridge(
             log.trace { "Establishing connection with processor ${conn.instanceId}" }
 
             activeProcessors[conn.instanceId] = ActiveInstance(conn.instanceId, System.currentTimeMillis(), conn.meta)
-            it.reply(true)
             log.info("Processor connected. Latency: {}ms - Active processors: {}", latency, activeProcessors.size)
 
             launch(vertx.dispatcher()) {
