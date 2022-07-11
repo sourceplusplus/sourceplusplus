@@ -20,7 +20,6 @@ package spp.platform.probe
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper
 import com.google.common.io.Files
-import io.vertx.core.eventbus.ReplyException
 import io.vertx.core.json.JsonObject
 import io.vertx.ext.web.Router
 import io.vertx.ext.web.RoutingContext
@@ -28,7 +27,6 @@ import io.vertx.kotlin.coroutines.CoroutineVerticle
 import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.launch
 import mu.KotlinLogging
-import org.apache.commons.io.FileUtils
 import org.apache.commons.io.IOUtils
 import org.bouncycastle.cert.X509CertificateHolder
 import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter
@@ -37,10 +35,9 @@ import org.bouncycastle.openssl.jcajce.JcaPEMWriter
 import org.kohsuke.github.GitHub
 import org.zeroturnaround.zip.ZipUtil
 import spp.platform.core.SourceStorage
-import spp.platform.probe.config.SourceProbeConfig
-import spp.protocol.platform.PlatformAddress
 import java.io.*
 import java.net.URL
+import java.nio.channels.Channels
 import java.security.cert.X509Certificate
 import java.util.*
 import java.util.zip.ZipEntry
@@ -63,83 +60,67 @@ class ProbeGenerator(private val router: Router) : CoroutineVerticle() {
             }
 
             val token = route.request().getParam("access_token")
+            if (token == null) {
+                route.response().setStatusCode(401).end("Unauthorized")
+                return@handler
+            }
+
             log.info("Probe download request. Verifying access token: {}", token)
             launch(vertx.dispatcher()) {
                 SourceStorage.getDeveloperByAccessToken(token)?.let {
                     doProbeGeneration(route)
-                } ?: route.response().setStatusCode(401).end()
-            }
-        }
-
-        vertx.eventBus().consumer<SourceProbeConfig>(PlatformAddress.GENERATE_PROBE) {
-            var config = it.body()
-            val probeRelease = if (config.probeVersion == "latest") {
-                val probeRelease = githubApi.getRepository("sourceplusplus/probe-jvm").latestRelease
-                config = config.copy(probeVersion = probeRelease.tagName)
-                probeRelease
-            } else {
-                githubApi.getRepository("sourceplusplus/probe-jvm").getReleaseByTagName(config.probeVersion)
-            }
-            if (probeRelease == null) {
-                log.error { "Probe release not found: ${config.probeVersion}" }
-                it.fail(404, "Probe release not found: ${config.probeVersion}")
-                return@consumer
-            }
-
-            val downloadUrl = probeRelease.listAssets()
-                .find { it.name.contains("spp-probe.jar") }!!.browserDownloadUrl
-            val destFile = File(Files.createTempDir(), "spp-probe-${probeRelease.tagName}.jar")
-            FileUtils.copyURLToFile(URL(downloadUrl), destFile)
-            it.reply(generateProbe(destFile, config))
-        }
-
-        //pre-generate default configuration probe
-        launch(vertx.dispatcher()) {
-            val platformHost = System.getenv("SPP_CLUSTER_URL")
-            val platformName = System.getenv("SPP_CLUSTER_NAME")
-            if (!platformHost.isNullOrEmpty() && !platformName.isNullOrEmpty()) {
-                log.debug("Pre-generating default configuration probe")
-                val probeRelease = githubApi.getRepository("sourceplusplus/probe-jvm").latestRelease
-                val downloadUrl = probeRelease.listAssets()
-                    .find { it.name.contains("spp-probe") }!!.browserDownloadUrl
-                val destFile = File(Files.createTempDir(), "spp-probe-${probeRelease.tagName}.jar")
-                FileUtils.copyURLToFile(URL(downloadUrl), destFile)
-
-                val config = SourceProbeConfig(platformHost, platformName, probeVersion = probeRelease.tagName)
-                generateProbe(destFile, config)
-            } else {
-                log.warn("Skipped pre-generating default configuration probe")
+                } ?: route.response().setStatusCode(401).end("Unauthorized")
             }
         }
     }
 
     private fun doProbeGeneration(route: RoutingContext) {
         log.debug("Generating signed probe")
-        val platformHost = System.getenv("SPP_CLUSTER_URL") ?: "localhost"
-        val platformName = System.getenv("SPP_CLUSTER_NAME") ?: "unknown"
-        val probeVersion = route.queryParam("version")
-        val config = if (probeVersion.isNotEmpty()) {
-            SourceProbeConfig(platformHost, platformName, probeVersion = probeVersion[0])
+        val platformHost = route.request().host().substringBefore(":")
+        val platformName = route.request().getParam("service_name")?.toString() ?: "Your_ApplicationName"
+        val probeVersion = route.request().getParam("version")
+        var config = if (!probeVersion.isNullOrEmpty()) {
+            SourceProbeConfig(platformHost, platformName, probeVersion = probeVersion)
         } else {
             SourceProbeConfig(platformHost, platformName, probeVersion = "latest")
         }
 
-        vertx.eventBus().request<JsonObject>(PlatformAddress.GENERATE_PROBE, config) {
-            if (it.succeeded()) {
-                launch(vertx.dispatcher()) {
-                    val genProbe = it.result().body()
-                    route.response().putHeader(
-                        "content-disposition",
-                        "attachment; filename=spp-probe-${genProbe.getString("probe_version")}.jar"
-                    ).sendFile(genProbe.getString("file_location"))
-                    log.info("Signed probe downloaded")
+        val probeRelease = if (config.probeVersion == "latest") {
+            val probeRelease = githubApi.getRepository("sourceplusplus/probe-jvm").latestRelease
+            config = config.copy(probeVersion = probeRelease.tagName)
+            probeRelease
+        } else {
+            githubApi.getRepository("sourceplusplus/probe-jvm").getReleaseByTagName(config.probeVersion)
+        }
+        if (probeRelease == null) {
+            log.error { "Probe release not found: ${config.probeVersion}" }
+            route.response().setStatusCode(404).end("Probe release not found: ${config.probeVersion}")
+            return
+        }
+
+        val downloadUrl = probeRelease.listAssets()
+            .find { it.name.equals("spp-probe-${probeRelease.tagName}.jar") }!!.browserDownloadUrl
+        val destFile = File(Files.createTempDir(), "spp-probe-${probeRelease.tagName}.jar")
+        vertx.executeBlocking<Nothing> {
+            if (generatedProbes[config] == null) {
+                log.info("Downloading probe from: $downloadUrl")
+                Channels.newChannel(URL(downloadUrl).openStream()).use { readableByteChannel ->
+                    FileOutputStream(destFile).use { fileOutputStream ->
+                        fileOutputStream.channel.transferFrom(readableByteChannel, 0, Long.MAX_VALUE)
+                    }
                 }
             } else {
-                log.error("Failed to generate signed probe", it.cause())
-                val replyEx = it.cause() as ReplyException
-                route.response().setStatusCode(replyEx.failureCode())
-                    .end(it.cause().message)
+                log.info("Probe already generated. Using cached probe")
             }
+
+            val genProbe = generateProbe(destFile, config)
+            route.response().putHeader(
+                "content-disposition",
+                "attachment; filename=spp-probe-${genProbe.getString("probe_version")}.jar"
+            ).sendFile(genProbe.getString("file_location"))
+            log.info("Signed probe downloaded")
+
+            it.complete()
         }
     }
 
@@ -175,48 +156,24 @@ class ProbeGenerator(private val router: Router) : CoroutineVerticle() {
             writer.close()
         }
 
-        val jsonObject = JsonObject()
-            .put(
-                "spp", JsonObject()
-                    .put("platform_host", config.platformHost)
-                    .put("platform_port", config.platformPort)
-                    .apply {
-                        if (certificate != null) {
-                            put(
-                                "platform_certificate", crt.toString()
-                                    .replace("-----BEGIN CERTIFICATE-----", "")
-                                    .replace("-----END CERTIFICATE-----", "")
-                                    .replace("\n", "")
-                            )
-                        }
-                    }
-            ).put(
-                "skywalking", JsonObject()
-                    .put(
-                        "logging", JsonObject()
-                            .put("level", "WARN")
-                    )
-                    .put(
-                        "agent", JsonObject()
-                            .put("service_name", config.skywalkingServiceName)
-                            .put("is_cache_enhanced_class", true)
-                            .put("class_cache_mode", "FILE")
-                    )
-                    .put(
-                        "collector", JsonObject()
-                            .put("backend_service", config.skywalkingBackendService)
-                    )
-                    .put(
-                        "plugin", JsonObject()
-                            .put(
-                                "toolkit", JsonObject()
-                                    .put(
-                                        "log", JsonObject()
-                                            .put("transmit_formatted", false)
-                                    )
-                            )
-                    )
+        val minProbeConfig = mutableMapOf<String, MutableMap<Any, Any>>(
+            "spp" to mutableMapOf(
+                "platform_host" to config.platformHost,
+                "platform_port" to config.platformPort
+            ),
+            "skywalking" to mutableMapOf(
+                "agent" to mutableMapOf(
+                    "service_name" to config.skywalkingServiceName,
+                )
             )
+        )
+        if (certificate != null) {
+            minProbeConfig["spp"]!!["platform_certificate"] = crt.toString()
+                .replace("-----BEGIN CERTIFICATE-----", "")
+                .replace("-----END CERTIFICATE-----", "")
+                .replace("\n", "")
+        }
+        val jsonObject = JsonObject.mapFrom(minProbeConfig)
 
         //load build.properties
         val buildProps = Properties()
@@ -296,4 +253,12 @@ class ProbeGenerator(private val router: Router) : CoroutineVerticle() {
         }
         fis.close()
     }
+
+    data class SourceProbeConfig(
+        val platformHost: String,
+        val skywalkingServiceName: String,
+        val skywalkingBackendService: String = "$platformHost:11800",
+        val platformPort: Int = 5450,
+        val probeVersion: String
+    )
 }

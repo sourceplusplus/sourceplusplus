@@ -36,6 +36,8 @@ dependencies {
     implementation("io.github.microutils:kotlin-logging-jvm:2.1.23")
     implementation("org.apache.commons:commons-lang3:$commonsLang3Version")
     implementation("ch.qos.logback:logback-classic:$logbackVersion")
+    implementation("io.vertx:vertx-grpc-server:$vertxVersion")
+    implementation("io.vertx:vertx-grpc-client:$vertxVersion")
     implementation("io.vertx:vertx-service-discovery:$vertxVersion")
     implementation("io.vertx:vertx-service-proxy:$vertxVersion")
     implementation("io.vertx:vertx-health-check:$vertxVersion")

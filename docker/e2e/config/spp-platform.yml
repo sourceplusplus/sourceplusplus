@@ -1,6 +1,12 @@
 spp-platform:
   host: ${SPP_PLATFORM_HOST:-0.0.0.0}
-  port: ${SPP_PLATFORM_PORT:-12800}
+  http:
+    port: ${SPP_HTTP_PORT:-443,12800}
+    ssl_enabled: ${SPP_HTTP_SSL_ENABLED:-true}
+    redirect_to_https: ${SPP_HTTP_REDIRECT_TO_HTTPS:-true}
+  grpc:
+    port: ${SPP_GRPC_PORT:-11800}
+    ssl_enabled: ${SPP_GRPC_SSL_ENABLED:-true}
   access_token: ${SPP_SYSTEM_ACCESS_TOKEN:-change-me}
   logging:
     level: ${SPP_LOGGING_LEVEL:-info}
@@ -58,4 +64,5 @@ storage:
 
 skywalking-oap:
   host: ${SPP_OAP_HOST:-localhost}
-  port: ${SPP_OAP_PORT:-12800}
+  rest_port: ${SPP_OAP_REST_PORT:-12800}
+  grpc_port: ${SPP_OAP_GRPC_PORT:-11800}

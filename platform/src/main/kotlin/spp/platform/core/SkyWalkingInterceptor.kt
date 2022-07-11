@@ -22,19 +22,23 @@ import graphql.language.Field
 import graphql.language.OperationDefinition
 import graphql.language.SelectionSet
 import graphql.parser.Parser
-import io.vertx.core.http.HttpMethod
-import io.vertx.core.http.HttpServerRequest
-import io.vertx.core.http.RequestOptions
+import io.vertx.core.http.*
 import io.vertx.core.json.JsonObject
+import io.vertx.core.net.SocketAddress
 import io.vertx.ext.web.Router
 import io.vertx.ext.web.handler.BodyHandler
+import io.vertx.grpc.client.GrpcClient
+import io.vertx.grpc.server.GrpcServer
 import io.vertx.kotlin.coroutines.CoroutineVerticle
 import io.vertx.kotlin.coroutines.await
 import kotlinx.coroutines.launch
 import mu.KotlinLogging
+import spp.platform.core.util.CertsToJksOptionsConverter
 import spp.platform.core.util.Msg
+import spp.protocol.platform.PlatformAddress.PROCESSOR_CONNECTED
 import spp.protocol.platform.auth.DataRedaction
 import spp.protocol.platform.auth.RedactionType
+import java.io.File
 import java.util.regex.Pattern
 
 class SkyWalkingInterceptor(private val router: Router) : CoroutineVerticle() {
@@ -44,8 +48,15 @@ class SkyWalkingInterceptor(private val router: Router) : CoroutineVerticle() {
     }
 
     override suspend fun start() {
-        val skywalkingHost = config.getJsonObject("skywalking-oap").getString("host")
-        val skywalkingPort = config.getJsonObject("skywalking-oap").getString("port").toInt()
+        //start grpc proxy once SkyWalking is available
+        val processorConnectedConsumer = vertx.eventBus().consumer<JsonObject>(PROCESSOR_CONNECTED)
+        processorConnectedConsumer.handler {
+            processorConnectedConsumer.unregister()
+            startGrpcProxy()
+        }
+
+        val swHost = config.getJsonObject("skywalking-oap").getString("host")
+        val swRestPort = config.getJsonObject("skywalking-oap").getString("rest_port").toInt()
         val httpClient = vertx.createHttpClient()
         vertx.eventBus().consumer<JsonObject>("skywalking-forwarder") { req ->
             val request = req.body()
@@ -75,7 +86,7 @@ class SkyWalkingInterceptor(private val router: Router) : CoroutineVerticle() {
                 val forward = try {
                     httpClient.request(
                         RequestOptions().putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
-                            .setMethod(method).setPort(skywalkingPort).setHost(skywalkingHost).setURI("/graphql")
+                            .setMethod(method).setPort(swRestPort).setHost(swHost).setURI("/graphql")
                     ).await()
                 } catch (e: Exception) {
                     log.error(e) { Msg.msg("Failed to forward SkyWalking request: {}", body) }
@@ -121,6 +132,65 @@ class SkyWalkingInterceptor(private val router: Router) : CoroutineVerticle() {
                 }
             }
             forwardSkyWalkingRequest(req.bodyAsString, req.request(), selfId)
+        }
+    }
+
+    private fun startGrpcProxy() {
+        val grpcConfig = config.getJsonObject("spp-platform").getJsonObject("grpc")
+        val sslEnabled = grpcConfig.getString("ssl_enabled").toBooleanStrict()
+        val options = HttpServerOptions()
+            .setSsl(sslEnabled)
+            .setUseAlpn(true)
+            .apply {
+                if (sslEnabled) {
+                    val keyFile = File("config/spp-platform.key")
+                    val certFile = File("config/spp-platform.crt")
+                    val jksOptions = CertsToJksOptionsConverter(
+                        certFile.absolutePath, keyFile.absolutePath
+                    ).createJksOptions()
+                    setKeyStoreOptions(jksOptions)
+                }
+            }
+        val grpcServer = GrpcServer.server(vertx)
+        val server = vertx.createHttpServer(options)
+        val sppGrpcPort = grpcConfig.getString("port").toInt()
+        server.requestHandler(grpcServer).listen(sppGrpcPort)
+        log.info("SkyWalking gRPC proxy started. Listening on port: {}", sppGrpcPort)
+
+        val swHost = config.getJsonObject("skywalking-oap").getString("host")
+        val swGrpcPort = config.getJsonObject("skywalking-oap").getString("grpc_port").toInt()
+        val http2Client = HttpClientOptions()
+            .setUseAlpn(true)
+            .setVerifyHost(false)
+            .setTrustAll(true)
+            .setDefaultHost(swHost)
+            .setDefaultPort(swGrpcPort)
+            .setSsl(sslEnabled)
+            .setHttp2ClearTextUpgrade(false)
+        val grpcClient = GrpcClient.client(vertx, http2Client)
+        val skywalkingGrpcServer = SocketAddress.inetSocketAddress(swGrpcPort, swHost)
+
+        grpcServer.callHandler { req ->
+            log.trace { "Proxying gRPC call: ${req.fullMethodName()}" }
+            req.messageHandler { msg ->
+                log.trace { "Received stream message. Bytes: ${msg.payload().bytes.size}" }
+                grpcClient.request(skywalkingGrpcServer).onSuccess {
+                    val grpcRequest = it
+                        .serviceName(req.serviceName())
+                        .methodName(req.methodName().substring(1))
+                    grpcRequest.endMessage(msg)
+                    grpcRequest.response().onSuccess {
+                        log.trace { "Piping response. Status: ${it.status()}" }
+                        it.pipeTo(req.response())
+                    }.onFailure {
+                        log.error("Failed to send response: ${it.message}")
+                        req.response().end()
+                    }
+                }.onFailure {
+                    log.error("Failed to send message: ${it}")
+                    req.response().end()
+                }
+            }
         }
     }
 

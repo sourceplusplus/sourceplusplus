@@ -97,7 +97,6 @@ import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.*
 import javax.crypto.Cipher
-import kotlin.collections.set
 import kotlin.system.exitProcess
 
 class SourcePlatform : CoroutineVerticle() {
@@ -276,12 +275,8 @@ class SourcePlatform : CoroutineVerticle() {
 
         val keyFile = File("config/spp-platform.key")
         val certFile = File("config/spp-platform.crt")
-        if ("true".equals(System.getenv("SPP_DISABLE_TLS"), true)) {
-            if ("true".equals(System.getenv("SPP_DISABLE_JWT"), true)) {
-                log.warn("Skipped generating security certificates")
-            } else if (keyFile.exists() && certFile.exists()) {
-                log.info("Using existing security certificates")
-            }
+        if ("true".equals(System.getenv("SPP_DISABLE_JWT"), true)) {
+            log.warn("JWT disabled. Skipped generating security certificates")
         } else if (!keyFile.exists() || !certFile.exists()) {
             generateSecurityCertificates(keyFile, certFile)
         } else {
@@ -406,6 +401,36 @@ class SourcePlatform : CoroutineVerticle() {
         router["/stats"].handler(this::getStats)
         router["/clients"].handler(this::getClients)
 
+        val httpConfig = config.getJsonObject("spp-platform").getJsonObject("http")
+        val sslEnabled = httpConfig.getString("ssl_enabled").toBooleanStrict()
+
+        //Open bridges
+        val netServerOptions = NetServerOptions()
+            .removeEnabledSecureTransportProtocol("SSLv2Hello")
+            .removeEnabledSecureTransportProtocol("TLSv1")
+            .removeEnabledSecureTransportProtocol("TLSv1.1")
+            .setSsl(sslEnabled)
+            .apply {
+                if (sslEnabled) {
+                    pemKeyCertOptions = PemKeyCertOptions()
+                        .setKeyValue(Buffer.buffer(keyFile.readText()))
+                        .setCertValue(Buffer.buffer(certFile.readText()))
+                }
+            }
+
+        vertx.deployVerticle(
+            ProbeBridge(router, jwt, netServerOptions),
+            DeploymentOptions().setConfig(config.getJsonObject("spp-platform").getJsonObject("probe"))
+        ).await()
+        vertx.deployVerticle(
+            MarkerBridge(jwt, netServerOptions),
+            DeploymentOptions().setConfig(config.getJsonObject("spp-platform").getJsonObject("marker"))
+        ).await()
+        vertx.deployVerticle(
+            ProcessorBridge(healthChecks, jwt, netServerOptions),
+            DeploymentOptions().setConfig(config.getJsonObject("spp-platform").getJsonObject("processor"))
+        ).await()
+
         //Setup dashboard
         setupDashboard(SessionHandler.create(sessionStore), router)
 
@@ -445,33 +470,6 @@ class SourcePlatform : CoroutineVerticle() {
             }
         }
 
-        val netServerOptions = NetServerOptions()
-            .removeEnabledSecureTransportProtocol("SSLv2Hello")
-            .removeEnabledSecureTransportProtocol("TLSv1")
-            .removeEnabledSecureTransportProtocol("TLSv1.1")
-            .setSsl(System.getenv("SPP_DISABLE_TLS") != "true")
-            .apply {
-                if (System.getenv("SPP_DISABLE_TLS") != "true") {
-                    pemKeyCertOptions = PemKeyCertOptions()
-                        .setKeyValue(Buffer.buffer(keyFile.readText()))
-                        .setCertValue(Buffer.buffer(certFile.readText()))
-                }
-            }
-
-        //Open bridges
-        vertx.deployVerticle(
-            ProbeBridge(router, jwt, netServerOptions),
-            DeploymentOptions().setConfig(config.getJsonObject("spp-platform").getJsonObject("probe"))
-        ).await()
-        vertx.deployVerticle(
-            MarkerBridge(jwt, netServerOptions),
-            DeploymentOptions().setConfig(config.getJsonObject("spp-platform").getJsonObject("marker"))
-        ).await()
-        vertx.deployVerticle(
-            ProcessorBridge(healthChecks, jwt, netServerOptions),
-            DeploymentOptions().setConfig(config.getJsonObject("spp-platform").getJsonObject("processor"))
-        ).await()
-
         //Start services
         vertx.deployVerticle(
             ServiceProvider(jwt), DeploymentOptions().setConfig(config.put("SPP_INSTANCE_ID", SPP_INSTANCE_ID))
@@ -482,23 +480,42 @@ class SourcePlatform : CoroutineVerticle() {
             SkyWalkingInterceptor(router), DeploymentOptions().setConfig(config)
         ).await()
 
-        log.debug("Starting API server")
-        if (System.getenv("SPP_DISABLE_TLS") == "true") {
+        if (sslEnabled) {
+            log.debug("Starting HTTPS server(s)")
+        } else {
             log.warn("TLS protocol disabled")
+            log.debug("Starting HTTP server(s)")
         }
+        val httpPorts = httpConfig.getString("port").split(",").map { it.toInt() }
 
-        val httpPort = vertx.sharedData().getLocalMap<String, Int>("spp.core")
-            .getOrDefault("http.port", config.getJsonObject("spp-platform").getString("port").toInt())
-        val httpOptions = HttpServerOptions().setSsl(System.getenv("SPP_DISABLE_TLS") != "true")
-        if (System.getenv("SPP_DISABLE_TLS") != "true") {
+        val httpOptions = HttpServerOptions().setSsl(sslEnabled)
+        if (sslEnabled) {
             val jksOptions = CertsToJksOptionsConverter(certFile.absolutePath, keyFile.absolutePath).createJksOptions()
             httpOptions.setKeyStoreOptions(jksOptions)
         }
-        val server = vertx.createHttpServer(httpOptions)
-            .requestHandler(router)
-            .listen(httpPort, config.getJsonObject("spp-platform").getString("host")).await()
-        vertx.sharedData().getLocalMap<String, Int>("spp.core")["http.port"] = server.actualPort()
-        log.info("API server started. Port: {}", server.actualPort())
+        httpPorts.forEach { httpPort ->
+            val server = vertx.createHttpServer(httpOptions)
+                .requestHandler(router)
+                .listen(httpPort).await()
+            if (sslEnabled) {
+                log.info("HTTPS server started. Port: {}", server.actualPort())
+            } else {
+                log.info("HTTP server started. Port: {}", server.actualPort())
+            }
+        }
+
+        if (sslEnabled && httpConfig.getString("redirect_to_https").toBooleanStrict()) {
+            val redirectServer = vertx.createHttpServer().requestHandler {
+                val redirectUrl = if (httpPorts.contains(443)) {
+                    "https://${it.host()}${it.uri()}"
+                } else {
+                    "https://${it.host()}:${httpPorts.first()}${it.uri()}"
+                }
+                log.trace { "Redirecting HTTP to $redirectUrl" }
+                it.response().putHeader("Location", redirectUrl).setStatusCode(302).end()
+            }.listen(80).await()
+            log.debug("HTTP redirect server started. Port: {}", redirectServer.actualPort())
+        }
         log.debug("Source++ Platform initialized")
     }
 
