@@ -11,10 +11,12 @@ services:
     hostname: spp-platform
     ports:
       - "5107:5107"
-      - "80:80"
-      - "443:443"
+      - "5450:5450"
+      - "5455:5455"
       - "11800:11800"
       - "12800:12800"
+      - "443:443"
+      - "80:80"
     build:
       context: .
       dockerfile: Dockerfile-spp-platform
