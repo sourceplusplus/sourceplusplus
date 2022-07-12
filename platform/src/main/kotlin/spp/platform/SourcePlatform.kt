@@ -273,10 +273,15 @@ class SourcePlatform : CoroutineVerticle() {
     override suspend fun start() {
         log.info("Initializing Source++ Platform")
 
+        val httpConfig = config.getJsonObject("spp-platform").getJsonObject("http")
+        val sslEnabled = httpConfig.getString("ssl_enabled").toBooleanStrict()
+        val jwtConfig = config.getJsonObject("spp-platform").getJsonObject("jwt")
+        val jwtEnabled = jwtConfig.getString("enabled").toBooleanStrict()
+
         val keyFile = File("config/spp-platform.key")
         val certFile = File("config/spp-platform.crt")
-        if ("true".equals(System.getenv("SPP_DISABLE_JWT"), true)) {
-            log.warn("JWT disabled. Skipped generating security certificates")
+        if (!sslEnabled && !jwtEnabled) {
+            log.warn("Skipped generating security certificates")
         } else if (!keyFile.exists() || !certFile.exists()) {
             generateSecurityCertificates(keyFile, certFile)
         } else {
@@ -284,12 +289,9 @@ class SourcePlatform : CoroutineVerticle() {
         }
 
         val jwt: JWTAuth?
-        if ("true".equals(System.getenv("SPP_DISABLE_JWT"), true)) {
+        if (!jwtEnabled) {
             jwt = null
         } else {
-            if (!keyFile.exists() || !certFile.exists()) {
-                generateSecurityCertificates(keyFile, certFile)
-            }
             val keyPair = PEMParser(StringReader(keyFile.readText())).use {
                 JcaPEMKeyConverter().getKeyPair(it.readObject() as PEMKeyPair)
             }
@@ -325,7 +327,7 @@ class SourcePlatform : CoroutineVerticle() {
         }
 
         router["/api/new-token"].handler { ctx: RoutingContext ->
-            if ("true".equals(System.getenv("SPP_DISABLE_JWT"), true)) {
+            if (!jwtEnabled) {
                 log.debug("Skipped generating JWT token. Reason: JWT authentication disabled")
                 ctx.response().setStatusCode(202).end()
                 return@handler
@@ -379,7 +381,7 @@ class SourcePlatform : CoroutineVerticle() {
         }
 
         //Setup JWT
-        if (System.getenv("SPP_DISABLE_JWT") != "true") {
+        if (jwtEnabled) {
             val jwtAuthHandler = JWTAuthHandler.create(jwt)
             router.post("/graphql").handler(jwtAuthHandler)
             router.post("/graphql/skywalking").handler(jwtAuthHandler)
@@ -392,7 +394,7 @@ class SourcePlatform : CoroutineVerticle() {
         }
 
         //S++ Graphql
-        vertx.deployVerticle(SourceService(router))
+        vertx.deployVerticle(SourceService(router), DeploymentOptions().setConfig(config.getJsonObject("spp-platform")))
 
         //Health checks
         val healthChecks = HealthChecks.create(vertx)
@@ -400,9 +402,6 @@ class SourcePlatform : CoroutineVerticle() {
         router["/health"].handler(HealthCheckHandler.createWithHealthChecks(healthChecks))
         router["/stats"].handler(this::getStats)
         router["/clients"].handler(this::getClients)
-
-        val httpConfig = config.getJsonObject("spp-platform").getJsonObject("http")
-        val sslEnabled = httpConfig.getString("ssl_enabled").toBooleanStrict()
 
         //Open bridges
         val netServerOptions = NetServerOptions()
@@ -420,7 +419,7 @@ class SourcePlatform : CoroutineVerticle() {
 
         vertx.deployVerticle(
             ProbeBridge(router, jwt, netServerOptions),
-            DeploymentOptions().setConfig(config.getJsonObject("spp-platform").getJsonObject("probe"))
+            DeploymentOptions().setConfig(config.getJsonObject("spp-platform"))
         ).await()
         vertx.deployVerticle(
             MarkerBridge(jwt, netServerOptions),
@@ -548,7 +547,9 @@ class SourcePlatform : CoroutineVerticle() {
     private fun getClients(ctx: RoutingContext) {
         var selfId = ctx.user()?.principal()?.getString("developer_id")
         if (selfId == null) {
-            if (System.getenv("SPP_DISABLE_JWT") != "true") {
+            val jwtConfig = config.getJsonObject("spp-platform").getJsonObject("jwt")
+            val jwtEnabled = jwtConfig.getString("enabled").toBooleanStrict()
+            if (jwtEnabled) {
                 ctx.response().setStatusCode(500).end("Missing self id")
                 return
             } else {
@@ -573,7 +574,9 @@ class SourcePlatform : CoroutineVerticle() {
         var selfId = ctx.user()?.principal()?.getString("developer_id")
         val accessToken: String? = ctx.user()?.principal()?.getString("access_token")
         if (selfId == null) {
-            if (System.getenv("SPP_DISABLE_JWT") != "true") {
+            val jwtConfig = config.getJsonObject("spp-platform").getJsonObject("jwt")
+            val jwtEnabled = jwtConfig.getString("enabled").toBooleanStrict()
+            if (jwtEnabled) {
                 ctx.response().setStatusCode(500).end("Missing self id")
                 return
             } else {

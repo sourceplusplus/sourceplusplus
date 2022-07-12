@@ -54,7 +54,8 @@ class ProbeGenerator(private val router: Router) : CoroutineVerticle() {
 
     override suspend fun start() {
         router["/download/spp-probe"].handler { route ->
-            if (System.getenv("SPP_DISABLE_JWT") == "true") {
+            val jwtEnabled = config.getJsonObject("jwt").getString("enabled").toBooleanStrict()
+            if (!jwtEnabled) {
                 doProbeGeneration(route)
                 return@handler
             }
@@ -145,7 +146,7 @@ class ProbeGenerator(private val router: Router) : CoroutineVerticle() {
         return cache
     }
 
-    private fun generateProbe(baseProbe: File, config: SourceProbeConfig, certificate: X509Certificate?): File {
+    private fun generateProbe(baseProbe: File, probeConfig: SourceProbeConfig, certificate: X509Certificate?): File {
         val tempDir = Files.createTempDir()
         unzip(baseProbe, tempDir)
 
@@ -158,12 +159,12 @@ class ProbeGenerator(private val router: Router) : CoroutineVerticle() {
 
         val minProbeConfig = mutableMapOf<String, MutableMap<Any, Any>>(
             "spp" to mutableMapOf(
-                "platform_host" to config.platformHost,
-                "platform_port" to config.platformPort
+                "platform_host" to probeConfig.platformHost,
+                "platform_port" to probeConfig.platformPort
             ),
             "skywalking" to mutableMapOf(
                 "agent" to mutableMapOf(
-                    "service_name" to config.skywalkingServiceName,
+                    "service_name" to probeConfig.skywalkingServiceName,
                 )
             )
         )
@@ -179,7 +180,8 @@ class ProbeGenerator(private val router: Router) : CoroutineVerticle() {
         val buildProps = Properties()
         buildProps.load(FileReader(File(tempDir, "build.properties")))
 
-        if (System.getenv("SPP_DISABLE_JWT") != "true") {
+        val jwtEnabled = config.getJsonObject("jwt").getString("enabled").toBooleanStrict()
+        if (jwtEnabled) {
             //add ca.crt
             val archiveZip = File(tempDir, "skywalking-agent-${buildProps["apache_skywalking_version"]}.zip")
             File(tempDir, "ca.crt").writeText(crt.toString())
@@ -190,18 +192,18 @@ class ProbeGenerator(private val router: Router) : CoroutineVerticle() {
         val yamlStr = yamlMapper.writeValueAsString(objectMapper.readTree(jsonObject.toString()))
         File(tempDir, "spp-probe.yml").writeText(yamlStr.substring(yamlStr.indexOf("\n") + 1))
 
-        val fos = FileOutputStream(File(tempDir, "spp-probe-${config.probeVersion}.jar"))
+        val fos = FileOutputStream(File(tempDir, "spp-probe-${probeConfig.probeVersion}.jar"))
         val zipOut = ZipOutputStream(fos)
         for (childFile in File(tempDir.absolutePath).listFiles()) {
             zipFile(
                 childFile, childFile.name, zipOut,
-                setOf("spp-probe-${config.probeVersion}.jar", "ca.crt")
+                setOf("spp-probe-${probeConfig.probeVersion}.jar", "ca.crt")
             )
         }
         zipOut.close()
         fos.close()
 
-        return File(tempDir.absolutePath + "/spp-probe-${config.probeVersion}.jar")
+        return File(tempDir.absolutePath + "/spp-probe-${probeConfig.probeVersion}.jar")
     }
 
     private fun unzip(archive: File, tempDir: File) {

@@ -35,12 +35,15 @@ object SourceStorage {
     suspend fun setup(storage: CoreStorage, config: JsonObject) {
         this.storage = storage
 
+        val jwtConfig = config.getJsonObject("spp-platform").getJsonObject("jwt")
+        val accessToken = jwtConfig.getString("access_token")
+
         //todo: if clustered, check if defaults are already set
-        systemAccessToken = if (config.getJsonObject("spp-platform").getString("access_token").isNullOrEmpty()) {
+        systemAccessToken = if (accessToken.isNullOrEmpty()) {
             log.warn("No system access token provided. Using default: {}", "change-me")
             "change-me"
         } else {
-            config.getJsonObject("spp-platform").getString("access_token")
+            accessToken
         }
 
         val piiRedaction = config.getJsonObject("spp-platform").getJsonObject("pii-redaction")
