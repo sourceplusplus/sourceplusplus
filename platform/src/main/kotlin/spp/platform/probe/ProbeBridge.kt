@@ -17,6 +17,7 @@
  */
 package spp.platform.probe
 
+import io.vertx.core.DeploymentOptions
 import io.vertx.core.Vertx
 import io.vertx.core.eventbus.DeliveryOptions
 import io.vertx.core.json.Json
@@ -69,7 +70,7 @@ class ProbeBridge(
     private val activeProbes: MutableMap<String, ActiveInstance> = ConcurrentHashMap()
 
     override suspend fun start() {
-        vertx.deployVerticle(ProbeGenerator(router)).await()
+        vertx.deployVerticle(ProbeGenerator(router), DeploymentOptions().setConfig(config)).await()
 
         vertx.eventBus().consumer<JsonObject>(activeProbesAddress) {
             launch(vertx.dispatcher()) {
@@ -184,6 +185,6 @@ class ProbeBridge(
                 }
             }
             it.complete(true) //todo: validateAuth(it)
-        }.listen(config.getString("bridge_port").toInt()).await()
+        }.listen(config.getJsonObject("probe").getString("bridge_port").toInt()).await()
     }
 }

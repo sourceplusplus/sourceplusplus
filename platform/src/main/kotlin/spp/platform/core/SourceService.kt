@@ -61,12 +61,16 @@ import spp.protocol.view.LiveViewConfig
 import spp.protocol.view.LiveViewSubscription
 import java.util.*
 import java.util.concurrent.CompletableFuture
+import kotlin.properties.Delegates
 
 class SourceService(private val router: Router) : CoroutineVerticle() {
 
     private val log = LoggerFactory.getLogger(SourceService::class.java)
+    private var jwtEnabled by Delegates.notNull<Boolean>()
 
     override suspend fun start() {
+        jwtEnabled = config.getJsonObject("jwt").getString("enabled").toBooleanStrict()
+
         val graphql = vertx.executeBlocking<GraphQL> {
             it.complete(setupGraphQL())
         }.await()
@@ -296,7 +300,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
     private fun getAccessPermissions(env: DataFetchingEnvironment): CompletableFuture<List<AccessPermission>> {
         val completableFuture = CompletableFuture<List<AccessPermission>>()
         launch(vertx.dispatcher()) {
-            if (System.getenv("SPP_DISABLE_JWT") != "true") {
+            if (jwtEnabled) {
                 val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(selfId, GET_ACCESS_PERMISSIONS)) {
@@ -312,7 +316,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
     private fun getAccessPermission(env: DataFetchingEnvironment): CompletableFuture<AccessPermission> {
         val completableFuture = CompletableFuture<AccessPermission>()
         launch(vertx.dispatcher()) {
-            if (System.getenv("SPP_DISABLE_JWT") != "true") {
+            if (jwtEnabled) {
                 val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(selfId, GET_ACCESS_PERMISSIONS)) {
@@ -334,7 +338,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
     private fun getRoleAccessPermissions(env: DataFetchingEnvironment): CompletableFuture<List<AccessPermission>> {
         val completableFuture = CompletableFuture<List<AccessPermission>>()
         launch(vertx.dispatcher()) {
-            if (System.getenv("SPP_DISABLE_JWT") != "true") {
+            if (jwtEnabled) {
                 val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(selfId, GET_ACCESS_PERMISSIONS)) {
@@ -357,7 +361,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
     private fun getDeveloperAccessPermissions(env: DataFetchingEnvironment): CompletableFuture<List<AccessPermission>> {
         val completableFuture = CompletableFuture<List<AccessPermission>>()
         launch(vertx.dispatcher()) {
-            if (System.getenv("SPP_DISABLE_JWT") != "true") {
+            if (jwtEnabled) {
                 val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(selfId, GET_ACCESS_PERMISSIONS)) {
@@ -379,7 +383,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
     private fun getDataRedactions(env: DataFetchingEnvironment): CompletableFuture<List<DataRedaction>> {
         val completableFuture = CompletableFuture<List<DataRedaction>>()
         launch(vertx.dispatcher()) {
-            if (System.getenv("SPP_DISABLE_JWT") != "true") {
+            if (jwtEnabled) {
                 val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(selfId, GET_DATA_REDACTIONS)) {
@@ -395,7 +399,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
     private fun getDataRedaction(env: DataFetchingEnvironment): CompletableFuture<DataRedaction> {
         val completableFuture = CompletableFuture<DataRedaction>()
         launch(vertx.dispatcher()) {
-            if (System.getenv("SPP_DISABLE_JWT") != "true") {
+            if (jwtEnabled) {
                 val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(selfId, GET_DATA_REDACTIONS)) {
@@ -417,7 +421,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
     private fun getRoleDataRedactions(env: DataFetchingEnvironment): CompletableFuture<List<DataRedaction>> {
         val completableFuture = CompletableFuture<List<DataRedaction>>()
         launch(vertx.dispatcher()) {
-            if (System.getenv("SPP_DISABLE_JWT") != "true") {
+            if (jwtEnabled) {
                 val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(selfId, GET_DATA_REDACTIONS)) {
@@ -440,7 +444,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
     private fun getDeveloperDataRedactions(env: DataFetchingEnvironment): CompletableFuture<List<DataRedaction>> {
         val completableFuture = CompletableFuture<List<DataRedaction>>()
         launch(vertx.dispatcher()) {
-            if (System.getenv("SPP_DISABLE_JWT") != "true") {
+            if (jwtEnabled) {
                 val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(selfId, GET_DATA_REDACTIONS)) {
@@ -462,7 +466,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
     private fun getRoles(env: DataFetchingEnvironment): CompletableFuture<List<DeveloperRole>> {
         val completableFuture = CompletableFuture<List<DeveloperRole>>()
         launch(vertx.dispatcher()) {
-            if (System.getenv("SPP_DISABLE_JWT") != "true") {
+            if (jwtEnabled) {
                 val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(selfId, GET_ROLES)) {
@@ -479,7 +483,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
         val completableFuture = CompletableFuture<List<RolePermission>>()
         launch(vertx.dispatcher()) {
             val role = env.getArgument<String>("role")
-            if (System.getenv("SPP_DISABLE_JWT") != "true") {
+            if (jwtEnabled) {
                 val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(selfId, GET_ROLE_PERMISSIONS)) {
@@ -501,7 +505,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
         val completableFuture = CompletableFuture<List<DeveloperRole>>()
         launch(vertx.dispatcher()) {
             val id = env.getArgument<String>("id").lowercase().replace(" ", "")
-            if (System.getenv("SPP_DISABLE_JWT") != "true") {
+            if (jwtEnabled) {
                 val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(selfId, GET_DEVELOPER_ROLES)) {
@@ -523,7 +527,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
         val completableFuture = CompletableFuture<List<RolePermission>>()
         launch(vertx.dispatcher()) {
             val id = env.getArgument<String>("id").lowercase().replace(" ", "")
-            if (System.getenv("SPP_DISABLE_JWT") != "true") {
+            if (jwtEnabled) {
                 val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(selfId, GET_DEVELOPER_PERMISSIONS)) {
@@ -544,7 +548,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
     private fun getDevelopers(env: DataFetchingEnvironment): CompletableFuture<List<Developer>> {
         val completableFuture = CompletableFuture<List<Developer>>()
         launch(vertx.dispatcher()) {
-            if (System.getenv("SPP_DISABLE_JWT") != "true") {
+            if (jwtEnabled) {
                 val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(selfId, GET_DEVELOPERS)) {
@@ -561,7 +565,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
     private fun getSelf(env: DataFetchingEnvironment): CompletableFuture<SelfInfo> {
         val completableFuture = CompletableFuture<SelfInfo>()
         var accessToken: String? = null
-        if (System.getenv("SPP_DISABLE_JWT") != "true") {
+        if (jwtEnabled) {
             val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
             accessToken = user.principal().getString("access_token")
         }
@@ -588,7 +592,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
     private fun getServices(env: DataFetchingEnvironment): CompletableFuture<List<Service>> {
         val completableFuture = CompletableFuture<List<Service>>()
         var accessToken: String? = null
-        if (System.getenv("SPP_DISABLE_JWT") != "true") {
+        if (jwtEnabled) {
             val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
             accessToken = user.principal().getString("access_token")
         }
@@ -615,7 +619,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
     private fun refreshDeveloperToken(env: DataFetchingEnvironment): CompletableFuture<Developer> {
         val completableFuture = CompletableFuture<Developer>()
         launch(vertx.dispatcher()) {
-            if (System.getenv("SPP_DISABLE_JWT") != "true") {
+            if (jwtEnabled) {
                 val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(selfId, REFRESH_DEVELOPER_TOKEN)) {
@@ -640,7 +644,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
         val completableFuture = CompletableFuture<List<Map<String, Any>>>()
         var accessToken: String? = null
         launch(vertx.dispatcher()) {
-            if (System.getenv("SPP_DISABLE_JWT") != "true") {
+            if (jwtEnabled) {
                 val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
                 val devId = user.principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(devId, GET_LIVE_INSTRUMENTS)) {
@@ -674,7 +678,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
         val completableFuture = CompletableFuture<List<Map<String, Any>>>()
         var accessToken: String? = null
         launch(vertx.dispatcher()) {
-            if (System.getenv("SPP_DISABLE_JWT") != "true") {
+            if (jwtEnabled) {
                 val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
                 val devId = user.principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(devId, GET_LIVE_BREAKPOINTS)) {
@@ -708,7 +712,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
         val completableFuture = CompletableFuture<List<Map<String, Any>>>()
         var accessToken: String? = null
         launch(vertx.dispatcher()) {
-            if (System.getenv("SPP_DISABLE_JWT") != "true") {
+            if (jwtEnabled) {
                 val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
                 val devId = user.principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(devId, GET_LIVE_LOGS)) {
@@ -742,7 +746,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
         val completableFuture = CompletableFuture<List<Map<String, Any>>>()
         var accessToken: String? = null
         launch(vertx.dispatcher()) {
-            if (System.getenv("SPP_DISABLE_JWT") != "true") {
+            if (jwtEnabled) {
                 val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
                 val devId = user.principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(devId, GET_LIVE_METERS)) {
@@ -776,7 +780,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
         val completableFuture = CompletableFuture<List<Map<String, Any>>>()
         var accessToken: String? = null
         launch(vertx.dispatcher()) {
-            if (System.getenv("SPP_DISABLE_JWT") != "true") {
+            if (jwtEnabled) {
                 val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
                 val devId = user.principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(devId, GET_LIVE_SPANS)) {
@@ -810,7 +814,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
         val completableFuture = CompletableFuture<Boolean>()
         var accessToken: String? = null
         launch(vertx.dispatcher()) {
-            if (System.getenv("SPP_DISABLE_JWT") != "true") {
+            if (jwtEnabled) {
                 val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
                 val devId = user.principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(devId, RESET)) {
@@ -845,7 +849,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
     private fun addDataRedaction(env: DataFetchingEnvironment): CompletableFuture<DataRedaction> {
         val completableFuture = CompletableFuture<DataRedaction>()
         launch(vertx.dispatcher()) {
-            if (System.getenv("SPP_DISABLE_JWT") != "true") {
+            if (jwtEnabled) {
                 val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(selfId, UPDATE_DATA_REDACTION)) {
@@ -867,7 +871,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
     private fun updateDataRedaction(env: DataFetchingEnvironment): CompletableFuture<DataRedaction> {
         val completableFuture = CompletableFuture<DataRedaction>()
         launch(vertx.dispatcher()) {
-            if (System.getenv("SPP_DISABLE_JWT") != "true") {
+            if (jwtEnabled) {
                 val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(selfId, UPDATE_DATA_REDACTION)) {
@@ -893,7 +897,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
     private fun removeDataRedaction(env: DataFetchingEnvironment): CompletableFuture<Boolean> {
         val completableFuture = CompletableFuture<Boolean>()
         launch(vertx.dispatcher()) {
-            if (System.getenv("SPP_DISABLE_JWT") != "true") {
+            if (jwtEnabled) {
                 val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(selfId, UPDATE_DATA_REDACTION)) {
@@ -916,7 +920,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
     private fun addRoleDataRedaction(env: DataFetchingEnvironment): CompletableFuture<Boolean> {
         val completableFuture = CompletableFuture<Boolean>()
         launch(vertx.dispatcher()) {
-            if (System.getenv("SPP_DISABLE_JWT") != "true") {
+            if (jwtEnabled) {
                 val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(selfId, UPDATE_DATA_REDACTION)) {
@@ -942,7 +946,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
     private fun removeRoleDataRedaction(env: DataFetchingEnvironment): CompletableFuture<Boolean> {
         val completableFuture = CompletableFuture<Boolean>()
         launch(vertx.dispatcher()) {
-            if (System.getenv("SPP_DISABLE_JWT") != "true") {
+            if (jwtEnabled) {
                 val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(selfId, UPDATE_DATA_REDACTION)) {
@@ -968,7 +972,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
     private fun addAccessPermission(env: DataFetchingEnvironment): CompletableFuture<AccessPermission> {
         val completableFuture = CompletableFuture<AccessPermission>()
         launch(vertx.dispatcher()) {
-            if (System.getenv("SPP_DISABLE_JWT") != "true") {
+            if (jwtEnabled) {
                 val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(selfId, ADD_ACCESS_PERMISSION)) {
@@ -989,7 +993,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
     private fun removeAccessPermission(env: DataFetchingEnvironment): CompletableFuture<Boolean> {
         val completableFuture = CompletableFuture<Boolean>()
         launch(vertx.dispatcher()) {
-            if (System.getenv("SPP_DISABLE_JWT") != "true") {
+            if (jwtEnabled) {
                 val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(selfId, REMOVE_ACCESS_PERMISSION)) {
@@ -1012,7 +1016,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
     private fun addRoleAccessPermission(env: DataFetchingEnvironment): CompletableFuture<Boolean> {
         val completableFuture = CompletableFuture<Boolean>()
         launch(vertx.dispatcher()) {
-            if (System.getenv("SPP_DISABLE_JWT") != "true") {
+            if (jwtEnabled) {
                 val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(selfId, ADD_ACCESS_PERMISSION)) {
@@ -1038,7 +1042,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
     private fun removeRoleAccessPermission(env: DataFetchingEnvironment): CompletableFuture<Boolean> {
         val completableFuture = CompletableFuture<Boolean>()
         launch(vertx.dispatcher()) {
-            if (System.getenv("SPP_DISABLE_JWT") != "true") {
+            if (jwtEnabled) {
                 val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(selfId, REMOVE_ACCESS_PERMISSION)) {
@@ -1064,7 +1068,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
     private fun addRole(env: DataFetchingEnvironment): CompletableFuture<Boolean> {
         val completableFuture = CompletableFuture<Boolean>()
         launch(vertx.dispatcher()) {
-            if (System.getenv("SPP_DISABLE_JWT") != "true") {
+            if (jwtEnabled) {
                 val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(selfId, ADD_ROLE)) {
@@ -1086,7 +1090,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
     private fun removeRole(env: DataFetchingEnvironment): CompletableFuture<Boolean> {
         val completableFuture = CompletableFuture<Boolean>()
         launch(vertx.dispatcher()) {
-            if (System.getenv("SPP_DISABLE_JWT") != "true") {
+            if (jwtEnabled) {
                 val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(selfId, REMOVE_ROLE)) {
@@ -1113,7 +1117,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
     private fun addRolePermission(env: DataFetchingEnvironment): CompletableFuture<Boolean> {
         val completableFuture = CompletableFuture<Boolean>()
         launch(vertx.dispatcher()) {
-            if (System.getenv("SPP_DISABLE_JWT") != "true") {
+            if (jwtEnabled) {
                 val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(selfId, ADD_ROLE_PERMISSION)) {
@@ -1150,7 +1154,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
     private fun removeRolePermission(env: DataFetchingEnvironment): CompletableFuture<Boolean> {
         val completableFuture = CompletableFuture<Boolean>()
         launch(vertx.dispatcher()) {
-            if (System.getenv("SPP_DISABLE_JWT") != "true") {
+            if (jwtEnabled) {
                 val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(selfId, REMOVE_ROLE_PERMISSION)) {
@@ -1187,7 +1191,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
     private fun addDeveloperRole(env: DataFetchingEnvironment): CompletableFuture<Boolean> {
         val completableFuture = CompletableFuture<Boolean>()
         launch(vertx.dispatcher()) {
-            if (System.getenv("SPP_DISABLE_JWT") != "true") {
+            if (jwtEnabled) {
                 val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(selfId, ADD_DEVELOPER_ROLE)) {
@@ -1213,7 +1217,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
     private fun removeDeveloperRole(env: DataFetchingEnvironment): CompletableFuture<Boolean> {
         val completableFuture = CompletableFuture<Boolean>()
         launch(vertx.dispatcher()) {
-            if (System.getenv("SPP_DISABLE_JWT") != "true") {
+            if (jwtEnabled) {
                 val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(selfId, REMOVE_DEVELOPER_ROLE)) {
@@ -1239,7 +1243,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
     private fun addDeveloper(env: DataFetchingEnvironment): CompletableFuture<Developer> {
         val completableFuture = CompletableFuture<Developer>()
         launch(vertx.dispatcher()) {
-            if (System.getenv("SPP_DISABLE_JWT") != "true") {
+            if (jwtEnabled) {
                 val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(selfId, ADD_DEVELOPER)) {
@@ -1261,7 +1265,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
     private fun removeDeveloper(env: DataFetchingEnvironment): CompletableFuture<Boolean> {
         val completableFuture = CompletableFuture<Boolean>()
         launch(vertx.dispatcher()) {
-            if (System.getenv("SPP_DISABLE_JWT") != "true") {
+            if (jwtEnabled) {
                 val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(selfId, REMOVE_DEVELOPER)) {
@@ -1288,7 +1292,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
         val completableFuture = CompletableFuture<Map<String, Any>?>()
         var accessToken: String? = null
         launch(vertx.dispatcher()) {
-            if (System.getenv("SPP_DISABLE_JWT") != "true") {
+            if (jwtEnabled) {
                 val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
                 val devId = user.principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(devId, REMOVE_LIVE_INSTRUMENT)) {
@@ -1325,7 +1329,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
         val completableFuture = CompletableFuture<List<Map<String, Any>>>()
         var accessToken: String? = null
         launch(vertx.dispatcher()) {
-            if (System.getenv("SPP_DISABLE_JWT") != "true") {
+            if (jwtEnabled) {
                 val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
                 val devId = user.principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(devId, REMOVE_LIVE_INSTRUMENT)) {
@@ -1362,7 +1366,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
         val completableFuture = CompletableFuture<Boolean>()
         var accessToken: String? = null
         launch(vertx.dispatcher()) {
-            if (System.getenv("SPP_DISABLE_JWT") != "true") {
+            if (jwtEnabled) {
                 val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
                 val devId = user.principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(devId, REMOVE_LIVE_INSTRUMENT)) {
@@ -1396,7 +1400,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
         val completableFuture = CompletableFuture<Map<String, Any>>()
         var accessToken: String? = null
         launch(vertx.dispatcher()) {
-            val selfId = if (System.getenv("SPP_DISABLE_JWT") != "true") {
+            val selfId = if (jwtEnabled) {
                 val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
                 val devId = user.principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(devId, ADD_LIVE_BREAKPOINT)) {
@@ -1463,7 +1467,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
         val completableFuture = CompletableFuture<Map<String, Any>>()
         var accessToken: String? = null
         launch(vertx.dispatcher()) {
-            val selfId = if (System.getenv("SPP_DISABLE_JWT") != "true") {
+            val selfId = if (jwtEnabled) {
                 val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
                 val devId = user.principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(devId, ADD_LIVE_LOG)) {
@@ -1535,7 +1539,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
         val completableFuture = CompletableFuture<Map<String, Any>>()
         var accessToken: String? = null
         launch(vertx.dispatcher()) {
-            val selfId = if (System.getenv("SPP_DISABLE_JWT") != "true") {
+            val selfId = if (jwtEnabled) {
                 val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
                 val devId = user.principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(devId, ADD_LIVE_METER)) {
@@ -1611,7 +1615,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
         val completableFuture = CompletableFuture<Map<String, Any>>()
         var accessToken: String? = null
         launch(vertx.dispatcher()) {
-            val selfId = if (System.getenv("SPP_DISABLE_JWT") != "true") {
+            val selfId = if (jwtEnabled) {
                 val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
                 val devId = user.principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(devId, ADD_LIVE_SPAN)) {
@@ -1680,7 +1684,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
         val completableFuture = CompletableFuture<LiveViewSubscription>()
         var accessToken: String? = null
         launch(vertx.dispatcher()) {
-            if (System.getenv("SPP_DISABLE_JWT") != "true") {
+            if (jwtEnabled) {
                 val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
                 val devId = user.principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(devId, ADD_LIVE_VIEW_SUBSCRIPTION)) {
@@ -1722,7 +1726,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
         val completableFuture = CompletableFuture<List<LiveViewSubscription>>()
         var accessToken: String? = null
         launch(vertx.dispatcher()) {
-            if (System.getenv("SPP_DISABLE_JWT") != "true") {
+            if (jwtEnabled) {
                 val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
                 val devId = user.principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(devId, GET_LIVE_VIEW_SUBSCRIPTIONS)) {
@@ -1756,7 +1760,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
         val completableFuture = CompletableFuture<Boolean>()
         var accessToken: String? = null
         launch(vertx.dispatcher()) {
-            if (System.getenv("SPP_DISABLE_JWT") != "true") {
+            if (jwtEnabled) {
                 val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
                 val devId = user.principal().getString("developer_id")
                 if (!SourceStorage.hasPermission(devId, REMOVE_LIVE_VIEW_SUBSCRIPTION)) {
