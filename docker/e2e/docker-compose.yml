@@ -21,7 +21,7 @@ services:
       context: .
       dockerfile: Dockerfile-spp-platform
     environment:
-      - SPP_LOGGING_LEVEL=trace
+      - SPP_LOGGING_LEVEL=debug
       - SPP_OAP_HOST=skywalking-oap
       - JAVA_OPTS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5107
   skywalking-oap:
