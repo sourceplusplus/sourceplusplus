@@ -26,7 +26,7 @@ import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import spp.platform.core.storage.RedisStorage
+import spp.platform.storage.RedisStorage
 import spp.protocol.platform.auth.DeveloperRole
 import spp.protocol.platform.auth.RedactionType
 

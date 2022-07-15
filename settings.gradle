@@ -32,6 +32,7 @@ include 'interfaces:jetbrains:monitor'
 include 'interfaces:jetbrains:plugin'
 include 'interfaces:booster-ui'
 include 'platform'
+include 'platform:storage'
 include 'protocol'
 
 include ':probes:jvm:control'

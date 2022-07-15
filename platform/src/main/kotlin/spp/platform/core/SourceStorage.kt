@@ -20,7 +20,7 @@ package spp.platform.core
 import io.vertx.core.json.JsonObject
 import org.apache.commons.lang3.RandomStringUtils
 import org.slf4j.LoggerFactory
-import spp.platform.core.storage.CoreStorage
+import spp.platform.storage.CoreStorage
 import spp.protocol.platform.auth.*
 import spp.protocol.platform.developer.Developer
 
