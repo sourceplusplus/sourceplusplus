@@ -77,13 +77,13 @@ import spp.platform.core.SkyWalkingInterceptor
 import spp.platform.core.SourceService
 import spp.platform.core.SourceStorage
 import spp.platform.core.service.ServiceProvider
-import spp.platform.core.storage.MemoryStorage
-import spp.platform.core.storage.RedisStorage
 import spp.platform.core.util.CertsToJksOptionsConverter
 import spp.platform.marker.MarkerBridge
 import spp.platform.probe.ProbeBridge
 import spp.platform.probe.util.SelfSignedCertGenerator
 import spp.platform.processor.ProcessorBridge
+import spp.platform.storage.MemoryStorage
+import spp.platform.storage.RedisStorage
 import spp.protocol.SourceServices.Utilize
 import spp.protocol.marshall.LocalMessageCodec
 import spp.protocol.platform.ProbeAddress.LIVE_INSTRUMENT_REMOTE

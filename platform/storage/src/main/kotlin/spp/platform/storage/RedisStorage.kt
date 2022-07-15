@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package spp.platform.core.storage
+package spp.platform.storage
 
 import io.vertx.core.Vertx
 import io.vertx.core.json.Json
@@ -23,8 +23,6 @@ import io.vertx.core.json.JsonObject
 import io.vertx.kotlin.coroutines.await
 import io.vertx.redis.client.Redis
 import io.vertx.redis.client.RedisAPI
-import io.vertx.redis.client.impl.RedisClient
-import spp.platform.core.SourceStorage
 import spp.protocol.marshall.ProtocolMarshaller
 import spp.protocol.platform.auth.*
 import spp.protocol.platform.developer.Developer
@@ -79,7 +77,7 @@ class RedisStorage : CoreStorage {
         redis.set(listOf("developers:access_tokens:$token", id)).await()
         redis.sadd(listOf("developers:access_tokens", token)).await()
         redis.set(listOf("developers:ids:$id:access_token", token)).await()
-        SourceStorage.addRoleToDeveloper(id, DeveloperRole.ROLE_USER)
+        addRoleToDeveloper(id, DeveloperRole.ROLE_USER)
         return Developer(id, token)
     }
 

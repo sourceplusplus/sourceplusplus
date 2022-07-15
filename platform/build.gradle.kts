@@ -27,6 +27,7 @@ repositories {
 }
 
 dependencies {
+    implementation(project("storage"))
     implementation(project(":protocol"))
     implementation(project(":processors:dependencies"))
     implementation(project(":interfaces:booster-ui"))
