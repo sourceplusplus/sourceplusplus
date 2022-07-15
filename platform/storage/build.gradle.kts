@@ -12,6 +12,17 @@ group = platformGroup
 version = project.properties["platformVersion"] as String? ?: projectVersion
 
 configure<PublishingExtension> {
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/sourceplusplus/live-platform")
+            credentials {
+                username = System.getenv("GH_PUBLISH_USERNAME")?.toString()
+                password = System.getenv("GH_PUBLISH_TOKEN")?.toString()
+            }
+        }
+    }
+
     publishing {
         publications {
             create<MavenPublication>("maven") {
