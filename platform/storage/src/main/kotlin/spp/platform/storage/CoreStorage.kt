@@ -55,4 +55,6 @@ interface CoreStorage {
     suspend fun addPermissionToRole(role: DeveloperRole, permission: RolePermission)
     suspend fun removePermissionFromRole(role: DeveloperRole, permission: RolePermission)
     suspend fun getRolePermissions(role: DeveloperRole): Set<RolePermission>
+
+    suspend fun namespace(location: String): String = location
 }
