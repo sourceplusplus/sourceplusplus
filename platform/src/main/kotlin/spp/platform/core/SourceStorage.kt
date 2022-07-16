@@ -62,7 +62,7 @@ object SourceStorage {
         installDefaults()
     }
 
-    private suspend fun installDefaults() {
+    suspend fun installDefaults() {
         //set default roles and permissions
         addRole(DeveloperRole.ROLE_MANAGER.roleName)
         addRole(DeveloperRole.ROLE_USER.roleName)
