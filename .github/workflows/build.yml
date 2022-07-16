@@ -86,6 +86,15 @@ jobs:
           name: spp-processors.zip
           path: ./spp-processors.zip
 
+      - name: Remove Old Snapshot Packages
+        if: github.ref == 'refs/heads/master'
+        uses: smartsquaregmbh/delete-old-packages@v0.4.0
+        with:
+          keep: 0
+          version-pattern: "^\\d+\\.\\d+\\.\\d+-SNAPSHOT$"
+          names: |
+            plus.sourceplus.platform.platform-storage 
+
       - name: Publish New Snapshot Packages
         if: github.ref == 'refs/heads/master'
         run: ./gradlew -p platform publish -Dbuild.profile=release
