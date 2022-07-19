@@ -78,7 +78,7 @@ jobs:
           path: ./dist/spp-platform-${{ env.SPP_RELEASE_VERSION }}.tar.gz
 
       - name: Zip S++ processors
-        run: find docker/e2e -name 'spp-processor-*' | zip -j spp-processors.zip -@
+        run: find docker/e2e -name 'spp-live-*' | zip -j spp-processors.zip -@
 
       - name: Upload S++ processors
         uses: actions/upload-artifact@v2
