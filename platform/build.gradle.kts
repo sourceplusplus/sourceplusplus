@@ -58,7 +58,7 @@ subprojects {
         implementation("org.bouncycastle:bcprov-jdk15on:$bouncycastleVersion")
         implementation("org.bouncycastle:bcpkix-jdk15on:$bouncycastleVersion")
 
-        implementation(files("/home/brandon/IdeaProjects/vertx-cluster/vertx-redis-clustermanager-0.0.1-local.jar"))
+        implementation(files(File(rootDir, ".ext/vertx-redis-clustermanager-0.0.1-local.jar")))
         implementation("org.redisson:redisson:3.17.3")
 
         implementation("org.jooq:joor:$joorVersion")

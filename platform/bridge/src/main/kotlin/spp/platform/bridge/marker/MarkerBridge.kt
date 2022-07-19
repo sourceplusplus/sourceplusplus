@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package spp.platform.marker
+package spp.platform.bridge.marker
 
 import io.vertx.core.Vertx
 import io.vertx.core.json.Json
@@ -30,7 +30,7 @@ import io.vertx.kotlin.coroutines.await
 import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.launch
 import mu.KotlinLogging
-import spp.platform.InstanceBridge
+import spp.platform.bridge.InstanceBridge
 import spp.platform.common.DeveloperAuth
 import spp.protocol.SourceServices.Provide
 import spp.protocol.SourceServices.Utilize

@@ -27,7 +27,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
 import spp.platform.storage.SourceStorage
-import spp.platform.probe.ProbeBridge
+import spp.platform.bridge.probe.ProbeBridge
 import spp.platform.common.DeveloperAuth
 import spp.protocol.platform.developer.Developer
 import spp.protocol.platform.developer.SelfInfo

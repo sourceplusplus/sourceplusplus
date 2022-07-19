@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package spp.platform.probe.util
+package spp.platform.bridge.probe.util
 
 import org.bouncycastle.asn1.oiw.OIWObjectIdentifiers
 import org.bouncycastle.asn1.x500.X500Name

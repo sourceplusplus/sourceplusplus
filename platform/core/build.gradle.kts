@@ -42,7 +42,6 @@ dependencies {
     implementation(project(":platform:bridge"))
     implementation(project(":platform:storage"))
     implementation(project(":platform:common"))
-    implementation(files("/home/brandon/IdeaProjects/vertx-cluster/vertx-redis-clustermanager-0.0.1-local.jar"))
 }
 
 //todo: shouldn't need to put in src (github actions needs for some reason)

@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package spp.platform.probe
+package spp.platform.bridge.probe
 
 import io.vertx.core.DeploymentOptions
 import io.vertx.core.Vertx
@@ -34,8 +34,8 @@ import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import mu.KotlinLogging
-import spp.platform.InstanceBridge
-import spp.platform.probe.util.Msg
+import spp.platform.bridge.InstanceBridge
+import spp.platform.bridge.probe.util.Msg
 import spp.protocol.platform.PlatformAddress
 import spp.protocol.platform.ProbeAddress
 import spp.protocol.platform.ProcessorAddress

@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package spp.platform
+package spp.platform.bridge
 
 import io.vertx.core.AsyncResult
 import io.vertx.core.Future

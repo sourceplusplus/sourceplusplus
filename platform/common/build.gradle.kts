@@ -33,7 +33,3 @@ configure<PublishingExtension> {
         }
     }
 }
-
-dependencies {
-    implementation(files("/home/brandon/IdeaProjects/vertx-cluster/vertx-redis-clustermanager-0.0.1-local.jar"))
-}
