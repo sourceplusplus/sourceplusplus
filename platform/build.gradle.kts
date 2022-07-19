@@ -57,6 +57,7 @@ subprojects {
         implementation("org.kohsuke:github-api:1.307")
         implementation("org.bouncycastle:bcprov-jdk15on:$bouncycastleVersion")
         implementation("org.bouncycastle:bcpkix-jdk15on:$bouncycastleVersion")
+        implementation("org.apache.logging.log4j:log4j-core:2.11.0")
 
         implementation(files(File(rootDir, ".ext/vertx-redis-clustermanager-0.0.1-local.jar")))
         implementation("org.redisson:redisson:3.17.3")

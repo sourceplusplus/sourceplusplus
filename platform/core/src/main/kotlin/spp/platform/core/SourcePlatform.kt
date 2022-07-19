@@ -90,28 +90,6 @@ import kotlin.system.exitProcess
 class SourcePlatform : CoroutineVerticle() {
 
     companion object {
-//        private var USE_DEFAULT_LOGGING_CONFIGURATION = true
-
-//        init {
-//            if (File("config/logback.xml").exists()) {
-//                USE_DEFAULT_LOGGING_CONFIGURATION = false
-////                System.setProperty("logback.configurationFile", File("config/logback.xml").absoluteFile.absolutePath)
-////                val context = LoggerFactory.getILoggerFactory() as LoggerContext
-////                try {
-////                    val configurator = ch.qos.logback.classic.joran.JoranConfigurator()
-////                    configurator.context = context
-////                    context.reset()
-////                    configurator.doConfigure(File("config/logback.xml"))
-////                } catch (ex: ch.qos.logback.core.joran.spi.JoranException) {
-////                    ex.printStackTrace()
-////                }
-////                LoggerFactory.getLogger(SourcePlatform::class.java)
-////                    .trace("Set logging via {}", File("config/logback.xml"))
-//            } else {
-//                LoggerFactory.getLogger(SourcePlatform::class.java).trace("Using default logging configuration")
-//            }
-//        }
-
         private val log = KotlinLogging.logger {}
         private val SPP_INSTANCE_ID = UUID.randomUUID().toString()
 
@@ -126,52 +104,6 @@ class SourcePlatform : CoroutineVerticle() {
         }
 
         lateinit var discovery: ServiceDiscovery
-
-//        @JvmStatic
-//        fun main(args: Array<String>) {
-//            val sppConfig = JsonObject(
-//                StringSubstitutor(StringLookupFactory.INSTANCE.environmentVariableStringLookup()).replace(
-//                    ObjectMapper().writeValueAsString(
-//                        YAMLMapper().readValue(File("config/spp-platform.yml"), Object::class.java)
-//                    )
-//                )
-//            )
-//
-////            if (USE_DEFAULT_LOGGING_CONFIGURATION) {
-////                val loggerContext = LoggerFactory.getILoggerFactory() as LoggerContext
-////                loggerContext.loggerList.filter { it.name.startsWith("spp") }.forEach {
-////                    it.level = Level.toLevel(
-////                        sppConfig.getJsonObject("spp-platform").getJsonObject("logging").getString("level")
-////                    )
-////                }
-////            }
-//            log.info("Booting Source++ Platform [v${BUILD.getString("build_version")}]")
-//            log.trace { "Build id: " + BUILD.getString("build_id") }
-//            log.trace { "Build date: " + BUILD.getString("build_date") }
-//            log.trace { "Using configuration: " + sppConfig.encode() }
-//
-//            runBlocking {
-//                try {
-//                    val scheme = "redis"
-//                    val host = "redis"// "127.0.0.1"
-//                    val port = "6379"
-//                    val defaultAddress = "$scheme://$host:$port"
-//                    val clusterManager = RedisClusterManager(
-//                        RedisConfig()
-//                            .setKeyNamespace("cluster")
-//                            .addEndpoint(defaultAddress)
-//                    )
-//                    val options = VertxOptions().setClusterManager(clusterManager)
-//                    val vertx = Vertx.clusteredVertx(options).await()
-//
-//                    vertx.eventBus().registerDefaultCodec(ArrayList::class.java, LocalMessageCodec())
-//                    vertx.deployVerticle(SourcePlatform(), DeploymentOptions().setConfig(sppConfig)).await()
-//                } catch (ex: Throwable) {
-//                    ex.printStackTrace()
-//                    exitProcess(-1)
-//                }
-//            }
-//        }
 
         fun addServiceCheck(checks: HealthChecks, serviceName: String) {
             val registeredName = "services/${serviceName.replace(".", "/")}"

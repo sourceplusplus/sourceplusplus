@@ -29,6 +29,8 @@ import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import org.apache.commons.text.StringSubstitutor
 import org.apache.commons.text.lookup.StringLookupFactory
+import org.apache.logging.log4j.Level
+import org.apache.logging.log4j.core.config.Configurator
 import java.io.File
 import java.util.*
 
@@ -51,6 +53,14 @@ object ClusterConnection {
                     )
                 )
 
+                Configurator.setLevel(
+                    "spp",
+                    Level.getLevel(
+                        config.getJsonObject("spp-platform")
+                            .getJsonObject("logging")
+                            .getString("level").uppercase()
+                    )
+                )
                 log.info("Booting Source++ Platform [v${BUILD.getString("build_version")}]")
                 log.trace { "Build id: " + BUILD.getString("build_id") }
                 log.trace { "Build date: " + BUILD.getString("build_date") }
