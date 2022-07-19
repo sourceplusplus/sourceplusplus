@@ -33,7 +33,7 @@ open class RedisStorage : CoreStorage {
     lateinit var redisClient: Redis
     lateinit var redis: RedisAPI
 
-    suspend fun init(vertx: Vertx, config: JsonObject) {
+    override suspend fun init(vertx: Vertx, config: JsonObject) {
         val sdHost = config.getString("host")
         val sdPort = config.getString("port")
         redisClient = Redis.createClient(vertx, "redis://$sdHost:$sdPort")
@@ -77,7 +77,6 @@ open class RedisStorage : CoreStorage {
         redis.set(listOf(namespace("developers:access_tokens:$token"), id)).await()
         redis.sadd(listOf(namespace("developers:access_tokens"), token)).await()
         redis.set(listOf(namespace("developers:ids:$id:access_token"), token)).await()
-        addRoleToDeveloper(id, DeveloperRole.ROLE_USER)
         return Developer(id, token)
     }
 

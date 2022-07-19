@@ -1,22 +1,35 @@
-FROM openjdk:11-jre
+FROM apache/skywalking-oap-server:9.1.0
 
-RUN mkdir /opt/sourceplusplus
-WORKDIR /opt/sourceplusplus
+ADD ./log4j2.xml /skywalking/config/log4j2.xml
 
-RUN mkdir /opt/sourceplusplus/config
-ADD ./config /opt/sourceplusplus/config
+#ADD ./spp-skywalking-banyandb-plugin-0.5.5-SNAPSHOT.jar /skywalking/ext-libs/
 
-ADD ./spp-platform-*.jar /opt/sourceplusplus
+#ADD ./spp-banyandb.yml .
+#RUN sed -i '/\SW_STORAGE:h2}/r spp-banyandb.yml' /skywalking/config/application.yml
 
-RUN mkdir -p /tmp/spp-probe/ca
-ADD ./config/spp-platform.crt /tmp/spp-probe/ca/ca.crt
+ADD ./spp-platform-*.jar /skywalking/oap-libs/
+ADD ./spp-live-*.jar /skywalking/oap-libs/
 
-ADD ./spp-probe.yml /tmp/spp-probe
-ADD ./spp-probe-*.jar /tmp/spp-probe/spp-probe.jar
+RUN printf "\nspp-live-core:\n  selector: \${SPP_LIVE_CORE:default}\n  default:\n" \
+    >> /skywalking/config/application.yml
 
-ENV SPP_DELETE_PROBE_DIRECTORY_ON_BOOT=false
+RUN printf "\nspp-live-instrument:\n  selector: \${SPP_LIVE_INSTRUMENT:default}\n  default:\n" \
+    >> /skywalking/config/application.yml
 
-ARG JAVA_OPTS
-ENV JAVA_OPTS=$JAVA_OPTS
+RUN printf "\nexporter:\n  selector: exporter\n  exporter:\n" \
+    >> /skywalking/config/application.yml
 
-CMD java ${JAVA_OPTS} -jar /opt/sourceplusplus/spp-platform-*.jar
+ADD ./config/spp-platform.crt /skywalking/config/
+ADD ./config/spp-platform.key /skywalking/config/
+ADD ./config/spp-platform.yml /skywalking/config/
+
+ADD ./config/ui-initialized-templates /skywalking/config/ui-initialized-templates
+ADD ./config/self.yaml /skywalking/config/fetcher-prom-rules
+
+ENV SW_CORE_GRPC_SSL_ENABLED=true
+ENV SW_CORE_GRPC_SSL_KEY_PATH=/skywalking/config/spp-platform.key
+ENV SW_CORE_GRPC_SSL_CERT_CHAIN_PATH=/skywalking/config/spp-platform.crt
+ENV SW_CORE_GRPC_SSL_TRUSTED_CA_PATH=/skywalking/config/spp-platform.crt
+ENV SW_RECEIVER_GRPC_SSL_ENABLED=true
+ENV SW_RECEIVER_GRPC_SSL_KEY_PATH=/skywalking/config/spp-platform.key
+ENV SW_RECEIVER_GRPC_SSL_CERT_CHAIN_PATH=/skywalking/config/spp-platform.crt

@@ -5,15 +5,12 @@ services:
     container_name: spp-platform
     hostname: spp-platform
     ports:
+      - "5450:5450"
+      - "5455:5455"
+      - "11800:11800"
       - "12800:12800"
+      - "443:443"
+      - "80:80"
     environment:
-      - SPP_HTTP_SSL_ENABLED=false
       - SPP_JWT_ENABLED=false
-  skywalking-oap:
-    image: sourceplusplus/spp-oap-server:latest
-    container_name: skywalking-oap
-    hostname: skywalking-oap
-    environment:
-      - SPP_PLATFORM_HOST=spp-platform
-      - SPP_PLATFORM_PORT=5460
       - SPP_HTTP_SSL_ENABLED=false

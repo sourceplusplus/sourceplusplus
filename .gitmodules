@@ -13,15 +13,6 @@
 [submodule "interfaces/jetbrains"]
 	path = interfaces/jetbrains
 	url = https://github.com/sourceplusplus/interface-jetbrains
-[submodule "processors/live-instrument"]
-	path = processors/live-instrument
-	url = https://github.com/sourceplusplus/processor-live-instrument
-[submodule "processors/live-view"]
-	path = processors/live-view
-	url = https://github.com/sourceplusplus/processor-live-view
-[submodule "processors/dependencies"]
-	path = processors/dependencies
-	url = https://github.com/sourceplusplus/processor-dependencies
 [submodule "docker/e2e/example-web-app"]
 	path = docker/e2e/example-web-app
 	url = https://github.com/sourceplusplus/example-web-app

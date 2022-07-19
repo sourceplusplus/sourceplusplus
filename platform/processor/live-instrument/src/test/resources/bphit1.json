@@ -1,0 +1,42 @@
+{
+  "breakpoint_id": "2afa1448-a7ec-404b-a357-445d9a421120",
+  "trace_id": "caf5f960d69b4337adf37ecd077b8456.88.16227616236020001",
+  "stack_trace": "java.lang.Throwable\nat spp.example.webapp.model.User.doThing(User.java:52)\nat spp.example.webapp.service.UserServiceImpl.createUser$original$jq3b8lCG(UserServiceImpl.java:54)\nat spp.example.webapp.service.UserServiceImpl.createUser$original$jq3b8lCG$accessor$AhktiAyc(UserServiceImpl.java)\nat spp.example.webapp.service.UserServiceImpl$auxiliary$5GbXqvUh.call(Unknown Source)\nat org.apache.skywalking.apm.agent.core.plugin.interceptor.enhance.InstMethodsInter.intercept(InstMethodsInter.java:86)\nat spp.example.webapp.service.UserServiceImpl.createUser(UserServiceImpl.java)\nat spp.example.webapp.controller.WebappController.createUser$original$y3xOcVfA(WebappController.java:45)\nat spp.example.webapp.controller.WebappController.createUser$original$y3xOcVfA$accessor$CLvt2ebi(WebappController.java)\nat spp.example.webapp.controller.WebappController$auxiliary$IDg2Rrjc.call(Unknown Source)\nat org.apache.skywalking.apm.agent.core.plugin.interceptor.enhance.InstMethodsInter.intercept(InstMethodsInter.java:86)\nat spp.example.webapp.controller.WebappController.createUser(WebappController.java)\nat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\nat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)\nat java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\nat java.base/java.lang.reflect.Method.invoke(Method.java:566)\nat org.springframework.web.method.support.InvocableHandlerMethod.doInvoke(InvocableHandlerMethod.java:190)\nat org.springframework.web.method.support.InvocableHandlerMethod.invokeForRequest(InvocableHandlerMethod.java:138)\nat org.springframework.web.servlet.mvc.method.annotation.ServletInvocableHandlerMethod.invokeAndHandle(ServletInvocableHandlerMethod.java:106)\nat org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.invokeHandlerMethod(RequestMappingHandlerAdapter.java:888)\nat org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.handleInternal(RequestMappingHandlerAdapter.java:793)\nat org.springframework.web.servlet.mvc.method.AbstractHandlerMethodAdapter.handle(AbstractHandlerMethodAdapter.java:87)\nat org.springframework.web.servlet.DispatcherServlet.doDispatch(DispatcherServlet.java:1040)\nat org.springframework.web.servlet.DispatcherServlet.doService(DispatcherServlet.java:943)\nat org.springframework.web.servlet.FrameworkServlet.processRequest(FrameworkServlet.java:1006)\nat org.springframework.web.servlet.FrameworkServlet.doPost(FrameworkServlet.java:909)\nat javax.servlet.http.HttpServlet.service(HttpServlet.java:660)\nat org.springframework.web.servlet.FrameworkServlet.service(FrameworkServlet.java:883)\nat javax.servlet.http.HttpServlet.service(HttpServlet.java:741)\nat org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:231)\nat org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:166)\nat org.apache.tomcat.websocket.server.WsFilter.doFilter(WsFilter.java:53)\nat org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:193)\nat org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:166)\nat org.springframework.web.filter.RequestContextFilter.doFilterInternal(RequestContextFilter.java:100)\nat org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:119)\nat org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:193)\nat org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:166)\nat org.springframework.web.filter.FormContentFilter.doFilterInternal(FormContentFilter.java:93)\nat org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:119)\nat org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:193)\nat org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:166)\n",
+  "variables": [
+    {
+      "scope": "LOCAL_VARIABLE",
+      "data": {
+        "this": "{\"@class\":\"spp.example.webapp.model.User\",\"@identity\":\"56bd1c65\",\"this\":{\"@class\":\"spp.example.webapp.model.User\",\"@identity\":\"56bd1c65\",\"id\":-1,\"firstname\":\"Vernie\",\"lastname\":\"Emmerich\"}}"
+      }
+    },
+    {
+      "scope": "LOCAL_VARIABLE",
+      "data": {
+        "s2": "{\"@class\":\"spp.example.webapp.model.Student\",\"@identity\":\"1fb93447\",\"s2\":{\"@class\":\"spp.example.webapp.model.Student\",\"@identity\":\"1fb93447\",\"firstName\":\"Brandon\",\"lastName\":\"Fergerson\",\"course\":{\"@class\":\"spp.example.webapp.model.Course\",\"@identity\":\"6989638d\",\"name\":\"Programming\",\"time\":{\"@class\":\"spp.example.webapp.model.CourseTime\",\"@identity\":\"6fff2283\",\"id\":5,\"time\":\"Jun 3, 2021, 7:07:04 PM\"}},\"student2\":{\"@class\":\"spp.example.webapp.model.Student\",\"@identity\":\"6c59f69f\",\"firstName\":\"Brandon\",\"lastName\":\"Fergerson\",\"course\":{\"@class\":\"spp.example.webapp.model.Course\",\"@identity\":\"7aa42aad\",\"name\":\"Programming\",\"time\":{\"@class\":\"spp.example.webapp.model.CourseTime\",\"@identity\":\"de7aa5c\",\"id\":5,\"time\":\"Jun 3, 2021, 7:07:04 PM\"}}}}}"
+      }
+    },
+    {
+      "scope": "INSTANCE_FIELD",
+      "data": {
+        "firstname": "{\"@class\":\"java.lang.String\",\"@identity\":\"5a02ec16\",\"firstname\":\"Vernie\"}"
+      }
+    },
+    {
+      "scope": "INSTANCE_FIELD",
+      "data": {
+        "id": "{\"@class\":\"java.lang.Long\",\"@identity\":\"465c8e26\",\"id\":-1}"
+      }
+    },
+    {
+      "scope": "INSTANCE_FIELD",
+      "data": {
+        "lastname": "{\"@class\":\"java.lang.String\",\"@identity\":\"283abfa9\",\"lastname\":\"Emmerich\"}"
+      }
+    }
+  ],
+  "occurred_at": 1622761624481,
+  "service_instance": "10.1.195.128",
+  "service": "unknown",
+  "location_source": "spp.example.webapp.model.User",
+  "location_line": 52
+}

@@ -1,19 +1,20 @@
-FROM openjdk:11-jre
+FROM apache/skywalking-oap-server:9.1.0
 
-RUN mkdir /opt/sourceplusplus
-WORKDIR /opt/sourceplusplus
+ADD ./config/spp-platform.yml /skywalking/config/
 
-RUN mkdir /opt/sourceplusplus/config
-ADD ./config/spp-platform.yml /opt/sourceplusplus/config
+RUN rm /skywalking/config/log4j2.xml
+ADD ./log4j2.xml /skywalking/config/log4j2.xml
 
-ADD ./spp-platform-*.jar /opt/sourceplusplus
+ADD ./spp-platform-*.jar /skywalking/oap-libs/
+ADD ./spp-processor-*.jar /skywalking/oap-libs/
 
-RUN curl -O -J -L https://github.com/sourceplusplus/interface-cli/releases/download/0.5.4/spp-cli-0.5.4-linux64.zip \
-    && unzip spp-cli-*-linux64.zip \
-    && chmod +x spp-cli \
-    && mv spp-cli /usr/local/bin
+RUN printf "\nspp-live-core:\n  selector: \${SPP_LIVE_CORE:default}\n  default:\n" \
+    >> /skywalking/config/application.yml \
 
-ARG JAVA_OPTS
-ENV JAVA_OPTS=$JAVA_OPTS
+RUN printf "\nspp-live-instrument:\n  selector: \${SPP_LIVE_INSTRUMENT:default}\n  default:\n" \
+    >> /skywalking/config/application.yml
 
-ENTRYPOINT java ${JAVA_OPTS} -jar /opt/sourceplusplus/spp-platform-*.jar
+RUN printf "\nexporter:\n  selector: exporter\n  exporter:\n" \
+    >> /skywalking/config/application.yml
+
+ADD ./ui-initialized-templates /skywalking/config/ui-initialized-templates
