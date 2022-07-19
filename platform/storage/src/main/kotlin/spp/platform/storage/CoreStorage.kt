@@ -17,11 +17,14 @@
  */
 package spp.platform.storage
 
+import io.vertx.core.Vertx
+import io.vertx.core.json.JsonObject
 import spp.protocol.platform.auth.*
 import spp.protocol.platform.developer.Developer
 
 interface CoreStorage {
 
+    suspend fun init(vertx: Vertx, config: JsonObject) = Unit
     suspend fun getDevelopers(): List<Developer>
     suspend fun getDeveloperByAccessToken(token: String): Developer?
     suspend fun hasRole(roleName: String): Boolean

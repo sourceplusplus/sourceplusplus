@@ -22,8 +22,6 @@ subprojects {
         resolutionStrategy.dependencySubstitution {
             substitute(module("plus.sourceplus:protocol"))
                 .using(project(":protocol"))
-            substitute(module("plus.sourceplus.processor:processor-dependencies"))
-                .using(project(":processors:dependencies"))
             substitute(module("plus.sourceplus.interface:interface-booster-ui"))
                 .using(project(":interfaces:booster-ui"))
         }
@@ -38,7 +36,7 @@ subprojects {
 tasks {
     register("buildDist") {
         //todo: use gradle copy task
-        dependsOn(":platform:build")
+        dependsOn("platform:build")
         doLast {
             file("dist/spp-platform-${project.version}/config").mkdirs()
             file("docker/e2e/config/spp-platform.yml")

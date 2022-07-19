@@ -10,7 +10,7 @@ services:
     container_name: spp-platform
     hostname: spp-platform
     ports:
-      - "5107:5107"
+      - "5106:5106"
       - "5450:5450"
       - "5455:5455"
       - "11800:11800"
@@ -19,27 +19,29 @@ services:
       - "80:80"
     build:
       context: .
-      dockerfile: Dockerfile-spp-platform
-    environment:
-      - SPP_LOGGING_LEVEL=debug
-      - SPP_OAP_HOST=skywalking-oap
-      - JAVA_OPTS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5107
-  skywalking-oap:
-    container_name: skywalking-oap
-    hostname: skywalking-oap
-    ports:
-      - "5106:5106"
-    build:
-      context: .
       dockerfile: Dockerfile-skywalking-oap
     environment:
+      - SPP_LOGGING_LEVEL=info
+      - SPP_OAP_HOST=spp-platform
       - JAVA_OPTS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5106
       - SW_OAL_ENGINE_DEBUG=Y
       - SW_ENABLE_UPDATE_UI_TEMPLATE=true
       - SW_TELEMETRY=prometheus
-      - SW_TELEMETRY_PROMETHEUS_HOST=skywalking-oap
+      - SW_TELEMETRY_PROMETHEUS_HOST=spp-platform
       - SW_PROMETHEUS_FETCHER=default
       - SW_PROMETHEUS_FETCHER_ENABLED_RULES=self
+      - SW_CORE_GRPC_PORT=11801
+      - SW_CORE_REST_PORT=12801
+#      - SW_STORAGE=spp-banyandb
+#      - SW_STORAGE_BANYANDB_HOST=banyandb
+#  banyandb:
+#    image: apache/skywalking-banyandb:latest
+#    container_name: banyandb
+#    hostname: banyandb
+#    ports:
+#      - "17912:17912"
+#    command:
+#      - "standalone"
   spp-example-webapp:
     container_name: spp-example-webapp
     hostname: spp-example-webapp

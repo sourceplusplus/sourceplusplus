@@ -1,8 +1,17 @@
 FROM apache/skywalking-oap-server:9.1.0
 
-ADD ./spp-processor-dependencies-*.jar /skywalking/ext-libs/
+ADD ./log4j2.xml /skywalking/config/log4j2.xml
 
-ADD ./spp-processor-*.jar /skywalking/oap-libs/
+#ADD ./spp-skywalking-banyandb-plugin-0.5.5-SNAPSHOT.jar /skywalking/ext-libs/
+
+ADD ./spp-banyandb.yml .
+RUN sed -i '/\SW_STORAGE:h2}/r spp-banyandb.yml' /skywalking/config/application.yml
+
+ADD ./spp-platform-*.jar /skywalking/oap-libs/
+ADD ./spp-live-*.jar /skywalking/oap-libs/
+
+RUN printf "\nspp-live-core:\n  selector: \${SPP_LIVE_CORE:default}\n  default:\n" \
+    >> /skywalking/config/application.yml
 
 RUN printf "\nspp-live-instrument:\n  selector: \${SPP_LIVE_INSTRUMENT:default}\n  default:\n" \
     >> /skywalking/config/application.yml
@@ -10,8 +19,9 @@ RUN printf "\nspp-live-instrument:\n  selector: \${SPP_LIVE_INSTRUMENT:default}\
 RUN printf "\nexporter:\n  selector: exporter\n  exporter:\n" \
     >> /skywalking/config/application.yml
 
-ADD ./config/spp-platform.crt /skywalking
-ADD ./config/spp-platform.key /skywalking
+ADD ./config/spp-platform.crt /skywalking/config/
+ADD ./config/spp-platform.key /skywalking/config/
+ADD ./config/spp-platform.yml /skywalking/config/
 
 ADD ./config/ui-initialized-templates /skywalking/config/ui-initialized-templates
 
@@ -26,14 +36,12 @@ ADD config/self.yaml /skywalking/config/fetcher-prom-rules
 #ENV SPP_DELETE_PROBE_DIRECTORY_ON_BOOT=false
 
 #ENV SPP_PLATFORM_SSL_TRUST_ALL=true
-ENV SPP_PLATFORM_HOST=spp-platform
-ENV SPP_PLATFORM_PORT=5460
-ENV SPP_PLATFORM_CERTIFICATE_FILE=/skywalking/spp-platform.crt
+ENV SPP_PLATFORM_CERTIFICATE_FILE=/skywalking/config/spp-platform.crt
 
 ENV SW_CORE_GRPC_SSL_ENABLED=true
-ENV SW_CORE_GRPC_SSL_KEY_PATH=/skywalking/spp-platform.key
-ENV SW_CORE_GRPC_SSL_CERT_CHAIN_PATH=/skywalking/spp-platform.crt
-ENV SW_CORE_GRPC_SSL_TRUSTED_CA_PATH=/skywalking/spp-platform.crt
+ENV SW_CORE_GRPC_SSL_KEY_PATH=/skywalking/config/spp-platform.key
+ENV SW_CORE_GRPC_SSL_CERT_CHAIN_PATH=/skywalking/config/spp-platform.crt
+ENV SW_CORE_GRPC_SSL_TRUSTED_CA_PATH=/skywalking/config/spp-platform.crt
 ENV SW_RECEIVER_GRPC_SSL_ENABLED=true
-ENV SW_RECEIVER_GRPC_SSL_KEY_PATH=/skywalking/spp-platform.key
-ENV SW_RECEIVER_GRPC_SSL_CERT_CHAIN_PATH=/skywalking/spp-platform.crt
+ENV SW_RECEIVER_GRPC_SSL_KEY_PATH=/skywalking/config/spp-platform.key
+ENV SW_RECEIVER_GRPC_SSL_CERT_CHAIN_PATH=/skywalking/config/spp-platform.crt

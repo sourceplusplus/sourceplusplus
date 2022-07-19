@@ -31,18 +31,18 @@ include 'interfaces:jetbrains:marker:py-marker'
 include 'interfaces:jetbrains:monitor'
 include 'interfaces:jetbrains:plugin'
 include 'interfaces:booster-ui'
-include 'platform'
+include 'platform:bridge'
+include 'platform:common'
+include 'platform:core'
 include 'platform:storage'
+include 'platform:processor:live-instrument'
+include 'platform:processor:live-view'
 include 'protocol'
 
 include ':probes:jvm:control'
 include ':probes:jvm:services'
 
 include ':probes:python'
-
-include ':processors:dependencies'
-include ':processors:live-instrument'
-include ':processors:live-view'
 
 include 'example-web-app'
 project(':example-web-app').projectDir = new File("docker/e2e/example-web-app")
