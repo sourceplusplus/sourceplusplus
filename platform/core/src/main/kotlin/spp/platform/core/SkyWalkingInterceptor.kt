@@ -34,7 +34,7 @@ import io.vertx.kotlin.coroutines.await
 import kotlinx.coroutines.launch
 import mu.KotlinLogging
 import spp.platform.core.util.CertsToJksOptionsConverter
-import spp.platform.core.util.Msg
+import spp.platform.common.util.Msg
 import spp.platform.storage.SourceStorage
 import spp.protocol.platform.PlatformAddress.PROCESSOR_CONNECTED
 import spp.protocol.platform.auth.DataRedaction

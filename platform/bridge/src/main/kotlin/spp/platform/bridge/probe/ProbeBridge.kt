@@ -35,7 +35,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import mu.KotlinLogging
 import spp.platform.bridge.InstanceBridge
-import spp.platform.bridge.probe.util.Msg
+import spp.platform.common.util.Msg
 import spp.protocol.platform.PlatformAddress
 import spp.protocol.platform.ProbeAddress
 import spp.protocol.platform.ProcessorAddress
