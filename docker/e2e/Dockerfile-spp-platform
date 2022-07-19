@@ -4,8 +4,8 @@ ADD ./log4j2.xml /skywalking/config/log4j2.xml
 
 #ADD ./spp-skywalking-banyandb-plugin-0.5.5-SNAPSHOT.jar /skywalking/ext-libs/
 
-ADD ./spp-banyandb.yml .
-RUN sed -i '/\SW_STORAGE:h2}/r spp-banyandb.yml' /skywalking/config/application.yml
+#ADD ./spp-banyandb.yml .
+#RUN sed -i '/\SW_STORAGE:h2}/r spp-banyandb.yml' /skywalking/config/application.yml
 
 ADD ./spp-platform-*.jar /skywalking/oap-libs/
 ADD ./spp-live-*.jar /skywalking/oap-libs/
