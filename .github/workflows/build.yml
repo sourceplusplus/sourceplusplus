@@ -182,6 +182,18 @@ jobs:
       - name: Untar spp-platform
         run: cd ./docker/spp-platform && tar -zxvf spp-platform-${{ needs.jvm-build.outputs.release_version }}.tar.gz --strip-components=1
 
+      - name: Copy ui-initialized-templates to spp-platform Docker image
+        run: cp -r ./docker/e2e/config/ui-initialized-templates ./docker/spp-platform
+
+      - name: Download Source++ processors
+        uses: actions/download-artifact@v2
+        with:
+          name: spp-processors.zip
+          path: ./docker/spp-platform
+
+      - name: Unzip Source++ processors
+        run: cd ./docker/spp-platform && unzip spp-processors.zip
+
       - name: Build spp-platform tagged Docker image
         run: cd ./docker/spp-platform && docker build . --file Dockerfile --tag sourceplusplus/spp-platform:${{ needs.jvm-build.outputs.release_version }}
 
@@ -190,27 +202,6 @@ jobs:
 
       - name: Push spp-platform latest Docker image
         run: docker push sourceplusplus/spp-platform:latest
-
-      - name: Copy ui-initialized-templates to spp-oap-server Docker image
-        run: cp -r ./docker/e2e/config/ui-initialized-templates ./docker/spp-oap-server
-
-      - name: Download Source++ processors
-        uses: actions/download-artifact@v2
-        with:
-          name: spp-processors.zip
-          path: ./docker/spp-oap-server
-
-      - name: Unzip Source++ processors
-        run: cd ./docker/spp-oap-server && unzip spp-processors.zip
-
-      - name: Build spp-oap-server tagged Docker image
-        run: cd ./docker/spp-oap-server && docker build . --file Dockerfile --tag sourceplusplus/spp-oap-server:${{ needs.jvm-build.outputs.release_version }}
-
-      - name: Retag spp-oap-server tagged Docker image to latest
-        run: docker tag sourceplusplus/spp-oap-server:${{ needs.jvm-build.outputs.release_version }} sourceplusplus/spp-oap-server:latest
-
-      - name: Push spp-oap-server latest Docker image
-        run: docker push sourceplusplus/spp-oap-server:latest
 
   # Delete build artifacts
   cleanup:

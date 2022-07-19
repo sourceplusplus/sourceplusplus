@@ -24,19 +24,7 @@ ADD ./config/spp-platform.key /skywalking/config/
 ADD ./config/spp-platform.yml /skywalking/config/
 
 ADD ./config/ui-initialized-templates /skywalking/config/ui-initialized-templates
-
-ADD config/self.yaml /skywalking/config/fetcher-prom-rules
-
-#RUN mkdir -p /tmp/spp-probe/ca
-#ADD ./config/spp-platform.crt /tmp/spp-probe/ca/ca.crt
-#
-#ADD ./spp-probe.yml /tmp/spp-probe
-#ADD ./spp-probe-*.jar /tmp/spp-probe/spp-probe.jar
-#
-#ENV SPP_DELETE_PROBE_DIRECTORY_ON_BOOT=false
-
-#ENV SPP_PLATFORM_SSL_TRUST_ALL=true
-ENV SPP_PLATFORM_CERTIFICATE_FILE=/skywalking/config/spp-platform.crt
+ADD ./config/self.yaml /skywalking/config/fetcher-prom-rules
 
 ENV SW_CORE_GRPC_SSL_ENABLED=true
 ENV SW_CORE_GRPC_SSL_KEY_PATH=/skywalking/config/spp-platform.key

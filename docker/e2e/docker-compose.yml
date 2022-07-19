@@ -19,11 +19,10 @@ services:
       - "80:80"
     build:
       context: .
-      dockerfile: Dockerfile-skywalking-oap
+      dockerfile: Dockerfile-spp-platform
     environment:
-      - SPP_LOGGING_LEVEL=info
-      - SPP_OAP_HOST=spp-platform
       - JAVA_OPTS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5106
+      - SPP_LOGGING_LEVEL=info
       - SW_OAL_ENGINE_DEBUG=Y
       - SW_ENABLE_UPDATE_UI_TEMPLATE=true
       - SW_TELEMETRY=prometheus

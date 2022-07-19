@@ -1,9 +1,15 @@
 FROM apache/skywalking-oap-server:9.1.0
 
+ADD ./config/spp-platform.yml /skywalking/config/
+
 RUN rm /skywalking/config/log4j2.xml
 ADD ./log4j2.xml /skywalking/config/log4j2.xml
 
+ADD ./spp-platform-*.jar /skywalking/oap-libs/
 ADD ./spp-processor-*.jar /skywalking/oap-libs/
+
+RUN printf "\nspp-live-core:\n  selector: \${SPP_LIVE_CORE:default}\n  default:\n" \
+    >> /skywalking/config/application.yml \
 
 RUN printf "\nspp-live-instrument:\n  selector: \${SPP_LIVE_INSTRUMENT:default}\n  default:\n" \
     >> /skywalking/config/application.yml
