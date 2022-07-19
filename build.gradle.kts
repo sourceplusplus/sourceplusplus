@@ -36,12 +36,12 @@ subprojects {
 tasks {
     register("buildDist") {
         //todo: use gradle copy task
-        dependsOn("platform:build")
+        dependsOn("platform:core:shadowJar")
         doLast {
             file("dist/spp-platform-${project.version}/config").mkdirs()
             file("docker/e2e/config/spp-platform.yml")
                 .copyTo(file("dist/spp-platform-${project.version}/config/spp-platform.yml"))
-            file("platform/build/libs/spp-platform-${project.version}.jar")
+            file("platform/core/build/libs/spp-platform-${project.version}.jar")
                 .copyTo(file("dist/spp-platform-${project.version}/spp-platform-${project.version}.jar"))
         }
     }
