@@ -83,6 +83,7 @@ tasks.getByName<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("sha
         exclude(dependency("io.vertx:.*:.*"))
         exclude(dependency("org.jetbrains.kotlinx:.*:.*"))
         exclude(dependency("com.fasterxml.jackson.dataformat:.*:.*"))
+        exclude(dependency("org.jooq:joor:.*"))
         exclude(project(":platform:bridge"))
         exclude(project(":platform:common"))
         exclude(project(":platform:core"))
