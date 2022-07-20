@@ -1,0 +1,33 @@
+name: Update demo.sourceplus.plus
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+jobs:
+  update-demo:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: true
+
+    steps:
+      - name: Redeploy demo.sourceplus.plus
+        uses: appleboy/ssh-action@master
+        with:
+          host: demo.sourceplus.plus
+          username: root
+          password: ${{ secrets.DEMO_SSH_PASSWORD }}
+          script: |
+            cd /opt/live-platform
+            ./gradlew -p platform composeDown
+            ./gradlew clean
+            git reset --hard
+            git pull
+            git submodule update --recursive --remote
+            sed -i 's/5105:5105/127.0.0.1:5105:5105/g' ./docker/e2e/docker-compose.yml
+            sed -i 's/5106:5106/127.0.0.1:5106:5106/g' ./docker/e2e/docker-compose.yml
+            sed -i 's/6379:6379/127.0.0.1:6379:6379/g' ./docker/e2e/docker-compose.yml
+            ./gradlew -p platform assembleUp
