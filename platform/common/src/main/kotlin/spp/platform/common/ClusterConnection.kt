@@ -19,6 +19,7 @@ package spp.platform.common
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper
+import com.google.common.base.CaseFormat
 import io.vertx.core.Vertx
 import io.vertx.core.VertxOptions
 import io.vertx.core.json.JsonObject
@@ -72,7 +73,11 @@ object ClusterConnection {
                 } else {
                     log.info("Using clustered mode")
                     val storageSelector = config.getJsonObject("storage").getString("selector")
-                    val storageConfig = config.getJsonObject("storage").getJsonObject(storageSelector)
+                    val storageName = CaseFormat.LOWER_CAMEL.to(
+                        CaseFormat.LOWER_HYPHEN,
+                        storageSelector.substringAfterLast(".").removeSuffix("Storage")
+                    )
+                    val storageConfig = config.getJsonObject("storage").getJsonObject(storageName)
                     val host = storageConfig.getString("host")
                     val port = storageConfig.getString("port").toInt()
                     val clusterStorageAddress = "redis://$host:$port"
