@@ -156,7 +156,7 @@ class SourcePlatform : CoroutineVerticle() {
                     it.session().put("developer_id", dev.id)
                     it.redirect("/")
                 } else {
-                    if (tenantId != null) {
+                    if (!tenantId.isNullOrEmpty()) {
                         it.redirect("/login?tenant_id=$tenantId")
                     } else {
                         it.redirect("/login")
