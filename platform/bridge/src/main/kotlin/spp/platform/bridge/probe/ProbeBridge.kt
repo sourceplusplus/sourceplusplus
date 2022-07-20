@@ -44,6 +44,7 @@ import spp.protocol.platform.status.InstanceConnection
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.TimeUnit
 
 class ProbeBridge(
     private val router: Router,
@@ -69,7 +70,13 @@ class ProbeBridge(
     private val activeProbes: MutableMap<String, ActiveInstance> = ConcurrentHashMap()
 
     override suspend fun start() {
-        vertx.deployVerticle(ProbeGenerator(router), DeploymentOptions().setConfig(config)).await()
+        vertx.deployVerticle(
+            ProbeGenerator(router),
+            DeploymentOptions()
+                .setWorker(true).setWorkerPoolName("spp-probe-generator")
+                .setMaxWorkerExecuteTime(5).setMaxWorkerExecuteTimeUnit(TimeUnit.MINUTES)
+                .setConfig(config)
+        ).await()
 
         vertx.eventBus().consumer<JsonObject>(activeProbesAddress) {
             launch(vertx.dispatcher()) {
