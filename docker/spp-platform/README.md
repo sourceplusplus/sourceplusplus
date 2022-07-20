@@ -2,10 +2,10 @@
 
 ## Running the Source++ Platform container
 
-Start your container binding the external port 12800.
+Start your container binding the external ports 11800 & 12800.
 
 ```
-docker run -d --name=spp-platform -p 12800:12800 sourceplusplus/spp-platform
+docker run -d --name=spp-platform -p 11800:11800 -p 12800:12800 sourceplusplus/spp-platform
 ```
 
 ## Environment
