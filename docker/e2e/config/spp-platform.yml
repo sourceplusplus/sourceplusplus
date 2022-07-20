@@ -60,5 +60,5 @@ storage:
 
 skywalking-oap:
   host: ${SPP_OAP_HOST:-localhost}
-  rest_port: ${SPP_OAP_REST_PORT:-12801}
-  grpc_port: ${SPP_OAP_GRPC_PORT:-11801}
+  rest_port: ${SW_CORE_REST_PORT:-12801}
+  grpc_port: ${SW_CORE_GRPC_PORT:-11801}
