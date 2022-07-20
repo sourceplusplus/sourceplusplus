@@ -33,7 +33,7 @@ import io.vertx.kotlin.coroutines.CoroutineVerticle
 import io.vertx.kotlin.coroutines.await
 import kotlinx.coroutines.launch
 import mu.KotlinLogging
-import spp.platform.core.util.CertsToJksOptionsConverter
+import spp.platform.common.util.CertsToJksOptionsConverter
 import spp.platform.common.util.Msg
 import spp.platform.storage.SourceStorage
 import spp.protocol.platform.PlatformAddress.PROCESSOR_CONNECTED
