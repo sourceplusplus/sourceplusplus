@@ -65,10 +65,10 @@ import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter
 import org.bouncycastle.openssl.jcajce.JcaPEMWriter
 import spp.booster.PortalServer
 import spp.platform.core.service.ServiceProvider
-import spp.platform.core.util.CertsToJksOptionsConverter
 import spp.platform.bridge.marker.MarkerBridge
 import spp.platform.bridge.probe.ProbeBridge
 import spp.platform.bridge.probe.util.SelfSignedCertGenerator
+import spp.platform.common.util.CertsToJksOptionsConverter
 import spp.platform.storage.CoreStorage
 import spp.platform.storage.MemoryStorage
 import spp.platform.storage.RedisStorage

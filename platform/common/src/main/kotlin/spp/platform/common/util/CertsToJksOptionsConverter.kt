@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package spp.platform.core.util
+package spp.platform.common.util
 
 import io.vertx.core.buffer.Buffer
 import io.vertx.core.net.JksOptions
