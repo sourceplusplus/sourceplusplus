@@ -19,29 +19,28 @@ package spp.platform.bridge.probe
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper
-import com.google.common.io.Files
+import io.vertx.core.buffer.Buffer
+import io.vertx.core.file.AsyncFile
+import io.vertx.core.http.HttpServerResponse
 import io.vertx.core.json.JsonObject
+import io.vertx.core.streams.WriteStream
 import io.vertx.ext.web.Router
 import io.vertx.ext.web.RoutingContext
 import io.vertx.kotlin.coroutines.CoroutineVerticle
 import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.launch
 import mu.KotlinLogging
-import org.apache.commons.io.IOUtils
 import org.bouncycastle.cert.X509CertificateHolder
 import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter
 import org.bouncycastle.openssl.PEMParser
 import org.bouncycastle.openssl.jcajce.JcaPEMWriter
 import org.kohsuke.github.GitHub
-import org.zeroturnaround.zip.ZipUtil
 import spp.platform.storage.SourceStorage
 import java.io.*
 import java.net.URL
-import java.nio.channels.Channels
 import java.security.cert.X509Certificate
-import java.util.*
 import java.util.zip.ZipEntry
-import java.util.zip.ZipFile
+import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
 
 class ProbeGenerator(private val router: Router) : CoroutineVerticle() {
@@ -49,7 +48,6 @@ class ProbeGenerator(private val router: Router) : CoroutineVerticle() {
     private val log = KotlinLogging.logger {}
     private val objectMapper = ObjectMapper()
     private val yamlMapper = YAMLMapper()
-    private val generatedProbes = mutableMapOf<SourceProbeConfig, JsonObject>()
     private val githubApi by lazy { GitHub.connectAnonymously() }
 
     override suspend fun start() {
@@ -78,12 +76,12 @@ class ProbeGenerator(private val router: Router) : CoroutineVerticle() {
     private fun doProbeGeneration(route: RoutingContext) {
         log.debug("Generating signed probe")
         val platformHost = route.request().host().substringBefore(":")
-        val platformName = route.request().getParam("service_name")?.toString() ?: "Your_ApplicationName"
+        val serviceName = route.request().getParam("service_name")?.toString() ?: "Your_ApplicationName"
         val probeVersion = route.request().getParam("version")
         var config = if (!probeVersion.isNullOrEmpty()) {
-            SourceProbeConfig(platformHost, platformName, probeVersion = probeVersion)
+            SourceProbeConfig(platformHost, serviceName, probeVersion = probeVersion)
         } else {
-            SourceProbeConfig(platformHost, platformName, probeVersion = "latest")
+            SourceProbeConfig(platformHost, serviceName, probeVersion = "latest")
         }
 
         val probeRelease = if (config.probeVersion == "latest") {
@@ -101,62 +99,70 @@ class ProbeGenerator(private val router: Router) : CoroutineVerticle() {
 
         val downloadUrl = probeRelease.listAssets()
             .find { it.name.equals("spp-probe-${probeRelease.tagName}.jar") }!!.browserDownloadUrl
-        val destFile = File(Files.createTempDir(), "spp-probe-${probeRelease.tagName}.jar")
+        val destFile = File("cache", "spp-probe-${probeRelease.tagName}.jar")
         vertx.executeBlocking<Nothing> {
-            if (generatedProbes[config] == null) {
-                log.info("Downloading probe from: $downloadUrl")
-                Channels.newChannel(URL(downloadUrl).openStream()).use { readableByteChannel ->
-                    FileOutputStream(destFile).use { fileOutputStream ->
-                        fileOutputStream.channel.transferFrom(readableByteChannel, 0, Long.MAX_VALUE)
-                    }
-                }
-            } else {
-                log.info("Probe already generated. Using cached probe")
-            }
-
-            val genProbe = generateProbe(destFile, config)
             route.response().putHeader(
                 "content-disposition",
-                "attachment; filename=spp-probe-${genProbe.getString("probe_version")}.jar"
-            ).sendFile(genProbe.getString("file_location"))
-            log.info("Signed probe downloaded")
+                "attachment; filename=spp-probe-${probeRelease.tagName}.jar"
+            ).setChunked(true)
 
+            val fileStreams = if (!destFile.exists()) {
+                destFile.parentFile.mkdirs()
+                destFile.createNewFile()
+                log.info("Saving cached probe to: ${destFile.absolutePath}")
+
+                //pipe modified probe to user while caching original for future use
+                log.info("Downloading probe from: $downloadUrl")
+                val zis = ZipInputStream(URL(downloadUrl).openStream())
+                Triple(zis, OutputWriterStream(route.response()), destFile.outputStream())
+            } else {
+                log.info("Probe already generated. Using cached probe")
+                Triple(ZipInputStream(destFile.inputStream()), OutputWriterStream(route.response()), null)
+            }
+
+            val crtFile = File("config/spp-platform.crt")
+            if (crtFile.exists()) {
+                val crtParser = PEMParser(StringReader(crtFile.readText()))
+                val crtHolder = crtParser.readObject() as X509CertificateHolder
+                val certificate = JcaX509CertificateConverter().getCertificate(crtHolder)
+                generateProbe(fileStreams.first, fileStreams.second, fileStreams.third, config, certificate)
+            } else {
+                generateProbe(fileStreams.first, fileStreams.second, fileStreams.third, config, null)
+            }
+
+            log.info("Signed probe downloaded")
             it.complete()
         }
     }
 
-    private fun generateProbe(baseProbe: File, config: SourceProbeConfig): JsonObject {
-        val existingProbe = generatedProbes[config]
-        if (existingProbe != null && File(existingProbe.getString("file_location")).exists()) {
-            return existingProbe
+    @Throws(IOException::class)
+    private fun generateProbe(
+        zin: ZipInputStream,
+        responseStream: OutputStream,
+        cacheStream: OutputStream? = null,
+        probeConfig: SourceProbeConfig,
+        certificate: X509Certificate?
+    ) {
+        val buffer = ByteArray(8192)
+        val responseOut = ZipOutputStream(responseStream)
+        val cacheOut = cacheStream?.let { ZipOutputStream(it) }
+        var entry = zin.nextEntry
+        while (entry != null) {
+            val name = entry.name
+            responseOut.putNextEntry(ZipEntry(name))
+            cacheOut?.putNextEntry(ZipEntry(name))
+
+            var len: Int
+            while (zin.read(buffer).also { len = it } > 0) {
+                responseOut.write(buffer, 0, len)
+                cacheOut?.write(buffer, 0, len)
+            }
+            entry = zin.nextEntry
         }
+        zin.close()
+        cacheOut?.close()
 
-        generatedProbes.remove(config)
-        val crtFile = File("config/spp-platform.crt")
-        val probePath = if (crtFile.exists()) {
-            val crtParser = PEMParser(StringReader(crtFile.readText()))
-            val crtHolder = crtParser.readObject() as X509CertificateHolder
-            val certificate = JcaX509CertificateConverter().getCertificate(crtHolder)
-            generateProbe(baseProbe, config, certificate)
-        } else {
-            generateProbe(baseProbe, config, null)
-        }
-        val cache = JsonObject().put("probe_version", config.probeVersion).put("file_location", probePath.absolutePath)
-        generatedProbes[config] = cache
-        return cache
-    }
-
-    private fun generateProbe(baseProbe: File, probeConfig: SourceProbeConfig, certificate: X509Certificate?): File {
-        val tempDir = Files.createTempDir()
-        unzip(baseProbe, tempDir)
-
-        val crt = StringWriter()
-        if (certificate != null) {
-            val writer = JcaPEMWriter(crt)
-            writer.writeObject(certificate)
-            writer.close()
-        }
-
+        //add S++ config files to zip
         val minProbeConfig = mutableMapOf<String, MutableMap<Any, Any>>(
             "spp" to mutableMapOf(
                 "platform_host" to probeConfig.platformHost,
@@ -164,101 +170,88 @@ class ProbeGenerator(private val router: Router) : CoroutineVerticle() {
             ),
             "skywalking" to mutableMapOf(
                 "agent" to mutableMapOf(
-                    "service_name" to probeConfig.skywalkingServiceName,
+                    "service_name" to probeConfig.serviceName,
                 )
             )
         )
         if (certificate != null) {
+            val crt = StringWriter()
+            val writer = JcaPEMWriter(crt)
+            writer.writeObject(certificate)
+            writer.close()
+
+            //add certificate data to minimum config
             minProbeConfig["spp"]!!["platform_certificate"] = crt.toString()
                 .replace("-----BEGIN CERTIFICATE-----", "")
                 .replace("-----END CERTIFICATE-----", "")
                 .replace("\n", "")
         }
-        val jsonObject = JsonObject.mapFrom(minProbeConfig)
-
-        //load build.properties
-        val buildProps = Properties()
-        buildProps.load(FileReader(File(tempDir, "build.properties")))
-
-        val jwtEnabled = config.getJsonObject("jwt").getString("enabled").toBooleanStrict()
-        if (jwtEnabled) {
-            //add ca.crt
-            val archiveZip = File(tempDir, "skywalking-agent-${buildProps["apache_skywalking_version"]}.zip")
-            File(tempDir, "ca.crt").writeText(crt.toString())
-            ZipUtil.addEntry(archiveZip, "ca/ca.crt", File(tempDir, "ca.crt"))
-        }
 
         //add spp-probe.yml
-        val yamlStr = yamlMapper.writeValueAsString(objectMapper.readTree(jsonObject.toString()))
-        File(tempDir, "spp-probe.yml").writeText(yamlStr.substring(yamlStr.indexOf("\n") + 1))
-
-        val fos = FileOutputStream(File(tempDir, "spp-probe-${probeConfig.probeVersion}.jar"))
-        val zipOut = ZipOutputStream(fos)
-        for (childFile in File(tempDir.absolutePath).listFiles()) {
-            zipFile(
-                childFile, childFile.name, zipOut,
-                setOf("spp-probe-${probeConfig.probeVersion}.jar", "ca.crt")
-            )
+        val yamlStr = yamlMapper.writeValueAsString(objectMapper.readTree(JsonObject.mapFrom(minProbeConfig).toString()))
+        responseOut.putNextEntry(ZipEntry("spp-probe.yml"))
+        yamlStr.byteInputStream().use {
+            var len: Int
+            while (it.read(buffer).also { len = it } > 0) {
+                responseOut.write(buffer, 0, len)
+            }
+            responseOut.closeEntry()
         }
-        zipOut.close()
-        fos.close()
 
-        return File(tempDir.absolutePath + "/spp-probe-${probeConfig.probeVersion}.jar")
+        responseOut.close()
     }
 
-    private fun unzip(archive: File, tempDir: File) {
-        ZipFile(archive).use { zipFile ->
-            val entries: Enumeration<out ZipEntry> = zipFile.entries()
-            while (entries.hasMoreElements()) {
-                val entry = entries.nextElement()
-                val entryDestination = File(tempDir.absolutePath, entry.name)
-                if (entry.isDirectory) {
-                    entryDestination.mkdirs()
-                } else {
-                    entryDestination.parentFile.mkdirs()
-                    zipFile.getInputStream(entry).use { `in` ->
-                        FileOutputStream(entryDestination).use { out ->
-                            IOUtils.copy(`in`, out)
-                        }
-                    }
+    private class OutputWriterStream(response: WriteStream<Buffer>) : OutputStream() {
+        @Synchronized
+        @Throws(IOException::class)
+        override fun write(b: Int) {
+            buffer[counter++] = b.toByte()
+            if (counter >= buffer.size) {
+                flush()
+            }
+        }
+
+        @Throws(IOException::class)
+        override fun flush() {
+            super.flush()
+            if (counter > 0) {
+                var remaining = buffer
+                if (counter < buffer.size) {
+                    remaining = ByteArray(counter)
+                    System.arraycopy(buffer, 0, remaining, 0, counter)
                 }
+                response.write(Buffer.buffer(remaining))
+                counter = 0
             }
+        }
+
+        @Throws(IOException::class)
+        override fun close() {
+            flush()
+            super.close()
+            if (response is HttpServerResponse) {
+                try {
+                    response.end()
+                } catch (ignore: IllegalStateException) {
+                }
+            } else if (response is AsyncFile) {
+                response.close()
+            }
+        }
+
+        private val response: WriteStream<Buffer>
+        private val buffer: ByteArray
+        private var counter = 0
+
+        init {
+            this.response = response
+            buffer = ByteArray(8192)
         }
     }
 
-    private fun zipFile(fileToZip: File, fileName: String, zipOut: ZipOutputStream, excludeList: Set<String>) {
-        if (fileToZip.isHidden) return
-        if (fileToZip.isDirectory) {
-            if (fileName.endsWith("/")) {
-                zipOut.putNextEntry(ZipEntry(fileName))
-                zipOut.closeEntry()
-            } else {
-                zipOut.putNextEntry(ZipEntry("$fileName/"))
-                zipOut.closeEntry()
-            }
-            val children = fileToZip.listFiles()
-            for (childFile in children) {
-                zipFile(childFile, fileName + "/" + childFile.name, zipOut, excludeList)
-            }
-            return
-        } else if (excludeList.any { fileName.endsWith(it) }) {
-            return
-        }
-
-        val fis = FileInputStream(fileToZip)
-        val zipEntry = ZipEntry(fileName)
-        zipOut.putNextEntry(zipEntry)
-        val bytes = ByteArray(1024)
-        var length: Int
-        while (fis.read(bytes).also { length = it } >= 0) {
-            zipOut.write(bytes, 0, length)
-        }
-        fis.close()
-    }
-
-    data class SourceProbeConfig(
+    private data class SourceProbeConfig(
         val platformHost: String,
-        val skywalkingServiceName: String,
+        val serviceName: String,
         val skywalkingBackendService: String = "$platformHost:11800",
         val platformPort: Int = 5450,
         val probeVersion: String
