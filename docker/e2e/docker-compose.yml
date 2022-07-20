@@ -29,8 +29,6 @@ services:
       - SW_TELEMETRY_PROMETHEUS_HOST=spp-platform
       - SW_PROMETHEUS_FETCHER=default
       - SW_PROMETHEUS_FETCHER_ENABLED_RULES=self
-      - SW_CORE_GRPC_PORT=11801
-      - SW_CORE_REST_PORT=12801
 #      - SW_STORAGE=spp-banyandb
 #      - SW_STORAGE_BANYANDB_HOST=banyandb
 #  banyandb:
