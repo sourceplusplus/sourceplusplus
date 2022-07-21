@@ -119,3 +119,4 @@ tasks.getByName<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("sha
     configurations.add(project.configurations.runtimeClasspath.get())
     configurations.add(project.configurations.shadow.get())
 }
+tasks.getByName("assemble").dependsOn("shadowJar")
