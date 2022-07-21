@@ -162,18 +162,22 @@ class InstrumentIntegrationTest : PlatformIntegrationTest() {
                         )
 
                         //int arr
-                        assertEquals(
-                            "[1, 2, 3]",
-                            (topFrame.variables.find { it.name == "iArr" }!!.value as List<Map<String, Any>>)
-                                .map { it["value"] }.toString()
-                        )
+                        topFrame.variables.find { it.name == "iArr" }!!.let { iArr ->
+                            assertEquals("int[]", iArr.liveClazz)
+                            assertEquals(
+                                "[1, 2, 3]",
+                                (iArr.value as List<Map<String, Any>>).map { it["value"] }.toString()
+                            )
+                        }
 
                         //int list
-                        assertEquals(
-                            "[1, 2, 3]",
-                            (topFrame.variables.find { it.name == "iList" }!!.value as List<Map<String, Any>>)
-                                .map { it["value"] }.toString()
-                        )
+                        topFrame.variables.find { it.name == "iList" }!!.let { iList ->
+                            assertEquals("java.util.ArrayList", iList.liveClazz)
+                            assertEquals(
+                                "[1, 2, 3]",
+                                (iList.value as List<Map<String, Any>>).map { it["value"] }.toString()
+                            )
+                        }
                     }
                 }
                 else -> testContext.failNow("Got event: " + it.body())

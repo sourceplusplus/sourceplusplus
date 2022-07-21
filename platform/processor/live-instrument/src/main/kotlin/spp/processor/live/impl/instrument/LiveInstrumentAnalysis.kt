@@ -25,6 +25,7 @@ import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import io.vertx.kotlin.core.json.get
 import kotlinx.datetime.Instant
+import net.bytebuddy.jar.asm.Type
 import org.apache.skywalking.apm.network.language.agent.v3.SegmentObject
 import org.apache.skywalking.apm.network.language.agent.v3.SpanObject
 import org.apache.skywalking.apm.network.logging.v3.LogData
@@ -112,10 +113,22 @@ class LiveInstrumentAnalysis(
                 var liveVar = if (outerVal.get<Any>(varName) is JsonObject) {
                     toLiveVariable(varName, scope, outerVal.getJsonObject(varName))
                 } else if (outerVal.get<Any>(varName) is JsonArray) {
-                    toLiveVariableArray(varName, scope, outerVal.getJsonArray(varName))
-                } else{
+                    val liveArr = toLiveVariableArray(varName, scope, outerVal.getJsonArray(varName))
+                    try {
+                        liveArr.copy(
+                            liveClazz = Type.getType(outerVal.getString("@class")).className,
+                            liveIdentity = outerVal.getString("@id") ?: outerVal.getString("@identity")
+                        )
+                    } catch (ignore: IllegalArgumentException) {
+                        liveArr.copy(
+                            liveClazz = outerVal.getString("@class"),
+                            liveIdentity = outerVal.getString("@id") ?: outerVal.getString("@identity")
+                        )
+                    }
+                } else {
                     LiveVariable(
-                        varName, outerVal[varName],
+                        varName,
+                        outerVal[varName],
                         scope = scope,
                         liveClazz = outerVal.getString("@class"),
                         liveIdentity = outerVal.getString("@id") ?: outerVal.getString("@identity")
