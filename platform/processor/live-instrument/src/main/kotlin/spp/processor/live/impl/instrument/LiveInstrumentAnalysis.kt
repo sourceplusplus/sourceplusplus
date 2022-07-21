@@ -78,7 +78,6 @@ class LiveInstrumentAnalysis(
                     if (varData.get<Any>(it) is JsonObject) {
                         innerVars.add(toLiveVariable(it, null, varData.getJsonObject(it)))
                     } else if (varData.get<Any>(it) is JsonArray) {
-                        println("Converting array: $it")
                         innerVars.add(toLiveVariableArray(it, null, varData.getJsonArray(it)))
                     } else {
                         innerVars.add(LiveVariable(it, varData[it]))
