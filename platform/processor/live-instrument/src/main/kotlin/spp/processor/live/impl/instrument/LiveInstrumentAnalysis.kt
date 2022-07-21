@@ -34,8 +34,8 @@ import org.apache.skywalking.oap.server.analyzer.provider.trace.parser.listener.
 import org.apache.skywalking.oap.server.core.query.TraceQueryService
 import org.apache.skywalking.oap.server.library.module.ModuleManager
 import org.slf4j.LoggerFactory
-import spp.processor.InstrumentProcessor.liveInstrumentProcessor
 import spp.platform.common.FeedbackProcessor.Companion.vertx
+import spp.processor.InstrumentProcessor.liveInstrumentProcessor
 import spp.protocol.SourceServices.Provide.toLiveInstrumentSubscriberAddress
 import spp.protocol.artifact.exception.LiveStackTrace
 import spp.protocol.artifact.exception.LiveStackTraceElement

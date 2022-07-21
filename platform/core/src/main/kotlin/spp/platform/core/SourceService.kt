@@ -845,7 +845,6 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
         return completableFuture
     }
 
-
     private fun addDataRedaction(env: DataFetchingEnvironment): CompletableFuture<DataRedaction> {
         val completableFuture = CompletableFuture<DataRedaction>()
         launch(vertx.dispatcher()) {

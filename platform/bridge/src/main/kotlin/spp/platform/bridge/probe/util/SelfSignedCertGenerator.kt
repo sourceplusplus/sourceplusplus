@@ -62,9 +62,7 @@ object SelfSignedCertGenerator {
      * @throws CertIOException on building JcaContentSignerBuilder
      * @throws CertificateException on getting certificate from provider
      */
-    fun generate(
-        keyPair: KeyPair, hashAlgorithm: String, cn: String, days: Int
-    ): X509Certificate {
+    fun generate(keyPair: KeyPair, hashAlgorithm: String, cn: String, days: Int): X509Certificate {
         val now = Instant.now()
         val notBefore = Date.from(now)
         val notAfter = Date.from(now.plus(Duration.ofDays(days.toLong())))

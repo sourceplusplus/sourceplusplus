@@ -32,7 +32,6 @@ import io.vertx.kotlin.coroutines.await
 import io.vertx.servicediscovery.Record
 import io.vertx.servicediscovery.types.EventBusService
 import io.vertx.serviceproxy.ServiceBinder
-import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Instant
 import org.apache.skywalking.oap.server.core.analysis.metrics.DataTable
 import org.apache.skywalking.oap.server.library.module.ModuleManager
@@ -59,11 +58,8 @@ object InstrumentProcessor : FeedbackProcessor() {
     override fun bootProcessor(moduleManager: ModuleManager) {
         module = moduleManager
 
-        runBlocking {
-            log.info("InstrumentProcessor initialized")
-
-            connectToPlatform()
-        }
+        log.info("InstrumentProcessor initialized")
+        connectToPlatform()
     }
 
     override fun onConnected(vertx: Vertx) {
@@ -158,7 +154,9 @@ object InstrumentProcessor : FeedbackProcessor() {
     }
 
     private fun validateRolePermission(
-        selfInfo: SelfInfo, msg: Message<JsonObject>, handler: Handler<AsyncResult<Message<JsonObject>>>
+        selfInfo: SelfInfo,
+        msg: Message<JsonObject>,
+        handler: Handler<AsyncResult<Message<JsonObject>>>
     ) {
         if (msg.headers().get("action") == "addLiveInstruments") {
             val batchPromise = Promise.promise<Message<JsonObject>>()
@@ -210,7 +208,9 @@ object InstrumentProcessor : FeedbackProcessor() {
     }
 
     private fun validateInstrumentAccess(
-        selfInfo: SelfInfo, msg: Message<JsonObject>, promise: Promise<Message<JsonObject>>
+        selfInfo: SelfInfo,
+        msg: Message<JsonObject>,
+        promise: Promise<Message<JsonObject>>
     ) {
         if (msg.headers().get("action") == "addLiveInstruments") {
             val instruments = msg.body().getJsonArray("instruments")

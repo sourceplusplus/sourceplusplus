@@ -2,7 +2,7 @@
 # https://github.com/detekt/detekt/blob/master/detekt-core/src/main/resources/default-detekt-config.yml
 
 build:
-  maxIssues: 31 #todo: zero out
+  maxIssues: 35 #todo: zero out
 
 formatting:
   Indentation:
@@ -10,6 +10,10 @@ formatting:
   CommentSpacing:
     active: false
   NoWildcardImports:
+    active: false
+  ChainWrapping:
+    active: false
+  Wrapping:
     active: false
 
 style:
@@ -29,8 +33,6 @@ exceptions:
     active: false
   TooGenericExceptionThrown:
     excludes: ['**/test/**']
-  PrintStackTrace:
-    excludes: ['**/SourcePlatform.kt', '**/ServiceProvider.kt']
 
 complexity:
   LongParameterList:

@@ -28,7 +28,6 @@ import io.vertx.kotlin.coroutines.await
 import io.vertx.servicediscovery.Record
 import io.vertx.servicediscovery.types.EventBusService
 import io.vertx.serviceproxy.ServiceBinder
-import kotlinx.coroutines.runBlocking
 import org.apache.skywalking.oap.server.core.CoreModule
 import org.apache.skywalking.oap.server.core.analysis.metrics.DataTable
 import org.apache.skywalking.oap.server.core.query.MetricsQueryService
@@ -60,10 +59,8 @@ object ViewProcessor : FeedbackProcessor() {
             metricsQueryService = getService(MetricsQueryService::class.java)
         }
 
-        runBlocking {
-            log.info("ViewProcessor initialized")
-            connectToPlatform()
-        }
+        log.info("ViewProcessor initialized")
+        connectToPlatform()
     }
 
     override fun onConnected(vertx: Vertx) {

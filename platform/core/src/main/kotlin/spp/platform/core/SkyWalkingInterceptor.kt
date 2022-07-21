@@ -196,7 +196,7 @@ class SkyWalkingInterceptor(private val router: Router) : CoroutineVerticle() {
                         req.response().end()
                     }
                 }.onFailure {
-                    log.error("Failed to send message: ${it}")
+                    log.error("Failed to send message: $it")
                     req.response().end()
                 }
             }
