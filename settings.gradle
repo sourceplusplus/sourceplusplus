@@ -22,7 +22,6 @@ rootProject.buildFileName = "build.gradle.kts"
 rootProject.name = 'live-platform'
 
 include 'interfaces:cli'
-include 'interfaces:jetbrains'
 include 'interfaces:jetbrains:commander'
 include 'interfaces:jetbrains:commander:kotlin-compiler-wrapper'
 include 'interfaces:jetbrains:marker'

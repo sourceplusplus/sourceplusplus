@@ -34,10 +34,13 @@ subprojects {
 
     apply(plugin = "org.jetbrains.kotlin.jvm")
     apply(plugin = "com.diffplug.spotless")
+    apply<io.gitlab.arturbosch.detekt.DetektPlugin>()
 
+    val detektPlugins by configurations
     val implementation by configurations
     val compileOnly by configurations
     val testImplementation by configurations
+
     dependencies {
         implementation("plus.sourceplus:protocol:$projectVersion")
         implementation("org.apache.commons:commons-lang3:$commonsLang3Version")
@@ -98,7 +101,7 @@ subprojects {
         compileOnly("org.apache.skywalking:storage-elasticsearch-plugin:$skywalkingVersion") { isTransitive = false }
         compileOnly("org.apache.skywalking:library-elasticsearch-client:$skywalkingVersion") { isTransitive = false }
 
-//    detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.21.0")
+        detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.21.0")
 
         testImplementation("org.junit.jupiter:junit-jupiter-engine:$jupiterVersion")
         testImplementation("io.vertx:vertx-junit5:$vertxVersion")
@@ -109,8 +112,14 @@ subprojects {
 
     spotless {
         kotlin {
-            licenseHeaderFile(File(project.rootDir, "platform/LICENSE-HEADER.txt"))
+            licenseHeaderFile(File(project.rootDir, "LICENSE-HEADER.txt"))
         }
+    }
+
+    tasks.withType<io.gitlab.arturbosch.detekt.Detekt> {
+        parallel = true
+        buildUponDefaultConfig = true
+        config.setFrom(arrayOf(File(project.rootDir, "detekt.yml")))
     }
 
     tasks.getByName<Test>("test") {

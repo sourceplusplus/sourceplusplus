@@ -64,11 +64,11 @@ import org.bouncycastle.openssl.PEMParser
 import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter
 import org.bouncycastle.openssl.jcajce.JcaPEMWriter
 import spp.booster.PortalServer
-import spp.platform.core.service.ServiceProvider
 import spp.platform.bridge.marker.MarkerBridge
 import spp.platform.bridge.probe.ProbeBridge
 import spp.platform.bridge.probe.util.SelfSignedCertGenerator
 import spp.platform.common.util.CertsToJksOptionsConverter
+import spp.platform.core.service.ServiceProvider
 import spp.platform.storage.CoreStorage
 import spp.platform.storage.MemoryStorage
 import spp.platform.storage.RedisStorage
@@ -330,7 +330,7 @@ class SourcePlatform : CoroutineVerticle() {
                         .getString("install_defaults")?.toBooleanStrictOrNull() != false
                     SourceStorage.setup(customStorage, config, installDefaults)
                     sessionStore = LocalSessionStore.create(vertx) //todo: sessionStore
-                } catch (e: ClassNotFoundException) {
+                } catch (ignore: ClassNotFoundException) {
                     log.error("Unknown storage selector: $storageSelector")
                     throw IllegalArgumentException("Unknown storage selector: $storageSelector")
                 }

@@ -27,13 +27,13 @@ import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.slf4j.LoggerFactory
-import spp.protocol.marshall.ProtocolMarshaller
 import spp.protocol.SourceServices
 import spp.protocol.SourceServices.Provide.toLiveInstrumentSubscriberAddress
 import spp.protocol.instrument.LiveLog
 import spp.protocol.instrument.LiveSourceLocation
 import spp.protocol.instrument.event.LiveInstrumentEvent
 import spp.protocol.instrument.event.LiveInstrumentEventType
+import spp.protocol.marshall.ProtocolMarshaller
 import spp.protocol.service.LiveInstrumentService
 import spp.protocol.service.error.LiveInstrumentException
 import java.util.*
@@ -101,7 +101,7 @@ class LiveLogTest : PlatformIntegrationTest() {
             }
         }.completionHandler {
             if (it.failed()) {
-                testContext.failNow(it.cause());
+                testContext.failNow(it.cause())
                 return@completionHandler
             }
 

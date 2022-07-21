@@ -25,7 +25,6 @@ import io.vertx.ext.auth.impl.jose.JWT
 import io.vertx.kotlin.coroutines.CoroutineVerticle
 import io.vertx.servicediscovery.ServiceDiscovery
 import org.apache.skywalking.oap.server.library.module.ModuleManager
-import org.slf4j.LoggerFactory
 import spp.protocol.platform.PlatformAddress.PROCESSOR_CONNECTED
 import spp.protocol.platform.status.InstanceConnection
 import java.util.*
@@ -33,7 +32,6 @@ import java.util.*
 abstract class FeedbackProcessor : CoroutineVerticle() {
 
     companion object {
-        private val log = LoggerFactory.getLogger(FeedbackProcessor::class.java)
         val INSTANCE_ID = UUID.randomUUID().toString()
 
         lateinit var vertx: Vertx
@@ -47,7 +45,7 @@ abstract class FeedbackProcessor : CoroutineVerticle() {
 
     abstract fun onConnected(vertx: Vertx)
 
-    suspend fun connectToPlatform() {
+    fun connectToPlatform() {
         Companion.vertx = ClusterConnection.getVertx()
         discovery = ServiceDiscovery.create(Companion.vertx)
 

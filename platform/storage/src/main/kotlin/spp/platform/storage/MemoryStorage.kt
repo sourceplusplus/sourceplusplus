@@ -66,7 +66,7 @@ open class MemoryStorage(val vertx: Vertx) : CoreStorage {
         val developersStorage = vertx.sharedData().getAsyncMap<String, Any>(namespace("developers")).await()
         val currentDevelopers = developersStorage.get("ids").await() as JsonArray? ?: JsonArray()
         val existingDeveloper = currentDevelopers.list.find { it == id } as String?
-        if (existingDeveloper != null) throw IllegalStateException("Developer $existingDeveloper already exists")
+        if (existingDeveloper != null) error("Developer $existingDeveloper already exists")
         currentDevelopers.add(id)
         developersStorage.put("ids", currentDevelopers)
 

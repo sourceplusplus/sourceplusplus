@@ -29,7 +29,7 @@ fun IMetadataQueryDAO.getMeterServices(group: String): List<Service> {
     } else if (Version.CURRENT.buildVersion.startsWith("9")) {
         Reflect.on(this).call("listServices", "", group).get()
     } else {
-        throw IllegalStateException("Unsupported version: ${Version.CURRENT.name}")
+        error("Unsupported version: ${Version.CURRENT.name}")
     }
 }
 
@@ -43,6 +43,6 @@ fun IMetadataQueryDAO.getMeterServiceInstances(
     } else if (Version.CURRENT.buildVersion.startsWith("9")) {
         Reflect.on(this).call("listInstances", startTimestamp, endTimestamp, serviceId).get()
     } else {
-        throw IllegalStateException("Unsupported version: ${Version.CURRENT.name}")
+        error("Unsupported version: ${Version.CURRENT.name}")
     }
 }
