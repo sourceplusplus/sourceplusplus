@@ -85,7 +85,8 @@ open class PlatformIntegrationTest {
             val platformPort = 5455
             val useSsl = true
             val trustAll = true
-            val platformCertificateFile = "../../docker/e2e/config/spp-platform.crt"
+            val currentDir = File(".").absoluteFile
+            val platformCertificateFile = currentDir.absolutePath.substringBeforeLast("/platform/") + "/docker/e2e/config/spp-platform.crt"
             val myCaAsABuffer = Buffer.buffer(File(platformCertificateFile).readText())
             val options = when {
                 myCaAsABuffer != null -> NetClientOptions()
