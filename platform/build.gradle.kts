@@ -217,3 +217,5 @@ tasks.register("assembleUp") {
         ":example-web-app:build", "composeUp"
     )
 }
+
+tasks.getByName("assemble").dependsOn(":makeDist")
