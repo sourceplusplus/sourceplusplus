@@ -93,7 +93,7 @@ class InstrumentIntegrationTest : PlatformIntegrationTest() {
                     testContext.verify {
                         assertTrue(bpHit.stackTrace.elements.isNotEmpty())
                         val topFrame = bpHit.stackTrace.elements.first()
-                        assertEquals(10, topFrame.variables.size)
+                        assertEquals(12, topFrame.variables.size)
 
                         //byte
                         assertEquals(-2, topFrame.variables.find { it.name == "b" }!!.value)
@@ -160,6 +160,20 @@ class InstrumentIntegrationTest : PlatformIntegrationTest() {
                             "java.lang.Integer",
                             topFrame.variables.find { it.name == "i" }!!.liveClazz
                         )
+
+                        //int arr
+                        assertEquals(
+                            "[1, 2, 3]",
+                            (topFrame.variables.find { it.name == "iArr" }!!.value as List<Map<String, Any>>)
+                                .map { it["value"] }.toString()
+                        )
+
+                        //int list
+                        assertEquals(
+                            "[1, 2, 3]",
+                            (topFrame.variables.find { it.name == "iList" }!!.value as List<Map<String, Any>>)
+                                .map { it["value"] }.toString()
+                        )
                     }
                 }
                 else -> testContext.failNow("Got event: " + it.body())
@@ -187,7 +201,7 @@ class InstrumentIntegrationTest : PlatformIntegrationTest() {
             instrumentService.addLiveInstrument(
                 LiveBreakpoint(
                     id = instrumentId,
-                    location = LiveSourceLocation("spp.example.webapp.test.InstrumentTest", 37)
+                    location = LiveSourceLocation("spp.example.webapp.test.InstrumentTest", 44)
                 )
             ).onComplete {
                 if (it.failed()) {

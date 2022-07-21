@@ -21,6 +21,7 @@ import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
 import com.google.protobuf.Message
 import io.vertx.core.json.Json
+import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import io.vertx.kotlin.core.json.get
 import kotlinx.datetime.Instant
@@ -76,12 +77,26 @@ class LiveInstrumentAnalysis(
                 if (!it.startsWith("@")) {
                     if (varData.get<Any>(it) is JsonObject) {
                         innerVars.add(toLiveVariable(it, null, varData.getJsonObject(it)))
+                    } else if (varData.get<Any>(it) is JsonArray) {
+                        innerVars.add(toLiveVariableArray(it, null, varData.getJsonArray(it)))
                     } else {
                         innerVars.add(LiveVariable(it, varData[it]))
                     }
                 }
             }
             return LiveVariable(varName, innerVars, scope = scope, liveClazz = liveClass, liveIdentity = liveIdentity)
+        }
+
+        fun toLiveVariableArray(varName: String, scope: LiveVariableScope?, varData: JsonArray): LiveVariable {
+            val innerVars = mutableListOf<LiveVariable>()
+            varData.forEachIndexed { index, it ->
+                if (it is JsonObject) {
+                    innerVars.add(toLiveVariable("$index", null, it))
+                } else {
+                    innerVars.add(LiveVariable("$index", it))
+                }
+            }
+            return LiveVariable(varName, innerVars, scope = scope)
         }
 
         fun transformRawBreakpointHit(bpData: JsonObject): LiveBreakpointHit {
@@ -96,7 +111,9 @@ class LiveInstrumentAnalysis(
 
                 var liveVar = if (outerVal.get<Any>(varName) is JsonObject) {
                     toLiveVariable(varName, scope, outerVal.getJsonObject(varName))
-                } else {
+                } else if (outerVal.get<Any>(varName) is JsonArray) {
+                    toLiveVariableArray(varName, scope, outerVal.getJsonArray(varName))
+                } else{
                     LiveVariable(
                         varName, outerVal[varName],
                         scope = scope,
