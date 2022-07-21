@@ -20,11 +20,9 @@ package spp.platform.core
 import com.google.common.base.CaseFormat
 import com.google.common.io.Resources
 import io.vertx.core.DeploymentOptions
-import io.vertx.core.Promise
 import io.vertx.core.Vertx
 import io.vertx.core.buffer.Buffer
 import io.vertx.core.http.HttpServerOptions
-import io.vertx.core.json.Json
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import io.vertx.core.net.NetServerOptions
@@ -74,8 +72,7 @@ import spp.platform.storage.MemoryStorage
 import spp.platform.storage.RedisStorage
 import spp.platform.storage.SourceStorage
 import spp.protocol.SourceServices.Utilize
-import spp.protocol.platform.ProbeAddress.LIVE_INSTRUMENT_REMOTE
-import spp.protocol.service.LiveViewService
+import spp.protocol.service.LiveService
 import java.io.File
 import java.io.FileWriter
 import java.io.StringReader
@@ -491,6 +488,7 @@ class SourcePlatform : CoroutineVerticle() {
 
     private fun getClients(ctx: RoutingContext) {
         var selfId = ctx.user()?.principal()?.getString("developer_id")
+        val accessToken: String? = ctx.user()?.principal()?.getString("access_token")
         if (selfId == null) {
             val jwtConfig = config.getJsonObject("spp-platform").getJsonObject("jwt")
             val jwtEnabled = jwtConfig.getString("enabled").toBooleanStrict()
@@ -504,13 +502,16 @@ class SourcePlatform : CoroutineVerticle() {
         log.debug("Get platform clients request. Developer: {}", selfId)
 
         launch(vertx.dispatcher()) {
-            ctx.response().putHeader("Content-Type", "application/json")
-                .end(
-                    JsonObject()
-                        .put("markers", JsonArray(Json.encode(MarkerBridge.getActiveMarkers(vertx))))
-                        .put("probes", JsonArray(Json.encode(ProbeBridge.getActiveProbes(vertx))))
-                        .toString()
-                )
+            LiveService.createProxy(vertx, accessToken).getClients().onComplete {
+                if (it.succeeded()) {
+                    ctx.response()
+                        .putHeader("Content-Type", "application/json")
+                        .end(it.result().toString())
+                } else {
+                    log.error("Failed to get platform stats", it.cause())
+                    ctx.response().setStatusCode(500).end()
+                }
+            }
         }
     }
 
@@ -530,73 +531,16 @@ class SourcePlatform : CoroutineVerticle() {
         log.info("Get platform stats request. Developer: {}", selfId)
 
         launch(vertx.dispatcher()) {
-            val promise = Promise.promise<JsonObject>()
-            EventBusService.getProxy(
-                discovery, LiveViewService::class.java,
-                JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("auth-token", accessToken)) } }
-            ) {
+            LiveService.createProxy(vertx, accessToken).getStats().onComplete {
                 if (it.succeeded()) {
-                    it.result().getLiveViewSubscriptionStats().onComplete {
-                        if (it.succeeded()) {
-                            promise.complete(it.result())
-                        } else {
-                            promise.fail(it.cause())
-                        }
-                    }
+                    ctx.response()
+                        .putHeader("Content-Type", "application/json")
+                        .end(it.result().toString())
                 } else {
-                    promise.fail(it.cause())
+                    log.error("Failed to get platform stats", it.cause())
+                    ctx.response().setStatusCode(500).end()
                 }
             }
-            val subStats = try {
-                promise.future().await()
-            } catch (ex: Throwable) {
-                log.error("Failed to get live view subscription stats", ex)
-                ctx.response().setStatusCode(500).end()
-                return@launch
-            }
-
-            ctx.response().putHeader("Content-Type", "application/json")
-                .end(
-                    JsonObject()
-                        .put("platform", getPlatformStats())
-                        .put("subscriptions", subStats)
-                        .toString()
-                )
         }
-    }
-
-    private suspend fun getPlatformStats(): JsonObject {
-        return JsonObject()
-            .put("connected-markers", MarkerBridge.getConnectedMarkerCount(vertx))
-            .put("connected-probes", ProbeBridge.getConnectedProbeCount(vertx))
-            .put(
-                "services",
-                JsonObject()
-                    .put(
-                        "core",
-                        JsonObject()
-                            .put(
-                                Utilize.LIVE_SERVICE,
-                                vertx.sharedData().getLocalCounter(Utilize.LIVE_SERVICE).await().get().await()
-                            )
-                            .put(
-                                Utilize.LIVE_INSTRUMENT,
-                                vertx.sharedData().getLocalCounter(Utilize.LIVE_INSTRUMENT).await().get().await()
-                            )
-                            .put(
-                                Utilize.LIVE_VIEW,
-                                vertx.sharedData().getLocalCounter(Utilize.LIVE_VIEW).await().get().await()
-                            )
-                    )
-                    .put(
-                        "probe",
-                        JsonObject()
-                            .put(
-                                LIVE_INSTRUMENT_REMOTE,
-                                vertx.sharedData().getLocalCounter(LIVE_INSTRUMENT_REMOTE)
-                                    .await().get().await()
-                            )
-                    )
-            )
     }
 }

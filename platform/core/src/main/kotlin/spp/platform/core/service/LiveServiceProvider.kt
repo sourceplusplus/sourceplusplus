@@ -21,19 +21,26 @@ import io.vertx.core.Future
 import io.vertx.core.Promise
 import io.vertx.core.Vertx
 import io.vertx.core.http.HttpMethod
+import io.vertx.core.json.Json
+import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
+import io.vertx.kotlin.coroutines.await
 import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
+import spp.platform.bridge.marker.MarkerBridge
 import spp.platform.bridge.probe.ProbeBridge
 import spp.platform.common.DeveloperAuth
 import spp.platform.storage.SourceStorage
+import spp.protocol.SourceServices
+import spp.protocol.platform.ProbeAddress
 import spp.protocol.platform.developer.Developer
 import spp.protocol.platform.developer.SelfInfo
 import spp.protocol.platform.general.Service
 import spp.protocol.platform.status.ActiveInstance
 import spp.protocol.service.LiveService
+import spp.protocol.service.LiveViewService
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -45,6 +52,85 @@ class LiveServiceProvider(private val vertx: Vertx) : LiveService {
         private val log = LoggerFactory.getLogger(LiveServiceProvider::class.java)
         private val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HHmm")
             .withZone(ZoneId.systemDefault())
+    }
+
+    override fun getClients(): Future<JsonObject> {
+        val promise = Promise.promise<JsonObject>()
+        GlobalScope.launch(vertx.dispatcher()) {
+            promise.complete(
+                JsonObject()
+                    .put("markers", JsonArray(Json.encode(MarkerBridge.getActiveMarkers(vertx))))
+                    .put("probes", JsonArray(Json.encode(ProbeBridge.getActiveProbes(vertx))))
+            )
+        }
+        return promise.future()
+    }
+
+    override fun getStats(): Future<JsonObject> {
+        log.trace("Getting platform stats")
+        val promise = Promise.promise<JsonObject>()
+        val devAuth = Vertx.currentContext().get<DeveloperAuth>("developer")
+
+        val subStats = Promise.promise<JsonObject>()
+        LiveViewService.createProxy(vertx, devAuth.accessToken).getLiveViewSubscriptionStats().onComplete {
+            if (it.succeeded()) {
+                subStats.complete(it.result())
+            } else {
+                subStats.fail(it.cause())
+            }
+        }
+
+        GlobalScope.launch(vertx.dispatcher()) {
+            val platformStats = getPlatformStats()
+            subStats.future().onSuccess {
+                promise.complete(
+                    JsonObject()
+                        .put("platform", platformStats)
+                        .put("subscriptions", it)
+                )
+            }.onFailure {
+                promise.fail(it)
+            }
+        }
+        return promise.future()
+    }
+
+    private suspend fun getPlatformStats(): JsonObject {
+        return JsonObject()
+            .put("connected-markers", MarkerBridge.getConnectedMarkerCount(vertx))
+            .put("connected-probes", ProbeBridge.getConnectedProbeCount(vertx))
+            .put(
+                "services",
+                JsonObject()
+                    .put(
+                        "core",
+                        JsonObject()
+                            .put(
+                                SourceServices.Utilize.LIVE_SERVICE,
+                                vertx.sharedData().getLocalCounter(SourceServices.Utilize.LIVE_SERVICE).await().get()
+                                    .await()
+                            )
+                            .put(
+                                SourceServices.Utilize.LIVE_INSTRUMENT,
+                                vertx.sharedData().getLocalCounter(SourceServices.Utilize.LIVE_INSTRUMENT).await().get()
+                                    .await()
+                            )
+                            .put(
+                                SourceServices.Utilize.LIVE_VIEW,
+                                vertx.sharedData().getLocalCounter(SourceServices.Utilize.LIVE_VIEW).await().get()
+                                    .await()
+                            )
+                    )
+                    .put(
+                        "probe",
+                        JsonObject()
+                            .put(
+                                ProbeAddress.LIVE_INSTRUMENT_REMOTE,
+                                vertx.sharedData().getLocalCounter(ProbeAddress.LIVE_INSTRUMENT_REMOTE)
+                                    .await().get().await()
+                            )
+                    )
+            )
     }
 
     override fun getSelf(): Future<SelfInfo> {
