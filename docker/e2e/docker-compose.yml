@@ -23,6 +23,8 @@ services:
     environment:
       - JAVA_OPTS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5106
       - SPP_LOGGING_LEVEL=info
+      - SPP_STORAGE=redis
+      - SPP_STORAGE_HOST=redis
       - SW_OAL_ENGINE_DEBUG=Y
       - SW_ENABLE_UPDATE_UI_TEMPLATE=true
       - SW_TELEMETRY=prometheus
