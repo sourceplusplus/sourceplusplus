@@ -1,21 +1,28 @@
 [submodule "protocol"]
 	path = protocol
 	url = https://github.com/sourceplusplus/protocol
+	branch = master
 [submodule "probes/jvm"]
 	path = probes/jvm
 	url = https://github.com/sourceplusplus/probe-jvm
+	branch = master
 [submodule "probes/python"]
 	path = probes/python
 	url = https://github.com/sourceplusplus/probe-python
+	branch = master
 [submodule "interfaces/cli"]
 	path = interfaces/cli
 	url = https://github.com/sourceplusplus/interface-cli
+	branch = master
 [submodule "interfaces/jetbrains"]
 	path = interfaces/jetbrains
 	url = https://github.com/sourceplusplus/interface-jetbrains
+	branch = master
 [submodule "docker/e2e/example-web-app"]
 	path = docker/e2e/example-web-app
 	url = https://github.com/sourceplusplus/example-web-app
+	branch = master
 [submodule "interfaces/booster-ui"]
 	path = interfaces/booster-ui
 	url = https://github.com/sourceplusplus/interface-booster-ui
+	branch = master
