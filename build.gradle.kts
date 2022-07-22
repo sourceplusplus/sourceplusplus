@@ -4,6 +4,7 @@ import java.net.URL
 plugins {
     id("com.dorongold.task-tree") version "2.1.0"
     id("org.jetbrains.kotlin.plugin.noarg") apply false
+    id("com.asarkar.gradle.build-time-tracker") version "4.3.0"
 }
 
 val projectVersion: String by project
