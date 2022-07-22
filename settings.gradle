@@ -37,6 +37,7 @@ include 'platform:storage'
 include 'platform:processor:live-instrument'
 include 'platform:processor:live-view'
 include 'protocol'
+include 'protocol:codegen'
 
 include ':probes:jvm:control'
 include ':probes:jvm:services'
