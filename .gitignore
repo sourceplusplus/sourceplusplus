@@ -1,0 +1,9 @@
+# Ignore artifacts
+build/
+/docker/e2e/spp-*.jar
+
+# Ignore IDE files
+.idea/
+
+# Ignore .gradle directory
+.gradle/
