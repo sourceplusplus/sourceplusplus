@@ -1,6 +1,7 @@
 [submodule "protocol"]
 	path = protocol
 	url = https://github.com/sourceplusplus/protocol
+	master = master
 [submodule "probes/jvm"]
 	path = probes/jvm
 	url = https://github.com/sourceplusplus/probe-jvm
