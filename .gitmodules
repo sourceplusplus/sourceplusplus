@@ -5,18 +5,24 @@
 [submodule "probes/jvm"]
 	path = probes/jvm
 	url = https://github.com/sourceplusplus/probe-jvm
+    master = master
 [submodule "probes/python"]
 	path = probes/python
 	url = https://github.com/sourceplusplus/probe-python
+    master = master
 [submodule "interfaces/cli"]
 	path = interfaces/cli
 	url = https://github.com/sourceplusplus/interface-cli
+    master = master
 [submodule "interfaces/jetbrains"]
 	path = interfaces/jetbrains
 	url = https://github.com/sourceplusplus/interface-jetbrains
+    master = master
 [submodule "docker/e2e/example-web-app"]
 	path = docker/e2e/example-web-app
 	url = https://github.com/sourceplusplus/example-web-app
+    master = master
 [submodule "interfaces/booster-ui"]
 	path = interfaces/booster-ui
 	url = https://github.com/sourceplusplus/interface-booster-ui
+    master = master
