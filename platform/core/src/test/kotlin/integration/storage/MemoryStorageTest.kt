@@ -25,16 +25,16 @@ import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import spp.platform.storage.RedisStorage
+import spp.platform.storage.MemoryStorage
 import spp.protocol.platform.auth.DeveloperRole
 import spp.protocol.platform.auth.RedactionType
 
 @ExtendWith(VertxExtension::class)
-class RedisStorageTest {
+class MemoryStorageTest {
 
     @Test
     fun updateDataRedactionInRole(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
-        val storage = RedisStorage()
+        val storage = MemoryStorage(vertx)
         storage.init(vertx, JsonObject().put("host", "localhost").put("port", 6379))
 
         storage.addDataRedaction("test", RedactionType.IDENTIFIER_MATCH, "lookup", "value1")
