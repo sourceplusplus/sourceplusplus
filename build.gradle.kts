@@ -40,9 +40,9 @@ tasks {
         doLast {
             file("dist/spp-platform-${project.version}/config").mkdirs()
             file("docker/e2e/config/spp-platform.yml")
-                .copyTo(file("dist/spp-platform-${project.version}/config/spp-platform.yml"))
+                .copyTo(file("dist/spp-platform-${project.version}/config/spp-platform.yml"), true)
             file("platform/core/build/libs/spp-platform-${project.version}.jar")
-                .copyTo(file("dist/spp-platform-${project.version}/spp-platform-${project.version}.jar"))
+                .copyTo(file("dist/spp-platform-${project.version}/spp-platform-${project.version}.jar"), true)
         }
     }
     register<Tar>("makeDist") {
