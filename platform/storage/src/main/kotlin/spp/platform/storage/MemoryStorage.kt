@@ -36,9 +36,9 @@ open class MemoryStorage(val vertx: Vertx) : CoreStorage {
         return getDevelopers().find { getAccessToken(it.id) == token }
     }
 
-    override suspend fun hasRole(roleName: String): Boolean {
+    override suspend fun hasRole(role: DeveloperRole): Boolean {
         val rolesStorage = vertx.sharedData().getAsyncMap<String, Any>(namespace("roles")).await()
-        return (rolesStorage.get("roles").await() as JsonArray? ?: JsonArray()).list.find { it == roleName } != null
+        return (rolesStorage.get("roles").await() as JsonArray? ?: JsonArray()).list.find { it == role.roleName } != null
     }
 
     override suspend fun removeRole(role: DeveloperRole): Boolean {
@@ -49,11 +49,11 @@ open class MemoryStorage(val vertx: Vertx) : CoreStorage {
         return true
     }
 
-    override suspend fun addRole(roleName: String): Boolean {
+    override suspend fun addRole(role: DeveloperRole): Boolean {
         val currentRoles = vertx.sharedData().getAsyncMap<String, JsonArray>(namespace("roles"))
             .await().get("roles").await() ?: JsonArray()
         vertx.sharedData().getAsyncMap<String, JsonArray>(namespace("roles"))
-            .await().put("roles", currentRoles.add(roleName))
+            .await().put("roles", currentRoles.add(role.roleName))
         return true
     }
 

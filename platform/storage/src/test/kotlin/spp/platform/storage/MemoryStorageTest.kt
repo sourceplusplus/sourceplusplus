@@ -32,7 +32,7 @@ class MemoryStorageTest {
         val storage = MemoryStorage(vertx)
 
         storage.addDataRedaction("test", RedactionType.IDENTIFIER_MATCH, "lookup", "value1")
-        storage.addRole("test_role")
+        storage.addRole(DeveloperRole.fromString("test_role"))
         storage.addDataRedactionToRole("test", DeveloperRole.fromString("test_role"))
         val dataRedactions = storage.getRoleDataRedactions(DeveloperRole.fromString("test_role"))
         assertEquals(1, dataRedactions.size)

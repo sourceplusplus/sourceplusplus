@@ -51,8 +51,7 @@ open class RedisStorage : CoreStorage {
         return Developer(devId)
     }
 
-    override suspend fun hasRole(roleName: String): Boolean {
-        val role = DeveloperRole.fromString(roleName)
+    override suspend fun hasRole(role: DeveloperRole): Boolean {
         return redis.sismember(namespace("roles"), role.roleName).await().toBoolean()
     }
 
@@ -63,8 +62,7 @@ open class RedisStorage : CoreStorage {
         return redis.srem(listOf(namespace("roles"), role.roleName)).await().toBoolean()
     }
 
-    override suspend fun addRole(roleName: String): Boolean {
-        val role = DeveloperRole.fromString(roleName)
+    override suspend fun addRole(role: DeveloperRole): Boolean {
         return redis.sadd(listOf(namespace("roles"), role.roleName)).await().toBoolean()
     }
 

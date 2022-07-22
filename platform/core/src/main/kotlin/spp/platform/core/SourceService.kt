@@ -347,12 +347,11 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
                 }
             }
 
-            val role = env.getArgument<String>("role")
+            val role = DeveloperRole.fromString(env.getArgument("role"))
             if (!SourceStorage.hasRole(role)) {
                 completableFuture.completeExceptionally(IllegalStateException("Non-existing role: $role"))
             } else {
-                val developerRole = DeveloperRole.fromString(role)
-                completableFuture.complete(SourceStorage.getRoleAccessPermissions(developerRole).toList())
+                completableFuture.complete(SourceStorage.getRoleAccessPermissions(role).toList())
             }
         }
         return completableFuture
@@ -430,12 +429,11 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
                 }
             }
 
-            val role = env.getArgument<String>("role")
+            val role = DeveloperRole.fromString(env.getArgument("role"))
             if (!SourceStorage.hasRole(role)) {
                 completableFuture.completeExceptionally(IllegalStateException("Non-existing role: $role"))
             } else {
-                val developerRole = DeveloperRole.fromString(role)
-                completableFuture.complete(SourceStorage.getRoleDataRedactions(developerRole).toList())
+                completableFuture.complete(SourceStorage.getRoleDataRedactions(role).toList())
             }
         }
         return completableFuture
@@ -482,7 +480,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
     private fun getRolePermissions(env: DataFetchingEnvironment): CompletableFuture<List<RolePermission>> {
         val completableFuture = CompletableFuture<List<RolePermission>>()
         launch(vertx.dispatcher()) {
-            val role = env.getArgument<String>("role")
+            val role = DeveloperRole.fromString(env.getArgument("role"))
             if (jwtEnabled) {
                 val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
@@ -495,7 +493,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
             if (!SourceStorage.hasRole(role)) {
                 completableFuture.completeExceptionally(IllegalStateException("Non-existing role: $role"))
             } else {
-                completableFuture.complete(SourceStorage.getRolePermissions(DeveloperRole.fromString(role)).toList())
+                completableFuture.complete(SourceStorage.getRolePermissions(role).toList())
             }
         }
         return completableFuture
@@ -928,14 +926,14 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
                 }
             }
 
-            val role: String = env.getArgument("role")
+            val role = DeveloperRole.fromString(env.getArgument("role"))
             val id: String = env.getArgument("dataRedactionId")
             if (!SourceStorage.hasRole(role)) {
                 completableFuture.completeExceptionally(IllegalStateException("Non-existing role: $role"))
             } else if (!SourceStorage.hasDataRedaction(id)) {
                 completableFuture.completeExceptionally(IllegalStateException("Non-existing data redaction: $role"))
             } else {
-                SourceStorage.addDataRedactionToRole(id, DeveloperRole.fromString(role))
+                SourceStorage.addDataRedactionToRole(id, role)
                 completableFuture.complete(true)
             }
         }
@@ -954,14 +952,14 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
                 }
             }
 
-            val role: String = env.getArgument("role")
+            val role = DeveloperRole.fromString(env.getArgument("role"))
             val id: String = env.getArgument("dataRedactionId")
             if (!SourceStorage.hasRole(role)) {
                 completableFuture.completeExceptionally(IllegalStateException("Non-existing role: $role"))
             } else if (!SourceStorage.hasDataRedaction(id)) {
                 completableFuture.completeExceptionally(IllegalStateException("Non-existing data redaction: $id"))
             } else {
-                SourceStorage.removeDataRedactionFromRole(id, DeveloperRole.fromString(role))
+                SourceStorage.removeDataRedactionFromRole(id, role)
                 completableFuture.complete(true)
             }
         }
@@ -1024,14 +1022,14 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
                 }
             }
 
-            val role: String = env.getArgument("role")
+            val role = DeveloperRole.fromString(env.getArgument("role"))
             val id: String = env.getArgument("accessPermissionId")
             if (!SourceStorage.hasRole(role)) {
                 completableFuture.completeExceptionally(IllegalStateException("Non-existing role: $role"))
             } else if (!SourceStorage.hasAccessPermission(id)) {
                 completableFuture.completeExceptionally(IllegalStateException("Non-existing access permission: $id"))
             } else {
-                SourceStorage.addAccessPermissionToRole(id, DeveloperRole.fromString(role))
+                SourceStorage.addAccessPermissionToRole(id, role)
                 completableFuture.complete(true)
             }
         }
@@ -1050,14 +1048,14 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
                 }
             }
 
-            val role: String = env.getArgument("role")
+            val role = DeveloperRole.fromString(env.getArgument("role"))
             val id: String = env.getArgument("accessPermissionId")
             if (!SourceStorage.hasRole(role)) {
                 completableFuture.completeExceptionally(IllegalStateException("Non-existing role: $role"))
             } else if (!SourceStorage.hasAccessPermission(id)) {
                 completableFuture.completeExceptionally(IllegalStateException("Non-existing access permission: $role"))
             } else {
-                SourceStorage.removeAccessPermissionFromRole(id, DeveloperRole.fromString(role))
+                SourceStorage.removeAccessPermissionFromRole(id, role)
                 completableFuture.complete(true)
             }
         }
@@ -1076,7 +1074,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
                 }
             }
 
-            val role: String = env.getArgument("role")
+            val role = DeveloperRole.fromString(env.getArgument("role"))
             if (SourceStorage.hasRole(role)) {
                 completableFuture.completeExceptionally(IllegalStateException("Existing role: $role"))
             } else {
@@ -1098,15 +1096,14 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
                 }
             }
 
-            val role: String = env.getArgument("role")
+            val role = DeveloperRole.fromString(env.getArgument("role"))
             if (!SourceStorage.hasRole(role)) {
                 completableFuture.completeExceptionally(IllegalStateException("Non-existing role: $role"))
             } else {
-                val developerRole = DeveloperRole.fromString(role)
-                if (developerRole.nativeRole) {
+                if (role.nativeRole) {
                     completableFuture.completeExceptionally(IllegalArgumentException("Unable to remove native role"))
                 } else {
-                    completableFuture.complete(SourceStorage.removeRole(developerRole))
+                    completableFuture.complete(SourceStorage.removeRole(role))
                 }
             }
         }
@@ -1125,7 +1122,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
                 }
             }
 
-            val role = env.getArgument<String>("role")
+            val role = DeveloperRole.fromString(env.getArgument("role"))
             val permission = env.getArgument<String>("permission")
             if (!SourceStorage.hasRole(role)) {
                 completableFuture.completeExceptionally(IllegalStateException("Non-existing role: $role"))
@@ -1136,12 +1133,12 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
                         IllegalStateException("Non-existing permission: $permission")
                     )
                 } else {
-                    if (DeveloperRole.fromString(role).nativeRole) {
+                    if (role.nativeRole) {
                         completableFuture.completeExceptionally(
                             IllegalArgumentException("Unable to update native role")
                         )
                     } else {
-                        SourceStorage.addPermissionToRole(DeveloperRole.fromString(role), rolePermission)
+                        SourceStorage.addPermissionToRole(role, rolePermission)
                         completableFuture.complete(true)
                     }
                 }
@@ -1162,7 +1159,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
                 }
             }
 
-            val role = env.getArgument<String>("role")
+            val role = DeveloperRole.fromString(env.getArgument("role"))
             val permission = env.getArgument<String>("permission")
             if (!SourceStorage.hasRole(role)) {
                 completableFuture.completeExceptionally(IllegalStateException("Non-existing role: $role"))
@@ -1173,12 +1170,12 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
                         IllegalStateException("Non-existing permission: $permission")
                     )
                 } else {
-                    if (DeveloperRole.fromString(role).nativeRole) {
+                    if (role.nativeRole) {
                         completableFuture.completeExceptionally(
                             IllegalArgumentException("Unable to update native role")
                         )
                     } else {
-                        SourceStorage.removePermissionFromRole(DeveloperRole.fromString(role), rolePermission)
+                        SourceStorage.removePermissionFromRole(role, rolePermission)
                         completableFuture.complete(true)
                     }
                 }
@@ -1200,13 +1197,13 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
             }
 
             val id = env.getArgument<String>("id").lowercase().replace(" ", "")
-            val role = env.getArgument<String>("role")
+            val role = DeveloperRole.fromString(env.getArgument("role"))
             if (!SourceStorage.hasDeveloper(id)) {
                 completableFuture.completeExceptionally(IllegalStateException("Non-existing developer: $id"))
             } else if (!SourceStorage.hasRole(role)) {
                 completableFuture.completeExceptionally(IllegalStateException("Non-existing role: $role"))
             } else {
-                SourceStorage.addRoleToDeveloper(id, DeveloperRole.fromString(role))
+                SourceStorage.addRoleToDeveloper(id, role)
                 completableFuture.complete(true)
             }
         }
@@ -1226,13 +1223,13 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
             }
 
             val id = env.getArgument<String>("id").lowercase().replace(" ", "")
-            val role = env.getArgument<String>("role")
+            val role = DeveloperRole.fromString(env.getArgument("role"))
             if (!SourceStorage.hasDeveloper(id)) {
                 completableFuture.completeExceptionally(IllegalStateException("Non-existing developer: $id"))
             } else if (!SourceStorage.hasRole(role)) {
                 completableFuture.completeExceptionally(IllegalStateException("Non-existing role: $role"))
             } else {
-                SourceStorage.removeRoleFromDeveloper(id, DeveloperRole.fromString(role))
+                SourceStorage.removeRoleFromDeveloper(id, role)
                 completableFuture.complete(true)
             }
         }
