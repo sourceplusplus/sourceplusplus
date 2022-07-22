@@ -12,7 +12,6 @@ val commonsLang3Version: String by project
 val bouncycastleVersion: String by project
 val jupiterVersion: String by project
 val commonsIoVersion: String by project
-val logbackVersion: String by project
 val vertxVersion: String by project
 val joorVersion: String by project
 val slf4jVersion: String by project

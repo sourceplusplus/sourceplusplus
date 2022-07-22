@@ -19,15 +19,12 @@ package integration
 
 import io.vertx.junit5.VertxExtension
 import io.vertx.junit5.VertxTestContext
-import io.vertx.serviceproxy.ServiceProxyBuilder
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import spp.protocol.SourceServices
 import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.LiveSourceLocation
-import spp.protocol.service.LiveInstrumentService
 import java.util.concurrent.TimeUnit
 
 @ExtendWith(VertxExtension::class)
@@ -36,11 +33,6 @@ class MetaTest : PlatformIntegrationTest() {
     @Test
     fun multipleMetaAttributes() {
         val testContext = VertxTestContext()
-        val instrumentService = ServiceProxyBuilder(vertx)
-            .setToken(SYSTEM_JWT_TOKEN)
-            .setAddress(SourceServices.Utilize.LIVE_INSTRUMENT)
-            .build(LiveInstrumentService::class.java)
-
         instrumentService.addLiveInstrument(
             LiveBreakpoint(
                 location = LiveSourceLocation("MetaTest", 42),
@@ -79,11 +71,6 @@ class MetaTest : PlatformIntegrationTest() {
     @Test
     fun getInstrumentsWithMeta() {
         val testContext = VertxTestContext()
-        val instrumentService = ServiceProxyBuilder(vertx)
-            .setToken(SYSTEM_JWT_TOKEN)
-            .setAddress(SourceServices.Utilize.LIVE_INSTRUMENT)
-            .build(LiveInstrumentService::class.java)
-
         instrumentService.addLiveInstrument(
             LiveBreakpoint(
                 location = LiveSourceLocation("MetaTest", 42),

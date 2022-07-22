@@ -21,13 +21,11 @@ import io.vertx.core.json.Json
 import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxExtension
 import io.vertx.junit5.VertxTestContext
-import io.vertx.serviceproxy.ServiceProxyBuilder
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.slf4j.LoggerFactory
-import spp.protocol.SourceServices
 import spp.protocol.SourceServices.Provide.toLiveInstrumentSubscriberAddress
 import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.LiveSourceLocation
@@ -35,7 +33,6 @@ import spp.protocol.instrument.event.LiveInstrumentEvent
 import spp.protocol.instrument.event.LiveInstrumentEventType
 import spp.protocol.marshall.ProtocolMarshaller
 import spp.protocol.marshall.ProtocolMarshaller.deserializeLiveInstrumentRemoved
-import spp.protocol.service.LiveInstrumentService
 import java.util.*
 import java.util.concurrent.TimeUnit
 
@@ -55,7 +52,7 @@ class InstrumentIntegrationTest : PlatformIntegrationTest() {
         var gotRemoved = false
         val instrumentId = UUID.randomUUID().toString()
 
-        val consumer = vertx.eventBus().localConsumer<JsonObject>(toLiveInstrumentSubscriberAddress("system"))
+        val consumer = vertx.eventBus().consumer<JsonObject>(toLiveInstrumentSubscriberAddress("system"))
         consumer.handler {
             log.info("Got subscription event: {}", it.body())
             val liveEvent = Json.decodeValue(it.body().toString(), LiveInstrumentEvent::class.java)
@@ -198,19 +195,13 @@ class InstrumentIntegrationTest : PlatformIntegrationTest() {
                 return@completionHandler
             }
 
-            val instrumentService = ServiceProxyBuilder(vertx)
-                .setToken(SYSTEM_JWT_TOKEN)
-                .setAddress(SourceServices.Utilize.LIVE_INSTRUMENT)
-                .build(LiveInstrumentService::class.java)
             instrumentService.addLiveInstrument(
                 LiveBreakpoint(
                     id = instrumentId,
                     location = LiveSourceLocation("spp.example.webapp.test.InstrumentTest", 44)
                 )
-            ).onComplete {
-                if (it.failed()) {
-                    testContext.failNow(it.cause())
-                }
+            ).onFailure {
+                testContext.failNow(it)
             }
         }
 
