@@ -21,13 +21,11 @@ import io.vertx.core.json.Json
 import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxExtension
 import io.vertx.junit5.VertxTestContext
-import io.vertx.serviceproxy.ServiceProxyBuilder
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.slf4j.LoggerFactory
-import spp.protocol.SourceServices
 import spp.protocol.SourceServices.Provide.toLiveInstrumentSubscriberAddress
 import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.LiveLog
@@ -35,7 +33,6 @@ import spp.protocol.instrument.LiveSourceLocation
 import spp.protocol.instrument.event.LiveInstrumentEvent
 import spp.protocol.instrument.event.LiveInstrumentEventType
 import spp.protocol.marshall.ProtocolMarshaller
-import spp.protocol.service.LiveInstrumentService
 import java.util.concurrent.TimeUnit
 
 @ExtendWith(VertxExtension::class)
@@ -46,11 +43,6 @@ class LiveInstrumentTest : PlatformIntegrationTest() {
     @Test
     fun getLiveInstrumentById_missing() {
         val testContext = VertxTestContext()
-        val instrumentService = ServiceProxyBuilder(vertx)
-            .setToken(SYSTEM_JWT_TOKEN)
-            .setAddress(SourceServices.Utilize.LIVE_INSTRUMENT)
-            .build(LiveInstrumentService::class.java)
-
         instrumentService.getLiveInstrumentById("whatever").onComplete {
             if (it.succeeded()) {
                 testContext.verify {
@@ -74,11 +66,6 @@ class LiveInstrumentTest : PlatformIntegrationTest() {
     @Test
     fun getLiveInstrumentById() {
         val testContext = VertxTestContext()
-        val instrumentService = ServiceProxyBuilder(vertx)
-            .setToken(SYSTEM_JWT_TOKEN)
-            .setAddress(SourceServices.Utilize.LIVE_INSTRUMENT)
-            .build(LiveInstrumentService::class.java)
-
         instrumentService.addLiveInstrument(
             LiveBreakpoint(LiveSourceLocation("integration.LiveInstrumentTest", 1))
         ).onComplete {
@@ -111,11 +98,6 @@ class LiveInstrumentTest : PlatformIntegrationTest() {
     @Test
     fun getLiveInstrumentByIds() {
         val testContext = VertxTestContext()
-        val instrumentService = ServiceProxyBuilder(vertx)
-            .setToken(SYSTEM_JWT_TOKEN)
-            .setAddress(SourceServices.Utilize.LIVE_INSTRUMENT)
-            .build(LiveInstrumentService::class.java)
-
         instrumentService.addLiveInstruments(
             listOf(
                 LiveBreakpoint(LiveSourceLocation("integration.LiveInstrumentTest", 1)),
@@ -154,12 +136,7 @@ class LiveInstrumentTest : PlatformIntegrationTest() {
     @RepeatedTest(2)
     fun addLiveLogAndLiveBreakpoint() {
         val testContext = VertxTestContext()
-        val instrumentService = ServiceProxyBuilder(vertx)
-            .setToken(SYSTEM_JWT_TOKEN)
-            .setAddress(SourceServices.Utilize.LIVE_INSTRUMENT)
-            .build(LiveInstrumentService::class.java)
-
-        val consumer = vertx.eventBus().localConsumer<JsonObject>(toLiveInstrumentSubscriberAddress("system"))
+        val consumer = vertx.eventBus().consumer<JsonObject>(toLiveInstrumentSubscriberAddress("system"))
         consumer.handler {
             log.info("Got subscription event: {}", it.body())
             val liveEvent = Json.decodeValue(it.body().toString(), LiveInstrumentEvent::class.java)
@@ -227,12 +204,7 @@ class LiveInstrumentTest : PlatformIntegrationTest() {
     @RepeatedTest(2)
     fun addLiveLogAndLiveBreakpoint_noLogHit() {
         val testContext = VertxTestContext()
-        val instrumentService = ServiceProxyBuilder(vertx)
-            .setToken(SYSTEM_JWT_TOKEN)
-            .setAddress(SourceServices.Utilize.LIVE_INSTRUMENT)
-            .build(LiveInstrumentService::class.java)
-
-        val consumer = vertx.eventBus().localConsumer<JsonObject>(toLiveInstrumentSubscriberAddress("system"))
+        val consumer = vertx.eventBus().consumer<JsonObject>(toLiveInstrumentSubscriberAddress("system"))
         consumer.handler {
             log.info("Got subscription event: {}", it.body())
             val liveEvent = Json.decodeValue(it.body().toString(), LiveInstrumentEvent::class.java)
@@ -300,12 +272,7 @@ class LiveInstrumentTest : PlatformIntegrationTest() {
     @RepeatedTest(2)
     fun addLiveLogAndLiveBreakpoint_singledThreaded() {
         val testContext = VertxTestContext()
-        val instrumentService = ServiceProxyBuilder(vertx)
-            .setToken(SYSTEM_JWT_TOKEN)
-            .setAddress(SourceServices.Utilize.LIVE_INSTRUMENT)
-            .build(LiveInstrumentService::class.java)
-
-        val consumer = vertx.eventBus().localConsumer<JsonObject>(toLiveInstrumentSubscriberAddress("system"))
+        val consumer = vertx.eventBus().consumer<JsonObject>(toLiveInstrumentSubscriberAddress("system"))
         consumer.handler {
             log.info("Got subscription event: {}", it.body())
             val liveEvent = Json.decodeValue(it.body().toString(), LiveInstrumentEvent::class.java)
@@ -373,12 +340,7 @@ class LiveInstrumentTest : PlatformIntegrationTest() {
     @RepeatedTest(2)
     fun addLiveLogAndLiveBreakpoint_singledThreaded_noLogHit() {
         val testContext = VertxTestContext()
-        val instrumentService = ServiceProxyBuilder(vertx)
-            .setToken(SYSTEM_JWT_TOKEN)
-            .setAddress(SourceServices.Utilize.LIVE_INSTRUMENT)
-            .build(LiveInstrumentService::class.java)
-
-        val consumer = vertx.eventBus().localConsumer<JsonObject>(toLiveInstrumentSubscriberAddress("system"))
+        val consumer = vertx.eventBus().consumer<JsonObject>(toLiveInstrumentSubscriberAddress("system"))
         consumer.handler {
             log.info("Got subscription event: {}", it.body())
             val liveEvent = Json.decodeValue(it.body().toString(), LiveInstrumentEvent::class.java)

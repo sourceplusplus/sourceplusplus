@@ -42,6 +42,10 @@ dependencies {
     implementation(project(":platform:bridge"))
     implementation(project(":platform:storage"))
     implementation(project(":platform:common"))
+
+    testImplementation("org.apache.logging.log4j:log4j-core:2.17.2")
+    //todo: properly add test dependency
+    testImplementation(project(":platform:common").dependencyProject.extensions.getByType(SourceSetContainer::class).test.get().output)
 }
 
 //todo: shouldn't need to put in src (github actions needs for some reason)

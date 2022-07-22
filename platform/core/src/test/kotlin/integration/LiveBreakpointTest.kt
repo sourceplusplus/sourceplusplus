@@ -21,20 +21,18 @@ import io.vertx.core.json.Json
 import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxExtension
 import io.vertx.junit5.VertxTestContext
-import io.vertx.serviceproxy.ServiceProxyBuilder
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.slf4j.LoggerFactory
-import spp.protocol.SourceServices
 import spp.protocol.SourceServices.Provide.toLiveInstrumentSubscriberAddress
 import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.LiveSourceLocation
 import spp.protocol.instrument.event.LiveInstrumentEvent
 import spp.protocol.instrument.event.LiveInstrumentEventType
 import spp.protocol.marshall.ProtocolMarshaller
-import spp.protocol.service.LiveInstrumentService
+import spp.protocol.marshall.ServiceExceptionConverter
 import spp.protocol.service.error.LiveInstrumentException
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -53,7 +51,7 @@ class LiveBreakpointTest : PlatformIntegrationTest() {
         var gotRemoved = false
         val instrumentId = UUID.randomUUID().toString()
 
-        val consumer = vertx.eventBus().localConsumer<JsonObject>(toLiveInstrumentSubscriberAddress("system"))
+        val consumer = vertx.eventBus().consumer<JsonObject>(toLiveInstrumentSubscriberAddress("system"))
         consumer.handler {
             log.info("Got subscription event: {}", it.body())
             val liveEvent = Json.decodeValue(it.body().toString(), LiveInstrumentEvent::class.java)
@@ -148,10 +146,6 @@ class LiveBreakpointTest : PlatformIntegrationTest() {
                 return@completionHandler
             }
 
-            val instrumentService = ServiceProxyBuilder(vertx)
-                .setToken(SYSTEM_JWT_TOKEN)
-                .setAddress(SourceServices.Utilize.LIVE_INSTRUMENT)
-                .build(LiveInstrumentService::class.java)
             instrumentService.addLiveInstrument(
                 LiveBreakpoint(
                     id = instrumentId,
@@ -192,7 +186,7 @@ class LiveBreakpointTest : PlatformIntegrationTest() {
         var gotRemoved = false
         val instrumentId = UUID.randomUUID().toString()
 
-        val consumer = vertx.eventBus().localConsumer<JsonObject>(toLiveInstrumentSubscriberAddress("system"))
+        val consumer = vertx.eventBus().consumer<JsonObject>(toLiveInstrumentSubscriberAddress("system"))
         consumer.handler {
             log.info("Got subscription event: {}", it.body())
             val liveEvent = Json.decodeValue(it.body().toString(), LiveInstrumentEvent::class.java)
@@ -244,10 +238,6 @@ class LiveBreakpointTest : PlatformIntegrationTest() {
                 return@completionHandler
             }
 
-            val instrumentService = ServiceProxyBuilder(vertx)
-                .setToken(SYSTEM_JWT_TOKEN)
-                .setAddress(SourceServices.Utilize.LIVE_INSTRUMENT)
-                .build(LiveInstrumentService::class.java)
             instrumentService.addLiveInstrument(
                 LiveBreakpoint(
                     id = instrumentId,
@@ -283,11 +273,6 @@ class LiveBreakpointTest : PlatformIntegrationTest() {
     @Test
     fun removeById() {
         val testContext = VertxTestContext()
-        val instrumentService = ServiceProxyBuilder(vertx)
-            .setToken(SYSTEM_JWT_TOKEN)
-            .setAddress(SourceServices.Utilize.LIVE_INSTRUMENT)
-            .build(LiveInstrumentService::class.java)
-
         instrumentService.addLiveInstrument(
             LiveBreakpoint(
                 LiveSourceLocation("spp.example.webapp.model.User", 42),
@@ -323,11 +308,6 @@ class LiveBreakpointTest : PlatformIntegrationTest() {
     @Test
     fun removeByLocation() {
         val testContext = VertxTestContext()
-        val instrumentService = ServiceProxyBuilder(vertx)
-            .setToken(SYSTEM_JWT_TOKEN)
-            .setAddress(SourceServices.Utilize.LIVE_INSTRUMENT)
-            .build(LiveInstrumentService::class.java)
-
         instrumentService.addLiveInstrument(
             LiveBreakpoint(
                 LiveSourceLocation("spp.example.webapp.model.User", 42),
@@ -366,11 +346,6 @@ class LiveBreakpointTest : PlatformIntegrationTest() {
     @Test
     fun removeMultipleByLocation() {
         val testContext = VertxTestContext()
-        val instrumentService = ServiceProxyBuilder(vertx)
-            .setToken(SYSTEM_JWT_TOKEN)
-            .setAddress(SourceServices.Utilize.LIVE_INSTRUMENT)
-            .build(LiveInstrumentService::class.java)
-
         instrumentService.addLiveInstruments(
             listOf(
                 LiveBreakpoint(
@@ -414,11 +389,6 @@ class LiveBreakpointTest : PlatformIntegrationTest() {
     @Test
     fun addBreakpointWithInvalidCondition() {
         val testContext = VertxTestContext()
-        val instrumentService = ServiceProxyBuilder(vertx)
-            .setToken(SYSTEM_JWT_TOKEN)
-            .setAddress(SourceServices.Utilize.LIVE_INSTRUMENT)
-            .build(LiveInstrumentService::class.java)
-
         instrumentService.addLiveInstrument(
             LiveBreakpoint(
                 LiveSourceLocation("spp.example.webapp.model.User", 42),
@@ -427,11 +397,12 @@ class LiveBreakpointTest : PlatformIntegrationTest() {
             )
         ).onComplete {
             if (it.failed()) {
-                if (it.cause().cause is LiveInstrumentException) {
+                val cause = ServiceExceptionConverter.fromEventBusException(it.cause().message!!)
+                if (cause is LiveInstrumentException) {
                     testContext.verify {
                         assertEquals(
                             "Expression [1===2] @1: EL1042E: Problem parsing right operand",
-                            it.cause().cause!!.message
+                            cause.message
                         )
                     }
                     testContext.completeNow()
@@ -453,11 +424,6 @@ class LiveBreakpointTest : PlatformIntegrationTest() {
     @RepeatedTest(2) //ensures can try again (in case things have changed on probe side)
     fun applyImmediatelyWithInvalidClass() {
         val testContext = VertxTestContext()
-        val instrumentService = ServiceProxyBuilder(vertx)
-            .setToken(SYSTEM_JWT_TOKEN)
-            .setAddress(SourceServices.Utilize.LIVE_INSTRUMENT)
-            .build(LiveInstrumentService::class.java)
-
         instrumentService.addLiveInstrument(
             LiveBreakpoint(
                 LiveSourceLocation("bad.Clazz", 48),
@@ -466,11 +432,12 @@ class LiveBreakpointTest : PlatformIntegrationTest() {
         ).onComplete {
             if (it.failed()) {
                 testContext.verify {
-                    assertNotNull(it.cause().cause)
-                    assertTrue(it.cause().cause is LiveInstrumentException)
-                    val ex = it.cause().cause as LiveInstrumentException
+                    assertNotNull(it.cause())
+                    val serviceException = ServiceExceptionConverter.fromEventBusException(it.cause().message!!)
+                    assertTrue(serviceException is LiveInstrumentException)
+                    val ex = serviceException as LiveInstrumentException
                     assertEquals(LiveInstrumentException.ErrorType.CLASS_NOT_FOUND, ex.errorType)
-                    assertEquals("bad.Clazz", it.cause().cause!!.message)
+                    assertEquals("bad.Clazz", ex.message)
                 }
                 testContext.completeNow()
             }

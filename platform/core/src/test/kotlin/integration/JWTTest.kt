@@ -24,15 +24,14 @@ import io.vertx.ext.web.client.WebClientOptions
 import io.vertx.junit5.VertxExtension
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
-import io.vertx.serviceproxy.ServiceProxyBuilder
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.slf4j.LoggerFactory
-import spp.protocol.SourceServices
 import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.LiveSourceLocation
+import spp.protocol.marshall.ServiceExceptionConverter
 import spp.protocol.service.LiveInstrumentService
 import spp.protocol.service.error.InstrumentAccessDenied
 import spp.protocol.service.error.PermissionAccessDenied
@@ -46,10 +45,6 @@ class JWTTest : PlatformIntegrationTest() {
     @Test
     fun verifySuccessful() = runBlocking {
         val testContext = VertxTestContext()
-        val instrumentService = ServiceProxyBuilder(vertx)
-            .setToken(SYSTEM_JWT_TOKEN)
-            .setAddress(SourceServices.Utilize.LIVE_INSTRUMENT)
-            .build(LiveInstrumentService::class.java)
         instrumentService.addLiveInstrument(
             LiveBreakpoint(
                 LiveSourceLocation("integration.JWTTest", 1),
@@ -126,13 +121,11 @@ class JWTTest : PlatformIntegrationTest() {
         log.info("Add developer role resp: {}", addDeveloperRoleResp)
         assertFalse(addDeveloperRoleResp.containsKey("errors"))
 
-        val instrumentService = ServiceProxyBuilder(vertx)
-            .setToken(TEST_JWT_TOKEN)
-            .setAddress(SourceServices.Utilize.LIVE_INSTRUMENT)
-            .build(LiveInstrumentService::class.java)
+        val instrumentService = LiveInstrumentService.createProxy(vertx, TEST_JWT_TOKEN)
         instrumentService.getLiveInstruments(null).onComplete {
             if (it.failed()) {
-                if (it.cause().cause is PermissionAccessDenied) {
+                val cause = ServiceExceptionConverter.fromEventBusException(it.cause().message!!)
+                if (cause is PermissionAccessDenied) {
                     testContext.completeNow()
                 } else {
                     testContext.failNow(it.cause())
@@ -249,10 +242,7 @@ class JWTTest : PlatformIntegrationTest() {
         log.info("Add role access permission resp: {}", addRoleAccessPermissionResp)
         assertFalse(addRoleAccessPermissionResp.containsKey("errors"))
 
-        val instrumentService = ServiceProxyBuilder(vertx)
-            .setToken(TEST_JWT_TOKEN)
-            .setAddress(SourceServices.Utilize.LIVE_INSTRUMENT)
-            .build(LiveInstrumentService::class.java)
+        val instrumentService = LiveInstrumentService.createProxy(vertx, TEST_JWT_TOKEN)
         instrumentService.addLiveInstrument(
             LiveBreakpoint(
                 LiveSourceLocation("integration.JWTTest", 2),
@@ -260,7 +250,8 @@ class JWTTest : PlatformIntegrationTest() {
             )
         ).onComplete {
             if (it.failed()) {
-                if (it.cause().cause is InstrumentAccessDenied) {
+                val cause = ServiceExceptionConverter.fromEventBusException(it.cause().message!!)
+                if (cause is InstrumentAccessDenied) {
                     testContext.completeNow()
                 } else {
                     testContext.failNow(it.cause())

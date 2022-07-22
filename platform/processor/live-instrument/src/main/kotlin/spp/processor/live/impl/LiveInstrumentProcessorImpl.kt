@@ -556,7 +556,7 @@ class LiveInstrumentProcessorImpl : CoroutineVerticle(), LiveInstrumentService {
         val waitingHandler = waitingApply.remove(liveInstrument.id)
         if (waitingHandler != null) {
             if (cause?.startsWith("EventBusException") == true) {
-                val ebException = ServiceExceptionConverter.fromEventBusException(cause)
+                val ebException = ServiceExceptionConverter.fromEventBusException(cause, true)
                 waitingHandler.handle(Future.failedFuture(ebException))
             } else {
                 TODO("$cause")
