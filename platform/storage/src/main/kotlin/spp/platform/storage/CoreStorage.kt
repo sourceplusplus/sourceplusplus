@@ -27,9 +27,9 @@ interface CoreStorage {
     suspend fun init(vertx: Vertx, config: JsonObject) = Unit
     suspend fun getDevelopers(): List<Developer>
     suspend fun getDeveloperByAccessToken(token: String): Developer?
-    suspend fun hasRole(roleName: String): Boolean
+    suspend fun hasRole(role: DeveloperRole): Boolean
     suspend fun removeRole(role: DeveloperRole): Boolean
-    suspend fun addRole(roleName: String): Boolean
+    suspend fun addRole(role: DeveloperRole): Boolean
     suspend fun hasDeveloper(id: String): Boolean
     suspend fun addDeveloper(id: String, token: String): Developer
     suspend fun removeDeveloper(id: String)

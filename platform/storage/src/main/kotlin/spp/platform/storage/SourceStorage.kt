@@ -46,8 +46,8 @@ object SourceStorage {
         }
 
         val piiRedaction = config.getJsonObject("spp-platform").getJsonObject("pii-redaction")
-        if (piiRedaction.getString("enabled").toBoolean()) {
-            systemRedactors = piiRedaction.getJsonArray("redactions").list.map {
+        systemRedactors = if (piiRedaction.getString("enabled").toBoolean()) {
+            piiRedaction.getJsonArray("redactions").list.map {
                 (it as JsonObject).let {
                     DataRedaction(
                         it.getString("id"),
@@ -57,6 +57,8 @@ object SourceStorage {
                     )
                 }
             }
+        } else {
+            emptyList()
         }
 
         if (installDefaults) {
@@ -67,8 +69,8 @@ object SourceStorage {
     private suspend fun installDefaults() {
         //set default roles, permissions, redactions
         log.info("Installing default roles, permissions, and redactions")
-        addRole(DeveloperRole.ROLE_MANAGER.roleName)
-        addRole(DeveloperRole.ROLE_USER.roleName)
+        addRole(DeveloperRole.ROLE_MANAGER)
+        addRole(DeveloperRole.ROLE_USER)
         addDeveloper("system", systemAccessToken)
         addRoleToDeveloper("system", DeveloperRole.ROLE_MANAGER)
         RolePermission.values().forEach {
@@ -99,16 +101,16 @@ object SourceStorage {
         return storage.getDeveloperByAccessToken(token)
     }
 
-    suspend fun hasRole(roleName: String): Boolean {
-        return storage.hasRole(roleName)
+    suspend fun hasRole(role: DeveloperRole): Boolean {
+        return storage.hasRole(role)
     }
 
     suspend fun removeRole(role: DeveloperRole): Boolean {
         return storage.removeRole(role)
     }
 
-    suspend fun addRole(roleName: String): Boolean {
-        return storage.addRole(roleName)
+    suspend fun addRole(role: DeveloperRole): Boolean {
+        return storage.addRole(role)
     }
 
     suspend fun hasDeveloper(id: String): Boolean {

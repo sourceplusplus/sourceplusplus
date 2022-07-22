@@ -15,30 +15,31 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package integration.storage
+package integration
 
 import io.vertx.core.Vertx
 import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxExtension
 import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import spp.platform.storage.RedisStorage
+import spp.platform.storage.MemoryStorage
+import spp.platform.storage.SourceStorage
 import spp.protocol.platform.auth.DeveloperRole
 import spp.protocol.platform.auth.RedactionType
 
 @ExtendWith(VertxExtension::class)
-class RedisStorageTest {
+class MemoryStorageITTest {
 
     @Test
     fun updateDataRedactionInRole(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
-        val storage = RedisStorage()
+        val storage = MemoryStorage(vertx)
         storage.init(vertx, JsonObject().put("host", "localhost").put("port", 6379))
 
         storage.addDataRedaction("test", RedactionType.IDENTIFIER_MATCH, "lookup", "value1")
-        storage.addRole("test_role")
+        storage.addRole(DeveloperRole.fromString("test_role"))
         storage.addDataRedactionToRole("test", DeveloperRole.fromString("test_role"))
         val dataRedactions = storage.getRoleDataRedactions(DeveloperRole.fromString("test_role"))
         assertEquals(1, dataRedactions.size)
@@ -48,5 +49,37 @@ class RedisStorageTest {
         val updatedDataRedactions = storage.getRoleDataRedactions(DeveloperRole.fromString("test_role"))
         assertEquals(1, updatedDataRedactions.size)
         assertEquals("value2", updatedDataRedactions.toList()[0].replacement)
+    }
+
+    @Test
+    fun reset(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+        val storage = MemoryStorage(vertx)
+        SourceStorage.setup(
+            storage,
+            JsonObject().put(
+                "spp-platform",
+                JsonObject()
+                    .put("jwt", JsonObject())
+                    .put("pii-redaction", JsonObject().put("enabled", "false"))
+            )
+        )
+
+        SourceStorage.addRole(DeveloperRole.fromString("resetRole"))
+        assertTrue(SourceStorage.getRoles().contains(DeveloperRole.fromString("resetRole")))
+        SourceStorage.addDeveloper("resetDeveloper")
+        assertNotNull(SourceStorage.getDevelopers().find { it.id == "resetDeveloper" })
+        SourceStorage.addDataRedaction(
+            "resetDataRedaction",
+            RedactionType.IDENTIFIER_MATCH,
+            "resetDataRedaction",
+            "resetDataRedaction"
+        )
+        assertNotNull(SourceStorage.getDataRedactions().find { it.id == "resetDataRedaction" })
+
+        SourceStorage.reset()
+
+        assertFalse(SourceStorage.getRoles().contains(DeveloperRole.fromString("resetRole")))
+        assertNull(SourceStorage.getDevelopers().find { it.id == "resetDeveloper" })
+        assertNull(SourceStorage.getDataRedactions().find { it.id == "resetDataRedaction" })
     }
 }
