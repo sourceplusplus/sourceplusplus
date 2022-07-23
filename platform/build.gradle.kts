@@ -148,15 +148,7 @@ tasks.register("cleanDockerSetup") {
 tasks.getByName("clean").dependsOn("cleanDockerSetup")
 
 tasks.register<Copy>("updateDockerFiles") {
-    dependsOn(
-        ":platform:core:shadowJar",
-        ":platform:storage:jar",
-        ":platform:dashboard:jar",
-        ":platform:processor:live-instrument:jar",
-        ":platform:processor:live-view:jar",
-        ":probes:jvm:control:jar"
-    )
-
+    dependsOn("assemble")
     from(
         File(projectDir, "core/build/libs/spp-platform-core-${project.version}.jar"),
         File(projectDir, "storage/build/libs/spp-platform-storage-${project.version}.jar"),
@@ -192,4 +184,13 @@ tasks.register("assembleUp") {
     )
 }
 
-tasks.getByName("assemble").dependsOn(":makeDist")
+tasks.getByName("assemble") {
+    dependsOn(
+        ":platform:core:shadowJar",
+        ":platform:storage:jar",
+        ":platform:dashboard:jar",
+        ":platform:processor:live-instrument:jar",
+        ":platform:processor:live-view:jar",
+        ":probes:jvm:control:jar"
+    )
+}
