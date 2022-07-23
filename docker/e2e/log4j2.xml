@@ -33,5 +33,8 @@
         <Logger name="spp.platform.dependencies" level="WARN" additivity="false">
             <Appender-ref ref="Console" />
         </Logger>
+        <Logger name="io.vertx.core.eventbus.impl.clustered" level="DEBUG" additivity="false">
+            <Appender-ref ref="Console" />
+        </Logger>
     </Loggers>
 </Configuration>
