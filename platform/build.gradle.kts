@@ -150,50 +150,25 @@ tasks.getByName("clean").dependsOn("cleanDockerSetup")
 tasks.register<Copy>("updateDockerFiles") {
     dependsOn(
         ":platform:core:shadowJar",
+        ":platform:storage:jar",
+        ":platform:dashboard:jar",
         ":platform:processor:live-instrument:jar",
         ":platform:processor:live-view:jar",
         ":probes:jvm:control:jar"
     )
 
-    doFirst {
-        if (!File(projectDir, "core/build/libs/spp-platform-${project.version}.jar").exists()) {
-            throw GradleException("Missing spp-platform-${project.version}.jar")
-        }
-    }
-    from(File(projectDir, "core/build/libs/spp-platform-${project.version}.jar"))
-        .into(File(projectDir, "../docker/e2e"))
-
-    doFirst {
-        if (!File(
-                projectDir,
-                "processor/live-instrument/build/libs/spp-live-instrument-${project.version}.jar"
-            ).exists()
-        ) {
-            throw GradleException("Missing spp-live-instrument-${project.version}.jar")
-        }
-    }
-    from(File(projectDir, "processor/live-instrument/build/libs/spp-live-instrument-${project.version}.jar"))
-        .into(File(projectDir, "../docker/e2e"))
-
-    doFirst {
-        if (!File(projectDir, "processor/live-view/build/libs/spp-live-view-${project.version}.jar").exists()) {
-            throw GradleException("Missing spp-platform-${project.version}.jar")
-        }
-    }
-    from(File(projectDir, "processor/live-view/build/libs/spp-live-view-${project.version}.jar"))
-        .into(File(projectDir, "../docker/e2e"))
-
-    doFirst {
-        if (!File(projectDir, "../probes/jvm/control/build/libs/spp-probe-${project.version}.jar").exists()) {
-            throw GradleException("Missing spp-probe-${project.version}.jar")
-        }
-    }
-    from(File(projectDir, "../probes/jvm/control/build/libs/spp-probe-${project.version}.jar"))
-        .into(File(projectDir, "../docker/e2e"))
+    from(
+        File(projectDir, "core/build/libs/spp-platform-core-${project.version}.jar"),
+        File(projectDir, "storage/build/libs/spp-platform-storage-${project.version}.jar"),
+        File(projectDir, "dashboard/build/libs/spp-live-dashboard-${project.version}.jar"),
+        File(projectDir, "processor/live-instrument/build/libs/spp-live-instrument-${project.version}.jar"),
+        File(projectDir, "processor/live-view/build/libs/spp-live-view-${project.version}.jar"),
+        File(projectDir, "../probes/jvm/control/build/libs/spp-probe-${project.version}.jar")
+    ).into(File(projectDir, "../docker/e2e"))
 
     doFirst {
         File(projectDir, "../docker/e2e").listFiles()?.forEach {
-            if (it.name.startsWith("spp-platform-") || it.name.startsWith("spp-processor-")) {
+            if (it.name.startsWith("spp-platform-") || it.name.startsWith("spp-live-")) {
                 it.delete()
             }
         }

@@ -27,13 +27,13 @@ import org.apache.skywalking.oap.server.library.module.ModuleProvider
 import spp.platform.common.ClusterConnection
 import spp.protocol.marshall.LocalMessageCodec
 
-class LiveCoreModule : ModuleDefine("spp-live-core") {
+class SourceCoreModule : ModuleDefine("spp-platform-core") {
     override fun services(): Array<Class<*>> = emptyArray()
 }
 
-class LiveCoreProvider : ModuleProvider() {
+class SourceCoreProvider : ModuleProvider() {
     override fun name(): String = "default"
-    override fun module(): Class<out ModuleDefine> = LiveCoreModule::class.java
+    override fun module(): Class<out ModuleDefine> = SourceCoreModule::class.java
     override fun createConfigBeanIfAbsent(): ModuleConfig? = null
     override fun prepare() = Unit
 

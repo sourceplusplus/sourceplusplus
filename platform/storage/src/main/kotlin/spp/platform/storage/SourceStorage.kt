@@ -18,6 +18,8 @@
 package spp.platform.storage
 
 import io.vertx.core.json.JsonObject
+import io.vertx.ext.web.handler.SessionHandler
+import io.vertx.ext.web.sstore.SessionStore
 import org.apache.commons.lang3.RandomStringUtils
 import org.slf4j.LoggerFactory
 import spp.protocol.platform.auth.*
@@ -30,6 +32,13 @@ object SourceStorage {
     lateinit var storage: CoreStorage
     lateinit var systemAccessToken: String //todo: multi tenant, can't be global
     private lateinit var systemRedactors: List<DataRedaction>
+    lateinit var sessionStore: SessionStore
+    lateinit var sessionHandler: SessionHandler
+
+    fun initSessionStore(sessionStore: SessionStore) {
+        this.sessionStore = sessionStore
+        this.sessionHandler = SessionHandler.create(SourceStorage.sessionStore)
+    }
 
     suspend fun setup(storage: CoreStorage, config: JsonObject, installDefaults: Boolean = true) {
         SourceStorage.storage = storage
@@ -48,7 +57,7 @@ object SourceStorage {
         val piiRedaction = config.getJsonObject("spp-platform").getJsonObject("pii-redaction")
         systemRedactors = if (piiRedaction.getString("enabled").toBoolean()) {
             piiRedaction.getJsonArray("redactions").list.map {
-                (it as JsonObject).let {
+                JsonObject.mapFrom(it).let {
                     DataRedaction(
                         it.getString("id"),
                         RedactionType.valueOf(it.getString("type")),
