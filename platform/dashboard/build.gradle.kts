@@ -25,7 +25,7 @@ configure<PublishingExtension> {
         publications {
             create<MavenPublication>("maven") {
                 groupId = platformGroup
-                artifactId = "platform-storage"
+                artifactId = "platform-dashboard"
                 version = project.version.toString()
 
                 from(components["kotlin"])
@@ -36,6 +36,8 @@ configure<PublishingExtension> {
 
 dependencies {
     compileOnly(project(":platform:common"))
+    compileOnly(project(":platform:storage"))
+    implementation(project(":interfaces:booster-ui"))
 }
 
 tasks {
@@ -45,6 +47,6 @@ tasks {
     }
 
     jar {
-        archiveBaseName.set("spp-platform-storage")
+        archiveBaseName.set("spp-live-dashboard")
     }
 }

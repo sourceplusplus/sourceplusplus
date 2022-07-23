@@ -15,37 +15,40 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package spp.platform.core
+package spp.platform.dashboard
 
 import io.vertx.core.DeploymentOptions
-import io.vertx.kotlin.coroutines.await
-import io.vertx.spi.cluster.redis.RedisClusterManager
-import kotlinx.coroutines.runBlocking
 import org.apache.skywalking.oap.server.library.module.ModuleConfig
 import org.apache.skywalking.oap.server.library.module.ModuleDefine
 import org.apache.skywalking.oap.server.library.module.ModuleProvider
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import spp.platform.common.ClusterConnection
-import spp.protocol.marshall.LocalMessageCodec
+import kotlin.system.exitProcess
 
-class LiveCoreModule : ModuleDefine("spp-live-core") {
+class SourceDashboardModule : ModuleDefine("spp-live-dashboard") {
     override fun services(): Array<Class<*>> = emptyArray()
 }
 
-class LiveCoreProvider : ModuleProvider() {
+class SourceDashboardProvider : ModuleProvider() {
+    private val log: Logger = LoggerFactory.getLogger(SourceDashboardProvider::class.java)
+
     override fun name(): String = "default"
-    override fun module(): Class<out ModuleDefine> = LiveCoreModule::class.java
+    override fun module(): Class<out ModuleDefine> = SourceDashboardModule::class.java
     override fun createConfigBeanIfAbsent(): ModuleConfig? = null
     override fun prepare() = Unit
 
     override fun start() {
-        RedisClusterManager::class.simpleName //todo: won't need when they make public artifact
-        val vertx = ClusterConnection.getVertx()
-        vertx.eventBus().registerDefaultCodec(ArrayList::class.java, LocalMessageCodec())
-        runBlocking {
-            vertx.deployVerticle(SourcePlatform(), DeploymentOptions().setConfig(ClusterConnection.config)).await()
+        try {
+            log.info("Starting spp-dashboard")
+            ClusterConnection.getVertx()
+                .deployVerticle(SourceDashboard(), DeploymentOptions().setConfig(ClusterConnection.config))
+        } catch (e: Exception) {
+            log.error("Failed to start spp-dashboard.", e)
+            exitProcess(-1)
         }
     }
 
     override fun notifyAfterCompleted() = Unit
-    override fun requiredModules(): Array<String> = emptyArray()
+    override fun requiredModules(): Array<String> = arrayOf("spp-platform-storage")
 }

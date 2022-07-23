@@ -40,15 +40,6 @@ jobs:
           target: ./docker/spp-platform/spp-platform-${{ env.SPP_PLATFORM_VERSION }}.tar.gz
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Download spp-processorS.zip
-        uses: dsaltares/fetch-gh-release-asset@master
-        with:
-          repo: sourceplusplus/live-platform
-          version: tags/${{ env.SPP_PLATFORM_VERSION }}
-          file: spp-processors.zip
-          target: ./docker/spp-platform/spp-processors.zip
-          token: ${{ secrets.GITHUB_TOKEN }}
-
       # Push spp-platform
 
       - name: Untar spp-platform
@@ -56,9 +47,6 @@ jobs:
 
       - name: Copy ui-initialized-templates to spp-platform Docker image
         run: cp -r ./docker/e2e/config/ui-initialized-templates ./docker/spp-platform
-
-      - name: Unzip spp-processors.zip
-        run: cd ./docker/spp-platform && unzip spp-processors.zip
 
       - name: Build spp-platform tagged Docker image
         run: cd ./docker/spp-platform && docker build . --file Dockerfile --tag sourceplusplus/spp-platform:${{ env.SPP_PLATFORM_VERSION }}
