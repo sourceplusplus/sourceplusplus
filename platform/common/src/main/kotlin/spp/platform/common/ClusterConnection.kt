@@ -72,7 +72,9 @@ object ClusterConnection {
 
                 if (config.getJsonObject("storage").getString("selector") == "memory") {
                     log.info("Using standalone mode")
-                    vertx = Vertx.vertx()
+                    val vertx = Vertx.vertx()
+                    router = Router.router(vertx)
+                    ClusterConnection.vertx = vertx
                 } else {
                     log.info("Using clustered mode")
                     val storageSelector = config.getJsonObject("storage").getString("selector")
