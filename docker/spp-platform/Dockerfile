@@ -17,6 +17,9 @@ RUN printf "\nspp-platform-core:\n  selector: \${SPP_PLATFORM_CORE:default}\n  d
 RUN printf "\nspp-platform-storage:\n  selector: \${SPP_PLATFORM_STORAGE:default}\n  default:\n" \
     >> /skywalking/config/application.yml
 
+RUN printf "\nspp-platform-bridge:\n  selector: \${SPP_PLATFORM_BRIDGE:default}\n  default:\n" \
+    >> /skywalking/config/application.yml
+
 RUN printf "\nspp-live-dashboard:\n  selector: \${SPP_LIVE_DASHBOARD:default}\n  default:\n" \
     >> /skywalking/config/application.yml
 

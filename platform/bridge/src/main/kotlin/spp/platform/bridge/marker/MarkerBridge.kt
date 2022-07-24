@@ -72,7 +72,7 @@ class MarkerBridge(
         }
         vertx.eventBus().consumer<JsonObject>(connectedMarkersAddress) {
             launch(vertx.dispatcher()) {
-                it.reply(vertx.sharedData().getLocalCounter(MARKER_CONNECTED).await().get().await())
+                it.reply(vertx.sharedData().getLocalCounter(MARKER_CONNECTED).await().get().await().toInt())
             }
         }
         vertx.eventBus().consumer<JsonObject>(MARKER_CONNECTED) { marker ->

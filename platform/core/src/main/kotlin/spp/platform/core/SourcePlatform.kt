@@ -18,12 +18,9 @@
 package spp.platform.core
 
 import io.vertx.core.DeploymentOptions
-import io.vertx.core.buffer.Buffer
 import io.vertx.core.http.HttpServerOptions
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
-import io.vertx.core.net.NetServerOptions
-import io.vertx.core.net.PemKeyCertOptions
 import io.vertx.ext.auth.JWTOptions
 import io.vertx.ext.auth.PubSecKeyOptions
 import io.vertx.ext.auth.jwt.JWTAuth
@@ -51,11 +48,9 @@ import org.bouncycastle.openssl.PEMKeyPair
 import org.bouncycastle.openssl.PEMParser
 import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter
 import org.bouncycastle.openssl.jcajce.JcaPEMWriter
-import spp.platform.bridge.marker.MarkerBridge
-import spp.platform.bridge.probe.ProbeBridge
-import spp.platform.bridge.probe.util.SelfSignedCertGenerator
 import spp.platform.common.ClusterConnection.router
 import spp.platform.common.util.CertsToJksOptionsConverter
+import spp.platform.common.util.SelfSignedCertGenerator
 import spp.platform.core.service.ServiceProvider
 import spp.platform.storage.SourceStorage
 import spp.protocol.SourceServices.Utilize
@@ -231,29 +226,6 @@ class SourcePlatform : CoroutineVerticle() {
         router["/health"].handler(HealthCheckHandler.createWithHealthChecks(healthChecks))
         router["/stats"].handler(this::getStats)
         router["/clients"].handler(this::getClients)
-
-        //Open bridges
-        val netServerOptions = NetServerOptions()
-            .removeEnabledSecureTransportProtocol("SSLv2Hello")
-            .removeEnabledSecureTransportProtocol("TLSv1")
-            .removeEnabledSecureTransportProtocol("TLSv1.1")
-            .setSsl(sslEnabled)
-            .apply {
-                if (sslEnabled) {
-                    pemKeyCertOptions = PemKeyCertOptions()
-                        .setKeyValue(Buffer.buffer(keyFile.readText()))
-                        .setCertValue(Buffer.buffer(certFile.readText()))
-                }
-            }
-
-        vertx.deployVerticle(
-            ProbeBridge(router, jwt, netServerOptions),
-            DeploymentOptions().setConfig(config.getJsonObject("spp-platform"))
-        ).await()
-        vertx.deployVerticle(
-            MarkerBridge(jwt, netServerOptions),
-            DeploymentOptions().setConfig(config.getJsonObject("spp-platform").getJsonObject("marker"))
-        ).await()
 
         log.info("Starting service discovery")
         discovery = ServiceDiscovery.create(vertx)

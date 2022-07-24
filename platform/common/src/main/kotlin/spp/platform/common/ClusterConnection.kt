@@ -25,6 +25,7 @@ import io.vertx.core.VertxOptions
 import io.vertx.core.json.JsonObject
 import io.vertx.ext.web.Router
 import io.vertx.kotlin.coroutines.await
+import io.vertx.servicediscovery.ServiceDiscovery
 import io.vertx.spi.cluster.redis.RedisClusterManager
 import io.vertx.spi.cluster.redis.config.RedisConfig
 import kotlinx.coroutines.runBlocking
@@ -43,6 +44,7 @@ object ClusterConnection {
     private lateinit var vertx: Vertx
     private val lock = Any()
     private fun isVertxInitialized() = ::vertx.isInitialized
+    lateinit var discovery: ServiceDiscovery
     lateinit var config: JsonObject
     lateinit var router: Router
 
@@ -73,6 +75,7 @@ object ClusterConnection {
                 if (config.getJsonObject("storage").getString("selector") == "memory") {
                     log.info("Using standalone mode")
                     val vertx = Vertx.vertx()
+                    discovery = ServiceDiscovery.create(vertx)
                     router = Router.router(vertx)
                     ClusterConnection.vertx = vertx
                 } else {
@@ -96,6 +99,7 @@ object ClusterConnection {
                     val options = VertxOptions().setClusterManager(clusterManager)
                     runBlocking {
                         val vertx = Vertx.clusteredVertx(options).await()
+                        discovery = ServiceDiscovery.create(vertx)
                         router = Router.router(vertx)
                         ClusterConnection.vertx = vertx
                     }

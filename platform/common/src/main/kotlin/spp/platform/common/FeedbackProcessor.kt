@@ -23,7 +23,6 @@ import io.vertx.core.eventbus.Message
 import io.vertx.core.json.JsonObject
 import io.vertx.ext.auth.impl.jose.JWT
 import io.vertx.kotlin.coroutines.CoroutineVerticle
-import io.vertx.servicediscovery.ServiceDiscovery
 import org.apache.skywalking.oap.server.library.module.ModuleManager
 import spp.protocol.platform.PlatformAddress.PROCESSOR_CONNECTED
 import spp.protocol.platform.status.InstanceConnection
@@ -33,9 +32,6 @@ abstract class FeedbackProcessor : CoroutineVerticle() {
 
     companion object {
         val INSTANCE_ID = UUID.randomUUID().toString()
-
-        lateinit var vertx: Vertx
-        lateinit var discovery: ServiceDiscovery
         var module: ModuleManager? = null
     }
 
@@ -46,13 +42,12 @@ abstract class FeedbackProcessor : CoroutineVerticle() {
     abstract fun onConnected(vertx: Vertx)
 
     fun connectToPlatform() {
-        Companion.vertx = ClusterConnection.getVertx()
-        discovery = ServiceDiscovery.create(Companion.vertx)
+        val vertx = ClusterConnection.getVertx()
 
         //send processor connected status
         val pc = InstanceConnection(INSTANCE_ID, System.currentTimeMillis())
-        Companion.vertx.eventBus().publish(PROCESSOR_CONNECTED, JsonObject.mapFrom(pc))
-        onConnected(Companion.vertx)
+        vertx.eventBus().publish(PROCESSOR_CONNECTED, JsonObject.mapFrom(pc))
+        onConnected(vertx)
     }
 
     fun developerAuthInterceptor(msg: Message<JsonObject>): Future<Message<JsonObject>> {

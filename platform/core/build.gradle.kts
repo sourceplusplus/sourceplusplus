@@ -39,7 +39,6 @@ configure<PublishingExtension> {
 
 dependencies {
     implementation(project(":interfaces:booster-ui"))
-    implementation(project(":platform:bridge"))
     implementation(project(":platform:storage"))
     implementation(project(":platform:common"))
 
