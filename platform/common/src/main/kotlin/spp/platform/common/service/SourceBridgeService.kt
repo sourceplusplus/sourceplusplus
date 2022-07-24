@@ -24,6 +24,7 @@ import io.vertx.core.Future
 import io.vertx.core.Promise
 import io.vertx.core.Vertx
 import io.vertx.core.json.JsonArray
+import io.vertx.core.json.JsonObject
 import spp.platform.common.ClusterConnection.discovery
 import spp.platform.common.PlatformServices
 
@@ -37,7 +38,7 @@ interface SourceBridgeService {
         @JvmStatic
         fun service(vertx: Vertx): Future<SourceBridgeService?> {
             val promise = Promise.promise<SourceBridgeService?>()
-            discovery.getRecord(PlatformServices.BRIDGE_SERVICE).onComplete {
+            discovery.getRecord(JsonObject().put("name", PlatformServices.BRIDGE_SERVICE)).onComplete {
                 if (it.succeeded()) {
                     if (it.result() == null) {
                         promise.complete(null)
