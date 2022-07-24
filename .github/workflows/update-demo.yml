@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - master
+    paths-ignore:
+      - '**.md'
+      - '**.svg'
   workflow_dispatch:
 
 jobs:
@@ -19,15 +22,13 @@ jobs:
         with:
           host: demo.sourceplus.plus
           username: root
-          password: ${{ secrets.DEMO_SSH_PASSWORD }}
+          key: ${{ secrets.DEMO_SSH_KEY }}
+          script_stop: true
+
+          #todo: redeploy demo with no downtime
           script: |
-            cd /opt/live-platform
-            ./gradlew --no-daemon -p platform composeDown
-            ./gradlew --no-daemon clean
-            git reset --hard
-            git pull
-            git submodule update --recursive --remote
-            sed -i 's/5105:5105/127.0.0.1:5105:5105/g' ./docker/e2e/docker-compose.yml
-            sed -i 's/5106:5106/127.0.0.1:5106:5106/g' ./docker/e2e/docker-compose.yml
-            sed -i 's/6379:6379/127.0.0.1:6379:6379/g' ./docker/e2e/docker-compose.yml
-            ./gradlew --no-daemon -p platform assembleUp
+            cd /opt/dev/private/demo
+            docker-compose down
+            docker image prune -f --all
+            docker-compose up --force-recreate --build -d
+            docker image prune -f
