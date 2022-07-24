@@ -43,6 +43,8 @@ tasks {
             .copyTo(file("dist/spp-platform-${project.version}/config/spp-platform.yml"), true)
         file("platform/core/build/libs/spp-platform-core-${project.version}.jar")
             .copyTo(file("dist/spp-platform-${project.version}/spp-platform-core-${project.version}.jar"), true)
+        file("platform/bridge/build/libs/spp-platform-bridge-${project.version}.jar")
+            .copyTo(file("dist/spp-platform-${project.version}/spp-platform-bridge-${project.version}.jar"), true)
         file("platform/storage/build/libs/spp-platform-storage-${project.version}.jar")
             .copyTo(file("dist/spp-platform-${project.version}/spp-platform-storage-${project.version}.jar"), true)
         file("platform/dashboard/build/libs/spp-live-dashboard-${project.version}.jar")
