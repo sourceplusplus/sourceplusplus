@@ -18,17 +18,22 @@
 package spp.platform.bridge.probe
 
 import io.vertx.core.DeploymentOptions
+import io.vertx.core.Handler
 import io.vertx.core.Vertx
 import io.vertx.core.eventbus.DeliveryOptions
 import io.vertx.core.json.Json
 import io.vertx.core.json.JsonObject
 import io.vertx.core.net.NetServerOptions
 import io.vertx.ext.auth.jwt.JWTAuth
+import io.vertx.ext.bridge.BaseBridgeEvent
 import io.vertx.ext.bridge.BridgeEventType
 import io.vertx.ext.bridge.BridgeOptions
 import io.vertx.ext.bridge.PermittedOptions
 import io.vertx.ext.eventbus.bridge.tcp.TcpEventBusBridge
 import io.vertx.ext.web.Router
+import io.vertx.ext.web.handler.sockjs.SockJSBridgeOptions
+import io.vertx.ext.web.handler.sockjs.SockJSHandler
+import io.vertx.ext.web.handler.sockjs.SockJSHandlerOptions
 import io.vertx.kotlin.coroutines.await
 import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.delay
@@ -137,62 +142,101 @@ class ProbeBridge(
             }
         }
 
-        val subscriberCache = ConcurrentHashMap<String, String>()
+        val subscriberCache = ConcurrentHashMap<String, String>() //todo: use storage
+
+        //http bridge
+        val sockJSHandler = SockJSHandler.create(vertx, SockJSHandlerOptions().setRegisterWriteHandler(true))
+        val portalBridgeOptions = SockJSBridgeOptions().apply {
+            inboundPermitteds = getInboundPermitted() //from probe
+            outboundPermitteds = getOutboundPermitted() //to probe
+        }
+        sockJSHandler.bridge(portalBridgeOptions) { handleBridgeEvent(it, subscriberCache) }
+        router.route("/probe/eventbus/*").handler(sockJSHandler)
+
+        //tcp bridge
         TcpEventBusBridge.create(
             vertx,
-            BridgeOptions()
-                //from probe
-                .addInboundPermitted(PermittedOptions().setAddress(PlatformAddress.PROBE_CONNECTED))
-                .addInboundPermitted(PermittedOptions().setAddress(ProcessorAddress.REMOTE_REGISTERED))
-                .addInboundPermitted(PermittedOptions().setAddress(ProcessorAddress.LIVE_INSTRUMENT_APPLIED))
-                .addInboundPermitted(PermittedOptions().setAddress(ProcessorAddress.LIVE_INSTRUMENT_REMOVED))
-                //to probe
-                .addOutboundPermitted(
-                    PermittedOptions().setAddressRegex(ProbeAddress.LIVE_INSTRUMENT_REMOTE)
-                ).addOutboundPermitted(
-                    PermittedOptions().setAddressRegex(ProbeAddress.LIVE_INSTRUMENT_REMOTE + "\\:.+")
-                ),
+            BridgeOptions().apply {
+                inboundPermitteds = getInboundPermitted() //from probe
+                outboundPermitteds = getOutboundPermitted() //to probe
+            },
             netServerOptions
-        ) {
-            if (it.type() == BridgeEventType.SEND) {
-                if (it.rawMessage.getString("address") == PlatformAddress.PROBE_CONNECTED) {
-                    val conn = Json.decodeValue(
-                        it.rawMessage.getJsonObject("body").toString(), InstanceConnection::class.java
+        ) { handleBridgeEvent(it, subscriberCache) }
+            .listen(config.getJsonObject("probe").getString("bridge_port").toInt()).await()
+    }
+
+    private fun handleBridgeEvent(it: BaseBridgeEvent, subscriberCache: ConcurrentHashMap<String, String>) {
+        if (it.type() == BridgeEventType.SEND) {
+            val writeHandlerID = getWriteHandlerID(it)
+            if (it.rawMessage.getString("address") == PlatformAddress.PROBE_CONNECTED) {
+                val conn = Json.decodeValue(
+                    it.rawMessage.getJsonObject("body").toString(), InstanceConnection::class.java
+                )
+                subscriberCache[writeHandlerID] = conn.instanceId
+
+                setCloseHandler(it) { _ ->
+                    vertx.eventBus().publish(
+                        PlatformAddress.PROBE_DISCONNECTED,
+                        it.rawMessage.getJsonObject("body")
                     )
-                    subscriberCache[it.socket().writeHandlerID()] = conn.instanceId
-
-                    it.socket().closeHandler { _ ->
-                        vertx.eventBus().publish(
-                            PlatformAddress.PROBE_DISCONNECTED,
-                            it.rawMessage.getJsonObject("body")
-                        )
-                        subscriberCache.remove(it.socket().writeHandlerID())
-                    }
-                }
-
-                //auto-add probe id to headers
-                val probeId = subscriberCache[it.socket().writeHandlerID()]
-                if (probeId != null && it.rawMessage.containsKey("headers")) {
-                    it.rawMessage.getJsonObject("headers").put("probe_id", probeId)
-                }
-            } else if (it.type() == BridgeEventType.REGISTERED) {
-                val probeId = subscriberCache[it.socket().writeHandlerID()]
-                if (probeId != null) {
-                    launch(vertx.dispatcher()) {
-                        delay(1500) //todo: this is temp fix for race condition
-                        vertx.eventBus().publish(
-                            ProcessorAddress.REMOTE_REGISTERED,
-                            it.rawMessage,
-                            DeliveryOptions().addHeader("probe_id", probeId)
-                        )
-                    }
-                } else {
-                    log.error("Failed to register remote due to missing probe id")
-                    it.fail("Missing probe id")
-                    return@create
+                    subscriberCache.remove(writeHandlerID)
                 }
             }
-            it.complete(true) //todo: validateAuth(it)
-        }.listen(config.getJsonObject("probe").getString("bridge_port").toInt()).await()
+
+            //auto-add probe id to headers
+            val probeId = subscriberCache[writeHandlerID]
+            if (probeId != null && it.rawMessage.containsKey("headers")) {
+                it.rawMessage.getJsonObject("headers").put("probe_id", probeId)
+            }
+        } else if (it.type() == BridgeEventType.REGISTERED) {
+            val probeId = subscriberCache[getWriteHandlerID(it)]
+            if (probeId != null) {
+                launch(vertx.dispatcher()) {
+                    delay(1500) //todo: this is temp fix for race condition
+                    vertx.eventBus().publish(
+                        ProcessorAddress.REMOTE_REGISTERED,
+                        it.rawMessage,
+                        DeliveryOptions().addHeader("probe_id", probeId)
+                    )
+                }
+            } else {
+                log.error("Failed to register remote due to missing probe id")
+                it.fail("Missing probe id")
+                return
+            }
+        }
+        it.complete(true) //todo: validateAuth(it)
+    }
+
+    private fun setCloseHandler(event: BaseBridgeEvent, handler: Handler<Void>) {
+        when (event) {
+            is io.vertx.ext.eventbus.bridge.tcp.BridgeEvent -> event.socket().closeHandler(handler)
+            is io.vertx.ext.web.handler.sockjs.BridgeEvent -> event.socket().closeHandler(handler)
+            else -> throw IllegalArgumentException("Unknown bridge event type")
+        }
+    }
+
+    private fun getWriteHandlerID(event: BaseBridgeEvent): String {
+        return when (event) {
+            is io.vertx.ext.eventbus.bridge.tcp.BridgeEvent -> event.socket().writeHandlerID()
+            is io.vertx.ext.web.handler.sockjs.BridgeEvent -> event.socket().writeHandlerID()
+            else -> throw IllegalArgumentException("Unknown bridge event type")
+        }
+    }
+
+    private fun getInboundPermitted(): List<PermittedOptions> {
+        return listOf(
+            PermittedOptions().setAddress(PlatformAddress.PROBE_CONNECTED),
+            PermittedOptions().setAddress(ProcessorAddress.REMOTE_REGISTERED),
+            PermittedOptions().setAddress(ProcessorAddress.LIVE_INSTRUMENT_APPLIED),
+            PermittedOptions().setAddress(ProcessorAddress.LIVE_INSTRUMENT_REMOVED)
+        )
+    }
+
+    private fun getOutboundPermitted(): List<PermittedOptions> {
+        return listOf(
+            PermittedOptions().setAddressRegex(ProbeAddress.LIVE_INSTRUMENT_REMOTE),
+            PermittedOptions().setAddressRegex(ProbeAddress.LIVE_INSTRUMENT_REMOTE + "\\:.+")
+        )
     }
 }
