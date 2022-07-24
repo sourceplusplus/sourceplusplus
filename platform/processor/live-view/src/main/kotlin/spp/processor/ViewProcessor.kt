@@ -35,6 +35,7 @@ import org.apache.skywalking.oap.server.core.storage.StorageModule
 import org.apache.skywalking.oap.server.core.storage.query.IMetadataQueryDAO
 import org.apache.skywalking.oap.server.library.module.ModuleManager
 import org.slf4j.LoggerFactory
+import spp.platform.common.ClusterConnection.discovery
 import spp.platform.common.FeedbackProcessor
 import spp.processor.live.impl.LiveViewProcessorImpl
 import spp.protocol.SourceServices

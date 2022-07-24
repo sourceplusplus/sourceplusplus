@@ -150,6 +150,7 @@ tasks.getByName("clean").dependsOn("cleanDockerSetup")
 tasks.register<Copy>("updateDockerFiles") {
     dependsOn("assemble")
     from(
+        File(projectDir, "bridge/build/libs/spp-platform-bridge-${project.version}.jar"),
         File(projectDir, "core/build/libs/spp-platform-core-${project.version}.jar"),
         File(projectDir, "storage/build/libs/spp-platform-storage-${project.version}.jar"),
         File(projectDir, "dashboard/build/libs/spp-live-dashboard-${project.version}.jar"),
@@ -187,6 +188,7 @@ tasks.register("assembleUp") {
 tasks.getByName("assemble") {
     dependsOn(
         ":platform:core:shadowJar",
+        ":platform:bridge:jar",
         ":platform:storage:jar",
         ":platform:dashboard:jar",
         ":platform:processor:live-instrument:jar",

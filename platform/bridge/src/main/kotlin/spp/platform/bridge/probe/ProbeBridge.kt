@@ -42,6 +42,7 @@ import mu.KotlinLogging
 import spp.platform.bridge.InstanceBridge
 import spp.platform.common.util.Msg
 import spp.protocol.platform.PlatformAddress
+import spp.protocol.platform.PlatformAddress.PROBE_CONNECTED
 import spp.protocol.platform.ProbeAddress
 import spp.protocol.platform.ProcessorAddress
 import spp.protocol.platform.status.ActiveInstance
@@ -90,11 +91,7 @@ class ProbeBridge(
         }
         vertx.eventBus().consumer<JsonObject>(connectedProbesAddress) {
             launch(vertx.dispatcher()) {
-                it.reply(
-                    vertx.sharedData().getLocalCounter(
-                        PlatformAddress.PROBE_CONNECTED
-                    ).await().get().await()
-                )
+                it.reply(vertx.sharedData().getLocalCounter(PROBE_CONNECTED).await().get().await().toInt())
             }
         }
         vertx.eventBus().consumer<JsonObject>(ProcessorAddress.REMOTE_REGISTERED) {
@@ -111,7 +108,7 @@ class ProbeBridge(
                 }
             }
         }
-        vertx.eventBus().consumer<JsonObject>(PlatformAddress.PROBE_CONNECTED) {
+        vertx.eventBus().consumer<JsonObject>(PROBE_CONNECTED) {
             val conn = Json.decodeValue(it.body().toString(), InstanceConnection::class.java)
             val latency = System.currentTimeMillis() - conn.connectionTime
             log.trace { Msg.msg("Establishing connection with probe {}", conn.instanceId) }
@@ -121,7 +118,7 @@ class ProbeBridge(
             log.info("Probe connected. Latency: {}ms - Probes connected: {}", latency, activeProbes.size)
 
             launch(vertx.dispatcher()) {
-                vertx.sharedData().getLocalCounter(PlatformAddress.PROBE_CONNECTED).await()
+                vertx.sharedData().getLocalCounter(PROBE_CONNECTED).await()
                     .incrementAndGet().await()
             }
         }
@@ -132,7 +129,7 @@ class ProbeBridge(
             log.info("Probe disconnected. Connection time: {}", Duration.between(Instant.now(), connectedAt))
 
             launch(vertx.dispatcher()) {
-                vertx.sharedData().getLocalCounter(PlatformAddress.PROBE_CONNECTED).await()
+                vertx.sharedData().getLocalCounter(PROBE_CONNECTED).await()
                     .decrementAndGet().await()
 
                 (activeProbe.meta["remotes"] as List<String>?).orEmpty().forEach {
@@ -168,7 +165,7 @@ class ProbeBridge(
     private fun handleBridgeEvent(it: BaseBridgeEvent, subscriberCache: ConcurrentHashMap<String, String>) {
         if (it.type() == BridgeEventType.SEND) {
             val writeHandlerID = getWriteHandlerID(it)
-            if (it.rawMessage.getString("address") == PlatformAddress.PROBE_CONNECTED) {
+            if (it.rawMessage.getString("address") == PROBE_CONNECTED) {
                 val conn = Json.decodeValue(
                     it.rawMessage.getJsonObject("body").toString(), InstanceConnection::class.java
                 )
@@ -226,7 +223,7 @@ class ProbeBridge(
 
     private fun getInboundPermitted(): List<PermittedOptions> {
         return listOf(
-            PermittedOptions().setAddress(PlatformAddress.PROBE_CONNECTED),
+            PermittedOptions().setAddress(PROBE_CONNECTED),
             PermittedOptions().setAddress(ProcessorAddress.REMOTE_REGISTERED),
             PermittedOptions().setAddress(ProcessorAddress.LIVE_INSTRUMENT_APPLIED),
             PermittedOptions().setAddress(ProcessorAddress.LIVE_INSTRUMENT_REMOVED)
