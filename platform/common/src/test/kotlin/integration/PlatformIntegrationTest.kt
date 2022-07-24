@@ -60,8 +60,12 @@ open class PlatformIntegrationTest {
                     "WbvSQpHyTR96rII4rjpqtFwC49CmPOCJPxLpEpa5rMW3gbvKa-M1IJRSnKN0rsPF1Yr80LIl4x1w6JZp47_MoYPe0rWNPojnBY" +
                     "KP-1-SRBc1skSsijxtOWiYoz2UbA9xIDWUrWh6g-wUFa-xE4eAjFKgE"
 
-        lateinit var vertx: Vertx
+        private var vertx: Vertx? = null
         val platformHost = System.getenv("SPP_PLATFORM_HOST") ?: "localhost"
+
+        fun vertx(): Vertx {
+            return vertx!!
+        }
 
         @BeforeAll
         @JvmStatic
@@ -73,11 +77,9 @@ open class PlatformIntegrationTest {
                     .addEndpoint(clusterStorageAddress)
             )
             runBlocking {
-                if (!::vertx.isInitialized) {
-                    log.info("Starting vertx")
-                    vertx = Vertx.clusteredVertx(VertxOptions().setClusterManager(clusterManager)).await()
-                    log.info("Started vertx")
-                }
+                log.info("Starting vertx")
+                vertx = Vertx.clusteredVertx(VertxOptions().setClusterManager(clusterManager)).await()
+                log.info("Started vertx")
             }
         }
 
@@ -86,11 +88,14 @@ open class PlatformIntegrationTest {
         fun destroy() {
             runBlocking {
                 log.info("Closing vertx")
-                vertx.close().await()
+                vertx!!.close().await()
+                vertx = null
                 log.info("Closed vertx")
             }
         }
     }
+
+    val vertx: Vertx = vertx()
 
     val liveService: LiveService
         get() {
