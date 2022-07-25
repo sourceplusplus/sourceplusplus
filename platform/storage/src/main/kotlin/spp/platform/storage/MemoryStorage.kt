@@ -36,6 +36,14 @@ open class MemoryStorage(val vertx: Vertx) : CoreStorage {
         return vertx.sharedData().getAsyncMap<K, V>(namespace(name)).await()
     }
 
+    override suspend fun <T> get(name: String): T? {
+        return map<String, T>("global.properties").get(name).await()
+    }
+
+    override suspend fun <T> set(name: String, value: T) {
+        map<String, T>("global.properties").put(name, value).await()
+    }
+
     override suspend fun getDevelopers(): List<Developer> {
         val currentDevelopers = vertx.sharedData().getAsyncMap<String, JsonArray>(namespace("developers"))
             .await().get("ids").await() ?: JsonArray()
