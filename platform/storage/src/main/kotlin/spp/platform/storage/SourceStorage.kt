@@ -121,7 +121,7 @@ object SourceStorage {
     }
 
     suspend fun put(name: String, value: Any) {
-        storage.set(name, value)
+        storage.put(name, value)
     }
 
     suspend fun getDevelopers(): List<Developer> {

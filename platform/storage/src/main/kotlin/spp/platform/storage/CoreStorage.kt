@@ -29,7 +29,7 @@ interface CoreStorage {
     suspend fun counter(name: String): Counter
     suspend fun <K, V> map(name: String): AsyncMap<K, V>
     suspend fun <T> get(name: String): T?
-    suspend fun <T> set(name: String, value: T)
+    suspend fun <T> put(name: String, value: T)
 
     suspend fun getDevelopers(): List<Developer>
     suspend fun getDeveloperByAccessToken(token: String): Developer?

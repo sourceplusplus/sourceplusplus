@@ -54,7 +54,7 @@ open class RedisStorage(val vertx: Vertx) : CoreStorage {
         return map<String, T>("global.properties").get(name).await()
     }
 
-    override suspend fun <T> set(name: String, value: T) {
+    override suspend fun <T> put(name: String, value: T) {
         map<String, T>("global.properties").put(name, value).await()
     }
 
