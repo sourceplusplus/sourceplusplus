@@ -230,12 +230,12 @@ class SourcePlatform : CoroutineVerticle() {
             val record = Record(it.body())
             if (record.status == Status.UP) {
                 launch(vertx.dispatcher()) {
-                    vertx.sharedData().getLocalCounter(record.name).await().andIncrement.await()
+                    vertx.sharedData().getCounter(record.name).await().andIncrement.await()
                     log.debug { "Service UP: ${record.name}" }
                 }
             } else if (record.status == Status.DOWN) {
                 launch(vertx.dispatcher()) {
-                    vertx.sharedData().getLocalCounter(record.name).await().decrementAndGet().await()
+                    vertx.sharedData().getCounter(record.name).await().decrementAndGet().await()
                     log.trace { "Service DOWN: ${record.name}" }
                 }
             }
