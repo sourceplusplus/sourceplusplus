@@ -48,6 +48,7 @@ import org.bouncycastle.openssl.PEMKeyPair
 import org.bouncycastle.openssl.PEMParser
 import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter
 import org.bouncycastle.openssl.jcajce.JcaPEMWriter
+import spp.platform.common.ClusterConnection.discovery
 import spp.platform.common.ClusterConnection.router
 import spp.platform.common.util.CertsToJksOptionsConverter
 import spp.platform.common.util.SelfSignedCertGenerator
@@ -81,8 +82,6 @@ class SourcePlatform : CoroutineVerticle() {
                 exitProcess(-1)
             }
         }
-
-        lateinit var discovery: ServiceDiscovery
 
         fun addServiceCheck(checks: HealthChecks, serviceName: String) {
             val registeredName = "services/${serviceName.replace(".", "/")}"
@@ -226,9 +225,6 @@ class SourcePlatform : CoroutineVerticle() {
         router["/health"].handler(HealthCheckHandler.createWithHealthChecks(healthChecks))
         router["/stats"].handler(this::getStats)
         router["/clients"].handler(this::getClients)
-
-        log.info("Starting service discovery")
-        discovery = ServiceDiscovery.create(vertx)
 
         vertx.eventBus().consumer<JsonObject>(ServiceDiscoveryOptions.DEFAULT_ANNOUNCE_ADDRESS) {
             val record = Record(it.body())
