@@ -37,6 +37,16 @@ curl -O 'https://raw.githubusercontent.com/sourceplusplus/live-platform/master/d
 </ol>
 </details>
 
+<details>
+<summary><b><a href="#"><img src="https://user-images.githubusercontent.com/511499/117447182-29758200-af0b-11eb-97bd-58723fee62ab.png" alt="Docker" height="28px" align="top"/></a> <code>docker</code></b>  (macOS/Linux/Windows)</summary>
+<br/>
+<ol>
+<li>Install <a href="https://docs.docker.com/get-docker/">Docker</a> on your system (if not already installed).</li>
+<li>Start Live Platform (Live Dashboard available at https://127.0.0.1:12800)
+<pre lang="bash"><code style="white-space: pre-line">docker run -d --name=spp-platform -p 11800:11800 -p 12800:12800 sourceplusplus/spp-platform</code></pre></li>
+</ol>
+</details>
+
 ## Get Started
 
 <!-- - [Get Source++](https://sourceplusplus.com/get/) -->
