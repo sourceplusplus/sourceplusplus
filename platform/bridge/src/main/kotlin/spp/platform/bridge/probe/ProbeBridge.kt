@@ -101,8 +101,7 @@ class ProbeBridge(
                 }
 
                 launch(vertx.dispatcher()) {
-                    vertx.sharedData().getCounter(remote).await()
-                        .incrementAndGet().await()
+                    SourceStorage.counter(remote).incrementAndGet().await()
                 }
             }
         }
@@ -127,8 +126,7 @@ class ProbeBridge(
             it.reply(true)
 
             launch(vertx.dispatcher()) {
-                vertx.sharedData().getCounter(PROBE_CONNECTED).await()
-                    .incrementAndGet().await()
+                SourceStorage.counter(PROBE_CONNECTED).incrementAndGet().await()
             }
         }
         vertx.eventBus().consumer<JsonObject>(PlatformAddress.PROBE_DISCONNECTED) {
@@ -141,12 +139,10 @@ class ProbeBridge(
                     log.info("Probe disconnected. Connection time: {}", Duration.between(Instant.now(), connectedAt))
 
                     launch(vertx.dispatcher()) {
-                        vertx.sharedData().getCounter(PROBE_CONNECTED).await()
-                            .decrementAndGet().await()
+                        SourceStorage.counter(PROBE_CONNECTED).decrementAndGet().await()
 
                         activeProbe.getJsonObject("meta").getJsonArray("remotes").forEach {
-                            vertx.sharedData().getCounter(it.toString()).await()
-                                .decrementAndGet().await()
+                            SourceStorage.counter(it.toString()).decrementAndGet().await()
                         }
                     }
                 }.onFailure {

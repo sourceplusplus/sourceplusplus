@@ -125,8 +125,7 @@ class MarkerBridge(
         }
 
         launch(vertx.dispatcher()) {
-            vertx.sharedData().getCounter(MARKER_CONNECTED).await()
-                .incrementAndGet().await()
+            SourceStorage.counter(MARKER_CONNECTED).incrementAndGet().await()
         }
     }
 
@@ -140,8 +139,7 @@ class MarkerBridge(
                     log.info("Marker disconnected. Connection time: {}", Duration.between(Instant.now(), connectedAt))
 
                     launch(vertx.dispatcher()) {
-                        vertx.sharedData().getCounter(MARKER_CONNECTED).await()
-                            .decrementAndGet().await()
+                        SourceStorage.counter(MARKER_CONNECTED).decrementAndGet().await()
                     }
                 }
             }.onFailure {
