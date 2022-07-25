@@ -47,5 +47,5 @@ class SourceCoreProvider : ModuleProvider() {
     }
 
     override fun notifyAfterCompleted() = Unit
-    override fun requiredModules(): Array<String> = emptyArray()
+    override fun requiredModules(): Array<String> = arrayOf("spp-platform-storage")
 }

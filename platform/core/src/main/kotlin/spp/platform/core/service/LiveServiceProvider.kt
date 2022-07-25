@@ -114,18 +114,15 @@ class LiveServiceProvider(private val vertx: Vertx) : LiveService {
                         JsonObject()
                             .put(
                                 SourceServices.Utilize.LIVE_SERVICE,
-                                vertx.sharedData().getLocalCounter(SourceServices.Utilize.LIVE_SERVICE).await().get()
-                                    .await()
+                                SourceStorage.counter(SourceServices.Utilize.LIVE_SERVICE).get().await()
                             )
                             .put(
                                 SourceServices.Utilize.LIVE_INSTRUMENT,
-                                vertx.sharedData().getLocalCounter(SourceServices.Utilize.LIVE_INSTRUMENT).await().get()
-                                    .await()
+                                SourceStorage.counter(SourceServices.Utilize.LIVE_INSTRUMENT).get().await()
                             )
                             .put(
                                 SourceServices.Utilize.LIVE_VIEW,
-                                vertx.sharedData().getLocalCounter(SourceServices.Utilize.LIVE_VIEW).await().get()
-                                    .await()
+                                SourceStorage.counter(SourceServices.Utilize.LIVE_VIEW).get().await()
                             )
                     )
                     .put(
@@ -133,8 +130,7 @@ class LiveServiceProvider(private val vertx: Vertx) : LiveService {
                         JsonObject()
                             .put(
                                 ProbeAddress.LIVE_INSTRUMENT_REMOTE,
-                                vertx.sharedData().getLocalCounter(ProbeAddress.LIVE_INSTRUMENT_REMOTE)
-                                    .await().get().await()
+                                SourceStorage.counter(ProbeAddress.LIVE_INSTRUMENT_REMOTE).get().await()
                             )
                     )
             )

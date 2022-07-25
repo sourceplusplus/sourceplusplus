@@ -19,9 +19,9 @@ package spp.platform.bridge.probe
 
 import io.vertx.core.DeploymentOptions
 import io.vertx.core.Handler
-import io.vertx.core.Vertx
 import io.vertx.core.eventbus.DeliveryOptions
 import io.vertx.core.json.Json
+import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import io.vertx.core.net.NetServerOptions
 import io.vertx.ext.auth.jwt.JWTAuth
@@ -39,8 +39,10 @@ import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import mu.KotlinLogging
+import spp.platform.bridge.BridgeAddress
 import spp.platform.bridge.InstanceBridge
 import spp.platform.common.util.Msg
+import spp.platform.storage.SourceStorage
 import spp.protocol.platform.PlatformAddress
 import spp.protocol.platform.PlatformAddress.PROBE_CONNECTED
 import spp.protocol.platform.ProbeAddress
@@ -52,6 +54,9 @@ import java.time.Instant
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 
+/**
+ * Provides services for and tracking of Live Probes.
+ */
 class ProbeBridge(
     private val router: Router,
     jwtAuth: JWTAuth?,
@@ -60,20 +65,7 @@ class ProbeBridge(
 
     companion object {
         private val log = KotlinLogging.logger {}
-
-        private const val connectedProbesAddress = "get-connected-probes"
-        private const val activeProbesAddress = "get-active-probes"
-
-        suspend fun getConnectedProbeCount(vertx: Vertx): Int {
-            return vertx.eventBus().request<Int>(connectedProbesAddress, null).await().body()
-        }
-
-        suspend fun getActiveProbes(vertx: Vertx): List<ActiveInstance> {
-            return vertx.eventBus().request<List<ActiveInstance>>(activeProbesAddress, null).await().body()
-        }
     }
-
-    private val activeProbes: MutableMap<String, ActiveInstance> = ConcurrentHashMap()
 
     override suspend fun start() {
         vertx.deployVerticle(
@@ -84,57 +76,77 @@ class ProbeBridge(
                 .setConfig(config)
         ).await()
 
-        vertx.eventBus().consumer<JsonObject>(activeProbesAddress) {
-            launch(vertx.dispatcher()) {
-                it.reply(ArrayList(activeProbes.values))
-            }
-        }
-        vertx.eventBus().consumer<JsonObject>(connectedProbesAddress) {
-            launch(vertx.dispatcher()) {
-                it.reply(vertx.sharedData().getLocalCounter(PROBE_CONNECTED).await().get().await().toInt())
-            }
-        }
         vertx.eventBus().consumer<JsonObject>(ProcessorAddress.REMOTE_REGISTERED) {
             val remote = it.body().getString("address")
             if (!remote.contains(":")) {
                 val probeId = it.headers().get("probe_id")
-                activeProbes[probeId]!!.meta.putIfAbsent("remotes", mutableListOf<String>())
-                (activeProbes[probeId]!!.meta["remotes"] as MutableList<String>).add(remote)
-                log.trace { Msg.msg("Probe {} registered {}", probeId, remote) }
+                launch(vertx.dispatcher()) {
+                    val map = SourceStorage.map<String, JsonObject>(BridgeAddress.ACTIVE_PROBES)
+                    map.get(probeId).onSuccess {
+                        val updatedActiveInstance = it
+                        val remotes = updatedActiveInstance.getJsonObject("meta").getJsonArray("remotes")
+                        if (remotes == null) {
+                            updatedActiveInstance.getJsonObject("meta").put("remotes", JsonArray().add(remote))
+                        } else {
+                            remotes.add(remote)
+                        }
+                        map.put(probeId, updatedActiveInstance).onSuccess {
+                            log.debug { Msg.msg("Probe {} registered {}", probeId, remote) }
+                        }.onFailure {
+                            log.error("Failed to update active probe", it)
+                        }
+                    }.onFailure {
+                        log.error("Failed to get active probe for $probeId", it)
+                    }
+                }
 
                 launch(vertx.dispatcher()) {
-                    vertx.sharedData().getLocalCounter(remote).await()
-                        .incrementAndGet().await()
+                    SourceStorage.counter(remote).incrementAndGet().await()
                 }
             }
         }
         vertx.eventBus().consumer<JsonObject>(PROBE_CONNECTED) {
             val conn = Json.decodeValue(it.body().toString(), InstanceConnection::class.java)
             val latency = System.currentTimeMillis() - conn.connectionTime
-            log.trace { Msg.msg("Establishing connection with probe {}", conn.instanceId) }
+            log.debug { Msg.msg("Establishing connection with probe {}", conn.instanceId) }
 
-            activeProbes[conn.instanceId] = ActiveInstance(conn.instanceId, System.currentTimeMillis(), conn.meta)
+            val activeInstance = ActiveInstance(conn.instanceId, System.currentTimeMillis(), conn.meta)
+            launch(vertx.dispatcher()) {
+                val map = SourceStorage.map<String, JsonObject>(BridgeAddress.ACTIVE_PROBES)
+                map.put(conn.instanceId, JsonObject.mapFrom(activeInstance)).onSuccess {
+                    map.size().onSuccess {
+                        log.info("Probe connected. Latency: {}ms - Probes connected: {}", latency, it)
+                    }.onFailure {
+                        log.error("Failed to get active probes", it)
+                    }
+                }.onFailure {
+                    log.error("Failed to update active probe", it)
+                }
+            }
             it.reply(true)
-            log.info("Probe connected. Latency: {}ms - Probes connected: {}", latency, activeProbes.size)
 
             launch(vertx.dispatcher()) {
-                vertx.sharedData().getLocalCounter(PROBE_CONNECTED).await()
-                    .incrementAndGet().await()
+                SourceStorage.counter(PROBE_CONNECTED).incrementAndGet().await()
             }
         }
         vertx.eventBus().consumer<JsonObject>(PlatformAddress.PROBE_DISCONNECTED) {
             val conn = Json.decodeValue(it.body().toString(), InstanceConnection::class.java)
-            val activeProbe = activeProbes.remove(conn.instanceId)!!
-            val connectedAt = Instant.ofEpochMilli(activeProbe.connectedAt)
-            log.info("Probe disconnected. Connection time: {}", Duration.between(Instant.now(), connectedAt))
-
             launch(vertx.dispatcher()) {
-                vertx.sharedData().getLocalCounter(PROBE_CONNECTED).await()
-                    .decrementAndGet().await()
+                val map = SourceStorage.map<String, JsonObject>(BridgeAddress.ACTIVE_PROBES)
+                map.remove(conn.instanceId).onSuccess {
+                    val activeProbe = it!!
+                    val connectedAt = Instant.ofEpochMilli(activeProbe.getLong("connectedAt"))
+                    log.info("Probe disconnected. Connection time: {}", Duration.between(Instant.now(), connectedAt))
 
-                (activeProbe.meta["remotes"] as List<String>?).orEmpty().forEach {
-                    vertx.sharedData().getLocalCounter(it).await()
-                        .decrementAndGet().await()
+                    launch(vertx.dispatcher()) {
+                        SourceStorage.counter(PROBE_CONNECTED).decrementAndGet().await()
+
+                        activeProbe.getJsonObject("meta").getJsonArray("remotes").forEach {
+                            SourceStorage.counter(it.toString()).decrementAndGet().await()
+                        }
+                    }
+                }.onFailure {
+                    log.error("Failed to remove active probe", it)
                 }
             }
         }

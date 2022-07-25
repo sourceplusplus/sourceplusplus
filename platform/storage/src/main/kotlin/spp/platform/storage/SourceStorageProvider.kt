@@ -56,8 +56,8 @@ class SourceStorageProvider : ModuleProvider() {
                     }
                     "redis" -> {
                         log.info("Using Redis storage")
-                        val redisStorage = RedisStorage()
-                        redisStorage.init(vertx, config.getJsonObject("storage").getJsonObject("redis"))
+                        val redisStorage = RedisStorage(vertx)
+                        redisStorage.init(config.getJsonObject("storage").getJsonObject("redis"))
 
                         val installDefaults = config.getJsonObject("storage").getJsonObject("redis")
                             .getString("install_defaults")?.toBooleanStrictOrNull() != false
@@ -73,7 +73,7 @@ class SourceStorageProvider : ModuleProvider() {
                             CaseFormat.LOWER_HYPHEN,
                             storageClass.simpleName.removeSuffix("Storage")
                         )
-                        customStorage.init(vertx, config.getJsonObject("storage").getJsonObject(storageName))
+                        customStorage.init(config.getJsonObject("storage").getJsonObject(storageName))
 
                         val installDefaults = config.getJsonObject("storage").getJsonObject(storageName)
                             .getString("install_defaults")?.toBooleanStrictOrNull() != false

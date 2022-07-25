@@ -19,12 +19,30 @@ package spp.platform.storage
 
 import io.vertx.core.Vertx
 import io.vertx.core.json.JsonArray
+import io.vertx.core.shareddata.AsyncMap
+import io.vertx.core.shareddata.Counter
 import io.vertx.core.shareddata.Shareable
 import io.vertx.kotlin.coroutines.await
 import spp.protocol.platform.auth.*
 import spp.protocol.platform.developer.Developer
 
 open class MemoryStorage(val vertx: Vertx) : CoreStorage {
+
+    override suspend fun counter(name: String): Counter {
+        return vertx.sharedData().getCounter(namespace(name)).await()
+    }
+
+    override suspend fun <K, V> map(name: String): AsyncMap<K, V> {
+        return vertx.sharedData().getAsyncMap<K, V>(namespace(name)).await()
+    }
+
+    override suspend fun <T> get(name: String): T? {
+        return map<String, T>("global.properties").get(name).await()
+    }
+
+    override suspend fun <T> put(name: String, value: T) {
+        map<String, T>("global.properties").put(name, value).await()
+    }
 
     override suspend fun getDevelopers(): List<Developer> {
         val currentDevelopers = vertx.sharedData().getAsyncMap<String, JsonArray>(namespace("developers"))
@@ -38,7 +56,8 @@ open class MemoryStorage(val vertx: Vertx) : CoreStorage {
 
     override suspend fun hasRole(role: DeveloperRole): Boolean {
         val rolesStorage = vertx.sharedData().getAsyncMap<String, Any>(namespace("roles")).await()
-        return (rolesStorage.get("roles").await() as JsonArray? ?: JsonArray()).list.find { it == role.roleName } != null
+        return (rolesStorage.get("roles").await() as JsonArray? ?: JsonArray())
+            .list.find { it == role.roleName } != null
     }
 
     override suspend fun removeRole(role: DeveloperRole): Boolean {
