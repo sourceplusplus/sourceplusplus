@@ -20,44 +20,30 @@ package spp.platform.bridge
 import io.vertx.core.Future
 import io.vertx.core.Promise
 import io.vertx.core.json.JsonArray
-import io.vertx.core.json.JsonObject
 import io.vertx.kotlin.coroutines.CoroutineVerticle
+import io.vertx.kotlin.coroutines.await
 import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.launch
 import spp.platform.bridge.marker.MarkerBridge
 import spp.platform.bridge.probe.ProbeBridge
 import spp.platform.common.service.SourceBridgeService
+import spp.protocol.platform.PlatformAddress.MARKER_CONNECTED
+import spp.protocol.platform.PlatformAddress.PROBE_CONNECTED
 
 class SourceBridge : CoroutineVerticle(), SourceBridgeService {
 
     override fun getActiveMarkers(): Future<JsonArray> {
-        val promise = Promise.promise<JsonArray>()
-        launch(vertx.dispatcher()) {
-            val jsonArray = JsonArray()
-            MarkerBridge.getActiveMarkers(vertx).map {
-                jsonArray.add(JsonObject.mapFrom(it))
-            }
-            promise.complete(jsonArray)
-        }
-        return promise.future()
+        return MarkerBridge.getActiveMarkers(vertx)
     }
 
     override fun getActiveProbes(): Future<JsonArray> {
-        val promise = Promise.promise<JsonArray>()
-        launch(vertx.dispatcher()) {
-            val jsonArray = JsonArray()
-            ProbeBridge.getActiveProbes(vertx).map {
-                jsonArray.add(JsonObject.mapFrom(it))
-            }
-            promise.complete(jsonArray)
-        }
-        return promise.future()
+        return ProbeBridge.getActiveProbes(vertx)
     }
 
     override fun getConnectedMarkers(): Future<Int> {
         val promise = Promise.promise<Int>()
         launch(vertx.dispatcher()) {
-            promise.complete(MarkerBridge.getConnectedMarkerCount(vertx))
+            promise.complete(vertx.sharedData().getCounter(MARKER_CONNECTED).await().get().await().toInt())
         }
         return promise.future()
     }
@@ -65,7 +51,7 @@ class SourceBridge : CoroutineVerticle(), SourceBridgeService {
     override fun getConnectedProbes(): Future<Int> {
         val promise = Promise.promise<Int>()
         launch(vertx.dispatcher()) {
-            promise.complete(ProbeBridge.getConnectedProbeCount(vertx))
+            promise.complete(vertx.sharedData().getCounter(PROBE_CONNECTED).await().get().await().toInt())
         }
         return promise.future()
     }
