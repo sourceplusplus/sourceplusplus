@@ -20,6 +20,8 @@ package spp.platform.storage
 import io.vertx.core.Vertx
 import io.vertx.core.json.Json
 import io.vertx.core.json.JsonObject
+import io.vertx.core.shareddata.AsyncMap
+import io.vertx.core.shareddata.Counter
 import io.vertx.kotlin.coroutines.await
 import io.vertx.redis.client.Redis
 import io.vertx.redis.client.RedisAPI
@@ -28,16 +30,24 @@ import spp.protocol.platform.auth.*
 import spp.protocol.platform.developer.Developer
 import java.nio.charset.StandardCharsets.UTF_8
 
-open class RedisStorage : CoreStorage {
+open class RedisStorage(val vertx: Vertx) : CoreStorage {
 
     lateinit var redisClient: Redis
     lateinit var redis: RedisAPI
 
-    override suspend fun init(vertx: Vertx, config: JsonObject) {
+    override suspend fun init(config: JsonObject) {
         val sdHost = config.getString("host")
         val sdPort = config.getString("port")
         redisClient = Redis.createClient(vertx, "redis://$sdHost:$sdPort")
         redis = RedisAPI.api(redisClient.connect().await())
+    }
+
+    override suspend fun counter(name: String): Counter {
+        return vertx.sharedData().getCounter(namespace(name)).await()
+    }
+
+    override suspend fun <K, V> map(name: String): AsyncMap<K, V> {
+        return vertx.sharedData().getAsyncMap<K, V>(namespace(name)).await()
     }
 
     override suspend fun getDevelopers(): List<Developer> {

@@ -18,6 +18,8 @@
 package spp.platform.storage
 
 import io.vertx.core.json.JsonObject
+import io.vertx.core.shareddata.AsyncMap
+import io.vertx.core.shareddata.Counter
 import io.vertx.ext.web.handler.SessionHandler
 import io.vertx.ext.web.sstore.SessionStore
 import org.apache.commons.lang3.RandomStringUtils
@@ -100,6 +102,14 @@ object SourceStorage {
         getDevelopers().forEach { removeDeveloper(it.id) }
         installDefaults()
         return true
+    }
+
+    suspend fun counter(name: String): Counter {
+        return storage.counter(name)
+    }
+
+    suspend fun <K, V> map(name: String): AsyncMap<K, V> {
+        return storage.map(name)
     }
 
     suspend fun getDevelopers(): List<Developer> {

@@ -17,11 +17,8 @@
  */
 package spp.platform.bridge.marker
 
-import io.vertx.core.Future
-import io.vertx.core.Promise
 import io.vertx.core.Vertx
 import io.vertx.core.json.Json
-import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import io.vertx.core.net.NetServerOptions
 import io.vertx.ext.auth.jwt.JWTAuth
@@ -33,8 +30,10 @@ import io.vertx.kotlin.coroutines.await
 import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.launch
 import mu.KotlinLogging
+import spp.platform.bridge.BridgeAddress
 import spp.platform.bridge.InstanceBridge
 import spp.platform.common.DeveloperAuth
+import spp.platform.storage.SourceStorage
 import spp.protocol.SourceServices.Provide
 import spp.protocol.SourceServices.Utilize
 import spp.protocol.platform.PlatformAddress.MARKER_CONNECTED
@@ -56,22 +55,6 @@ class MarkerBridge(
 
     companion object {
         private val log = KotlinLogging.logger {}
-
-        fun getActiveMarkers(vertx: Vertx): Future<JsonArray> {
-            val promise = Promise.promise<JsonArray>()
-            vertx.sharedData().getAsyncMap<String, JsonObject>("bridge.active-markers").onSuccess { map ->
-                map.values().onSuccess {
-                    promise.complete(JsonArray().apply { it.forEach { add(it) } })
-                }.onFailure {
-                    log.error("Failed to get active markers", it)
-                    promise.fail(it)
-                }
-            }.onFailure {
-                log.error("Failed to get active markers", it)
-                promise.fail(it)
-            }
-            return promise.future()
-        }
     }
 
     override suspend fun start() {
@@ -128,7 +111,8 @@ class MarkerBridge(
         conn.meta["selfId"] = selfId
 
         val activeInstance = ActiveInstance(conn.instanceId, System.currentTimeMillis(), conn.meta)
-        vertx.sharedData().getAsyncMap<String, JsonObject>("bridge.active-markers").onSuccess { map ->
+        launch(vertx.dispatcher()) {
+            val map = SourceStorage.map<String, JsonObject>(BridgeAddress.ACTIVE_MARKERS)
             map.put(conn.instanceId, JsonObject.mapFrom(activeInstance)).onSuccess {
                 map.size().onSuccess {
                     log.info("Marker connected. Latency: {}ms - Markers connected: {}", latency, it)
@@ -148,7 +132,8 @@ class MarkerBridge(
 
     private fun handleDisconnection(rawConnectionBody: JsonObject) {
         val conn = Json.decodeValue(rawConnectionBody.toString(), InstanceConnection::class.java)
-        vertx.sharedData().getAsyncMap<String, JsonObject>("bridge.active-markers").onSuccess { map ->
+        launch(vertx.dispatcher()) {
+            val map = SourceStorage.map<String, JsonObject>(BridgeAddress.ACTIVE_MARKERS)
             map.remove(conn.instanceId).onSuccess {
                 if (it != null) {
                     val connectedAt = Instant.ofEpochMilli(it.getLong("connectedAt"))
@@ -162,8 +147,6 @@ class MarkerBridge(
             }.onFailure {
                 log.error("Failed to remove active marker", it)
             }
-        }.onFailure {
-            log.error("Failed to get active markers", it)
         }
     }
 }

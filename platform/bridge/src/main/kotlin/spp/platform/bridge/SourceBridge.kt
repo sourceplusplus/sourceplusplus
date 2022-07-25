@@ -20,30 +20,55 @@ package spp.platform.bridge
 import io.vertx.core.Future
 import io.vertx.core.Promise
 import io.vertx.core.json.JsonArray
+import io.vertx.core.json.JsonObject
 import io.vertx.kotlin.coroutines.CoroutineVerticle
 import io.vertx.kotlin.coroutines.await
 import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.launch
-import spp.platform.bridge.marker.MarkerBridge
-import spp.platform.bridge.probe.ProbeBridge
+import mu.KotlinLogging
 import spp.platform.common.service.SourceBridgeService
+import spp.platform.storage.SourceStorage
 import spp.protocol.platform.PlatformAddress.MARKER_CONNECTED
 import spp.protocol.platform.PlatformAddress.PROBE_CONNECTED
 
 class SourceBridge : CoroutineVerticle(), SourceBridgeService {
 
+    companion object {
+        private val log = KotlinLogging.logger {}
+    }
+
     override fun getActiveMarkers(): Future<JsonArray> {
-        return MarkerBridge.getActiveMarkers(vertx)
+        val promise = Promise.promise<JsonArray>()
+        launch(vertx.dispatcher()) {
+            val map = SourceStorage.map<String, JsonObject>(BridgeAddress.ACTIVE_MARKERS)
+            map.values().onSuccess {
+                promise.complete(JsonArray().apply { it.forEach { add(it) } })
+            }.onFailure {
+                log.error("Failed to get active markers", it)
+                promise.fail(it)
+            }
+        }
+        return promise.future()
     }
 
     override fun getActiveProbes(): Future<JsonArray> {
-        return ProbeBridge.getActiveProbes(vertx)
+        val promise = Promise.promise<JsonArray>()
+        launch(vertx.dispatcher()) {
+            val map = SourceStorage.map<String, JsonObject>(BridgeAddress.ACTIVE_PROBES)
+            map.values().onSuccess {
+                promise.complete(JsonArray().apply { it.forEach { add(it) } })
+            }.onFailure {
+                log.error("Failed to get active probes", it)
+                promise.fail(it)
+            }
+        }
+        return promise.future()
     }
 
     override fun getConnectedMarkers(): Future<Int> {
         val promise = Promise.promise<Int>()
         launch(vertx.dispatcher()) {
-            promise.complete(vertx.sharedData().getCounter(MARKER_CONNECTED).await().get().await().toInt())
+            promise.complete(SourceStorage.counter(MARKER_CONNECTED).get().await().toInt())
         }
         return promise.future()
     }
@@ -51,7 +76,7 @@ class SourceBridge : CoroutineVerticle(), SourceBridgeService {
     override fun getConnectedProbes(): Future<Int> {
         val promise = Promise.promise<Int>()
         launch(vertx.dispatcher()) {
-            promise.complete(vertx.sharedData().getCounter(PROBE_CONNECTED).await().get().await().toInt())
+            promise.complete(SourceStorage.counter(PROBE_CONNECTED).get().await().toInt())
         }
         return promise.future()
     }
