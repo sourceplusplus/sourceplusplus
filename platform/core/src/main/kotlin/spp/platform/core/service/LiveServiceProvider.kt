@@ -21,19 +21,17 @@ import io.vertx.core.Future
 import io.vertx.core.Promise
 import io.vertx.core.Vertx
 import io.vertx.core.http.HttpMethod
-import io.vertx.core.json.Json
-import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import io.vertx.kotlin.coroutines.await
 import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
-import spp.platform.bridge.marker.MarkerBridge
-import spp.platform.bridge.probe.ProbeBridge
 import spp.platform.common.DeveloperAuth
+import spp.platform.common.service.SourceBridgeService
 import spp.platform.storage.SourceStorage
 import spp.protocol.SourceServices
+import spp.protocol.marshall.ProtocolMarshaller
 import spp.protocol.platform.ProbeAddress
 import spp.protocol.platform.developer.Developer
 import spp.protocol.platform.developer.SelfInfo
@@ -58,9 +56,13 @@ class LiveServiceProvider(private val vertx: Vertx) : LiveService {
         val promise = Promise.promise<JsonObject>()
         GlobalScope.launch(vertx.dispatcher()) {
             promise.complete(
-                JsonObject()
-                    .put("markers", JsonArray(Json.encode(MarkerBridge.getActiveMarkers(vertx))))
-                    .put("probes", JsonArray(Json.encode(ProbeBridge.getActiveProbes(vertx))))
+                JsonObject().apply {
+                    val bridgeService = SourceBridgeService.service(vertx).await()
+                    if (bridgeService != null) {
+                        put("markers", bridgeService.getActiveMarkers().await())
+                        put("probes", bridgeService.getActiveProbes().await())
+                    }
+                }
             )
         }
         return promise.future()
@@ -97,28 +99,30 @@ class LiveServiceProvider(private val vertx: Vertx) : LiveService {
 
     private suspend fun getPlatformStats(): JsonObject {
         return JsonObject()
-            .put("connected-markers", MarkerBridge.getConnectedMarkerCount(vertx))
-            .put("connected-probes", ProbeBridge.getConnectedProbeCount(vertx))
+            .apply {
+                val bridgeService = SourceBridgeService.service(vertx).await()
+                if (bridgeService != null) {
+                    put("connected-markers", bridgeService.getConnectedMarkers().await())
+                    put("connected-probes", bridgeService.getConnectedProbes().await())
+                }
+            }
             .put(
-                "services",
+                "services", //todo: get services from service registry
                 JsonObject()
                     .put(
                         "core",
                         JsonObject()
                             .put(
                                 SourceServices.Utilize.LIVE_SERVICE,
-                                vertx.sharedData().getLocalCounter(SourceServices.Utilize.LIVE_SERVICE).await().get()
-                                    .await()
+                                SourceStorage.counter(SourceServices.Utilize.LIVE_SERVICE).get().await()
                             )
                             .put(
                                 SourceServices.Utilize.LIVE_INSTRUMENT,
-                                vertx.sharedData().getLocalCounter(SourceServices.Utilize.LIVE_INSTRUMENT).await().get()
-                                    .await()
+                                SourceStorage.counter(SourceServices.Utilize.LIVE_INSTRUMENT).get().await()
                             )
                             .put(
                                 SourceServices.Utilize.LIVE_VIEW,
-                                vertx.sharedData().getLocalCounter(SourceServices.Utilize.LIVE_VIEW).await().get()
-                                    .await()
+                                SourceStorage.counter(SourceServices.Utilize.LIVE_VIEW).get().await()
                             )
                     )
                     .put(
@@ -126,8 +130,7 @@ class LiveServiceProvider(private val vertx: Vertx) : LiveService {
                         JsonObject()
                             .put(
                                 ProbeAddress.LIVE_INSTRUMENT_REMOTE,
-                                vertx.sharedData().getLocalCounter(ProbeAddress.LIVE_INSTRUMENT_REMOTE)
-                                    .await().get().await()
+                                SourceStorage.counter(ProbeAddress.LIVE_INSTRUMENT_REMOTE).get().await()
                             )
                     )
             )
@@ -201,7 +204,14 @@ class LiveServiceProvider(private val vertx: Vertx) : LiveService {
     override fun getActiveProbes(): Future<List<ActiveInstance>> {
         val promise = Promise.promise<List<ActiveInstance>>()
         GlobalScope.launch(vertx.dispatcher()) {
-            promise.complete(ProbeBridge.getActiveProbes(vertx))
+            val bridgeService = SourceBridgeService.service(vertx).await()
+            if (bridgeService != null) {
+                promise.complete(
+                    bridgeService.getActiveProbes().await().list.map {
+                        ProtocolMarshaller.deserializeActiveInstance(JsonObject.mapFrom(it))
+                    }
+                )
+            }
         }
         return promise.future()
     }

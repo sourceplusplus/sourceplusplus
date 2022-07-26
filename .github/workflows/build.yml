@@ -77,15 +77,6 @@ jobs:
           name: spp-platform-${{ env.SPP_RELEASE_VERSION }}.tar.gz
           path: ./dist/spp-platform-${{ env.SPP_RELEASE_VERSION }}.tar.gz
 
-      - name: Zip S++ processors
-        run: find docker/e2e -name 'spp-live-*' | zip -j spp-processors.zip -@
-
-      - name: Upload S++ processors
-        uses: actions/upload-artifact@v2
-        with:
-          name: spp-processors.zip
-          path: ./spp-processors.zip
-
       - name: Remove Old Snapshot Packages
         if: github.ref == 'refs/heads/master'
         uses: smartsquaregmbh/delete-old-packages@v0.4.0
@@ -96,6 +87,7 @@ jobs:
             plus.sourceplus.platform.platform-bridge
             plus.sourceplus.platform.platform-common
             plus.sourceplus.platform.platform-core
+            plus.sourceplus.platform.platform-dashboard
             plus.sourceplus.platform.platform-storage
 
       - name: Publish New Snapshot Packages
@@ -132,21 +124,6 @@ jobs:
           release_name: v${{ needs.jvm-build.outputs.release_version }}
           body: ${{ needs.build.outputs.changelog }}
           draft: true
-
-      - name: Download S++ processors artifact
-        uses: actions/download-artifact@v2
-        with:
-          name: spp-processors.zip
-
-      - name: Upload S++ processors asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.createDraft.outputs.upload_url }}
-          asset_path: ./spp-processors.zip
-          asset_name: spp-processors.zip
-          asset_content_type: application/zip
 
       - name: Download spp-platform artifact
         uses: actions/download-artifact@v2
@@ -188,15 +165,6 @@ jobs:
       - name: Copy ui-initialized-templates to spp-platform Docker image
         run: cp -r ./docker/e2e/config/ui-initialized-templates ./docker/spp-platform
 
-      - name: Download Source++ processors
-        uses: actions/download-artifact@v2
-        with:
-          name: spp-processors.zip
-          path: ./docker/spp-platform
-
-      - name: Unzip Source++ processors
-        run: cd ./docker/spp-platform && unzip spp-processors.zip
-
       - name: Build spp-platform tagged Docker image
         run: cd ./docker/spp-platform && docker build . --file Dockerfile --tag sourceplusplus/spp-platform:${{ needs.jvm-build.outputs.release_version }}
 
@@ -217,8 +185,3 @@ jobs:
         uses: geekyeggo/delete-artifact@v1
         with:
           name: spp-platform-${{ needs.jvm-build.outputs.release_version }}.tar.gz
-
-      - name: Delete Source++ processors
-        uses: geekyeggo/delete-artifact@v1
-        with:
-          name: spp-processors.zip

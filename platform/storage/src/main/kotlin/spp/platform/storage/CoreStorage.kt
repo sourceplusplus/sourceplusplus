@@ -17,14 +17,20 @@
  */
 package spp.platform.storage
 
-import io.vertx.core.Vertx
 import io.vertx.core.json.JsonObject
+import io.vertx.core.shareddata.AsyncMap
+import io.vertx.core.shareddata.Counter
 import spp.protocol.platform.auth.*
 import spp.protocol.platform.developer.Developer
 
 interface CoreStorage {
 
-    suspend fun init(vertx: Vertx, config: JsonObject) = Unit
+    suspend fun init(config: JsonObject) = Unit
+    suspend fun counter(name: String): Counter
+    suspend fun <K, V> map(name: String): AsyncMap<K, V>
+    suspend fun <T> get(name: String): T?
+    suspend fun <T> put(name: String, value: T)
+
     suspend fun getDevelopers(): List<Developer>
     suspend fun getDeveloperByAccessToken(token: String): Developer?
     suspend fun hasRole(role: DeveloperRole): Boolean

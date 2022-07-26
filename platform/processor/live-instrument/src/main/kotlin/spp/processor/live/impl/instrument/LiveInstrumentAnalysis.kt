@@ -36,7 +36,7 @@ import org.apache.skywalking.oap.server.analyzer.provider.trace.parser.listener.
 import org.apache.skywalking.oap.server.core.query.TraceQueryService
 import org.apache.skywalking.oap.server.library.module.ModuleManager
 import org.slf4j.LoggerFactory
-import spp.platform.common.FeedbackProcessor.Companion.vertx
+import spp.platform.common.ClusterConnection
 import spp.processor.InstrumentProcessor.liveInstrumentProcessor
 import spp.protocol.SourceServices.Provide.toLiveInstrumentSubscriberAddress
 import spp.protocol.artifact.exception.LiveStackTrace
@@ -192,7 +192,7 @@ class LiveInstrumentAnalysis(
 
     init {
         //todo: map of rate limit per log id
-        vertx.eventBus().consumer<Int>(ProcessorAddress.SET_LOG_PUBLISH_RATE_LIMIT) {
+        ClusterConnection.getVertx().eventBus().consumer<Int>(ProcessorAddress.SET_LOG_PUBLISH_RATE_LIMIT) {
             logPublishRateLimit = it.body()
         }
     }
@@ -260,7 +260,7 @@ class LiveInstrumentAnalysis(
             }
 
             val devInstrument = liveInstrument ?: liveInstrumentProcessor.getCachedDeveloperInstrument(hit.logId)
-            vertx.eventBus().publish(
+            ClusterConnection.getVertx().eventBus().publish(
                 toLiveInstrumentSubscriberAddress(devInstrument.developerAuth.selfId),
                 JsonObject.mapFrom(
                     LiveInstrumentEvent(LiveInstrumentEventType.LOG_HIT, JsonObject.mapFrom(hit).toString())
@@ -383,7 +383,7 @@ class LiveInstrumentAnalysis(
             }
 
             val devInstrument = liveInstrument ?: liveInstrumentProcessor.getCachedDeveloperInstrument(hit.breakpointId)
-            vertx.eventBus().publish(
+            ClusterConnection.getVertx().eventBus().publish(
                 toLiveInstrumentSubscriberAddress(devInstrument.developerAuth.selfId),
                 JsonObject.mapFrom(LiveInstrumentEvent(LiveInstrumentEventType.BREAKPOINT_HIT, Json.encode(hit)))
             )

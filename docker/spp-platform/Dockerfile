@@ -11,7 +11,16 @@ ADD ./spp-live-*.jar /skywalking/oap-libs/
 RUN sed -i -e 's/SW_CORE_REST_PORT:12800/SW_CORE_REST_PORT:12801/g' /skywalking/config/application.yml
 RUN sed -i -e 's/SW_CORE_GRPC_PORT:11800/SW_CORE_GRPC_PORT:11801/g' /skywalking/config/application.yml
 
-RUN printf "\nspp-live-core:\n  selector: \${SPP_LIVE_CORE:default}\n  default:\n" \
+RUN printf "\nspp-platform-core:\n  selector: \${SPP_PLATFORM_CORE:default}\n  default:\n" \
+    >> /skywalking/config/application.yml
+
+RUN printf "\nspp-platform-storage:\n  selector: \${SPP_PLATFORM_STORAGE:default}\n  default:\n" \
+    >> /skywalking/config/application.yml
+
+RUN printf "\nspp-platform-bridge:\n  selector: \${SPP_PLATFORM_BRIDGE:default}\n  default:\n" \
+    >> /skywalking/config/application.yml
+
+RUN printf "\nspp-live-dashboard:\n  selector: \${SPP_LIVE_DASHBOARD:default}\n  default:\n" \
     >> /skywalking/config/application.yml
 
 RUN printf "\nspp-live-instrument:\n  selector: \${SPP_LIVE_INSTRUMENT:default}\n  default:\n" \

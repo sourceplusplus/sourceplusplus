@@ -36,7 +36,6 @@ class MemoryStorageITTest {
     @Test
     fun updateDataRedactionInRole(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
         val storage = MemoryStorage(vertx)
-        storage.init(vertx, JsonObject().put("host", "localhost").put("port", 6379))
 
         storage.addDataRedaction("test", RedactionType.IDENTIFIER_MATCH, "lookup", "value1")
         storage.addRole(DeveloperRole.fromString("test_role"))

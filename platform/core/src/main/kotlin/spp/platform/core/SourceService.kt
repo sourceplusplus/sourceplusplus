@@ -37,6 +37,7 @@ import kotlinx.coroutines.launch
 import org.apache.commons.lang3.EnumUtils
 import org.apache.commons.lang3.RandomStringUtils
 import org.slf4j.LoggerFactory
+import spp.platform.common.ClusterConnection.discovery
 import spp.platform.storage.SourceStorage
 import spp.protocol.artifact.ArtifactQualifiedName
 import spp.protocol.artifact.ArtifactType
@@ -569,7 +570,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
         }
 
         EventBusService.getProxy(
-            SourcePlatform.discovery, LiveService::class.java,
+            discovery, LiveService::class.java,
             JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("auth-token", accessToken)) } }
         ) {
             if (it.succeeded()) {
@@ -596,7 +597,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
         }
 
         EventBusService.getProxy(
-            SourcePlatform.discovery, LiveService::class.java,
+            discovery, LiveService::class.java,
             JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("auth-token", accessToken)) } }
         ) {
             if (it.succeeded()) {
@@ -653,7 +654,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
             }
 
             EventBusService.getProxy(
-                SourcePlatform.discovery, LiveInstrumentService::class.java,
+                discovery, LiveInstrumentService::class.java,
                 JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("auth-token", accessToken)) } }
             ) {
                 if (it.succeeded()) {
@@ -687,7 +688,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
             }
 
             EventBusService.getProxy(
-                SourcePlatform.discovery, LiveInstrumentService::class.java,
+                discovery, LiveInstrumentService::class.java,
                 JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("auth-token", accessToken)) } }
             ) {
                 if (it.succeeded()) {
@@ -721,7 +722,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
             }
 
             EventBusService.getProxy(
-                SourcePlatform.discovery, LiveInstrumentService::class.java,
+                discovery, LiveInstrumentService::class.java,
                 JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("auth-token", accessToken)) } }
             ) {
                 if (it.succeeded()) {
@@ -755,7 +756,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
             }
 
             EventBusService.getProxy(
-                SourcePlatform.discovery, LiveInstrumentService::class.java,
+                discovery, LiveInstrumentService::class.java,
                 JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("auth-token", accessToken)) } }
             ) {
                 if (it.succeeded()) {
@@ -789,7 +790,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
             }
 
             EventBusService.getProxy(
-                SourcePlatform.discovery, LiveInstrumentService::class.java,
+                discovery, LiveInstrumentService::class.java,
                 JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("auth-token", accessToken)) } }
             ) {
                 if (it.succeeded()) {
@@ -824,7 +825,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
 
             SourceStorage.reset()
             EventBusService.getProxy(
-                SourcePlatform.discovery, LiveInstrumentService::class.java,
+                discovery, LiveInstrumentService::class.java,
                 JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("auth-token", accessToken)) } }
             ) {
                 if (it.succeeded()) {
@@ -1300,7 +1301,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
 
             val id: String = env.getArgument("id")
             EventBusService.getProxy(
-                SourcePlatform.discovery, LiveInstrumentService::class.java,
+                discovery, LiveInstrumentService::class.java,
                 JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("auth-token", accessToken)) } }
             ) {
                 if (it.succeeded()) {
@@ -1339,7 +1340,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
             val line: Int = env.getArgument("line")
 
             EventBusService.getProxy(
-                SourcePlatform.discovery, LiveInstrumentService::class.java,
+                discovery, LiveInstrumentService::class.java,
                 JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("auth-token", accessToken)) } }
             ) {
                 if (it.succeeded()) {
@@ -1373,7 +1374,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
             }
 
             EventBusService.getProxy(
-                SourcePlatform.discovery, LiveInstrumentService::class.java,
+                discovery, LiveInstrumentService::class.java,
                 JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("auth-token", accessToken)) } }
             ) {
                 if (it.succeeded()) {
@@ -1430,7 +1431,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
             } else InstrumentThrottle.DEFAULT
 
             EventBusService.getProxy(
-                SourcePlatform.discovery, LiveInstrumentService::class.java,
+                discovery, LiveInstrumentService::class.java,
                 JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("auth-token", accessToken)) } }
             ) {
                 if (it.succeeded()) {
@@ -1501,7 +1502,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
             } else InstrumentThrottle.DEFAULT
 
             EventBusService.getProxy(
-                SourcePlatform.discovery, LiveInstrumentService::class.java,
+                discovery, LiveInstrumentService::class.java,
                 JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("auth-token", accessToken)) } }
             ) {
                 if (it.succeeded()) {
@@ -1575,7 +1576,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
             } else InstrumentThrottle.DEFAULT
 
             EventBusService.getProxy(
-                SourcePlatform.discovery, LiveInstrumentService::class.java,
+                discovery, LiveInstrumentService::class.java,
                 JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("auth-token", accessToken)) } }
             ) {
                 if (it.succeeded()) {
@@ -1646,7 +1647,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
             } else InstrumentThrottle.DEFAULT
 
             EventBusService.getProxy(
-                SourcePlatform.discovery, LiveInstrumentService::class.java,
+                discovery, LiveInstrumentService::class.java,
                 JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("auth-token", accessToken)) } }
             ) {
                 if (it.succeeded()) {
@@ -1699,7 +1700,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
             )
 
             EventBusService.getProxy(
-                SourcePlatform.discovery, LiveViewService::class.java,
+                discovery, LiveViewService::class.java,
                 JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("auth-token", accessToken)) } }
             ) {
                 if (it.succeeded()) {
@@ -1733,7 +1734,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
             }
 
             EventBusService.getProxy(
-                SourcePlatform.discovery, LiveViewService::class.java,
+                discovery, LiveViewService::class.java,
                 JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("auth-token", accessToken)) } }
             ) {
                 if (it.succeeded()) {
@@ -1767,7 +1768,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
             }
 
             EventBusService.getProxy(
-                SourcePlatform.discovery, LiveViewService::class.java,
+                discovery, LiveViewService::class.java,
                 JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("auth-token", accessToken)) } }
             ) {
                 if (it.succeeded()) {
