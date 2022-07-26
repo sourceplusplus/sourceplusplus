@@ -34,6 +34,28 @@ import spp.protocol.platform.auth.RedactionType
 class RedisStorageITTest {
 
     @Test
+    fun getDevelopers(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+        val storage = RedisStorage()
+        storage.init(vertx, JsonObject().put("host", "localhost").put("port", 6379))
+
+        storage.addDeveloper("dev_1", "token_1")
+
+        val developer = storage.getDevelopers()[1] //developer ID at 0 index == system
+        assertEquals("dev_1", developer.id)
+    }
+
+    @Test
+    fun getDeveloperByAccessToken(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()){
+        val storage = RedisStorage()
+        storage.init(vertx, JsonObject().put("host", "localhost").put("port", 6379))
+
+        storage.addDeveloper("dev_2", "token_2")
+
+        val developer = storage.getDeveloperByAccessToken("token_2")
+        assertEquals("dev_2", developer?.id)
+    }
+
+    @Test
     fun updateDataRedactionInRole(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
         val storage = RedisStorage()
         storage.init(vertx, JsonObject().put("host", "localhost").put("port", 6379))

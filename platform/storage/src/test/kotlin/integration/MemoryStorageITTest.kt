@@ -34,6 +34,33 @@ import spp.protocol.platform.auth.RedactionType
 class MemoryStorageITTest {
 
     @Test
+    fun getDevelopers(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()){
+        val storage = MemoryStorage(vertx)
+        storage.init(vertx, JsonObject().put("host", "localhost").put("port", 6379))
+
+        assertEquals(0, storage.getDevelopers().size)
+        storage.addDeveloper("dev1", "token")
+        assertEquals(1, storage.getDevelopers().size)
+
+        val developer = storage.getDevelopers()[0]
+        assertEquals("dev1", developer.id)
+    }
+
+    @Test
+    fun getDeveloperByAccessToken(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()){
+        val storage = MemoryStorage(vertx)
+        storage.init(vertx, JsonObject().put("host", "localhost").put("port", 6379))
+
+        assertEquals(0, storage.getDevelopers().size)
+        storage.addDeveloper("dev1", "token")
+        assertEquals(1, storage.getDevelopers().size)
+
+        val developer = storage.getDeveloperByAccessToken("token")
+        assertEquals("dev1", developer?.id)
+    }
+
+
+    @Test
     fun updateDataRedactionInRole(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
         val storage = MemoryStorage(vertx)
         storage.init(vertx, JsonObject().put("host", "localhost").put("port", 6379))
