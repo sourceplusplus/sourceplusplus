@@ -25,6 +25,7 @@ import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import spp.platform.storage.MemoryStorage
 import spp.platform.storage.RedisStorage
 import spp.platform.storage.SourceStorage
 import spp.protocol.platform.auth.DeveloperRole
@@ -53,6 +54,29 @@ class RedisStorageITTest {
 
         val developer = storage.getDeveloperByAccessToken("token_2")
         assertEquals("dev_2", developer?.id)
+    }
+
+    @Test
+    fun hasRole(vertx: Vertx): Unit= runBlocking(vertx.dispatcher()) {
+        val storage = RedisStorage()
+        storage.init(vertx, JsonObject().put("host", "localhost").put("port", 6379))
+
+        val developerRole = DeveloperRole.fromString("test_role")
+        assertFalse(storage.hasRole(developerRole))
+        storage.addRole(developerRole)
+        assertTrue(storage.hasRole(developerRole))
+    }
+
+    @Test
+    fun addRemoveRole(vertx: Vertx): Unit= runBlocking(vertx.dispatcher()) {
+        val storage = RedisStorage()
+        storage.init(vertx, JsonObject().put("host", "localhost").put("port", 6379))
+
+        val developerRole = DeveloperRole.fromString("test_role_2")
+        storage.addRole(developerRole)
+        assertTrue(storage.hasRole(developerRole))
+        storage.removeRole(developerRole)
+        assertFalse(storage.hasRole(developerRole))
     }
 
     @Test

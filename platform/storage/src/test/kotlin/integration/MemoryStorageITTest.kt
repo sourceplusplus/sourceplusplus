@@ -59,6 +59,28 @@ class MemoryStorageITTest {
         assertEquals("dev1", developer?.id)
     }
 
+    @Test
+    fun hasRole(vertx: Vertx): Unit= runBlocking(vertx.dispatcher()) {
+        val storage = MemoryStorage(vertx)
+
+        val developerRole = DeveloperRole.fromString("test_role")
+        assertFalse(storage.hasRole(developerRole))
+        storage.addRole(developerRole)
+        assertTrue(storage.hasRole(developerRole))
+    }
+
+    @Test
+    fun addRemoveRole(vertx: Vertx): Unit= runBlocking(vertx.dispatcher()) {
+        val storage = MemoryStorage(vertx)
+
+        val developerRole = DeveloperRole.fromString("test_role_2")
+        storage.addRole(developerRole)
+        assertTrue(storage.hasRole(developerRole))
+        storage.removeRole(developerRole)
+        assertFalse(storage.hasRole(developerRole))
+    }
+
+
 
     @Test
     fun updateDataRedactionInRole(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
