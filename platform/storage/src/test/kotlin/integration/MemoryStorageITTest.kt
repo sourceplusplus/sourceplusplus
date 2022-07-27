@@ -34,9 +34,8 @@ import spp.protocol.platform.auth.RedactionType
 class MemoryStorageITTest {
 
     @Test
-    fun getDevelopers(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()){
+    fun getDevelopers(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
         val storage = MemoryStorage(vertx)
-        storage.init(vertx, JsonObject().put("host", "localhost").put("port", 6379))
 
         assertEquals(0, storage.getDevelopers().size)
         storage.addDeveloper("dev1", "token")
@@ -47,9 +46,8 @@ class MemoryStorageITTest {
     }
 
     @Test
-    fun getDeveloperByAccessToken(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()){
+    fun getDeveloperByAccessToken(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
         val storage = MemoryStorage(vertx)
-        storage.init(vertx, JsonObject().put("host", "localhost").put("port", 6379))
 
         assertEquals(0, storage.getDevelopers().size)
         storage.addDeveloper("dev1", "token")
@@ -60,7 +58,38 @@ class MemoryStorageITTest {
     }
 
     @Test
-    fun hasRole(vertx: Vertx): Unit= runBlocking(vertx.dispatcher()) {
+    fun removeDeveloper(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+        val storage = MemoryStorage(vertx)
+
+        val id = "dev_3"
+        val token = "token_3"
+        storage.addDeveloper(id, token)
+        val developer = storage.getDeveloperByAccessToken(token)
+        assertNotNull(developer)
+        assertEquals(id, developer?.id)
+        storage.removeDeveloper(id)
+        val updatedDeveloper = storage.getDeveloperByAccessToken(token)
+        assertNull(updatedDeveloper)
+    }
+
+    @Test
+    fun setAccessToken(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+        val storage = MemoryStorage(vertx)
+
+        val id = "dev_4"
+        val token = "token_4"
+        storage.addDeveloper(id, token)
+        val developer = storage.getDeveloperByAccessToken(token)
+        assertEquals(id, developer?.id)
+
+        storage.setAccessToken(id, "newToken")
+        assertNull(storage.getDeveloperByAccessToken(token))
+        val developerWithNewToken = storage.getDeveloperByAccessToken("newToken")
+        assertEquals(id, developerWithNewToken?.id)
+    }
+
+    @Test
+    fun hasRole(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
         val storage = MemoryStorage(vertx)
 
         val developerRole = DeveloperRole.fromString("test_role")
@@ -69,8 +98,9 @@ class MemoryStorageITTest {
         assertTrue(storage.hasRole(developerRole))
     }
 
+
     @Test
-    fun addRemoveRole(vertx: Vertx): Unit= runBlocking(vertx.dispatcher()) {
+    fun addRemoveRole(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
         val storage = MemoryStorage(vertx)
 
         val developerRole = DeveloperRole.fromString("test_role_2")
@@ -81,21 +111,20 @@ class MemoryStorageITTest {
     }
 
 
-
     @Test
     fun updateDataRedactionInRole(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
         val storage = MemoryStorage(vertx)
-        storage.init(vertx, JsonObject().put("host", "localhost").put("port", 6379))
 
         storage.addDataRedaction("test", RedactionType.IDENTIFIER_MATCH, "lookup", "value1")
-        storage.addRole(DeveloperRole.fromString("test_role"))
-        storage.addDataRedactionToRole("test", DeveloperRole.fromString("test_role"))
-        val dataRedactions = storage.getRoleDataRedactions(DeveloperRole.fromString("test_role"))
+        val developerRole = DeveloperRole.fromString("test_role")
+        storage.addRole(developerRole)
+        storage.addDataRedactionToRole("test", developerRole)
+        val dataRedactions = storage.getRoleDataRedactions(developerRole)
         assertEquals(1, dataRedactions.size)
         assertEquals("value1", dataRedactions.toList()[0].replacement)
 
         storage.updateDataRedaction("test", RedactionType.IDENTIFIER_MATCH, "lookup", "value2")
-        val updatedDataRedactions = storage.getRoleDataRedactions(DeveloperRole.fromString("test_role"))
+        val updatedDataRedactions = storage.getRoleDataRedactions(developerRole)
         assertEquals(1, updatedDataRedactions.size)
         assertEquals("value2", updatedDataRedactions.toList()[0].replacement)
     }

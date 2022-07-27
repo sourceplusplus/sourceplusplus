@@ -25,7 +25,6 @@ import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import spp.platform.storage.MemoryStorage
 import spp.platform.storage.RedisStorage
 import spp.platform.storage.SourceStorage
 import spp.protocol.platform.auth.DeveloperRole
@@ -54,6 +53,39 @@ class RedisStorageITTest {
 
         val developer = storage.getDeveloperByAccessToken("token_2")
         assertEquals("dev_2", developer?.id)
+    }
+
+    @Test
+    fun removeDeveloper(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+        val storage = RedisStorage()
+        storage.init(vertx, JsonObject().put("host", "localhost").put("port", 6379))
+
+        val developerId = "dev_3"
+        val developerToken = "token_3"
+        storage.addDeveloper(developerId, developerToken)
+        val developer = storage.getDeveloperByAccessToken(developerToken)
+        assertNotNull(developer)
+        assertEquals(developerId, developer?.id)
+        storage.removeDeveloper(developerId)
+        val updatedDeveloper = storage.getDeveloperByAccessToken(developerToken)
+        assertNull(updatedDeveloper)
+    }
+
+    @Test
+    fun setAccessToken(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+        val storage = RedisStorage()
+        storage.init(vertx, JsonObject().put("host", "localhost").put("port", 6379))
+
+        val id = "dev_4"
+        val token = "token_4"
+        storage.addDeveloper(id, token)
+        val developer = storage.getDeveloperByAccessToken(token)
+        assertEquals(id, developer?.id)
+
+        storage.setAccessToken(id, "newToken")
+        assertNull(storage.getDeveloperByAccessToken(token))
+        val developerWithNewToken = storage.getDeveloperByAccessToken("newToken")
+        assertEquals(id, developerWithNewToken?.id)
     }
 
     @Test
