@@ -29,7 +29,7 @@ import org.apache.skywalking.oap.server.analyzer.provider.trace.parser.listener.
 import org.apache.skywalking.oap.server.analyzer.provider.trace.parser.listener.EntryAnalysisListener
 import org.apache.skywalking.oap.server.library.module.ModuleManager
 import org.slf4j.LoggerFactory
-import spp.platform.common.FeedbackProcessor
+import spp.platform.common.ClusterConnection
 import spp.processor.live.impl.view.util.MetricTypeSubscriptionCache
 import spp.protocol.artifact.trace.Trace
 import spp.protocol.artifact.trace.TraceSpan
@@ -121,7 +121,7 @@ class LiveTracesView(private val subscriptionCache: MetricTypeSubscriptionCache)
                         .put("entityId", entityId)
                         .put("timeBucket", formatter.format(trace.start.toJavaInstant()))
                         .put("trace", JsonObject.mapFrom(trace))
-                    FeedbackProcessor.vertx.eventBus().send(sub.consumer.address(), event)
+                    ClusterConnection.getVertx().eventBus().send(sub.consumer.address(), event)
                 }
             }
         }

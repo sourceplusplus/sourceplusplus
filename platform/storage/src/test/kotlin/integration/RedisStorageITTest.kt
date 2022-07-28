@@ -113,8 +113,8 @@ class RedisStorageITTest {
 
     @Test
     fun updateDataRedactionInRole(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
-        val storage = RedisStorage()
-        storage.init(vertx, JsonObject().put("host", "localhost").put("port", 6379))
+        val storage = RedisStorage(vertx)
+        storage.init(JsonObject().put("host", "localhost").put("port", 6379))
 
         storage.addDataRedaction("test", RedactionType.IDENTIFIER_MATCH, "lookup", "value1")
         storage.addRole(DeveloperRole.fromString("test_role"))
@@ -131,8 +131,8 @@ class RedisStorageITTest {
 
     @Test
     fun reset(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
-        val storage = RedisStorage()
-        storage.init(vertx, JsonObject().put("host", "localhost").put("port", 6379))
+        val storage = RedisStorage(vertx)
+        storage.init(JsonObject().put("host", "localhost").put("port", 6379))
         SourceStorage.setup(
             storage,
             JsonObject().put(

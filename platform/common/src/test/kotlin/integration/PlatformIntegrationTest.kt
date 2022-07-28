@@ -24,8 +24,10 @@ import io.vertx.kotlin.coroutines.await
 import io.vertx.spi.cluster.redis.RedisClusterManager
 import io.vertx.spi.cluster.redis.config.RedisConfig
 import kotlinx.coroutines.runBlocking
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.extension.ExtendWith
+import org.slf4j.LoggerFactory
 import spp.protocol.service.LiveInstrumentService
 import spp.protocol.service.LiveService
 import spp.protocol.service.LiveViewService
@@ -34,6 +36,8 @@ import spp.protocol.service.LiveViewService
 open class PlatformIntegrationTest {
 
     companion object {
+        private val log = LoggerFactory.getLogger(PlatformIntegrationTest::class.java)
+
         const val SYSTEM_JWT_TOKEN =
             "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJkZXZlbG9wZXJfaWQiOiJzeXN0ZW0iLCJjcmVhdGVkX2F0IjoxNjU3MDM5NzAzOTE1L" +
                     "CJleHBpcmVzX2F0IjoxNjg4NTc1NzAzOTE1LCJpYXQiOjE2NTcwMzk3MDN9.hKxtqnajBWbWxL2nYoVyp9HeyDfIi5XjRRkJtI" +
@@ -56,8 +60,12 @@ open class PlatformIntegrationTest {
                     "WbvSQpHyTR96rII4rjpqtFwC49CmPOCJPxLpEpa5rMW3gbvKa-M1IJRSnKN0rsPF1Yr80LIl4x1w6JZp47_MoYPe0rWNPojnBY" +
                     "KP-1-SRBc1skSsijxtOWiYoz2UbA9xIDWUrWh6g-wUFa-xE4eAjFKgE"
 
-        lateinit var vertx: Vertx
+        private var vertx: Vertx? = null
         val platformHost = System.getenv("SPP_PLATFORM_HOST") ?: "localhost"
+
+        fun vertx(): Vertx {
+            return vertx!!
+        }
 
         @BeforeAll
         @JvmStatic
@@ -69,12 +77,25 @@ open class PlatformIntegrationTest {
                     .addEndpoint(clusterStorageAddress)
             )
             runBlocking {
-                if (!::vertx.isInitialized) {
-                    vertx = Vertx.clusteredVertx(VertxOptions().setClusterManager(clusterManager)).await()
-                }
+                log.info("Starting vertx")
+                vertx = Vertx.clusteredVertx(VertxOptions().setClusterManager(clusterManager)).await()
+                log.info("Started vertx")
+            }
+        }
+
+        @AfterAll
+        @JvmStatic
+        fun destroy() {
+            runBlocking {
+                log.info("Closing vertx")
+                vertx!!.close().await()
+                vertx = null
+                log.info("Closed vertx")
             }
         }
     }
+
+    val vertx: Vertx = vertx()
 
     val liveService: LiveService
         get() {

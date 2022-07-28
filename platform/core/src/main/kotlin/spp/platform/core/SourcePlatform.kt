@@ -17,16 +17,10 @@
  */
 package spp.platform.core
 
-import com.google.common.base.CaseFormat
-import com.google.common.io.Resources
 import io.vertx.core.DeploymentOptions
-import io.vertx.core.Vertx
-import io.vertx.core.buffer.Buffer
 import io.vertx.core.http.HttpServerOptions
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
-import io.vertx.core.net.NetServerOptions
-import io.vertx.core.net.PemKeyCertOptions
 import io.vertx.ext.auth.JWTOptions
 import io.vertx.ext.auth.PubSecKeyOptions
 import io.vertx.ext.auth.jwt.JWTAuth
@@ -35,15 +29,9 @@ import io.vertx.ext.healthchecks.HealthCheckHandler
 import io.vertx.ext.healthchecks.HealthChecks
 import io.vertx.ext.healthchecks.Status.KO
 import io.vertx.ext.healthchecks.Status.OK
-import io.vertx.ext.web.Router
 import io.vertx.ext.web.RoutingContext
-import io.vertx.ext.web.handler.BodyHandler
 import io.vertx.ext.web.handler.JWTAuthHandler
 import io.vertx.ext.web.handler.ResponseTimeHandler
-import io.vertx.ext.web.handler.SessionHandler
-import io.vertx.ext.web.sstore.LocalSessionStore
-import io.vertx.ext.web.sstore.SessionStore
-import io.vertx.ext.web.sstore.redis.RedisSessionStore
 import io.vertx.kotlin.coroutines.CoroutineVerticle
 import io.vertx.kotlin.coroutines.await
 import io.vertx.kotlin.coroutines.dispatcher
@@ -51,7 +39,6 @@ import io.vertx.servicediscovery.Record
 import io.vertx.servicediscovery.ServiceDiscovery
 import io.vertx.servicediscovery.ServiceDiscoveryOptions
 import io.vertx.servicediscovery.Status
-import io.vertx.servicediscovery.types.EventBusService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -61,15 +48,11 @@ import org.bouncycastle.openssl.PEMKeyPair
 import org.bouncycastle.openssl.PEMParser
 import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter
 import org.bouncycastle.openssl.jcajce.JcaPEMWriter
-import spp.booster.PortalServer
-import spp.platform.bridge.marker.MarkerBridge
-import spp.platform.bridge.probe.ProbeBridge
-import spp.platform.bridge.probe.util.SelfSignedCertGenerator
+import spp.platform.common.ClusterConnection.discovery
+import spp.platform.common.ClusterConnection.router
 import spp.platform.common.util.CertsToJksOptionsConverter
+import spp.platform.common.util.SelfSignedCertGenerator
 import spp.platform.core.service.ServiceProvider
-import spp.platform.storage.CoreStorage
-import spp.platform.storage.MemoryStorage
-import spp.platform.storage.RedisStorage
 import spp.platform.storage.SourceStorage
 import spp.protocol.SourceServices.Utilize
 import spp.protocol.service.LiveService
@@ -100,8 +83,6 @@ class SourcePlatform : CoroutineVerticle() {
             }
         }
 
-        lateinit var discovery: ServiceDiscovery
-
         fun addServiceCheck(checks: HealthChecks, serviceName: String) {
             val registeredName = "services/${serviceName.replace(".", "/")}"
             checks.register(registeredName) { promise ->
@@ -131,76 +112,6 @@ class SourcePlatform : CoroutineVerticle() {
                 }
             }
         }
-    }
-
-    private fun setupDashboard(sessionHandler: SessionHandler, router: Router) {
-        router.post("/auth").handler(sessionHandler).handler(BodyHandler.create()).handler {
-            val postData = it.request().params()
-            val password = postData.get("password")
-            log.info { "Authenticating $password" }
-            if (password?.isEmpty() == true) {
-                it.redirect("/login")
-                return@handler
-            }
-
-            val tenantId = postData.get("tenant_id")
-            if (!tenantId.isNullOrEmpty()) {
-                Vertx.currentContext().put("tenant_id", tenantId)
-            }
-            launch(vertx.dispatcher()) {
-                val dev = SourceStorage.getDeveloperByAccessToken(password)
-                if (dev != null) {
-                    it.session().put("developer_id", dev.id)
-                    it.redirect("/")
-                } else {
-                    if (!tenantId.isNullOrEmpty()) {
-                        it.redirect("/login?tenant_id=$tenantId")
-                    } else {
-                        it.redirect("/login")
-                    }
-                }
-            }
-        }
-        router.get("/login").handler(sessionHandler).handler {
-            val loginHtml = Resources.toString(Resources.getResource("login.html"), Charsets.UTF_8)
-            it.response().putHeader("Content-Type", "text/html").end(loginHtml)
-        }
-        router.get("/*").handler(sessionHandler).handler { ctx ->
-            if (ctx.session().get<String>("developer_id") == null) {
-                ctx.redirect("/login")
-                return@handler
-            } else {
-                ctx.next()
-            }
-        }
-        router.post("/graphql/dashboard").handler(sessionHandler).handler(BodyHandler.create()).handler { ctx ->
-            if (ctx.session().get<String>("developer_id") != null) {
-                val forward = JsonObject()
-                forward.put("developer_id", ctx.session().get<String>("developer_id"))
-                forward.put("body", ctx.body().asJsonObject())
-                val headers = JsonObject()
-                ctx.request().headers().names().forEach {
-                    headers.put(it, ctx.request().headers().get(it))
-                }
-                forward.put("headers", headers)
-                forward.put("method", ctx.request().method().name())
-                vertx.eventBus().request<JsonObject>("skywalking-forwarder", forward) {
-                    if (it.succeeded()) {
-                        val resp = it.result().body()
-                        ctx.response().setStatusCode(resp.getInteger("status")).end(resp.getString("body"))
-                    } else {
-                        log.error("Failed to forward SkyWalking request", it.cause())
-                        ctx.response().setStatusCode(500).end(it.cause().message)
-                    }
-                }
-            } else {
-                ctx.response().setStatusCode(401).end("Unauthorized")
-            }
-        }
-
-        //Serve dashboard
-        PortalServer.addStaticHandler(router, sessionHandler)
-        PortalServer.addSPAHandler(router, sessionHandler)
     }
 
     @Suppress("LongMethod")
@@ -254,7 +165,6 @@ class SourcePlatform : CoroutineVerticle() {
             )
         }
 
-        val router = Router.router(vertx)
         router.route().handler(ResponseTimeHandler.create())
         router.errorHandler(500) {
             if (it.failed()) log.error("Failed request: " + it.request().path(), it.failure())
@@ -293,47 +203,6 @@ class SourcePlatform : CoroutineVerticle() {
             }
         }
 
-        //Setup storage
-        val sessionStore: SessionStore
-        when (val storageSelector = config.getJsonObject("storage").getString("selector")) {
-            "memory" -> {
-                log.info("Using in-memory storage")
-                SourceStorage.setup(MemoryStorage(vertx), config)
-                sessionStore = LocalSessionStore.create(vertx)
-            }
-            "redis" -> {
-                log.info("Using Redis storage")
-                val redisStorage = RedisStorage()
-                redisStorage.init(vertx, config.getJsonObject("storage").getJsonObject("redis"))
-
-                val installDefaults = config.getJsonObject("storage").getJsonObject("redis")
-                    .getString("install_defaults")?.toBooleanStrictOrNull() != false
-                SourceStorage.setup(redisStorage, config, installDefaults)
-                sessionStore = RedisSessionStore.create(vertx, redisStorage.redisClient)
-            }
-            else -> {
-                try {
-                    Class.forName(storageSelector, false, SourcePlatform::class.java.classLoader)
-                    log.info("Using custom storage: $storageSelector")
-                    val storageClass = Class.forName(storageSelector)
-                    val customStorage = storageClass.getDeclaredConstructor().newInstance() as CoreStorage
-                    val storageName = CaseFormat.LOWER_CAMEL.to(
-                        CaseFormat.LOWER_HYPHEN,
-                        storageClass.simpleName.removeSuffix("Storage")
-                    )
-                    customStorage.init(vertx, config.getJsonObject("storage").getJsonObject(storageName))
-
-                    val installDefaults = config.getJsonObject("storage").getJsonObject(storageName)
-                        .getString("install_defaults")?.toBooleanStrictOrNull() != false
-                    SourceStorage.setup(customStorage, config, installDefaults)
-                    sessionStore = LocalSessionStore.create(vertx) //todo: sessionStore
-                } catch (ignore: ClassNotFoundException) {
-                    log.error("Unknown storage selector: $storageSelector")
-                    throw IllegalArgumentException("Unknown storage selector: $storageSelector")
-                }
-            }
-        }
-
         //Setup JWT
         if (jwtEnabled) {
             val jwtAuthHandler = JWTAuthHandler.create(jwt)
@@ -357,45 +226,16 @@ class SourcePlatform : CoroutineVerticle() {
         router["/stats"].handler(this::getStats)
         router["/clients"].handler(this::getClients)
 
-        //Open bridges
-        val netServerOptions = NetServerOptions()
-            .removeEnabledSecureTransportProtocol("SSLv2Hello")
-            .removeEnabledSecureTransportProtocol("TLSv1")
-            .removeEnabledSecureTransportProtocol("TLSv1.1")
-            .setSsl(sslEnabled)
-            .apply {
-                if (sslEnabled) {
-                    pemKeyCertOptions = PemKeyCertOptions()
-                        .setKeyValue(Buffer.buffer(keyFile.readText()))
-                        .setCertValue(Buffer.buffer(certFile.readText()))
-                }
-            }
-
-        vertx.deployVerticle(
-            ProbeBridge(router, jwt, netServerOptions),
-            DeploymentOptions().setConfig(config.getJsonObject("spp-platform"))
-        ).await()
-        vertx.deployVerticle(
-            MarkerBridge(jwt, netServerOptions),
-            DeploymentOptions().setConfig(config.getJsonObject("spp-platform").getJsonObject("marker"))
-        ).await()
-
-        //Setup dashboard
-        setupDashboard(SessionHandler.create(sessionStore), router)
-
-        log.info("Starting service discovery")
-        discovery = ServiceDiscovery.create(vertx)
-
         vertx.eventBus().consumer<JsonObject>(ServiceDiscoveryOptions.DEFAULT_ANNOUNCE_ADDRESS) {
             val record = Record(it.body())
             if (record.status == Status.UP) {
                 launch(vertx.dispatcher()) {
-                    vertx.sharedData().getLocalCounter(record.name).await().andIncrement.await()
+                    SourceStorage.counter(record.name).andIncrement.await()
                     log.debug { "Service UP: ${record.name}" }
                 }
             } else if (record.status == Status.DOWN) {
                 launch(vertx.dispatcher()) {
-                    vertx.sharedData().getLocalCounter(record.name).await().decrementAndGet().await()
+                    SourceStorage.counter(record.name).decrementAndGet().await()
                     log.trace { "Service DOWN: ${record.name}" }
                 }
             }

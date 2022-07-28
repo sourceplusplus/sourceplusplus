@@ -23,7 +23,9 @@ import com.google.common.base.CaseFormat
 import io.vertx.core.Vertx
 import io.vertx.core.VertxOptions
 import io.vertx.core.json.JsonObject
+import io.vertx.ext.web.Router
 import io.vertx.kotlin.coroutines.await
+import io.vertx.servicediscovery.ServiceDiscovery
 import io.vertx.spi.cluster.redis.RedisClusterManager
 import io.vertx.spi.cluster.redis.config.RedisConfig
 import kotlinx.coroutines.runBlocking
@@ -36,12 +38,15 @@ import java.io.File
 import java.util.*
 
 object ClusterConnection {
+
     private val BUILD = ResourceBundle.getBundle("build")
     private val log = KotlinLogging.logger {}
     private lateinit var vertx: Vertx
     private val lock = Any()
     private fun isVertxInitialized() = ::vertx.isInitialized
+    lateinit var discovery: ServiceDiscovery
     lateinit var config: JsonObject
+    lateinit var router: Router
 
     fun getVertx(): Vertx {
         if (!isVertxInitialized()) {
@@ -69,7 +74,10 @@ object ClusterConnection {
 
                 if (config.getJsonObject("storage").getString("selector") == "memory") {
                     log.info("Using standalone mode")
-                    vertx = Vertx.vertx()
+                    val vertx = Vertx.vertx()
+                    discovery = ServiceDiscovery.create(vertx)
+                    router = Router.router(vertx)
+                    ClusterConnection.vertx = vertx
                 } else {
                     log.info("Using clustered mode")
                     val storageSelector = config.getJsonObject("storage").getString("selector")
@@ -90,7 +98,10 @@ object ClusterConnection {
                     )
                     val options = VertxOptions().setClusterManager(clusterManager)
                     runBlocking {
-                        vertx = Vertx.clusteredVertx(options).await()
+                        val vertx = Vertx.clusteredVertx(options).await()
+                        discovery = ServiceDiscovery.create(vertx)
+                        router = Router.router(vertx)
+                        ClusterConnection.vertx = vertx
                     }
                 }
             }

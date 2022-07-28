@@ -25,7 +25,7 @@ Powered by [Apache SkyWalking](https://github.com/apache/skywalking), Source++ e
 ## Quickstart
 
 <details>
-<summary><b><a href="#"><img src="https://user-images.githubusercontent.com/511499/117447182-29758200-af0b-11eb-97bd-58723fee62ab.png" alt="Docker" height="28px" align="top"/></a> <code>docker-compose</code></b>  (macOS/Linux/Windows) &nbsp; <b>👈&nbsp; recommended</b> &nbsp; <i>(click to expand)</i></summary>
+<summary><b><a href="#"><img src="https://user-images.githubusercontent.com/511499/117447182-29758200-af0b-11eb-97bd-58723fee62ab.png" alt="Docker" height="28px" align="top"/></a> <code>docker-compose</code></b> (macOS/Linux/Windows) &nbsp; <b>👈&nbsp; recommended</b> &nbsp; <i>(click to expand)</i></summary>
 <br/>
 <ol>
 <li>Install <a href="https://docs.docker.com/get-docker/">Docker</a> and <a href="https://docs.docker.com/compose/install/">Docker Compose</a> on your system (if not already installed).</li>
@@ -34,6 +34,16 @@ Powered by [Apache SkyWalking](https://github.com/apache/skywalking), Source++ e
 curl -O 'https://raw.githubusercontent.com/sourceplusplus/live-platform/master/docker/docker-compose.yml'</code></pre></li>
 <li>Start services.
 <pre lang="bash"><code style="white-space: pre-line">docker-compose up</code></pre></li>
+</ol>
+</details>
+
+<details>
+<summary><b><a href="#"><img src="https://user-images.githubusercontent.com/511499/117447182-29758200-af0b-11eb-97bd-58723fee62ab.png" alt="Docker" height="28px" align="top"/></a> <code>docker</code></b> (macOS/Linux/Windows)</summary>
+<br/>
+<ol>
+<li>Install <a href="https://docs.docker.com/get-docker/">Docker</a> on your system (if not already installed).</li>
+<li>Start Live Platform (Live Dashboard available at https://127.0.0.1:12800)
+<pre lang="bash"><code style="white-space: pre-line">docker run -d --name=spp-platform -p 11800:11800 -p 12800:12800 sourceplusplus/spp-platform</code></pre></li>
 </ol>
 </details>
 
@@ -60,25 +70,25 @@ The Source++ documentation is available [here](https://docs.sourceplus.plus).
 
 ## Directory Structure
 ```graphql
-├── config              # Detekt
-├── docker              # Docker setup files
-    ├── e2e             # End-to-end testing environment
-    ├── spp-oap-server  # SkyWalking OAP (incl. Source++ processor) image
-    └── spp-platform    # Live coding server image
-├── documentation       # Documentation
-├── gradle              # Gradle wrapper
-├── interfaces          # Live coding clients
-    ├── cli             # Command-line interface
-    └── jetbrains       # JetBrains IDE plugin
-├── platform            # Live coding server
-├── probes              # Live coding probes
-    ├── jvm             # JVM support
-    └── python          # Python support
-├── processors          # Live coding processors
-    ├── dependencies    # Live processor common code
-    ├── live-instrument # Live instrument processing
-    └── live-view       # Live view processing
-└── protocol            # Communication protocol
+├── docker                    # Docker setup files
+    ├── e2e                   # End-to-end testing environment
+    └── spp-platform          # Live coding server image
+├── interfaces                # Live coding clients
+    ├── cli                   # Command-line interface
+    └── jetbrains             # JetBrains IDE plugin
+├── platform                  # Live coding server
+    ├── bridge                # Bridge clients to platform
+    ├── common                # Common platform code
+    ├── core                  # Core platform code
+    ├── dashboard             # Live Dashboard
+    ├── processor             # Observability data processors
+        ├── live-instrument   # Live Instrument processor
+        └── live-view         # Live View processor
+    └── storage               # JetBrains IDE plugin
+├── probes                    # Live coding probes
+    ├── jvm                   # JVM support
+    └── python                # Python support
+└── protocol                  # Communication protocol
 ```
 
 ## License

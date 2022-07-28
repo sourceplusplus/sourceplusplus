@@ -35,20 +35,24 @@ subprojects {
 }
 
 tasks {
-    register("buildDist") {
-        //todo: use gradle copy task
-        dependsOn("platform:core:shadowJar")
-        doLast {
-            file("dist/spp-platform-${project.version}/config").mkdirs()
-            file("docker/e2e/config/spp-platform.yml")
-                .copyTo(file("dist/spp-platform-${project.version}/config/spp-platform.yml"), true)
-            file("platform/core/build/libs/spp-platform-${project.version}.jar")
-                .copyTo(file("dist/spp-platform-${project.version}/spp-platform-${project.version}.jar"), true)
-        }
-    }
     register<Tar>("makeDist") {
-        dependsOn(":buildDist")
-        mustRunAfter(":buildDist")
+        dependsOn("platform:assemble")
+
+        file("dist/spp-platform-${project.version}/config").mkdirs()
+        file("docker/e2e/config/spp-platform.yml")
+            .copyTo(file("dist/spp-platform-${project.version}/config/spp-platform.yml"), true)
+        file("platform/core/build/libs/spp-platform-core-${project.version}.jar")
+            .copyTo(file("dist/spp-platform-${project.version}/spp-platform-core-${project.version}.jar"), true)
+        file("platform/bridge/build/libs/spp-platform-bridge-${project.version}.jar")
+            .copyTo(file("dist/spp-platform-${project.version}/spp-platform-bridge-${project.version}.jar"), true)
+        file("platform/storage/build/libs/spp-platform-storage-${project.version}.jar")
+            .copyTo(file("dist/spp-platform-${project.version}/spp-platform-storage-${project.version}.jar"), true)
+        file("platform/dashboard/build/libs/spp-live-dashboard-${project.version}.jar")
+            .copyTo(file("dist/spp-platform-${project.version}/spp-live-dashboard-${project.version}.jar"), true)
+        file("platform/processor/live-instrument/build/libs/spp-live-instrument-${project.version}.jar")
+            .copyTo(file("dist/spp-platform-${project.version}/spp-live-instrument-${project.version}.jar"), true)
+        file("platform/processor/live-view/build/libs/spp-live-view-${project.version}.jar")
+            .copyTo(file("dist/spp-platform-${project.version}/spp-live-view-${project.version}.jar"), true)
 
         into("spp-platform-${project.version}") {
             from("dist/spp-platform-${project.version}")
