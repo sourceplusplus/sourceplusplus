@@ -37,6 +37,9 @@ configure<PublishingExtension> {
 dependencies {
     implementation(project(":platform:storage"))
     implementation(project(":platform:common"))
+
+    //todo: properly add test dependency
+    testImplementation(project(":platform:common").dependencyProject.extensions.getByType(SourceSetContainer::class).test.get().output)
 }
 
 tasks {
