@@ -2,11 +2,11 @@ plugins {
     kotlin("jvm")
 }
 
-val processorGroup: String by project
+val platformGroup: String by project
 val projectVersion: String by project
 
-group = processorGroup
-version = project.properties["processorVersion"] as String? ?: projectVersion
+group = platformGroup
+version = project.properties["platformVersion"] as String? ?: projectVersion
 
 dependencies {
     compileOnly(project(":platform:common"))
