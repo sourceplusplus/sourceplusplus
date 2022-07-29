@@ -44,7 +44,7 @@ jobs:
           echo "::set-output name=release_version::$SPP_RELEASE_VERSION"
 
       - name: Start platform
-        run: ./gradlew -p platform assembleUp -Dbuild.profile=release -PplatformVersion=$SPP_RELEASE_VERSION -PprocessorVersion=$SPP_RELEASE_VERSION -PprobeVersion=$SPP_RELEASE_VERSION
+        run: ./gradlew -p platform assembleUp -x :interfaces:booster-ui:buildSkyWalkingUI -Dbuild.profile=release -PplatformVersion=$SPP_RELEASE_VERSION -PprocessorVersion=$SPP_RELEASE_VERSION -PprobeVersion=$SPP_RELEASE_VERSION
 
       - name: Docker IPs
         run: docker inspect --format='{{.Name}} - {{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $(docker ps -aq)
@@ -57,7 +57,7 @@ jobs:
           until $(curl --header "Authorization: Bearer ${{ env.SPP_JWT_TOKEN }}" --insecure --output /dev/null --silent --fail https://localhost:12800/health); do printf '.'; sleep 5; done
 
       - name: Run platform integration tests
-        run: ./gradlew -p platform test -Dtest.profile=integration
+        run: ./gradlew -p platform test -x :interfaces:booster-ui:buildSkyWalkingUI -Dtest.profile=integration
 
       - run: ./gradlew :platform:composeLogs
         if: ${{ always() }}
