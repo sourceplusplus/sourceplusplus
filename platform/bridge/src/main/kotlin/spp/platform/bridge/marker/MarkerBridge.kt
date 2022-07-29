@@ -17,21 +17,27 @@
  */
 package spp.platform.bridge.marker
 
+import io.vertx.core.Handler
 import io.vertx.core.Vertx
 import io.vertx.core.json.Json
 import io.vertx.core.json.JsonObject
 import io.vertx.core.net.NetServerOptions
 import io.vertx.ext.auth.jwt.JWTAuth
-import io.vertx.ext.bridge.BridgeEventType
+import io.vertx.ext.bridge.BaseBridgeEvent
+import io.vertx.ext.bridge.BridgeEventType.*
 import io.vertx.ext.bridge.BridgeOptions
 import io.vertx.ext.bridge.PermittedOptions
 import io.vertx.ext.eventbus.bridge.tcp.TcpEventBusBridge
+import io.vertx.ext.web.handler.sockjs.SockJSBridgeOptions
+import io.vertx.ext.web.handler.sockjs.SockJSHandler
+import io.vertx.ext.web.handler.sockjs.SockJSHandlerOptions
 import io.vertx.kotlin.coroutines.await
 import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.launch
 import mu.KotlinLogging
 import spp.platform.bridge.BridgeAddress
 import spp.platform.bridge.InstanceBridge
+import spp.platform.common.ClusterConnection.router
 import spp.platform.common.DeveloperAuth
 import spp.platform.storage.SourceStorage
 import spp.protocol.SourceServices.Provide
@@ -59,47 +65,89 @@ class MarkerBridge(
 
     override suspend fun start() {
         vertx.eventBus().consumer<JsonObject>(MARKER_CONNECTED) { marker ->
-            handleConnection(marker.body())
-            marker.reply(true)
-        }
-
-        TcpEventBusBridge.create(
-            vertx,
-            BridgeOptions()
-                //from marker
-                .addInboundPermitted(PermittedOptions().setAddress("get-records")) //todo: name like others
-                .addInboundPermitted(PermittedOptions().setAddress(MARKER_CONNECTED))
-                .addInboundPermitted(PermittedOptions().setAddress(Utilize.LIVE_SERVICE))
-                .addInboundPermitted(PermittedOptions().setAddress(Utilize.LIVE_INSTRUMENT))
-                .addInboundPermitted(PermittedOptions().setAddress(Utilize.LIVE_VIEW))
-                //to marker
-                .addOutboundPermitted(
-                    PermittedOptions().setAddressRegex(Provide.LIVE_INSTRUMENT_SUBSCRIBER + "\\:.+")
-                )
-                .addOutboundPermitted(
-                    PermittedOptions().setAddressRegex(Provide.LIVE_VIEW_SUBSCRIBER + "\\:.+")
-                ),
-            netServerOptions
-        ) {
-            if (it.type() == BridgeEventType.SEND && it.rawMessage.getString("address") == MARKER_CONNECTED) {
-                launch(vertx.dispatcher()) {
-                    validateAuth(it) { devAuth ->
-                        if (devAuth.succeeded()) {
-                            val rawConnectionBody = it.rawMessage.getJsonObject("body")
-                            it.socket().closeHandler {
-                                handleDisconnection(rawConnectionBody)
-                                vertx.eventBus().publish(MARKER_DISCONNECTED, JsonObject.mapFrom(devAuth.result()))
-                            }
-                            it.complete(true)
-                        } else {
-                            it.fail(devAuth.cause().message)
-                        }
+            if (Vertx.currentContext().get<DeveloperAuth>("developer") == null) {
+                //todo: SockJS connections needs to revalidate for some reason
+                val authToken = marker.headers()?.get("auth-token")
+                validateAuthToken(authToken) {
+                    if (it.succeeded()) {
+                        handleConnection(marker.body())
+                        marker.reply(true)
+                    } else {
+                        //todo: terminate connection
+                        marker.reply(false)
                     }
                 }
             } else {
-                validateAuth(it)
+                handleConnection(marker.body())
+                marker.reply(true)
             }
-        }.listen(config.getString("bridge_port").toInt()).await()
+        }
+
+        //http bridge
+        val sockJSHandler = SockJSHandler.create(vertx, SockJSHandlerOptions().setRegisterWriteHandler(true))
+        val portalBridgeOptions = SockJSBridgeOptions().apply {
+            inboundPermitteds = getInboundPermitted() //from marker
+            outboundPermitteds = getOutboundPermitted() //to marker
+        }
+        sockJSHandler.bridge(portalBridgeOptions) { handleBridgeEvent(it) }
+        router.route("/marker/eventbus/*").handler(sockJSHandler)
+
+        //tcp bridge
+        TcpEventBusBridge.create(
+            vertx,
+            BridgeOptions().apply {
+                inboundPermitteds = getInboundPermitted() //from marker
+                outboundPermitteds = getOutboundPermitted() //to marker
+            },
+            netServerOptions
+        ) { handleBridgeEvent(it) }
+            .listen(config.getString("bridge_port").toInt()).await()
+    }
+
+    private fun handleBridgeEvent(it: BaseBridgeEvent) {
+        if (it.type() == SEND && it.rawMessage.getString("address") == MARKER_CONNECTED) {
+            validateAuth(it) { devAuth ->
+                if (devAuth.succeeded()) {
+                    val rawConnectionBody = it.rawMessage.getJsonObject("body")
+                    setCloseHandler(it) {
+                        handleDisconnection(rawConnectionBody)
+                        vertx.eventBus().publish(MARKER_DISCONNECTED, JsonObject.mapFrom(devAuth.result()))
+                    }
+                    it.complete(true)
+                } else {
+                    it.fail(devAuth.cause().message)
+                }
+            }
+        } else if (it.type() == SEND || it.type() == PUBLISH || it.type() == REGISTER) {
+            validateAuth(it)
+        } else {
+            it.complete(true)
+        }
+    }
+
+    private fun setCloseHandler(event: BaseBridgeEvent, handler: Handler<Void>) {
+        when (event) {
+            is io.vertx.ext.eventbus.bridge.tcp.BridgeEvent -> event.socket().closeHandler(handler)
+            is io.vertx.ext.web.handler.sockjs.BridgeEvent -> event.socket().closeHandler(handler)
+            else -> throw IllegalArgumentException("Unknown bridge event type")
+        }
+    }
+
+    private fun getInboundPermitted(): List<PermittedOptions> {
+        return listOf(
+            PermittedOptions().setAddress("get-records"),
+            PermittedOptions().setAddress(MARKER_CONNECTED),
+            PermittedOptions().setAddress(Utilize.LIVE_SERVICE),
+            PermittedOptions().setAddress(Utilize.LIVE_INSTRUMENT),
+            PermittedOptions().setAddress(Utilize.LIVE_VIEW)
+        )
+    }
+
+    private fun getOutboundPermitted(): List<PermittedOptions> {
+        return listOf(
+            PermittedOptions().setAddressRegex(Provide.LIVE_INSTRUMENT_SUBSCRIBER + "\\:.+"),
+            PermittedOptions().setAddressRegex(Provide.LIVE_VIEW_SUBSCRIBER + "\\:.+")
+        )
     }
 
     private fun handleConnection(rawConnectionBody: JsonObject) {
@@ -113,18 +161,9 @@ class MarkerBridge(
         val activeInstance = ActiveInstance(conn.instanceId, System.currentTimeMillis(), conn.meta)
         launch(vertx.dispatcher()) {
             val map = SourceStorage.map<String, JsonObject>(BridgeAddress.ACTIVE_MARKERS)
-            map.put(conn.instanceId, JsonObject.mapFrom(activeInstance)).onSuccess {
-                map.size().onSuccess {
-                    log.info("Marker connected. Latency: {}ms - Markers connected: {}", latency, it)
-                }.onFailure {
-                    log.error("Failed to get active markers", it)
-                }
-            }.onFailure {
-                log.error("Failed to update active marker", it)
-            }
-        }
+            map.put(conn.instanceId, JsonObject.mapFrom(activeInstance)).await()
+            log.info("Marker connected. Latency: {}ms - Markers connected: {}", latency, map.size().await())
 
-        launch(vertx.dispatcher()) {
             SourceStorage.counter(MARKER_CONNECTED).incrementAndGet().await()
         }
     }
@@ -133,18 +172,11 @@ class MarkerBridge(
         val conn = Json.decodeValue(rawConnectionBody.toString(), InstanceConnection::class.java)
         launch(vertx.dispatcher()) {
             val map = SourceStorage.map<String, JsonObject>(BridgeAddress.ACTIVE_MARKERS)
-            map.remove(conn.instanceId).onSuccess {
-                if (it != null) {
-                    val connectedAt = Instant.ofEpochMilli(it.getLong("connectedAt"))
-                    log.info("Marker disconnected. Connection time: {}", Duration.between(Instant.now(), connectedAt))
+            val it = map.remove(conn.instanceId).await()
+            val connectedAt = Instant.ofEpochMilli(it.getLong("connectedAt"))
+            log.info("Marker disconnected. Connection time: {}", Duration.between(Instant.now(), connectedAt))
 
-                    launch(vertx.dispatcher()) {
-                        SourceStorage.counter(MARKER_CONNECTED).decrementAndGet().await()
-                    }
-                }
-            }.onFailure {
-                log.error("Failed to remove active marker", it)
-            }
+            SourceStorage.counter(MARKER_CONNECTED).decrementAndGet().await()
         }
     }
 }

@@ -30,5 +30,6 @@ jobs:
             cd /opt/dev/private/demo
             docker-compose down
             docker image prune -f --all
-            docker-compose up --force-recreate --build -d
+            docker-compose build --no-cache
+            docker-compose up -d
             docker image prune -f
