@@ -25,7 +25,7 @@ import org.apache.skywalking.apm.network.logging.v3.LogData
 import org.apache.skywalking.oap.log.analyzer.provider.log.listener.LogAnalysisListener
 import org.apache.skywalking.oap.log.analyzer.provider.log.listener.LogAnalysisListenerFactory
 import org.slf4j.LoggerFactory
-import spp.platform.common.FeedbackProcessor
+import spp.platform.common.ClusterConnection
 import spp.processor.live.impl.view.util.MetricTypeSubscriptionCache
 import spp.protocol.artifact.log.Log
 import java.time.Instant
@@ -70,7 +70,7 @@ class LiveLogsView(private val subscriptionCache: MetricTypeSubscriptionCache) :
                         .put("entityId", logPattern)
                         .put("timeBucket", formatter.format(log.timestamp.toJavaInstant()))
                         .put("log", JsonObject.mapFrom(log))
-                    FeedbackProcessor.vertx.eventBus().send(sub.consumer.address(), event)
+                    ClusterConnection.getVertx().eventBus().send(sub.consumer.address(), event)
                 }
             }
             return this

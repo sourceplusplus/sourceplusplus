@@ -1,10 +1,12 @@
 plugins {
     id("org.jetbrains.kotlin.jvm")
     id("maven-publish")
+    id("kotlin-kapt")
 }
 
 val platformGroup: String by project
 val projectVersion: String by project
+val vertxVersion: String by project
 
 group = platformGroup
 version = project.properties["platformVersion"] as String? ?: projectVersion
@@ -32,4 +34,9 @@ configure<PublishingExtension> {
             }
         }
     }
+}
+
+dependencies {
+    kapt("io.vertx:vertx-codegen:$vertxVersion:processor")
+    compileOnly("io.vertx:vertx-codegen:$vertxVersion")
 }

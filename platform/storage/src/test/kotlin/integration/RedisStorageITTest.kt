@@ -36,8 +36,8 @@ class RedisStorageITTest {
 
     @BeforeEach
     fun setupInit(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
-        val storage = RedisStorage()
-        storage.init(vertx, JsonObject().put("host", "localhost").put("port", 6379))
+        val storage = RedisStorage(vertx)
+        storage.init(JsonObject().put("host", "localhost").put("port", 6379))
         SourceStorage.setup(
             storage,
             JsonObject().put(
@@ -52,8 +52,8 @@ class RedisStorageITTest {
 
     @Test
     fun getDevelopers(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
-        val storage = RedisStorage()
-        storage.init(vertx, JsonObject().put("host", "localhost").put("port", 6379))
+        val storage = RedisStorage(vertx)
+        storage.init(JsonObject().put("host", "localhost").put("port", 6379))
 
         assertEquals(1, storage.getDevelopers().size)
         storage.addDeveloper("dev_1", "token")
@@ -64,8 +64,8 @@ class RedisStorageITTest {
 
     @Test
     fun getDeveloperByAccessToken(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
-        val storage = RedisStorage()
-        storage.init(vertx, JsonObject().put("host", "localhost").put("port", 6379))
+        val storage = RedisStorage(vertx)
+        storage.init(JsonObject().put("host", "localhost").put("port", 6379))
 
         storage.addDeveloper("dev_2", "token_2")
 
@@ -75,8 +75,8 @@ class RedisStorageITTest {
 
     @Test
     fun removeDeveloper(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
-        val storage = RedisStorage()
-        storage.init(vertx, JsonObject().put("host", "localhost").put("port", 6379))
+        val storage = RedisStorage(vertx)
+        storage.init(JsonObject().put("host", "localhost").put("port", 6379))
 
         val developerId = "dev_3"
         val developerToken = "token_3"
@@ -92,8 +92,8 @@ class RedisStorageITTest {
 
     @Test
     fun setAccessToken(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
-        val storage = RedisStorage()
-        storage.init(vertx, JsonObject().put("host", "localhost").put("port", 6379))
+        val storage = RedisStorage(vertx)
+        storage.init(JsonObject().put("host", "localhost").put("port", 6379))
 
         val id = "dev_4"
         val token = "token_4"
@@ -110,8 +110,8 @@ class RedisStorageITTest {
 
     @Test
     fun hasRole(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
-        val storage = RedisStorage()
-        storage.init(vertx, JsonObject().put("host", "localhost").put("port", 6379))
+        val storage = RedisStorage(vertx)
+        storage.init(JsonObject().put("host", "localhost").put("port", 6379))
 
         val developerRole = DeveloperRole.fromString("test_role")
         assertFalse(storage.hasRole(developerRole))
@@ -122,8 +122,8 @@ class RedisStorageITTest {
 
     @Test
     fun addRemoveRole(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
-        val storage = RedisStorage()
-        storage.init(vertx, JsonObject().put("host", "localhost").put("port", 6379))
+        val storage = RedisStorage(vertx)
+        storage.init(JsonObject().put("host", "localhost").put("port", 6379))
 
         val developerRole = DeveloperRole.fromString("test_role_2")
         assertFalse(storage.hasRole(developerRole))
@@ -137,8 +137,8 @@ class RedisStorageITTest {
 
     @Test
     fun getDeveloperRoles(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
-        val storage = RedisStorage()
-        storage.init(vertx, JsonObject().put("host", "localhost").put("port", 6379))
+        val storage = RedisStorage(vertx)
+        storage.init(JsonObject().put("host", "localhost").put("port", 6379))
         val id = "dev_5"
         storage.addDeveloper(id, "token_5")
         val developerRole = DeveloperRole.fromString("dev_role")
@@ -155,8 +155,8 @@ class RedisStorageITTest {
 
     @Test
     fun updateDataRedactionInRole(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
-        val storage = RedisStorage()
-        storage.init(vertx, JsonObject().put("host", "localhost").put("port", 6379))
+        val storage = RedisStorage(vertx)
+        storage.init(JsonObject().put("host", "localhost").put("port", 6379))
 
         storage.addDataRedaction("test", RedactionType.IDENTIFIER_MATCH, "lookup", "value1")
         storage.addRole(DeveloperRole.fromString("test_role"))
@@ -173,8 +173,8 @@ class RedisStorageITTest {
 
     @Test
     fun reset(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
-        val storage = RedisStorage()
-        storage.init(vertx, JsonObject().put("host", "localhost").put("port", 6379))
+        val storage = RedisStorage(vertx)
+        storage.init(JsonObject().put("host", "localhost").put("port", 6379))
 
         SourceStorage.addRole(DeveloperRole.fromString("resetRole"))
         assertTrue(SourceStorage.getRoles().contains(DeveloperRole.fromString("resetRole")))

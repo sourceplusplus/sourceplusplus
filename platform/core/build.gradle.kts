@@ -39,7 +39,6 @@ configure<PublishingExtension> {
 
 dependencies {
     implementation(project(":interfaces:booster-ui"))
-    implementation(project(":platform:bridge"))
     implementation(project(":platform:storage"))
     implementation(project(":platform:common"))
 
@@ -70,7 +69,7 @@ tasks.create("createProperties") {
 tasks["processResources"].dependsOn("createProperties")
 
 tasks.getByName<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar") {
-    archiveBaseName.set("spp-platform")
+    archiveBaseName.set("spp-platform-core")
     archiveClassifier.set("")
     manifest {
         attributes(
@@ -93,8 +92,10 @@ tasks.getByName<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("sha
         exclude(project(":platform:common"))
         exclude(project(":platform:core"))
         exclude(project(":platform:storage"))
+        exclude(project(":platform:dashboard"))
         exclude(project(":platform:processor:live-instrument"))
         exclude(project(":platform:processor:live-view"))
+        exclude(project(":interfaces:booster-ui"))
     }
 
     exclude("ch/qos/**")

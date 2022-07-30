@@ -33,3 +33,18 @@ configure<PublishingExtension> {
         }
     }
 }
+
+dependencies {
+    compileOnly(project(":platform:common"))
+}
+
+tasks {
+    withType<JavaCompile> {
+        sourceCompatibility = "1.8"
+        targetCompatibility = "1.8"
+    }
+
+    jar {
+        archiveBaseName.set("spp-platform-storage")
+    }
+}

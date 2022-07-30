@@ -18,6 +18,10 @@
 package spp.platform.storage
 
 import io.vertx.core.json.JsonObject
+import io.vertx.core.shareddata.AsyncMap
+import io.vertx.core.shareddata.Counter
+import io.vertx.ext.web.handler.SessionHandler
+import io.vertx.ext.web.sstore.SessionStore
 import org.apache.commons.lang3.RandomStringUtils
 import org.slf4j.LoggerFactory
 import spp.protocol.platform.auth.*
@@ -25,11 +29,18 @@ import spp.protocol.platform.developer.Developer
 
 object SourceStorage {
 
+    const val DEFAULT_ACCESS_TOKEN = "change-me"
     private val log = LoggerFactory.getLogger(SourceStorage::class.java)
 
     lateinit var storage: CoreStorage
-    lateinit var systemAccessToken: String //todo: multi tenant, can't be global
     private lateinit var systemRedactors: List<DataRedaction>
+    lateinit var sessionStore: SessionStore
+    lateinit var sessionHandler: SessionHandler
+
+    fun initSessionStore(sessionStore: SessionStore) {
+        this.sessionStore = sessionStore
+        this.sessionHandler = SessionHandler.create(SourceStorage.sessionStore)
+    }
 
     suspend fun setup(storage: CoreStorage, config: JsonObject, installDefaults: Boolean = true) {
         SourceStorage.storage = storage
@@ -37,18 +48,18 @@ object SourceStorage {
         val jwtConfig = config.getJsonObject("spp-platform").getJsonObject("jwt")
         val accessToken = jwtConfig.getString("access_token")
 
-        //todo: if clustered, check if defaults are already set
-        systemAccessToken = if (accessToken.isNullOrEmpty()) {
-            log.warn("No system access token provided. Using default: {}", "change-me")
-            "change-me"
+        val systemAccessToken = if (accessToken.isNullOrEmpty()) {
+            log.warn("No system access token provided. Using default: {}", DEFAULT_ACCESS_TOKEN)
+            DEFAULT_ACCESS_TOKEN
         } else {
             accessToken
         }
+        put("system_access_token", systemAccessToken)
 
         val piiRedaction = config.getJsonObject("spp-platform").getJsonObject("pii-redaction")
         systemRedactors = if (piiRedaction.getString("enabled").toBoolean()) {
             piiRedaction.getJsonArray("redactions").list.map {
-                (it as JsonObject).let {
+                JsonObject.mapFrom(it).let {
                     DataRedaction(
                         it.getString("id"),
                         RedactionType.valueOf(it.getString("type")),
@@ -71,7 +82,7 @@ object SourceStorage {
         log.info("Installing default roles, permissions, and redactions")
         addRole(DeveloperRole.ROLE_MANAGER)
         addRole(DeveloperRole.ROLE_USER)
-        addDeveloper("system", systemAccessToken)
+        addDeveloper("system", get("system_access_token", DEFAULT_ACCESS_TOKEN))
         addRoleToDeveloper("system", DeveloperRole.ROLE_MANAGER)
         RolePermission.values().forEach {
             addPermissionToRole(DeveloperRole.ROLE_MANAGER, it)
@@ -91,6 +102,26 @@ object SourceStorage {
         getDevelopers().forEach { removeDeveloper(it.id) }
         installDefaults()
         return true
+    }
+
+    suspend fun counter(name: String): Counter {
+        return storage.counter(name)
+    }
+
+    suspend fun <K, V> map(name: String): AsyncMap<K, V> {
+        return storage.map(name)
+    }
+
+    suspend fun <T> get(name: String): T? {
+        return storage.get(name)
+    }
+
+    suspend fun <T> get(name: String, default: T): T {
+        return get<T>(name) ?: default
+    }
+
+    suspend fun put(name: String, value: Any) {
+        storage.put(name, value)
     }
 
     suspend fun getDevelopers(): List<Developer> {

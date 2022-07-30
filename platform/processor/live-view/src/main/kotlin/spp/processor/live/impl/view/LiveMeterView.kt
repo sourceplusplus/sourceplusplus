@@ -30,11 +30,11 @@ import org.apache.skywalking.oap.server.core.query.input.Entity
 import org.apache.skywalking.oap.server.core.query.input.MetricsCondition
 import org.joor.Reflect
 import org.slf4j.LoggerFactory
-import spp.processor.ViewProcessor.metadata
-import spp.processor.ViewProcessor.metricsQueryService
-import spp.platform.common.FeedbackProcessor
+import spp.platform.common.ClusterConnection
 import spp.platform.common.extend.getMeterServiceInstances
 import spp.platform.common.extend.getMeterServices
+import spp.processor.ViewProcessor.metadata
+import spp.processor.ViewProcessor.metricsQueryService
 import spp.processor.live.impl.view.util.EntitySubscribersCache
 import spp.processor.live.impl.view.util.MetricTypeSubscriptionCache
 import spp.protocol.instrument.DurationStep
@@ -111,7 +111,7 @@ class LiveMeterView(
                 val day = dayPromise.future().result()
 
                 subbedMetrics.values.flatten().forEach {
-                    FeedbackProcessor.vertx.eventBus().send(
+                    ClusterConnection.getVertx().eventBus().send(
                         it.consumer.address(),
                         JsonObject()
                             .put("last_minute", minute.getJsonArray("values").firstOrNull() ?: 0) //todo: seems to want last
