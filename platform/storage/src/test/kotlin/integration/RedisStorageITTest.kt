@@ -23,6 +23,7 @@ import io.vertx.junit5.VertxExtension
 import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import spp.platform.storage.RedisStorage
@@ -33,19 +34,36 @@ import spp.protocol.platform.auth.RedactionType
 @ExtendWith(VertxExtension::class)
 class RedisStorageITTest {
 
+    @BeforeEach
+    fun setupInit(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+        val storage = RedisStorage()
+        storage.init(vertx, JsonObject().put("host", "localhost").put("port", 6379))
+        SourceStorage.setup(
+            storage,
+            JsonObject().put(
+                "spp-platform",
+                JsonObject()
+                    .put("jwt", JsonObject())
+                    .put("pii-redaction", JsonObject().put("enabled", "false"))
+            )
+        )
+        SourceStorage.reset()
+    }
+
     @Test
     fun getDevelopers(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
         val storage = RedisStorage()
         storage.init(vertx, JsonObject().put("host", "localhost").put("port", 6379))
 
-        storage.addDeveloper("dev_1", "token_1")
+        assertEquals(1, storage.getDevelopers().size)
+        storage.addDeveloper("dev_1", "token")
+        assertEquals(2, storage.getDevelopers().size)
 
-        val developer = storage.getDevelopers()[1] //developer ID at 0 index == system
-        assertEquals("dev_1", developer.id)
+        assertNotNull(storage.getDevelopers().find { it.id == "dev_1" })
     }
 
     @Test
-    fun getDeveloperByAccessToken(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()){
+    fun getDeveloperByAccessToken(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
         val storage = RedisStorage()
         storage.init(vertx, JsonObject().put("host", "localhost").put("port", 6379))
 
@@ -66,6 +84,7 @@ class RedisStorageITTest {
         val developer = storage.getDeveloperByAccessToken(developerToken)
         assertNotNull(developer)
         assertEquals(developerId, developer?.id)
+
         storage.removeDeveloper(developerId)
         val updatedDeveloper = storage.getDeveloperByAccessToken(developerToken)
         assertNull(updatedDeveloper)
@@ -84,31 +103,54 @@ class RedisStorageITTest {
 
         storage.setAccessToken(id, "newToken")
         assertNull(storage.getDeveloperByAccessToken(token))
+
         val developerWithNewToken = storage.getDeveloperByAccessToken("newToken")
         assertEquals(id, developerWithNewToken?.id)
     }
 
     @Test
-    fun hasRole(vertx: Vertx): Unit= runBlocking(vertx.dispatcher()) {
+    fun hasRole(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
         val storage = RedisStorage()
         storage.init(vertx, JsonObject().put("host", "localhost").put("port", 6379))
 
         val developerRole = DeveloperRole.fromString("test_role")
         assertFalse(storage.hasRole(developerRole))
+
         storage.addRole(developerRole)
         assertTrue(storage.hasRole(developerRole))
     }
 
     @Test
-    fun addRemoveRole(vertx: Vertx): Unit= runBlocking(vertx.dispatcher()) {
+    fun addRemoveRole(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
         val storage = RedisStorage()
         storage.init(vertx, JsonObject().put("host", "localhost").put("port", 6379))
 
         val developerRole = DeveloperRole.fromString("test_role_2")
+        assertFalse(storage.hasRole(developerRole))
+
         storage.addRole(developerRole)
         assertTrue(storage.hasRole(developerRole))
+
         storage.removeRole(developerRole)
         assertFalse(storage.hasRole(developerRole))
+    }
+
+    @Test
+    fun getDeveloperRoles(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+        val storage = RedisStorage()
+        storage.init(vertx, JsonObject().put("host", "localhost").put("port", 6379))
+        val id = "dev_5"
+        storage.addDeveloper(id, "token_5")
+        val developerRole = DeveloperRole.fromString("dev_role")
+        storage.addRole(developerRole)
+
+        val developerRoles = storage.getDeveloperRoles(id)
+        assertEquals(0, developerRoles.size)
+
+        storage.addRoleToDeveloper(id, developerRole)
+        val updatedDeveloperRoles = storage.getDeveloperRoles(id)
+        assertEquals(1, updatedDeveloperRoles.size)
+        assertEquals("dev_role", updatedDeveloperRoles[0].roleName)
     }
 
     @Test
@@ -133,15 +175,6 @@ class RedisStorageITTest {
     fun reset(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
         val storage = RedisStorage()
         storage.init(vertx, JsonObject().put("host", "localhost").put("port", 6379))
-        SourceStorage.setup(
-            storage,
-            JsonObject().put(
-                "spp-platform",
-                JsonObject()
-                    .put("jwt", JsonObject())
-                    .put("pii-redaction", JsonObject().put("enabled", "false"))
-            )
-        )
 
         SourceStorage.addRole(DeveloperRole.fromString("resetRole"))
         assertTrue(SourceStorage.getRoles().contains(DeveloperRole.fromString("resetRole")))

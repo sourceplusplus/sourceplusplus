@@ -23,6 +23,7 @@ import io.vertx.junit5.VertxExtension
 import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import spp.platform.storage.MemoryStorage
@@ -33,25 +34,39 @@ import spp.protocol.platform.auth.RedactionType
 @ExtendWith(VertxExtension::class)
 class MemoryStorageITTest {
 
+    @BeforeEach
+    fun setupInit(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+        val storage = MemoryStorage(vertx)
+        SourceStorage.setup(
+            storage,
+            JsonObject().put(
+                "spp-platform",
+                JsonObject()
+                    .put("jwt", JsonObject())
+                    .put("pii-redaction", JsonObject().put("enabled", "false"))
+            )
+        )
+        SourceStorage.reset()
+    }
+
     @Test
     fun getDevelopers(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
         val storage = MemoryStorage(vertx)
 
-        assertEquals(0, storage.getDevelopers().size)
-        storage.addDeveloper("dev1", "token")
         assertEquals(1, storage.getDevelopers().size)
+        storage.addDeveloper("dev1", "token")
+        assertEquals(2, storage.getDevelopers().size)
 
-        val developer = storage.getDevelopers()[0]
-        assertEquals("dev1", developer.id)
+        assertNotNull(storage.getDevelopers().find { it.id == "dev1" })
     }
 
     @Test
     fun getDeveloperByAccessToken(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
         val storage = MemoryStorage(vertx)
 
-        assertEquals(0, storage.getDevelopers().size)
-        storage.addDeveloper("dev1", "token")
         assertEquals(1, storage.getDevelopers().size)
+        storage.addDeveloper("dev1", "token")
+        assertEquals(2, storage.getDevelopers().size)
 
         val developer = storage.getDeveloperByAccessToken("token")
         assertEquals("dev1", developer?.id)
@@ -67,6 +82,7 @@ class MemoryStorageITTest {
         val developer = storage.getDeveloperByAccessToken(token)
         assertNotNull(developer)
         assertEquals(id, developer?.id)
+
         storage.removeDeveloper(id)
         val updatedDeveloper = storage.getDeveloperByAccessToken(token)
         assertNull(updatedDeveloper)
@@ -84,6 +100,7 @@ class MemoryStorageITTest {
 
         storage.setAccessToken(id, "newToken")
         assertNull(storage.getDeveloperByAccessToken(token))
+
         val developerWithNewToken = storage.getDeveloperByAccessToken("newToken")
         assertEquals(id, developerWithNewToken?.id)
     }
@@ -94,22 +111,42 @@ class MemoryStorageITTest {
 
         val developerRole = DeveloperRole.fromString("test_role")
         assertFalse(storage.hasRole(developerRole))
+
         storage.addRole(developerRole)
         assertTrue(storage.hasRole(developerRole))
     }
-
 
     @Test
     fun addRemoveRole(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
         val storage = MemoryStorage(vertx)
 
         val developerRole = DeveloperRole.fromString("test_role_2")
+        assertFalse(storage.hasRole(developerRole))
+
         storage.addRole(developerRole)
         assertTrue(storage.hasRole(developerRole))
+
         storage.removeRole(developerRole)
         assertFalse(storage.hasRole(developerRole))
     }
 
+    @Test
+    fun getDeveloperRoles(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+        val storage = MemoryStorage(vertx)
+
+        val id = "dev_5"
+        storage.addDeveloper(id, "token_5")
+        val developerRole = DeveloperRole.fromString("dev_role")
+        storage.addRole(developerRole)
+
+        val developerRoles = storage.getDeveloperRoles(id)
+        assertEquals(0, developerRoles.size)
+
+        storage.addRoleToDeveloper(id, developerRole)
+        val updatedDeveloperRoles = storage.getDeveloperRoles(id)
+        assertEquals(1, updatedDeveloperRoles.size)
+        assertEquals("dev_role", updatedDeveloperRoles[0].roleName)
+    }
 
     @Test
     fun updateDataRedactionInRole(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
@@ -131,17 +168,6 @@ class MemoryStorageITTest {
 
     @Test
     fun reset(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
-        val storage = MemoryStorage(vertx)
-        SourceStorage.setup(
-            storage,
-            JsonObject().put(
-                "spp-platform",
-                JsonObject()
-                    .put("jwt", JsonObject())
-                    .put("pii-redaction", JsonObject().put("enabled", "false"))
-            )
-        )
-
         SourceStorage.addRole(DeveloperRole.fromString("resetRole"))
         assertTrue(SourceStorage.getRoles().contains(DeveloperRole.fromString("resetRole")))
         SourceStorage.addDeveloper("resetDeveloper")
