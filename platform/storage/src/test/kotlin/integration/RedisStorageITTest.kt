@@ -39,12 +39,19 @@ class RedisStorageITTest {
         @JvmStatic
         @BeforeAll
         fun beforeAll() {
-            ClusterConnection.config = JsonObject().put(
-                "spp-platform",
-                JsonObject()
-                    .put("jwt", JsonObject())
-                    .put("pii-redaction", JsonObject().put("enabled", "false"))
-            )
+            ClusterConnection.config = JsonObject()
+                .put(
+                    "spp-platform",
+                    JsonObject()
+                        .put("jwt", JsonObject())
+                        .put("pii-redaction", JsonObject().put("enabled", "false"))
+                )
+                .put(
+                    "storage",
+                    JsonObject()
+                        .put("selector", "redis")
+                        .put("redis", JsonObject())
+                )
         }
     }
 
