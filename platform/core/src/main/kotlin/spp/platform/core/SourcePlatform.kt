@@ -18,6 +18,7 @@
 package spp.platform.core
 
 import io.vertx.core.DeploymentOptions
+import io.vertx.core.eventbus.ReplyException
 import io.vertx.core.http.HttpServerOptions
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
@@ -36,7 +37,6 @@ import io.vertx.kotlin.coroutines.CoroutineVerticle
 import io.vertx.kotlin.coroutines.await
 import io.vertx.kotlin.coroutines.dispatcher
 import io.vertx.servicediscovery.Record
-import io.vertx.servicediscovery.ServiceDiscovery
 import io.vertx.servicediscovery.ServiceDiscoveryOptions
 import io.vertx.servicediscovery.Status
 import kotlinx.coroutines.Dispatchers
@@ -342,13 +342,16 @@ class SourcePlatform : CoroutineVerticle() {
         log.debug("Get platform clients request. Developer: {}", selfId)
 
         launch(vertx.dispatcher()) {
-            LiveService.createProxy(vertx, accessToken).getClients().onComplete {
-                if (it.succeeded()) {
-                    ctx.response()
-                        .putHeader("Content-Type", "application/json")
-                        .end(it.result().toString())
+            LiveService.createProxy(vertx, accessToken).getClients().onSuccess {
+                ctx.response()
+                    .putHeader("Content-Type", "application/json")
+                    .end(it.toString())
+            }.onFailure {
+                if (it is ReplyException) {
+                    log.error("Failed to get platform clients. Reason: {}", it.message)
+                    ctx.response().setStatusCode(it.failureCode()).end(it.message)
                 } else {
-                    log.error("Failed to get platform stats", it.cause())
+                    log.error("Failed to get platform clients", it)
                     ctx.response().setStatusCode(500).end()
                 }
             }
@@ -371,13 +374,16 @@ class SourcePlatform : CoroutineVerticle() {
         log.info("Get platform stats request. Developer: {}", selfId)
 
         launch(vertx.dispatcher()) {
-            LiveService.createProxy(vertx, accessToken).getStats().onComplete {
-                if (it.succeeded()) {
-                    ctx.response()
-                        .putHeader("Content-Type", "application/json")
-                        .end(it.result().toString())
+            LiveService.createProxy(vertx, accessToken).getStats().onSuccess {
+                ctx.response()
+                    .putHeader("Content-Type", "application/json")
+                    .end(it.toString())
+            }.onFailure {
+                if (it is ReplyException) {
+                    log.error("Failed to get platform stats. Reason: {}", it.message)
+                    ctx.response().setStatusCode(it.failureCode()).end(it.message)
                 } else {
-                    log.error("Failed to get platform stats", it.cause())
+                    log.error("Failed to get platform stats", it)
                     ctx.response().setStatusCode(500).end()
                 }
             }
