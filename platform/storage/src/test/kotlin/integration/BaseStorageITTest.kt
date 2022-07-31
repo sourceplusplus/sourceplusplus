@@ -132,7 +132,15 @@ abstract class BaseStorageITTest<T : CoreStorage> {
     }
 
     @Test
-    fun getDeveloperRoles(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+    fun getRoles(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+        val developerRole = DeveloperRole.fromString("test_role_4")
+        Assertions.assertFalse(storageInstance.getRoles().contains(developerRole))
+        storageInstance.addRole(developerRole)
+        Assertions.assertTrue(storageInstance.getRoles().contains(developerRole))
+    }
+
+    @Test
+    fun addGetDeveloperRoles(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
         val id = "dev_5"
         storageInstance.addDeveloper(id, "token_5")
         val developerRole = DeveloperRole.fromString("dev_role")
@@ -145,6 +153,20 @@ abstract class BaseStorageITTest<T : CoreStorage> {
         val updatedDeveloperRoles = storageInstance.getDeveloperRoles(id)
         Assertions.assertEquals(1, updatedDeveloperRoles.size)
         Assertions.assertEquals("dev_role", updatedDeveloperRoles[0].roleName)
+    }
+
+    @Test
+    fun removeRoleFromDeveloper(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+        val id = "dev6"
+        storageInstance.addDeveloper(id, "token6")
+        val developerRole = DeveloperRole.fromString("devRole")
+        storageInstance.addRole(developerRole)
+        storageInstance.addRoleToDeveloper(id, developerRole)
+
+        Assertions.assertTrue(storageInstance.getDeveloperRoles(id).contains(developerRole))
+
+        storageInstance.removeRoleFromDeveloper(id, developerRole)
+        Assertions.assertFalse(storageInstance.getDeveloperRoles(id).contains(developerRole))
     }
 
     @Test
