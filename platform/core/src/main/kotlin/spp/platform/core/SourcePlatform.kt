@@ -18,6 +18,7 @@
 package spp.platform.core
 
 import io.vertx.core.DeploymentOptions
+import io.vertx.core.eventbus.ReplyException
 import io.vertx.core.http.HttpServerOptions
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
