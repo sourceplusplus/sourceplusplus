@@ -57,7 +57,7 @@ class LiveServiceProvider(private val vertx: Vertx) : LiveService {
         GlobalScope.launch(vertx.dispatcher()) {
             promise.complete(
                 JsonObject().apply {
-                    val devAuth = Vertx.currentContext().get<DeveloperAuth>("developer")
+                    val devAuth = Vertx.currentContext().getLocal<DeveloperAuth>("developer")
                     var bridgeService = SourceBridgeService.service(vertx, devAuth?.accessToken).await()
                     if (bridgeService != null) {
                         put("markers", bridgeService.getActiveMarkers().await())
@@ -75,7 +75,7 @@ class LiveServiceProvider(private val vertx: Vertx) : LiveService {
     override fun getStats(): Future<JsonObject> {
         log.trace("Getting platform stats")
         val promise = Promise.promise<JsonObject>()
-        val devAuth = Vertx.currentContext().get<DeveloperAuth>("developer")
+        val devAuth = Vertx.currentContext().getLocal<DeveloperAuth>("developer")
 
         val subStats = Promise.promise<JsonObject>()
         LiveViewService.createProxy(vertx, devAuth.accessToken).getLiveViewSubscriptionStats().onComplete {
@@ -104,7 +104,7 @@ class LiveServiceProvider(private val vertx: Vertx) : LiveService {
     private suspend fun getPlatformStats(): JsonObject {
         return JsonObject()
             .apply {
-                val devAuth = Vertx.currentContext().get<DeveloperAuth>("developer")
+                val devAuth = Vertx.currentContext().getLocal<DeveloperAuth>("developer")
                 var bridgeService = SourceBridgeService.service(vertx, devAuth?.accessToken).await()
                 if (bridgeService != null) {
                     put("connected-markers", bridgeService.getConnectedMarkers().await())
@@ -146,7 +146,7 @@ class LiveServiceProvider(private val vertx: Vertx) : LiveService {
 
     override fun getSelf(): Future<SelfInfo> {
         val promise = Promise.promise<SelfInfo>()
-        val selfId = Vertx.currentContext().get<DeveloperAuth>("developer").selfId
+        val selfId = Vertx.currentContext().getLocal<DeveloperAuth>("developer").selfId
         log.trace("Getting self info")
 
         GlobalScope.launch(vertx.dispatcher()) {
@@ -165,7 +165,7 @@ class LiveServiceProvider(private val vertx: Vertx) : LiveService {
     override fun getServices(): Future<List<Service>> {
         val promise = Promise.promise<List<Service>>()
         val forward = JsonObject()
-        forward.put("developer_id", Vertx.currentContext().get<DeveloperAuth>("developer").selfId)
+        forward.put("developer_id", Vertx.currentContext().getLocal<DeveloperAuth>("developer").selfId)
         forward.put("method", HttpMethod.POST.name())
         forward.put(
             "body", JsonObject()
@@ -212,7 +212,7 @@ class LiveServiceProvider(private val vertx: Vertx) : LiveService {
     override fun getActiveProbes(): Future<List<ActiveInstance>> {
         val promise = Promise.promise<List<ActiveInstance>>()
         GlobalScope.launch(vertx.dispatcher()) {
-            val devAuth = Vertx.currentContext().get<DeveloperAuth>("developer")
+            val devAuth = Vertx.currentContext().getLocal<DeveloperAuth>("developer")
             val bridgeService = SourceBridgeService.service(vertx, devAuth?.accessToken).await()
             if (bridgeService != null) {
                 promise.complete(

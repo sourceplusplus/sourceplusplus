@@ -79,17 +79,17 @@ class ServiceProvider(private val jwtAuth: JWTAuth?) : CoroutineVerticle() {
                 if (jwtAuth != null) {
                     jwtAuth.authenticate(JsonObject().put("token", msg.headers().get("auth-token"))).onComplete {
                         if (it.succeeded()) {
-                            Vertx.currentContext().put("user", it.result())
+                            Vertx.currentContext().putLocal("user", it.result())
                             val selfId = it.result().principal().getString("developer_id")
                             val accessToken = it.result().principal().getString("access_token")
-                            Vertx.currentContext().put("developer", DeveloperAuth.from(selfId, accessToken))
+                            Vertx.currentContext().putLocal("developer", DeveloperAuth.from(selfId, accessToken))
                             promise.complete(msg)
                         } else {
                             promise.fail(it.cause())
                         }
                     }
                 } else {
-                    Vertx.currentContext().put("developer", DeveloperAuth.from("system", null))
+                    Vertx.currentContext().putLocal("developer", DeveloperAuth.from("system", null))
                     promise.complete(msg)
                 }
                 return@addInterceptor promise.future()

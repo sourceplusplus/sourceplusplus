@@ -89,8 +89,8 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
             }
         }
         router.post("/graphql/spp").handler(BodyHandler.create()).handler {
-            if (it.user() != null && Vertx.currentContext().get<DeveloperAuth>("developer") == null) {
-                Vertx.currentContext().put(
+            if (it.user() != null && Vertx.currentContext().getLocal<DeveloperAuth>("developer") == null) {
+                Vertx.currentContext().putLocal(
                     "developer",
                     DeveloperAuth(
                         it.user().principal().getString("developer_id"),

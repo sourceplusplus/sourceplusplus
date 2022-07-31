@@ -71,7 +71,7 @@ abstract class InstanceBridge(private val jwtAuth: JWTAuth?) : CoroutineVerticle
             }
         } else {
             val developerAuth = DeveloperAuth("system")
-            Vertx.currentContext().put("developer", developerAuth)
+            Vertx.currentContext().putLocal("developer", developerAuth)
             handler.handle(Future.succeededFuture(developerAuth))
         }
     }
@@ -79,18 +79,18 @@ abstract class InstanceBridge(private val jwtAuth: JWTAuth?) : CoroutineVerticle
     fun validateAuthToken(authToken: String?, handler: Handler<AsyncResult<DeveloperAuth>>) {
         if (jwtAuth == null) {
             val developerAuth = DeveloperAuth("system")
-            Vertx.currentContext().put("developer", developerAuth)
+            Vertx.currentContext().putLocal("developer", developerAuth)
             handler.handle(Future.succeededFuture(developerAuth))
             return
         }
 
         jwtAuth.authenticate(JsonObject().put("token", authToken)) {
             if (it.succeeded()) {
-                Vertx.currentContext().put("user", it.result())
+                Vertx.currentContext().putLocal("user", it.result())
                 val selfId = it.result().principal().getString("developer_id")
                 val accessToken = it.result().principal().getString("access_token")
                 val developerAuth = DeveloperAuth.from(selfId, accessToken)
-                Vertx.currentContext().put("developer", developerAuth)
+                Vertx.currentContext().putLocal("developer", developerAuth)
                 handler.handle(Future.succeededFuture(developerAuth))
             } else {
                 handler.handle(Future.failedFuture((it.cause())))
