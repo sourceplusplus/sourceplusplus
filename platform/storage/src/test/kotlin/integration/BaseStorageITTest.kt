@@ -1,5 +1,6 @@
 package integration
 
+import graphql.Assert
 import io.vertx.core.Vertx
 import io.vertx.core.json.JsonObject
 import io.vertx.kotlin.coroutines.dispatcher
@@ -41,7 +42,6 @@ abstract class BaseStorageITTest<T : CoreStorage> {
         Assertions.assertNotNull(storageInstance.getDevelopers().find { it.id == "dev_1" })
     }
 
-
     @Test
     fun getDeveloperByAccessToken(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
         Assertions.assertEquals(1, storageInstance.getDevelopers().size)
@@ -50,6 +50,25 @@ abstract class BaseStorageITTest<T : CoreStorage> {
 
         val developer = storageInstance.getDeveloperByAccessToken("token")
         Assertions.assertEquals("dev_2", developer?.id)
+    }
+
+    @Test
+    fun hasDeveloper(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+        storageInstance.addDeveloper("dev_6", "token_6")
+
+        Assert.assertTrue(storageInstance.hasDeveloper("dev_6"))
+    }
+
+    @Test
+    fun addDeveloper(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+        val id = "dev_5"
+        val token = "token_5"
+        storageInstance.addDeveloper(id, token)
+        val developer = storageInstance.getDeveloperByAccessToken(token)
+        Assertions.assertNotNull(developer)
+        Assertions.assertEquals(id, developer?.id)
+
+        Assertions.assertNotNull(storageInstance.getDevelopers().find { it.id == "dev_5" })
     }
 
     @Test
@@ -91,7 +110,7 @@ abstract class BaseStorageITTest<T : CoreStorage> {
     }
 
     @Test
-    fun addRemoveRole(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+    fun removeRole(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
         val developerRole = DeveloperRole.fromString("test_role_2")
         Assertions.assertFalse(storageInstance.hasRole(developerRole))
 
@@ -100,6 +119,15 @@ abstract class BaseStorageITTest<T : CoreStorage> {
 
         storageInstance.removeRole(developerRole)
         Assertions.assertFalse(storageInstance.hasRole(developerRole))
+    }
+
+    @Test
+    fun addRole(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+        val developerRole = DeveloperRole.fromString("test_role_3")
+        Assertions.assertFalse(storageInstance.hasRole(developerRole))
+
+        storageInstance.addRole(developerRole)
+        Assertions.assertTrue(storageInstance.hasRole(developerRole))
     }
 
     @Test
