@@ -26,6 +26,8 @@ import org.apache.commons.lang3.RandomStringUtils
 import org.slf4j.LoggerFactory
 import spp.protocol.platform.auth.*
 import spp.protocol.platform.developer.Developer
+import spp.protocol.service.error.PermissionAccessDenied
+import java.util.concurrent.CompletableFuture
 
 object SourceStorage {
 
@@ -286,5 +288,20 @@ object SourceStorage {
     suspend fun hasPermission(id: String, permission: RolePermission): Boolean {
         log.trace("Checking permission: $permission - Id: $id")
         return getDeveloperRoles(id).any { getRolePermissions(it).contains(permission) }
+    }
+
+    suspend fun requiresPermission(
+        id: String,
+        permission: RolePermission,
+        completableFuture: CompletableFuture<*>
+    ): Boolean {
+        return if (hasPermission(id, permission)) {
+            false
+        } else {
+            completableFuture.completeExceptionally(
+                PermissionAccessDenied(permission, "Developer '$id' missing permission: $permission")
+            )
+            true
+        }
     }
 }
