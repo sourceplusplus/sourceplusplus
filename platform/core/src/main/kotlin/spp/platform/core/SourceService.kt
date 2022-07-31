@@ -27,6 +27,7 @@ import graphql.schema.CoercingParseValueException
 import graphql.schema.DataFetchingEnvironment
 import graphql.schema.GraphQLScalarType
 import graphql.schema.idl.*
+import io.vertx.core.Vertx
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import io.vertx.ext.web.Router
@@ -42,6 +43,7 @@ import org.apache.commons.lang3.EnumUtils
 import org.apache.commons.lang3.RandomStringUtils
 import org.slf4j.LoggerFactory
 import spp.platform.common.ClusterConnection.discovery
+import spp.platform.common.DeveloperAuth
 import spp.platform.storage.SourceStorage
 import spp.protocol.artifact.ArtifactQualifiedName
 import spp.protocol.artifact.ArtifactType
@@ -87,6 +89,15 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
             }
         }
         router.post("/graphql/spp").handler(BodyHandler.create()).handler {
+            if (it.user() != null && Vertx.currentContext().get<DeveloperAuth>("developer") == null) {
+                Vertx.currentContext().put(
+                    "developer",
+                    DeveloperAuth(
+                        it.user().principal().getString("developer_id"),
+                        it.user().principal().getString("access_token")
+                    )
+                )
+            }
             sppGraphQLHandler.handle(it)
         }
     }
