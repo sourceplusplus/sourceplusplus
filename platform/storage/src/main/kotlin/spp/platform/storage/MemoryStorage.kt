@@ -65,7 +65,7 @@ open class MemoryStorage(val vertx: Vertx) : CoreStorage {
         val currentRoles = vertx.sharedData().getAsyncMap<String, JsonArray>(namespace("roles"))
             .await().get("roles").await() ?: JsonArray()
         vertx.sharedData().getAsyncMap<String, JsonArray>(namespace("roles"))
-            .await().put("roles", currentRoles.apply { remove(role.roleName) })
+            .await().put("roles", currentRoles.apply { remove(role.roleName) }).await()
         return true
     }
 
@@ -73,7 +73,7 @@ open class MemoryStorage(val vertx: Vertx) : CoreStorage {
         val currentRoles = vertx.sharedData().getAsyncMap<String, JsonArray>(namespace("roles"))
             .await().get("roles").await() ?: JsonArray()
         vertx.sharedData().getAsyncMap<String, JsonArray>(namespace("roles"))
-            .await().put("roles", currentRoles.add(role.roleName))
+            .await().put("roles", currentRoles.add(role.roleName)).await()
         return true
     }
 
@@ -88,7 +88,7 @@ open class MemoryStorage(val vertx: Vertx) : CoreStorage {
         val existingDeveloper = currentDevelopers.list.find { it == id } as String?
         if (existingDeveloper != null) error("Developer $existingDeveloper already exists")
         currentDevelopers.add(id)
-        developersStorage.put("ids", currentDevelopers)
+        developersStorage.put("ids", currentDevelopers).await()
 
         setAccessToken(id, token)
         return Developer(id, token)
@@ -98,7 +98,7 @@ open class MemoryStorage(val vertx: Vertx) : CoreStorage {
         val developersStorage = vertx.sharedData().getAsyncMap<String, Any>(namespace("developers")).await()
         val currentDevelopers = developersStorage.get("ids").await() as JsonArray? ?: JsonArray()
         currentDevelopers.list.remove(id)
-        developersStorage.put("ids", currentDevelopers)
+        developersStorage.put("ids", currentDevelopers).await()
 
         val developerStorage = vertx.sharedData().getAsyncMap<String, Any>(namespace("developer:$id")).await()
         developerStorage.clear().await()
@@ -152,7 +152,7 @@ open class MemoryStorage(val vertx: Vertx) : CoreStorage {
             vertx.sharedData().getAsyncMap<String, Any>(namespace("accessPermissions")).await()
         val access = accessPermissionsStorage.get("accessPermissions").await() as JsonArray? ?: JsonArray()
         access.add(AccessPermission(id, locationPatterns, type))
-        accessPermissionsStorage.put("accessPermissions", access)
+        accessPermissionsStorage.put("accessPermissions", access).await()
 
         val accessPermissionStorage =
             vertx.sharedData().getAsyncMap<String, Any>(namespace("accessPermission:$id")).await()
@@ -165,7 +165,7 @@ open class MemoryStorage(val vertx: Vertx) : CoreStorage {
             vertx.sharedData().getAsyncMap<String, Any>(namespace("accessPermissions")).await()
         val access = accessPermissionsStorage.get("accessPermissions").await() as JsonArray? ?: JsonArray()
         access.list.removeIf { (it as AccessPermission).id == id }
-        accessPermissionsStorage.put("accessPermissions", access)
+        accessPermissionsStorage.put("accessPermissions", access).await()
 
         val accessPermissionStorage =
             vertx.sharedData().getAsyncMap<String, Any>(namespace("accessPermission:$id")).await()
@@ -177,7 +177,7 @@ open class MemoryStorage(val vertx: Vertx) : CoreStorage {
         val accessPermissions = roleStorage.get("accessPermissions").await() as JsonArray? ?: JsonArray()
         if (accessPermissions.list.find { it == id } == null) {
             accessPermissions.add(id)
-            roleStorage.put("accessPermissions", accessPermissions)
+            roleStorage.put("accessPermissions", accessPermissions).await()
         }
     }
 
@@ -185,7 +185,7 @@ open class MemoryStorage(val vertx: Vertx) : CoreStorage {
         val roleStorage = vertx.sharedData().getAsyncMap<String, Any>(namespace("role:${role.roleName}")).await()
         val accessPermissions = roleStorage.get("accessPermissions").await() as JsonArray? ?: JsonArray()
         accessPermissions.list.removeIf { it == id }
-        roleStorage.put("accessPermissions", accessPermissions)
+        roleStorage.put("accessPermissions", accessPermissions).await()
     }
 
     override suspend fun getDataRedactions(): Set<DataRedaction> {
@@ -210,7 +210,7 @@ open class MemoryStorage(val vertx: Vertx) : CoreStorage {
         val dataRedactionsStorage = vertx.sharedData().getAsyncMap<String, Any>(namespace("dataRedactions")).await()
         val dataRedactions = dataRedactionsStorage.get("dataRedactions").await() as JsonArray? ?: JsonArray()
         dataRedactions.add(DataRedaction(id, type, lookup, replacement))
-        dataRedactionsStorage.put("dataRedactions", dataRedactions)
+        dataRedactionsStorage.put("dataRedactions", dataRedactions).await()
     }
 
     override suspend fun updateDataRedaction(id: String, type: RedactionType, lookup: String, replacement: String) {
@@ -219,14 +219,14 @@ open class MemoryStorage(val vertx: Vertx) : CoreStorage {
         dataRedactions.list.removeIf { (it as DataRedaction).id == id }
 
         dataRedactions.add(DataRedaction(id, type, lookup, replacement))
-        dataRedactionsStorage.put("dataRedactions", dataRedactions)
+        dataRedactionsStorage.put("dataRedactions", dataRedactions).await()
     }
 
     override suspend fun removeDataRedaction(id: String) {
         val dataRedactionsStorage = vertx.sharedData().getAsyncMap<String, Any>(namespace("dataRedactions")).await()
         val dataRedactions = dataRedactionsStorage.get("dataRedactions").await() as JsonArray? ?: JsonArray()
         dataRedactions.list.removeIf { (it as DataRedaction).id == id }
-        dataRedactionsStorage.put("dataRedactions", dataRedactions)
+        dataRedactionsStorage.put("dataRedactions", dataRedactions).await()
     }
 
     override suspend fun addDataRedactionToRole(id: String, role: DeveloperRole) {
@@ -235,7 +235,7 @@ open class MemoryStorage(val vertx: Vertx) : CoreStorage {
         val dataRedactions = roleStorage.get("dataRedactions").await() as JsonArray? ?: JsonArray()
         if (dataRedactions.list.find { (it as String) == id } == null) {
             dataRedactions.add(dataRedaction.id)
-            roleStorage.put("dataRedactions", dataRedactions)
+            roleStorage.put("dataRedactions", dataRedactions).await()
         }
     }
 
@@ -243,7 +243,7 @@ open class MemoryStorage(val vertx: Vertx) : CoreStorage {
         val roleStorage = vertx.sharedData().getAsyncMap<String, Any>(namespace("role:${role.roleName}")).await()
         val dataRedactions = roleStorage.get("dataRedactions").await() as JsonArray? ?: JsonArray()
         dataRedactions.list.removeIf { (it as String) == id }
-        roleStorage.put("dataRedactions", dataRedactions)
+        roleStorage.put("dataRedactions", dataRedactions).await()
     }
 
     override suspend fun getRoleDataRedactions(role: DeveloperRole): Set<DataRedaction> {
@@ -264,7 +264,7 @@ open class MemoryStorage(val vertx: Vertx) : CoreStorage {
         val existingRole = devRoles.list.find { (it as DeveloperRole) == role } as DeveloperRole?
         if (existingRole == null) {
             devRoles.add(role)
-            developerStorage.put("roles", devRoles)
+            developerStorage.put("roles", devRoles).await()
         }
     }
 
@@ -274,7 +274,7 @@ open class MemoryStorage(val vertx: Vertx) : CoreStorage {
         val existingRole = devRoles.list.find { (it as DeveloperRole) == role } as DeveloperRole?
         if (existingRole != null) {
             devRoles.remove(existingRole)
-            developerStorage.put("roles", devRoles)
+            developerStorage.put("roles", devRoles).await()
         }
     }
 
@@ -284,7 +284,7 @@ open class MemoryStorage(val vertx: Vertx) : CoreStorage {
         val existingPermission = rolePermissions.list.find { (it as RolePermission) == permission } as RolePermission?
         if (existingPermission == null) {
             rolePermissions.add(permission)
-            roleStorage.put("permissions", rolePermissions)
+            roleStorage.put("permissions", rolePermissions).await()
         }
     }
 
@@ -294,7 +294,7 @@ open class MemoryStorage(val vertx: Vertx) : CoreStorage {
         val existingPermission = rolePermissions.list.find { (it as RolePermission) == permission } as RolePermission?
         if (existingPermission != null) {
             rolePermissions.remove(existingPermission)
-            roleStorage.put("permissions", rolePermissions)
+            roleStorage.put("permissions", rolePermissions).await()
         }
     }
 
