@@ -83,6 +83,6 @@ interface CoreStorage {
 
     fun generateClientSecret(): String {
         return UUID.randomUUID().toString().replace("-", "") +
-                "-" + UUID.randomUUID().toString().replace("-", "")
+                UUID.randomUUID().toString().replace("-", "")
     }
 }
