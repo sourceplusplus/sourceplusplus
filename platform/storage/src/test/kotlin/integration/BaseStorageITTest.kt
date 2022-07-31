@@ -232,6 +232,64 @@ abstract class BaseStorageITTest<T : CoreStorage> {
     }
 
     @Test
+    fun addDataRedaction(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+        val id = "redaction1"
+        storageInstance.addDataRedaction(id, RedactionType.IDENTIFIER_MATCH, "lookup1", "value1")
+        val dataRedaction = storageInstance.getDataRedaction(id)
+        Assertions.assertEquals(id, dataRedaction.id)
+        Assertions.assertEquals(RedactionType.IDENTIFIER_MATCH, dataRedaction.type)
+        Assertions.assertEquals("lookup1", dataRedaction.lookup)
+        Assertions.assertEquals("value1", dataRedaction.replacement)
+    }
+
+    @Test
+    fun hasDataRedaction(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+        val id = "redaction2"
+        Assertions.assertFalse(storageInstance.hasDataRedaction(id))
+        storageInstance.addDataRedaction(id, RedactionType.IDENTIFIER_MATCH, "lookup2", "value2")
+        Assertions.assertTrue(storageInstance.hasDataRedaction(id))
+    }
+
+    @Test
+    fun getDataRedactions(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+        val id3 = "redaction3"
+        val id4 = "redaction4"
+        val id5 = "redaction5"
+        Assertions.assertEquals(0, storageInstance.getDataRedactions().size)
+        storageInstance.addDataRedaction(id3, RedactionType.IDENTIFIER_MATCH, "lookup3", "value3")
+        storageInstance.addDataRedaction(id4, RedactionType.VALUE_REGEX, "lookup4", "value4")
+        storageInstance.addDataRedaction(id5, RedactionType.IDENTIFIER_MATCH, "lookup5", "value5")
+        Assertions.assertEquals(3, storageInstance.getDataRedactions().size)
+    }
+
+    @Test
+    fun updateDataRedaction(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+        val id = "redaction6"
+        storageInstance.addDataRedaction(id, RedactionType.IDENTIFIER_MATCH, "lookup1", "value1")
+        val dataRedaction = storageInstance.getDataRedaction(id)
+        Assertions.assertEquals(id, dataRedaction.id)
+        Assertions.assertEquals(RedactionType.IDENTIFIER_MATCH, dataRedaction.type)
+        Assertions.assertEquals("lookup1", dataRedaction.lookup)
+        Assertions.assertEquals("value1", dataRedaction.replacement)
+
+        storageInstance.updateDataRedaction(id, RedactionType.VALUE_REGEX, "lookup6", "value6")
+        val updatedDataRedaction = storageInstance.getDataRedaction(id)
+        Assertions.assertEquals(id, updatedDataRedaction.id)
+        Assertions.assertEquals(RedactionType.VALUE_REGEX, updatedDataRedaction.type)
+        Assertions.assertEquals("lookup6", updatedDataRedaction.lookup)
+        Assertions.assertEquals("value6", updatedDataRedaction.replacement)
+    }
+
+    @Test
+    fun removeDataRedaction(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+        val id = "redaction7"
+        storageInstance.addDataRedaction(id, RedactionType.IDENTIFIER_MATCH, "lookup7", "value7")
+        Assertions.assertTrue(storageInstance.hasDataRedaction(id))
+        storageInstance.removeDataRedaction(id)
+        Assertions.assertFalse(storageInstance.hasDataRedaction(id))
+    }
+
+    @Test
     fun updateDataRedactionInRole(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
         storageInstance.addDataRedaction("test", RedactionType.IDENTIFIER_MATCH, "lookup", "value1")
         val developerRole = DeveloperRole.fromString("test_role")
