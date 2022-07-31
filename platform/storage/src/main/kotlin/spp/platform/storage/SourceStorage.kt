@@ -137,6 +137,22 @@ object SourceStorage {
         storage.put(name, value)
     }
 
+    suspend fun getClientAccessors(): List<ClientAccess> {
+        return storage.getClientAccessors()
+    }
+
+    suspend fun addClientAccess(): ClientAccess {
+        return storage.addClientAccess()
+    }
+
+    suspend fun removeClientAccess(id: String): Boolean {
+        return storage.removeClientAccess(id)
+    }
+
+    suspend fun updateClientAccess(id: String): ClientAccess {
+        return storage.updateClientAccess(id)
+    }
+
     suspend fun getDevelopers(): List<Developer> {
         return storage.getDevelopers()
     }

@@ -302,4 +302,44 @@ open class MemoryStorage(val vertx: Vertx) : CoreStorage {
         val rolePermissions = roleStorage.get("permissions").await() as JsonArray? ?: JsonArray()
         return rolePermissions.list.map { it as RolePermission }.toSet()
     }
+
+    override suspend fun getClientAccessors(): List<ClientAccess> {
+        val clientAccessStorage = vertx.sharedData().getAsyncMap<String, Any>(namespace("client_access")).await()
+        return (clientAccessStorage.get("client_accessors").await() as JsonArray? ?: JsonArray())
+            .list.map { Json.decodeValue(it.toString(), ClientAccess::class.java) }
+    }
+
+    override suspend fun addClientAccess(): ClientAccess {
+        val clientAccessStorage = vertx.sharedData().getAsyncMap<String, Any>(namespace("client_access")).await()
+        val clientAccessors = clientAccessStorage.get("client_accessors").await() as JsonArray? ?: JsonArray()
+        val clientAccess = generateClientAccess()
+        clientAccessors.add(clientAccess)
+        clientAccessStorage.put("client_accessors", clientAccessors).await()
+        return clientAccess
+    }
+
+    override suspend fun removeClientAccess(id: String): Boolean {
+        val clientAccessStorage = vertx.sharedData().getAsyncMap<String, Any>(namespace("client_access")).await()
+        val clientAccessors = clientAccessStorage.get("client_accessors").await() as JsonArray? ?: JsonArray()
+        val existingClientAccess = clientAccessors.list.find { (it as ClientAccess).id == id } as ClientAccess?
+        if (existingClientAccess != null) {
+            clientAccessors.remove(existingClientAccess)
+            clientAccessStorage.put("client_accessors", clientAccessors).await()
+            return true
+        }
+        return false
+    }
+
+    override suspend fun updateClientAccess(id: String): ClientAccess {
+        val clientAccessStorage = vertx.sharedData().getAsyncMap<String, Any>(namespace("client_access")).await()
+        val clientAccessors = clientAccessStorage.get("client_accessors").await() as JsonArray? ?: JsonArray()
+        val existingClientAccess = clientAccessors.list.find { (it as ClientAccess).id == id } as ClientAccess?
+        if (existingClientAccess != null) {
+            clientAccessors.remove(existingClientAccess)
+            clientAccessors.add(ClientAccess(id, generateClientSecret()))
+            clientAccessStorage.put("client_accessors", clientAccessors).await()
+            return existingClientAccess
+        }
+        throw IllegalArgumentException("Client access with id $id does not exist")
+    }
 }

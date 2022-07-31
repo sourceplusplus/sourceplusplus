@@ -262,4 +262,57 @@ open class RedisStorage(val vertx: Vertx) : CoreStorage {
         val permissions = redis.smembers(namespace("roles:${role.roleName}:permissions")).await()
         return permissions.map { RolePermission.valueOf(it.toString(UTF_8)) }.toSet()
     }
+
+    override suspend fun getClientAccessors(): List<ClientAccess> {
+        val clientAccessors = redis.smembers(namespace("client_access")).await()
+        return clientAccessors.map { Json.decodeValue(it.toString(UTF_8), ClientAccess::class.java) }
+    }
+
+    override suspend fun addClientAccess(): ClientAccess {
+        val clientAccess = generateClientAccess()
+        redis.sadd(listOf(namespace("client_access"), Json.encode(clientAccess))).await()
+        return clientAccess
+    }
+
+    override suspend fun removeClientAccess(id: String): Boolean {
+        val clientAccessors = getClientAccessors()
+        if (clientAccessors.any { it.id == id }) {
+            redis.multi().await()
+            redis.del(listOf(namespace("client_access"))).await()
+            val updatedClientAccessors = clientAccessors.filter { it.id != id }
+            if (updatedClientAccessors.isNotEmpty()) {
+                redis.sadd(mutableListOf(namespace("client_access")).apply {
+                    updatedClientAccessors.forEach {
+                        add(Json.encode(it))
+                    }
+                }).await()
+            }
+            redis.exec().await()
+            return true
+        }
+        return false
+    }
+
+    override suspend fun updateClientAccess(id: String): ClientAccess {
+        val clientAccessors = getClientAccessors()
+        if (clientAccessors.find { it.id == id } == null) {
+            throw IllegalArgumentException("Client accessor with id $id does not exist")
+        }
+
+        var clientAccess: ClientAccess? = null
+        redis.multi().await()
+        redis.del(listOf(namespace("client_access"))).await()
+        redis.sadd(mutableListOf(namespace("client_access")).apply {
+            clientAccessors.forEach {
+                if (it.id != id) {
+                    add(Json.encode(it))
+                } else {
+                    clientAccess = ClientAccess(id, generateClientSecret())
+                    add(Json.encode(clientAccess))
+                }
+            }
+        }).await()
+        redis.exec().await()
+        return clientAccess!!
+    }
 }

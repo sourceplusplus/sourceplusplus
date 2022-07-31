@@ -22,6 +22,7 @@ import io.vertx.core.shareddata.AsyncMap
 import io.vertx.core.shareddata.Counter
 import spp.protocol.platform.auth.*
 import spp.protocol.platform.developer.Developer
+import java.util.*
 
 interface CoreStorage {
 
@@ -30,6 +31,11 @@ interface CoreStorage {
     suspend fun <K, V> map(name: String): AsyncMap<K, V>
     suspend fun <T> get(name: String): T?
     suspend fun <T> put(name: String, value: T)
+
+    suspend fun getClientAccessors(): List<ClientAccess>
+    suspend fun addClientAccess(): ClientAccess
+    suspend fun removeClientAccess(id: String): Boolean
+    suspend fun updateClientAccess(id: String): ClientAccess
 
     suspend fun getDevelopers(): List<Developer>
     suspend fun getDeveloperByAccessToken(token: String): Developer?
@@ -66,4 +72,17 @@ interface CoreStorage {
     suspend fun getRolePermissions(role: DeveloperRole): Set<RolePermission>
 
     suspend fun namespace(location: String): String = location
+
+    fun generateClientAccess(): ClientAccess {
+        return ClientAccess(generateClientId(), generateClientSecret())
+    }
+
+    fun generateClientId(): String {
+        return UUID.randomUUID().toString().replace("-", "")
+    }
+
+    fun generateClientSecret(): String {
+        return UUID.randomUUID().toString().replace("-", "") +
+                "-" + UUID.randomUUID().toString().replace("-", "")
+    }
 }

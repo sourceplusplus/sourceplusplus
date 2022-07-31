@@ -11,6 +11,11 @@ enum ArtifactType {
     ENDPOINT
 }
 
+type ClientAccess {
+    id: String
+    secret: String
+}
+
 type ArtifactQualifiedName {
     identifier: String
     commitId: String
@@ -358,6 +363,8 @@ type Query {
     getServices: [Service!]!
 
     getLiveViewSubscriptions: [LiveViewSubscription!]!
+
+    getClientAccessors: [ClientAccess!]!
 }
 
 type Mutation {
@@ -394,6 +401,10 @@ type Mutation {
 
     addLiveViewSubscription(input: LiveViewSubscriptionInput!): LiveViewSubscription!
     clearLiveViewSubscriptions: Boolean!
+
+    addClientAccess: ClientAccess!
+    removeClientAccess(id: String!): Boolean!
+    updateClientAccess(id: String!): ClientAccess!
 }
 
 scalar Long
