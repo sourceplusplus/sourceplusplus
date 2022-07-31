@@ -43,10 +43,9 @@ object SourceStorage {
 
     fun getStorageConfig(): JsonObject {
         val storageSelector = config.getJsonObject("storage").getString("selector")
-        val storageClass = Class.forName(storageSelector)
         val storageName = CaseFormat.LOWER_CAMEL.to(
             CaseFormat.LOWER_HYPHEN,
-            storageClass.simpleName.removeSuffix("Storage")
+            storageSelector.substringAfterLast(".").removeSuffix("Storage")
         )
         return config.getJsonObject("storage").getJsonObject(storageName)
     }
