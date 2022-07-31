@@ -149,7 +149,7 @@ abstract class BaseStorageITTest<T : CoreStorage> {
 
     @Test
     fun getRoleAccessPermissions(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
-        val developerRole = DeveloperRole.fromString("test_role_4")
+        val developerRole = DeveloperRole.fromString("test_role_6")
         storageInstance.addRole(developerRole)
 
         val id = "accessId"
@@ -163,15 +163,72 @@ abstract class BaseStorageITTest<T : CoreStorage> {
         Assertions.assertEquals(1, updatedRoleAccessPermissions.size)
         Assertions.assertNotNull(updatedRoleAccessPermissions.find { it.id == id })
 
-
-        storageInstance.addAccessPermission("accessId1", listOf("pattern"), AccessType.WHITE_LIST)
-        storageInstance.addAccessPermissionToRole("accessId1", developerRole)
-        storageInstance.addAccessPermission("accessId2", listOf("pattern"), AccessType.WHITE_LIST)
-        storageInstance.addAccessPermissionToRole("accessId2", developerRole)
+        val id1 = "accessId1"
+        val id2 = "accessId2"
+        storageInstance.addAccessPermission(id1, listOf("pattern"), AccessType.WHITE_LIST)
+        storageInstance.addAccessPermissionToRole(id1, developerRole)
+        storageInstance.addAccessPermission(id2, listOf("pattern"), AccessType.WHITE_LIST)
+        storageInstance.addAccessPermissionToRole(id2, developerRole)
         val multipleRoleAccess = storageInstance.getRoleAccessPermissions(developerRole)
         Assertions.assertEquals(3, multipleRoleAccess.size)
-        Assertions.assertNotNull(multipleRoleAccess.find { it.id == "accessId1" })
-        Assertions.assertNotNull(multipleRoleAccess.find { it.id == "accessId2" })
+        Assertions.assertNotNull(multipleRoleAccess.find { it.id == id1 })
+        Assertions.assertNotNull(multipleRoleAccess.find { it.id == id2 })
+    }
+
+    @Test
+    fun getAccessPermissions(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+        storageInstance.addAccessPermission("accessId3", listOf("pattern3"), AccessType.WHITE_LIST)
+        storageInstance.addAccessPermission("accessId4", listOf("pattern4"), AccessType.WHITE_LIST)
+        storageInstance.addAccessPermission("accessId5", listOf("pattern5"), AccessType.BLACK_LIST)
+        val accessPermissions = storageInstance.getAccessPermissions()
+        Assertions.assertEquals(3, accessPermissions.size)
+
+    }
+
+    @Test
+    fun hasAccessPermission(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+        val id = "accessId6"
+        Assertions.assertFalse(storageInstance.hasAccessPermission(id))
+        storageInstance.addAccessPermission(id, listOf("pattern6"), AccessType.WHITE_LIST)
+        Assertions.assertTrue(storageInstance.hasAccessPermission(id))
+
+    }
+
+    @Test
+    fun getAccessPermission(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+        val id = "accessId7"
+        storageInstance.addAccessPermission(id, listOf("pattern7"), AccessType.WHITE_LIST)
+        val accessPermission = storageInstance.getAccessPermission(id)
+        Assertions.assertEquals(id, accessPermission.id)
+        Assertions.assertEquals(1, accessPermission.locationPatterns.size)
+        Assertions.assertEquals("pattern7", accessPermission.locationPatterns[0])
+    }
+
+    @Test
+    fun addRemovePermission(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+        val id = "accessId8"
+        Assertions.assertFalse(storageInstance.hasAccessPermission(id))
+        storageInstance.addAccessPermission(id, listOf("pattern8"), AccessType.WHITE_LIST)
+        Assertions.assertTrue(storageInstance.hasAccessPermission(id))
+        storageInstance.removeAccessPermission(id)
+        Assertions.assertFalse(storageInstance.hasAccessPermission(id))
+    }
+
+    @Test
+    fun addRemoveAccessPermissionToRole(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+        val developerRole = DeveloperRole.fromString("test_role_7")
+        storageInstance.addRole(developerRole)
+
+        val id = "accessId9"
+        storageInstance.addAccessPermission(id, listOf("pattern9"), AccessType.BLACK_LIST)
+        storageInstance.addAccessPermissionToRole(id, developerRole)
+
+        val updatedRoleAccessPermissions = storageInstance.getRoleAccessPermissions(developerRole)
+        Assertions.assertEquals(1, updatedRoleAccessPermissions.size)
+
+        storageInstance.removeAccessPermissionFromRole(id, developerRole)
+        val removedRoleAccessPermissions = storageInstance.getRoleAccessPermissions(developerRole)
+        Assertions.assertEquals(0, removedRoleAccessPermissions.size)
     }
 
     @Test
