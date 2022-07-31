@@ -10,6 +10,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import spp.platform.storage.CoreStorage
 import spp.platform.storage.SourceStorage
+import spp.protocol.platform.auth.AccessType
 import spp.protocol.platform.auth.DeveloperRole
 import spp.protocol.platform.auth.RedactionType
 
@@ -144,6 +145,33 @@ abstract class BaseStorageITTest<T : CoreStorage> {
         val updatedDeveloperRoles = storageInstance.getDeveloperRoles(id)
         Assertions.assertEquals(1, updatedDeveloperRoles.size)
         Assertions.assertEquals("dev_role", updatedDeveloperRoles[0].roleName)
+    }
+
+    @Test
+    fun getRoleAccessPermissions(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+        val developerRole = DeveloperRole.fromString("test_role_4")
+        storageInstance.addRole(developerRole)
+
+        val id = "accessId"
+        storageInstance.addAccessPermission(id, listOf("pattern"), AccessType.BLACK_LIST)
+        val roleAccessPermissions = storageInstance.getRoleAccessPermissions(developerRole)
+        Assertions.assertEquals(0, roleAccessPermissions.size)
+        Assertions.assertNull(roleAccessPermissions.find { it.id == id })
+
+        storageInstance.addAccessPermissionToRole(id, developerRole)
+        val updatedRoleAccessPermissions = storageInstance.getRoleAccessPermissions(developerRole)
+        Assertions.assertEquals(1, updatedRoleAccessPermissions.size)
+        Assertions.assertNotNull(updatedRoleAccessPermissions.find { it.id == id })
+
+
+        storageInstance.addAccessPermission("accessId1", listOf("pattern"), AccessType.WHITE_LIST)
+        storageInstance.addAccessPermissionToRole("accessId1", developerRole)
+        storageInstance.addAccessPermission("accessId2", listOf("pattern"), AccessType.WHITE_LIST)
+        storageInstance.addAccessPermissionToRole("accessId2", developerRole)
+        val multipleRoleAccess = storageInstance.getRoleAccessPermissions(developerRole)
+        Assertions.assertEquals(3, multipleRoleAccess.size)
+        Assertions.assertNotNull(multipleRoleAccess.find { it.id == "accessId1" })
+        Assertions.assertNotNull(multipleRoleAccess.find { it.id == "accessId2" })
     }
 
     @Test
