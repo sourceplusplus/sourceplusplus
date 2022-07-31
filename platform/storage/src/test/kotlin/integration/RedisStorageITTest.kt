@@ -55,15 +55,7 @@ class RedisStorageITTest {
     fun reset(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
         val storage = RedisStorage(vertx)
         storage.init(JsonObject().put("host", "localhost").put("port", 6379))
-        SourceStorage.setup(
-            storage,
-            JsonObject().put(
-                "spp-platform",
-                JsonObject()
-                    .put("jwt", JsonObject())
-                    .put("pii-redaction", JsonObject().put("enabled", "false"))
-            )
-        )
+        SourceStorage.setup(storage)
 
         SourceStorage.addRole(DeveloperRole.fromString("resetRole"))
         assertTrue(SourceStorage.getRoles().contains(DeveloperRole.fromString("resetRole")))

@@ -53,15 +53,7 @@ class MemoryStorageITTest {
     @Test
     fun reset(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
         val storage = MemoryStorage(vertx)
-        SourceStorage.setup(
-            storage,
-            JsonObject().put(
-                "spp-platform",
-                JsonObject()
-                    .put("jwt", JsonObject())
-                    .put("pii-redaction", JsonObject().put("enabled", "false"))
-            )
-        )
+        SourceStorage.setup(storage)
 
         SourceStorage.addRole(DeveloperRole.fromString("resetRole"))
         assertTrue(SourceStorage.getRoles().contains(DeveloperRole.fromString("resetRole")))

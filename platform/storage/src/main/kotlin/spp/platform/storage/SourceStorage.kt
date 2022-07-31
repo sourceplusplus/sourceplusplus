@@ -17,6 +17,7 @@
  */
 package spp.platform.storage
 
+import com.google.common.base.CaseFormat
 import io.vertx.core.json.JsonObject
 import io.vertx.core.shareddata.AsyncMap
 import io.vertx.core.shareddata.Counter
@@ -24,6 +25,7 @@ import io.vertx.ext.web.handler.SessionHandler
 import io.vertx.ext.web.sstore.SessionStore
 import org.apache.commons.lang3.RandomStringUtils
 import org.slf4j.LoggerFactory
+import spp.platform.common.ClusterConnection.config
 import spp.protocol.platform.auth.*
 import spp.protocol.platform.developer.Developer
 import spp.protocol.service.error.PermissionAccessDenied
@@ -39,24 +41,23 @@ object SourceStorage {
     lateinit var sessionStore: SessionStore
     lateinit var sessionHandler: SessionHandler
 
+    fun getStorageConfig(): JsonObject {
+        val storageSelector = config.getJsonObject("storage").getString("selector")
+        val storageClass = Class.forName(storageSelector)
+        val storageName = CaseFormat.LOWER_CAMEL.to(
+            CaseFormat.LOWER_HYPHEN,
+            storageClass.simpleName.removeSuffix("Storage")
+        )
+        return config.getJsonObject("storage").getJsonObject(storageName)
+    }
+
     fun initSessionStore(sessionStore: SessionStore) {
         this.sessionStore = sessionStore
         this.sessionHandler = SessionHandler.create(SourceStorage.sessionStore)
     }
 
-    suspend fun setup(storage: CoreStorage, config: JsonObject, installDefaults: Boolean = true) {
+    suspend fun setup(storage: CoreStorage) {
         SourceStorage.storage = storage
-
-        val jwtConfig = config.getJsonObject("spp-platform").getJsonObject("jwt")
-        val accessToken = jwtConfig.getString("access_token")
-
-        val systemAccessToken = if (accessToken.isNullOrEmpty()) {
-            log.warn("No system access token provided. Using default: {}", DEFAULT_ACCESS_TOKEN)
-            DEFAULT_ACCESS_TOKEN
-        } else {
-            accessToken
-        }
-        put("system_access_token", systemAccessToken)
 
         val piiRedaction = config.getJsonObject("spp-platform").getJsonObject("pii-redaction")
         systemRedactors = if (piiRedaction.getString("enabled").toBoolean()) {
@@ -74,12 +75,23 @@ object SourceStorage {
             emptyList()
         }
 
+        val installDefaults = getStorageConfig().getString("install_defaults")?.toBooleanStrictOrNull() != false
         if (installDefaults) {
             installDefaults()
         }
     }
 
     private suspend fun installDefaults() {
+        val jwtConfig = config.getJsonObject("spp-platform").getJsonObject("jwt")
+        val accessToken = jwtConfig.getString("access_token")
+        val systemAccessToken = if (accessToken.isNullOrEmpty()) {
+            log.warn("No system access token provided. Using default: {}", DEFAULT_ACCESS_TOKEN)
+            DEFAULT_ACCESS_TOKEN
+        } else {
+            accessToken
+        }
+        put("system_access_token", systemAccessToken)
+
         //set default roles, permissions, redactions
         log.info("Installing default roles, permissions, and redactions")
         addRole(DeveloperRole.ROLE_MANAGER)
