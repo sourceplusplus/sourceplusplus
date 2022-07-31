@@ -57,9 +57,13 @@ class LiveServiceProvider(private val vertx: Vertx) : LiveService {
         GlobalScope.launch(vertx.dispatcher()) {
             promise.complete(
                 JsonObject().apply {
-                    val bridgeService = SourceBridgeService.service(vertx).await()
+                    val devAuth = Vertx.currentContext().get<DeveloperAuth>("developer")
+                    var bridgeService = SourceBridgeService.service(vertx, devAuth?.accessToken).await()
                     if (bridgeService != null) {
                         put("markers", bridgeService.getActiveMarkers().await())
+                    }
+                    bridgeService = SourceBridgeService.service(vertx, devAuth?.accessToken).await()
+                    if (bridgeService != null) {
                         put("probes", bridgeService.getActiveProbes().await())
                     }
                 }
@@ -100,9 +104,13 @@ class LiveServiceProvider(private val vertx: Vertx) : LiveService {
     private suspend fun getPlatformStats(): JsonObject {
         return JsonObject()
             .apply {
-                val bridgeService = SourceBridgeService.service(vertx).await()
+                val devAuth = Vertx.currentContext().get<DeveloperAuth>("developer")
+                var bridgeService = SourceBridgeService.service(vertx, devAuth?.accessToken).await()
                 if (bridgeService != null) {
                     put("connected-markers", bridgeService.getConnectedMarkers().await())
+                }
+                bridgeService = SourceBridgeService.service(vertx, devAuth?.accessToken).await()
+                if (bridgeService != null) {
                     put("connected-probes", bridgeService.getConnectedProbes().await())
                 }
             }
@@ -204,7 +212,8 @@ class LiveServiceProvider(private val vertx: Vertx) : LiveService {
     override fun getActiveProbes(): Future<List<ActiveInstance>> {
         val promise = Promise.promise<List<ActiveInstance>>()
         GlobalScope.launch(vertx.dispatcher()) {
-            val bridgeService = SourceBridgeService.service(vertx).await()
+            val devAuth = Vertx.currentContext().get<DeveloperAuth>("developer")
+            val bridgeService = SourceBridgeService.service(vertx, devAuth?.accessToken).await()
             if (bridgeService != null) {
                 promise.complete(
                     bridgeService.getActiveProbes().await().list.map {
