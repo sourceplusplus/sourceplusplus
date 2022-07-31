@@ -23,8 +23,10 @@ import io.vertx.junit5.VertxExtension
 import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import spp.platform.common.ClusterConnection
 import spp.platform.storage.MemoryStorage
 import spp.platform.storage.SourceStorage
 import spp.protocol.platform.auth.DeveloperRole
@@ -32,6 +34,26 @@ import spp.protocol.platform.auth.RedactionType
 
 @ExtendWith(VertxExtension::class)
 class MemoryStorageITTest {
+
+    companion object {
+        @JvmStatic
+        @BeforeAll
+        fun beforeAll() {
+            ClusterConnection.config = JsonObject()
+                .put(
+                    "spp-platform",
+                    JsonObject()
+                        .put("jwt", JsonObject())
+                        .put("pii-redaction", JsonObject().put("enabled", "false"))
+                )
+                .put(
+                    "storage",
+                    JsonObject()
+                        .put("selector", "memory")
+                        .put("memory", JsonObject())
+                )
+        }
+    }
 
     @Test
     fun updateDataRedactionInRole(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
@@ -53,15 +75,7 @@ class MemoryStorageITTest {
     @Test
     fun reset(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
         val storage = MemoryStorage(vertx)
-        SourceStorage.setup(
-            storage,
-            JsonObject().put(
-                "spp-platform",
-                JsonObject()
-                    .put("jwt", JsonObject())
-                    .put("pii-redaction", JsonObject().put("enabled", "false"))
-            )
-        )
+        SourceStorage.setup(storage)
 
         SourceStorage.addRole(DeveloperRole.fromString("resetRole"))
         assertTrue(SourceStorage.getRoles().contains(DeveloperRole.fromString("resetRole")))

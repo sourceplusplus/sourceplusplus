@@ -17,7 +17,7 @@
  */
 package spp.platform.storage
 
-import com.google.common.base.CaseFormat
+import io.vertx.core.Vertx
 import io.vertx.ext.web.sstore.LocalSessionStore
 import io.vertx.ext.web.sstore.redis.RedisSessionStore
 import io.vertx.kotlin.coroutines.dispatcher
@@ -51,33 +51,31 @@ class SourceStorageProvider : ModuleProvider() {
                 when (val storageSelector = config.getJsonObject("storage").getString("selector")) {
                     "memory" -> {
                         log.info("Using in-memory storage")
-                        SourceStorage.setup(MemoryStorage(vertx), config)
+                        SourceStorage.setup(MemoryStorage(vertx))
                         SourceStorage.initSessionStore(LocalSessionStore.create(vertx))
                     }
+
                     "redis" -> {
                         log.info("Using Redis storage")
                         val redisStorage = RedisStorage(vertx)
-                        redisStorage.init(config.getJsonObject("storage").getJsonObject("redis"))
+                        redisStorage.init(SourceStorage.getStorageConfig())
 
-                        val installDefaults = config.getJsonObject("storage").getJsonObject("redis")
-                            .getString("install_defaults")?.toBooleanStrictOrNull() != false
-                        SourceStorage.setup(redisStorage, config, installDefaults)
+                        SourceStorage.setup(redisStorage)
                         SourceStorage.initSessionStore(RedisSessionStore.create(vertx, redisStorage.redisClient))
                     }
+
                     else -> {
                         Class.forName(storageSelector, false, SourceStorage::class.java.classLoader)
                         log.info("Using custom storage: $storageSelector")
                         val storageClass = Class.forName(storageSelector)
-                        val customStorage = storageClass.getDeclaredConstructor().newInstance() as CoreStorage
-                        val storageName = CaseFormat.LOWER_CAMEL.to(
-                            CaseFormat.LOWER_HYPHEN,
-                            storageClass.simpleName.removeSuffix("Storage")
-                        )
-                        customStorage.init(config.getJsonObject("storage").getJsonObject(storageName))
+                        val customStorage = try {
+                            storageClass.getConstructor(Vertx::class.java).newInstance(vertx)
+                        } catch (e: NoSuchMethodException) {
+                            storageClass.getConstructor()
+                        } as CoreStorage
+                        customStorage.init(SourceStorage.getStorageConfig())
 
-                        val installDefaults = config.getJsonObject("storage").getJsonObject(storageName)
-                            .getString("install_defaults")?.toBooleanStrictOrNull() != false
-                        SourceStorage.setup(customStorage, config, installDefaults)
+                        SourceStorage.setup(customStorage)
                         SourceStorage.initSessionStore(LocalSessionStore.create(vertx)) //todo: dynamic sessionStore
                     }
                 }
