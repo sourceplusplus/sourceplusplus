@@ -18,7 +18,6 @@
 package integration
 
 import io.vertx.core.Vertx
-import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxExtension
 import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.runBlocking
@@ -31,7 +30,7 @@ import spp.protocol.platform.auth.DeveloperRole
 import spp.protocol.platform.auth.RedactionType
 
 @ExtendWith(VertxExtension::class)
-class MemoryStorageITTest {
+class MemoryStorageITTest : PlatformIntegrationTest() {
 
     @Test
     fun updateDataRedactionInRole(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {

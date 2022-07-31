@@ -31,7 +31,7 @@ import spp.protocol.platform.auth.DeveloperRole
 import spp.protocol.platform.auth.RedactionType
 
 @ExtendWith(VertxExtension::class)
-class RedisStorageITTest {
+class RedisStorageITTest : PlatformIntegrationTest() {
 
     @Test
     fun updateDataRedactionInRole(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
