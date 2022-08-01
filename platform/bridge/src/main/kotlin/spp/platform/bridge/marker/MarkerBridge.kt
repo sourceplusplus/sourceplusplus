@@ -115,7 +115,8 @@ class MarkerBridge(
                     }
                     it.complete(true)
                 } else {
-                    it.fail(devAuth.cause().message)
+                    log.error("Failed to validate marker auth", devAuth.cause())
+                    it.complete(false)
                 }
             }
         } else if (it.type() == SEND || it.type() == PUBLISH || it.type() == REGISTER) {

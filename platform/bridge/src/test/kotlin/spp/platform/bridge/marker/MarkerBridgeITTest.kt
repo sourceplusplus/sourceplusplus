@@ -28,6 +28,7 @@ import io.vertx.kotlin.coroutines.await
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import spp.protocol.SourceServices
 import spp.protocol.platform.PlatformAddress.MARKER_CONNECTED
 import spp.protocol.platform.status.InstanceConnection
 import java.util.*
@@ -95,6 +96,99 @@ class MarkerBridgeITTest : PlatformIntegrationTest() {
         testContext.verify {
             assertEquals(markerCount, decreasedMarkerCount)
         }
+
+        if (testContext.failed()) {
+            throw testContext.causeOfFailure()
+        }
+    }
+
+    @Test
+    fun testInvalidAccess_connectedMessage(): Unit = runBlocking {
+        val testContext = VertxTestContext()
+
+        //connect new marker
+        val client = vertx.createHttpClient(
+            HttpClientOptions()
+                .setDefaultHost("localhost")
+                .setDefaultPort(12800)
+                .setSsl(true)
+                .setTrustAll(true)
+                .setVerifyHost(false)
+        )
+        val wsOptions = WebSocketConnectOptions()
+            .setURI("https://localhost:12800/marker/eventbus/websocket")
+        val ws = client.webSocket(wsOptions).await()
+
+        //send connected message
+        val replyAddress = UUID.randomUUID().toString()
+        val msg = JsonObject()
+            .put("type", "send")
+            .put("address", MARKER_CONNECTED)
+            .put("replyAddress", replyAddress)
+            .put("headers", JsonObject().put("auth-token", "invalid-token"))
+        val pc = InstanceConnection("test-marker-id", System.currentTimeMillis())
+        msg.put("body", JsonObject.mapFrom(pc))
+        ws.writeFrame(WebSocketFrame.textFrame(msg.encode(), true))
+
+        val connectPromise = Promise.promise<Void>()
+        ws.handler {
+            val received = JsonObject(it.toString())
+            testContext.verify {
+                assertEquals("err", received.getString("type"))
+                assertEquals("rejected", received.getString("body"))
+            }
+            connectPromise.complete()
+        }
+        connectPromise.future().await()
+
+        //disconnect marker
+        ws.close().await()
+        client.close().await()
+
+        if (testContext.failed()) {
+            throw testContext.causeOfFailure()
+        }
+    }
+
+    @Test
+    fun testInvalidAccess_registerSubscriber(): Unit = runBlocking {
+        val testContext = VertxTestContext()
+
+        //connect new marker
+        val client = vertx.createHttpClient(
+            HttpClientOptions()
+                .setDefaultHost("localhost")
+                .setDefaultPort(12800)
+                .setSsl(true)
+                .setTrustAll(true)
+                .setVerifyHost(false)
+        )
+        val wsOptions = WebSocketConnectOptions()
+            .setURI("https://localhost:12800/marker/eventbus/websocket")
+        val ws = client.webSocket(wsOptions).await()
+
+        //attempt register live instrument subscriber
+        val msg = JsonObject()
+            .put("type", "register")
+            .put("address", SourceServices.Provide.LIVE_INSTRUMENT_SUBSCRIBER + ":test-marker-id")
+        val pc = InstanceConnection("test-marker-id", System.currentTimeMillis())
+        msg.put("body", JsonObject.mapFrom(pc))
+        ws.writeFrame(WebSocketFrame.textFrame(msg.encode(), true))
+
+        val connectPromise = Promise.promise<Void>()
+        ws.handler {
+            val received = JsonObject(it.toString())
+            testContext.verify {
+                assertEquals("err", received.getString("type"))
+                assertEquals("rejected", received.getString("body"))
+            }
+            connectPromise.complete()
+        }
+        connectPromise.future().await()
+
+        //disconnect marker
+        ws.close().await()
+        client.close().await()
 
         if (testContext.failed()) {
             throw testContext.causeOfFailure()

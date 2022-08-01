@@ -42,7 +42,8 @@ abstract class InstanceBridge(private val jwtAuth: JWTAuth?) : CoroutineVerticle
             if (it.succeeded()) {
                 event.complete(true)
             } else {
-                event.fail(it.cause().message)//todo: return false
+                log.error("Failed to validate marker auth", it.cause())
+                event.complete(false)
             }
         }
     }

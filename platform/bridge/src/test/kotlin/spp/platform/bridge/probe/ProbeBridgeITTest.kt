@@ -127,7 +127,7 @@ class ProbeBridgeITTest : PlatformIntegrationTest() {
     }
 
     @Test
-    fun testInvalidAccess(): Unit = runBlocking {
+    fun testInvalidAccess_connectedMessage(): Unit = runBlocking {
         val testContext = VertxTestContext()
 
         //connect new probe
@@ -179,7 +179,7 @@ class ProbeBridgeITTest : PlatformIntegrationTest() {
     }
 
     @Test
-    fun attemptInvalidAccessBypass(): Unit = runBlocking {
+    fun testInvalidAccess_registerRemote(): Unit = runBlocking {
         val testContext = VertxTestContext()
 
         //connect new probe
