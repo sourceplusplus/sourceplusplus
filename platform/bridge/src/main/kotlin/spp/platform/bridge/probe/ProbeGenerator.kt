@@ -289,7 +289,7 @@ class ProbeGenerator(private val router: Router) : CoroutineVerticle() {
 
         //add client access (if necessary)
         clientAccess?.let {
-            minProbeConfig["spp"]!!["probe_metadata"] = mutableMapOf(
+            minProbeConfig["spp"]!!["authentication"] = mutableMapOf(
                 "client_id" to it.id,
                 "client_secret" to it.secret
             )

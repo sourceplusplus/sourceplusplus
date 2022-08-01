@@ -1,5 +1,5 @@
 spp:
-  probe_metadata:
+  authentication:
     client_id: "test-id"
     client_secret: "test-secret"
   platform_host: "spp-platform"
