@@ -17,20 +17,26 @@
  */
 package spp.platform.core
 
+import com.google.common.cache.CacheBuilder
 import com.google.common.net.HttpHeaders
 import graphql.language.Field
 import graphql.language.OperationDefinition
 import graphql.language.SelectionSet
 import graphql.parser.Parser
+import io.vertx.core.Vertx
+import io.vertx.core.buffer.Buffer
 import io.vertx.core.http.*
 import io.vertx.core.json.JsonObject
 import io.vertx.core.net.SocketAddress
 import io.vertx.ext.web.Router
 import io.vertx.ext.web.handler.BodyHandler
 import io.vertx.grpc.client.GrpcClient
+import io.vertx.grpc.common.GrpcStatus
 import io.vertx.grpc.server.GrpcServer
+import io.vertx.grpc.server.GrpcServerRequest
 import io.vertx.kotlin.coroutines.CoroutineVerticle
 import io.vertx.kotlin.coroutines.await
+import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.launch
 import mu.KotlinLogging
 import spp.platform.common.util.CertsToJksOptionsConverter
@@ -40,6 +46,7 @@ import spp.protocol.platform.PlatformAddress.PROCESSOR_CONNECTED
 import spp.protocol.platform.auth.DataRedaction
 import spp.protocol.platform.auth.RedactionType
 import java.io.File
+import java.util.concurrent.TimeUnit
 import java.util.regex.Pattern
 
 class SkyWalkingInterceptor(private val router: Router) : CoroutineVerticle() {
@@ -47,6 +54,10 @@ class SkyWalkingInterceptor(private val router: Router) : CoroutineVerticle() {
     companion object {
         private val log = KotlinLogging.logger {}
     }
+
+    private val probeAuthCache = CacheBuilder.newBuilder()
+        .expireAfterAccess(1, TimeUnit.MINUTES)
+        .build<String, Boolean>()
 
     override suspend fun start() {
         //start grpc proxy once SkyWalking is available
@@ -180,25 +191,65 @@ class SkyWalkingInterceptor(private val router: Router) : CoroutineVerticle() {
         val skywalkingGrpcServer = SocketAddress.inetSocketAddress(swGrpcPort, swHost)
 
         grpcServer.callHandler { req ->
-            log.trace { "Proxying gRPC call: ${req.fullMethodName()}" }
-            req.messageHandler { msg ->
-                log.trace { "Received stream message. Bytes: ${msg.payload().bytes.size}" }
-                grpcClient.request(skywalkingGrpcServer).onSuccess {
-                    val grpcRequest = it
-                        .serviceName(req.serviceName())
-                        .methodName(req.methodName().substring(1))
-                    grpcRequest.endMessage(msg)
-                    grpcRequest.response().onSuccess {
-                        log.trace { "Piping response. Status: ${it.status()}" }
-                        it.pipeTo(req.response())
-                    }.onFailure {
-                        log.error("Failed to send response: ${it.message}")
-                        req.response().end()
+            val authHeader = req.headers().get("authentication")
+            if (probeAuthCache.getIfPresent(authHeader) != null) {
+                proxyGrpcRequest(req, grpcClient, skywalkingGrpcServer)
+            } else {
+                val authEnabled = config.getJsonObject("client-access")?.getString("enabled")?.toBooleanStrictOrNull()
+                if (authEnabled == true) {
+                    val authParts = authHeader?.split(":") ?: emptyList()
+                    val clientId = authParts.getOrNull(0)
+                    val clientSecret = authParts.getOrNull(1)
+                    if (clientId == null || clientSecret == null) {
+                        req.response().status(GrpcStatus.PERMISSION_DENIED).end()
+                        return@callHandler
                     }
+
+                    val tenantId = authParts.getOrNull(2)
+                    if (tenantId != null) {
+                        Vertx.currentContext().putLocal("tenant_id", tenantId)
+                    }
+
+                    launch(vertx.dispatcher()) {
+                        val clientAccess = SourceStorage.getClientAccess(clientId)
+                        if (clientAccess == null || clientAccess.secret != clientSecret) {
+                            req.response().status(GrpcStatus.PERMISSION_DENIED).end()
+                            return@launch
+                        } else {
+                            probeAuthCache.put(authHeader, true)
+                            proxyGrpcRequest(req, grpcClient, skywalkingGrpcServer)
+                        }
+                    }
+                } else {
+                    proxyGrpcRequest(req, grpcClient, skywalkingGrpcServer)
+                }
+            }
+        }
+    }
+
+    private fun proxyGrpcRequest(
+        req: GrpcServerRequest<Buffer, Buffer>,
+        grpcClient: GrpcClient,
+        skywalkingGrpcServer: SocketAddress
+    ) {
+        log.trace { "Proxying gRPC call: ${req.fullMethodName()}" }
+        req.messageHandler { msg ->
+            log.trace { "Received stream message. Bytes: ${msg.payload().bytes.size}" }
+            grpcClient.request(skywalkingGrpcServer).onSuccess {
+                val grpcRequest = it
+                    .serviceName(req.serviceName())
+                    .methodName(req.methodName().substring(1))
+                grpcRequest.endMessage(msg)
+                grpcRequest.response().onSuccess {
+                    log.trace { "Piping response. Status: ${it.status()}" }
+                    it.pipeTo(req.response())
                 }.onFailure {
-                    log.error("Failed to send message: $it")
+                    log.error("Failed to send response: ${it.message}")
                     req.response().end()
                 }
+            }.onFailure {
+                log.error("Failed to send message: $it")
+                req.response().end()
             }
         }
     }
