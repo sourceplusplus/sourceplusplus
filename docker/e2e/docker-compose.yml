@@ -23,6 +23,8 @@ services:
     environment:
       - JAVA_OPTS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5106
       - SPP_CLIENT_ACCESS_ENABLED=true
+      - SPP_CLIENT_ACCESS_ID=test-id
+      - SPP_CLIENT_ACCESS_SECRET=test-secret
       - SPP_LOGGING_LEVEL=debug
       - SPP_STORAGE=redis
       - SPP_STORAGE_HOST=redis
