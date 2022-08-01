@@ -43,7 +43,6 @@ object SourceStorage {
     private val log = LoggerFactory.getLogger(SourceStorage::class.java)
 
     lateinit var storage: CoreStorage
-    private lateinit var systemRedactors: List<DataRedaction>
     lateinit var sessionStore: SessionStore
     lateinit var sessionHandler: SessionHandler
 
@@ -63,22 +62,6 @@ object SourceStorage {
 
     suspend fun setup(storage: CoreStorage) {
         SourceStorage.storage = storage
-
-        val piiRedaction = config.getJsonObject("spp-platform").getJsonObject("pii-redaction")
-        systemRedactors = if (piiRedaction.getString("enabled").toBoolean()) {
-            piiRedaction.getJsonArray("redactions").list.map {
-                JsonObject.mapFrom(it).let {
-                    DataRedaction(
-                        it.getString("id"),
-                        RedactionType.valueOf(it.getString("type")),
-                        it.getString("lookup"),
-                        it.getString("replacement")
-                    )
-                }
-            }
-        } else {
-            emptyList()
-        }
 
         val installDefaults = getStorageConfig().getString("install_defaults")?.toBooleanStrictOrNull() != false
         if (installDefaults) {
@@ -112,7 +95,38 @@ object SourceStorage {
                 addPermissionToRole(DeveloperRole.ROLE_USER, it)
             }
         }
-        systemRedactors.forEach { addDataRedaction(it.id, it.type, it.lookup, it.replacement) }
+
+        //set default redactions
+        val piiRedaction = config.getJsonObject("spp-platform").getJsonObject("pii-redaction")
+        if (piiRedaction.getString("enabled").toBoolean()) {
+            piiRedaction.getJsonArray("redactions").list.map {
+                JsonObject.mapFrom(it).let {
+                    DataRedaction(
+                        it.getString("id"),
+                        RedactionType.valueOf(it.getString("type")),
+                        it.getString("lookup"),
+                        it.getString("replacement")
+                    )
+                }
+            }
+        } else {
+            emptyList()
+        }.forEach { addDataRedaction(it.id, it.type, it.lookup, it.replacement) }
+
+        //set default client accessors
+        val clientAccessors = config.getJsonObject("client-access")
+        if (clientAccessors?.getString("enabled").toBoolean()) {
+            clientAccessors?.getJsonArray("accessors")?.list?.map {
+                JsonObject.mapFrom(it).let {
+                    ClientAccess(
+                        it.getString("id"),
+                        it.getString("secret")
+                    )
+                }
+            }.orEmpty()
+        } else {
+            emptyList()
+        }.forEach { addClientAccess(it.id, it.secret) }
     }
 
     suspend fun reset(): Boolean {
@@ -152,8 +166,8 @@ object SourceStorage {
         return storage.getClientAccess(id)
     }
 
-    suspend fun addClientAccess(): ClientAccess {
-        return storage.addClientAccess()
+    suspend fun addClientAccess(id: String? = null, secret: String? = null): ClientAccess {
+        return storage.addClientAccess(id, secret)
     }
 
     suspend fun removeClientAccess(id: String): Boolean {

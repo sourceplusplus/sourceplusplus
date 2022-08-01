@@ -34,7 +34,7 @@ interface CoreStorage {
 
     suspend fun getClientAccessors(): List<ClientAccess>
     suspend fun getClientAccess(id: String): ClientAccess?
-    suspend fun addClientAccess(): ClientAccess
+    suspend fun addClientAccess(id: String? = null, secret: String? = null): ClientAccess
     suspend fun removeClientAccess(id: String): Boolean
     suspend fun updateClientAccess(id: String): ClientAccess
 
@@ -74,8 +74,11 @@ interface CoreStorage {
 
     suspend fun namespace(location: String): String = location
 
-    fun generateClientAccess(): ClientAccess {
-        return ClientAccess(generateClientId(), generateClientSecret())
+    fun generateClientAccess(id: String? = null, secret: String? = null): ClientAccess {
+        if (id?.isBlank() == true || secret?.isBlank() == true) {
+            throw IllegalArgumentException("id and secret must be non-blank")
+        }
+        return ClientAccess(id ?: generateClientId(), secret ?: generateClientSecret())
     }
 
     fun generateClientId(): String {

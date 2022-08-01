@@ -315,10 +315,10 @@ open class MemoryStorage(val vertx: Vertx) : CoreStorage {
         return clientAccessors.find { it.id == id }
     }
 
-    override suspend fun addClientAccess(): ClientAccess {
+    override suspend fun addClientAccess(id: String?, secret: String?): ClientAccess {
         val clientAccessStorage = vertx.sharedData().getAsyncMap<String, Any>(namespace("client_access")).await()
         val clientAccessors = clientAccessStorage.get("client_accessors").await() as JsonArray? ?: JsonArray()
-        val clientAccess = generateClientAccess()
+        val clientAccess = generateClientAccess(id, secret)
         clientAccessors.add(clientAccess)
         clientAccessStorage.put("client_accessors", clientAccessors).await()
         return clientAccess

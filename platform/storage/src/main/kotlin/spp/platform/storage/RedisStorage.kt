@@ -273,8 +273,8 @@ open class RedisStorage(val vertx: Vertx) : CoreStorage {
         return clientAccessors.find { it.id == id }
     }
 
-    override suspend fun addClientAccess(): ClientAccess {
-        val clientAccess = generateClientAccess()
+    override suspend fun addClientAccess(id: String?, secret: String?): ClientAccess {
+        val clientAccess = generateClientAccess(id, secret)
         redis.sadd(listOf(namespace("client_access"), Json.encode(clientAccess))).await()
         return clientAccess
     }
