@@ -1,0 +1,102 @@
+/*
+ * Source++, the open-source live coding platform.
+ * Copyright (C) 2022 CodeBrig, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+package spp.platform.bridge.probe
+
+import integration.PlatformIntegrationTest
+import io.vertx.core.Promise
+import io.vertx.core.http.HttpClientOptions
+import io.vertx.core.http.WebSocketConnectOptions
+import io.vertx.core.http.WebSocketFrame
+import io.vertx.core.json.JsonObject
+import io.vertx.junit5.VertxTestContext
+import io.vertx.kotlin.coroutines.await
+import kotlinx.coroutines.runBlocking
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
+import spp.protocol.platform.PlatformAddress.PROBE_CONNECTED
+import spp.protocol.platform.status.InstanceConnection
+import java.util.*
+
+class ProbeBridgeITTest : PlatformIntegrationTest() {
+
+    @Test
+    fun testProbeCounter(): Unit = runBlocking {
+        val testContext = VertxTestContext()
+
+        //get probe count
+        val probeCount = liveService.getStats().await()
+            .getJsonObject("platform").getInteger("connected-probes")
+
+        //connect new probe
+        val client = vertx.createHttpClient(
+            HttpClientOptions()
+                .setDefaultHost("localhost")
+                .setDefaultPort(12800)
+                .setSsl(true)
+                .setTrustAll(true)
+                .setVerifyHost(false)
+        )
+        val wsOptions = WebSocketConnectOptions()
+            .setURI("https://localhost:12800/probe/eventbus/websocket")
+        val ws = client.webSocket(wsOptions).await()
+
+        //send connected message
+        val replyAddress = UUID.randomUUID().toString()
+        val msg = JsonObject()
+            .put("type", "send")
+            .put("address", PROBE_CONNECTED)
+            .put("replyAddress", replyAddress)
+        val pc = InstanceConnection("test-probe-id", System.currentTimeMillis())
+        msg.put("body", JsonObject.mapFrom(pc))
+        ws.writeFrame(WebSocketFrame.textFrame(msg.encode(), true))
+
+        val connectPromise = Promise.promise<Void>()
+        ws.handler { buff ->
+            val str: String = buff.toString()
+            val received = JsonObject(str)
+            val rec: Any = received.getValue("body")
+            testContext.verify {
+                assertEquals(true, rec)
+            }
+            connectPromise.complete()
+        }
+        connectPromise.future().await()
+
+        //verify probe count increased
+        val increasedProbeCount = liveService.getStats().await()
+            .getJsonObject("platform").getInteger("connected-probes")
+        testContext.verify {
+            assertEquals(probeCount + 1, increasedProbeCount)
+        }
+
+        //disconnect probe
+        ws.close().await()
+        client.close().await()
+
+        //verify probe count decreased
+        val decreasedProbeCount = liveService.getStats().await()
+            .getJsonObject("platform").getInteger("connected-probes")
+        testContext.verify {
+            assertEquals(probeCount, decreasedProbeCount)
+        }
+
+        if (testContext.failed()) {
+            throw testContext.causeOfFailure()
+        }
+    }
+}

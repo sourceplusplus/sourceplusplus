@@ -36,6 +36,8 @@ configure<PublishingExtension> {
 
 dependencies {
     compileOnly(project(":platform:common"))
+
+    testImplementation(project(":platform:common"))
 }
 
 tasks {

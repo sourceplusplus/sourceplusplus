@@ -23,10 +23,11 @@ import io.vertx.codegen.annotations.VertxGen
 import io.vertx.core.Future
 import io.vertx.core.Promise
 import io.vertx.core.Vertx
+import io.vertx.core.eventbus.DeliveryOptions
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import spp.platform.common.ClusterConnection.discovery
-import spp.platform.common.PlatformServices
+import spp.platform.common.PlatformServices.BRIDGE_SERVICE
 
 @ProxyGen
 @VertxGen
@@ -36,14 +37,17 @@ interface SourceBridgeService {
     companion object {
         @GenIgnore
         @JvmStatic
-        fun service(vertx: Vertx): Future<SourceBridgeService?> {
+        fun service(vertx: Vertx, authToken: String? = null): Future<SourceBridgeService?> {
             val promise = Promise.promise<SourceBridgeService?>()
-            discovery.getRecord(JsonObject().put("name", PlatformServices.BRIDGE_SERVICE)).onComplete {
+            discovery.getRecord(JsonObject().put("name", BRIDGE_SERVICE)).onComplete {
                 if (it.succeeded()) {
                     if (it.result() == null) {
                         promise.complete(null)
                     } else {
-                        promise.complete(SourceBridgeServiceVertxEBProxy(vertx, PlatformServices.BRIDGE_SERVICE))
+                        val deliveryOptions = DeliveryOptions().apply {
+                            authToken?.let { addHeader("auth-token", it) }
+                        }
+                        promise.complete(SourceBridgeServiceVertxEBProxy(vertx, BRIDGE_SERVICE, deliveryOptions))
                     }
                 } else {
                     promise.fail(it.cause())

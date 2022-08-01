@@ -17,12 +17,17 @@
  */
 package spp.platform.core
 
+import graphql.ExceptionWhileDataFetching
 import graphql.GraphQL
+import graphql.execution.DataFetcherExceptionHandler
+import graphql.execution.DataFetcherExceptionHandlerParameters
+import graphql.execution.DataFetcherExceptionHandlerResult
 import graphql.schema.Coercing
 import graphql.schema.CoercingParseValueException
 import graphql.schema.DataFetchingEnvironment
 import graphql.schema.GraphQLScalarType
 import graphql.schema.idl.*
+import io.vertx.core.Vertx
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import io.vertx.ext.web.Router
@@ -38,6 +43,7 @@ import org.apache.commons.lang3.EnumUtils
 import org.apache.commons.lang3.RandomStringUtils
 import org.slf4j.LoggerFactory
 import spp.platform.common.ClusterConnection.discovery
+import spp.platform.common.DeveloperAuth
 import spp.platform.storage.SourceStorage
 import spp.protocol.artifact.ArtifactQualifiedName
 import spp.protocol.artifact.ArtifactType
@@ -57,7 +63,6 @@ import spp.protocol.service.LiveInstrumentService
 import spp.protocol.service.LiveService
 import spp.protocol.service.LiveViewService
 import spp.protocol.service.error.InstrumentAccessDenied
-import spp.protocol.service.error.PermissionAccessDenied
 import spp.protocol.view.LiveViewConfig
 import spp.protocol.view.LiveViewSubscription
 import java.util.*
@@ -84,6 +89,15 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
             }
         }
         router.post("/graphql/spp").handler(BodyHandler.create()).handler {
+            if (it.user() != null && Vertx.currentContext().get<DeveloperAuth>("developer") == null) {
+                Vertx.currentContext().put(
+                    "developer",
+                    DeveloperAuth(
+                        it.user().principal().getString("developer_id"),
+                        it.user().principal().getString("access_token")
+                    )
+                )
+            }
             sppGraphQLHandler.handle(it)
         }
     }
@@ -110,6 +124,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
                                         throw CoercingParseValueException("Invalid long value: $input")
                                     }
                                 }
+
                                 else -> throw CoercingParseValueException("Expected Number or String")
                             }
                         }
@@ -295,17 +310,31 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
             }.build()
         val schemaGenerator = SchemaGenerator()
         val graphQLSchema = schemaGenerator.makeExecutableSchema(typeDefinitionRegistry, runtimeWiring)
-        return GraphQL.newGraphQL(graphQLSchema).build()
+        return GraphQL.newGraphQL(graphQLSchema)
+            .defaultDataFetcherExceptionHandler(object : DataFetcherExceptionHandler {
+                override fun handleException(
+                    handlerParameters: DataFetcherExceptionHandlerParameters
+                ): CompletableFuture<DataFetcherExceptionHandlerResult> {
+                    val exception = handlerParameters.exception
+                    exception.message?.let { log.warn(it) }
+                    val sourceLocation = handlerParameters.sourceLocation
+                    val path = handlerParameters.path
+                    val error = ExceptionWhileDataFetching(path, exception, sourceLocation)
+                    return CompletableFuture.completedFuture(
+                        DataFetcherExceptionHandlerResult.newResult().error(error).build()
+                    )
+                }
+            })
+            .build()
     }
 
     private fun getAccessPermissions(env: DataFetchingEnvironment): CompletableFuture<List<AccessPermission>> {
         val completableFuture = CompletableFuture<List<AccessPermission>>()
         launch(vertx.dispatcher()) {
             if (jwtEnabled) {
-                val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                val devId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
-                if (!SourceStorage.hasPermission(selfId, GET_ACCESS_PERMISSIONS)) {
-                    completableFuture.completeExceptionally(PermissionAccessDenied(GET_ACCESS_PERMISSIONS))
+                if (SourceStorage.requiresPermission(devId, GET_ACCESS_PERMISSIONS, completableFuture)) {
                     return@launch
                 }
             }
@@ -318,10 +347,9 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
         val completableFuture = CompletableFuture<AccessPermission>()
         launch(vertx.dispatcher()) {
             if (jwtEnabled) {
-                val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                val devId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
-                if (!SourceStorage.hasPermission(selfId, GET_ACCESS_PERMISSIONS)) {
-                    completableFuture.completeExceptionally(PermissionAccessDenied(GET_ACCESS_PERMISSIONS))
+                if (SourceStorage.requiresPermission(devId, GET_ACCESS_PERMISSIONS, completableFuture)) {
                     return@launch
                 }
             }
@@ -340,10 +368,9 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
         val completableFuture = CompletableFuture<List<AccessPermission>>()
         launch(vertx.dispatcher()) {
             if (jwtEnabled) {
-                val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                val devId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
-                if (!SourceStorage.hasPermission(selfId, GET_ACCESS_PERMISSIONS)) {
-                    completableFuture.completeExceptionally(PermissionAccessDenied(GET_ACCESS_PERMISSIONS))
+                if (SourceStorage.requiresPermission(devId, GET_ACCESS_PERMISSIONS, completableFuture)) {
                     return@launch
                 }
             }
@@ -362,10 +389,9 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
         val completableFuture = CompletableFuture<List<AccessPermission>>()
         launch(vertx.dispatcher()) {
             if (jwtEnabled) {
-                val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                val devId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
-                if (!SourceStorage.hasPermission(selfId, GET_ACCESS_PERMISSIONS)) {
-                    completableFuture.completeExceptionally(PermissionAccessDenied(GET_ACCESS_PERMISSIONS))
+                if (SourceStorage.requiresPermission(devId, GET_ACCESS_PERMISSIONS, completableFuture)) {
                     return@launch
                 }
             }
@@ -384,10 +410,9 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
         val completableFuture = CompletableFuture<List<DataRedaction>>()
         launch(vertx.dispatcher()) {
             if (jwtEnabled) {
-                val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                val devId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
-                if (!SourceStorage.hasPermission(selfId, GET_DATA_REDACTIONS)) {
-                    completableFuture.completeExceptionally(PermissionAccessDenied(GET_DATA_REDACTIONS))
+                if (SourceStorage.requiresPermission(devId, GET_DATA_REDACTIONS, completableFuture)) {
                     return@launch
                 }
             }
@@ -400,10 +425,9 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
         val completableFuture = CompletableFuture<DataRedaction>()
         launch(vertx.dispatcher()) {
             if (jwtEnabled) {
-                val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                val devId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
-                if (!SourceStorage.hasPermission(selfId, GET_DATA_REDACTIONS)) {
-                    completableFuture.completeExceptionally(PermissionAccessDenied(GET_DATA_REDACTIONS))
+                if (SourceStorage.requiresPermission(devId, GET_DATA_REDACTIONS, completableFuture)) {
                     return@launch
                 }
             }
@@ -422,10 +446,9 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
         val completableFuture = CompletableFuture<List<DataRedaction>>()
         launch(vertx.dispatcher()) {
             if (jwtEnabled) {
-                val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                val devId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
-                if (!SourceStorage.hasPermission(selfId, GET_DATA_REDACTIONS)) {
-                    completableFuture.completeExceptionally(PermissionAccessDenied(GET_DATA_REDACTIONS))
+                if (SourceStorage.requiresPermission(devId, GET_DATA_REDACTIONS, completableFuture)) {
                     return@launch
                 }
             }
@@ -444,10 +467,9 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
         val completableFuture = CompletableFuture<List<DataRedaction>>()
         launch(vertx.dispatcher()) {
             if (jwtEnabled) {
-                val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                val devId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
-                if (!SourceStorage.hasPermission(selfId, GET_DATA_REDACTIONS)) {
-                    completableFuture.completeExceptionally(PermissionAccessDenied(GET_DATA_REDACTIONS))
+                if (SourceStorage.requiresPermission(devId, GET_DATA_REDACTIONS, completableFuture)) {
                     return@launch
                 }
             }
@@ -466,10 +488,9 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
         val completableFuture = CompletableFuture<List<DeveloperRole>>()
         launch(vertx.dispatcher()) {
             if (jwtEnabled) {
-                val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                val devId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
-                if (!SourceStorage.hasPermission(selfId, GET_ROLES)) {
-                    completableFuture.completeExceptionally(PermissionAccessDenied(GET_ROLES))
+                if (SourceStorage.requiresPermission(devId, GET_ROLES, completableFuture)) {
                     return@launch
                 }
             }
@@ -483,10 +504,9 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
         launch(vertx.dispatcher()) {
             val role = DeveloperRole.fromString(env.getArgument("role"))
             if (jwtEnabled) {
-                val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                val devId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
-                if (!SourceStorage.hasPermission(selfId, GET_ROLE_PERMISSIONS)) {
-                    completableFuture.completeExceptionally(PermissionAccessDenied(GET_ROLE_PERMISSIONS))
+                if (SourceStorage.requiresPermission(devId, GET_ROLE_PERMISSIONS, completableFuture)) {
                     return@launch
                 }
             }
@@ -505,10 +525,9 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
         launch(vertx.dispatcher()) {
             val id = env.getArgument<String>("id").lowercase().replace(" ", "")
             if (jwtEnabled) {
-                val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                val devId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
-                if (!SourceStorage.hasPermission(selfId, GET_DEVELOPER_ROLES)) {
-                    completableFuture.completeExceptionally(PermissionAccessDenied(GET_DEVELOPER_ROLES))
+                if (SourceStorage.requiresPermission(devId, GET_DEVELOPER_ROLES, completableFuture)) {
                     return@launch
                 }
             }
@@ -527,10 +546,9 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
         launch(vertx.dispatcher()) {
             val id = env.getArgument<String>("id").lowercase().replace(" ", "")
             if (jwtEnabled) {
-                val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                val devId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
-                if (!SourceStorage.hasPermission(selfId, GET_DEVELOPER_PERMISSIONS)) {
-                    completableFuture.completeExceptionally(PermissionAccessDenied(GET_DEVELOPER_PERMISSIONS))
+                if (SourceStorage.requiresPermission(devId, GET_DEVELOPER_PERMISSIONS, completableFuture)) {
                     return@launch
                 }
             }
@@ -548,10 +566,9 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
         val completableFuture = CompletableFuture<List<Developer>>()
         launch(vertx.dispatcher()) {
             if (jwtEnabled) {
-                val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                val devId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
-                if (!SourceStorage.hasPermission(selfId, GET_DEVELOPERS)) {
-                    completableFuture.completeExceptionally(PermissionAccessDenied(GET_DEVELOPERS))
+                if (SourceStorage.requiresPermission(devId, GET_DEVELOPERS, completableFuture)) {
                     return@launch
                 }
             }
@@ -619,10 +636,9 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
         val completableFuture = CompletableFuture<Developer>()
         launch(vertx.dispatcher()) {
             if (jwtEnabled) {
-                val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                val devId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
-                if (!SourceStorage.hasPermission(selfId, REFRESH_DEVELOPER_TOKEN)) {
-                    completableFuture.completeExceptionally(PermissionAccessDenied(REFRESH_DEVELOPER_TOKEN))
+                if (SourceStorage.requiresPermission(devId, REFRESH_DEVELOPER_TOKEN, completableFuture)) {
                     return@launch
                 }
             }
@@ -646,8 +662,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
             if (jwtEnabled) {
                 val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
                 val devId = user.principal().getString("developer_id")
-                if (!SourceStorage.hasPermission(devId, GET_LIVE_INSTRUMENTS)) {
-                    completableFuture.completeExceptionally(PermissionAccessDenied(GET_LIVE_INSTRUMENTS))
+                if (SourceStorage.requiresPermission(devId, GET_LIVE_INSTRUMENTS, completableFuture)) {
                     return@launch
                 }
                 accessToken = user.principal().getString("access_token")
@@ -680,8 +695,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
             if (jwtEnabled) {
                 val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
                 val devId = user.principal().getString("developer_id")
-                if (!SourceStorage.hasPermission(devId, GET_LIVE_BREAKPOINTS)) {
-                    completableFuture.completeExceptionally(PermissionAccessDenied(GET_LIVE_BREAKPOINTS))
+                if (SourceStorage.requiresPermission(devId, GET_LIVE_BREAKPOINTS, completableFuture)) {
                     return@launch
                 }
                 accessToken = user.principal().getString("access_token")
@@ -714,8 +728,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
             if (jwtEnabled) {
                 val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
                 val devId = user.principal().getString("developer_id")
-                if (!SourceStorage.hasPermission(devId, GET_LIVE_LOGS)) {
-                    completableFuture.completeExceptionally(PermissionAccessDenied(GET_LIVE_LOGS))
+                if (SourceStorage.requiresPermission(devId, GET_LIVE_LOGS, completableFuture)) {
                     return@launch
                 }
                 accessToken = user.principal().getString("access_token")
@@ -748,8 +761,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
             if (jwtEnabled) {
                 val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
                 val devId = user.principal().getString("developer_id")
-                if (!SourceStorage.hasPermission(devId, GET_LIVE_METERS)) {
-                    completableFuture.completeExceptionally(PermissionAccessDenied(GET_LIVE_METERS))
+                if (SourceStorage.requiresPermission(devId, GET_LIVE_METERS, completableFuture)) {
                     return@launch
                 }
                 accessToken = user.principal().getString("access_token")
@@ -782,8 +794,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
             if (jwtEnabled) {
                 val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
                 val devId = user.principal().getString("developer_id")
-                if (!SourceStorage.hasPermission(devId, GET_LIVE_SPANS)) {
-                    completableFuture.completeExceptionally(PermissionAccessDenied(GET_LIVE_SPANS))
+                if (SourceStorage.requiresPermission(devId, GET_LIVE_SPANS, completableFuture)) {
                     return@launch
                 }
                 accessToken = user.principal().getString("access_token")
@@ -816,8 +827,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
             if (jwtEnabled) {
                 val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
                 val devId = user.principal().getString("developer_id")
-                if (!SourceStorage.hasPermission(devId, RESET)) {
-                    completableFuture.completeExceptionally(PermissionAccessDenied(RESET))
+                if (SourceStorage.requiresPermission(devId, RESET, completableFuture)) {
                     return@launch
                 }
                 accessToken = user.principal().getString("access_token")
@@ -848,10 +858,9 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
         val completableFuture = CompletableFuture<DataRedaction>()
         launch(vertx.dispatcher()) {
             if (jwtEnabled) {
-                val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                val devId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
-                if (!SourceStorage.hasPermission(selfId, UPDATE_DATA_REDACTION)) {
-                    completableFuture.completeExceptionally(PermissionAccessDenied(UPDATE_DATA_REDACTION))
+                if (SourceStorage.requiresPermission(devId, UPDATE_DATA_REDACTION, completableFuture)) {
                     return@launch
                 }
             }
@@ -870,10 +879,9 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
         val completableFuture = CompletableFuture<DataRedaction>()
         launch(vertx.dispatcher()) {
             if (jwtEnabled) {
-                val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                val devId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
-                if (!SourceStorage.hasPermission(selfId, UPDATE_DATA_REDACTION)) {
-                    completableFuture.completeExceptionally(PermissionAccessDenied(UPDATE_DATA_REDACTION))
+                if (SourceStorage.requiresPermission(devId, UPDATE_DATA_REDACTION, completableFuture)) {
                     return@launch
                 }
             }
@@ -896,10 +904,9 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
         val completableFuture = CompletableFuture<Boolean>()
         launch(vertx.dispatcher()) {
             if (jwtEnabled) {
-                val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                val devId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
-                if (!SourceStorage.hasPermission(selfId, UPDATE_DATA_REDACTION)) {
-                    completableFuture.completeExceptionally(PermissionAccessDenied(UPDATE_DATA_REDACTION))
+                if (SourceStorage.requiresPermission(devId, UPDATE_DATA_REDACTION, completableFuture)) {
                     return@launch
                 }
             }
@@ -919,10 +926,9 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
         val completableFuture = CompletableFuture<Boolean>()
         launch(vertx.dispatcher()) {
             if (jwtEnabled) {
-                val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                val devId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
-                if (!SourceStorage.hasPermission(selfId, UPDATE_DATA_REDACTION)) {
-                    completableFuture.completeExceptionally(PermissionAccessDenied(UPDATE_DATA_REDACTION))
+                if (SourceStorage.requiresPermission(devId, UPDATE_DATA_REDACTION, completableFuture)) {
                     return@launch
                 }
             }
@@ -945,10 +951,9 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
         val completableFuture = CompletableFuture<Boolean>()
         launch(vertx.dispatcher()) {
             if (jwtEnabled) {
-                val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                val devId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
-                if (!SourceStorage.hasPermission(selfId, UPDATE_DATA_REDACTION)) {
-                    completableFuture.completeExceptionally(PermissionAccessDenied(UPDATE_DATA_REDACTION))
+                if (SourceStorage.requiresPermission(devId, UPDATE_DATA_REDACTION, completableFuture)) {
                     return@launch
                 }
             }
@@ -971,10 +976,9 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
         val completableFuture = CompletableFuture<AccessPermission>()
         launch(vertx.dispatcher()) {
             if (jwtEnabled) {
-                val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                val devId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
-                if (!SourceStorage.hasPermission(selfId, ADD_ACCESS_PERMISSION)) {
-                    completableFuture.completeExceptionally(PermissionAccessDenied(ADD_ACCESS_PERMISSION))
+                if (SourceStorage.requiresPermission(devId, ADD_ACCESS_PERMISSION, completableFuture)) {
                     return@launch
                 }
             }
@@ -992,10 +996,9 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
         val completableFuture = CompletableFuture<Boolean>()
         launch(vertx.dispatcher()) {
             if (jwtEnabled) {
-                val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                val devId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
-                if (!SourceStorage.hasPermission(selfId, REMOVE_ACCESS_PERMISSION)) {
-                    completableFuture.completeExceptionally(PermissionAccessDenied(REMOVE_ACCESS_PERMISSION))
+                if (SourceStorage.requiresPermission(devId, REMOVE_ACCESS_PERMISSION, completableFuture)) {
                     return@launch
                 }
             }
@@ -1015,10 +1018,9 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
         val completableFuture = CompletableFuture<Boolean>()
         launch(vertx.dispatcher()) {
             if (jwtEnabled) {
-                val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                val devId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
-                if (!SourceStorage.hasPermission(selfId, ADD_ACCESS_PERMISSION)) {
-                    completableFuture.completeExceptionally(PermissionAccessDenied(ADD_ACCESS_PERMISSION))
+                if (SourceStorage.requiresPermission(devId, ADD_ACCESS_PERMISSION, completableFuture)) {
                     return@launch
                 }
             }
@@ -1041,10 +1043,9 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
         val completableFuture = CompletableFuture<Boolean>()
         launch(vertx.dispatcher()) {
             if (jwtEnabled) {
-                val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                val devId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
-                if (!SourceStorage.hasPermission(selfId, REMOVE_ACCESS_PERMISSION)) {
-                    completableFuture.completeExceptionally(PermissionAccessDenied(REMOVE_ACCESS_PERMISSION))
+                if (SourceStorage.requiresPermission(devId, REMOVE_ACCESS_PERMISSION, completableFuture)) {
                     return@launch
                 }
             }
@@ -1067,10 +1068,9 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
         val completableFuture = CompletableFuture<Boolean>()
         launch(vertx.dispatcher()) {
             if (jwtEnabled) {
-                val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                val devId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
-                if (!SourceStorage.hasPermission(selfId, ADD_ROLE)) {
-                    completableFuture.completeExceptionally(PermissionAccessDenied(ADD_ROLE))
+                if (SourceStorage.requiresPermission(devId, ADD_ROLE, completableFuture)) {
                     return@launch
                 }
             }
@@ -1089,10 +1089,9 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
         val completableFuture = CompletableFuture<Boolean>()
         launch(vertx.dispatcher()) {
             if (jwtEnabled) {
-                val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                val devId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
-                if (!SourceStorage.hasPermission(selfId, REMOVE_ROLE)) {
-                    completableFuture.completeExceptionally(PermissionAccessDenied(REMOVE_ROLE))
+                if (SourceStorage.requiresPermission(devId, REMOVE_ROLE, completableFuture)) {
                     return@launch
                 }
             }
@@ -1115,10 +1114,9 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
         val completableFuture = CompletableFuture<Boolean>()
         launch(vertx.dispatcher()) {
             if (jwtEnabled) {
-                val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                val devId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
-                if (!SourceStorage.hasPermission(selfId, ADD_ROLE_PERMISSION)) {
-                    completableFuture.completeExceptionally(PermissionAccessDenied(ADD_ROLE_PERMISSION))
+                if (SourceStorage.requiresPermission(devId, ADD_ROLE_PERMISSION, completableFuture)) {
                     return@launch
                 }
             }
@@ -1152,10 +1150,9 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
         val completableFuture = CompletableFuture<Boolean>()
         launch(vertx.dispatcher()) {
             if (jwtEnabled) {
-                val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                val devId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
-                if (!SourceStorage.hasPermission(selfId, REMOVE_ROLE_PERMISSION)) {
-                    completableFuture.completeExceptionally(PermissionAccessDenied(REMOVE_ROLE_PERMISSION))
+                if (SourceStorage.requiresPermission(devId, REMOVE_ROLE_PERMISSION, completableFuture)) {
                     return@launch
                 }
             }
@@ -1189,10 +1186,9 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
         val completableFuture = CompletableFuture<Boolean>()
         launch(vertx.dispatcher()) {
             if (jwtEnabled) {
-                val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                val devId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
-                if (!SourceStorage.hasPermission(selfId, ADD_DEVELOPER_ROLE)) {
-                    completableFuture.completeExceptionally(PermissionAccessDenied(ADD_DEVELOPER_ROLE))
+                if (SourceStorage.requiresPermission(devId, ADD_DEVELOPER_ROLE, completableFuture)) {
                     return@launch
                 }
             }
@@ -1215,10 +1211,9 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
         val completableFuture = CompletableFuture<Boolean>()
         launch(vertx.dispatcher()) {
             if (jwtEnabled) {
-                val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                val devId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
-                if (!SourceStorage.hasPermission(selfId, REMOVE_DEVELOPER_ROLE)) {
-                    completableFuture.completeExceptionally(PermissionAccessDenied(REMOVE_DEVELOPER_ROLE))
+                if (SourceStorage.requiresPermission(devId, REMOVE_DEVELOPER_ROLE, completableFuture)) {
                     return@launch
                 }
             }
@@ -1241,10 +1236,9 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
         val completableFuture = CompletableFuture<Developer>()
         launch(vertx.dispatcher()) {
             if (jwtEnabled) {
-                val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                val devId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
-                if (!SourceStorage.hasPermission(selfId, ADD_DEVELOPER)) {
-                    completableFuture.completeExceptionally(PermissionAccessDenied(ADD_DEVELOPER))
+                if (SourceStorage.requiresPermission(devId, ADD_DEVELOPER, completableFuture)) {
                     return@launch
                 }
             }
@@ -1263,10 +1257,9 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
         val completableFuture = CompletableFuture<Boolean>()
         launch(vertx.dispatcher()) {
             if (jwtEnabled) {
-                val selfId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                val devId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
                     .user().principal().getString("developer_id")
-                if (!SourceStorage.hasPermission(selfId, REMOVE_DEVELOPER)) {
-                    completableFuture.completeExceptionally(PermissionAccessDenied(REMOVE_DEVELOPER))
+                if (SourceStorage.requiresPermission(devId, REMOVE_DEVELOPER, completableFuture)) {
                     return@launch
                 }
             }
@@ -1292,8 +1285,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
             if (jwtEnabled) {
                 val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
                 val devId = user.principal().getString("developer_id")
-                if (!SourceStorage.hasPermission(devId, REMOVE_LIVE_INSTRUMENT)) {
-                    completableFuture.completeExceptionally(PermissionAccessDenied(REMOVE_LIVE_INSTRUMENT))
+                if (SourceStorage.requiresPermission(devId, REMOVE_LIVE_INSTRUMENT, completableFuture)) {
                     return@launch
                 }
                 accessToken = user.principal().getString("access_token")
@@ -1329,8 +1321,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
             if (jwtEnabled) {
                 val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
                 val devId = user.principal().getString("developer_id")
-                if (!SourceStorage.hasPermission(devId, REMOVE_LIVE_INSTRUMENT)) {
-                    completableFuture.completeExceptionally(PermissionAccessDenied(REMOVE_LIVE_INSTRUMENT))
+                if (SourceStorage.requiresPermission(devId, REMOVE_LIVE_INSTRUMENT, completableFuture)) {
                     return@launch
                 }
                 accessToken = user.principal().getString("access_token")
@@ -1366,8 +1357,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
             if (jwtEnabled) {
                 val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
                 val devId = user.principal().getString("developer_id")
-                if (!SourceStorage.hasPermission(devId, REMOVE_LIVE_INSTRUMENT)) {
-                    completableFuture.completeExceptionally(PermissionAccessDenied(REMOVE_LIVE_INSTRUMENT))
+                if (SourceStorage.requiresPermission(devId, REMOVE_LIVE_INSTRUMENT, completableFuture)) {
                     return@launch
                 }
                 accessToken = user.principal().getString("access_token")
@@ -1400,8 +1390,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
             val selfId = if (jwtEnabled) {
                 val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
                 val devId = user.principal().getString("developer_id")
-                if (!SourceStorage.hasPermission(devId, ADD_LIVE_BREAKPOINT)) {
-                    completableFuture.completeExceptionally(PermissionAccessDenied(ADD_LIVE_BREAKPOINT))
+                if (SourceStorage.requiresPermission(devId, ADD_LIVE_BREAKPOINT, completableFuture)) {
                     return@launch
                 }
                 accessToken = user.principal().getString("access_token")
@@ -1467,8 +1456,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
             val selfId = if (jwtEnabled) {
                 val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
                 val devId = user.principal().getString("developer_id")
-                if (!SourceStorage.hasPermission(devId, ADD_LIVE_LOG)) {
-                    completableFuture.completeExceptionally(PermissionAccessDenied(ADD_LIVE_LOG))
+                if (SourceStorage.requiresPermission(devId, ADD_LIVE_LOG, completableFuture)) {
                     return@launch
                 }
                 accessToken = user.principal().getString("access_token")
@@ -1539,8 +1527,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
             val selfId = if (jwtEnabled) {
                 val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
                 val devId = user.principal().getString("developer_id")
-                if (!SourceStorage.hasPermission(devId, ADD_LIVE_METER)) {
-                    completableFuture.completeExceptionally(PermissionAccessDenied(ADD_LIVE_METER))
+                if (SourceStorage.requiresPermission(devId, ADD_LIVE_METER, completableFuture)) {
                     return@launch
                 }
                 accessToken = user.principal().getString("access_token")
@@ -1615,8 +1602,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
             val selfId = if (jwtEnabled) {
                 val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
                 val devId = user.principal().getString("developer_id")
-                if (!SourceStorage.hasPermission(devId, ADD_LIVE_SPAN)) {
-                    completableFuture.completeExceptionally(PermissionAccessDenied(ADD_LIVE_SPAN))
+                if (SourceStorage.requiresPermission(devId, ADD_LIVE_SPAN, completableFuture)) {
                     return@launch
                 }
                 accessToken = user.principal().getString("access_token")
@@ -1684,8 +1670,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
             if (jwtEnabled) {
                 val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
                 val devId = user.principal().getString("developer_id")
-                if (!SourceStorage.hasPermission(devId, ADD_LIVE_VIEW_SUBSCRIPTION)) {
-                    completableFuture.completeExceptionally(PermissionAccessDenied(ADD_LIVE_VIEW_SUBSCRIPTION))
+                if (SourceStorage.requiresPermission(devId, ADD_LIVE_VIEW_SUBSCRIPTION, completableFuture)) {
                     return@launch
                 }
                 accessToken = user.principal().getString("access_token")
@@ -1726,8 +1711,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
             if (jwtEnabled) {
                 val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
                 val devId = user.principal().getString("developer_id")
-                if (!SourceStorage.hasPermission(devId, GET_LIVE_VIEW_SUBSCRIPTIONS)) {
-                    completableFuture.completeExceptionally(PermissionAccessDenied(GET_LIVE_VIEW_SUBSCRIPTIONS))
+                if (SourceStorage.requiresPermission(devId, GET_LIVE_VIEW_SUBSCRIPTIONS, completableFuture)) {
                     return@launch
                 }
                 accessToken = user.principal().getString("access_token")
@@ -1760,8 +1744,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
             if (jwtEnabled) {
                 val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
                 val devId = user.principal().getString("developer_id")
-                if (!SourceStorage.hasPermission(devId, REMOVE_LIVE_VIEW_SUBSCRIPTION)) {
-                    completableFuture.completeExceptionally(PermissionAccessDenied(REMOVE_LIVE_VIEW_SUBSCRIPTION))
+                if (SourceStorage.requiresPermission(devId, REMOVE_LIVE_VIEW_SUBSCRIPTION, completableFuture)) {
                     return@launch
                 }
                 accessToken = user.principal().getString("access_token")
