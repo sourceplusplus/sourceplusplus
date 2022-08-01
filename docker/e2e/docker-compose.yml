@@ -52,10 +52,3 @@ services:
     build:
       context: .
       dockerfile: Dockerfile-spp-example-webapp
-
-#networks:
-#  default:
-#    driver: bridge
-#    ipam:
-#      config:
-#        - subnet: 172.16.57.0/24
