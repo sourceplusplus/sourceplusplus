@@ -118,12 +118,13 @@ object SourceStorage {
         if (clientAccessors?.getString("enabled").toBoolean()) {
             clientAccessors?.getJsonArray("accessors")?.list?.map {
                 JsonObject.mapFrom(it).let {
-                    ClientAccess(
-                        it.getString("id"),
-                        it.getString("secret")
-                    )
+                    if (!it.getString("id").isNullOrEmpty() && !it.getString("secret").isNullOrEmpty()) {
+                        ClientAccess(it.getString("id"), it.getString("secret"))
+                    } else {
+                        null
+                    }
                 }
-            }.orEmpty()
+            }.orEmpty().filterNotNull()
         } else {
             emptyList()
         }.forEach { addClientAccess(it.id, it.secret) }
