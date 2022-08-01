@@ -24,10 +24,12 @@ import io.vertx.core.Vertx
 import io.vertx.core.json.JsonObject
 import io.vertx.ext.auth.jwt.JWTAuth
 import io.vertx.ext.bridge.BaseBridgeEvent
-import io.vertx.ext.bridge.BridgeEventType
 import io.vertx.kotlin.coroutines.CoroutineVerticle
 import org.slf4j.LoggerFactory
+import spp.platform.common.ClientAuth
 import spp.platform.common.DeveloperAuth
+import spp.platform.storage.SourceStorage
+import spp.protocol.platform.auth.ClientAccess
 
 abstract class InstanceBridge(private val jwtAuth: JWTAuth?) : CoroutineVerticle() {
 
@@ -35,44 +37,60 @@ abstract class InstanceBridge(private val jwtAuth: JWTAuth?) : CoroutineVerticle
         private val log = LoggerFactory.getLogger(InstanceBridge::class.java)
     }
 
-    fun validateAuth(event: BaseBridgeEvent) {
-        validateAuth(event) {
+    fun validateMarkerAuth(event: BaseBridgeEvent) {
+        validateMarkerAuth(event) {
             if (it.succeeded()) {
                 event.complete(true)
             } else {
-                event.fail(it.cause().message)
+                event.fail(it.cause().message)//todo: return false
             }
         }
     }
 
-    fun validateAuth(event: BaseBridgeEvent, handler: Handler<AsyncResult<DeveloperAuth>>) {
+    fun validateMarkerAuth(event: BaseBridgeEvent, handler: Handler<AsyncResult<DeveloperAuth>>) {
         if (jwtAuth != null) {
             val authToken = event.rawMessage.getJsonObject("headers")?.getString("auth-token")
             if (authToken.isNullOrEmpty()) {
-                if (event.type() == BridgeEventType.SEND) {
-                    handler.handle(
-                        Future.failedFuture(
-                            "Rejected SEND event to ${event.rawMessage.getString("address")} with missing auth token"
-                        )
-                    )
-                } else {
-                    handler.handle(Future.failedFuture("Rejected ${event.type()} event with missing auth token"))
-                }
-                return
-            }
-
-            validateAuthToken(authToken) {
-                if (it.succeeded()) {
-                    handler.handle(Future.succeededFuture(it.result()))
-                } else {
-                    log.warn("Failed to authenticate ${event.type()} event", it.cause())
-                    handler.handle(Future.failedFuture((it.cause())))
+                handler.handle(Future.failedFuture("Rejected ${event.type()} event with missing auth token"))
+            } else {
+                validateAuthToken(authToken) {
+                    if (it.succeeded()) {
+                        handler.handle(Future.succeededFuture(it.result()))
+                    } else {
+                        log.warn("Failed to authenticate ${event.type()} event", it.cause())
+                        handler.handle(Future.failedFuture((it.cause())))
+                    }
                 }
             }
         } else {
             val developerAuth = DeveloperAuth("system")
             Vertx.currentContext().putLocal("developer", developerAuth)
             handler.handle(Future.succeededFuture(developerAuth))
+        }
+    }
+
+    fun validateProbeAuth(event: BaseBridgeEvent, handler: Handler<AsyncResult<ClientAuth>>) {
+        if (jwtAuth != null) {
+            val clientId = event.rawMessage.getJsonObject("headers")?.getString("client_id")
+            val clientSecret = event.rawMessage.getJsonObject("headers")?.getString("client_secret")
+            if (clientId == null || clientSecret == null) {
+                handler.handle(Future.failedFuture("Rejected ${event.type()} event with missing client credentials"))
+                return
+            }
+            val tenantId = event.rawMessage.getJsonObject("headers")?.getString("tenant_id")
+            if (!tenantId.isNullOrEmpty()) {
+                Vertx.currentContext().putLocal("tenant_id", tenantId)
+            }
+
+            SourceStorage.isValidClientAccess(clientId, clientSecret).onSuccess {
+                val clientAuth = ClientAuth(ClientAccess(clientId, clientSecret), tenantId)
+                Vertx.currentContext().putLocal("client", clientAuth)
+                handler.handle(Future.succeededFuture(clientAuth))
+            }.onFailure {
+                handler.handle(Future.failedFuture("Rejected ${event.type()} event with invalid client credentials"))
+            }
+        } else {
+            handler.handle(Future.succeededFuture())
         }
     }
 

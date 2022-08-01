@@ -106,7 +106,7 @@ class MarkerBridge(
 
     private fun handleBridgeEvent(it: BaseBridgeEvent) {
         if (it.type() == SEND && it.rawMessage.getString("address") == MARKER_CONNECTED) {
-            validateAuth(it) { devAuth ->
+            validateMarkerAuth(it) { devAuth ->
                 if (devAuth.succeeded()) {
                     val rawConnectionBody = it.rawMessage.getJsonObject("body")
                     setCloseHandler(it) {
@@ -119,7 +119,7 @@ class MarkerBridge(
                 }
             }
         } else if (it.type() == SEND || it.type() == PUBLISH || it.type() == REGISTER) {
-            validateAuth(it)
+            validateMarkerAuth(it)
         } else {
             it.complete(true)
         }

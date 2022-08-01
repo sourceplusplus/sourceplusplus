@@ -32,6 +32,7 @@ import io.vertx.serviceproxy.ServiceBinder
 import org.slf4j.LoggerFactory
 import spp.platform.common.DeveloperAuth
 import spp.protocol.SourceServices.Utilize
+import spp.protocol.service.LiveManagementService
 import spp.protocol.service.LiveService
 import kotlin.system.exitProcess
 
@@ -43,6 +44,7 @@ class ServiceProvider(private val jwtAuth: JWTAuth?) : CoroutineVerticle() {
 
     private var discovery: ServiceDiscovery? = null
     private var liveService: Record? = null
+    private var liveManagementService: Record? = null
 
     override suspend fun start() {
         try {
@@ -64,6 +66,11 @@ class ServiceProvider(private val jwtAuth: JWTAuth?) : CoroutineVerticle() {
                 Utilize.LIVE_SERVICE,
                 LiveService::class.java,
                 LiveServiceProvider(vertx)
+            )
+            liveManagementService = publishService(
+                Utilize.LIVE_MANAGEMENT_SERVICE,
+                LiveManagementService::class.java,
+                LiveManagementServiceProvider(vertx)
             )
         } catch (throwable: Throwable) {
             throwable.printStackTrace()
@@ -109,6 +116,13 @@ class ServiceProvider(private val jwtAuth: JWTAuth?) : CoroutineVerticle() {
                 log.info("Live service unpublished")
             } else {
                 log.error("Failed to unpublish live service", it.cause())
+            }
+        }.await()
+        discovery!!.unpublish(liveManagementService!!.registration).onComplete {
+            if (it.succeeded()) {
+                log.info("Live management service unpublished")
+            } else {
+                log.error("Failed to unpublish live management service", it.cause())
             }
         }.await()
         discovery!!.close()

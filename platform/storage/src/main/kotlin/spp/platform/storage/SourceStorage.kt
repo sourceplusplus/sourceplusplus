@@ -18,14 +18,20 @@
 package spp.platform.storage
 
 import com.google.common.base.CaseFormat
+import io.vertx.core.Future
+import io.vertx.core.Promise
 import io.vertx.core.json.JsonObject
 import io.vertx.core.shareddata.AsyncMap
 import io.vertx.core.shareddata.Counter
 import io.vertx.ext.web.handler.SessionHandler
 import io.vertx.ext.web.sstore.SessionStore
+import io.vertx.kotlin.coroutines.dispatcher
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import org.apache.commons.lang3.RandomStringUtils
 import org.slf4j.LoggerFactory
 import spp.platform.common.ClusterConnection.config
+import spp.platform.common.ClusterConnection.getVertx
 import spp.protocol.platform.auth.*
 import spp.protocol.platform.developer.Developer
 import spp.protocol.service.error.PermissionAccessDenied
@@ -80,7 +86,8 @@ object SourceStorage {
         }
     }
 
-    private suspend fun installDefaults() {
+    @Suppress("MemberVisibilityCanBePrivate")
+    suspend fun installDefaults() {
         val jwtConfig = config.getJsonObject("spp-platform").getJsonObject("jwt")
         val accessToken = jwtConfig.getString("access_token")
         val systemAccessToken = if (accessToken.isNullOrEmpty()) {
@@ -139,6 +146,10 @@ object SourceStorage {
 
     suspend fun getClientAccessors(): List<ClientAccess> {
         return storage.getClientAccessors()
+    }
+
+    suspend fun getClientAccess(id: String): ClientAccess? {
+        return storage.getClientAccess(id)
     }
 
     suspend fun addClientAccess(): ClientAccess {
@@ -330,5 +341,17 @@ object SourceStorage {
             )
             true
         }
+    }
+
+    fun isValidClientAccess(clientId: String, clientSecret: String?): Future<Void> {
+        val promise = Promise.promise<Void>()
+        GlobalScope.launch(getVertx().dispatcher()) {
+            if (storage.getClientAccess(clientId)?.secret == clientSecret) {
+                promise.complete()
+            } else {
+                promise.fail("Invalid client secret")
+            }
+        }
+        return promise.future()
     }
 }

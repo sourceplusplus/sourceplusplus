@@ -69,6 +69,7 @@ import java.util.*
 import java.util.concurrent.CompletableFuture
 import kotlin.properties.Delegates
 
+//todo: move validation logic to LiveManagementServiceProvider
 class SourceService(private val router: Router) : CoroutineVerticle() {
 
     private val log = LoggerFactory.getLogger(SourceService::class.java)

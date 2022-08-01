@@ -33,6 +33,7 @@ interface CoreStorage {
     suspend fun <T> put(name: String, value: T)
 
     suspend fun getClientAccessors(): List<ClientAccess>
+    suspend fun getClientAccess(id: String): ClientAccess?
     suspend fun addClientAccess(): ClientAccess
     suspend fun removeClientAccess(id: String): Boolean
     suspend fun updateClientAccess(id: String): ClientAccess

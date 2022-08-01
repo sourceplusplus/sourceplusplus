@@ -19,6 +19,7 @@ package spp.platform.bridge.probe
 
 import io.vertx.core.DeploymentOptions
 import io.vertx.core.Handler
+import io.vertx.core.Vertx
 import io.vertx.core.eventbus.DeliveryOptions
 import io.vertx.core.json.Json
 import io.vertx.core.json.JsonArray
@@ -26,7 +27,7 @@ import io.vertx.core.json.JsonObject
 import io.vertx.core.net.NetServerOptions
 import io.vertx.ext.auth.jwt.JWTAuth
 import io.vertx.ext.bridge.BaseBridgeEvent
-import io.vertx.ext.bridge.BridgeEventType
+import io.vertx.ext.bridge.BridgeEventType.*
 import io.vertx.ext.bridge.BridgeOptions
 import io.vertx.ext.bridge.PermittedOptions
 import io.vertx.ext.eventbus.bridge.tcp.TcpEventBusBridge
@@ -41,6 +42,7 @@ import kotlinx.coroutines.launch
 import mu.KotlinLogging
 import spp.platform.bridge.BridgeAddress
 import spp.platform.bridge.InstanceBridge
+import spp.platform.common.ClientAuth
 import spp.platform.common.util.Msg
 import spp.platform.storage.SourceStorage
 import spp.protocol.platform.PlatformAddress
@@ -80,6 +82,12 @@ class ProbeBridge(
             val remote = it.body().getString("address")
             if (!remote.contains(":")) {
                 val probeId = it.headers().get("probe_id")
+                val clientAuth: ClientAuth? = it.headers().get("client_auth")?.let {
+                    ClientAuth.from(it)
+                }
+                if (clientAuth != null) {
+                    Vertx.currentContext().putLocal("client", clientAuth)
+                }
                 launch(vertx.dispatcher()) {
                     val map = SourceStorage.map<String, JsonObject>(BridgeAddress.ACTIVE_PROBES)
                     map.get(probeId).onSuccess {
@@ -169,29 +177,7 @@ class ProbeBridge(
     }
 
     private fun handleBridgeEvent(it: BaseBridgeEvent, subscriberCache: ConcurrentHashMap<String, String>) {
-        if (it.type() == BridgeEventType.SEND) {
-            val writeHandlerID = getWriteHandlerID(it)
-            if (it.rawMessage.getString("address") == PROBE_CONNECTED) {
-                val conn = Json.decodeValue(
-                    it.rawMessage.getJsonObject("body").toString(), InstanceConnection::class.java
-                )
-                subscriberCache[writeHandlerID] = conn.instanceId
-
-                setCloseHandler(it) { _ ->
-                    vertx.eventBus().publish(
-                        PlatformAddress.PROBE_DISCONNECTED,
-                        it.rawMessage.getJsonObject("body")
-                    )
-                    subscriberCache.remove(writeHandlerID)
-                }
-            }
-
-            //auto-add probe id to headers
-            val probeId = subscriberCache[writeHandlerID]
-            if (probeId != null && it.rawMessage.containsKey("headers")) {
-                it.rawMessage.getJsonObject("headers").put("probe_id", probeId)
-            }
-        } else if (it.type() == BridgeEventType.REGISTERED) {
+        if (it.type() == REGISTERED) {
             val probeId = subscriberCache[getWriteHandlerID(it)]
             if (probeId != null) {
                 launch(vertx.dispatcher()) {
@@ -199,7 +185,13 @@ class ProbeBridge(
                     vertx.eventBus().publish(
                         ProcessorAddress.REMOTE_REGISTERED,
                         it.rawMessage,
-                        DeliveryOptions().addHeader("probe_id", probeId)
+                        DeliveryOptions()
+                            .addHeader("probe_id", probeId)
+                            .apply {
+                                Vertx.currentContext().getLocal<ClientAuth>("client")?.let {
+                                    addHeader("client_auth", Json.encode(it))
+                                }
+                            }
                     )
                 }
             } else {
@@ -207,8 +199,46 @@ class ProbeBridge(
                 it.fail("Missing probe id")
                 return
             }
+        } else if (it.type() == SEND || it.type() == PUBLISH || it.type() == REGISTER) {
+            validateProbeAuth(it) { clientAuth ->
+                if (clientAuth.succeeded()) {
+                    val writeHandlerID = getWriteHandlerID(it)
+                    if (it.rawMessage.getString("address") == PROBE_CONNECTED) {
+                        val conn = Json.decodeValue(
+                            it.rawMessage.getJsonObject("body").toString(), InstanceConnection::class.java
+                        )
+                        subscriberCache[writeHandlerID] = conn.instanceId
+
+                        setCloseHandler(it) { _ ->
+                            vertx.eventBus().publish(
+                                PlatformAddress.PROBE_DISCONNECTED,
+                                it.rawMessage.getJsonObject("body"),
+                                DeliveryOptions().apply {
+                                    it.rawMessage.getJsonObject("headers")?.let {
+                                        it.map.forEach { (k, v) ->
+                                            addHeader(k, v.toString())
+                                        }
+                                    }
+                                }
+                            )
+                            subscriberCache.remove(writeHandlerID)
+                        }
+                    }
+
+                    //auto-add probe id to headers
+                    val probeId = subscriberCache[writeHandlerID]
+                    if (probeId != null && it.rawMessage.containsKey("headers")) {
+                        it.rawMessage.getJsonObject("headers").put("probe_id", probeId)
+                    }
+                    it.complete(true)
+                } else {
+                    log.error("Failed to validate probe auth", clientAuth.cause())
+                    it.complete(false)
+                }
+            }
+        } else {
+            it.complete(true)
         }
-        it.complete(true) //todo: validateAuth(it)
     }
 
     private fun setCloseHandler(event: BaseBridgeEvent, handler: Handler<Void>) {
