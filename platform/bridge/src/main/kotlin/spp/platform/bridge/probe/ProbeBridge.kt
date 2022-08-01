@@ -37,7 +37,6 @@ import io.vertx.ext.web.handler.sockjs.SockJSHandler
 import io.vertx.ext.web.handler.sockjs.SockJSHandlerOptions
 import io.vertx.kotlin.coroutines.await
 import io.vertx.kotlin.coroutines.dispatcher
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import mu.KotlinLogging
 import spp.platform.bridge.BridgeAddress
@@ -49,6 +48,7 @@ import spp.protocol.platform.PlatformAddress
 import spp.protocol.platform.PlatformAddress.PROBE_CONNECTED
 import spp.protocol.platform.ProbeAddress
 import spp.protocol.platform.ProcessorAddress
+import spp.protocol.platform.auth.ClientAccess
 import spp.protocol.platform.status.ActiveInstance
 import spp.protocol.platform.status.InstanceConnection
 import java.time.Duration
@@ -88,6 +88,7 @@ class ProbeBridge(
                 if (clientAuth != null) {
                     Vertx.currentContext().putLocal("client", clientAuth)
                 }
+
                 launch(vertx.dispatcher()) {
                     val map = SourceStorage.map<String, JsonObject>(BridgeAddress.ACTIVE_PROBES)
                     map.get(probeId).onSuccess {
@@ -180,20 +181,19 @@ class ProbeBridge(
         if (it.type() == REGISTERED) {
             val probeId = subscriberCache[getWriteHandlerID(it)]
             if (probeId != null) {
-                launch(vertx.dispatcher()) {
-                    delay(1500) //todo: this is temp fix for race condition
-                    vertx.eventBus().publish(
-                        ProcessorAddress.REMOTE_REGISTERED,
-                        it.rawMessage,
-                        DeliveryOptions()
-                            .addHeader("probe_id", probeId)
-                            .apply {
-                                Vertx.currentContext().getLocal<ClientAuth>("client")?.let {
-                                    addHeader("client_auth", Json.encode(it))
-                                }
-                            }
-                    )
-                }
+                val deliveryOptions = DeliveryOptions()
+                    .addHeader("probe_id", probeId)
+                    .apply {
+                        //create ClientAuth without validation as REGISTER event will have validated already
+                        val clientId = it.rawMessage.getJsonObject("headers")?.getString("client_id")
+                        val clientSecret = it.rawMessage.getJsonObject("headers")?.getString("client_secret")
+                        val tenantId = it.rawMessage.getJsonObject("headers")?.getString("tenant_id")
+                        if (clientId != null && clientSecret != null) {
+                            val clientAccess = ClientAccess(clientId, clientSecret)
+                            addHeader("client_auth", Json.encode(ClientAuth(clientAccess, tenantId)))
+                        }
+                    }
+                vertx.eventBus().publish(ProcessorAddress.REMOTE_REGISTERED, it.rawMessage, deliveryOptions)
             } else {
                 log.error("Failed to register remote due to missing probe id")
                 it.fail("Missing probe id")
