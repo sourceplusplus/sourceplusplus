@@ -84,7 +84,7 @@ class SourcePlatform : CoroutineVerticle() {
         }
 
         fun addServiceCheck(checks: HealthChecks, serviceName: String) {
-            val registeredName = "services/${serviceName.replace(".", "/")}"
+            val registeredName = "services/${serviceName.substringAfterLast(".")}"
             checks.register(registeredName) { promise ->
                 discovery.getRecord({ rec -> serviceName == rec.name }
                 ) { record ->
@@ -221,7 +221,10 @@ class SourcePlatform : CoroutineVerticle() {
 
         //Health checks
         val healthChecks = HealthChecks.create(vertx)
+        addServiceCheck(healthChecks, Utilize.LIVE_MANAGEMENT_SERVICE)
         addServiceCheck(healthChecks, Utilize.LIVE_SERVICE)
+        addServiceCheck(healthChecks, Utilize.LIVE_INSTRUMENT)
+        addServiceCheck(healthChecks, Utilize.LIVE_VIEW)
         router["/health"].handler(HealthCheckHandler.createWithHealthChecks(healthChecks))
         router["/stats"].handler(this::getStats)
         router["/clients"].handler(this::getClients)
