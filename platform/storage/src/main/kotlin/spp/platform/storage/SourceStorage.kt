@@ -52,7 +52,7 @@ object SourceStorage {
             CaseFormat.LOWER_HYPHEN,
             storageSelector.substringAfterLast(".").removeSuffix("Storage")
         )
-        return config.getJsonObject("storage").getJsonObject(storageName)
+        return config.getJsonObject("storage").getJsonObject(storageName) ?: JsonObject()
     }
 
     fun initSessionStore(sessionStore: SessionStore) {
