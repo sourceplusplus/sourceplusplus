@@ -20,6 +20,7 @@ package spp.platform.storage
 import io.vertx.core.Vertx
 import io.vertx.core.json.Json
 import io.vertx.core.json.JsonArray
+import io.vertx.core.json.JsonObject
 import io.vertx.core.shareddata.AsyncMap
 import io.vertx.core.shareddata.Counter
 import io.vertx.core.shareddata.Shareable
@@ -319,15 +320,15 @@ open class MemoryStorage(val vertx: Vertx) : CoreStorage {
         val clientAccessStorage = vertx.sharedData().getAsyncMap<String, Any>(namespace("client_access")).await()
         val clientAccessors = clientAccessStorage.get("client_accessors").await() as JsonArray? ?: JsonArray()
         val clientAccess = generateClientAccess(id, secret)
-        clientAccessors.add(clientAccess)
+        clientAccessors.add(JsonObject.mapFrom(clientAccess))
         clientAccessStorage.put("client_accessors", clientAccessors).await()
         return clientAccess
     }
 
     override suspend fun removeClientAccess(id: String): Boolean {
         val clientAccessStorage = vertx.sharedData().getAsyncMap<String, Any>(namespace("client_access")).await()
-        val clientAccessors = clientAccessStorage.get("client_accessors").await() as JsonArray? ?: JsonArray()
-        val existingClientAccess = clientAccessors.list.find { (it as ClientAccess).id == id } as ClientAccess?
+        val clientAccessors = (clientAccessStorage.get("client_accessors").await() as JsonArray? ?: JsonArray())
+        val existingClientAccess = clientAccessors.find { JsonObject.mapFrom(it).getString("id") == id }
         if (existingClientAccess != null) {
             clientAccessors.remove(existingClientAccess)
             clientAccessStorage.put("client_accessors", clientAccessors).await()
@@ -339,12 +340,13 @@ open class MemoryStorage(val vertx: Vertx) : CoreStorage {
     override suspend fun updateClientAccess(id: String): ClientAccess {
         val clientAccessStorage = vertx.sharedData().getAsyncMap<String, Any>(namespace("client_access")).await()
         val clientAccessors = clientAccessStorage.get("client_accessors").await() as JsonArray? ?: JsonArray()
-        val existingClientAccess = clientAccessors.list.find { (it as ClientAccess).id == id } as ClientAccess?
+        val existingClientAccess = clientAccessors.list.find { (it as JsonObject).getString("id") == id } as JsonObject?
         if (existingClientAccess != null) {
+            val clientAccess = generateClientAccess(id, generateClientSecret())
             clientAccessors.remove(existingClientAccess)
-            clientAccessors.add(ClientAccess(id, generateClientSecret()))
+            clientAccessors.add(JsonObject.mapFrom(clientAccess))
             clientAccessStorage.put("client_accessors", clientAccessors).await()
-            return existingClientAccess
+            return clientAccess
         }
         throw IllegalArgumentException("Client access with id $id does not exist")
     }
