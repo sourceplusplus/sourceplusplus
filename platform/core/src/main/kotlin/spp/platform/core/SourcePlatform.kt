@@ -352,7 +352,11 @@ class SourcePlatform : CoroutineVerticle() {
             }.onFailure {
                 if (it is ReplyException) {
                     log.error("Failed to get platform clients. Reason: {}", it.message)
-                    ctx.response().setStatusCode(it.failureCode()).end(it.message)
+                    if (it.failureCode() < 0) {
+                        ctx.response().setStatusCode(500).end(it.message)
+                    } else {
+                        ctx.response().setStatusCode(it.failureCode()).end(it.message)
+                    }
                 } else {
                     log.error("Failed to get platform clients", it)
                     ctx.response().setStatusCode(500).end()
@@ -384,7 +388,11 @@ class SourcePlatform : CoroutineVerticle() {
             }.onFailure {
                 if (it is ReplyException) {
                     log.error("Failed to get platform stats. Reason: {}", it.message)
-                    ctx.response().setStatusCode(it.failureCode()).end(it.message)
+                    if (it.failureCode() < 0) {
+                        ctx.response().setStatusCode(500).end(it.message)
+                    } else {
+                        ctx.response().setStatusCode(it.failureCode()).end(it.message)
+                    }
                 } else {
                     log.error("Failed to get platform stats", it)
                     ctx.response().setStatusCode(500).end()
