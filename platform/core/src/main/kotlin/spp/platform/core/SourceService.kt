@@ -69,6 +69,7 @@ import java.util.*
 import java.util.concurrent.CompletableFuture
 import kotlin.properties.Delegates
 
+//todo: move validation logic to LiveManagementServiceProvider
 class SourceService(private val router: Router) : CoroutineVerticle() {
 
     private val log = LoggerFactory.getLogger(SourceService::class.java)
@@ -89,8 +90,8 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
             }
         }
         router.post("/graphql/spp").handler(BodyHandler.create()).handler {
-            if (it.user() != null && Vertx.currentContext().get<DeveloperAuth>("developer") == null) {
-                Vertx.currentContext().put(
+            if (it.user() != null && Vertx.currentContext().getLocal<DeveloperAuth>("developer") == null) {
+                Vertx.currentContext().putLocal(
                     "developer",
                     DeveloperAuth(
                         it.user().principal().getString("developer_id"),
@@ -217,6 +218,9 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
                 ).dataFetcher(
                     "getLiveViewSubscriptions",
                     this::getLiveViewSubscriptions
+                ).dataFetcher(
+                    "getClientAccessors",
+                    this::getClientAccessors
                 )
             }
             .type(
@@ -306,6 +310,15 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
                 ).dataFetcher(
                     "clearLiveViewSubscriptions",
                     this::clearLiveViewSubscriptions
+                ).dataFetcher(
+                    "addClientAccess",
+                    this::addClientAccess
+                ).dataFetcher(
+                    "removeClientAccess",
+                    this::removeClientAccess
+                ).dataFetcher(
+                    "updateClientAccess",
+                    this::updateClientAccess
                 )
             }.build()
         val schemaGenerator = SchemaGenerator()
@@ -1765,6 +1778,74 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
                 } else {
                     completableFuture.completeExceptionally(it.cause())
                 }
+            }
+        }
+        return completableFuture
+    }
+
+    private fun getClientAccessors(env: DataFetchingEnvironment): CompletableFuture<List<ClientAccess>> {
+        val completableFuture = CompletableFuture<List<ClientAccess>>()
+        launch(vertx.dispatcher()) {
+            if (jwtEnabled) {
+                val devId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                    .user().principal().getString("developer_id")
+                if (SourceStorage.requiresPermission(devId, GET_CLIENT_ACCESSORS, completableFuture)) {
+                    return@launch
+                }
+            }
+
+            completableFuture.complete(SourceStorage.getClientAccessors())
+        }
+        return completableFuture
+    }
+
+    private fun addClientAccess(env: DataFetchingEnvironment): CompletableFuture<ClientAccess> {
+        val completableFuture = CompletableFuture<ClientAccess>()
+        launch(vertx.dispatcher()) {
+            if (jwtEnabled) {
+                val devId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                    .user().principal().getString("developer_id")
+                if (SourceStorage.requiresPermission(devId, ADD_CLIENT_ACCESS, completableFuture)) {
+                    return@launch
+                }
+            }
+
+            completableFuture.complete(SourceStorage.addClientAccess())
+        }
+        return completableFuture
+    }
+
+    private fun removeClientAccess(env: DataFetchingEnvironment): CompletableFuture<Boolean> {
+        val completableFuture = CompletableFuture<Boolean>()
+        launch(vertx.dispatcher()) {
+            if (jwtEnabled) {
+                val devId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                    .user().principal().getString("developer_id")
+                if (SourceStorage.requiresPermission(devId, REMOVE_CLIENT_ACCESS, completableFuture)) {
+                    return@launch
+                }
+            }
+
+            completableFuture.complete(SourceStorage.removeClientAccess(env.getArgument("id")))
+        }
+        return completableFuture
+    }
+
+    private fun updateClientAccess(env: DataFetchingEnvironment): CompletableFuture<ClientAccess> {
+        val completableFuture = CompletableFuture<ClientAccess>()
+        launch(vertx.dispatcher()) {
+            if (jwtEnabled) {
+                val devId = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java)
+                    .user().principal().getString("developer_id")
+                if (SourceStorage.requiresPermission(devId, UPDATE_CLIENT_ACCESS, completableFuture)) {
+                    return@launch
+                }
+            }
+
+            try {
+                completableFuture.complete(SourceStorage.updateClientAccess(env.getArgument("id")))
+            } catch (e: Exception) {
+                completableFuture.completeExceptionally(e)
             }
         }
         return completableFuture

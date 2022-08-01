@@ -48,7 +48,7 @@ class SourceDashboard : CoroutineVerticle() {
 
             val tenantId = postData.get("tenant_id")
             if (!tenantId.isNullOrEmpty()) {
-                Vertx.currentContext().put("tenant_id", tenantId)
+                Vertx.currentContext().putLocal("tenant_id", tenantId)
             }
             launch(vertx.dispatcher()) {
                 val dev = SourceStorage.getDeveloperByAccessToken(password)

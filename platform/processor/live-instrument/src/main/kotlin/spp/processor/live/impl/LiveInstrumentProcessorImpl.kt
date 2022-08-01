@@ -142,7 +142,7 @@ class LiveInstrumentProcessorImpl : CoroutineVerticle(), LiveInstrumentService {
     }
 
     override fun addLiveInstrument(instrument: LiveInstrument): Future<LiveInstrument> {
-        val devAuth = Vertx.currentContext().get<DeveloperAuth>("developer")
+        val devAuth = Vertx.currentContext().getLocal<DeveloperAuth>("developer")
         return addLiveInstrument(devAuth, instrument)
     }
 
@@ -286,7 +286,7 @@ class LiveInstrumentProcessorImpl : CoroutineVerticle(), LiveInstrumentService {
     }
 
     override fun addLiveInstruments(instruments: List<LiveInstrument>): Future<List<LiveInstrument>> {
-        val devAuth = Vertx.currentContext().get<DeveloperAuth>("developer")
+        val devAuth = Vertx.currentContext().getLocal<DeveloperAuth>("developer")
         log.info(
             "Received add live instrument batch request. Developer: {} - Location(s): {}",
             devAuth, instruments.map { it.location.let { it.source + ":" + it.line } }
@@ -309,21 +309,21 @@ class LiveInstrumentProcessorImpl : CoroutineVerticle(), LiveInstrumentService {
     }
 
     override fun getLiveInstruments(type: LiveInstrumentType?): Future<List<LiveInstrument>> {
-        val devAuth = Vertx.currentContext().get<DeveloperAuth>("developer")
+        val devAuth = Vertx.currentContext().getLocal<DeveloperAuth>("developer")
         log.info("Received get live instruments request. Developer: {}", devAuth)
 
         return Future.succeededFuture(_getLiveInstruments(type))
     }
 
     override fun removeLiveInstrument(id: String): Future<LiveInstrument?> {
-        val devAuth = Vertx.currentContext().get<DeveloperAuth>("developer")
+        val devAuth = Vertx.currentContext().getLocal<DeveloperAuth>("developer")
         log.info("Received remove live instrument request. Developer: {} - Id: {}", devAuth, id)
 
         return removeLiveInstrument(devAuth, id)
     }
 
     override fun removeLiveInstruments(location: LiveSourceLocation): Future<List<LiveInstrument>> {
-        val devAuth = Vertx.currentContext().get<DeveloperAuth>("developer")
+        val devAuth = Vertx.currentContext().getLocal<DeveloperAuth>("developer")
         log.info("Received remove live instruments request. Developer: {} - Location: {}", devAuth, location)
 
         try {
@@ -348,28 +348,28 @@ class LiveInstrumentProcessorImpl : CoroutineVerticle(), LiveInstrumentService {
     }
 
     override fun getLiveInstrumentById(id: String): Future<LiveInstrument?> {
-        val devAuth = Vertx.currentContext().get<DeveloperAuth>("developer")
+        val devAuth = Vertx.currentContext().getLocal<DeveloperAuth>("developer")
         log.info("Received get live instrument by id request. Developer: {} - Id: {}", devAuth, id)
 
         return Future.succeededFuture(_getLiveInstrumentById(id))
     }
 
     override fun getLiveInstrumentsByIds(ids: List<String>): Future<List<LiveInstrument>> {
-        val devAuth = Vertx.currentContext().get<DeveloperAuth>("developer")
+        val devAuth = Vertx.currentContext().getLocal<DeveloperAuth>("developer")
         log.info("Received get live instruments by ids request. Developer: {} - Ids: {}", devAuth, ids)
 
         return Future.succeededFuture(_getLiveInstrumentsByIds(ids))
     }
 
     override fun getLiveInstrumentsByLocation(location: LiveSourceLocation): Future<List<LiveInstrument>> {
-        val devAuth = Vertx.currentContext().get<DeveloperAuth>("developer")
+        val devAuth = Vertx.currentContext().getLocal<DeveloperAuth>("developer")
         log.info("Received get live instruments by location request. Developer: {} - Location: {}", devAuth, location)
 
         return Future.succeededFuture(_getLiveInstruments(location))
     }
 
     override fun clearAllLiveInstruments(type: LiveInstrumentType?): Future<Boolean> {
-        val devAuth = Vertx.currentContext().get<DeveloperAuth>("developer")
+        val devAuth = Vertx.currentContext().getLocal<DeveloperAuth>("developer")
         log.info("Received clear live instruments request. Developer: {}", devAuth)
 
         //todo: impl probe clear command
@@ -381,7 +381,7 @@ class LiveInstrumentProcessorImpl : CoroutineVerticle(), LiveInstrumentService {
     }
 
     override fun clearLiveInstruments(type: LiveInstrumentType?): Future<Boolean> {
-        val devAuth = Vertx.currentContext().get<DeveloperAuth>("developer")
+        val devAuth = Vertx.currentContext().getLocal<DeveloperAuth>("developer")
         log.info("Received clear live instruments request. Developer: {}", devAuth.selfId)
 
         //todo: impl probe clear command

@@ -32,6 +32,7 @@ import io.vertx.serviceproxy.ServiceBinder
 import org.slf4j.LoggerFactory
 import spp.platform.common.DeveloperAuth
 import spp.protocol.SourceServices.Utilize
+import spp.protocol.service.LiveManagementService
 import spp.protocol.service.LiveService
 import kotlin.system.exitProcess
 
@@ -43,6 +44,7 @@ class ServiceProvider(private val jwtAuth: JWTAuth?) : CoroutineVerticle() {
 
     private var discovery: ServiceDiscovery? = null
     private var liveService: Record? = null
+    private var liveManagementService: Record? = null
 
     override suspend fun start() {
         try {
@@ -65,6 +67,11 @@ class ServiceProvider(private val jwtAuth: JWTAuth?) : CoroutineVerticle() {
                 LiveService::class.java,
                 LiveServiceProvider(vertx)
             )
+            liveManagementService = publishService(
+                Utilize.LIVE_MANAGEMENT_SERVICE,
+                LiveManagementService::class.java,
+                LiveManagementServiceProvider(vertx)
+            )
         } catch (throwable: Throwable) {
             throwable.printStackTrace()
             log.error("Failed to start SkyWalking provider", throwable)
@@ -79,17 +86,17 @@ class ServiceProvider(private val jwtAuth: JWTAuth?) : CoroutineVerticle() {
                 if (jwtAuth != null) {
                     jwtAuth.authenticate(JsonObject().put("token", msg.headers().get("auth-token"))).onComplete {
                         if (it.succeeded()) {
-                            Vertx.currentContext().put("user", it.result())
+                            Vertx.currentContext().putLocal("user", it.result())
                             val selfId = it.result().principal().getString("developer_id")
                             val accessToken = it.result().principal().getString("access_token")
-                            Vertx.currentContext().put("developer", DeveloperAuth.from(selfId, accessToken))
+                            Vertx.currentContext().putLocal("developer", DeveloperAuth.from(selfId, accessToken))
                             promise.complete(msg)
                         } else {
                             promise.fail(it.cause())
                         }
                     }
                 } else {
-                    Vertx.currentContext().put("developer", DeveloperAuth.from("system", null))
+                    Vertx.currentContext().putLocal("developer", DeveloperAuth.from("system", null))
                     promise.complete(msg)
                 }
                 return@addInterceptor promise.future()
@@ -109,6 +116,13 @@ class ServiceProvider(private val jwtAuth: JWTAuth?) : CoroutineVerticle() {
                 log.info("Live service unpublished")
             } else {
                 log.error("Failed to unpublish live service", it.cause())
+            }
+        }.await()
+        discovery!!.unpublish(liveManagementService!!.registration).onComplete {
+            if (it.succeeded()) {
+                log.info("Live management service unpublished")
+            } else {
+                log.error("Failed to unpublish live management service", it.cause())
             }
         }.await()
         discovery!!.close()

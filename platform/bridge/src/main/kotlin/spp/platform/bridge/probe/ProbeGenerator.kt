@@ -27,7 +27,6 @@ import io.vertx.core.json.JsonObject
 import io.vertx.core.streams.WriteStream
 import io.vertx.ext.web.Router
 import io.vertx.ext.web.RoutingContext
-import io.vertx.ext.web.impl.RoutingContextImpl
 import io.vertx.kotlin.coroutines.CoroutineVerticle
 import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.launch
@@ -39,6 +38,7 @@ import org.bouncycastle.openssl.jcajce.JcaPEMWriter
 import org.kohsuke.github.GitHub
 import spp.platform.storage.SourceStorage
 import spp.protocol.marshall.LocalMessageCodec
+import spp.protocol.platform.auth.ClientAccess
 import java.io.*
 import java.net.URL
 import java.nio.file.Files
@@ -51,18 +51,24 @@ import java.util.zip.ZipOutputStream
 class ProbeGenerator(private val router: Router) : CoroutineVerticle() {
 
     companion object {
-        private const val LOCAL_GEN_PROBE_ADDR = "local.generate-probe"
+        private const val LOCAL_GEN_PROBE_YML_ADDR = "local.generate-spp-probe.yml"
+        private const val LOCAL_GEN_JVM_PROBE_ADDR = "local.generate-jvm-probe.jar"
         private val log = KotlinLogging.logger {}
         private val objectMapper = ObjectMapper()
         private val yamlMapper = YAMLMapper()
         private val githubApi by lazy { GitHub.connectAnonymously() }
     }
 
+    private data class Request(
+        val route: RoutingContext,
+        val clientAccess: ClientAccess? = null
+    )
+
     override suspend fun start() {
-        router["/download/spp-probe"].handler { route ->
+        router["/download/spp-probe.yml"].handler { route ->
             val jwtEnabled = config.getJsonObject("jwt").getString("enabled").toBooleanStrict()
             if (!jwtEnabled) {
-                vertx.eventBus().send(LOCAL_GEN_PROBE_ADDR, route, DeliveryOptions().setLocalOnly(true))
+                vertx.eventBus().send(LOCAL_GEN_PROBE_YML_ADDR, route, DeliveryOptions().setLocalOnly(true))
                 return@handler
             }
 
@@ -72,22 +78,75 @@ class ProbeGenerator(private val router: Router) : CoroutineVerticle() {
                 return@handler
             }
 
-            log.info("Probe download request. Verifying access token: {}", token)
+            log.info("spp-probe.yml download request. Verifying access token: {}", token)
             launch(vertx.dispatcher()) {
+                val clientAccess = SourceStorage.getClientAccessors().firstOrNull()
                 SourceStorage.getDeveloperByAccessToken(token)?.let {
-                    vertx.eventBus().send(LOCAL_GEN_PROBE_ADDR, route, DeliveryOptions().setLocalOnly(true))
+                    vertx.eventBus().send(
+                        LOCAL_GEN_PROBE_YML_ADDR,
+                        Request(route, clientAccess),
+                        DeliveryOptions().setLocalOnly(true)
+                    )
+                } ?: route.response().setStatusCode(401).end("Unauthorized")
+            }
+        }
+        router["/download/jvm-probe.jar"].handler { route ->
+            val jwtEnabled = config.getJsonObject("jwt").getString("enabled").toBooleanStrict()
+            if (!jwtEnabled) {
+                vertx.eventBus().send(LOCAL_GEN_JVM_PROBE_ADDR, route, DeliveryOptions().setLocalOnly(true))
+                return@handler
+            }
+
+            val token = route.request().getParam("access_token")
+            if (token == null) {
+                route.response().setStatusCode(401).end("Unauthorized")
+                return@handler
+            }
+
+            log.info("jvm-probe.jar download request. Verifying access token: {}", token)
+            launch(vertx.dispatcher()) {
+                val clientAccess = SourceStorage.getClientAccessors().firstOrNull()
+                SourceStorage.getDeveloperByAccessToken(token)?.let {
+                    vertx.eventBus().send(
+                        LOCAL_GEN_JVM_PROBE_ADDR,
+                        Request(route, clientAccess),
+                        DeliveryOptions().setLocalOnly(true)
+                    )
                 } ?: route.response().setStatusCode(401).end("Unauthorized")
             }
         }
 
-        vertx.eventBus().registerDefaultCodec(RoutingContextImpl::class.java, LocalMessageCodec())
-        vertx.eventBus().localConsumer<RoutingContext>(LOCAL_GEN_PROBE_ADDR) { msg ->
-            doProbeGeneration(msg.body())
+        vertx.eventBus().registerDefaultCodec(Request::class.java, LocalMessageCodec())
+        vertx.eventBus().localConsumer<Request>(LOCAL_GEN_PROBE_YML_ADDR) { msg ->
+            val crtFile = File("config/spp-platform.crt")
+            val certificate = if (crtFile.exists()) {
+                val crtParser = PEMParser(StringReader(crtFile.readText()))
+                val crtHolder = crtParser.readObject() as X509CertificateHolder
+                JcaX509CertificateConverter().getCertificate(crtHolder)
+            } else {
+                null
+            }
+
+            val platformHost = msg.body().route.request().host().substringBefore(":")
+            val serviceName = msg.body().route.request().getParam("service_name")?.toString() ?: "Your_ApplicationName"
+            val config = SourceProbeConfig(platformHost, serviceName, probeVersion = "latest")
+            val yamlStr = yamlMapper.writeValueAsString(
+                objectMapper.readTree(
+                    JsonObject.mapFrom(getMinimumProbeConfig(config, certificate, msg.body().clientAccess)).toString()
+                )
+            )
+            msg.body().route.response()
+                .putHeader("Content-Type", "application/x-yaml")
+                .putHeader("content-disposition", "attachment; filename=spp-probe.yml")
+                .end(yamlStr)
+        }
+        vertx.eventBus().localConsumer<Request>(LOCAL_GEN_JVM_PROBE_ADDR) { msg ->
+            doJVMProbeGeneration(msg.body().route, msg.body().clientAccess)
         }
     }
 
-    private fun doProbeGeneration(route: RoutingContext) {
-        log.debug("Generating signed probe")
+    private fun doJVMProbeGeneration(route: RoutingContext, clientAccess: ClientAccess?) {
+        log.debug("Generating signed JVM probe")
         val platformHost = route.request().host().substringBefore(":")
         val serviceName = route.request().getParam("service_name")?.toString() ?: "Your_ApplicationName"
         val probeVersion = route.request().getParam("version")
@@ -137,9 +196,9 @@ class ProbeGenerator(private val router: Router) : CoroutineVerticle() {
             val crtParser = PEMParser(StringReader(crtFile.readText()))
             val crtHolder = crtParser.readObject() as X509CertificateHolder
             val certificate = JcaX509CertificateConverter().getCertificate(crtHolder)
-            generateProbe(fileStreams.first, fileStreams.second, fileStreams.third, config, certificate)
+            generateProbe(fileStreams.first, fileStreams.second, fileStreams.third, config, certificate, clientAccess)
         } else {
-            generateProbe(fileStreams.first, fileStreams.second, fileStreams.third, config, null)
+            generateProbe(fileStreams.first, fileStreams.second, fileStreams.third, config, null, clientAccess)
         }
         log.info("Signed probe downloaded")
     }
@@ -150,7 +209,8 @@ class ProbeGenerator(private val router: Router) : CoroutineVerticle() {
         responseStream: OutputStream,
         tempFile: File? = null,
         probeConfig: SourceProbeConfig,
-        certificate: X509Certificate?
+        certificate: X509Certificate?,
+        clientAccess: ClientAccess?
     ) {
         val buffer = ByteArray(8192)
         val responseOut = ZipOutputStream(responseStream)
@@ -179,6 +239,29 @@ class ProbeGenerator(private val router: Router) : CoroutineVerticle() {
             )
         }
 
+        //write minimum probe config as spp-probe.yml inside probe jar
+        val yamlStr = yamlMapper.writeValueAsString(
+            objectMapper.readTree(
+                JsonObject.mapFrom(getMinimumProbeConfig(probeConfig, certificate, clientAccess)).toString()
+            )
+        )
+        responseOut.putNextEntry(ZipEntry("spp-probe.yml"))
+        yamlStr.byteInputStream().use {
+            var len: Int
+            while (it.read(buffer).also { len = it } > 0) {
+                responseOut.write(buffer, 0, len)
+            }
+            responseOut.closeEntry()
+        }
+
+        responseOut.close()
+    }
+
+    private fun getMinimumProbeConfig(
+        probeConfig: SourceProbeConfig,
+        certificate: X509Certificate?,
+        clientAccess: ClientAccess?
+    ): MutableMap<String, MutableMap<Any, Any>> {
         //determine minimum probe config
         val minProbeConfig = mutableMapOf<String, MutableMap<Any, Any>>(
             "spp" to mutableMapOf(
@@ -204,20 +287,15 @@ class ProbeGenerator(private val router: Router) : CoroutineVerticle() {
                 .replace("\n", "")
         }
 
-        //write minimum probe config as spp-probe.yml inside probe jar
-        val yamlStr = yamlMapper.writeValueAsString(
-            objectMapper.readTree(JsonObject.mapFrom(minProbeConfig).toString())
-        )
-        responseOut.putNextEntry(ZipEntry("spp-probe.yml"))
-        yamlStr.byteInputStream().use {
-            var len: Int
-            while (it.read(buffer).also { len = it } > 0) {
-                responseOut.write(buffer, 0, len)
-            }
-            responseOut.closeEntry()
+        //add client access (if necessary)
+        clientAccess?.let {
+            minProbeConfig["spp"]!!["authentication"] = mutableMapOf(
+                "client_id" to it.id,
+                "client_secret" to it.secret
+            )
         }
 
-        responseOut.close()
+        return minProbeConfig
     }
 
     private class OutputWriterStream(response: WriteStream<Buffer>) : OutputStream() {
