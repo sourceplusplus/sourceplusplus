@@ -55,8 +55,8 @@ spp-platform:
 client-access:
   enabled: ${SPP_CLIENT_ACCESS_ENABLED:-false}
   accessors:
-    - id: "test-id"
-      secret: "test-secret"
+    - id: ${SPP_CLIENT_ACCESS_ID:-}
+      secret: ${SPP_CLIENT_ACCESS_SECRET:-}
 
 storage:
   selector: ${SPP_STORAGE:-memory}
