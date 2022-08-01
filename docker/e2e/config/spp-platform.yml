@@ -53,7 +53,7 @@ spp-platform:
         replacement: "<Zip Code>"
 
 client-access:
-  enabled: ${SPP_CLIENT_ACCESS_ENABLED:-true}
+  enabled: ${SPP_CLIENT_ACCESS_ENABLED:-false}
   accessors:
     - id: "test-id"
       secret: "test-secret"
