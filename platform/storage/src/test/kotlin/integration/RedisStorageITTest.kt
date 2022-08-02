@@ -22,10 +22,31 @@ import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxExtension
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.extension.ExtendWith
+import spp.platform.common.ClusterConnection
 import spp.platform.storage.RedisStorage
 
 @ExtendWith(VertxExtension::class)
 class RedisStorageITTest : BaseStorageITTest<RedisStorage>() {
+
+    companion object {
+        @JvmStatic
+        @BeforeAll
+        fun beforeAll() {
+            ClusterConnection.config = JsonObject()
+                .put(
+                    "spp-platform",
+                    JsonObject()
+                        .put("jwt", JsonObject())
+                        .put("pii-redaction", JsonObject().put("enabled", "false"))
+                )
+                .put(
+                    "storage",
+                    JsonObject()
+                        .put("selector", "redis")
+                        .put("redis", JsonObject())
+                )
+        }
+    }
 
     override suspend fun createInstance(vertx: Vertx): RedisStorage {
         val storage = RedisStorage(vertx)
