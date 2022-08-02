@@ -76,6 +76,12 @@ type DeveloperRole {
 
 enum RolePermission {
     RESET,
+
+    ADD_CLIENT_ACCESS,
+    REMOVE_CLIENT_ACCESS,
+    GET_CLIENT_ACCESSORS,
+    UPDATE_CLIENT_ACCESS,
+
     ADD_DEVELOPER,
     REMOVE_DEVELOPER,
     GET_DEVELOPERS,
