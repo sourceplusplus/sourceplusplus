@@ -2,7 +2,6 @@ package integration
 
 import graphql.Assert
 import io.vertx.core.Vertx
-import io.vertx.core.json.JsonObject
 import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions
@@ -22,15 +21,7 @@ abstract class BaseStorageITTest<T : CoreStorage> {
     @BeforeEach
     fun setupInit(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
         storageInstance = createInstance(vertx)
-        SourceStorage.setup(
-            storageInstance,
-            JsonObject().put(
-                "spp-platform",
-                JsonObject()
-                    .put("jwt", JsonObject())
-                    .put("pii-redaction", JsonObject().put("enabled", "false"))
-            )
-        )
+        SourceStorage.setup(storageInstance)
         SourceStorage.reset()
     }
 

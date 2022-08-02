@@ -19,19 +19,13 @@ package integration
 
 import io.vertx.core.Vertx
 import io.vertx.junit5.VertxExtension
-import io.vertx.kotlin.coroutines.dispatcher
-import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.Assertions.*
-import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import spp.platform.common.ClusterConnection
 import spp.platform.storage.MemoryStorage
 
 @ExtendWith(VertxExtension::class)
 class MemoryStorageITTest : BaseStorageITTest<MemoryStorage>() {
 
-    override suspend fun createInstance(vertx: Vertx): MemoryStorage{
+    override suspend fun createInstance(vertx: Vertx): MemoryStorage {
         return MemoryStorage(vertx)
     }
 }

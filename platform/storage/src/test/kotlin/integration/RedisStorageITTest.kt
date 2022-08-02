@@ -20,13 +20,8 @@ package integration
 import io.vertx.core.Vertx
 import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxExtension
-import io.vertx.kotlin.coroutines.dispatcher
-import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import spp.platform.common.ClusterConnection
 import spp.platform.storage.RedisStorage
 
 @ExtendWith(VertxExtension::class)
