@@ -27,6 +27,7 @@ import io.vertx.ext.bridge.BaseBridgeEvent
 import io.vertx.kotlin.coroutines.CoroutineVerticle
 import org.slf4j.LoggerFactory
 import spp.platform.common.ClientAuth
+import spp.platform.common.ClusterConnection
 import spp.platform.common.DeveloperAuth
 import spp.platform.storage.SourceStorage
 import spp.protocol.platform.auth.ClientAccess
@@ -71,7 +72,9 @@ abstract class InstanceBridge(private val jwtAuth: JWTAuth?) : CoroutineVerticle
     }
 
     fun validateProbeAuth(event: BaseBridgeEvent, handler: Handler<AsyncResult<ClientAuth>>) {
-        if (jwtAuth != null) {
+        val authEnabled = ClusterConnection.config.getJsonObject("client-access")?.getString("enabled")
+            ?.toBooleanStrictOrNull()
+        if (authEnabled == true) {
             val clientId = event.rawMessage.getJsonObject("headers")?.getString("client_id")
             val clientSecret = event.rawMessage.getJsonObject("headers")?.getString("client_secret")
             if (clientId == null || clientSecret == null) {
