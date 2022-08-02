@@ -360,12 +360,17 @@ object SourceStorage {
 
     fun isValidClientAccess(clientId: String, clientSecret: String?): Future<Void> {
         val promise = Promise.promise<Void>()
-        GlobalScope.launch(getVertx().dispatcher()) {
-            if (storage.getClientAccess(clientId)?.secret == clientSecret) {
-                promise.complete()
-            } else {
-                promise.fail("Invalid client secret")
+        val authEnabled = config.getJsonObject("client-access")?.getString("enabled")?.toBooleanStrictOrNull()
+        if (authEnabled == true) {
+            GlobalScope.launch(getVertx().dispatcher()) {
+                if (storage.getClientAccess(clientId)?.secret == clientSecret) {
+                    promise.complete()
+                } else {
+                    promise.fail("Invalid client secret")
+                }
             }
+        } else {
+            promise.complete()
         }
         return promise.future()
     }
