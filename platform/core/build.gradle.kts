@@ -38,7 +38,7 @@ configure<PublishingExtension> {
 }
 
 dependencies {
-    implementation(project(":platform:storage"))
+    compileOnly(project(":platform:storage"))
     implementation(project(":platform:common"))
 
     testImplementation("org.apache.logging.log4j:log4j-core:2.18.0")
@@ -90,12 +90,9 @@ tasks.getByName<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("sha
         exclude(project(":platform:bridge"))
         exclude(project(":platform:common"))
         exclude(project(":platform:core"))
-        exclude(project(":platform:storage"))
-        exclude(project(":platform:dashboard"))
-        exclude(project(":platform:processor:live-instrument"))
-        exclude(project(":platform:processor:live-view"))
     }
 
+    exclude("spp/platform/storage/**")
     exclude("ch/qos/**")
     exclude("org/slf4j/**")
     exclude("logback.xml")
