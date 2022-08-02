@@ -38,7 +38,6 @@ configure<PublishingExtension> {
 }
 
 dependencies {
-    implementation(project(":interfaces:booster-ui"))
     implementation(project(":platform:storage"))
     implementation(project(":platform:common"))
 
@@ -47,7 +46,7 @@ dependencies {
     testImplementation(project(":platform:common").dependencyProject.extensions.getByType(SourceSetContainer::class).test.get().output)
 }
 
-//todo: shouldn't need to put in src (github actions needs for some reason)
+//todo: shouldn't need to put in src (GitHub actions needs for some reason)
 tasks.create("createProperties") {
     if (System.getProperty("build.profile") == "release") {
         val buildBuildFile = File(projectDir, "src/main/resources/build.properties")
@@ -95,7 +94,6 @@ tasks.getByName<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("sha
         exclude(project(":platform:dashboard"))
         exclude(project(":platform:processor:live-instrument"))
         exclude(project(":platform:processor:live-view"))
-        exclude(project(":interfaces:booster-ui"))
     }
 
     exclude("ch/qos/**")
