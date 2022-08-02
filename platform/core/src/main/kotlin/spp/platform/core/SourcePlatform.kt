@@ -18,6 +18,7 @@
 package spp.platform.core
 
 import io.vertx.core.DeploymentOptions
+import io.vertx.core.Vertx
 import io.vertx.core.eventbus.ReplyException
 import io.vertx.core.http.HttpServerOptions
 import io.vertx.core.json.JsonArray
@@ -185,6 +186,10 @@ class SourcePlatform : CoroutineVerticle() {
                 ctx.response().setStatusCode(401).end()
                 return@handler
             }
+            val tenantId = ctx.queryParam("tenant_id").firstOrNull()
+            if (!tenantId.isNullOrEmpty()) {
+                Vertx.currentContext().putLocal("tenant_id", tenantId)
+            }
 
             val token = accessTokenParam[0]
             log.debug("Verifying access token: $token")
@@ -193,8 +198,14 @@ class SourcePlatform : CoroutineVerticle() {
                 if (dev != null) {
                     val jwtToken = jwt!!.generateToken(
                         JsonObject()
+                            .apply {
+                                if (!tenantId.isNullOrEmpty()) {
+                                    put("tenant_id", tenantId)
+                                }
+                            }
                             .put("developer_id", dev.id)
                             .put("created_at", Instant.now().toEpochMilli())
+                            //todo: reasonable expires_at
                             .put("expires_at", Instant.now().plus(365, ChronoUnit.DAYS).toEpochMilli()),
                         JWTOptions().setAlgorithm("RS256")
                     )
