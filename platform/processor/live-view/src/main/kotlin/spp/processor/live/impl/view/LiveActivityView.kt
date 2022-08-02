@@ -17,10 +17,11 @@
  */
 package spp.processor.live.impl.view
 
+import mu.KotlinLogging
 import org.apache.skywalking.oap.server.core.analysis.metrics.WithMetadata
 import org.apache.skywalking.oap.server.core.exporter.ExportEvent
 import org.apache.skywalking.oap.server.core.exporter.MetricValuesExportService
-import org.slf4j.LoggerFactory
+import spp.platform.common.util.Msg
 import spp.processor.live.impl.view.util.EntityNaming
 import spp.processor.live.impl.view.util.MetricTypeSubscriptionCache
 
@@ -28,7 +29,7 @@ class LiveActivityView(private val subscriptionCache: MetricTypeSubscriptionCach
     AbstractLiveView(), MetricValuesExportService {
 
     companion object {
-        private val log = LoggerFactory.getLogger(LiveActivityView::class.java)
+        private val log = KotlinLogging.logger {}
     }
 
     override fun export(event: ExportEvent) {
@@ -44,7 +45,7 @@ class LiveActivityView(private val subscriptionCache: MetricTypeSubscriptionCach
         if (subbedArtifacts != null) {
             val subs = subbedArtifacts[entityName].orEmpty() + subbedArtifacts[metadata.id].orEmpty()
             if (subs.isNotEmpty()) {
-                log.debug("Exporting event $metricName to {} subscribers", subs.size)
+                log.trace { Msg.msg("Exporting event $metricName to {} subscribers", subs.size) }
                 handleEvent(subs, event)
             }
         }
