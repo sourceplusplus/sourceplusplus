@@ -82,10 +82,13 @@ class ProbeBridge(
             val remote = it.body().getString("address")
             if (!remote.contains(":")) {
                 val probeId = it.headers().get("probe_id")
+                log.debug { Msg.msg("Probe {} registering remote: {}", probeId, remote) }
+
                 val clientAuth: ClientAuth? = it.headers().get("client_auth")?.let {
                     ClientAuth.from(it)
                 }
                 if (clientAuth != null) {
+                    log.trace { Msg.msg("Using client auth: {}", clientAuth) }
                     Vertx.currentContext().putLocal("client", clientAuth)
                 }
 
