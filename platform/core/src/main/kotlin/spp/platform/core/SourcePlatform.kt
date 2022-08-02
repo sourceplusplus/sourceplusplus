@@ -84,7 +84,7 @@ class SourcePlatform : CoroutineVerticle() {
         }
 
         fun addServiceCheck(checks: HealthChecks, serviceName: String) {
-            val registeredName = "services/${serviceName.replace(".", "/")}"
+            val registeredName = "services/${serviceName.substringAfterLast(".")}"
             checks.register(registeredName) { promise ->
                 discovery.getRecord({ rec -> serviceName == rec.name }
                 ) { record ->
@@ -221,7 +221,10 @@ class SourcePlatform : CoroutineVerticle() {
 
         //Health checks
         val healthChecks = HealthChecks.create(vertx)
+        addServiceCheck(healthChecks, Utilize.LIVE_MANAGEMENT_SERVICE)
         addServiceCheck(healthChecks, Utilize.LIVE_SERVICE)
+        addServiceCheck(healthChecks, Utilize.LIVE_INSTRUMENT)
+        addServiceCheck(healthChecks, Utilize.LIVE_VIEW)
         router["/health"].handler(HealthCheckHandler.createWithHealthChecks(healthChecks))
         router["/stats"].handler(this::getStats)
         router["/clients"].handler(this::getClients)
@@ -349,7 +352,11 @@ class SourcePlatform : CoroutineVerticle() {
             }.onFailure {
                 if (it is ReplyException) {
                     log.error("Failed to get platform clients. Reason: {}", it.message)
-                    ctx.response().setStatusCode(it.failureCode()).end(it.message)
+                    if (it.failureCode() < 0) {
+                        ctx.response().setStatusCode(500).end(it.message)
+                    } else {
+                        ctx.response().setStatusCode(it.failureCode()).end(it.message)
+                    }
                 } else {
                     log.error("Failed to get platform clients", it)
                     ctx.response().setStatusCode(500).end()
@@ -381,7 +388,11 @@ class SourcePlatform : CoroutineVerticle() {
             }.onFailure {
                 if (it is ReplyException) {
                     log.error("Failed to get platform stats. Reason: {}", it.message)
-                    ctx.response().setStatusCode(it.failureCode()).end(it.message)
+                    if (it.failureCode() < 0) {
+                        ctx.response().setStatusCode(500).end(it.message)
+                    } else {
+                        ctx.response().setStatusCode(it.failureCode()).end(it.message)
+                    }
                 } else {
                     log.error("Failed to get platform stats", it)
                     ctx.response().setStatusCode(500).end()

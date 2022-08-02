@@ -52,6 +52,12 @@ spp-platform:
         lookup: '\b\d{5}[- ]?\d{4}\b'
         replacement: "<Zip Code>"
 
+client-access:
+  enabled: ${SPP_CLIENT_ACCESS_ENABLED:-false}
+  accessors:
+    - id: ${SPP_CLIENT_ACCESS_ID:-}
+      secret: ${SPP_CLIENT_ACCESS_SECRET:-}
+
 storage:
   selector: ${SPP_STORAGE:-memory}
   redis:

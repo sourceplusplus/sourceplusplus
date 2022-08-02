@@ -65,7 +65,7 @@ class MarkerBridge(
 
     override suspend fun start() {
         vertx.eventBus().consumer<JsonObject>(MARKER_CONNECTED) { marker ->
-            if (Vertx.currentContext().get<DeveloperAuth>("developer") == null) {
+            if (Vertx.currentContext().getLocal<DeveloperAuth>("developer") == null) {
                 //todo: SockJS connections needs to revalidate for some reason
                 val authToken = marker.headers()?.get("auth-token")
                 validateAuthToken(authToken) {
@@ -106,7 +106,7 @@ class MarkerBridge(
 
     private fun handleBridgeEvent(it: BaseBridgeEvent) {
         if (it.type() == SEND && it.rawMessage.getString("address") == MARKER_CONNECTED) {
-            validateAuth(it) { devAuth ->
+            validateMarkerAuth(it) { devAuth ->
                 if (devAuth.succeeded()) {
                     val rawConnectionBody = it.rawMessage.getJsonObject("body")
                     setCloseHandler(it) {
@@ -115,11 +115,12 @@ class MarkerBridge(
                     }
                     it.complete(true)
                 } else {
-                    it.fail(devAuth.cause().message)
+                    log.error("Failed to validate marker auth", devAuth.cause())
+                    it.complete(false)
                 }
             }
         } else if (it.type() == SEND || it.type() == PUBLISH || it.type() == REGISTER) {
-            validateAuth(it)
+            validateMarkerAuth(it)
         } else {
             it.complete(true)
         }
@@ -155,7 +156,7 @@ class MarkerBridge(
         val latency = System.currentTimeMillis() - conn.connectionTime
         log.trace { "Establishing connection with marker ${conn.instanceId}" }
 
-        val selfId = Vertx.currentContext().get<DeveloperAuth>("developer").selfId
+        val selfId = Vertx.currentContext().getLocal<DeveloperAuth>("developer").selfId
         conn.meta["selfId"] = selfId
 
         val activeInstance = ActiveInstance(conn.instanceId, System.currentTimeMillis(), conn.meta)

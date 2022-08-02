@@ -69,7 +69,7 @@ class LiveViewProcessorImpl : CoroutineVerticle(), LiveViewService {
 
     override fun addLiveViewSubscription(subscription: LiveViewSubscription): Future<LiveViewSubscription> {
         val promise = Promise.promise<LiveViewSubscription>()
-        val devAuth = Vertx.currentContext().get<DeveloperAuth>("developer")
+        val devAuth = Vertx.currentContext().getLocal<DeveloperAuth>("developer")
         val address = "view." + UUID.randomUUID().toString()
         val sub = subscription.copy(subscriptionId = address)
         log.info("Adding live view subscription: {}", sub)
@@ -180,7 +180,7 @@ class LiveViewProcessorImpl : CoroutineVerticle(), LiveViewService {
     }
 
     override fun getLiveViewSubscriptions(): Future<List<LiveViewSubscription>> {
-        val devAuth = Vertx.currentContext().get<DeveloperAuth>("developer")
+        val devAuth = Vertx.currentContext().getLocal<DeveloperAuth>("developer")
         val viewSubscriptions = mutableSetOf<LiveViewSubscription>()
         subscriptionCache.forEach {
             it.value.forEach {
@@ -195,7 +195,7 @@ class LiveViewProcessorImpl : CoroutineVerticle(), LiveViewService {
     }
 
     override fun clearLiveViewSubscriptions(): Future<List<LiveViewSubscription>> {
-        val devAuth = Vertx.currentContext().get<DeveloperAuth>("developer")
+        val devAuth = Vertx.currentContext().getLocal<DeveloperAuth>("developer")
         return clearLiveViewSubscriptions(devAuth.selfId)
     }
 

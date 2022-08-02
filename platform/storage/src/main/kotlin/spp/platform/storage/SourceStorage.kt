@@ -18,14 +18,20 @@
 package spp.platform.storage
 
 import com.google.common.base.CaseFormat
+import io.vertx.core.Future
+import io.vertx.core.Promise
 import io.vertx.core.json.JsonObject
 import io.vertx.core.shareddata.AsyncMap
 import io.vertx.core.shareddata.Counter
 import io.vertx.ext.web.handler.SessionHandler
 import io.vertx.ext.web.sstore.SessionStore
+import io.vertx.kotlin.coroutines.dispatcher
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import org.apache.commons.lang3.RandomStringUtils
 import org.slf4j.LoggerFactory
 import spp.platform.common.ClusterConnection.config
+import spp.platform.common.ClusterConnection.getVertx
 import spp.protocol.platform.auth.*
 import spp.protocol.platform.developer.Developer
 import spp.protocol.service.error.PermissionAccessDenied
@@ -37,7 +43,6 @@ object SourceStorage {
     private val log = LoggerFactory.getLogger(SourceStorage::class.java)
 
     lateinit var storage: CoreStorage
-    private lateinit var systemRedactors: List<DataRedaction>
     lateinit var sessionStore: SessionStore
     lateinit var sessionHandler: SessionHandler
 
@@ -47,7 +52,7 @@ object SourceStorage {
             CaseFormat.LOWER_HYPHEN,
             storageSelector.substringAfterLast(".").removeSuffix("Storage")
         )
-        return config.getJsonObject("storage").getJsonObject(storageName)
+        return config.getJsonObject("storage").getJsonObject(storageName) ?: JsonObject()
     }
 
     fun initSessionStore(sessionStore: SessionStore) {
@@ -58,29 +63,14 @@ object SourceStorage {
     suspend fun setup(storage: CoreStorage) {
         SourceStorage.storage = storage
 
-        val piiRedaction = config.getJsonObject("spp-platform").getJsonObject("pii-redaction")
-        systemRedactors = if (piiRedaction.getString("enabled").toBoolean()) {
-            piiRedaction.getJsonArray("redactions").list.map {
-                JsonObject.mapFrom(it).let {
-                    DataRedaction(
-                        it.getString("id"),
-                        RedactionType.valueOf(it.getString("type")),
-                        it.getString("lookup"),
-                        it.getString("replacement")
-                    )
-                }
-            }
-        } else {
-            emptyList()
-        }
-
         val installDefaults = getStorageConfig().getString("install_defaults")?.toBooleanStrictOrNull() != false
         if (installDefaults) {
             installDefaults()
         }
     }
 
-    private suspend fun installDefaults() {
+    @Suppress("MemberVisibilityCanBePrivate")
+    suspend fun installDefaults() {
         val jwtConfig = config.getJsonObject("spp-platform").getJsonObject("jwt")
         val accessToken = jwtConfig.getString("access_token")
         val systemAccessToken = if (accessToken.isNullOrEmpty()) {
@@ -105,7 +95,39 @@ object SourceStorage {
                 addPermissionToRole(DeveloperRole.ROLE_USER, it)
             }
         }
-        systemRedactors.forEach { addDataRedaction(it.id, it.type, it.lookup, it.replacement) }
+
+        //set default redactions
+        val piiRedaction = config.getJsonObject("spp-platform").getJsonObject("pii-redaction")
+        if (piiRedaction.getString("enabled").toBoolean()) {
+            piiRedaction.getJsonArray("redactions").list.map {
+                JsonObject.mapFrom(it).let {
+                    DataRedaction(
+                        it.getString("id"),
+                        RedactionType.valueOf(it.getString("type")),
+                        it.getString("lookup"),
+                        it.getString("replacement")
+                    )
+                }
+            }
+        } else {
+            emptyList()
+        }.forEach { addDataRedaction(it.id, it.type, it.lookup, it.replacement) }
+
+        //set default client accessors
+        val clientAccessors = config.getJsonObject("client-access")
+        if (clientAccessors?.getString("enabled").toBoolean()) {
+            clientAccessors?.getJsonArray("accessors")?.list?.map {
+                JsonObject.mapFrom(it).let {
+                    if (!it.getString("id").isNullOrEmpty() && !it.getString("secret").isNullOrEmpty()) {
+                        ClientAccess(it.getString("id"), it.getString("secret"))
+                    } else {
+                        null
+                    }
+                }
+            }.orEmpty().filterNotNull()
+        } else {
+            emptyList()
+        }.forEach { addClientAccess(it.id, it.secret) }
     }
 
     suspend fun reset(): Boolean {
@@ -135,6 +157,26 @@ object SourceStorage {
 
     suspend fun put(name: String, value: Any) {
         storage.put(name, value)
+    }
+
+    suspend fun getClientAccessors(): List<ClientAccess> {
+        return storage.getClientAccessors()
+    }
+
+    suspend fun getClientAccess(id: String): ClientAccess? {
+        return storage.getClientAccess(id)
+    }
+
+    suspend fun addClientAccess(id: String? = null, secret: String? = null): ClientAccess {
+        return storage.addClientAccess(id, secret)
+    }
+
+    suspend fun removeClientAccess(id: String): Boolean {
+        return storage.removeClientAccess(id)
+    }
+
+    suspend fun updateClientAccess(id: String): ClientAccess {
+        return storage.updateClientAccess(id)
     }
 
     suspend fun getDevelopers(): List<Developer> {
@@ -314,5 +356,22 @@ object SourceStorage {
             )
             true
         }
+    }
+
+    fun isValidClientAccess(clientId: String, clientSecret: String?): Future<Void> {
+        val promise = Promise.promise<Void>()
+        val authEnabled = config.getJsonObject("client-access")?.getString("enabled")?.toBooleanStrictOrNull()
+        if (authEnabled == true) {
+            GlobalScope.launch(getVertx().dispatcher()) {
+                if (storage.getClientAccess(clientId)?.secret == clientSecret) {
+                    promise.complete()
+                } else {
+                    promise.fail("Invalid client secret")
+                }
+            }
+        } else {
+            promise.complete()
+        }
+        return promise.future()
     }
 }

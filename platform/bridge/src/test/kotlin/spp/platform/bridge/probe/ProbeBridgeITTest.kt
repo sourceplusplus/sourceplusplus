@@ -26,13 +26,34 @@ import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
 import kotlinx.coroutines.runBlocking
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import spp.protocol.platform.PlatformAddress.PROBE_CONNECTED
+import spp.protocol.platform.ProbeAddress
+import spp.protocol.platform.auth.ClientAccess
 import spp.protocol.platform.status.InstanceConnection
 import java.util.*
 
 class ProbeBridgeITTest : PlatformIntegrationTest() {
+
+    private var clientAccess: ClientAccess? = null
+
+    @BeforeEach
+    fun addClientAccess(): Unit = runBlocking {
+        if (clientAccess == null) {
+            clientAccess = liveManagementService.addClientAccess().await()
+        }
+    }
+
+    @AfterEach
+    fun removeClientAccess(): Unit = runBlocking {
+        if (clientAccess != null) {
+            liveManagementService.removeClientAccess(clientAccess!!.id).await()
+            clientAccess = null
+        }
+    }
 
     @Test
     fun testProbeCounter(): Unit = runBlocking {
@@ -61,6 +82,11 @@ class ProbeBridgeITTest : PlatformIntegrationTest() {
             .put("type", "send")
             .put("address", PROBE_CONNECTED)
             .put("replyAddress", replyAddress)
+            .put(
+                "headers", JsonObject()
+                    .put("client_id", clientAccess!!.id)
+                    .put("client_secret", clientAccess!!.secret)
+            )
         val pc = InstanceConnection("test-probe-id", System.currentTimeMillis())
         msg.put("body", JsonObject.mapFrom(pc))
         ws.writeFrame(WebSocketFrame.textFrame(msg.encode(), true))
@@ -94,6 +120,103 @@ class ProbeBridgeITTest : PlatformIntegrationTest() {
         testContext.verify {
             assertEquals(probeCount, decreasedProbeCount)
         }
+
+        if (testContext.failed()) {
+            throw testContext.causeOfFailure()
+        }
+    }
+
+    @Test
+    fun testInvalidAccess_connectedMessage(): Unit = runBlocking {
+        val testContext = VertxTestContext()
+
+        //connect new probe
+        val client = vertx.createHttpClient(
+            HttpClientOptions()
+                .setDefaultHost("localhost")
+                .setDefaultPort(12800)
+                .setSsl(true)
+                .setTrustAll(true)
+                .setVerifyHost(false)
+        )
+        val wsOptions = WebSocketConnectOptions()
+            .setURI("https://localhost:12800/probe/eventbus/websocket")
+        val ws = client.webSocket(wsOptions).await()
+
+        //send connected message
+        val replyAddress = UUID.randomUUID().toString()
+        val msg = JsonObject()
+            .put("type", "send")
+            .put("address", PROBE_CONNECTED)
+            .put("replyAddress", replyAddress)
+            .put(
+                "headers", JsonObject()
+                    .put("client_id", "invalid-id")
+                    .put("client_secret", "invalid-secret")
+            )
+        val pc = InstanceConnection("test-probe-id", System.currentTimeMillis())
+        msg.put("body", JsonObject.mapFrom(pc))
+        ws.writeFrame(WebSocketFrame.textFrame(msg.encode(), true))
+
+        val connectPromise = Promise.promise<Void>()
+        ws.handler {
+            val received = JsonObject(it.toString())
+            testContext.verify {
+                assertEquals("err", received.getString("type"))
+                assertEquals("rejected", received.getString("body"))
+            }
+            connectPromise.complete()
+        }
+        connectPromise.future().await()
+
+        //disconnect probe
+        ws.close().await()
+        client.close().await()
+
+        if (testContext.failed()) {
+            throw testContext.causeOfFailure()
+        }
+    }
+
+    @Test
+    fun testInvalidAccess_registerRemote(): Unit = runBlocking {
+        val testContext = VertxTestContext()
+
+        //connect new probe
+        val client = vertx.createHttpClient(
+            HttpClientOptions()
+                .setDefaultHost("localhost")
+                .setDefaultPort(12800)
+                .setSsl(true)
+                .setTrustAll(true)
+                .setVerifyHost(false)
+        )
+        val wsOptions = WebSocketConnectOptions()
+            .setURI("https://localhost:12800/probe/eventbus/websocket")
+        val ws = client.webSocket(wsOptions).await()
+
+        //skip connected message and try to register remote
+        val msg = JsonObject()
+            .put("type", "register")
+            .put("address", ProbeAddress.LIVE_INSTRUMENT_REMOTE)
+        val pc = InstanceConnection("test-probe-id", System.currentTimeMillis())
+        msg.put("body", JsonObject.mapFrom(pc))
+        ws.writeFrame(WebSocketFrame.textFrame(msg.encode(), true))
+
+        val connectPromise = Promise.promise<Void>()
+        ws.handler {
+            val received = JsonObject(it.toString())
+            testContext.verify {
+                assertEquals("err", received.getString("type"))
+                assertEquals("rejected", received.getString("body"))
+            }
+            connectPromise.complete()
+        }
+        connectPromise.future().await()
+
+        //disconnect probe
+        ws.close().await()
+        client.close().await()
 
         if (testContext.failed()) {
             throw testContext.causeOfFailure()

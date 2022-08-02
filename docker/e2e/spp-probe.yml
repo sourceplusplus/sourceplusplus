@@ -1,4 +1,7 @@
 spp:
+  authentication:
+    client_id: "test-id"
+    client_secret: "test-secret"
   platform_host: "spp-platform"
   platform_port: 5450
   platform_certificate: |

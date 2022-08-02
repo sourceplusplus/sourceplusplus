@@ -51,7 +51,7 @@ abstract class FeedbackProcessor : CoroutineVerticle() {
     }
 
     fun developerAuthInterceptor(msg: Message<JsonObject>): Future<Message<JsonObject>> {
-        Vertx.currentContext().put("developer", msg.headers().let {
+        Vertx.currentContext().putLocal("developer", msg.headers().let {
             if (it.contains("auth-token")) {
                 DeveloperAuth(
                     JWT.parse(it.get("auth-token")).getJsonObject("payload").getString("developer_id"),
