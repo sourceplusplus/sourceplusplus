@@ -9,9 +9,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import spp.platform.storage.CoreStorage
 import spp.platform.storage.SourceStorage
-import spp.protocol.platform.auth.AccessType
-import spp.protocol.platform.auth.DeveloperRole
-import spp.protocol.platform.auth.RedactionType
+import spp.protocol.platform.auth.*
 
 abstract class BaseStorageITTest<T : CoreStorage> {
 
@@ -161,6 +159,32 @@ abstract class BaseStorageITTest<T : CoreStorage> {
     }
 
     @Test
+    fun addGetRolePermissions(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+        val developerRole = DeveloperRole.fromString("devRole11")
+        storageInstance.addRole(developerRole)
+        storageInstance.addPermissionToRole(developerRole, RolePermission.ADD_ROLE_PERMISSION)
+        storageInstance.addPermissionToRole(developerRole, RolePermission.ADD_DEVELOPER)
+        storageInstance.addPermissionToRole(developerRole, RolePermission.REMOVE_ROLE_PERMISSION)
+        val rolePermissions = storageInstance.getRolePermissions(developerRole)
+        Assertions.assertEquals(3, rolePermissions.size)
+        Assertions.assertNotNull(rolePermissions.find { it.commandType == CommandType.LIVE_SERVICE })
+    }
+//
+//    @Test
+//    fun removePermissionFromRole(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+//        val developerRole = DeveloperRole.fromString("devRole12")
+//        storageInstance.addRole(developerRole)
+//        storageInstance.addPermissionToRole(developerRole, RolePermission.ADD_DEVELOPER_ROLE)
+//        val rolePermissions = storageInstance.getRolePermissions(developerRole)
+//        Assertions.assertEquals(1, rolePermissions.size)
+////        Assertions.assertNotNull(rolePermissions.find { it.commandType == CommandType.LIVE_SERVICE })
+//
+//        storageInstance.removePermissionFromRole(developerRole, RolePermission.ADD_DEVELOPER_ROLE)
+//        Assertions.assertEquals(0, rolePermissions.size)
+////        Assertions.assertNull(rolePermissions.find { it.commandType == CommandType.LIVE_SERVICE })
+//    }
+
+    @Test
     fun getRoleAccessPermissions(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
         val developerRole = DeveloperRole.fromString("test_role_6")
         storageInstance.addRole(developerRole)
@@ -300,6 +324,35 @@ abstract class BaseStorageITTest<T : CoreStorage> {
         Assertions.assertTrue(storageInstance.hasDataRedaction(id))
         storageInstance.removeDataRedaction(id)
         Assertions.assertFalse(storageInstance.hasDataRedaction(id))
+    }
+
+    @Test
+    fun removeDataRedactionFromRole(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+        storageInstance.addDataRedaction("redact8", RedactionType.IDENTIFIER_MATCH, "lookup8", "value8")
+        val developerRole = DeveloperRole.fromString("devRole8")
+        storageInstance.addRole(developerRole)
+        storageInstance.addDataRedactionToRole("redact8", developerRole)
+        val dataRedactions = storageInstance.getRoleDataRedactions(developerRole)
+        Assertions.assertEquals(1, dataRedactions.size)
+        Assertions.assertEquals("value8", dataRedactions.toList()[0].replacement)
+
+        storageInstance.removeDataRedactionFromRole("redact8", developerRole)
+        val updatedDataRedactions = storageInstance.getRoleDataRedactions(developerRole)
+        Assertions.assertEquals(0, updatedDataRedactions.size)
+    }
+
+    @Test
+    fun getRoleDataRedactions(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+        storageInstance.addDataRedaction("redact9", RedactionType.IDENTIFIER_MATCH, "lookup9", "value9")
+        storageInstance.addDataRedaction("redact10", RedactionType.VALUE_REGEX, "lookup10", "value10")
+        val developerRole = DeveloperRole.fromString("devRole9")
+        storageInstance.addRole(developerRole)
+        storageInstance.addDataRedactionToRole("redact9", developerRole)
+        storageInstance.addDataRedactionToRole("redact10", developerRole)
+        val dataRedactions = storageInstance.getRoleDataRedactions(developerRole)
+        Assertions.assertEquals(2, dataRedactions.size)
+        Assertions.assertNotNull(dataRedactions.find { it.replacement == "value10" })
+        Assertions.assertNotNull(dataRedactions.find { it.replacement == "value9" })
     }
 
     @Test
