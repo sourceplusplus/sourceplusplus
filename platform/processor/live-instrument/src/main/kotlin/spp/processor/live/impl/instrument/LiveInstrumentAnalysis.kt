@@ -201,7 +201,6 @@ class LiveInstrumentAnalysis(
         override fun build() = Unit
 
         override fun parse(logData: LogData.Builder, p1: Message?): LogAnalysisListener {
-            if (log.isTraceEnabled) log.trace("Parsing log data {}", logData)
             var logId: String? = null
             var logger: String? = null
             var thread: String? = null
@@ -283,7 +282,6 @@ class LiveInstrumentAnalysis(
         override fun parseLocal(span: SpanObject, segment: SegmentObject) = parseSpan(span, segment)
 
         fun parseSpan(span: SpanObject, segment: SegmentObject) {
-            if (log.isTraceEnabled) log.trace("Parsing span {} of {}", span, segment)
             val locationSources = mutableMapOf<String, String>()
             val locationLines = mutableMapOf<String, Int>()
             val variables = mutableMapOf<String, MutableList<MutableMap<String, Any>>>()

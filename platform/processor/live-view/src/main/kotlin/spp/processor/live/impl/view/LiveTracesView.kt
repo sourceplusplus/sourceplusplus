@@ -55,8 +55,6 @@ class LiveTracesView(private val subscriptionCache: MetricTypeSubscriptionCache)
     override fun build() = Unit
     override fun containsPoint(point: AnalysisListener.Point): Boolean = point == AnalysisListener.Point.Entry
     override fun parseEntry(span: SpanObject, segment: SegmentObject) {
-        if (log.isTraceEnabled) log.trace("Parsing span {} of {}", span, segment)
-
         val entityId = span.operationName
         val subbedArtifacts = subscriptionCache["endpoint_traces"]
         if (subbedArtifacts != null) {
