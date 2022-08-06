@@ -190,20 +190,21 @@ abstract class BaseStorageITTest<T : CoreStorage> {
         Assertions.assertEquals(3, rolePermissions.size)
         Assertions.assertNotNull(rolePermissions.find { it.commandType == CommandType.LIVE_SERVICE })
     }
-//
-//    @Test
-//    fun removePermissionFromRole(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
-//        val developerRole = DeveloperRole.fromString("devRole12")
-//        storageInstance.addRole(developerRole)
-//        storageInstance.addPermissionToRole(developerRole, RolePermission.ADD_DEVELOPER_ROLE)
-//        val rolePermissions = storageInstance.getRolePermissions(developerRole)
-//        Assertions.assertEquals(1, rolePermissions.size)
-////        Assertions.assertNotNull(rolePermissions.find { it.commandType == CommandType.LIVE_SERVICE })
-//
-//        storageInstance.removePermissionFromRole(developerRole, RolePermission.ADD_DEVELOPER_ROLE)
-//        Assertions.assertEquals(0, rolePermissions.size)
-////        Assertions.assertNull(rolePermissions.find { it.commandType == CommandType.LIVE_SERVICE })
-//    }
+
+    @Test
+    fun removePermissionFromRole(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+        val developerRole = DeveloperRole.fromString("devRole12")
+        storageInstance.addRole(developerRole)
+        storageInstance.addPermissionToRole(developerRole, RolePermission.ADD_DEVELOPER_ROLE)
+        val rolePermissions = storageInstance.getRolePermissions(developerRole)
+        Assertions.assertEquals(1, rolePermissions.size)
+        Assertions.assertNotNull(rolePermissions.find { it.commandType == CommandType.LIVE_SERVICE })
+
+        storageInstance.removePermissionFromRole(developerRole, RolePermission.ADD_DEVELOPER_ROLE)
+        val updatedRolePermissions = storageInstance.getRolePermissions(developerRole)
+        Assertions.assertEquals(0, updatedRolePermissions.size)
+        Assertions.assertNull(updatedRolePermissions.find { it.commandType == CommandType.LIVE_SERVICE })
+    }
 
     @Test
     fun getRoleAccessPermissions(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
