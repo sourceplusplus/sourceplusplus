@@ -84,7 +84,7 @@ The Source++ documentation is available [here](https://docs.sourceplus.plus).
     ├── processor             # Observability data processors
         ├── live-instrument   # Live Instrument processor
         └── live-view         # Live View processor
-    └── storage               # JetBrains IDE plugin
+    └── storage               # Platform persistent memory
 ├── probes                    # Live coding probes
     ├── jvm                   # JVM support
     └── python                # Python support
