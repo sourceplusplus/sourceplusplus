@@ -1,6 +1,5 @@
 package integration
 
-import graphql.Assert
 import io.vertx.core.Vertx
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
@@ -94,7 +93,7 @@ abstract class BaseStorageITTest<T : CoreStorage> {
     fun hasDeveloper(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
         storageInstance.addDeveloper("dev_6", "token_6")
 
-        Assert.assertTrue(storageInstance.hasDeveloper("dev_6"))
+        assertTrue(storageInstance.hasDeveloper("dev_6"))
     }
 
     @Test
