@@ -94,6 +94,7 @@ class SourcePlatform : CoroutineVerticle() {
                             val debugData = JsonObject().put("reason", "No published record(s)")
                             promise.complete(KO(debugData))
                         }
+
                         else -> {
                             val reference = discovery.getReference(record.result())
                             try {
@@ -119,13 +120,15 @@ class SourcePlatform : CoroutineVerticle() {
         log.info("Initializing Source++ Platform")
 
         val httpConfig = config.getJsonObject("spp-platform").getJsonObject("http")
-        val sslEnabled = httpConfig.getString("ssl_enabled").toBooleanStrict()
+        val httpSslEnabled = httpConfig.getString("ssl_enabled").toBooleanStrict()
+        val grpcConfig = config.getJsonObject("spp-platform").getJsonObject("grpc")
+        val grpcSslEnabled = grpcConfig.getString("ssl_enabled").toBooleanStrict()
         val jwtConfig = config.getJsonObject("spp-platform").getJsonObject("jwt")
         val jwtEnabled = jwtConfig.getString("enabled").toBooleanStrict()
 
         val keyFile = File("config/spp-platform.key")
         val certFile = File("config/spp-platform.crt")
-        if (!sslEnabled && !jwtEnabled) {
+        if (!httpSslEnabled && !grpcSslEnabled && !jwtEnabled) {
             log.warn("Skipped generating security certificates")
         } else if (!keyFile.exists() || !certFile.exists()) {
             generateSecurityCertificates(keyFile, certFile)
@@ -264,7 +267,7 @@ class SourcePlatform : CoroutineVerticle() {
             SkyWalkingInterceptor(router), DeploymentOptions().setConfig(config)
         ).await()
 
-        if (sslEnabled) {
+        if (httpSslEnabled) {
             log.debug("Starting HTTPS server(s)")
         } else {
             log.warn("TLS protocol disabled")
@@ -272,8 +275,8 @@ class SourcePlatform : CoroutineVerticle() {
         }
         val httpPorts = httpConfig.getString("port").split(",").map { it.toInt() }
 
-        val httpOptions = HttpServerOptions().setSsl(sslEnabled)
-        if (sslEnabled) {
+        val httpOptions = HttpServerOptions().setSsl(httpSslEnabled)
+        if (httpSslEnabled) {
             val jksOptions = CertsToJksOptionsConverter(certFile.absolutePath, keyFile.absolutePath).createJksOptions()
             httpOptions.setKeyStoreOptions(jksOptions)
         }
@@ -281,14 +284,14 @@ class SourcePlatform : CoroutineVerticle() {
             val server = vertx.createHttpServer(httpOptions)
                 .requestHandler(router)
                 .listen(httpPort).await()
-            if (sslEnabled) {
+            if (httpSslEnabled) {
                 log.info("HTTPS server started. Port: {}", server.actualPort())
             } else {
                 log.info("HTTP server started. Port: {}", server.actualPort())
             }
         }
 
-        if (sslEnabled && httpConfig.getString("redirect_to_https").toBooleanStrict()) {
+        if (httpSslEnabled && httpConfig.getString("redirect_to_https").toBooleanStrict()) {
             val redirectServer = vertx.createHttpServer().requestHandler {
                 val redirectUrl = if (httpPorts.contains(443)) {
                     "https://${it.host()}${it.uri()}"

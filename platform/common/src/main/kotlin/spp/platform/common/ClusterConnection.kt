@@ -68,8 +68,8 @@ object ClusterConnection {
                     )
                 )
                 log.info("Booting Source++ Platform [v${BUILD.getString("build_version")}]")
-                log.trace { "Build id: " + BUILD.getString("build_id") }
-                log.trace { "Build date: " + BUILD.getString("build_date") }
+                log.debug { "Build id: " + BUILD.getString("build_id") }
+                log.debug { "Build date: " + BUILD.getString("build_date") }
                 log.trace { "Using configuration: " + config.encode() }
 
                 if (config.getJsonObject("storage").getString("selector") == "memory") {

@@ -44,7 +44,7 @@ jobs:
           echo "::set-output name=release_version::$SPP_RELEASE_VERSION"
 
       - name: Start platform
-        run: ./gradlew -p platform assembleUp -x :interfaces:booster-ui:buildSkyWalkingUI -Dbuild.profile=release -PplatformVersion=$SPP_RELEASE_VERSION -PprocessorVersion=$SPP_RELEASE_VERSION -PprobeVersion=$SPP_RELEASE_VERSION
+        run: ./gradlew -p platform assembleUp -Dbuild.profile=release -PplatformVersion=$SPP_RELEASE_VERSION -PprocessorVersion=$SPP_RELEASE_VERSION -PprobeVersion=$SPP_RELEASE_VERSION
 
       - name: Docker IPs
         run: docker inspect --format='{{.Name}} - {{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $(docker ps -aq)
@@ -69,7 +69,7 @@ jobs:
           name: docker-logs
           path: ./platform/build/containers-logs
 
-      - run: ./gradlew makeDist -Dbuild.profile=release -PplatformVersion=$SPP_RELEASE_VERSION
+      - run: ./gradlew makeDist -x :interfaces:booster-ui:buildSkyWalkingUI -Dbuild.profile=release -PplatformVersion=$SPP_RELEASE_VERSION
 
       - name: Upload spp-platform
         uses: actions/upload-artifact@v2
@@ -92,7 +92,7 @@ jobs:
 
       - name: Publish New Snapshot Packages
         if: github.ref == 'refs/heads/master'
-        run: ./gradlew -p platform publish -Dbuild.profile=release
+        run: ./gradlew -p platform publish -x :interfaces:booster-ui:buildSkyWalkingUI -Dbuild.profile=release
         env:
           GH_PUBLISH_USERNAME: $GITHUB_ACTOR
           GH_PUBLISH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

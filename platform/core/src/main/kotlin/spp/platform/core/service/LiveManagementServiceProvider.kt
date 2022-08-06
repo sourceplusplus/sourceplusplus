@@ -26,12 +26,28 @@ import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
 import spp.platform.storage.SourceStorage
 import spp.protocol.platform.auth.ClientAccess
+import spp.protocol.platform.auth.DeveloperRole
+import spp.protocol.platform.auth.RolePermission
 import spp.protocol.service.LiveManagementService
 
 class LiveManagementServiceProvider(private val vertx: Vertx) : LiveManagementService {
 
     companion object {
         private val log = LoggerFactory.getLogger(LiveManagementServiceProvider::class.java)
+    }
+
+    override fun getRolePermissions(role: String): Future<List<RolePermission>> {
+        val promise = Promise.promise<List<RolePermission>>()
+        GlobalScope.launch(vertx.dispatcher()) {
+            try {
+                val permissions = SourceStorage.getRolePermissions(DeveloperRole.fromString(role))
+                promise.complete(permissions.toList())
+            } catch (e: Exception) {
+                log.error("Failed to get role permissions", e)
+                promise.fail(e)
+            }
+        }
+        return promise.future()
     }
 
     override fun getClientAccessors(): Future<List<ClientAccess>> {

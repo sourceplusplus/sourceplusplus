@@ -14,3 +14,4 @@ services:
     environment:
       - SPP_JWT_ENABLED=false
       - SPP_HTTP_SSL_ENABLED=false
+      - SPP_GRPC_SSL_ENABLED=false

@@ -20,7 +20,7 @@ package spp.platform.common.util
 import org.slf4j.helpers.MessageFormatter
 
 object Msg {
-    fun msg(pattern: String, vararg args: String): String {
+    fun msg(pattern: String, vararg args: Any): String {
         return MessageFormatter.arrayFormat(pattern, args).message
     }
 }

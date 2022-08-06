@@ -192,7 +192,7 @@ class SkyWalkingInterceptor(private val router: Router) : CoroutineVerticle() {
 
         grpcServer.callHandler { req ->
             val authHeader = req.headers().get("authentication")
-            if (probeAuthCache.getIfPresent(authHeader) != null) {
+            if (authHeader != null && probeAuthCache.getIfPresent(authHeader) != null) {
                 proxyGrpcRequest(req, grpcClient, skywalkingGrpcServer)
             } else {
                 val authEnabled = config.getJsonObject("client-access")?.getString("enabled")?.toBooleanStrictOrNull()
