@@ -135,6 +135,7 @@ object SourceStorage {
         getAccessPermissions().forEach { removeAccessPermission(it.id) }
         getRoles().forEach { removeRole(it) }
         getDevelopers().forEach { removeDeveloper(it.id) }
+        getClientAccessors().forEach { removeClientAccess(it.id) }
         installDefaults()
         return true
     }
