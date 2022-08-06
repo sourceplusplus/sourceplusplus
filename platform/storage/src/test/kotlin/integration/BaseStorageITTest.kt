@@ -6,7 +6,7 @@ import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import spp.platform.storage.CoreStorage
@@ -50,41 +50,41 @@ abstract class BaseStorageITTest<T : CoreStorage> {
     @Test
     fun reset(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
         SourceStorage.addRole(DeveloperRole.fromString("resetRole"))
-        Assertions.assertTrue(SourceStorage.getRoles().contains(DeveloperRole.fromString("resetRole")))
+        assertTrue(SourceStorage.getRoles().contains(DeveloperRole.fromString("resetRole")))
         SourceStorage.addDeveloper("resetDeveloper")
-        Assertions.assertNotNull(SourceStorage.getDevelopers().find { it.id == "resetDeveloper" })
+        assertNotNull(SourceStorage.getDevelopers().find { it.id == "resetDeveloper" })
         SourceStorage.addDataRedaction(
             "resetDataRedaction",
             RedactionType.IDENTIFIER_MATCH,
             "resetDataRedaction",
             "resetDataRedaction"
         )
-        Assertions.assertNotNull(SourceStorage.getDataRedactions().find { it.id == "resetDataRedaction" })
+        assertNotNull(SourceStorage.getDataRedactions().find { it.id == "resetDataRedaction" })
 
         SourceStorage.reset()
 
-        Assertions.assertFalse(SourceStorage.getRoles().contains(DeveloperRole.fromString("resetRole")))
-        Assertions.assertNull(SourceStorage.getDevelopers().find { it.id == "resetDeveloper" })
-        Assertions.assertNull(SourceStorage.getDataRedactions().find { it.id == "resetDataRedaction" })
+        assertFalse(SourceStorage.getRoles().contains(DeveloperRole.fromString("resetRole")))
+        assertNull(SourceStorage.getDevelopers().find { it.id == "resetDeveloper" })
+        assertNull(SourceStorage.getDataRedactions().find { it.id == "resetDataRedaction" })
     }
 
     @Test
     fun getDevelopers(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
-        Assertions.assertEquals(1, storageInstance.getDevelopers().size)
+        assertEquals(1, storageInstance.getDevelopers().size)
         storageInstance.addDeveloper("dev_1", "token")
-        Assertions.assertEquals(2, storageInstance.getDevelopers().size)
+        assertEquals(2, storageInstance.getDevelopers().size)
 
-        Assertions.assertNotNull(storageInstance.getDevelopers().find { it.id == "dev_1" })
+        assertNotNull(storageInstance.getDevelopers().find { it.id == "dev_1" })
     }
 
     @Test
     fun getDeveloperByAccessToken(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
-        Assertions.assertEquals(1, storageInstance.getDevelopers().size)
+        assertEquals(1, storageInstance.getDevelopers().size)
         storageInstance.addDeveloper("dev_2", "token")
-        Assertions.assertEquals(2, storageInstance.getDevelopers().size)
+        assertEquals(2, storageInstance.getDevelopers().size)
 
         val developer = storageInstance.getDeveloperByAccessToken("token")
-        Assertions.assertEquals("dev_2", developer?.id)
+        assertEquals("dev_2", developer?.id)
     }
 
     @Test
@@ -100,10 +100,10 @@ abstract class BaseStorageITTest<T : CoreStorage> {
         val token = "token_5"
         storageInstance.addDeveloper(id, token)
         val developer = storageInstance.getDeveloperByAccessToken(token)
-        Assertions.assertNotNull(developer)
-        Assertions.assertEquals(id, developer?.id)
+        assertNotNull(developer)
+        assertEquals(id, developer?.id)
 
-        Assertions.assertNotNull(storageInstance.getDevelopers().find { it.id == "dev_5" })
+        assertNotNull(storageInstance.getDevelopers().find { it.id == "dev_5" })
     }
 
     @Test
@@ -112,12 +112,12 @@ abstract class BaseStorageITTest<T : CoreStorage> {
         val token = "token_3"
         storageInstance.addDeveloper(id, token)
         val developer = storageInstance.getDeveloperByAccessToken(token)
-        Assertions.assertNotNull(developer)
-        Assertions.assertEquals(id, developer?.id)
+        assertNotNull(developer)
+        assertEquals(id, developer?.id)
 
         storageInstance.removeDeveloper(id)
         val updatedDeveloper = storageInstance.getDeveloperByAccessToken(token)
-        Assertions.assertNull(updatedDeveloper)
+        assertNull(updatedDeveloper)
     }
 
     @Test
@@ -126,51 +126,51 @@ abstract class BaseStorageITTest<T : CoreStorage> {
         val token = "token_4"
         storageInstance.addDeveloper(id, token)
         val developer = storageInstance.getDeveloperByAccessToken(token)
-        Assertions.assertEquals(id, developer?.id)
+        assertEquals(id, developer?.id)
 
         storageInstance.setAccessToken(id, "newToken")
-        Assertions.assertNull(storageInstance.getDeveloperByAccessToken(token))
+        assertNull(storageInstance.getDeveloperByAccessToken(token))
 
         val developerWithNewToken = storageInstance.getDeveloperByAccessToken("newToken")
-        Assertions.assertEquals(id, developerWithNewToken?.id)
+        assertEquals(id, developerWithNewToken?.id)
     }
 
     @Test
     fun hasRole(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
         val developerRole = DeveloperRole.fromString("test_role")
-        Assertions.assertFalse(storageInstance.hasRole(developerRole))
+        assertFalse(storageInstance.hasRole(developerRole))
 
         storageInstance.addRole(developerRole)
-        Assertions.assertTrue(storageInstance.hasRole(developerRole))
+        assertTrue(storageInstance.hasRole(developerRole))
     }
 
     @Test
     fun removeRole(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
         val developerRole = DeveloperRole.fromString("test_role_2")
-        Assertions.assertFalse(storageInstance.hasRole(developerRole))
+        assertFalse(storageInstance.hasRole(developerRole))
 
         storageInstance.addRole(developerRole)
-        Assertions.assertTrue(storageInstance.hasRole(developerRole))
+        assertTrue(storageInstance.hasRole(developerRole))
 
         storageInstance.removeRole(developerRole)
-        Assertions.assertFalse(storageInstance.hasRole(developerRole))
+        assertFalse(storageInstance.hasRole(developerRole))
     }
 
     @Test
     fun addRole(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
         val developerRole = DeveloperRole.fromString("test_role_3")
-        Assertions.assertFalse(storageInstance.hasRole(developerRole))
+        assertFalse(storageInstance.hasRole(developerRole))
 
         storageInstance.addRole(developerRole)
-        Assertions.assertTrue(storageInstance.hasRole(developerRole))
+        assertTrue(storageInstance.hasRole(developerRole))
     }
 
     @Test
     fun getRoles(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
         val developerRole = DeveloperRole.fromString("test_role_4")
-        Assertions.assertFalse(storageInstance.getRoles().contains(developerRole))
+        assertFalse(storageInstance.getRoles().contains(developerRole))
         storageInstance.addRole(developerRole)
-        Assertions.assertTrue(storageInstance.getRoles().contains(developerRole))
+        assertTrue(storageInstance.getRoles().contains(developerRole))
     }
 
     @Test
@@ -181,12 +181,12 @@ abstract class BaseStorageITTest<T : CoreStorage> {
         storageInstance.addRole(developerRole)
 
         val developerRoles = storageInstance.getDeveloperRoles(id)
-        Assertions.assertEquals(0, developerRoles.size)
+        assertEquals(0, developerRoles.size)
 
         storageInstance.addRoleToDeveloper(id, developerRole)
         val updatedDeveloperRoles = storageInstance.getDeveloperRoles(id)
-        Assertions.assertEquals(1, updatedDeveloperRoles.size)
-        Assertions.assertEquals("dev_role", updatedDeveloperRoles[0].roleName)
+        assertEquals(1, updatedDeveloperRoles.size)
+        assertEquals("dev_role", updatedDeveloperRoles[0].roleName)
     }
 
     @Test
@@ -197,10 +197,10 @@ abstract class BaseStorageITTest<T : CoreStorage> {
         storageInstance.addRole(developerRole)
         storageInstance.addRoleToDeveloper(id, developerRole)
 
-        Assertions.assertTrue(storageInstance.getDeveloperRoles(id).contains(developerRole))
+        assertTrue(storageInstance.getDeveloperRoles(id).contains(developerRole))
 
         storageInstance.removeRoleFromDeveloper(id, developerRole)
-        Assertions.assertFalse(storageInstance.getDeveloperRoles(id).contains(developerRole))
+        assertFalse(storageInstance.getDeveloperRoles(id).contains(developerRole))
     }
 
     @Test
@@ -211,8 +211,8 @@ abstract class BaseStorageITTest<T : CoreStorage> {
         storageInstance.addPermissionToRole(developerRole, RolePermission.ADD_DEVELOPER)
         storageInstance.addPermissionToRole(developerRole, RolePermission.REMOVE_ROLE_PERMISSION)
         val rolePermissions = storageInstance.getRolePermissions(developerRole)
-        Assertions.assertEquals(3, rolePermissions.size)
-        Assertions.assertNotNull(rolePermissions.find { it.commandType == CommandType.LIVE_SERVICE })
+        assertEquals(3, rolePermissions.size)
+        assertNotNull(rolePermissions.find { it.commandType == CommandType.LIVE_SERVICE })
     }
 
     @Test
@@ -221,13 +221,13 @@ abstract class BaseStorageITTest<T : CoreStorage> {
         storageInstance.addRole(developerRole)
         storageInstance.addPermissionToRole(developerRole, RolePermission.ADD_DEVELOPER_ROLE)
         val rolePermissions = storageInstance.getRolePermissions(developerRole)
-        Assertions.assertEquals(1, rolePermissions.size)
-        Assertions.assertNotNull(rolePermissions.find { it.commandType == CommandType.LIVE_SERVICE })
+        assertEquals(1, rolePermissions.size)
+        assertNotNull(rolePermissions.find { it.commandType == CommandType.LIVE_SERVICE })
 
         storageInstance.removePermissionFromRole(developerRole, RolePermission.ADD_DEVELOPER_ROLE)
         val updatedRolePermissions = storageInstance.getRolePermissions(developerRole)
-        Assertions.assertEquals(0, updatedRolePermissions.size)
-        Assertions.assertNull(updatedRolePermissions.find { it.commandType == CommandType.LIVE_SERVICE })
+        assertEquals(0, updatedRolePermissions.size)
+        assertNull(updatedRolePermissions.find { it.commandType == CommandType.LIVE_SERVICE })
     }
 
     @Test
@@ -238,13 +238,13 @@ abstract class BaseStorageITTest<T : CoreStorage> {
         val id = "accessId"
         storageInstance.addAccessPermission(id, listOf("pattern"), AccessType.BLACK_LIST)
         val roleAccessPermissions = storageInstance.getRoleAccessPermissions(developerRole)
-        Assertions.assertEquals(0, roleAccessPermissions.size)
-        Assertions.assertNull(roleAccessPermissions.find { it.id == id })
+        assertEquals(0, roleAccessPermissions.size)
+        assertNull(roleAccessPermissions.find { it.id == id })
 
         storageInstance.addAccessPermissionToRole(id, developerRole)
         val updatedRoleAccessPermissions = storageInstance.getRoleAccessPermissions(developerRole)
-        Assertions.assertEquals(1, updatedRoleAccessPermissions.size)
-        Assertions.assertNotNull(updatedRoleAccessPermissions.find { it.id == id })
+        assertEquals(1, updatedRoleAccessPermissions.size)
+        assertNotNull(updatedRoleAccessPermissions.find { it.id == id })
 
         val id1 = "accessId1"
         val id2 = "accessId2"
@@ -253,9 +253,9 @@ abstract class BaseStorageITTest<T : CoreStorage> {
         storageInstance.addAccessPermission(id2, listOf("pattern"), AccessType.WHITE_LIST)
         storageInstance.addAccessPermissionToRole(id2, developerRole)
         val multipleRoleAccess = storageInstance.getRoleAccessPermissions(developerRole)
-        Assertions.assertEquals(3, multipleRoleAccess.size)
-        Assertions.assertNotNull(multipleRoleAccess.find { it.id == id1 })
-        Assertions.assertNotNull(multipleRoleAccess.find { it.id == id2 })
+        assertEquals(3, multipleRoleAccess.size)
+        assertNotNull(multipleRoleAccess.find { it.id == id1 })
+        assertNotNull(multipleRoleAccess.find { it.id == id2 })
     }
 
     @Test
@@ -264,16 +264,16 @@ abstract class BaseStorageITTest<T : CoreStorage> {
         storageInstance.addAccessPermission("accessId4", listOf("pattern4"), AccessType.WHITE_LIST)
         storageInstance.addAccessPermission("accessId5", listOf("pattern5"), AccessType.BLACK_LIST)
         val accessPermissions = storageInstance.getAccessPermissions()
-        Assertions.assertEquals(3, accessPermissions.size)
+        assertEquals(3, accessPermissions.size)
 
     }
 
     @Test
     fun hasAccessPermission(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
         val id = "accessId6"
-        Assertions.assertFalse(storageInstance.hasAccessPermission(id))
+        assertFalse(storageInstance.hasAccessPermission(id))
         storageInstance.addAccessPermission(id, listOf("pattern6"), AccessType.WHITE_LIST)
-        Assertions.assertTrue(storageInstance.hasAccessPermission(id))
+        assertTrue(storageInstance.hasAccessPermission(id))
 
     }
 
@@ -282,19 +282,19 @@ abstract class BaseStorageITTest<T : CoreStorage> {
         val id = "accessId7"
         storageInstance.addAccessPermission(id, listOf("pattern7"), AccessType.WHITE_LIST)
         val accessPermission = storageInstance.getAccessPermission(id)
-        Assertions.assertEquals(id, accessPermission.id)
-        Assertions.assertEquals(1, accessPermission.locationPatterns.size)
-        Assertions.assertEquals("pattern7", accessPermission.locationPatterns[0])
+        assertEquals(id, accessPermission.id)
+        assertEquals(1, accessPermission.locationPatterns.size)
+        assertEquals("pattern7", accessPermission.locationPatterns[0])
     }
 
     @Test
     fun addRemovePermission(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
         val id = "accessId8"
-        Assertions.assertFalse(storageInstance.hasAccessPermission(id))
+        assertFalse(storageInstance.hasAccessPermission(id))
         storageInstance.addAccessPermission(id, listOf("pattern8"), AccessType.WHITE_LIST)
-        Assertions.assertTrue(storageInstance.hasAccessPermission(id))
+        assertTrue(storageInstance.hasAccessPermission(id))
         storageInstance.removeAccessPermission(id)
-        Assertions.assertFalse(storageInstance.hasAccessPermission(id))
+        assertFalse(storageInstance.hasAccessPermission(id))
     }
 
     @Test
@@ -307,11 +307,11 @@ abstract class BaseStorageITTest<T : CoreStorage> {
         storageInstance.addAccessPermissionToRole(id, developerRole)
 
         val updatedRoleAccessPermissions = storageInstance.getRoleAccessPermissions(developerRole)
-        Assertions.assertEquals(1, updatedRoleAccessPermissions.size)
+        assertEquals(1, updatedRoleAccessPermissions.size)
 
         storageInstance.removeAccessPermissionFromRole(id, developerRole)
         val removedRoleAccessPermissions = storageInstance.getRoleAccessPermissions(developerRole)
-        Assertions.assertEquals(0, removedRoleAccessPermissions.size)
+        assertEquals(0, removedRoleAccessPermissions.size)
     }
 
     @Test
@@ -319,18 +319,18 @@ abstract class BaseStorageITTest<T : CoreStorage> {
         val id = "redaction1"
         storageInstance.addDataRedaction(id, RedactionType.IDENTIFIER_MATCH, "lookup1", "value1")
         val dataRedaction = storageInstance.getDataRedaction(id)
-        Assertions.assertEquals(id, dataRedaction.id)
-        Assertions.assertEquals(RedactionType.IDENTIFIER_MATCH, dataRedaction.type)
-        Assertions.assertEquals("lookup1", dataRedaction.lookup)
-        Assertions.assertEquals("value1", dataRedaction.replacement)
+        assertEquals(id, dataRedaction.id)
+        assertEquals(RedactionType.IDENTIFIER_MATCH, dataRedaction.type)
+        assertEquals("lookup1", dataRedaction.lookup)
+        assertEquals("value1", dataRedaction.replacement)
     }
 
     @Test
     fun hasDataRedaction(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
         val id = "redaction2"
-        Assertions.assertFalse(storageInstance.hasDataRedaction(id))
+        assertFalse(storageInstance.hasDataRedaction(id))
         storageInstance.addDataRedaction(id, RedactionType.IDENTIFIER_MATCH, "lookup2", "value2")
-        Assertions.assertTrue(storageInstance.hasDataRedaction(id))
+        assertTrue(storageInstance.hasDataRedaction(id))
     }
 
     @Test
@@ -338,11 +338,11 @@ abstract class BaseStorageITTest<T : CoreStorage> {
         val id3 = "redaction3"
         val id4 = "redaction4"
         val id5 = "redaction5"
-        Assertions.assertEquals(0, storageInstance.getDataRedactions().size)
+        assertEquals(0, storageInstance.getDataRedactions().size)
         storageInstance.addDataRedaction(id3, RedactionType.IDENTIFIER_MATCH, "lookup3", "value3")
         storageInstance.addDataRedaction(id4, RedactionType.VALUE_REGEX, "lookup4", "value4")
         storageInstance.addDataRedaction(id5, RedactionType.IDENTIFIER_MATCH, "lookup5", "value5")
-        Assertions.assertEquals(3, storageInstance.getDataRedactions().size)
+        assertEquals(3, storageInstance.getDataRedactions().size)
     }
 
     @Test
@@ -350,26 +350,26 @@ abstract class BaseStorageITTest<T : CoreStorage> {
         val id = "redaction6"
         storageInstance.addDataRedaction(id, RedactionType.IDENTIFIER_MATCH, "lookup1", "value1")
         val dataRedaction = storageInstance.getDataRedaction(id)
-        Assertions.assertEquals(id, dataRedaction.id)
-        Assertions.assertEquals(RedactionType.IDENTIFIER_MATCH, dataRedaction.type)
-        Assertions.assertEquals("lookup1", dataRedaction.lookup)
-        Assertions.assertEquals("value1", dataRedaction.replacement)
+        assertEquals(id, dataRedaction.id)
+        assertEquals(RedactionType.IDENTIFIER_MATCH, dataRedaction.type)
+        assertEquals("lookup1", dataRedaction.lookup)
+        assertEquals("value1", dataRedaction.replacement)
 
         storageInstance.updateDataRedaction(id, RedactionType.VALUE_REGEX, "lookup6", "value6")
         val updatedDataRedaction = storageInstance.getDataRedaction(id)
-        Assertions.assertEquals(id, updatedDataRedaction.id)
-        Assertions.assertEquals(RedactionType.VALUE_REGEX, updatedDataRedaction.type)
-        Assertions.assertEquals("lookup6", updatedDataRedaction.lookup)
-        Assertions.assertEquals("value6", updatedDataRedaction.replacement)
+        assertEquals(id, updatedDataRedaction.id)
+        assertEquals(RedactionType.VALUE_REGEX, updatedDataRedaction.type)
+        assertEquals("lookup6", updatedDataRedaction.lookup)
+        assertEquals("value6", updatedDataRedaction.replacement)
     }
 
     @Test
     fun removeDataRedaction(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
         val id = "redaction7"
         storageInstance.addDataRedaction(id, RedactionType.IDENTIFIER_MATCH, "lookup7", "value7")
-        Assertions.assertTrue(storageInstance.hasDataRedaction(id))
+        assertTrue(storageInstance.hasDataRedaction(id))
         storageInstance.removeDataRedaction(id)
-        Assertions.assertFalse(storageInstance.hasDataRedaction(id))
+        assertFalse(storageInstance.hasDataRedaction(id))
     }
 
     @Test
@@ -379,12 +379,12 @@ abstract class BaseStorageITTest<T : CoreStorage> {
         storageInstance.addRole(developerRole)
         storageInstance.addDataRedactionToRole("redact8", developerRole)
         val dataRedactions = storageInstance.getRoleDataRedactions(developerRole)
-        Assertions.assertEquals(1, dataRedactions.size)
-        Assertions.assertEquals("value8", dataRedactions.toList()[0].replacement)
+        assertEquals(1, dataRedactions.size)
+        assertEquals("value8", dataRedactions.toList()[0].replacement)
 
         storageInstance.removeDataRedactionFromRole("redact8", developerRole)
         val updatedDataRedactions = storageInstance.getRoleDataRedactions(developerRole)
-        Assertions.assertEquals(0, updatedDataRedactions.size)
+        assertEquals(0, updatedDataRedactions.size)
     }
 
     @Test
@@ -396,9 +396,9 @@ abstract class BaseStorageITTest<T : CoreStorage> {
         storageInstance.addDataRedactionToRole("redact9", developerRole)
         storageInstance.addDataRedactionToRole("redact10", developerRole)
         val dataRedactions = storageInstance.getRoleDataRedactions(developerRole)
-        Assertions.assertEquals(2, dataRedactions.size)
-        Assertions.assertNotNull(dataRedactions.find { it.replacement == "value10" })
-        Assertions.assertNotNull(dataRedactions.find { it.replacement == "value9" })
+        assertEquals(2, dataRedactions.size)
+        assertNotNull(dataRedactions.find { it.replacement == "value10" })
+        assertNotNull(dataRedactions.find { it.replacement == "value9" })
     }
 
     @Test
@@ -408,27 +408,27 @@ abstract class BaseStorageITTest<T : CoreStorage> {
         storageInstance.addRole(developerRole)
         storageInstance.addDataRedactionToRole("test", developerRole)
         val dataRedactions = storageInstance.getRoleDataRedactions(developerRole)
-        Assertions.assertEquals(1, dataRedactions.size)
-        Assertions.assertEquals("value1", dataRedactions.toList()[0].replacement)
+        assertEquals(1, dataRedactions.size)
+        assertEquals("value1", dataRedactions.toList()[0].replacement)
 
         storageInstance.updateDataRedaction("test", RedactionType.IDENTIFIER_MATCH, "lookup", "value2")
         val updatedDataRedactions = storageInstance.getRoleDataRedactions(developerRole)
-        Assertions.assertEquals(1, updatedDataRedactions.size)
-        Assertions.assertEquals("value2", updatedDataRedactions.toList()[0].replacement)
+        assertEquals(1, updatedDataRedactions.size)
+        assertEquals("value2", updatedDataRedactions.toList()[0].replacement)
     }
 
     @Test
     fun addGetClientAccess(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
         val id = "clientId1"
         val secret = "clientSecret1"
-        Assertions.assertNull(storageInstance.getClientAccess(id))
-        Assertions.assertEquals(0, storageInstance.getClientAccessors().size)
+        assertNull(storageInstance.getClientAccess(id))
+        assertEquals(0, storageInstance.getClientAccessors().size)
 
         storageInstance.addClientAccess(id, secret);
         val clientAccess = storageInstance.getClientAccess(id)
-        Assertions.assertNotNull(clientAccess)
-        Assertions.assertEquals(1, storageInstance.getClientAccessors().size)
-        Assertions.assertEquals(secret, clientAccess?.secret)
+        assertNotNull(clientAccess)
+        assertEquals(1, storageInstance.getClientAccessors().size)
+        assertEquals(secret, clientAccess?.secret)
     }
 
     @Test
@@ -436,12 +436,12 @@ abstract class BaseStorageITTest<T : CoreStorage> {
         val id = "clientId2"
         storageInstance.addClientAccess(id);
         val clientAccess = storageInstance.getClientAccess(id)
-        Assertions.assertNotNull(clientAccess)
-        Assertions.assertEquals(1, storageInstance.getClientAccessors().size)
+        assertNotNull(clientAccess)
+        assertEquals(1, storageInstance.getClientAccessors().size)
 
-        Assertions.assertTrue(storageInstance.removeClientAccess(id))
-        Assertions.assertNull(storageInstance.getClientAccess(id))
-        Assertions.assertEquals(0, storageInstance.getClientAccessors().size)
+        assertTrue(storageInstance.removeClientAccess(id))
+        assertNull(storageInstance.getClientAccess(id))
+        assertEquals(0, storageInstance.getClientAccessors().size)
     }
 
     @Test
@@ -450,10 +450,10 @@ abstract class BaseStorageITTest<T : CoreStorage> {
         val secret = "clientSecret3"
         storageInstance.addClientAccess(id, secret);
         val clientAccess = storageInstance.getClientAccess(id)
-        Assertions.assertEquals(secret, clientAccess?.secret)
+        assertEquals(secret, clientAccess?.secret)
 
         storageInstance.updateClientAccess(id)
         val updatedClientAccess = storageInstance.getClientAccess(id)
-        Assertions.assertNotEquals(secret, updatedClientAccess?.secret)
+        assertNotEquals(secret, updatedClientAccess?.secret)
     }
 }
