@@ -425,12 +425,12 @@ abstract class BaseStorageITTest<T : CoreStorage> {
         val id = "clientId1"
         val secret = "clientSecret1"
         assertNull(storageInstance.getClientAccess(id))
-        assertEquals(0, storageInstance.getClientAccessors().size)
+        assertEquals(1, storageInstance.getClientAccessors().size)
 
         storageInstance.addClientAccess(id, secret);
         val clientAccess = storageInstance.getClientAccess(id)
         assertNotNull(clientAccess)
-        assertEquals(1, storageInstance.getClientAccessors().size)
+        assertEquals(2, storageInstance.getClientAccessors().size)
         assertEquals(secret, clientAccess?.secret)
     }
 
@@ -440,11 +440,11 @@ abstract class BaseStorageITTest<T : CoreStorage> {
         storageInstance.addClientAccess(id);
         val clientAccess = storageInstance.getClientAccess(id)
         assertNotNull(clientAccess)
-        assertEquals(1, storageInstance.getClientAccessors().size)
+        assertEquals(2, storageInstance.getClientAccessors().size)
 
         assertTrue(storageInstance.removeClientAccess(id))
         assertNull(storageInstance.getClientAccess(id))
-        assertEquals(0, storageInstance.getClientAccessors().size)
+        assertEquals(1, storageInstance.getClientAccessors().size)
     }
 
     @Test
