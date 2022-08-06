@@ -21,7 +21,7 @@ jobs:
           echo "SPP_RELEASE_VERSION=${SPP_PLATFORM_VERSION/-SNAPSHOT/}" >> $GITHUB_ENV
 
       - name: Publish Release Package
-        run: ./gradlew publish -Dbuild.profile=release -PplatformVersion=$SPP_RELEASE_VERSION
+        run: ./gradlew -p platform publish -Dbuild.profile=release -PplatformVersion=$SPP_RELEASE_VERSION
         env:
           GH_PUBLISH_USERNAME: $GITHUB_ACTOR
           GH_PUBLISH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
