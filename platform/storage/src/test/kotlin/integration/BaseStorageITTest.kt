@@ -24,6 +24,27 @@ abstract class BaseStorageITTest<T : CoreStorage> {
     }
 
     @Test
+    fun reset(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+        SourceStorage.addRole(DeveloperRole.fromString("resetRole"))
+        Assertions.assertTrue(SourceStorage.getRoles().contains(DeveloperRole.fromString("resetRole")))
+        SourceStorage.addDeveloper("resetDeveloper")
+        Assertions.assertNotNull(SourceStorage.getDevelopers().find { it.id == "resetDeveloper" })
+        SourceStorage.addDataRedaction(
+            "resetDataRedaction",
+            RedactionType.IDENTIFIER_MATCH,
+            "resetDataRedaction",
+            "resetDataRedaction"
+        )
+        Assertions.assertNotNull(SourceStorage.getDataRedactions().find { it.id == "resetDataRedaction" })
+
+        SourceStorage.reset()
+
+        Assertions.assertFalse(SourceStorage.getRoles().contains(DeveloperRole.fromString("resetRole")))
+        Assertions.assertNull(SourceStorage.getDevelopers().find { it.id == "resetDeveloper" })
+        Assertions.assertNull(SourceStorage.getDataRedactions().find { it.id == "resetDataRedaction" })
+    }
+
+    @Test
     fun getDevelopers(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
         Assertions.assertEquals(1, storageInstance.getDevelopers().size)
         storageInstance.addDeveloper("dev_1", "token")
@@ -372,23 +393,42 @@ abstract class BaseStorageITTest<T : CoreStorage> {
     }
 
     @Test
-    fun reset(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
-        SourceStorage.addRole(DeveloperRole.fromString("resetRole"))
-        Assertions.assertTrue(SourceStorage.getRoles().contains(DeveloperRole.fromString("resetRole")))
-        SourceStorage.addDeveloper("resetDeveloper")
-        Assertions.assertNotNull(SourceStorage.getDevelopers().find { it.id == "resetDeveloper" })
-        SourceStorage.addDataRedaction(
-            "resetDataRedaction",
-            RedactionType.IDENTIFIER_MATCH,
-            "resetDataRedaction",
-            "resetDataRedaction"
-        )
-        Assertions.assertNotNull(SourceStorage.getDataRedactions().find { it.id == "resetDataRedaction" })
+    fun addGetClientAccess(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+        val id = "clientId1"
+        val secret = "clientSecret1"
+        Assertions.assertNull(storageInstance.getClientAccess(id))
+        Assertions.assertEquals(0, storageInstance.getClientAccessors().size)
 
-        SourceStorage.reset()
+        storageInstance.addClientAccess(id, secret);
+        val clientAccess = storageInstance.getClientAccess(id)
+        Assertions.assertNotNull(clientAccess)
+        Assertions.assertEquals(1, storageInstance.getClientAccessors().size)
+        Assertions.assertEquals(secret, clientAccess?.secret)
+    }
 
-        Assertions.assertFalse(SourceStorage.getRoles().contains(DeveloperRole.fromString("resetRole")))
-        Assertions.assertNull(SourceStorage.getDevelopers().find { it.id == "resetDeveloper" })
-        Assertions.assertNull(SourceStorage.getDataRedactions().find { it.id == "resetDataRedaction" })
+    @Test
+    fun removeClientAccess(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+        val id = "clientId2"
+        storageInstance.addClientAccess(id);
+        val clientAccess = storageInstance.getClientAccess(id)
+        Assertions.assertNotNull(clientAccess)
+        Assertions.assertEquals(1, storageInstance.getClientAccessors().size)
+
+        Assertions.assertTrue(storageInstance.removeClientAccess(id))
+        Assertions.assertNull(storageInstance.getClientAccess(id))
+        Assertions.assertEquals(0, storageInstance.getClientAccessors().size)
+    }
+
+    @Test
+    fun updateClientAccess(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+        val id = "clientId3"
+        val secret = "clientSecret3"
+        storageInstance.addClientAccess(id, secret);
+        val clientAccess = storageInstance.getClientAccess(id)
+        Assertions.assertEquals(secret, clientAccess?.secret)
+
+        storageInstance.updateClientAccess(id)
+        val updatedClientAccess = storageInstance.getClientAccess(id)
+        Assertions.assertNotEquals(secret, updatedClientAccess?.secret)
     }
 }
