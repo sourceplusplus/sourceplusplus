@@ -267,7 +267,6 @@ abstract class BaseStorageITTest<T : CoreStorage> {
         storageInstance.addAccessPermission("accessId5", listOf("pattern5"), AccessType.BLACK_LIST)
         val accessPermissions = storageInstance.getAccessPermissions()
         assertEquals(3, accessPermissions.size)
-
     }
 
     @Test
@@ -276,7 +275,6 @@ abstract class BaseStorageITTest<T : CoreStorage> {
         assertFalse(storageInstance.hasAccessPermission(id))
         storageInstance.addAccessPermission(id, listOf("pattern6"), AccessType.WHITE_LIST)
         assertTrue(storageInstance.hasAccessPermission(id))
-
     }
 
     @Test
