@@ -32,13 +32,7 @@ class RedisStorageITTest : BaseStorageITTest<RedisStorage>() {
         @JvmStatic
         @BeforeAll
         fun beforeAll() {
-            ClusterConnection.config = JsonObject()
-                .put(
-                    "spp-platform",
-                    JsonObject()
-                        .put("jwt", JsonObject())
-                        .put("pii-redaction", JsonObject().put("enabled", "false"))
-                )
+            ClusterConnection.config = baseConfig
                 .put(
                     "storage",
                     JsonObject()

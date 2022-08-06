@@ -2,6 +2,8 @@ package integration
 
 import graphql.Assert
 import io.vertx.core.Vertx
+import io.vertx.core.json.JsonArray
+import io.vertx.core.json.JsonObject
 import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions
@@ -12,6 +14,28 @@ import spp.platform.storage.SourceStorage
 import spp.protocol.platform.auth.*
 
 abstract class BaseStorageITTest<T : CoreStorage> {
+
+    companion object {
+        val baseConfig: JsonObject = JsonObject()
+            .put(
+                "spp-platform",
+                JsonObject()
+                    .put("jwt", JsonObject())
+                    .put("pii-redaction", JsonObject().put("enabled", "false"))
+            )
+            .put(
+                "client-access",
+                JsonObject()
+                    .put("enabled", "true")
+                    .put(
+                        "accessors", JsonArray().add(
+                            JsonObject()
+                                .put("id", "test-id")
+                                .put("secret", "test-secret")
+                        )
+                    )
+            )
+    }
 
     lateinit var storageInstance: T
     abstract suspend fun createInstance(vertx: Vertx): T

@@ -20,7 +20,6 @@ package integration
 import io.vertx.core.Vertx
 import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxExtension
-import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.extension.ExtendWith
 import spp.platform.common.ClusterConnection
@@ -33,13 +32,7 @@ class MemoryStorageITTest : BaseStorageITTest<MemoryStorage>() {
         @JvmStatic
         @BeforeAll
         fun beforeAll() {
-            ClusterConnection.config = JsonObject()
-                .put(
-                    "spp-platform",
-                    JsonObject()
-                        .put("jwt", JsonObject())
-                        .put("pii-redaction", JsonObject().put("enabled", "false"))
-                )
+            ClusterConnection.config = baseConfig
                 .put(
                     "storage",
                     JsonObject()
