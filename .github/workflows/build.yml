@@ -44,7 +44,12 @@ jobs:
           echo "::set-output name=release_version::$SPP_RELEASE_VERSION"
 
       - name: Start platform
+        if: github.ref == 'refs/heads/master'
         run: ./gradlew -p platform assembleUp -Dbuild.profile=release -PplatformVersion=$SPP_RELEASE_VERSION -PprocessorVersion=$SPP_RELEASE_VERSION -PprobeVersion=$SPP_RELEASE_VERSION
+
+      - name: Start platform (no dashboard)
+        if: github.ref != 'refs/heads/master'
+        run: ./gradlew -p platform assembleUp -x :interfaces:booster-ui:buildSkyWalkingUI -Dbuild.profile=release -PplatformVersion=$SPP_RELEASE_VERSION -PprocessorVersion=$SPP_RELEASE_VERSION -PprobeVersion=$SPP_RELEASE_VERSION
 
       - name: Docker IPs
         run: docker inspect --format='{{.Name}} - {{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $(docker ps -aq)
