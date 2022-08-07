@@ -73,7 +73,9 @@ jobs:
           name: docker-logs
           path: ./platform/build/containers-logs
 
-      - run: ./gradlew makeDist -x :interfaces:booster-ui:buildSkyWalkingUI -Dbuild.profile=release -PplatformVersion=$SPP_RELEASE_VERSION
+      - name: Make distribution
+        if: github.ref == 'refs/heads/master'
+        run: ./gradlew makeDist -x :interfaces:booster-ui:buildSkyWalkingUI -Dbuild.profile=release -PplatformVersion=$SPP_RELEASE_VERSION
 
       - name: Upload spp-platform
         uses: actions/upload-artifact@v2
