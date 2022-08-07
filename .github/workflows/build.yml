@@ -31,6 +31,7 @@ jobs:
       - uses: actions/checkout@v2
         with:
           submodules: 'recursive'
+
       - name: Export Properties
         id: properties
         shell: bash
@@ -42,13 +43,23 @@ jobs:
           SPP_RELEASE_VERSION=${VERSION/-SNAPSHOT/}
           echo "::set-output name=release_version::$SPP_RELEASE_VERSION"
 
+      - name: Set build version (release)
+        if: github.ref == 'refs/heads/master'
+        run: |
+          echo "BUILD_VERSION=$SPP_RELEASE_VERSION" >> $GITHUB_ENV
+
+      - name: Set build version (non-release)
+        if: github.ref != 'refs/heads/master'
+        run: |
+          echo "BUILD_VERSION=$SPP_PLATFORM_VERSION" >> $GITHUB_ENV
+
       - name: Start platform (release)
         if: github.ref == 'refs/heads/master'
-        run: ./gradlew -p platform assembleUp -Dbuild.profile=release -PplatformVersion=$SPP_RELEASE_VERSION -PprobeVersion=$SPP_RELEASE_VERSION
+        run: ./gradlew -p platform assembleUp -Dbuild.profile=release -PplatformVersion=$BUILD_VERSION -PprobeVersion=$BUILD_VERSION
 
       - name: Start platform (non-release)
         if: github.ref != 'refs/heads/master'
-        run: ./gradlew -p platform assembleUp -x :interfaces:booster-ui:buildSkyWalkingUI
+        run: ./gradlew -p platform assembleUp -x :interfaces:booster-ui:buildSkyWalkingUI -PplatformVersion=$BUILD_VERSION -PprobeVersion=$BUILD_VERSION
 
       - name: Docker IPs
         run: docker inspect --format='{{.Name}} - {{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $(docker ps -aq)
@@ -61,7 +72,7 @@ jobs:
           until $(curl --header "Authorization: Bearer ${{ env.SPP_JWT_TOKEN }}" --insecure --output /dev/null --silent --fail https://localhost:12800/health); do printf '.'; sleep 5; done
 
       - name: Run platform integration tests
-        run: ./gradlew -p platform test -x :interfaces:booster-ui:buildSkyWalkingUI -Dtest.profile=integration
+        run: ./gradlew -p platform test -x :interfaces:booster-ui:buildSkyWalkingUI -Dtest.profile=integration -PplatformVersion=$BUILD_VERSION -PprobeVersion=$BUILD_VERSION
 
       - run: ./gradlew :platform:composeLogs
         if: ${{ always() }}
@@ -75,13 +86,14 @@ jobs:
 
       - name: Make distribution
         if: github.ref == 'refs/heads/master'
-        run: ./gradlew makeDist -x :interfaces:booster-ui:buildSkyWalkingUI -Dbuild.profile=release -PplatformVersion=$SPP_RELEASE_VERSION
+        run: ./gradlew makeDist -x :interfaces:booster-ui:buildSkyWalkingUI -Dbuild.profile=release -PplatformVersion=$BUILD_VERSION
 
       - name: Upload spp-platform
+        if: github.ref == 'refs/heads/master'
         uses: actions/upload-artifact@v2
         with:
-          name: spp-platform-${{ env.SPP_RELEASE_VERSION }}.tar.gz
-          path: ./dist/spp-platform-${{ env.SPP_RELEASE_VERSION }}.tar.gz
+          name: spp-platform-${{ env.BUILD_VERSION }}.tar.gz
+          path: ./dist/spp-platform-${{ env.BUILD_VERSION }}.tar.gz
 
       - name: Remove Old Snapshot Packages
         if: github.ref == 'refs/heads/master'
