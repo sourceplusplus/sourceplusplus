@@ -35,8 +35,7 @@ jobs:
         id: properties
         shell: bash
         run: |
-          PROPERTIES="$(./gradlew properties --console=plain -q)"
-          VERSION="$(echo "$PROPERTIES" | grep "^version:" | cut -f2- -d ' ')"
+          VERSION=$(grep "projectVersion" gradle.properties | cut -d'=' -f2)
           echo "::set-output name=version::$VERSION"
           echo "SPP_PLATFORM_VERSION=$VERSION" >> $GITHUB_ENV
           echo "SPP_RELEASE_VERSION=${VERSION/-SNAPSHOT/}" >> $GITHUB_ENV
@@ -50,6 +49,8 @@ jobs:
       - name: Start platform (no dashboard)
         if: github.ref != 'refs/heads/master'
         run: ./gradlew -p platform assembleUp -x :interfaces:booster-ui:buildSkyWalkingUI -Dbuild.profile=release -PplatformVersion=$SPP_RELEASE_VERSION -PprocessorVersion=$SPP_RELEASE_VERSION -PprobeVersion=$SPP_RELEASE_VERSION
+
+      - run: ls -lh /home/runner/work/live-platform/live-platform/docker/e2e/
 
       - name: Docker IPs
         run: docker inspect --format='{{.Name}} - {{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $(docker ps -aq)
