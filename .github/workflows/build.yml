@@ -86,13 +86,14 @@ jobs:
 
       - name: Make distribution
         if: github.ref == 'refs/heads/master'
-        run: ./gradlew makeDist -x :interfaces:booster-ui:buildSkyWalkingUI -Dbuild.profile=release -PplatformVersion=$SPP_RELEASE_VERSION
+        run: ./gradlew makeDist -x :interfaces:booster-ui:buildSkyWalkingUI -Dbuild.profile=release -PplatformVersion=$BUILD_VERSION
 
       - name: Upload spp-platform
+        if: github.ref == 'refs/heads/master'
         uses: actions/upload-artifact@v2
         with:
-          name: spp-platform-${{ env.SPP_RELEASE_VERSION }}.tar.gz
-          path: ./dist/spp-platform-${{ env.SPP_RELEASE_VERSION }}.tar.gz
+          name: spp-platform-${{ env.BUILD_VERSION }}.tar.gz
+          path: ./dist/spp-platform-${{ env.BUILD_VERSION }}.tar.gz
 
       - name: Remove Old Snapshot Packages
         if: github.ref == 'refs/heads/master'
