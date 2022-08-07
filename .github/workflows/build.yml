@@ -51,7 +51,7 @@ jobs:
       - name: Set build version (non-release)
         if: github.ref != 'refs/heads/master'
         run: |
-          echo "BUILD_VERSION=$VERSION" >> $GITHUB_ENV
+          echo "BUILD_VERSION=$SPP_PLATFORM_VERSION" >> $GITHUB_ENV
 
       - name: Start platform (release)
         if: github.ref == 'refs/heads/master'
