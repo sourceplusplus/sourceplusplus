@@ -70,6 +70,7 @@ class LiveInstrumentProcessorProvider : ModuleProvider() {
         logParserService.addListenerFactory(liveInstrumentAnalysis)
 
         InstrumentProcessor.bootProcessor(manager)
+        log.info("LiveInstrumentProcessorProvider started")
     }
 
     override fun notifyAfterCompleted() = Unit

@@ -47,8 +47,6 @@ class LiveLogsView(private val subscriptionCache: MetricTypeSubscriptionCache) :
         override fun build() = Unit
 
         override fun parse(logData: LogData.Builder, p1: Message?): LogAnalysisListener {
-            if (log.isTraceEnabled) log.trace("Parsing log data {}", logData)
-
             val subbedArtifacts = subscriptionCache["endpoint_logs"]
             if (subbedArtifacts != null) {
                 val logPattern = logData.body.text.text

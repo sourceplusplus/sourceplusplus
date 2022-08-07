@@ -80,6 +80,7 @@ class SourceStorageProvider : ModuleProvider() {
                     }
                 }
             }
+            log.info("spp-storage started")
         } catch (e: Exception) {
             log.error("Failed to start spp-storage.", e)
             exitProcess(-1)
