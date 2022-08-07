@@ -65,8 +65,10 @@ subprojects {
         implementation("org.redisson:redisson:3.17.3")
 
         implementation("org.jooq:joor:$joorVersion")
-        implementation("io.vertx:vertx-grpc-server:$vertxVersion")
-        implementation("io.vertx:vertx-grpc-client:$vertxVersion")
+        implementation("io.vertx:vertx-grpc-server:$vertxVersion") { exclude(group = "io.grpc") }
+        implementation("io.vertx:vertx-grpc-client:$vertxVersion") { exclude(group = "io.grpc") }
+        implementation("io.vertx:vertx-grpc-common:$vertxVersion") { exclude(group = "io.grpc") }
+        implementation("com.google.protobuf:protobuf-java:3.21.4")
         implementation("io.vertx:vertx-service-discovery:$vertxVersion")
         implementation("io.vertx:vertx-service-proxy:$vertxVersion")
         implementation("io.vertx:vertx-health-check:$vertxVersion")
@@ -105,8 +107,8 @@ subprojects {
         testImplementation("org.junit.jupiter:junit-jupiter-engine:$jupiterVersion")
         testImplementation("io.vertx:vertx-junit5:$vertxVersion")
         testImplementation("io.vertx:vertx-web-client:$vertxVersion")
-        testImplementation("org.apache.skywalking:agent-analyzer:$skywalkingVersion")
-        testImplementation("org.apache.skywalking:log-analyzer:$skywalkingVersion")
+        testImplementation("org.apache.skywalking:agent-analyzer:$skywalkingVersion") { isTransitive = false }
+        testImplementation("org.apache.skywalking:log-analyzer:$skywalkingVersion") { isTransitive = false }
     }
 
     spotless {

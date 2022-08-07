@@ -35,16 +35,20 @@ jobs:
         id: properties
         shell: bash
         run: |
-          PROPERTIES="$(./gradlew properties --console=plain -q)"
-          VERSION="$(echo "$PROPERTIES" | grep "^version:" | cut -f2- -d ' ')"
+          VERSION=$(grep "projectVersion" gradle.properties | cut -d'=' -f2)
           echo "::set-output name=version::$VERSION"
           echo "SPP_PLATFORM_VERSION=$VERSION" >> $GITHUB_ENV
           echo "SPP_RELEASE_VERSION=${VERSION/-SNAPSHOT/}" >> $GITHUB_ENV
           SPP_RELEASE_VERSION=${VERSION/-SNAPSHOT/}
           echo "::set-output name=release_version::$SPP_RELEASE_VERSION"
 
-      - name: Start platform
-        run: ./gradlew -p platform assembleUp -Dbuild.profile=release -PplatformVersion=$SPP_RELEASE_VERSION -PprocessorVersion=$SPP_RELEASE_VERSION -PprobeVersion=$SPP_RELEASE_VERSION
+      - name: Start platform (release)
+        if: github.ref == 'refs/heads/master'
+        run: ./gradlew -p platform assembleUp -Dbuild.profile=release -PplatformVersion=$SPP_RELEASE_VERSION -PprobeVersion=$SPP_RELEASE_VERSION
+
+      - name: Start platform (non-release)
+        if: github.ref != 'refs/heads/master'
+        run: ./gradlew -p platform assembleUp -x :interfaces:booster-ui:buildSkyWalkingUI
 
       - name: Docker IPs
         run: docker inspect --format='{{.Name}} - {{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $(docker ps -aq)
@@ -69,7 +73,9 @@ jobs:
           name: docker-logs
           path: ./platform/build/containers-logs
 
-      - run: ./gradlew makeDist -x :interfaces:booster-ui:buildSkyWalkingUI -Dbuild.profile=release -PplatformVersion=$SPP_RELEASE_VERSION
+      - name: Make distribution
+        if: github.ref == 'refs/heads/master'
+        run: ./gradlew makeDist -x :interfaces:booster-ui:buildSkyWalkingUI -Dbuild.profile=release -PplatformVersion=$SPP_RELEASE_VERSION
 
       - name: Upload spp-platform
         uses: actions/upload-artifact@v2
