@@ -44,7 +44,7 @@ jobs:
 
       - name: Start platform (release)
         if: github.ref == 'refs/heads/master'
-        run: ./gradlew -p platform assembleUp -Dbuild.profile=release -PplatformVersion=$SPP_RELEASE_VERSION -PprocessorVersion=$SPP_RELEASE_VERSION -PprobeVersion=$SPP_RELEASE_VERSION
+        run: ./gradlew -p platform assembleUp -Dbuild.profile=release -PplatformVersion=$SPP_RELEASE_VERSION -PprobeVersion=$SPP_RELEASE_VERSION
 
       - name: Start platform (non-release)
         if: github.ref != 'refs/heads/master'
