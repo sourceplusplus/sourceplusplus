@@ -19,7 +19,7 @@ dependencies {
 
 tasks {
     test {
-        jvmArgs = listOf("-javaagent:../../../docker/e2e/spp-probe-$version.jar=${project.projectDir}/src/test/resources/spp-test-probe.yml")
+        jvmArgs = listOf("-javaagent:${rootProject.projectDir}/docker/e2e/spp-probe-$version.jar=${project.projectDir}/src/test/resources/spp-test-probe.yml")
     }
 
     withType<JavaCompile> {
