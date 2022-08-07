@@ -112,7 +112,6 @@ tasks.getByName<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("sha
     exclude("org/springframework/expression/spel/generated/SpringExpressions.g")
     relocate("com.codahale", "spp.platform.dependencies.com.codahale")
     relocate("io.netty", "spp.platform.dependencies.io.netty")
-    relocate("io.grpc", "spp.platform.dependencies.io.grpc")
 
     configurations.add(project.configurations.compileClasspath.get())
     configurations.add(project.configurations.runtimeClasspath.get())
