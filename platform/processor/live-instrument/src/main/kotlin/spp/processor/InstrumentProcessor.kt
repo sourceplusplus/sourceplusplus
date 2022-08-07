@@ -43,6 +43,7 @@ import spp.protocol.SourceServices
 import spp.protocol.marshall.KSerializers
 import spp.protocol.platform.auth.AccessChecker
 import spp.protocol.platform.auth.RolePermission
+import spp.protocol.platform.auth.RolePermission.*
 import spp.protocol.platform.developer.SelfInfo
 import spp.protocol.service.LiveInstrumentService
 import spp.protocol.service.LiveService
@@ -179,22 +180,22 @@ object InstrumentProcessor : FeedbackProcessor() {
                 handler.handle(Future.failedFuture(PermissionAccessDenied(necessaryPermission).toEventBusException()))
             }
         } else if (msg.headers().get("action").startsWith("removeLiveInstrument")) {
-            if (selfInfo.permissions.contains(RolePermission.REMOVE_LIVE_INSTRUMENT)) {
+            if (selfInfo.permissions.contains(REMOVE_LIVE_INSTRUMENT)) {
                 handler.handle(Future.succeededFuture(msg))
             } else {
-                handler.handle(Future.failedFuture(PermissionAccessDenied(RolePermission.REMOVE_LIVE_INSTRUMENT).toEventBusException()))
+                handler.handle(Future.failedFuture(PermissionAccessDenied(REMOVE_LIVE_INSTRUMENT).toEventBusException()))
             }
         } else if (msg.headers().get("action").startsWith("getLiveInstrument")) {
-            if (selfInfo.permissions.contains(RolePermission.GET_LIVE_INSTRUMENTS)) {
+            if (selfInfo.permissions.contains(GET_LIVE_INSTRUMENTS)) {
                 handler.handle(Future.succeededFuture(msg))
             } else {
-                handler.handle(Future.failedFuture(PermissionAccessDenied(RolePermission.GET_LIVE_INSTRUMENTS).toEventBusException()))
+                handler.handle(Future.failedFuture(PermissionAccessDenied(GET_LIVE_INSTRUMENTS).toEventBusException()))
             }
         } else if (msg.headers().get("action") == "clearLiveInstruments") {
-            if (selfInfo.permissions.contains(RolePermission.CLEAR_ALL_LIVE_INSTRUMENTS)) {
+            if (selfInfo.permissions.contains(CLEAR_ALL_LIVE_INSTRUMENTS)) {
                 handler.handle(Future.succeededFuture(msg))
             } else {
-                handler.handle(Future.failedFuture(PermissionAccessDenied(RolePermission.CLEAR_ALL_LIVE_INSTRUMENTS).toEventBusException()))
+                handler.handle(Future.failedFuture(PermissionAccessDenied(CLEAR_ALL_LIVE_INSTRUMENTS).toEventBusException()))
             }
         } else if (RolePermission.fromString(msg.headers().get("action")) != null) {
             val necessaryPermission = RolePermission.fromString(msg.headers().get("action"))!!

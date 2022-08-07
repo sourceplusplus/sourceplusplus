@@ -113,7 +113,35 @@ subprojects {
 
     spotless {
         kotlin {
-            licenseHeaderFile(File(project.rootDir, "LICENSE-HEADER.txt"))
+            val startYear = 2022
+            val currentYear = java.util.Calendar.getInstance().get(java.util.Calendar.YEAR)
+            val copyrightYears = if (startYear == currentYear) {
+                "$startYear"
+            } else {
+                "$startYear-$currentYear"
+            }
+
+            val licenseHeader = Regex("(    <one line[\\S\\s]+If not.+)")
+                .find(File(project.rootDir, "LICENSE").readText())!!.value.lines().joinToString("\n") {
+                    if (it.trim().isEmpty()) {
+                        " *"
+                    } else {
+                        " * " + it.trim()
+                    }
+                }
+            val formattedLicenseHeader = buildString {
+                append("/*\n")
+                append(
+                    licenseHeader.replace(
+                        "<one line to give the program's name and a brief idea of what it does.>",
+                        "Source++, the open-source live coding platform."
+                    )
+                        .replace("<year>", copyrightYears)
+                        .replace(" <name of author>", "CodeBrig, Inc.")
+                )
+                append("\n */")
+            }
+            licenseHeader(formattedLicenseHeader)
         }
     }
 
