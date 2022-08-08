@@ -61,7 +61,7 @@ subprojects {
         implementation("org.bouncycastle:bcpkix-jdk15on:$bouncycastleVersion")
         implementation("org.apache.logging.log4j:log4j-core:2.11.0")
 
-        implementation(files(File(rootDir, ".ext/vertx-redis-clustermanager-0.0.1-local.jar")))
+        implementation(files(File(findProject(":platform")!!.projectDir.parentFile, ".ext/vertx-redis-clustermanager-0.0.1-local.jar")))
         implementation("org.redisson:redisson:3.17.3")
 
         implementation("org.jooq:joor:$joorVersion")
@@ -122,7 +122,8 @@ subprojects {
             }
 
             val licenseHeader = Regex("(    <one line[\\S\\s]+If not.+)")
-                .find(File(project.rootDir, "LICENSE").readText())!!.value.lines().joinToString("\n") {
+                .find(File(project(":platform").projectDir.parentFile, "LICENSE").readText())!!
+                .value.lines().joinToString("\n") {
                     if (it.trim().isEmpty()) {
                         " *"
                     } else {
