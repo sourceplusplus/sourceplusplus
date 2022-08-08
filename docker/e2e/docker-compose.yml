@@ -34,16 +34,6 @@ services:
       - SW_TELEMETRY_PROMETHEUS_HOST=spp-platform
       - SW_PROMETHEUS_FETCHER=default
       - SW_PROMETHEUS_FETCHER_ENABLED_RULES=self
-#      - SW_STORAGE=spp-banyandb
-#      - SW_STORAGE_BANYANDB_HOST=banyandb
-#  banyandb:
-#    image: apache/skywalking-banyandb:latest
-#    container_name: banyandb
-#    hostname: banyandb
-#    ports:
-#      - "17912:17912"
-#    command:
-#      - "standalone"
   spp-example-webapp:
     container_name: spp-example-webapp
     hostname: spp-example-webapp
