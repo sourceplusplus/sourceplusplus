@@ -189,6 +189,8 @@ class SourcePlatform : CoroutineVerticle() {
             val tenantId = ctx.queryParam("tenant_id").firstOrNull()
             if (!tenantId.isNullOrEmpty()) {
                 Vertx.currentContext().putLocal("tenant_id", tenantId)
+            } else {
+                Vertx.currentContext().removeLocal("tenant_id")
             }
 
             val token = accessTokenParam[0]

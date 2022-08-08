@@ -107,6 +107,7 @@ class SkyWalkingInterceptor(private val router: Router) : CoroutineVerticle() {
                 }
 
                 val selfId = request.getString("developer_id")
+                val tenantId = request.getString("tenant_id")
                 val redactions = SourceStorage.getDeveloperDataRedactions(selfId)
                 forward.response().onSuccess { resp ->
                     resp.body().onSuccess {
@@ -135,6 +136,7 @@ class SkyWalkingInterceptor(private val router: Router) : CoroutineVerticle() {
                 headers?.fieldNames()?.forEach {
                     forward.putHeader(it, headers.getValue(it).toString())
                 }
+                forward.putHeader("tenant_id", tenantId)
                 forward.end(body).await()
             }
         }
@@ -208,6 +210,8 @@ class SkyWalkingInterceptor(private val router: Router) : CoroutineVerticle() {
                     val tenantId = authParts.getOrNull(2)
                     if (tenantId != null) {
                         Vertx.currentContext().putLocal("tenant_id", tenantId)
+                    } else {
+                        Vertx.currentContext().removeLocal("tenant_id")
                     }
 
                     launch(vertx.dispatcher()) {
