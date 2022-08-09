@@ -1,6 +1,8 @@
 name: test gh publish
 
 on:
+  pull_request:
+  push:
   workflow_dispatch:
 
 jobs:
