@@ -192,7 +192,7 @@ tasks.register<Copy>("updateDockerFiles") {
 
     doFirst {
         File(projectDir, "../docker/e2e").listFiles()?.forEach {
-            if (it.name.startsWith("spp-platform-") || it.name.startsWith("spp-live-")) {
+            if (it.name.matches(Regex("(spp-(live|platform|probe)-.+\\.jar)"))) {
                 it.delete()
             }
         }
