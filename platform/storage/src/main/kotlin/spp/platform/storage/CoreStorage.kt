@@ -82,11 +82,11 @@ interface CoreStorage {
     }
 
     fun generateClientId(): String {
-        return UUID.randomUUID().toString().replace("-", "")
+        return "spp_ci_" + UUID.randomUUID().toString().replace("-", "")
     }
 
     fun generateClientSecret(): String {
-        return UUID.randomUUID().toString().replace("-", "") +
+        return "spp_cs_" + UUID.randomUUID().toString().replace("-", "") +
                 UUID.randomUUID().toString().replace("-", "")
     }
 }
