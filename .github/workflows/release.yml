@@ -3,6 +3,7 @@ name: Release distributions
 on:
   release:
     types: [published]
+  workflow_dispatch:
 
 jobs:
   release:
@@ -18,13 +19,6 @@ jobs:
         shell: bash
         run: |
           echo "SPP_PLATFORM_VERSION=$(echo $GITHUB_REF | cut -d / -f 3 | cut -d v -f2-)" >> $GITHUB_ENV
-          echo "SPP_RELEASE_VERSION=${SPP_PLATFORM_VERSION/-SNAPSHOT/}" >> $GITHUB_ENV
-
-      - name: Publish Release Package
-        run: ./gradlew -p platform publish -Dbuild.profile=release -PplatformVersion=$SPP_RELEASE_VERSION
-        env:
-          GH_PUBLISH_USERNAME: $GITHUB_ACTOR
-          GH_PUBLISH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Login to DockerHub Registry
         run: echo ${{ secrets.DOCKERHUB_PASSWORD }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
@@ -61,3 +55,9 @@ jobs:
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
           repository: sourceplusplus/spp-platform
           readme-filepath: ./docker/spp-platform/README.md
+
+      - name: Publish Release Package
+        run: ./gradlew -p platform publish -Dbuild.profile=release -PplatformVersion=$SPP_PLATFORM_VERSION
+        env:
+          GH_PUBLISH_USERNAME: $GITHUB_ACTOR
+          GH_PUBLISH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
