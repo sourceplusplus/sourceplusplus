@@ -72,10 +72,12 @@ subprojects {
         implementation("io.vertx:vertx-service-discovery:$vertxVersion")
         implementation("io.vertx:vertx-service-proxy:$vertxVersion")
         implementation("io.vertx:vertx-health-check:$vertxVersion")
-        implementation("io.vertx:vertx-web-graphql:$vertxVersion")
+        implementation("io.vertx:vertx-web-graphql:$vertxVersion") {
+            exclude(group = "com.graphql-java")
+        }
+        compileOnly("com.graphql-java:graphql-java:18.1")
         implementation("io.vertx:vertx-auth-jwt:$vertxVersion")
         implementation("io.vertx:vertx-redis-client:$vertxVersion")
-        implementation("io.vertx:vertx-web-graphql:${vertxVersion}")
         implementation("io.vertx:vertx-tcp-eventbus-bridge:$vertxVersion")
         implementation("io.vertx:vertx-web-sstore-redis:$vertxVersion")
         implementation("org.bouncycastle:bcprov-jdk15on:$bouncycastleVersion")
