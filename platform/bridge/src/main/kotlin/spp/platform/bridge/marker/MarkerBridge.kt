@@ -89,8 +89,8 @@ class MarkerBridge(
             inboundPermitteds = getInboundPermitted() //from marker
             outboundPermitteds = getOutboundPermitted() //to marker
         }
-        sockJSHandler.bridge(portalBridgeOptions) { handleBridgeEvent(it) }
-        router.route("/marker/eventbus/*").handler(sockJSHandler)
+        router.route("/marker/eventbus/*")
+            .subRouter(sockJSHandler.bridge(portalBridgeOptions) { handleBridgeEvent(it) })
 
         //tcp bridge
         TcpEventBusBridge.create(

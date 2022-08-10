@@ -165,8 +165,8 @@ class ProbeBridge(
             inboundPermitteds = getInboundPermitted() //from probe
             outboundPermitteds = getOutboundPermitted() //to probe
         }
-        sockJSHandler.bridge(portalBridgeOptions) { handleBridgeEvent(it, subscriberCache) }
-        router.route("/probe/eventbus/*").handler(sockJSHandler)
+        router.route("/probe/eventbus/*")
+            .subRouter(sockJSHandler.bridge(portalBridgeOptions) { handleBridgeEvent(it, subscriberCache) })
 
         //tcp bridge
         TcpEventBusBridge.create(
