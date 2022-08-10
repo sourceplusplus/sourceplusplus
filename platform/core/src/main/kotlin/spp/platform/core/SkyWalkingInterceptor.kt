@@ -243,7 +243,7 @@ class SkyWalkingInterceptor(private val router: Router) : CoroutineVerticle() {
                 val grpcRequest = it
                     .serviceName(req.serviceName())
                     .methodName(req.methodName().substring(1))
-                grpcRequest.headers().add("authentication", req.headers().get("authentication"))
+                req.headers().get("authentication")?.let { grpcRequest.headers().add("authentication", it) }
                 grpcRequest.endMessage(msg)
                 grpcRequest.response().onSuccess {
                     log.trace { "Piping response. Status: ${it.status()}" }
