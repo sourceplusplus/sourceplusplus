@@ -108,13 +108,16 @@ abstract class BaseStorageITTest<T : CoreStorage> {
 
     @Test
     fun hasDeveloper(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+        assertEquals(listOf("system"), storageInstance.getDevelopers().map { it.id })
         storageInstance.addDeveloper("dev_6", "token_6")
 
         assertTrue(storageInstance.hasDeveloper("dev_6"))
+        assertEquals(2, storageInstance.getDevelopers().size)
     }
 
     @Test
     fun addDeveloper(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+        assertEquals(listOf("system"), storageInstance.getDevelopers().map { it.id })
         val id = "dev_5"
         val token = "token_5"
         storageInstance.addDeveloper(id, token)
@@ -123,13 +126,16 @@ abstract class BaseStorageITTest<T : CoreStorage> {
         assertEquals(id, developer?.id)
 
         assertNotNull(storageInstance.getDevelopers().find { it.id == "dev_5" })
+        assertEquals(2, storageInstance.getDevelopers().size)
     }
 
     @Test
     fun removeDeveloper(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+        assertEquals(1, storageInstance.getDevelopers().size)
         val id = "dev_3"
         val token = "token_3"
         storageInstance.addDeveloper(id, token)
+        assertEquals(2, storageInstance.getDevelopers().size)
         val developer = storageInstance.getDeveloperByAccessToken(token)
         assertNotNull(developer)
         assertEquals(id, developer?.id)
@@ -137,10 +143,12 @@ abstract class BaseStorageITTest<T : CoreStorage> {
         storageInstance.removeDeveloper(id)
         val updatedDeveloper = storageInstance.getDeveloperByAccessToken(token)
         assertNull(updatedDeveloper)
+        assertEquals(1, storageInstance.getDevelopers().size)
     }
 
     @Test
     fun setAccessToken(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+        assertEquals(listOf("system"), storageInstance.getDevelopers().map { it.id })
         val id = "dev_4"
         val token = "token_4"
         storageInstance.addDeveloper(id, token)
@@ -364,6 +372,7 @@ abstract class BaseStorageITTest<T : CoreStorage> {
 
     @Test
     fun updateDataRedaction(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+        assertEquals(0, storageInstance.getDataRedactions().size)
         val id = "redaction6"
         storageInstance.addDataRedaction(id, RedactionType.IDENTIFIER_MATCH, "lookup1", "value1")
         val dataRedaction = storageInstance.getDataRedaction(id)
