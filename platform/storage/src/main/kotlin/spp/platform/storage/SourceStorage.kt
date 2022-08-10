@@ -203,11 +203,11 @@ object SourceStorage {
     }
 
     suspend fun addDeveloper(id: String): Developer {
-        return addDeveloper(id, RandomStringUtils.randomAlphanumeric(50))
+        return addDeveloper(id, null)
     }
 
-    suspend fun addDeveloper(id: String, token: String): Developer {
-        return storage.addDeveloper(id, token)
+    suspend fun addDeveloper(id: String, token: String?): Developer {
+        return storage.addDeveloper(id, token ?: RandomStringUtils.randomAlphanumeric(50))
     }
 
     suspend fun removeDeveloper(id: String) {
