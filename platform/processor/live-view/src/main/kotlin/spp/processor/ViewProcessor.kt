@@ -96,7 +96,7 @@ object ViewProcessor : FeedbackProcessor() {
 
         ServiceBinder(vertx).setIncludeDebugInfo(true)
             .setAddress(SourceServices.Utilize.LIVE_VIEW)
-            .addInterceptor { developerAuthInterceptor(it) }
+            .addInterceptor(developerAuthInterceptor())
             .register(LiveViewService::class.java, liveViewProcessor)
         liveViewRecord = EventBusService.createRecord(
             SourceServices.Utilize.LIVE_VIEW,

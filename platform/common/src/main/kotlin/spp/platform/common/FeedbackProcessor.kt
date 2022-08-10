@@ -19,10 +19,10 @@ package spp.platform.common
 
 import io.vertx.core.Future
 import io.vertx.core.Vertx
-import io.vertx.core.eventbus.Message
 import io.vertx.core.json.JsonObject
 import io.vertx.ext.auth.impl.jose.JWT
 import io.vertx.kotlin.coroutines.CoroutineVerticle
+import io.vertx.serviceproxy.ServiceInterceptor
 import org.apache.skywalking.oap.server.library.module.ModuleManager
 import spp.protocol.platform.PlatformAddress.PROCESSOR_CONNECTED
 import spp.protocol.platform.status.InstanceConnection
@@ -50,15 +50,17 @@ abstract class FeedbackProcessor : CoroutineVerticle() {
         onConnected(vertx)
     }
 
-    fun developerAuthInterceptor(msg: Message<JsonObject>): Future<Message<JsonObject>> {
-        Vertx.currentContext().putLocal("developer", msg.headers().let {
-            if (it.contains("auth-token")) {
-                DeveloperAuth(
-                    JWT.parse(it.get("auth-token")).getJsonObject("payload").getString("developer_id"),
-                    it.get("auth-token")
-                )
-            } else DeveloperAuth("system", null)
-        })
-        return Future.succeededFuture(msg)
+    fun developerAuthInterceptor(): ServiceInterceptor {
+        return ServiceInterceptor { _, _, msg ->
+            Vertx.currentContext().putLocal("developer", msg.headers().let {
+                if (it.contains("auth-token")) {
+                    DeveloperAuth(
+                        JWT.parse(it.get("auth-token")).getJsonObject("payload").getString("developer_id"),
+                        it.get("auth-token")
+                    )
+                } else DeveloperAuth("system", null)
+            })
+            Future.succeededFuture(msg)
+        }
     }
 }
