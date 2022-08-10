@@ -38,4 +38,4 @@ skywalking:
   logging:
     level: "INFO"
   agent:
-    service_name: "spp"
+    service_name: "example-jvm"
