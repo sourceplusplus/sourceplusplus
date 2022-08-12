@@ -350,7 +350,7 @@ class ProbeGenerator(private val router: Router) : CoroutineVerticle() {
         val platformHost: String,
         val serviceName: String,
         val skywalkingBackendService: String = "$platformHost:11800",
-        val platformPort: Int = 5450,
+        val platformPort: Int = 12800,
         val probeVersion: String
     )
 }

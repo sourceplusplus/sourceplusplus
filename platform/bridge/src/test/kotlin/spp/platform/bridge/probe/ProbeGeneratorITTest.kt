@@ -46,7 +46,7 @@ class ProbeGeneratorTTest : PlatformIntegrationTest() {
 
         jsonObject.getJsonObject("spp").apply {
             assertEquals(platformHost, getString("platform_host"))
-            assertEquals(5450, getInteger("platform_port"))
+            assertEquals(12800, getInteger("platform_port"))
             getJsonObject("authentication").apply {
                 assertEquals("test-id", getString("client_id"))
                 assertEquals("test-secret", getString("client_secret"))

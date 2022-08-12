@@ -37,6 +37,7 @@ import kotlinx.coroutines.launch
 import mu.KotlinLogging
 import spp.platform.bridge.BridgeAddress
 import spp.platform.bridge.InstanceBridge
+import spp.platform.common.ClusterConnection
 import spp.platform.common.ClusterConnection.router
 import spp.platform.common.DeveloperAuth
 import spp.platform.storage.SourceStorage
@@ -55,8 +56,7 @@ import java.time.Instant
  * todo: rename Marker to Plugin?
  */
 class MarkerBridge(
-    jwtAuth: JWTAuth?,
-    private val netServerOptions: NetServerOptions
+    jwtAuth: JWTAuth?
 ) : InstanceBridge(jwtAuth) {
 
     companion object {
@@ -93,15 +93,17 @@ class MarkerBridge(
             .subRouter(sockJSHandler.bridge(portalBridgeOptions) { handleBridgeEvent(it) })
 
         //tcp bridge
-        TcpEventBusBridge.create(
+        val bridge = TcpEventBusBridge.create(
             vertx,
             BridgeOptions().apply {
                 inboundPermitteds = getInboundPermitted() //from marker
                 outboundPermitteds = getOutboundPermitted() //to marker
             },
-            netServerOptions
-        ) { handleBridgeEvent(it) }
-            .listen(config.getString("bridge_port").toInt()).await()
+            NetServerOptions()
+        ) { handleBridgeEvent(it) }.listen(0)
+        ClusterConnection.multiUseNetServer.addUse(bridge) {
+            it.toString().contains(MARKER_CONNECTED)
+        }
     }
 
     private fun handleBridgeEvent(it: BaseBridgeEvent) {
