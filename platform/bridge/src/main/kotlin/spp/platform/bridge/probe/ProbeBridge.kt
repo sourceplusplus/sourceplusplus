@@ -42,6 +42,7 @@ import mu.KotlinLogging
 import spp.platform.bridge.BridgeAddress
 import spp.platform.bridge.InstanceBridge
 import spp.platform.common.ClientAuth
+import spp.platform.common.ClusterConnection
 import spp.platform.common.util.Msg
 import spp.platform.storage.SourceStorage
 import spp.protocol.platform.PlatformAddress
@@ -169,15 +170,17 @@ class ProbeBridge(
             .subRouter(sockJSHandler.bridge(portalBridgeOptions) { handleBridgeEvent(it, subscriberCache) })
 
         //tcp bridge
-        TcpEventBusBridge.create(
+        val bridge = TcpEventBusBridge.create(
             vertx,
             BridgeOptions().apply {
                 inboundPermitteds = getInboundPermitted() //from probe
                 outboundPermitteds = getOutboundPermitted() //to probe
             },
             netServerOptions
-        ) { handleBridgeEvent(it, subscriberCache) }
-            .listen(config.getJsonObject("probe").getString("bridge_port").toInt()).await()
+        ) { handleBridgeEvent(it, subscriberCache) }.listen(0)
+        ClusterConnection.multiUseNetServer.addUse(bridge) {
+            it.toString().contains(PROBE_CONNECTED)
+        }
     }
 
     private fun handleBridgeEvent(it: BaseBridgeEvent, subscriberCache: ConcurrentHashMap<String, String>) {

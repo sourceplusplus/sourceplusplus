@@ -49,6 +49,7 @@ import org.bouncycastle.openssl.PEMKeyPair
 import org.bouncycastle.openssl.PEMParser
 import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter
 import org.bouncycastle.openssl.jcajce.JcaPEMWriter
+import spp.platform.common.ClusterConnection
 import spp.platform.common.ClusterConnection.discovery
 import spp.platform.common.ClusterConnection.router
 import spp.platform.common.util.CertsToJksOptionsConverter
@@ -294,9 +295,11 @@ class SourcePlatform : CoroutineVerticle() {
             httpOptions.setKeyStoreOptions(jksOptions)
         }
         httpPorts.forEach { httpPort ->
-            val server = vertx.createHttpServer(httpOptions)
+            val httpServer = vertx.createHttpServer(httpOptions)
                 .requestHandler(router)
-                .listen(httpPort).await()
+                .listen(0)
+            val server = ClusterConnection.multiUseNetServer.addUse(httpServer)
+                .listen(httpOptions, httpPort).await()
             if (httpSslEnabled) {
                 log.info("HTTPS server started. Port: {}", server.actualPort())
             } else {

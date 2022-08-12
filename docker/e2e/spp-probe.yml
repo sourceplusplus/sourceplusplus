@@ -3,7 +3,7 @@ spp:
     client_id: "test-id"
     client_secret: "test-secret"
   platform_host: "spp-platform"
-  platform_port: 5450
+  platform_port: 12800
   platform_certificate: |
     MIIFLzCCAxegAwIBAgIGAYG9v8lfMA0GCSqGSIb3DQEBCwUAMBcxFTATBgNVBAMM
     DHNwcC1wbGF0Zm9ybTAeFw0yMjA3MDIwNzExMTFaFw0yMzA3MDIwNzExMTFaMBcx
