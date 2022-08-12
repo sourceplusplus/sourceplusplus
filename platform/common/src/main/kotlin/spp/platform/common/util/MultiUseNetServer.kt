@@ -33,7 +33,7 @@ import org.joor.Reflect
 import java.util.*
 
 /**
- * Allows for an HTTP server and a TCP server to reside on the same port.
+ * Allows for HTTP server(s) and a TCP server(s) to reside on the same port simultaneously.
  */
 class MultiUseNetServer(private val vertx: Vertx) {
 
