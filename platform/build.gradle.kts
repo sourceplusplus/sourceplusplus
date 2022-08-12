@@ -106,6 +106,7 @@ subprojects {
 
         detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.21.0")
 
+        testImplementation("org.slf4j:slf4j-simple:$slf4jVersion")
         testImplementation("org.junit.jupiter:junit-jupiter-engine:$jupiterVersion")
         testImplementation("io.vertx:vertx-junit5:$vertxVersion")
         testImplementation("io.vertx:vertx-web-client:$vertxVersion")
