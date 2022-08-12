@@ -450,7 +450,7 @@ abstract class BaseStorageITTest<T : CoreStorage> {
         assertNull(storageInstance.getClientAccess(id))
         assertEquals(1, storageInstance.getClientAccessors().size)
 
-        storageInstance.addClientAccess(id, secret);
+        storageInstance.addClientAccess(id, secret)
         val clientAccess = storageInstance.getClientAccess(id)
         assertNotNull(clientAccess)
         assertEquals(2, storageInstance.getClientAccessors().size)
@@ -460,7 +460,7 @@ abstract class BaseStorageITTest<T : CoreStorage> {
     @Test
     fun removeClientAccess(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
         val id = "clientId2"
-        storageInstance.addClientAccess(id);
+        storageInstance.addClientAccess(id)
         val clientAccess = storageInstance.getClientAccess(id)
         assertNotNull(clientAccess)
         assertEquals(2, storageInstance.getClientAccessors().size)
@@ -474,7 +474,7 @@ abstract class BaseStorageITTest<T : CoreStorage> {
     fun updateClientAccess(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
         val id = "clientId3"
         val secret = "clientSecret3"
-        storageInstance.addClientAccess(id, secret);
+        storageInstance.addClientAccess(id, secret)
         val clientAccess = storageInstance.getClientAccess(id)
         assertEquals(secret, clientAccess?.secret)
 
