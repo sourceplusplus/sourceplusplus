@@ -295,7 +295,7 @@ class SourcePlatform : CoroutineVerticle() {
             httpOptions.setKeyStoreOptions(jksOptions)
         }
         httpPorts.forEach { httpPort ->
-            val httpServer = vertx.createHttpServer(httpOptions)
+            val httpServer = vertx.createHttpServer()
                 .requestHandler(router)
                 .listen(0)
             val server = ClusterConnection.multiUseNetServer.addUse(httpServer)

@@ -56,8 +56,7 @@ import java.time.Instant
  * todo: rename Marker to Plugin?
  */
 class MarkerBridge(
-    jwtAuth: JWTAuth?,
-    private val netServerOptions: NetServerOptions
+    jwtAuth: JWTAuth?
 ) : InstanceBridge(jwtAuth) {
 
     companion object {
@@ -100,7 +99,7 @@ class MarkerBridge(
                 inboundPermitteds = getInboundPermitted() //from marker
                 outboundPermitteds = getOutboundPermitted() //to marker
             },
-            netServerOptions
+            NetServerOptions()
         ) { handleBridgeEvent(it) }.listen(0)
         ClusterConnection.multiUseNetServer.addUse(bridge) {
             it.toString().contains(MARKER_CONNECTED)

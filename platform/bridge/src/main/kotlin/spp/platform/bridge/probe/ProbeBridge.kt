@@ -62,8 +62,7 @@ import java.util.concurrent.TimeUnit
  */
 class ProbeBridge(
     private val router: Router,
-    jwtAuth: JWTAuth?,
-    private val netServerOptions: NetServerOptions
+    jwtAuth: JWTAuth?
 ) : InstanceBridge(jwtAuth) {
 
     companion object {
@@ -176,7 +175,7 @@ class ProbeBridge(
                 inboundPermitteds = getInboundPermitted() //from probe
                 outboundPermitteds = getOutboundPermitted() //to probe
             },
-            netServerOptions
+            NetServerOptions()
         ) { handleBridgeEvent(it, subscriberCache) }.listen(0)
         ClusterConnection.multiUseNetServer.addUse(bridge) {
             it.toString().contains(PROBE_CONNECTED)
