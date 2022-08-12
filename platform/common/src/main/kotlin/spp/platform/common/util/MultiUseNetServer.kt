@@ -96,15 +96,8 @@ class MultiUseNetServer(private val vertx: Vertx) {
                 } else {
                     val usableNetClient = usableServers.values.first()
                     usableNetClient.netClient.connect(usableNetClient.port, usableNetClient.host).onSuccess { sock ->
-                        orig.handler {
-                            sock.write(it)
-                        }
-                        sock.handler {
-                            orig.write(it)
-                        }
-                        sock.endHandler {
-                            orig.end()
-                        }
+                        orig.pipeTo(sock)
+                        sock.pipeTo(orig)
                         sock.write(origBuffer).onFailure {
                             log.error("Could not write to socket", it)
                         }
