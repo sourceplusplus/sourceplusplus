@@ -84,6 +84,7 @@ class MultiUseNetServer(private val vertx: Vertx) {
         val server = vertx.createNetServer(serverOptions)
         server.connectHandler { orig ->
             orig.handler { origBuffer ->
+                orig.pause()
                 var usableServers = useMap.filter {
                     it.key !is CatchAllUseDecider && it.key.canUse(origBuffer)
                 }
@@ -98,7 +99,9 @@ class MultiUseNetServer(private val vertx: Vertx) {
                     usableNetClient.netClient.connect(usableNetClient.port, usableNetClient.host).onSuccess { sock ->
                         orig.pipeTo(sock)
                         sock.pipeTo(orig)
-                        sock.write(origBuffer).onFailure {
+                        sock.write(origBuffer).onSuccess {
+                            orig.resume()
+                        }.onFailure {
                             log.error("Could not write to socket", it)
                         }
                     }.onFailure {
