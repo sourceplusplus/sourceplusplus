@@ -74,6 +74,11 @@ object SourceStorage {
         val jwtConfig = config.getJsonObject("spp-platform").getJsonObject("jwt")
         val accessToken = jwtConfig.getString("access_token")
         val systemAccessToken = if (accessToken.isNullOrEmpty()) DEFAULT_ACCESS_TOKEN else accessToken
+        installDefaults(systemAccessToken)
+    }
+
+    @Suppress("MemberVisibilityCanBePrivate")
+    suspend fun installDefaults(systemAccessToken: String) {
         if (systemAccessToken == DEFAULT_ACCESS_TOKEN) {
             log.warn("Using default system access token. This is not recommended.")
         }
