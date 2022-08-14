@@ -72,6 +72,9 @@ class LiveInstrumentAnalysis(
         private fun toLiveVariable(varName: String, scope: LiveVariableScope?, varData: JsonObject): LiveVariable {
             val liveClass = varData.getString("@class")
             val liveIdentity = varData.getString("@id") ?: varData.getString("@identity")
+            if (varData.containsKey("@skip")) {
+                return LiveVariable(varName, varData, scope = scope, liveClazz = liveClass, liveIdentity = liveIdentity)
+            }
 
             val innerVars = mutableListOf<LiveVariable>()
             varData.fieldNames().forEach {
