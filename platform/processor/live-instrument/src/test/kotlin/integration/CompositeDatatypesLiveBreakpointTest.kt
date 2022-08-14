@@ -25,13 +25,13 @@ open class CompositeDatatypesLiveBreakpointTest : LiveInstrumentIntegrationTest(
         val date = Date(1L)
         val duration = Duration.ofSeconds(1)
         val instant = Instant.ofEpochSecond(1)
-        val localDate = LocalDate.now()
+        val localDate = LocalDate.of(1, 2, 3)
         val localTime = LocalTime.of(1, 2, 3, 4)
-//        val offsetDateTime = OffsetDateTime.now()
-//        val offsetTime = OffsetTime.now()
-//        val zonedDateTime = ZonedDateTime.now()
+//        val offsetDateTime = OffsetDateTime.of(1, 2, 3, 4, 5, 6, 7, ZoneOffset.MAX)
+//        val offsetTime = OffsetTime.of(1, 2, 3, 4, ZoneOffset.MIN)
+//        val zonedDateTime = ZonedDateTime.of(1, 2, 3, 4, 5, 6, 7, ZoneId.of("EST"))
 //        val zoneOffset = ZoneOffset.ofTotalSeconds(1)
-////        val zoneRegion = ZoneRegion("1",  ZoneRules.of(zoneOffset))
+//        val zoneRegion = Zo
         val bigInteger = BigInteger.TEN
 //        val clazz = Class.forName("Ezpeepee")
 
@@ -90,7 +90,7 @@ open class CompositeDatatypesLiveBreakpointTest : LiveInstrumentIntegrationTest(
 
                     // LocalDate
                     assertEquals(
-                        LocalDate.now().toString(),
+                        LocalDate.of(1, 2, 3).toString(),
                         topFrame.variables.find { it.name == "localDate" }!!.presentation
                     )
                     assertEquals(
@@ -107,6 +107,48 @@ open class CompositeDatatypesLiveBreakpointTest : LiveInstrumentIntegrationTest(
                         "java.time.LocalTime",
                         topFrame.variables.find { it.name == "localTime" }!!.liveClazz
                     )
+
+                    // LocalTime
+                    //todo: test times out
+//                    assertEquals(1,1      )
+//                    assertEquals(
+//                        "java.time.OffsetDateTime",
+//                        topFrame.variables.find { it.name == "offsetTime" }!!.liveClazz
+//                    )
+
+                    // OffsetTime
+                    //todo: test times out
+//                    assertEquals(
+//                        OffsetTime.of(1, 2, 3, 4, ZoneOffset.MIN),
+//                        topFrame.variables.find { it.name == "offsetTime" }!!.presentation
+//                    )
+//                    assertEquals(
+//                        "java.time.OffsetTime",
+//                        topFrame.variables.find { it.name == "offsetTime" }!!.liveClazz
+//                    )
+
+                    // ZonedDateTime
+                    //todo: test times out
+//                    assertEquals(
+//                        ZonedDateTime.of(1, 2, 3, 4, 5, 6, 7,
+//                            ZoneId.of("EST")),
+//                        topFrame.variables.find { it.name == "zonedDateTime" }!!.presentation
+//                    )
+//                    assertEquals(
+//                        "java.time.ZonedDateTime",
+//                        topFrame.variables.find { it.name == "zonedDateTime" }!!.liveClazz
+//                    )
+
+                    // ZoneOffset
+                    //todo: test times out
+//                    assertEquals(
+//                        ZoneOffset.ofTotalSeconds(1).toString(),
+//                        topFrame.variables.find { it.name == "zoneOffset" }!!.presentation
+//                    )
+//                    assertEquals(
+//                        "java.time.ZoneOffset",
+//                        topFrame.variables.find { it.name == "zoneOffset" }!!.liveClazz
+//                    )
 
                     // BigInteger
                     assertEquals(
