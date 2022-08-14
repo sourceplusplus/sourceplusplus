@@ -23,7 +23,7 @@ import io.vertx.junit5.VertxTestContext
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import spp.protocol.SourceServices
+import spp.protocol.SourceServices.Provide.toLiveInstrumentSubscriberAddress
 import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.LiveSourceLocation
 import spp.protocol.instrument.event.LiveInstrumentEvent
@@ -64,8 +64,7 @@ class DeepObjectLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         }
 
         val testContext = VertxTestContext()
-        val consumer =
-            vertx.eventBus().consumer<Any>(SourceServices.Provide.toLiveInstrumentSubscriberAddress("system"))
+        val consumer = vertx.eventBus().consumer<Any>(toLiveInstrumentSubscriberAddress("system"))
         consumer.handler {
             val event = Json.decodeValue(it.body().toString(), LiveInstrumentEvent::class.java)
             if (event.eventType == LiveInstrumentEventType.BREAKPOINT_HIT) {

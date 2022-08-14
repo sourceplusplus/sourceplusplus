@@ -621,7 +621,7 @@ class LiveInstrumentProcessorImpl : CoroutineVerticle(), LiveInstrumentService {
         val debuggerCommand = LiveInstrumentCommand(CommandType.REMOVE_LIVE_INSTRUMENT, locations = setOf(location))
 
         val result = liveInstruments.filter {
-            it.instrument.location == location && it.instrument.type == instrumentType
+            it.instrument.location.isSameLocation(location) && it.instrument.type == instrumentType
         }
         liveInstruments.removeAll(result.toSet())
         if (result.isEmpty()) {
