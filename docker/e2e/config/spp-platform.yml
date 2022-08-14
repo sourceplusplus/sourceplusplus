@@ -12,10 +12,6 @@ spp-platform:
     ssl_enabled: ${SPP_GRPC_SSL_ENABLED:-true}
   logging:
     level: ${SPP_LOGGING_LEVEL:-info}
-  probe:
-    bridge_port: ${SPP_PROBE_BRIDGE_PORT:-5450}
-  marker:
-    bridge_port: ${SPP_MARKER_BRIDGE_PORT:-5455}
   pii-redaction:
     enabled: ${SPP_PII_REDACTION_ENABLED:-true}
     redactions:

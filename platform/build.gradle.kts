@@ -61,7 +61,7 @@ subprojects {
         implementation("org.bouncycastle:bcpkix-jdk15on:$bouncycastleVersion")
         implementation("org.apache.logging.log4j:log4j-core:2.11.0")
 
-        implementation(files(File(rootDir, ".ext/vertx-redis-clustermanager-0.0.1-local.jar")))
+        implementation(files(File(findProject(":platform")!!.projectDir.parentFile, ".ext/vertx-redis-clustermanager-0.0.1-local.jar")))
         implementation("org.redisson:redisson:3.17.3")
 
         implementation("org.jooq:joor:$joorVersion")
@@ -72,10 +72,12 @@ subprojects {
         implementation("io.vertx:vertx-service-discovery:$vertxVersion")
         implementation("io.vertx:vertx-service-proxy:$vertxVersion")
         implementation("io.vertx:vertx-health-check:$vertxVersion")
-        implementation("io.vertx:vertx-web-graphql:$vertxVersion")
+        implementation("io.vertx:vertx-web-graphql:$vertxVersion") {
+            exclude(group = "com.graphql-java")
+        }
+        compileOnly("com.graphql-java:graphql-java:18.1")
         implementation("io.vertx:vertx-auth-jwt:$vertxVersion")
         implementation("io.vertx:vertx-redis-client:$vertxVersion")
-        implementation("io.vertx:vertx-web-graphql:${vertxVersion}")
         implementation("io.vertx:vertx-tcp-eventbus-bridge:$vertxVersion")
         implementation("io.vertx:vertx-web-sstore-redis:$vertxVersion")
         implementation("org.bouncycastle:bcprov-jdk15on:$bouncycastleVersion")
@@ -104,6 +106,7 @@ subprojects {
 
         detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.21.0")
 
+        testImplementation("org.slf4j:slf4j-simple:$slf4jVersion")
         testImplementation("org.junit.jupiter:junit-jupiter-engine:$jupiterVersion")
         testImplementation("io.vertx:vertx-junit5:$vertxVersion")
         testImplementation("io.vertx:vertx-web-client:$vertxVersion")
@@ -122,7 +125,8 @@ subprojects {
             }
 
             val licenseHeader = Regex("(    <one line[\\S\\s]+If not.+)")
-                .find(File(project.rootDir, "LICENSE").readText())!!.value.lines().joinToString("\n") {
+                .find(File(project(":platform").projectDir.parentFile, "LICENSE").readText())!!
+                .value.lines().joinToString("\n") {
                     if (it.trim().isEmpty()) {
                         " *"
                     } else {
@@ -191,7 +195,7 @@ tasks.register<Copy>("updateDockerFiles") {
 
     doFirst {
         File(projectDir, "../docker/e2e").listFiles()?.forEach {
-            if (it.name.startsWith("spp-platform-") || it.name.startsWith("spp-live-")) {
+            if (it.name.matches(Regex("(spp-(live|platform|probe)-.+\\.jar)"))) {
                 it.delete()
             }
         }

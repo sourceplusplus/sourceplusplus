@@ -25,6 +25,7 @@ import io.vertx.core.http.WebSocketFrame
 import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -113,6 +114,7 @@ class ProbeBridgeITTest : PlatformIntegrationTest() {
         //disconnect probe
         ws.close().await()
         client.close().await()
+        delay(2000) //ensure probe is disconnected
 
         //verify probe count decreased
         val decreasedProbeCount = liveService.getStats().await()

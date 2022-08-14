@@ -186,6 +186,7 @@ class LiveInstrumentProcessorImpl : CoroutineVerticle(), LiveInstrumentService {
                         }
                     }
                 }
+
                 is LiveLog -> {
                     val pendingLog = if (instrument.id == null) {
                         instrument.copy(id = UUID.randomUUID().toString())
@@ -214,6 +215,7 @@ class LiveInstrumentProcessorImpl : CoroutineVerticle(), LiveInstrumentService {
                         }
                     }
                 }
+
                 is LiveMeter -> {
                     val pendingMeter = if (instrument.id == null) {
                         instrument.copy(id = UUID.randomUUID().toString())
@@ -247,6 +249,7 @@ class LiveInstrumentProcessorImpl : CoroutineVerticle(), LiveInstrumentService {
                         }
                     }
                 }
+
                 is LiveSpan -> {
                     val pendingSpan = if (instrument.id == null) {
                         instrument.copy(id = UUID.randomUUID().toString())
@@ -274,6 +277,7 @@ class LiveInstrumentProcessorImpl : CoroutineVerticle(), LiveInstrumentService {
                         }
                     }
                 }
+
                 else -> {
                     promise.fail(IllegalArgumentException("Unknown live instrument type"))
                 }
@@ -433,6 +437,7 @@ class LiveInstrumentProcessorImpl : CoroutineVerticle(), LiveInstrumentService {
                             pending = false
                         )
                     }
+
                     LiveInstrumentType.LOG -> {
                         eventType = LiveInstrumentEventType.LOG_APPLIED
                         appliedInstrument = (it.instrument as LiveLog).copy(
@@ -440,6 +445,7 @@ class LiveInstrumentProcessorImpl : CoroutineVerticle(), LiveInstrumentService {
                             pending = false
                         )
                     }
+
                     LiveInstrumentType.METER -> {
                         eventType = LiveInstrumentEventType.METER_APPLIED
                         appliedInstrument = (it.instrument as LiveMeter).copy(
@@ -447,6 +453,7 @@ class LiveInstrumentProcessorImpl : CoroutineVerticle(), LiveInstrumentService {
                             pending = false
                         )
                     }
+
                     LiveInstrumentType.SPAN -> {
                         eventType = LiveInstrumentEventType.SPAN_APPLIED
                         appliedInstrument = (it.instrument as LiveSpan).copy(
@@ -454,6 +461,7 @@ class LiveInstrumentProcessorImpl : CoroutineVerticle(), LiveInstrumentService {
                             pending = false
                         )
                     }
+
                     else -> throw IllegalArgumentException("Unknown live instrument type")
                 }
                 (appliedInstrument.meta as MutableMap<String, Any>)["applied_at"] = "${System.currentTimeMillis()}"
@@ -655,6 +663,7 @@ class LiveInstrumentProcessorImpl : CoroutineVerticle(), LiveInstrumentService {
                     }
                 )
             }
+
             MeterType.GAUGE -> {
                 meterConfig.metricPrefix = METRIC_PREFIX
                 meterConfig.metricsRules = mutableListOf(
@@ -671,6 +680,7 @@ class LiveInstrumentProcessorImpl : CoroutineVerticle(), LiveInstrumentService {
                     }
                 )
             }
+
             MeterType.HISTOGRAM -> {
                 meterConfig.metricPrefix = METRIC_PREFIX
                 meterConfig.metricsRules = mutableListOf(
@@ -687,6 +697,7 @@ class LiveInstrumentProcessorImpl : CoroutineVerticle(), LiveInstrumentService {
                     }
                 )
             }
+
             else -> throw UnsupportedOperationException("Unsupported meter type: ${liveMeter.meterType}")
         }
         meterProcessService.converts().add(MetricConvert(meterConfig, meterSystem))

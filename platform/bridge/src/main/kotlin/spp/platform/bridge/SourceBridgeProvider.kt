@@ -18,9 +18,6 @@
 package spp.platform.bridge
 
 import io.vertx.core.DeploymentOptions
-import io.vertx.core.buffer.Buffer
-import io.vertx.core.net.NetServerOptions
-import io.vertx.core.net.PemKeyCertOptions
 import io.vertx.ext.auth.PubSecKeyOptions
 import io.vertx.ext.auth.jwt.JWTAuth
 import io.vertx.ext.auth.jwt.JWTAuthOptions
@@ -69,29 +66,13 @@ class SourceBridgeProvider : ModuleProvider() {
             val vertx = ClusterConnection.getVertx()
             runBlocking(vertx.dispatcher()) {
                 //Open bridges
-                val keyFile = File("config/spp-platform.key")
-                val certFile = File("config/spp-platform.crt")
-                val httpConfig = config.getJsonObject("spp-platform").getJsonObject("http")
-                val sslEnabled = httpConfig.getString("ssl_enabled").toBooleanStrict()
-                val netServerOptions = NetServerOptions()
-                    .removeEnabledSecureTransportProtocol("SSLv2Hello")
-                    .removeEnabledSecureTransportProtocol("TLSv1")
-                    .removeEnabledSecureTransportProtocol("TLSv1.1")
-                    .setSsl(sslEnabled)
-                    .apply {
-                        if (sslEnabled) {
-                            pemKeyCertOptions = PemKeyCertOptions()
-                                .setKeyValue(Buffer.buffer(keyFile.readText()))
-                                .setCertValue(Buffer.buffer(certFile.readText()))
-                        }
-                    }
-
                 val jwtConfig = config.getJsonObject("spp-platform").getJsonObject("jwt")
                 val jwtEnabled = jwtConfig.getString("enabled").toBooleanStrict()
                 val jwt: JWTAuth?
                 if (!jwtEnabled) {
                     jwt = null
                 } else {
+                    val keyFile = File("config/spp-platform.key")
                     val keyPair = PEMParser(StringReader(keyFile.readText())).use {
                         JcaPEMKeyConverter().getKeyPair(it.readObject() as PEMKeyPair)
                     }
@@ -121,11 +102,11 @@ class SourceBridgeProvider : ModuleProvider() {
                 }
 
                 vertx.deployVerticle(
-                    ProbeBridge(ClusterConnection.router, jwt, netServerOptions),
+                    ProbeBridge(ClusterConnection.router, jwt),
                     DeploymentOptions().setConfig(config.getJsonObject("spp-platform"))
                 ).await()
                 vertx.deployVerticle(
-                    MarkerBridge(jwt, netServerOptions),
+                    MarkerBridge(jwt),
                     DeploymentOptions().setConfig(config.getJsonObject("spp-platform").getJsonObject("marker"))
                 ).await()
 

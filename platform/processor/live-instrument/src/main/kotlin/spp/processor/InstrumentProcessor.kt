@@ -32,6 +32,7 @@ import io.vertx.kotlin.coroutines.await
 import io.vertx.servicediscovery.Record
 import io.vertx.servicediscovery.types.EventBusService
 import io.vertx.serviceproxy.ServiceBinder
+import io.vertx.serviceproxy.ServiceInterceptor
 import kotlinx.datetime.Instant
 import org.apache.skywalking.oap.server.core.analysis.metrics.DataTable
 import org.apache.skywalking.oap.server.library.module.ModuleManager
@@ -99,8 +100,8 @@ object InstrumentProcessor : FeedbackProcessor() {
         vertx.deployVerticle(liveInstrumentProcessor).await()
 
         ServiceBinder(vertx).setIncludeDebugInfo(true)
-            .addInterceptor { developerAuthInterceptor(it) }
-            .addInterceptor { msg -> permissionAndAccessCheckInterceptor(msg) }
+            .addInterceptor(developerAuthInterceptor())
+            .addInterceptor(permissionAndAccessCheckInterceptor())
             .setAddress(SourceServices.Utilize.LIVE_INSTRUMENT)
             .register(LiveInstrumentService::class.java, liveInstrumentProcessor)
         liveInstrumentRecord = EventBusService.createRecord(
@@ -119,40 +120,27 @@ object InstrumentProcessor : FeedbackProcessor() {
         }
     }
 
-    private fun permissionAndAccessCheckInterceptor(msg: Message<JsonObject>): Future<Message<JsonObject>> {
-        val promise = Promise.promise<Message<JsonObject>>()
-        EventBusService.getProxy(
-            discovery, LiveService::class.java,
-            JsonObject().apply {
-                if (msg.headers().contains("auth-token")) {
-                    put("headers", JsonObject().put("auth-token", msg.headers().get("auth-token")))
-                }
-            }
-        ) {
-            if (it.succeeded()) {
-                it.result().getSelf().onComplete {
+    private fun permissionAndAccessCheckInterceptor(): ServiceInterceptor {
+        return ServiceInterceptor { _, _, msg ->
+            val promise = Promise.promise<Message<JsonObject>>()
+            val liveService = LiveService.createProxy(vertx, msg.headers().get("auth-token"))
+            liveService.getSelf().onSuccess { selfInfo ->
+                validateRolePermission(selfInfo, msg) {
                     if (it.succeeded()) {
-                        val selfInfo = it.result()
-                        validateRolePermission(selfInfo, msg) {
-                            if (it.succeeded()) {
-                                if (msg.headers().get("action").startsWith("addLiveInstrument")) {
-                                    validateInstrumentAccess(selfInfo, msg, promise)
-                                } else {
-                                    promise.complete(msg)
-                                }
-                            } else {
-                                promise.fail(it.cause())
-                            }
+                        if (msg.headers().get("action").startsWith("addLiveInstrument")) {
+                            validateInstrumentAccess(selfInfo, msg, promise)
+                        } else {
+                            promise.complete(msg)
                         }
                     } else {
                         promise.fail(it.cause())
                     }
                 }
-            } else {
-                promise.fail(it.cause())
+            }.onFailure {
+                promise.fail(it)
             }
+            promise.future()
         }
-        return promise.future()
     }
 
     private fun validateRolePermission(

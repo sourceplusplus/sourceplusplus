@@ -18,6 +18,7 @@
 package spp.platform.core
 
 import io.vertx.core.DeploymentOptions
+import io.vertx.core.Vertx
 import io.vertx.core.eventbus.ReplyException
 import io.vertx.core.http.HttpServerOptions
 import io.vertx.core.json.JsonArray
@@ -48,6 +49,7 @@ import org.bouncycastle.openssl.PEMKeyPair
 import org.bouncycastle.openssl.PEMParser
 import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter
 import org.bouncycastle.openssl.jcajce.JcaPEMWriter
+import spp.platform.common.ClusterConnection
 import spp.platform.common.ClusterConnection.discovery
 import spp.platform.common.ClusterConnection.router
 import spp.platform.common.util.CertsToJksOptionsConverter
@@ -185,6 +187,12 @@ class SourcePlatform : CoroutineVerticle() {
                 ctx.response().setStatusCode(401).end()
                 return@handler
             }
+            val tenantId = ctx.queryParam("tenant_id").firstOrNull()
+            if (!tenantId.isNullOrEmpty()) {
+                Vertx.currentContext().putLocal("tenant_id", tenantId)
+            } else {
+                Vertx.currentContext().removeLocal("tenant_id")
+            }
 
             val token = accessTokenParam[0]
             log.debug("Verifying access token: $token")
@@ -193,8 +201,14 @@ class SourcePlatform : CoroutineVerticle() {
                 if (dev != null) {
                     val jwtToken = jwt!!.generateToken(
                         JsonObject()
+                            .apply {
+                                if (!tenantId.isNullOrEmpty()) {
+                                    put("tenant_id", tenantId)
+                                }
+                            }
                             .put("developer_id", dev.id)
                             .put("created_at", Instant.now().toEpochMilli())
+                            //todo: reasonable expires_at
                             .put("expires_at", Instant.now().plus(365, ChronoUnit.DAYS).toEpochMilli()),
                         JWTOptions().setAlgorithm("RS256")
                     )
@@ -281,9 +295,11 @@ class SourcePlatform : CoroutineVerticle() {
             httpOptions.setKeyStoreOptions(jksOptions)
         }
         httpPorts.forEach { httpPort ->
-            val server = vertx.createHttpServer(httpOptions)
+            val httpServer = vertx.createHttpServer()
                 .requestHandler(router)
-                .listen(httpPort).await()
+                .listen(0)
+            val server = ClusterConnection.multiUseNetServer.addUse(httpServer)
+                .listen(httpOptions, httpPort).await()
             if (httpSslEnabled) {
                 log.info("HTTPS server started. Port: {}", server.actualPort())
             } else {

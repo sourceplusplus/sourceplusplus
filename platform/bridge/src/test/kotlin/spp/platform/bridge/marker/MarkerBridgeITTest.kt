@@ -25,6 +25,7 @@ import io.vertx.core.http.WebSocketFrame
 import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -89,6 +90,7 @@ class MarkerBridgeITTest : PlatformIntegrationTest() {
         //disconnect marker
         ws.close().await()
         client.close().await()
+        delay(2000) //ensure probe is disconnected
 
         //verify marker count decreased
         val decreasedMarkerCount = liveService.getStats().await()

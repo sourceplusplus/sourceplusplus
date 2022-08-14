@@ -34,6 +34,7 @@ import org.apache.commons.text.StringSubstitutor
 import org.apache.commons.text.lookup.StringLookupFactory
 import org.apache.logging.log4j.Level
 import org.apache.logging.log4j.core.config.Configurator
+import spp.platform.common.util.MultiUseNetServer
 import java.io.File
 import java.util.*
 
@@ -47,6 +48,7 @@ object ClusterConnection {
     lateinit var discovery: ServiceDiscovery
     lateinit var config: JsonObject
     lateinit var router: Router
+    lateinit var multiUseNetServer: MultiUseNetServer
 
     fun getVertx(): Vertx {
         if (!isVertxInitialized()) {
@@ -77,6 +79,7 @@ object ClusterConnection {
                     val vertx = Vertx.vertx()
                     discovery = ServiceDiscovery.create(vertx)
                     router = Router.router(vertx)
+                    multiUseNetServer = MultiUseNetServer(vertx)
                     ClusterConnection.vertx = vertx
                 } else {
                     log.info("Using clustered mode")
@@ -101,6 +104,7 @@ object ClusterConnection {
                         val vertx = Vertx.clusteredVertx(options).await()
                         discovery = ServiceDiscovery.create(vertx)
                         router = Router.router(vertx)
+                        multiUseNetServer = MultiUseNetServer(vertx)
                         ClusterConnection.vertx = vertx
                     }
                 }

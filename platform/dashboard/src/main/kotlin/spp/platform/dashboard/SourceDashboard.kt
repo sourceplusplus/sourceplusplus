@@ -49,11 +49,15 @@ class SourceDashboard : CoroutineVerticle() {
             val tenantId = postData.get("tenant_id")
             if (!tenantId.isNullOrEmpty()) {
                 Vertx.currentContext().putLocal("tenant_id", tenantId)
+            } else {
+                Vertx.currentContext().removeLocal("tenant_id")
             }
             launch(vertx.dispatcher()) {
                 val dev = SourceStorage.getDeveloperByAccessToken(password)
                 if (dev != null) {
-                    it.session().put("developer_id", dev.id)
+                    it.session()
+                        .put("developer_id", dev.id)
+                        .put("tenant_id", tenantId)
                     it.redirect("/")
                 } else {
                     if (!tenantId.isNullOrEmpty()) {
@@ -80,6 +84,7 @@ class SourceDashboard : CoroutineVerticle() {
             if (ctx.session().get<String>("developer_id") != null) {
                 val forward = JsonObject()
                 forward.put("developer_id", ctx.session().get<String>("developer_id"))
+                forward.put("tenant_id", ctx.session().get<String>("tenant_id"))
                 forward.put("body", ctx.body().asJsonObject())
                 val headers = JsonObject()
                 ctx.request().headers().names().forEach {

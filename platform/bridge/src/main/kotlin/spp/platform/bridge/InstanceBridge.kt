@@ -84,7 +84,10 @@ abstract class InstanceBridge(private val jwtAuth: JWTAuth?) : CoroutineVerticle
             val tenantId = event.rawMessage.getJsonObject("headers")?.getString("tenant_id")
             if (!tenantId.isNullOrEmpty()) {
                 Vertx.currentContext().putLocal("tenant_id", tenantId)
+            } else {
+                Vertx.currentContext().removeLocal("tenant_id")
             }
+            Vertx.currentContext().removeLocal("client")
 
             SourceStorage.isValidClientAccess(clientId, clientSecret).onSuccess {
                 val clientAuth = ClientAuth(ClientAccess(clientId, clientSecret), tenantId)

@@ -73,11 +73,14 @@ object SourceStorage {
     suspend fun installDefaults() {
         val jwtConfig = config.getJsonObject("spp-platform").getJsonObject("jwt")
         val accessToken = jwtConfig.getString("access_token")
-        val systemAccessToken = if (accessToken.isNullOrEmpty()) {
-            log.warn("No system access token provided. Using default: {}", DEFAULT_ACCESS_TOKEN)
-            DEFAULT_ACCESS_TOKEN
-        } else {
-            accessToken
+        val systemAccessToken = if (accessToken.isNullOrEmpty()) DEFAULT_ACCESS_TOKEN else accessToken
+        installDefaults(systemAccessToken)
+    }
+
+    @Suppress("MemberVisibilityCanBePrivate")
+    suspend fun installDefaults(systemAccessToken: String) {
+        if (systemAccessToken == DEFAULT_ACCESS_TOKEN) {
+            log.warn("Using default system access token. This is not recommended.")
         }
         put("system_access_token", systemAccessToken)
 
@@ -205,11 +208,11 @@ object SourceStorage {
     }
 
     suspend fun addDeveloper(id: String): Developer {
-        return addDeveloper(id, RandomStringUtils.randomAlphanumeric(50))
+        return addDeveloper(id, null)
     }
 
-    suspend fun addDeveloper(id: String, token: String): Developer {
-        return storage.addDeveloper(id, token)
+    suspend fun addDeveloper(id: String, token: String?): Developer {
+        return storage.addDeveloper(id, token ?: RandomStringUtils.randomAlphanumeric(50))
     }
 
     suspend fun removeDeveloper(id: String) {
