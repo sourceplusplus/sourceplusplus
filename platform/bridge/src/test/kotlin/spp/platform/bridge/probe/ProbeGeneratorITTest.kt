@@ -28,7 +28,7 @@ import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
-class ProbeGeneratorTTest : PlatformIntegrationTest() {
+class ProbeGeneratorITTest : PlatformIntegrationTest() {
 
     @Test
     fun verifyGeneratedProbeConfig(): Unit = runBlocking {

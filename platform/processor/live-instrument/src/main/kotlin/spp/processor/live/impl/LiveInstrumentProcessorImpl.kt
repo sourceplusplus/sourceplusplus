@@ -497,7 +497,7 @@ class LiveInstrumentProcessorImpl : CoroutineVerticle(), LiveInstrumentService {
     }
 
     fun _getLiveInstruments(location: LiveSourceLocation): List<LiveInstrument> {
-        return liveInstruments.filter { it.instrument.location == location }.map { it.instrument }.toList()
+        return liveInstruments.filter { it.instrument.location.isSameLocation(location) }.map { it.instrument }.toList()
     }
 
     fun _addLiveInstrument(
