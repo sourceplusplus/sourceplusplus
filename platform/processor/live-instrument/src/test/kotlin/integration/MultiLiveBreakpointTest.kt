@@ -23,7 +23,8 @@ import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
 import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Assertions.fail
 import org.junit.jupiter.api.Test
 import spp.protocol.SourceServices.Provide.toLiveInstrumentSubscriberAddress
 import spp.protocol.artifact.exception.sourceAsLineNumber
@@ -94,7 +95,6 @@ class MultiLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                             getLineNumber("line1"),
                             //"spp-test-probe" //todo: impl this so applyImmediately can be used
                         ),
-                        hitLimit = 2,
                         //applyImmediately = true //todo: can't use applyImmediately
                     ),
                     LiveBreakpoint(
@@ -103,7 +103,6 @@ class MultiLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                             getLineNumber("line2"),
                             //"spp-test-probe" //todo: impl this so applyImmediately can be used
                         ),
-                        hitLimit = 2,
                         //applyImmediately = true //todo: can't use applyImmediately
                     )
                 )
@@ -119,14 +118,6 @@ class MultiLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
         gotLine1Promise.future().await()
         gotLine2Promise.future().await()
-
-        //clean up after test
-        val removedInstruments = instrumentService.removeLiveInstruments(
-            LiveSourceLocation(MultiLiveBreakpointTest::class.qualifiedName!!)
-        ).await()
-        testContext.verify {
-            assertEquals(2, removedInstruments.size)
-        }
 
         if (testContext.failed()) {
             throw testContext.causeOfFailure()
