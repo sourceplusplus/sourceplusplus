@@ -44,7 +44,11 @@ class DeepObjectLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                 val layer4 = Layer4()
 
                 class Layer4 {
-                    val finalInt = 0
+                    val layer5 = Layer5()
+
+                    class Layer5 {
+                        val finalInt = 0
+                    }
                 }
             }
         }
@@ -97,15 +101,32 @@ class DeepObjectLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                         layer3Object["liveClazz"]
                     )
 
+                    //layer4
+                    val layer4Object = (layer3Object["value"] as List<*>)[0] as Map<String, *>
+                    assertEquals(
+                        "integration.DeepObjectLiveBreakpointTest\$Layer1\$Layer2\$Layer3\$Layer4",
+                        layer4Object["liveClazz"]
+                    )
+
+                    //layer5
+                    val layer5Object = (layer4Object["value"] as List<*>)[0] as Map<String, *>
+                    assertEquals(
+                        "integration.DeepObjectLiveBreakpointTest\$Layer1\$Layer2\$Layer3\$Layer4\$Layer5",
+                        layer5Object["liveClazz"]
+                    )
+
+                    //finalInt
+                    val finalInt = (layer5Object["value"] as List<*>)[0] as Map<String, *>
+                    assertEquals(
+                        "java.lang.Integer",
+                        finalInt["liveClazz"]
+                    )
+
                     //max depth exceeded
-                    val layer4Object = layer3Object["value"] as Map<String, *>
+                    val finalIntValue = finalInt["value"] as Map<String, *>
                     assertEquals(
                         "MAX_DEPTH_EXCEEDED",
-                        layer4Object["@skip"]
-                    )
-                    assertEquals(
-                        "integration.DeepObjectLiveBreakpointTest\$Layer1\$Layer2\$Layer3",
-                        layer4Object["@class"]
+                        finalIntValue["@skip"]
                     )
                 }
 
