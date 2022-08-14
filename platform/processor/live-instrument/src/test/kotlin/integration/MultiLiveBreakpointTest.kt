@@ -33,21 +33,92 @@ import spp.protocol.instrument.LiveSourceLocation
 import spp.protocol.instrument.event.LiveInstrumentEvent
 import spp.protocol.instrument.event.LiveInstrumentEventType
 import spp.protocol.marshall.ProtocolMarshaller
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 
 @Suppress("unused")
 class MultiLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
-    private fun addSideBySide() {
-        val activeSpan = startEntrySpan("addSideBySide")
+    private fun multiLineTest() {
+        val activeSpan = startEntrySpan("multiLineTest")
         addLineLabel("line1") { Throwable().stackTrace[0].lineNumber }
         addLineLabel("line2") { Throwable().stackTrace[0].lineNumber }
         stopSpan(activeSpan)
     }
 
     @Test
+    fun `same line twice`() = runBlocking {
+        setupLineLabels {
+            multiLineTest()
+        }
+
+        val gotAllHitsLatch = CountDownLatch(2)
+        val testContext = VertxTestContext()
+        val consumer = vertx.eventBus().consumer<Any>(toLiveInstrumentSubscriberAddress("system"))
+        consumer.handler {
+            val event = Json.decodeValue(it.body().toString(), LiveInstrumentEvent::class.java)
+            if (event.eventType == LiveInstrumentEventType.BREAKPOINT_HIT) {
+                //verify live breakpoint data
+                val bpHit = ProtocolMarshaller.deserializeLiveBreakpointHit(JsonObject(event.data))
+                testContext.verify {
+                    assertTrue(bpHit.stackTrace.elements.isNotEmpty())
+                    val topFrame = bpHit.stackTrace.elements.first()
+
+                    if (topFrame.sourceAsLineNumber() == getLineNumber("line1")) {
+                        gotAllHitsLatch.countDown()
+                    } else {
+                        fail("Unexpected line number: ${topFrame.sourceAsLineNumber()}")
+                    }
+                }
+            }
+        }.completionHandler {
+            if (it.failed()) {
+                testContext.failNow(it.cause())
+                return@completionHandler
+            }
+
+            //add live breakpoint
+            instrumentService.addLiveInstruments(
+                listOf(
+                    LiveBreakpoint(
+                        location = LiveSourceLocation(
+                            MultiLiveBreakpointTest::class.qualifiedName!!,
+                            getLineNumber("line1"),
+                            //"spp-test-probe" //todo: impl this so applyImmediately can be used
+                        ),
+                        //applyImmediately = true //todo: can't use applyImmediately
+                    ),
+                    LiveBreakpoint(
+                        location = LiveSourceLocation(
+                            MultiLiveBreakpointTest::class.qualifiedName!!,
+                            getLineNumber("line1"),
+                            //"spp-test-probe" //todo: impl this so applyImmediately can be used
+                        ),
+                        //applyImmediately = true //todo: can't use applyImmediately
+                    )
+                )
+            ).onSuccess {
+                //trigger live breakpoint
+                vertx.setTimer(5000) { //todo: have to wait since not applyImmediately
+                    multiLineTest()
+                }
+            }.onFailure {
+                testContext.failNow(it)
+            }
+        }
+
+        if (!gotAllHitsLatch.await(30, TimeUnit.SECONDS)) {
+            testContext.failNow(RuntimeException("didn't get all hits"))
+        }
+        if (testContext.failed()) {
+            throw testContext.causeOfFailure()
+        }
+    }
+
+    @Test
     fun `side by side`() = runBlocking {
         setupLineLabels {
-            addSideBySide()
+            multiLineTest()
         }
 
         val gotLine1Promise = Promise.promise<Void>()
@@ -109,7 +180,7 @@ class MultiLiveBreakpointTest : LiveInstrumentIntegrationTest() {
             ).onSuccess {
                 //trigger live breakpoint
                 vertx.setTimer(5000) { //todo: have to wait since not applyImmediately
-                    addSideBySide()
+                    multiLineTest()
                 }
             }.onFailure {
                 testContext.failNow(it)
