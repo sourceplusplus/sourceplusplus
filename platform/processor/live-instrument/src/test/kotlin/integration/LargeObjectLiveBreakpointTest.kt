@@ -34,11 +34,9 @@ import java.util.concurrent.TimeUnit
 @Suppress("unused", "UNUSED_VARIABLE")
 class LargeObjectLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
-    private val TWO_MB_ARR = ByteArray(1024 * 1024 * 2)
-
     private fun largeObject() {
         val activeSpan = startEntrySpan("deepObject")
-        val twoMbArr = TWO_MB_ARR
+        val twoMbArr = ByteArray(1024 * 1024 * 2)
         addLineLabel("done") { Throwable().stackTrace[0].lineNumber }
         stopSpan(activeSpan)
     }
