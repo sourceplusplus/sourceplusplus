@@ -31,26 +31,25 @@ class LiveInstrumentTagAdder : SegmentListener, AnalysisListenerFactory {
 
     override fun parseSegment(segmentObject: SegmentObject) {
         segmentObject.spansList.forEach { span ->
-            val breakpointIds = mutableListOf<String>()
+            var breakpointId: String? = null
             span.tagsList.forEach {
                 if (it.key.startsWith(LiveBreakpointAnalyzer.BREAKPOINT)) {
-                    val breakpointId = it.key.substring(LiveBreakpointAnalyzer.BREAKPOINT.length)
-                    breakpointIds.add(breakpointId)
+                    breakpointId = it.key.substring(LiveBreakpointAnalyzer.BREAKPOINT.length)
                 }
             }
 
-            val tagsList = span.tagsList.toMutableList()
-            breakpointIds.forEach {
+            if (breakpointId != null) {
+                val tagsList = span.tagsList.toMutableList()
                 tagsList.add(
                     KeyStringValuePair.newBuilder().setKey("spp.instrument_id")
-                        .setValue(it).build()
+                        .setValue(breakpointId).build()
                 )
                 tagsList.add(
                     KeyStringValuePair.newBuilder().setKey("spp.instrument_type")
                         .setValue(LiveInstrumentType.BREAKPOINT.ordinal.toString()).build()
                 )
+                Reflect.on(span).set("tags_", tagsList)
             }
-            Reflect.on(span).set("tags_", tagsList)
         }
     }
 
