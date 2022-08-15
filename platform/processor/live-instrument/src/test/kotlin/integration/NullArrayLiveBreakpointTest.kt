@@ -34,10 +34,10 @@ import java.util.concurrent.TimeUnit
 class NullArrayLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
     private fun nullArray() {
-        val activeSpan = startEntrySpan("nullArray")
+        startEntrySpan("nullArray")
         val nullArray = arrayOfNulls<Any?>(10)
         addLineLabel("done") { Throwable().stackTrace[0].lineNumber }
-        stopSpan(activeSpan)
+        stopSpan()
     }
 
     @Test

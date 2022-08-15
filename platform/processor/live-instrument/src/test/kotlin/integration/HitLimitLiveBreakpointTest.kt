@@ -36,9 +36,9 @@ import java.util.concurrent.TimeUnit
 class HitLimitLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
     private fun hitLimit() {
-        val activeSpan = startEntrySpan("hitLimit")
+        startEntrySpan("hitLimit")
         addLineLabel("done") { Throwable().stackTrace[0].lineNumber }
-        stopSpan(activeSpan)
+        stopSpan()
     }
 
     @Test

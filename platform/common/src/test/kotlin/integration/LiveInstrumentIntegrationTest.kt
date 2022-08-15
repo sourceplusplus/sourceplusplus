@@ -17,12 +17,12 @@
  */
 package integration
 
-import io.vertx.core.Vertx
 import org.joor.Reflect
 
 abstract class LiveInstrumentIntegrationTest : PlatformIntegrationTest() {
 
     private val lineLabels = mutableMapOf<String, Int>()
+    private var setupLineLabels = false
 
     fun addLineLabel(label: String, getLineNumber: () -> Int) {
         lineLabels[label] = getLineNumber.invoke()
@@ -33,32 +33,31 @@ abstract class LiveInstrumentIntegrationTest : PlatformIntegrationTest() {
     }
 
     fun setupLineLabels(invoke: () -> Unit) {
-        vertx.runOnContext {
-            Vertx.currentContext().put("setupLineLabels", true)
-            invoke.invoke()
-        }
+        setupLineLabels = true
+        invoke.invoke()
+        setupLineLabels = false
     }
 
-    fun stopSpan(activeSpan: Any?) {
-        if (Vertx.currentContext()?.get<Boolean>("setupLineLabels") == true) {
+    fun stopSpan() {
+        if (setupLineLabels) {
             return
         }
 
         Reflect.onClass(
             "org.apache.skywalking.apm.agent.core.context.ContextManager"
-        ).call("stopSpan", activeSpan)
+        ).call("stopSpan")
     }
 
-    fun startEntrySpan(name: String): Any? {
-        if (Vertx.currentContext()?.get<Boolean>("setupLineLabels") == true) {
-            return null
+    fun startEntrySpan(name: String) {
+        if (setupLineLabels) {
+            return
         }
 
         val contextCarrier = Reflect.onClass(
             "org.apache.skywalking.apm.agent.core.context.ContextCarrier"
         ).create().get<Any>()
-        return Reflect.onClass(
+        Reflect.onClass(
             "org.apache.skywalking.apm.agent.core.context.ContextManager"
-        ).call("createEntrySpan", name, contextCarrier).get()
+        ).call("createEntrySpan", name, contextCarrier)
     }
 }

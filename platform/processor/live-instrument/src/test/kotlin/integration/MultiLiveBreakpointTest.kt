@@ -40,10 +40,10 @@ import java.util.concurrent.TimeUnit
 class MultiLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
     private fun multiLineTest() {
-        val activeSpan = startEntrySpan("multiLineTest")
+        startEntrySpan("multiLineTest")
         addLineLabel("line1") { Throwable().stackTrace[0].lineNumber }
         addLineLabel("line2") { Throwable().stackTrace[0].lineNumber }
-        stopSpan(activeSpan)
+        stopSpan()
     }
 
     @Test

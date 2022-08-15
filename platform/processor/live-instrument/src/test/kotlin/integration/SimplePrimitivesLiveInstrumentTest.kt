@@ -35,7 +35,7 @@ import java.util.concurrent.TimeUnit
 open class SimplePrimitivesLiveInstrumentTest : LiveInstrumentIntegrationTest() {
 
     private fun simplePrimitives() {
-        val activeSpan = startEntrySpan("simplePrimitives")
+        startEntrySpan("simplePrimitives")
         val i = 1
         val c = 'h'
         val s = "hi"
@@ -46,7 +46,7 @@ open class SimplePrimitivesLiveInstrumentTest : LiveInstrumentIntegrationTest() 
         val d = 00.23
         val bool = true
         addLineLabel("done") { Throwable().stackTrace[0].lineNumber }
-        stopSpan(activeSpan)
+        stopSpan()
     }
 
     @Test

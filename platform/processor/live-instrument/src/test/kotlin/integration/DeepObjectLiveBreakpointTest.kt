@@ -55,10 +55,10 @@ class DeepObjectLiveBreakpointTest : LiveInstrumentIntegrationTest() {
     }
 
     private fun deepObject() {
-        val activeSpan = startEntrySpan("deepObject")
+        startEntrySpan("deepObject")
         val deepObject = Layer1()
         addLineLabel("done") { Throwable().stackTrace[0].lineNumber }
-        stopSpan(activeSpan)
+        stopSpan()
     }
 
     @Test

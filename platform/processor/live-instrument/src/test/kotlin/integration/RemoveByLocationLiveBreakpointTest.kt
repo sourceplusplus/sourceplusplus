@@ -37,12 +37,12 @@ import java.util.concurrent.TimeUnit
 class RemoveByLocationLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
     private fun removeMultipleByLine() {
-        val activeSpan = startEntrySpan("removeMultipleByLine")
+        startEntrySpan("removeMultipleByLine")
         val line1Var = 1
         addLineLabel("line1") { Throwable().stackTrace[0].lineNumber }
         val line2Var = 2
         addLineLabel("line2") { Throwable().stackTrace[0].lineNumber }
-        stopSpan(activeSpan)
+        stopSpan()
     }
 
     @Test
