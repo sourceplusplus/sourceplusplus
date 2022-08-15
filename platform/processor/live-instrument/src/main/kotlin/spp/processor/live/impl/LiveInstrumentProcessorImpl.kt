@@ -47,7 +47,6 @@ import org.apache.skywalking.oap.server.core.version.Version
 import org.joor.Reflect
 import spp.platform.common.DeveloperAuth
 import spp.platform.common.FeedbackProcessor
-import spp.platform.common.SkyWalkingStorage.Companion.METRIC_PREFIX
 import spp.platform.common.extend.getMeterServiceInstances
 import spp.platform.common.extend.getMeterServices
 import spp.protocol.SourceServices.Provide.toLiveInstrumentSubscriberAddress
@@ -76,6 +75,7 @@ class LiveInstrumentProcessorImpl : CoroutineVerticle(), LiveInstrumentService {
 
     companion object {
         private val log = KotlinLogging.logger {}
+        const val METRIC_PREFIX = "spp"
     }
 
     private lateinit var metricsQueryService: MetricsQueryService
