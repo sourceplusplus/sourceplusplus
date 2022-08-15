@@ -31,7 +31,7 @@ class LiveInstrumentAnalysisTest {
         val bpData = JsonObject(
             Resources.toString(Resources.getResource("bphit1.json"), Charsets.UTF_8)
         )
-        val bpHit = LiveInstrumentAnalysis.transformRawBreakpointHit(bpData)
+        val bpHit = LiveBreakpointAnalyzer.transformRawBreakpointHit(bpData)
         assertNotNull(bpHit)
 
         val topStack = bpHit.stackTrace.first()

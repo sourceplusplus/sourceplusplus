@@ -30,9 +30,12 @@ import org.apache.skywalking.oap.server.core.storage.StorageModule
 import org.apache.skywalking.oap.server.library.module.ModuleConfig
 import org.apache.skywalking.oap.server.library.module.ModuleDefine
 import org.apache.skywalking.oap.server.library.module.ModuleProvider
+import org.joor.Reflect
 import org.slf4j.LoggerFactory
 import spp.processor.InstrumentProcessor
-import spp.processor.live.impl.instrument.LiveInstrumentAnalysis
+import spp.processor.live.impl.instrument.LiveBreakpointAnalyzer
+import spp.processor.live.impl.instrument.LiveInstrumentTagAdder
+import spp.processor.live.impl.instrument.LiveLogAnalyzer
 
 class LiveInstrumentModule : ModuleDefine("spp-live-instrument") {
     override fun services(): Array<Class<*>> = emptyArray()
@@ -52,22 +55,20 @@ class LiveInstrumentProcessorProvider : ModuleProvider() {
     override fun start() {
         log.info("Starting LiveInstrumentProcessorProvider")
 
+        //gather live breakpoints
         val traceQueryService = manager.find(CoreModule.NAME)
             .provider().getService(TraceQueryService::class.java) as TraceQueryService
-        val liveInstrumentAnalysis = LiveInstrumentAnalysis(traceQueryService)
-
-        //gather live breakpoints
         val segmentParserService = manager.find(AnalyzerModule.NAME)
             .provider().getService(ISegmentParserService::class.java) as SegmentParserServiceImpl
-        val listenerManagerField = segmentParserService.javaClass.getDeclaredField("listenerManager")
-        listenerManagerField.trySetAccessible()
-        val listenerManager = listenerManagerField.get(segmentParserService) as SegmentParserListenerManager
-        listenerManager.add(liveInstrumentAnalysis)
+        val listenerManager = Reflect.on(segmentParserService).get<SegmentParserListenerManager>("listenerManager")
+        val spanListenerFactories = Reflect.on(listenerManager).get<MutableList<Any>>("spanListenerFactories")
+        spanListenerFactories.add(0, LiveInstrumentTagAdder())
+        spanListenerFactories.add(LiveBreakpointAnalyzer(traceQueryService))
 
         //gather live logs
         val logParserService = manager.find(LogAnalyzerModule.NAME)
             .provider().getService(ILogAnalyzerService::class.java) as LogAnalyzerServiceImpl
-        logParserService.addListenerFactory(liveInstrumentAnalysis)
+        logParserService.addListenerFactory(LiveLogAnalyzer())
 
         InstrumentProcessor.bootProcessor(manager)
         log.info("LiveInstrumentProcessorProvider started")
