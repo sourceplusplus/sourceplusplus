@@ -40,7 +40,7 @@ abstract class LiveInstrumentIntegrationTest : PlatformIntegrationTest() {
     }
 
     fun stopSpan(activeSpan: Any?) {
-        if (Vertx.currentContext().get<Boolean>("setupLineLabels") == true) {
+        if (Vertx.currentContext()?.get<Boolean>("setupLineLabels") == true) {
             return
         }
 
@@ -50,7 +50,7 @@ abstract class LiveInstrumentIntegrationTest : PlatformIntegrationTest() {
     }
 
     fun startEntrySpan(name: String): Any? {
-        if (Vertx.currentContext().get<Boolean>("setupLineLabels") == true) {
+        if (Vertx.currentContext()?.get<Boolean>("setupLineLabels") == true) {
             return null
         }
 
