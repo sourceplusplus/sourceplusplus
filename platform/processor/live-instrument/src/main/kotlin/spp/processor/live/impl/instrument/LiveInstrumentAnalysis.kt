@@ -303,6 +303,7 @@ class LiveInstrumentAnalysis(
                             )
                         )
                     }
+
                     it.key.startsWith(GLOBAL_VARIABLE) -> {
                         val parts = it.key.substring(GLOBAL_VARIABLE.length).split(":")
                         val breakpointId = parts[0]
@@ -314,6 +315,7 @@ class LiveInstrumentAnalysis(
                             )
                         )
                     }
+
                     it.key.startsWith(STATIC_FIELD) -> {
                         val parts = it.key.substring(STATIC_FIELD.length).split(":")
                         val breakpointId = parts[0]
@@ -325,6 +327,7 @@ class LiveInstrumentAnalysis(
                             )
                         )
                     }
+
                     it.key.startsWith(INSTANCE_FIELD) -> {
                         val parts = it.key.substring(INSTANCE_FIELD.length).split(":")
                         val breakpointId = parts[0]
@@ -336,9 +339,11 @@ class LiveInstrumentAnalysis(
                             )
                         )
                     }
+
                     it.key.startsWith(STACK_TRACE) -> {
                         stackTraces[it.key.substring(STACK_TRACE.length)] = it.value
                     }
+
                     it.key.startsWith(BREAKPOINT) -> {
                         val breakpointId = it.key.substring(BREAKPOINT.length)
                         breakpointIds.add(breakpointId)
