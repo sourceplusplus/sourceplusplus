@@ -35,10 +35,10 @@ import java.util.concurrent.TimeUnit
 class LargeObjectLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
     private fun largeObject() {
-        val activeSpan = startEntrySpan("deepObject")
+        startEntrySpan("deepObject")
         val twoMbArr = ByteArray(1024 * 1024 * 2)
         addLineLabel("done") { Throwable().stackTrace[0].lineNumber }
-        stopSpan(activeSpan)
+        stopSpan()
     }
 
     @Test

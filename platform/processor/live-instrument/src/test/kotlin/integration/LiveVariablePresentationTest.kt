@@ -38,7 +38,7 @@ import java.util.concurrent.TimeUnit
 class LiveVariablePresentationTest : LiveInstrumentIntegrationTest() {
 
     private fun liveVariablePresentation() {
-        val activeSpan = startEntrySpan("liveVariablePresentation")
+        startEntrySpan("liveVariablePresentation")
         val date = Date(1L)
         val duration = Duration.ofSeconds(1)
         val instant = Instant.ofEpochSecond(1)
@@ -53,7 +53,7 @@ class LiveVariablePresentationTest : LiveInstrumentIntegrationTest() {
         val bigInteger = BigInteger.TEN
         val clazz = Class.forName("java.lang.String")
         addLineLabel("done") { Throwable().stackTrace[0].lineNumber }
-        stopSpan(activeSpan)
+        stopSpan()
     }
 
     @Test

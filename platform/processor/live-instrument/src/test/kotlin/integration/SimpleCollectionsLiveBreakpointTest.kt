@@ -35,7 +35,7 @@ import java.util.concurrent.TimeUnit
 open class SimpleCollectionsLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
     private fun simpleCollections() {
-        val activeSpan = startEntrySpan("simpleCollections")
+        startEntrySpan("simpleCollections")
         val emptyList = emptyList<String>()
         val intArr = intArrayOf(1, 2, 3)
         val stringSet = setOf("a", "b", "c")
@@ -50,7 +50,7 @@ open class SimpleCollectionsLiveBreakpointTest : LiveInstrumentIntegrationTest()
             listOf(4, 5, 6)
         )
         addLineLabel("done") { Throwable().stackTrace[0].lineNumber }
-        stopSpan(activeSpan)
+        stopSpan()
     }
 
     @Test
