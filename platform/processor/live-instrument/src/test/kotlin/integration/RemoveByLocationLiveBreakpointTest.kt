@@ -17,19 +17,13 @@
  */
 package integration
 
-import io.vertx.core.json.Json
-import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
-import spp.protocol.SourceServices.Provide.toLiveInstrumentSubscriberAddress
 import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.LiveSourceLocation
-import spp.protocol.instrument.event.LiveInstrumentEvent
-import spp.protocol.instrument.event.LiveInstrumentEventType
-import spp.protocol.marshall.ProtocolMarshaller
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
@@ -53,22 +47,16 @@ class RemoveByLocationLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
         val gotAllHitsLatch = CountDownLatch(2)
         val testContext = VertxTestContext()
-        val consumer = vertx.eventBus().consumer<Any>(toLiveInstrumentSubscriberAddress("system"))
-        consumer.handler {
-            val event = Json.decodeValue(it.body().toString(), LiveInstrumentEvent::class.java)
-            if (event.eventType == LiveInstrumentEventType.BREAKPOINT_HIT) {
-                //verify live breakpoint data
-                val bpHit = ProtocolMarshaller.deserializeLiveBreakpointHit(JsonObject(event.data))
-                testContext.verify {
-                    assertTrue(bpHit.stackTrace.elements.isNotEmpty())
-                    val topFrame = bpHit.stackTrace.elements.first()
+        onBreakpointHit { bpHit ->
+            testContext.verify {
+                assertTrue(bpHit.stackTrace.elements.isNotEmpty())
+                val topFrame = bpHit.stackTrace.elements.first()
 
-                    if (topFrame.variables.find { it.name == "line2Var" } != null) {
-                        gotAllHitsLatch.countDown()
-                    } else {
-                        assertNotNull(topFrame.variables.find { it.name == "line1Var" })
-                        gotAllHitsLatch.countDown()
-                    }
+                if (topFrame.variables.find { it.name == "line2Var" } != null) {
+                    gotAllHitsLatch.countDown()
+                } else {
+                    assertNotNull(topFrame.variables.find { it.name == "line1Var" })
+                    gotAllHitsLatch.countDown()
                 }
             }
         }.completionHandler {
