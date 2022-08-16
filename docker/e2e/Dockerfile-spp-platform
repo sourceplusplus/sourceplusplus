@@ -40,3 +40,5 @@ ENV SW_CORE_GRPC_SSL_TRUSTED_CA_PATH=/skywalking/config/spp-platform.crt
 ENV SW_RECEIVER_GRPC_SSL_ENABLED=true
 ENV SW_RECEIVER_GRPC_SSL_KEY_PATH=/skywalking/config/spp-platform.key
 ENV SW_RECEIVER_GRPC_SSL_CERT_CHAIN_PATH=/skywalking/config/spp-platform.crt
+
+ENV SW_SEARCHABLE_TAG_KEYS="spp.instrument_id,spp.instrument_type,http.method,http.status_code,rpc.status_code,db.type,db.instance,mq.queue,mq.topic,mq.broker"
