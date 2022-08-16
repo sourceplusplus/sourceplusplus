@@ -26,6 +26,7 @@ import spp.protocol.SourceServices.Provide.toLiveInstrumentSubscriberAddress
 import spp.protocol.instrument.event.LiveBreakpointHit
 import spp.protocol.instrument.event.LiveInstrumentEvent
 import spp.protocol.instrument.event.LiveInstrumentEventType
+import spp.protocol.instrument.event.LiveLogHit
 import spp.protocol.marshall.ProtocolMarshaller
 import java.util.concurrent.TimeUnit
 
@@ -78,6 +79,18 @@ abstract class LiveInstrumentIntegrationTest : PlatformIntegrationTest() {
             if (event.eventType == LiveInstrumentEventType.BREAKPOINT_HIT) {
                 val bpHit = ProtocolMarshaller.deserializeLiveBreakpointHit(JsonObject(event.data))
                 invoke.invoke(bpHit)
+                consumer.unregister()
+            }
+        }
+    }
+
+    fun onLogHit(invoke: (LiveLogHit) -> Unit): MessageConsumer<*> {
+        val consumer = vertx.eventBus().consumer<Any>(toLiveInstrumentSubscriberAddress("system"))
+        return consumer.handler {
+            val event = Json.decodeValue(it.body().toString(), LiveInstrumentEvent::class.java)
+            if (event.eventType == LiveInstrumentEventType.LOG_HIT) {
+                val logHit = ProtocolMarshaller.deserializeLiveLogHit(JsonObject(event.data))
+                invoke.invoke(logHit)
                 consumer.unregister()
             }
         }
