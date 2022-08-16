@@ -29,7 +29,6 @@ import spp.protocol.instrument.LiveSourceLocation
 import spp.protocol.instrument.event.LiveInstrumentEvent
 import spp.protocol.instrument.event.LiveInstrumentEventType.BREAKPOINT_HIT
 import spp.protocol.marshall.ProtocolMarshaller
-import java.util.concurrent.TimeUnit
 
 @Suppress("UNUSED_VARIABLE")
 open class SimplePrimitivesLiveInstrumentTest : LiveInstrumentIntegrationTest() {
@@ -163,12 +162,6 @@ open class SimplePrimitivesLiveInstrumentTest : LiveInstrumentIntegrationTest() 
             }
         }
 
-        if (testContext.awaitCompletion(30, TimeUnit.SECONDS)) {
-            if (testContext.failed()) {
-                throw testContext.causeOfFailure()
-            }
-        } else {
-            throw RuntimeException("Test timed out")
-        }
+        errorOnTimeout(testContext)
     }
 }
