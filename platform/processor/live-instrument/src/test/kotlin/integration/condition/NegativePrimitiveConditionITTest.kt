@@ -21,6 +21,7 @@ import integration.LiveInstrumentIntegrationTest
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
 import kotlinx.coroutines.runBlocking
+import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
 import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.LiveSourceLocation
@@ -65,7 +66,7 @@ class NegativePrimitiveConditionITTest : LiveInstrumentIntegrationTest() {
         }
 
         //add live breakpoint
-        instrumentService.addLiveInstrument(
+        val liveInstrument = instrumentService.addLiveInstrument(
             LiveBreakpoint(
                 location = LiveSourceLocation(
                     NegativePrimitiveConditionITTest::class.qualifiedName!!,
@@ -83,6 +84,9 @@ class NegativePrimitiveConditionITTest : LiveInstrumentIntegrationTest() {
         }
 
         successOnTimeout(testContext)
+
+        //clean up
+        assertNotNull(instrumentService.removeLiveInstrument(liveInstrument.id!!).await())
     }
 
     @Test
@@ -97,7 +101,7 @@ class NegativePrimitiveConditionITTest : LiveInstrumentIntegrationTest() {
         }
 
         //add live breakpoint
-        instrumentService.addLiveInstrument(
+        val liveInstrument = instrumentService.addLiveInstrument(
             LiveBreakpoint(
                 location = LiveSourceLocation(
                     NegativePrimitiveConditionITTest::class.qualifiedName!!,
@@ -115,6 +119,9 @@ class NegativePrimitiveConditionITTest : LiveInstrumentIntegrationTest() {
         }
 
         successOnTimeout(testContext)
+
+        //clean up
+        assertNotNull(instrumentService.removeLiveInstrument(liveInstrument.id!!).await())
     }
 
     @Test
@@ -129,7 +136,7 @@ class NegativePrimitiveConditionITTest : LiveInstrumentIntegrationTest() {
         }
 
         //add live breakpoint
-        instrumentService.addLiveInstrument(
+        val liveInstrument = instrumentService.addLiveInstrument(
             LiveBreakpoint(
                 location = LiveSourceLocation(
                     NegativePrimitiveConditionITTest::class.qualifiedName!!,
@@ -147,5 +154,8 @@ class NegativePrimitiveConditionITTest : LiveInstrumentIntegrationTest() {
         }
 
         successOnTimeout(testContext)
+
+        //clean up
+        assertNotNull(instrumentService.removeLiveInstrument(liveInstrument.id!!).await())
     }
 }

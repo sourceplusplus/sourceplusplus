@@ -23,6 +23,7 @@ import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import spp.protocol.instrument.LiveBreakpoint
+import spp.protocol.instrument.LiveInstrumentType
 import spp.protocol.instrument.LiveSourceLocation
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -47,7 +48,7 @@ class RemoveByLocationLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
         val gotAllHitsLatch = CountDownLatch(2)
         val testContext = VertxTestContext()
-        onBreakpointHit { bpHit ->
+        onBreakpointHit(2) { bpHit ->
             testContext.verify {
                 assertTrue(bpHit.stackTrace.elements.isNotEmpty())
                 val topFrame = bpHit.stackTrace.elements.first()
@@ -130,5 +131,8 @@ class RemoveByLocationLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         if (testContext.failed()) {
             throw testContext.causeOfFailure()
         }
+
+        //clean up
+        assertTrue(instrumentService.clearLiveInstruments(LiveInstrumentType.BREAKPOINT).await())
     }
 }

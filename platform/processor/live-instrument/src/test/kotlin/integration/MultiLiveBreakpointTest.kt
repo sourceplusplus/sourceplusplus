@@ -18,21 +18,15 @@
 package integration
 
 import io.vertx.core.Promise
-import io.vertx.core.json.Json
-import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Assertions.fail
 import org.junit.jupiter.api.Test
-import spp.protocol.SourceServices.Provide.toLiveInstrumentSubscriberAddress
 import spp.protocol.artifact.exception.sourceAsLineNumber
 import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.LiveSourceLocation
-import spp.protocol.instrument.event.LiveInstrumentEvent
-import spp.protocol.instrument.event.LiveInstrumentEventType
-import spp.protocol.marshall.ProtocolMarshaller
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
@@ -54,21 +48,15 @@ class MultiLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
         val gotAllHitsLatch = CountDownLatch(2)
         val testContext = VertxTestContext()
-        val consumer = vertx.eventBus().consumer<Any>(toLiveInstrumentSubscriberAddress("system"))
-        consumer.handler {
-            val event = Json.decodeValue(it.body().toString(), LiveInstrumentEvent::class.java)
-            if (event.eventType == LiveInstrumentEventType.BREAKPOINT_HIT) {
-                //verify live breakpoint data
-                val bpHit = ProtocolMarshaller.deserializeLiveBreakpointHit(JsonObject(event.data))
-                testContext.verify {
-                    assertTrue(bpHit.stackTrace.elements.isNotEmpty())
-                    val topFrame = bpHit.stackTrace.elements.first()
+        onBreakpointHit(2) { bpHit ->
+            testContext.verify {
+                assertTrue(bpHit.stackTrace.elements.isNotEmpty())
+                val topFrame = bpHit.stackTrace.elements.first()
 
-                    if (topFrame.sourceAsLineNumber() == getLineNumber("line1")) {
-                        gotAllHitsLatch.countDown()
-                    } else {
-                        fail("Unexpected line number: ${topFrame.sourceAsLineNumber()}")
-                    }
+                if (topFrame.sourceAsLineNumber() == getLineNumber("line1")) {
+                    gotAllHitsLatch.countDown()
+                } else {
+                    fail("Unexpected line number: ${topFrame.sourceAsLineNumber()}")
                 }
             }
         }.completionHandler {
@@ -124,31 +112,25 @@ class MultiLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         val gotLine1Promise = Promise.promise<Void>()
         val gotLine2Promise = Promise.promise<Void>()
         val testContext = VertxTestContext()
-        val consumer = vertx.eventBus().consumer<Any>(toLiveInstrumentSubscriberAddress("system"))
-        consumer.handler {
-            val event = Json.decodeValue(it.body().toString(), LiveInstrumentEvent::class.java)
-            if (event.eventType == LiveInstrumentEventType.BREAKPOINT_HIT) {
-                //verify live breakpoint data
-                val bpHit = ProtocolMarshaller.deserializeLiveBreakpointHit(JsonObject(event.data))
-                testContext.verify {
-                    assertTrue(bpHit.stackTrace.elements.isNotEmpty())
-                    val topFrame = bpHit.stackTrace.elements.first()
+        onBreakpointHit(2) { bpHit ->
+            testContext.verify {
+                assertTrue(bpHit.stackTrace.elements.isNotEmpty())
+                val topFrame = bpHit.stackTrace.elements.first()
 
-                    if (topFrame.sourceAsLineNumber() == getLineNumber("line1")) {
-                        if (gotLine1Promise.future().isComplete) {
-                            gotLine1Promise.fail("got line1 twice")
-                        } else {
-                            gotLine1Promise.complete()
-                        }
-                    } else if (topFrame.sourceAsLineNumber() == getLineNumber("line2")) {
-                        if (gotLine2Promise.future().isComplete) {
-                            gotLine2Promise.fail("got line2 twice")
-                        } else {
-                            gotLine2Promise.complete()
-                        }
+                if (topFrame.sourceAsLineNumber() == getLineNumber("line1")) {
+                    if (gotLine1Promise.future().isComplete) {
+                        gotLine1Promise.fail("got line1 twice")
                     } else {
-                        fail("Unexpected line number: ${topFrame.sourceAsLineNumber()}")
+                        gotLine1Promise.complete()
                     }
+                } else if (topFrame.sourceAsLineNumber() == getLineNumber("line2")) {
+                    if (gotLine2Promise.future().isComplete) {
+                        gotLine2Promise.fail("got line2 twice")
+                    } else {
+                        gotLine2Promise.complete()
+                    }
+                } else {
+                    fail("Unexpected line number: ${topFrame.sourceAsLineNumber()}")
                 }
             }
         }.completionHandler {

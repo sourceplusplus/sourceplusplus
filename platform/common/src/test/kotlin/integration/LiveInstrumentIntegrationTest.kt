@@ -29,6 +29,7 @@ import spp.protocol.instrument.event.LiveInstrumentEventType
 import spp.protocol.instrument.event.LiveLogHit
 import spp.protocol.marshall.ProtocolMarshaller
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicInteger
 
 abstract class LiveInstrumentIntegrationTest : PlatformIntegrationTest() {
 
@@ -72,14 +73,18 @@ abstract class LiveInstrumentIntegrationTest : PlatformIntegrationTest() {
         ).call("createEntrySpan", name, contextCarrier)
     }
 
-    fun onBreakpointHit(invoke: (LiveBreakpointHit) -> Unit): MessageConsumer<*> {
+    fun onBreakpointHit(hitLimit: Int = 1, invoke: (LiveBreakpointHit) -> Unit): MessageConsumer<*> {
+        val hitCount = AtomicInteger(0)
         val consumer = vertx.eventBus().consumer<Any>(toLiveInstrumentSubscriberAddress("system"))
         return consumer.handler {
             val event = Json.decodeValue(it.body().toString(), LiveInstrumentEvent::class.java)
             if (event.eventType == LiveInstrumentEventType.BREAKPOINT_HIT) {
                 val bpHit = ProtocolMarshaller.deserializeLiveBreakpointHit(JsonObject(event.data))
                 invoke.invoke(bpHit)
-                consumer.unregister()
+
+                if (hitCount.incrementAndGet() == hitLimit) {
+                    consumer.unregister()
+                }
             }
         }
     }
