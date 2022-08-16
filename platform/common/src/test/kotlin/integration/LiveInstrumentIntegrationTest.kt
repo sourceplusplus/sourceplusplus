@@ -17,7 +17,17 @@
  */
 package integration
 
+import io.vertx.core.eventbus.MessageConsumer
+import io.vertx.core.json.Json
+import io.vertx.core.json.JsonObject
+import io.vertx.junit5.VertxTestContext
 import org.joor.Reflect
+import spp.protocol.SourceServices.Provide.toLiveInstrumentSubscriberAddress
+import spp.protocol.instrument.event.LiveBreakpointHit
+import spp.protocol.instrument.event.LiveInstrumentEvent
+import spp.protocol.instrument.event.LiveInstrumentEventType
+import spp.protocol.marshall.ProtocolMarshaller
+import java.util.concurrent.TimeUnit
 
 abstract class LiveInstrumentIntegrationTest : PlatformIntegrationTest() {
 
@@ -59,5 +69,37 @@ abstract class LiveInstrumentIntegrationTest : PlatformIntegrationTest() {
         Reflect.onClass(
             "org.apache.skywalking.apm.agent.core.context.ContextManager"
         ).call("createEntrySpan", name, contextCarrier)
+    }
+
+    fun onBreakpointHit(invoke: (LiveBreakpointHit) -> Unit): MessageConsumer<*> {
+        val consumer = vertx.eventBus().consumer<Any>(toLiveInstrumentSubscriberAddress("system"))
+        return consumer.handler {
+            val event = Json.decodeValue(it.body().toString(), LiveInstrumentEvent::class.java)
+            if (event.eventType == LiveInstrumentEventType.BREAKPOINT_HIT) {
+                val bpHit = ProtocolMarshaller.deserializeLiveBreakpointHit(JsonObject(event.data))
+                invoke.invoke(bpHit)
+                consumer.unregister()
+            }
+        }
+    }
+
+    fun errorOnTimeout(testContext: VertxTestContext, waitTime: Long = 15) {
+        if (testContext.awaitCompletion(waitTime, TimeUnit.SECONDS)) {
+            if (testContext.failed()) {
+                throw testContext.causeOfFailure()
+            }
+        } else {
+            throw RuntimeException("Test timed out")
+        }
+    }
+
+    fun successOnTimeout(testContext: VertxTestContext, waitTime: Long = 15) {
+        if (testContext.awaitCompletion(waitTime, TimeUnit.SECONDS)) {
+            if (testContext.failed()) {
+                throw testContext.causeOfFailure()
+            }
+        } else {
+            testContext.completeNow()
+        }
     }
 }
