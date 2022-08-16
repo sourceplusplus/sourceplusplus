@@ -25,6 +25,8 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.LiveSourceLocation
+import spp.protocol.instrument.throttle.InstrumentThrottle
+import spp.protocol.instrument.throttle.ThrottleStep
 import java.util.concurrent.atomic.AtomicInteger
 
 @Suppress("unused")
@@ -37,7 +39,7 @@ class ThrottleLiveBreakpointTest : LiveInstrumentIntegrationTest() {
     }
 
     @Test
-    fun `once per second`() = runBlocking {
+    fun `one per second`() = runBlocking {
         setupLineLabels {
             throttleTest()
         }
@@ -45,9 +47,11 @@ class ThrottleLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         //verify breakpoint is hit once per second (10 times)
         val bpHitCount = AtomicInteger(0)
         val testContext = VertxTestContext()
-        onBreakpointHit {
+        onBreakpointHit(-1) {
             //todo: shouldn't hit 11. pretty sure issue is from use of volatile int instead of atomic int
-            assertTrue(bpHitCount.incrementAndGet() <= 11)
+            testContext.verify {
+                assertTrue(bpHitCount.incrementAndGet() <= 11)
+            }
         }
 
         //add live breakpoint
@@ -75,6 +79,102 @@ class ThrottleLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         }
 
         successOnTimeout(testContext, 15)
+        assertTrue(bpHitCount.get() >= 10, "bpHitCount: ${bpHitCount.get()}")
+
+        //clean up
+        assertNotNull(instrumentService.removeLiveInstrument(liveInstrument.id!!).await())
+    }
+
+    @Test
+    fun `two per second`() = runBlocking {
+        setupLineLabels {
+            throttleTest()
+        }
+
+        //verify breakpoint is hit twice per second (20 times)
+        val bpHitCount = AtomicInteger(0)
+        val testContext = VertxTestContext()
+        onBreakpointHit(-1) {
+            //todo: shouldn't hit 22. pretty sure issue is from use of volatile int instead of atomic int
+            testContext.verify {
+                assertTrue(bpHitCount.incrementAndGet() <= 22)
+            }
+        }
+
+        //add live breakpoint
+        val liveInstrument = instrumentService.addLiveInstrument(
+            LiveBreakpoint(
+                location = LiveSourceLocation(
+                    ThrottleLiveBreakpointTest::class.qualifiedName!!,
+                    getLineNumber("done"),
+                    //"spp-test-probe" //todo: impl this so applyImmediately can be used
+                ),
+                hitLimit = -1,
+                throttle = InstrumentThrottle(2, ThrottleStep.SECOND)
+                //applyImmediately = true //todo: can't use applyImmediately
+            )
+        ).await()
+
+        //trigger live breakpoint (100 times)
+        vertx.setTimer(5000) { //todo: have to wait since not applyImmediately
+            val counter = AtomicInteger(0)
+            vertx.setPeriodic(100) {
+                throttleTest()
+                if (counter.incrementAndGet() >= 100) {
+                    vertx.cancelTimer(it)
+                }
+            }
+        }
+
+        successOnTimeout(testContext, 15)
+        assertTrue(bpHitCount.get() >= 20, "bpHitCount: ${bpHitCount.get()}")
+
+        //clean up
+        assertNotNull(instrumentService.removeLiveInstrument(liveInstrument.id!!).await())
+    }
+
+    @Test
+    fun `no throttle`() = runBlocking {
+        setupLineLabels {
+            throttleTest()
+        }
+
+        val bpHitCount = AtomicInteger(0)
+        val testContext = VertxTestContext()
+        onBreakpointHit(-1) {
+            testContext.verify {
+                assertTrue(bpHitCount.incrementAndGet() <= 100)
+            }
+        }
+
+        //add live breakpoint
+        val liveInstrument = instrumentService.addLiveInstrument(
+            LiveBreakpoint(
+                location = LiveSourceLocation(
+                    ThrottleLiveBreakpointTest::class.qualifiedName!!,
+                    getLineNumber("done"),
+                    //"spp-test-probe" //todo: impl this so applyImmediately can be used
+                ),
+                hitLimit = -1,
+                throttle = InstrumentThrottle(1000, ThrottleStep.SECOND) //todo: impl NOP throttle
+                //applyImmediately = true //todo: can't use applyImmediately
+            )
+        ).await()
+
+        //trigger live breakpoint (100 times)
+        vertx.setTimer(5000) { //todo: have to wait since not applyImmediately
+            val counter = AtomicInteger(0)
+            vertx.setPeriodic(100) {
+                throttleTest()
+                if (counter.incrementAndGet() >= 100) {
+                    vertx.cancelTimer(it)
+                }
+            }
+        }
+
+        successOnTimeout(testContext, 15)
+        //todo: should be able to verify at exactly 100
+        assertTrue(bpHitCount.get() >= 99, "bpHitCount: ${bpHitCount.get()}")
 
         //clean up
         assertNotNull(instrumentService.removeLiveInstrument(liveInstrument.id!!).await())
