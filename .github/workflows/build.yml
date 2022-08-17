@@ -202,7 +202,6 @@ jobs:
   cleanup:
     needs: [jvm-build, releaseDraft, docker-push]
     runs-on: ubuntu-latest
-    if: always()
 
     steps:
       - name: Delete spp-platform
