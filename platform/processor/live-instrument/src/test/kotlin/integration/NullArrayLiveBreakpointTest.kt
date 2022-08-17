@@ -17,27 +17,20 @@
  */
 package integration
 
-import io.vertx.core.json.Json
-import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxTestContext
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
-import spp.protocol.SourceServices.Provide.toLiveInstrumentSubscriberAddress
 import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.LiveSourceLocation
-import spp.protocol.instrument.event.LiveInstrumentEvent
-import spp.protocol.instrument.event.LiveInstrumentEventType
-import spp.protocol.marshall.ProtocolMarshaller
-import java.util.concurrent.TimeUnit
 
 @Suppress("unused", "UNUSED_VARIABLE")
 class NullArrayLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
     private fun nullArray() {
-        val activeSpan = startEntrySpan("nullArray")
+        startEntrySpan("nullArray")
         val nullArray = arrayOfNulls<Any?>(10)
         addLineLabel("done") { Throwable().stackTrace[0].lineNumber }
-        stopSpan(activeSpan)
+        stopSpan()
     }
 
     @Test
@@ -47,33 +40,27 @@ class NullArrayLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         }
 
         val testContext = VertxTestContext()
-        val consumer = vertx.eventBus().consumer<Any>(toLiveInstrumentSubscriberAddress("system"))
-        consumer.handler {
-            val event = Json.decodeValue(it.body().toString(), LiveInstrumentEvent::class.java)
-            if (event.eventType == LiveInstrumentEventType.BREAKPOINT_HIT) {
-                //verify live breakpoint data
-                val bpHit = ProtocolMarshaller.deserializeLiveBreakpointHit(JsonObject(event.data))
-                testContext.verify {
-                    assertTrue(bpHit.stackTrace.elements.isNotEmpty())
-                    val topFrame = bpHit.stackTrace.elements.first()
-                    assertEquals(2, topFrame.variables.size)
+        onBreakpointHit { bpHit ->
+            testContext.verify {
+                assertTrue(bpHit.stackTrace.elements.isNotEmpty())
+                val topFrame = bpHit.stackTrace.elements.first()
+                assertEquals(2, topFrame.variables.size)
 
-                    //nullArray
-                    val nullArrayVariable = topFrame.variables.first { it.name == "nullArray" }
-                    assertNotNull(nullArrayVariable)
-                    assertEquals(
-                        "java.lang.Object[]",
-                        nullArrayVariable.liveClazz
-                    )
-                    assertArrayEquals(
-                        arrayOfNulls<Any?>(10),
-                        (nullArrayVariable.value as List<Map<*, *>>).map { it["value"] }.toTypedArray()
-                    )
-                }
-
-                //test passed
-                testContext.completeNow()
+                //nullArray
+                val nullArrayVariable = topFrame.variables.first { it.name == "nullArray" }
+                assertNotNull(nullArrayVariable)
+                assertEquals(
+                    "java.lang.Object[]",
+                    nullArrayVariable.liveClazz
+                )
+                assertArrayEquals(
+                    arrayOfNulls<Any?>(10),
+                    (nullArrayVariable.value as List<Map<*, *>>).map { it["value"] }.toTypedArray()
+                )
             }
+
+            //test passed
+            testContext.completeNow()
         }.completionHandler {
             if (it.failed()) {
                 testContext.failNow(it.cause())
@@ -100,12 +87,6 @@ class NullArrayLiveBreakpointTest : LiveInstrumentIntegrationTest() {
             }
         }
 
-        if (testContext.awaitCompletion(30, TimeUnit.SECONDS)) {
-            if (testContext.failed()) {
-                throw testContext.causeOfFailure()
-            }
-        } else {
-            throw RuntimeException("Test timed out")
-        }
+        errorOnTimeout(testContext)
     }
 }

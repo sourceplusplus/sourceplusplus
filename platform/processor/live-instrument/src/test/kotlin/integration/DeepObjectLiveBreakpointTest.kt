@@ -17,19 +17,12 @@
  */
 package integration
 
-import io.vertx.core.json.Json
-import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxTestContext
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import spp.protocol.SourceServices.Provide.toLiveInstrumentSubscriberAddress
 import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.LiveSourceLocation
-import spp.protocol.instrument.event.LiveInstrumentEvent
-import spp.protocol.instrument.event.LiveInstrumentEventType
-import spp.protocol.marshall.ProtocolMarshaller
-import java.util.concurrent.TimeUnit
 
 @Suppress("unused", "UNUSED_VARIABLE")
 class DeepObjectLiveBreakpointTest : LiveInstrumentIntegrationTest() {
@@ -55,10 +48,10 @@ class DeepObjectLiveBreakpointTest : LiveInstrumentIntegrationTest() {
     }
 
     private fun deepObject() {
-        val activeSpan = startEntrySpan("deepObject")
+        startEntrySpan("deepObject")
         val deepObject = Layer1()
         addLineLabel("done") { Throwable().stackTrace[0].lineNumber }
-        stopSpan(activeSpan)
+        stopSpan()
     }
 
     @Test
@@ -68,70 +61,64 @@ class DeepObjectLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         }
 
         val testContext = VertxTestContext()
-        val consumer = vertx.eventBus().consumer<Any>(toLiveInstrumentSubscriberAddress("system"))
-        consumer.handler {
-            val event = Json.decodeValue(it.body().toString(), LiveInstrumentEvent::class.java)
-            if (event.eventType == LiveInstrumentEventType.BREAKPOINT_HIT) {
-                //verify live breakpoint data
-                val bpHit = ProtocolMarshaller.deserializeLiveBreakpointHit(JsonObject(event.data))
-                testContext.verify {
-                    assertTrue(bpHit.stackTrace.elements.isNotEmpty())
-                    val topFrame = bpHit.stackTrace.elements.first()
-                    assertEquals(2, topFrame.variables.size)
+        onBreakpointHit { bpHit ->
+            testContext.verify {
+                assertTrue(bpHit.stackTrace.elements.isNotEmpty())
+                val topFrame = bpHit.stackTrace.elements.first()
+                assertEquals(2, topFrame.variables.size)
 
-                    //layer1
-                    val layer1Object = topFrame.variables.first { it.name == "deepObject" }
-                    assertEquals(
-                        "integration.DeepObjectLiveBreakpointTest\$Layer1",
-                        layer1Object.liveClazz
-                    )
+                //layer1
+                val layer1Object = topFrame.variables.first { it.name == "deepObject" }
+                assertEquals(
+                    "integration.DeepObjectLiveBreakpointTest\$Layer1",
+                    layer1Object.liveClazz
+                )
 
-                    //layer2
-                    val layer2Object = (layer1Object.value as List<*>)[0] as Map<String, *>
-                    assertEquals(
-                        "integration.DeepObjectLiveBreakpointTest\$Layer1\$Layer2",
-                        layer2Object["liveClazz"]
-                    )
+                //layer2
+                val layer2Object = (layer1Object.value as List<*>)[0] as Map<String, *>
+                assertEquals(
+                    "integration.DeepObjectLiveBreakpointTest\$Layer1\$Layer2",
+                    layer2Object["liveClazz"]
+                )
 
-                    //layer3
-                    val layer3Object = (layer2Object["value"] as List<*>)[0] as Map<String, *>
-                    assertEquals(
-                        "integration.DeepObjectLiveBreakpointTest\$Layer1\$Layer2\$Layer3",
-                        layer3Object["liveClazz"]
-                    )
+                //layer3
+                val layer3Object = (layer2Object["value"] as List<*>)[0] as Map<String, *>
+                assertEquals(
+                    "integration.DeepObjectLiveBreakpointTest\$Layer1\$Layer2\$Layer3",
+                    layer3Object["liveClazz"]
+                )
 
-                    //layer4
-                    val layer4Object = (layer3Object["value"] as List<*>)[0] as Map<String, *>
-                    assertEquals(
-                        "integration.DeepObjectLiveBreakpointTest\$Layer1\$Layer2\$Layer3\$Layer4",
-                        layer4Object["liveClazz"]
-                    )
+                //layer4
+                val layer4Object = (layer3Object["value"] as List<*>)[0] as Map<String, *>
+                assertEquals(
+                    "integration.DeepObjectLiveBreakpointTest\$Layer1\$Layer2\$Layer3\$Layer4",
+                    layer4Object["liveClazz"]
+                )
 
-                    //layer5
-                    val layer5Object = (layer4Object["value"] as List<*>)[0] as Map<String, *>
-                    assertEquals(
-                        "integration.DeepObjectLiveBreakpointTest\$Layer1\$Layer2\$Layer3\$Layer4\$Layer5",
-                        layer5Object["liveClazz"]
-                    )
+                //layer5
+                val layer5Object = (layer4Object["value"] as List<*>)[0] as Map<String, *>
+                assertEquals(
+                    "integration.DeepObjectLiveBreakpointTest\$Layer1\$Layer2\$Layer3\$Layer4\$Layer5",
+                    layer5Object["liveClazz"]
+                )
 
-                    //finalInt
-                    val finalInt = (layer5Object["value"] as List<*>)[0] as Map<String, *>
-                    assertEquals(
-                        "java.lang.Integer",
-                        finalInt["liveClazz"]
-                    )
+                //finalInt
+                val finalInt = (layer5Object["value"] as List<*>)[0] as Map<String, *>
+                assertEquals(
+                    "java.lang.Integer",
+                    finalInt["liveClazz"]
+                )
 
-                    //max depth exceeded
-                    val finalIntValue = finalInt["value"] as Map<String, *>
-                    assertEquals(
-                        "MAX_DEPTH_EXCEEDED",
-                        finalIntValue["@skip"]
-                    )
-                }
-
-                //test passed
-                testContext.completeNow()
+                //max depth exceeded
+                val finalIntValue = finalInt["value"] as Map<String, *>
+                assertEquals(
+                    "MAX_DEPTH_EXCEEDED",
+                    finalIntValue["@skip"]
+                )
             }
+
+            //test passed
+            testContext.completeNow()
         }.completionHandler {
             if (it.failed()) {
                 testContext.failNow(it.cause())
@@ -158,12 +145,6 @@ class DeepObjectLiveBreakpointTest : LiveInstrumentIntegrationTest() {
             }
         }
 
-        if (testContext.awaitCompletion(30, TimeUnit.SECONDS)) {
-            if (testContext.failed()) {
-                throw testContext.causeOfFailure()
-            }
-        } else {
-            throw RuntimeException("Test timed out")
-        }
+        errorOnTimeout(testContext)
     }
 }

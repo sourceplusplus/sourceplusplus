@@ -39,7 +39,7 @@ import java.util.concurrent.CompletableFuture
 
 object SourceStorage {
 
-    const val DEFAULT_ACCESS_TOKEN = "change-me"
+    private const val DEFAULT_ACCESS_TOKEN = "change-me"
     private val log = LoggerFactory.getLogger(SourceStorage::class.java)
 
     lateinit var storage: CoreStorage
@@ -69,19 +69,19 @@ object SourceStorage {
         }
     }
 
-    @Suppress("MemberVisibilityCanBePrivate")
-    suspend fun installDefaults() {
+    private suspend fun installDefaults() {
         val jwtConfig = config.getJsonObject("spp-platform").getJsonObject("jwt")
         val accessToken = jwtConfig.getString("access_token")
         val systemAccessToken = if (accessToken.isNullOrEmpty()) DEFAULT_ACCESS_TOKEN else accessToken
+        if (systemAccessToken == DEFAULT_ACCESS_TOKEN) {
+            log.warn("Using default system access token. This is not recommended.")
+        }
+
         installDefaults(systemAccessToken)
     }
 
     @Suppress("MemberVisibilityCanBePrivate")
     suspend fun installDefaults(systemAccessToken: String) {
-        if (systemAccessToken == DEFAULT_ACCESS_TOKEN) {
-            log.warn("Using default system access token. This is not recommended.")
-        }
         put("system_access_token", systemAccessToken)
 
         //set default roles, permissions, redactions
@@ -139,7 +139,7 @@ object SourceStorage {
         getRoles().forEach { removeRole(it) }
         getDevelopers().forEach { removeDeveloper(it.id) }
         getClientAccessors().forEach { removeClientAccess(it.id) }
-        installDefaults()
+        installDefaults(get("system_access_token", DEFAULT_ACCESS_TOKEN))
         return true
     }
 

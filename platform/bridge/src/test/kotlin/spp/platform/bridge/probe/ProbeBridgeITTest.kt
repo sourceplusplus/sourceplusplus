@@ -104,6 +104,8 @@ class ProbeBridgeITTest : PlatformIntegrationTest() {
         }
         connectPromise.future().await()
 
+        delay(2000) //ensure probe is connected
+
         //verify probe count increased
         val increasedProbeCount = liveService.getStats().await()
             .getJsonObject("platform").getInteger("connected-probes")

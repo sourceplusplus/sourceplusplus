@@ -17,19 +17,14 @@
  */
 package integration
 
-import io.vertx.core.json.Json
-import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
-import spp.protocol.SourceServices.Provide.toLiveInstrumentSubscriberAddress
 import spp.protocol.instrument.LiveBreakpoint
+import spp.protocol.instrument.LiveInstrumentType
 import spp.protocol.instrument.LiveSourceLocation
-import spp.protocol.instrument.event.LiveInstrumentEvent
-import spp.protocol.instrument.event.LiveInstrumentEventType
-import spp.protocol.marshall.ProtocolMarshaller
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
@@ -37,12 +32,12 @@ import java.util.concurrent.TimeUnit
 class RemoveByLocationLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
     private fun removeMultipleByLine() {
-        val activeSpan = startEntrySpan("removeMultipleByLine")
+        startEntrySpan("removeMultipleByLine")
         val line1Var = 1
         addLineLabel("line1") { Throwable().stackTrace[0].lineNumber }
         val line2Var = 2
         addLineLabel("line2") { Throwable().stackTrace[0].lineNumber }
-        stopSpan(activeSpan)
+        stopSpan()
     }
 
     @Test
@@ -53,22 +48,16 @@ class RemoveByLocationLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
         val gotAllHitsLatch = CountDownLatch(2)
         val testContext = VertxTestContext()
-        val consumer = vertx.eventBus().consumer<Any>(toLiveInstrumentSubscriberAddress("system"))
-        consumer.handler {
-            val event = Json.decodeValue(it.body().toString(), LiveInstrumentEvent::class.java)
-            if (event.eventType == LiveInstrumentEventType.BREAKPOINT_HIT) {
-                //verify live breakpoint data
-                val bpHit = ProtocolMarshaller.deserializeLiveBreakpointHit(JsonObject(event.data))
-                testContext.verify {
-                    assertTrue(bpHit.stackTrace.elements.isNotEmpty())
-                    val topFrame = bpHit.stackTrace.elements.first()
+        onBreakpointHit(2) { bpHit ->
+            testContext.verify {
+                assertTrue(bpHit.stackTrace.elements.isNotEmpty())
+                val topFrame = bpHit.stackTrace.elements.first()
 
-                    if (topFrame.variables.find { it.name == "line2Var" } != null) {
-                        gotAllHitsLatch.countDown()
-                    } else {
-                        assertNotNull(topFrame.variables.find { it.name == "line1Var" })
-                        gotAllHitsLatch.countDown()
-                    }
+                if (topFrame.variables.find { it.name == "line2Var" } != null) {
+                    gotAllHitsLatch.countDown()
+                } else {
+                    assertNotNull(topFrame.variables.find { it.name == "line1Var" })
+                    gotAllHitsLatch.countDown()
                 }
             }
         }.completionHandler {
@@ -142,5 +131,8 @@ class RemoveByLocationLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         if (testContext.failed()) {
             throw testContext.causeOfFailure()
         }
+
+        //clean up
+        assertTrue(instrumentService.clearLiveInstruments(LiveInstrumentType.BREAKPOINT).await())
     }
 }

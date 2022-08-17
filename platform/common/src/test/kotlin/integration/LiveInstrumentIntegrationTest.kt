@@ -17,12 +17,24 @@
  */
 package integration
 
-import io.vertx.core.Vertx
+import io.vertx.core.eventbus.MessageConsumer
+import io.vertx.core.json.Json
+import io.vertx.core.json.JsonObject
+import io.vertx.junit5.VertxTestContext
 import org.joor.Reflect
+import spp.protocol.SourceServices.Provide.toLiveInstrumentSubscriberAddress
+import spp.protocol.instrument.event.LiveBreakpointHit
+import spp.protocol.instrument.event.LiveInstrumentEvent
+import spp.protocol.instrument.event.LiveInstrumentEventType
+import spp.protocol.instrument.event.LiveLogHit
+import spp.protocol.marshall.ProtocolMarshaller
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicInteger
 
 abstract class LiveInstrumentIntegrationTest : PlatformIntegrationTest() {
 
     private val lineLabels = mutableMapOf<String, Int>()
+    private var setupLineLabels = false
 
     fun addLineLabel(label: String, getLineNumber: () -> Int) {
         lineLabels[label] = getLineNumber.invoke()
@@ -33,32 +45,79 @@ abstract class LiveInstrumentIntegrationTest : PlatformIntegrationTest() {
     }
 
     fun setupLineLabels(invoke: () -> Unit) {
-        vertx.runOnContext {
-            Vertx.currentContext().put("setupLineLabels", true)
-            invoke.invoke()
-        }
+        setupLineLabels = true
+        invoke.invoke()
+        setupLineLabels = false
     }
 
-    fun stopSpan(activeSpan: Any?) {
-        if (Vertx.currentContext().get<Boolean>("setupLineLabels") == true) {
+    fun stopSpan() {
+        if (setupLineLabels) {
             return
         }
 
         Reflect.onClass(
             "org.apache.skywalking.apm.agent.core.context.ContextManager"
-        ).call("stopSpan", activeSpan)
+        ).call("stopSpan")
     }
 
-    fun startEntrySpan(name: String): Any? {
-        if (Vertx.currentContext().get<Boolean>("setupLineLabels") == true) {
-            return null
+    fun startEntrySpan(name: String) {
+        if (setupLineLabels) {
+            return
         }
 
         val contextCarrier = Reflect.onClass(
             "org.apache.skywalking.apm.agent.core.context.ContextCarrier"
         ).create().get<Any>()
-        return Reflect.onClass(
+        Reflect.onClass(
             "org.apache.skywalking.apm.agent.core.context.ContextManager"
-        ).call("createEntrySpan", name, contextCarrier).get()
+        ).call("createEntrySpan", name, contextCarrier)
+    }
+
+    fun onBreakpointHit(hitLimit: Int = 1, invoke: (LiveBreakpointHit) -> Unit): MessageConsumer<*> {
+        val hitCount = AtomicInteger(0)
+        val consumer = vertx.eventBus().consumer<Any>(toLiveInstrumentSubscriberAddress("system"))
+        return consumer.handler {
+            val event = Json.decodeValue(it.body().toString(), LiveInstrumentEvent::class.java)
+            if (event.eventType == LiveInstrumentEventType.BREAKPOINT_HIT) {
+                val bpHit = ProtocolMarshaller.deserializeLiveBreakpointHit(JsonObject(event.data))
+                invoke.invoke(bpHit)
+
+                if (hitCount.incrementAndGet() == hitLimit) {
+                    consumer.unregister()
+                }
+            }
+        }
+    }
+
+    fun onLogHit(invoke: (LiveLogHit) -> Unit): MessageConsumer<*> {
+        val consumer = vertx.eventBus().consumer<Any>(toLiveInstrumentSubscriberAddress("system"))
+        return consumer.handler {
+            val event = Json.decodeValue(it.body().toString(), LiveInstrumentEvent::class.java)
+            if (event.eventType == LiveInstrumentEventType.LOG_HIT) {
+                val logHit = ProtocolMarshaller.deserializeLiveLogHit(JsonObject(event.data))
+                invoke.invoke(logHit)
+                consumer.unregister()
+            }
+        }
+    }
+
+    fun errorOnTimeout(testContext: VertxTestContext, waitTime: Long = 15) {
+        if (testContext.awaitCompletion(waitTime, TimeUnit.SECONDS)) {
+            if (testContext.failed()) {
+                throw testContext.causeOfFailure()
+            }
+        } else {
+            throw RuntimeException("Test timed out")
+        }
+    }
+
+    fun successOnTimeout(testContext: VertxTestContext, waitTime: Long = 15) {
+        if (testContext.awaitCompletion(waitTime, TimeUnit.SECONDS)) {
+            if (testContext.failed()) {
+                throw testContext.causeOfFailure()
+            }
+        } else {
+            testContext.completeNow()
+        }
     }
 }
