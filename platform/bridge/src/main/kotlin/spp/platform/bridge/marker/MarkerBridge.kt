@@ -102,7 +102,14 @@ class MarkerBridge(
             NetServerOptions()
         ) { handleBridgeEvent(it) }.listen(0)
         ClusterConnection.multiUseNetServer.addUse(bridge) {
-            it.toString().contains(MARKER_CONNECTED)
+            log.trace { "Checking message: $it" }
+            if (it.toString().contains(MARKER_CONNECTED)) {
+                log.trace { "Valid marker connection" }
+                true
+            } else {
+                log.trace { "Invalid marker connection" }
+                false
+            }
         }
     }
 
