@@ -23,12 +23,14 @@ import io.vertx.core.json.JsonObject
 import io.vertx.ext.web.client.HttpRequest
 import io.vertx.ext.web.client.WebClient
 import io.vertx.ext.web.client.WebClientOptions
+import io.vertx.kotlin.core.json.get
 import io.vertx.kotlin.coroutines.await
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import spp.protocol.platform.auth.AccessType
 import spp.protocol.platform.auth.DeveloperRole.Companion.ROLE_MANAGER
 import spp.protocol.platform.auth.RolePermission
 
@@ -56,14 +58,147 @@ class SourceServiceITTest : PlatformIntegrationTest() {
             .sendJsonObject(
                 JsonObject().put(
                     "query",
-                    """
-                        mutation {
+                    """ mutation {
                           reset
                         }
                     """.trimIndent()
                 )
             ).await().bodyAsJsonObject()
         Assertions.assertTrue(resetResp.getJsonObject("data").getBoolean("reset"))
+    }
+
+
+    @Test
+    fun `ensure getAccessPermissions works`() = runBlocking {
+        val addAccessPermissionResp = request
+            .sendJsonObject(
+                JsonObject().put(
+                    "query",
+                    """mutation (${'$'}type: AccessType!, ${'$'}locationPatterns: [String!]){
+                          addAccessPermission (type: ${'$'}type, locationPatterns: ${'$'}locationPatterns){
+                                id
+                                locationPatterns
+                                type
+                            }
+                        }
+                    """.trimIndent()
+                ).put(
+                    "variables",
+                    JsonObject().put("type", AccessType.WHITE_LIST).put("locationPatterns", "some-pattern")
+                )
+            ).await().bodyAsJsonObject()
+        Assertions.assertNull(addAccessPermissionResp.getJsonArray("errors"))
+        val addAccessPermission = addAccessPermissionResp.getJsonObject("data").getJsonObject("addAccessPermission")
+        Assertions.assertEquals(AccessType.WHITE_LIST.name, addAccessPermission.getString("type"))
+        Assertions.assertEquals("some-pattern", addAccessPermission.getJsonArray("locationPatterns")[0])
+
+        val getAccessPermissionsResp = request
+            .sendJsonObject(
+                JsonObject().put(
+                    "query",
+                    """query {
+                          getAccessPermissions {
+                                id
+                                locationPatterns
+                                type
+                            }
+                        }
+                    """.trimIndent()
+                )
+            ).await().bodyAsJsonObject()
+        Assertions.assertNull(getAccessPermissionsResp.getJsonArray("errors"))
+        val accessPermission: JsonObject = getAccessPermissionsResp.getJsonObject("data")
+            .getJsonArray("getAccessPermissions")[0]
+        Assertions.assertEquals(AccessType.WHITE_LIST.name, accessPermission.getString("type"))
+        Assertions.assertEquals("some-pattern", accessPermission.getJsonArray("locationPatterns")[0])
+    }
+
+
+    @Test
+    fun `ensure getAccessPermission with ID works`() = runBlocking {
+        val addAccessPermissionResp = request
+            .sendJsonObject(
+                JsonObject().put(
+                    "query",
+                    """mutation (${'$'}type: AccessType!, ${'$'}locationPatterns: [String!]){
+                          addAccessPermission (type: ${'$'}type, locationPatterns: ${'$'}locationPatterns){
+                                id
+                                locationPatterns
+                                type
+                            }
+                        }
+                    """.trimIndent()
+                ).put(
+                    "variables",
+                    JsonObject().put("type", AccessType.WHITE_LIST).put("locationPatterns", "some-pattern")
+                )
+            ).await().bodyAsJsonObject()
+        Assertions.assertNull(addAccessPermissionResp.getJsonArray("errors"))
+        val addAccessPermission = addAccessPermissionResp.getJsonObject("data").getJsonObject("addAccessPermission")
+        Assertions.assertEquals(AccessType.WHITE_LIST.name, addAccessPermission.getString("type"))
+        Assertions.assertEquals("some-pattern", addAccessPermission.getJsonArray("locationPatterns")[0])
+
+        val accessPermissionId = addAccessPermission.getString("id")
+        val getAccessPermissionResp = request
+            .sendJsonObject(
+                JsonObject().put(
+                    "query",
+                    """query (${'$'}id: String!){
+                          getAccessPermission (id: ${'$'}id){
+                                id
+                                locationPatterns
+                                type
+                            }
+                        }
+                    """.trimIndent()
+                ).put("variables", JsonObject().put("id", accessPermissionId))
+            ).await().bodyAsJsonObject()
+        Assertions.assertNull(getAccessPermissionResp.getJsonArray("errors"))
+        val accessPermission2: JsonObject = getAccessPermissionResp.getJsonObject("data")
+            .getJsonObject("getAccessPermission")
+        Assertions.assertEquals(AccessType.WHITE_LIST.name, accessPermission2.getString("type"))
+        Assertions.assertEquals("some-pattern", accessPermission2.getJsonArray("locationPatterns")[0])
+
+    }
+
+    @Test
+    fun `ensure removeAccessPermission works`() = runBlocking {
+        val addAccessPermissionResp = request
+            .sendJsonObject(
+                JsonObject().put(
+                    "query",
+                    """mutation (${'$'}type: AccessType!, ${'$'}locationPatterns: [String!]){
+                          addAccessPermission (type: ${'$'}type, locationPatterns: ${'$'}locationPatterns){
+                                id
+                                locationPatterns
+                                type
+                            }
+                        }
+                    """.trimIndent()
+                ).put(
+                    "variables",
+                    JsonObject().put("type", AccessType.WHITE_LIST).put("locationPatterns", "some-pattern")
+                )
+            ).await().bodyAsJsonObject()
+        Assertions.assertNull(addAccessPermissionResp.getJsonArray("errors"))
+        val addAccessPermission = addAccessPermissionResp.getJsonObject("data").getJsonObject("addAccessPermission")
+        Assertions.assertEquals(AccessType.WHITE_LIST.name, addAccessPermission.getString("type"))
+        Assertions.assertEquals("some-pattern", addAccessPermission.getJsonArray("locationPatterns")[0])
+
+        val accessPermissionId = addAccessPermission.getString("id")
+        val removeAccessPermission = request
+            .sendJsonObject(
+                JsonObject().put(
+                    "query",
+                    """mutation (${'$'}id: String!){
+                          removeAccessPermission (id: ${'$'}id)
+                        }
+                    """.trimIndent()
+                ).put("variables", JsonObject().put("id", accessPermissionId))
+            ).await().bodyAsJsonObject()
+        Assertions.assertNull(removeAccessPermission.getJsonArray("errors"))
+        Assertions.assertTrue(removeAccessPermission.getJsonObject("data").getBoolean("removeAccessPermission"))
+
     }
 
     @Test
@@ -79,8 +214,7 @@ class SourceServiceITTest : PlatformIntegrationTest() {
             .sendJsonObject(
                 JsonObject().put(
                     "query",
-                    """
-                        query (${'$'}role: String!){
+                    """query (${'$'}role: String!){
                           getRolePermissions (role: ${'$'}role)
                         }
                     """.trimIndent()
@@ -105,8 +239,7 @@ class SourceServiceITTest : PlatformIntegrationTest() {
             .sendJsonObject(
                 JsonObject().put(
                     "query",
-                    """
-                        query {
+                    """ query {
                           getClientAccessors {
                             id,
                             secret
@@ -132,8 +265,7 @@ class SourceServiceITTest : PlatformIntegrationTest() {
 //            .sendJsonObject(
 //                JsonObject().put(
 //                    "query",
-//                    """
-//                        query (${'$'}id: String!){
+//                    """query (${'$'}id: String!){
 //                          getClientAccess (id: ${'$'}id){
 //                            id,
 //                            secret
@@ -159,8 +291,7 @@ class SourceServiceITTest : PlatformIntegrationTest() {
             .sendJsonObject(
                 JsonObject().put(
                     "query",
-                    """
-                        mutation {
+                    """mutation {
                           addClientAccess {
                             id,
                             secret
@@ -193,8 +324,7 @@ class SourceServiceITTest : PlatformIntegrationTest() {
             .sendJsonObject(
                 JsonObject().put(
                     "query",
-                    """
-                        mutation (${'$'}id: String!){
+                    """ mutation (${'$'}id: String!){
                           removeClientAccess (id: ${'$'}id)
                         }
                     """.trimIndent()
@@ -222,8 +352,7 @@ class SourceServiceITTest : PlatformIntegrationTest() {
             .sendJsonObject(
                 JsonObject().put(
                     "query",
-                    """
-                        mutation (${'$'}id: String!){
+                    """ mutation (${'$'}id: String!){
                           updateClientAccess (id: ${'$'}id){
                             id,
                             secret
@@ -234,7 +363,8 @@ class SourceServiceITTest : PlatformIntegrationTest() {
             ).await().bodyAsJsonObject()
         Assertions.assertNull(updateClientAccessResp.getJsonArray("errors"))
 
-        val updatedClientAccessJsonObject = updateClientAccessResp.getJsonObject("data").getJsonObject("updateClientAccess")
+        val updatedClientAccessJsonObject =
+            updateClientAccessResp.getJsonObject("data").getJsonObject("updateClientAccess")
         Assertions.assertEquals(clientId, updatedClientAccessJsonObject.getString("id"))
         Assertions.assertNotEquals(clientSecret, updatedClientAccessJsonObject.getString("secret"))
 

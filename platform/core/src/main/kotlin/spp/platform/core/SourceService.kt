@@ -368,7 +368,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
             }
 
             val id = env.getArgument<String>("id")
-            if (SourceStorage.hasAccessPermission(id)) {
+            if (!SourceStorage.hasAccessPermission(id)) {
                 completableFuture.completeExceptionally(IllegalStateException("Non-existing access permission: $id"))
             } else {
                 completableFuture.complete(SourceStorage.getAccessPermission(id))
