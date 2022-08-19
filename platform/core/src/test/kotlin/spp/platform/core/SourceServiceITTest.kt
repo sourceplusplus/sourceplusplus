@@ -32,6 +32,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import spp.protocol.platform.auth.AccessType
 import spp.protocol.platform.auth.DeveloperRole.Companion.ROLE_MANAGER
+import spp.protocol.platform.auth.RedactionType
 import spp.protocol.platform.auth.RolePermission
 
 class SourceServiceITTest : PlatformIntegrationTest() {
@@ -66,7 +67,6 @@ class SourceServiceITTest : PlatformIntegrationTest() {
             ).await().bodyAsJsonObject()
         Assertions.assertTrue(resetResp.getJsonObject("data").getBoolean("reset"))
     }
-
 
     @Test
     fun `ensure getAccessPermissions works`() = runBlocking {
@@ -113,6 +113,251 @@ class SourceServiceITTest : PlatformIntegrationTest() {
         Assertions.assertEquals("some-pattern", accessPermission.getJsonArray("locationPatterns")[0])
     }
 
+    @Test
+    fun `ensure addAccessPermission works`() = runBlocking {
+        val addAccessPermissionResp = request
+            .sendJsonObject(
+                JsonObject().put(
+                    "query",
+                    """mutation (${'$'}type: AccessType!, ${'$'}locationPatterns: [String!]){
+                          addAccessPermission (type: ${'$'}type, locationPatterns: ${'$'}locationPatterns){
+                                id
+                                locationPatterns
+                                type
+                            }
+                        }
+                    """.trimIndent()
+                ).put(
+                    "variables",
+                    JsonObject().put("type", AccessType.WHITE_LIST).put("locationPatterns", "some-pattern")
+                )
+            ).await().bodyAsJsonObject()
+        Assertions.assertNull(addAccessPermissionResp.getJsonArray("errors"))
+        val addAccessPermission = addAccessPermissionResp.getJsonObject("data").getJsonObject("addAccessPermission")
+        Assertions.assertEquals(AccessType.WHITE_LIST.name, addAccessPermission.getString("type"))
+        Assertions.assertEquals("some-pattern", addAccessPermission.getJsonArray("locationPatterns")[0])
+    }
+
+    @Test
+    fun `ensure addDataRedaction works`() = runBlocking {
+        val addDataRedactionResp = request
+            .sendJsonObject(
+                JsonObject().put(
+                    "query",
+                    """mutation (${'$'}id: String!, ${'$'}type: RedactionType!, ${'$'}lookup: String!, ${'$'}replacement: String!){
+                          addDataRedaction (id: ${'$'}id, type: ${'$'}type, lookup: ${'$'}lookup, replacement: ${'$'}replacement){
+                                id
+                                type
+                                lookup
+                                replacement
+                            }
+                        }
+                    """.trimIndent()
+                ).put(
+                    "variables",
+                    JsonObject().put("id", "some-id").put("type", RedactionType.VALUE_REGEX)
+                        .put("lookup", "some-lookup")
+                        .put("replacement", "some-replacement")
+                )
+            ).await().bodyAsJsonObject()
+        Assertions.assertNull(addDataRedactionResp.getJsonArray("errors"))
+        val addAccessPermission = addDataRedactionResp.getJsonObject("data").getJsonObject("addDataRedaction")
+        Assertions.assertEquals("some-id", addAccessPermission.getString("id"))
+        Assertions.assertEquals(RedactionType.VALUE_REGEX.name, addAccessPermission.getString("type"))
+        Assertions.assertEquals("some-lookup", addAccessPermission.getString("lookup"))
+        Assertions.assertEquals("some-replacement", addAccessPermission.getString("replacement"))
+    }
+
+    @Test
+    fun `ensure updateDataRedaction works`() = runBlocking {
+        val addDataRedactionResp = request
+            .sendJsonObject(
+                JsonObject().put(
+                    "query",
+                    """mutation (${'$'}id: String!, ${'$'}type: RedactionType!, ${'$'}lookup: String!, ${'$'}replacement: String!){
+                          addDataRedaction (id: ${'$'}id, type: ${'$'}type, lookup: ${'$'}lookup, replacement: ${'$'}replacement){
+                                id
+                                type
+                                lookup
+                                replacement
+                            }
+                        }
+                    """.trimIndent()
+                ).put(
+                    "variables",
+                    JsonObject().put("id", "some-id").put("type", RedactionType.VALUE_REGEX)
+                        .put("lookup", "some-lookup")
+                        .put("replacement", "some-replacement")
+                )
+            ).await().bodyAsJsonObject()
+        Assertions.assertNull(addDataRedactionResp.getJsonArray("errors"))
+        val addAccessPermission = addDataRedactionResp.getJsonObject("data").getJsonObject("addDataRedaction")
+        Assertions.assertEquals("some-id", addAccessPermission.getString("id"))
+        Assertions.assertEquals(RedactionType.VALUE_REGEX.name, addAccessPermission.getString("type"))
+
+        val updateDataRedactionResp = request
+            .sendJsonObject(
+                JsonObject().put(
+                    "query",
+                    """mutation (${'$'}id: String!, ${'$'}type: RedactionType!, ${'$'}lookup: String!, ${'$'}replacement: String!){
+                          updateDataRedaction (id: ${'$'}id, type: ${'$'}type, lookup: ${'$'}lookup, replacement: ${'$'}replacement){
+                                id
+                                type
+                                lookup
+                                replacement
+                            }
+                        }
+                    """.trimIndent()
+                ).put(
+                    "variables",
+                    JsonObject().put("id", "some-id").put("type", RedactionType.IDENTIFIER_MATCH)
+                        .put("lookup", "other-lookup")
+                        .put("replacement", "other-replacement")
+                )
+            ).await().bodyAsJsonObject()
+        Assertions.assertNull(updateDataRedactionResp.getJsonArray("errors"))
+        val updatedDataRedaction = updateDataRedactionResp.getJsonObject("data").getJsonObject("updateDataRedaction")
+        Assertions.assertEquals(RedactionType.IDENTIFIER_MATCH.name, updatedDataRedaction.getString("type"))
+        Assertions.assertEquals("other-lookup", updatedDataRedaction.getString("lookup"))
+        Assertions.assertEquals("other-replacement", updatedDataRedaction.getString("replacement"))
+    }
+
+    //todeo: fails with Exception in thread "vert.x-eventloop-thread-1" java.lang.NullPointerException
+    //	at spp.platform.storage.RedisStorage.getDataRedaction$suspendImpl(RedisStorage.kt:203)
+//    @Test
+//    fun `ensure getDataRedaction with ID works`() = runBlocking {
+//        val addDataRedactionResp = request
+//            .sendJsonObject(
+//                JsonObject().put(
+//                    "query",
+//                    """mutation (${'$'}id: String!, ${'$'}type: RedactionType!, ${'$'}lookup: String!, ${'$'}replacement: String!){
+//                          addDataRedaction (id: ${'$'}id, type: ${'$'}type, lookup: ${'$'}lookup, replacement: ${'$'}replacement){
+//                                id
+//                                type
+//                                lookup
+//                                replacement
+//                            }
+//                        }
+//                    """.trimIndent()
+//                ).put(
+//                    "variables",
+//                    JsonObject().put("id", "some-id").put("type", RedactionType.VALUE_REGEX)
+//                        .put("lookup", "some-lookup")
+//                        .put("replacement", "some-replacement")
+//                )
+//            ).await().bodyAsJsonObject()
+//        Assertions.assertNull(addDataRedactionResp.getJsonArray("errors"))
+//        val addAccessPermission = addDataRedactionResp.getJsonObject("data").getJsonObject("addDataRedaction")
+//        Assertions.assertEquals("some-id", addAccessPermission.getString("id"))
+//        Assertions.assertEquals(RedactionType.VALUE_REGEX.name, addAccessPermission.getString("type"))
+//
+//        val getDataRedactionResp = request
+//            .sendJsonObject(
+//                JsonObject().put(
+//                    "query",
+//                    """query (${'$'}id: String!){
+//                          getDataRedaction (id: ${'$'}id){
+//                                id
+//                                type
+//                                lookup
+//                                replacement
+//                            }
+//                        }
+//                    """.trimIndent()
+//                ).put("variables", JsonObject().put("id", "other-id"))
+//            ).await().bodyAsJsonObject()
+//        Assertions.assertNull(getDataRedactionResp.getJsonArray("errors"))
+//        val updatedDataRedaction = getDataRedactionResp.getJsonObject("data").getJsonObject("addAccessPermission")
+//        Assertions.assertEquals(AccessType.WHITE_LIST.name, updatedDataRedaction.getString("type"))
+//        Assertions.assertEquals("some-pattern", updatedDataRedaction.getJsonArray("locationPatterns")[0])
+//    }
+
+    @Test
+    fun `ensure getDataRedactions works`() = runBlocking {
+        val addDataRedactionResp = request
+            .sendJsonObject(
+                JsonObject().put(
+                    "query",
+                    """mutation (${'$'}id: String!, ${'$'}type: RedactionType!, ${'$'}lookup: String!, ${'$'}replacement: String!){
+                          addDataRedaction (id: ${'$'}id, type: ${'$'}type, lookup: ${'$'}lookup, replacement: ${'$'}replacement){
+                                id
+                                type
+                                lookup
+                                replacement
+                            }
+                        }
+                    """.trimIndent()
+                ).put(
+                    "variables",
+                    JsonObject().put("id", "some-id").put("type", RedactionType.VALUE_REGEX)
+                        .put("lookup", "some-lookup").put("replacement", "some-replacement")
+                )
+            ).await().bodyAsJsonObject()
+        Assertions.assertNull(addDataRedactionResp.getJsonArray("errors"))
+        val addAccessPermission = addDataRedactionResp.getJsonObject("data").getJsonObject("addDataRedaction")
+        Assertions.assertEquals("some-id", addAccessPermission.getString("id"))
+        Assertions.assertEquals(RedactionType.VALUE_REGEX.name, addAccessPermission.getString("type"))
+
+        val getDataRedactionsResp = request
+            .sendJsonObject(
+                JsonObject().put(
+                    "query",
+                    """query {
+                          getDataRedactions {
+                                id
+                                type
+                                lookup
+                                replacement
+                            }
+                        }
+                    """.trimIndent()
+                ).put("variables", JsonObject().put("id", "some-id"))
+            ).await().bodyAsJsonObject()
+        Assertions.assertNull(getDataRedactionsResp.getJsonArray("errors"))
+        val dataRedactions = getDataRedactionsResp.getJsonObject("data").getJsonArray("getDataRedactions")
+        Assertions.assertTrue(dataRedactions.size() > 0)
+    }
+
+    @Test
+    fun `ensure removeDataRedaction works`() = runBlocking {
+        val addDataRedactionResp = request
+            .sendJsonObject(
+                JsonObject().put(
+                    "query",
+                    """mutation (${'$'}id: String!, ${'$'}type: RedactionType!, ${'$'}lookup: String!, ${'$'}replacement: String!){
+                          addDataRedaction (id: ${'$'}id, type: ${'$'}type, lookup: ${'$'}lookup, replacement: ${'$'}replacement){
+                                id
+                                type
+                                lookup
+                                replacement
+                            }
+                        }
+                    """.trimIndent()
+                ).put(
+                    "variables",
+                    JsonObject().put("id", "some-id").put("type", RedactionType.VALUE_REGEX)
+                        .put("lookup", "some-lookup")
+                        .put("replacement", "some-replacement")
+                )
+            ).await().bodyAsJsonObject()
+        Assertions.assertNull(addDataRedactionResp.getJsonArray("errors"))
+        val addAccessPermission = addDataRedactionResp.getJsonObject("data").getJsonObject("addDataRedaction")
+        Assertions.assertEquals("some-id", addAccessPermission.getString("id"))
+        Assertions.assertEquals(RedactionType.VALUE_REGEX.name, addAccessPermission.getString("type"))
+
+        val removeDataRedactionResp = request
+            .sendJsonObject(
+                JsonObject().put(
+                    "query",
+                    """mutation (${'$'}id: String!){
+                          removeDataRedaction (id: ${'$'}id)
+                        }
+                    """.trimIndent()
+                ).put("variables", JsonObject().put("id", "some-id"))
+            ).await().bodyAsJsonObject()
+        Assertions.assertNull(removeDataRedactionResp.getJsonArray("errors"))
+        Assertions.assertTrue(removeDataRedactionResp.getJsonObject("data").getBoolean("removeDataRedaction"))
+    }
 
     @Test
     fun `ensure getAccessPermission with ID works`() = runBlocking {
@@ -158,7 +403,176 @@ class SourceServiceITTest : PlatformIntegrationTest() {
             .getJsonObject("getAccessPermission")
         Assertions.assertEquals(AccessType.WHITE_LIST.name, accessPermission2.getString("type"))
         Assertions.assertEquals("some-pattern", accessPermission2.getJsonArray("locationPatterns")[0])
+    }
 
+
+    @Test
+    fun `ensure getRoleAccessPermissions works`() = runBlocking {
+        val addRoleResp = request
+            .sendJsonObject(
+                JsonObject().put(
+                    "query",
+                    """mutation (${'$'}role: String!){
+                          addRole (role: ${'$'}role)
+                        }
+                    """.trimIndent()
+                ).put("variables", JsonObject().put("role", "developer-role"))
+            ).await().bodyAsJsonObject()
+        Assertions.assertNull(addRoleResp.getJsonArray("errors"))
+        val addAccessPermissionResp = request
+            .sendJsonObject(
+                JsonObject().put(
+                    "query",
+                    """mutation (${'$'}type: AccessType!, ${'$'}locationPatterns: [String!]){
+                          addAccessPermission (type: ${'$'}type, locationPatterns: ${'$'}locationPatterns){
+                                id
+                                locationPatterns
+                                type
+                            }
+                        }
+                    """.trimIndent()
+                ).put(
+                    "variables",
+                    JsonObject().put("type", AccessType.WHITE_LIST).put("locationPatterns", "some-pattern")
+                )
+            ).await().bodyAsJsonObject()
+        Assertions.assertNull(addAccessPermissionResp.getJsonArray("errors"))
+        val addAccessPermission = addAccessPermissionResp.getJsonObject("data").getJsonObject("addAccessPermission")
+        val accessPermissionId = addAccessPermission.getString("id")
+
+        val addRoleAccessPermissionResp = request
+            .sendJsonObject(
+                JsonObject().put(
+                    "query",
+                    """mutation (${'$'}role: String!, ${'$'}accessPermissionId: String!){
+                          addRoleAccessPermission (role: ${'$'}role, accessPermissionId: ${'$'}accessPermissionId)
+                        }
+                    """.trimIndent()
+                ).put(
+                    "variables",
+                    JsonObject().put("accessPermissionId", accessPermissionId).put("role", "developer-role")
+                )
+            ).await().bodyAsJsonObject()
+        Assertions.assertNull(addRoleAccessPermissionResp.getJsonArray("errors"))
+
+        val getRoleAccessPermissions = request
+            .sendJsonObject(
+                JsonObject().put(
+                    "query",
+                    """query (${'$'}role: String!){
+                          getRoleAccessPermissions (role: ${'$'}role){
+                                id
+                                locationPatterns
+                                type
+                            }
+                        }
+                    """.trimIndent()
+                ).put("variables", JsonObject().put("role", "developer-role"))
+            ).await().bodyAsJsonObject()
+        Assertions.assertNull(getRoleAccessPermissions.getJsonArray("errors"))
+        val roleAccessPermission: JsonObject = getRoleAccessPermissions.getJsonObject("data")
+            .getJsonArray("getRoleAccessPermissions")[0]
+        Assertions.assertEquals(AccessType.WHITE_LIST.name, roleAccessPermission.getString("type"))
+        Assertions.assertEquals("some-pattern", roleAccessPermission.getJsonArray("locationPatterns")[0])
+    }
+
+    @Test
+    fun `ensure getDeveloperAccessPermissions works`() = runBlocking {
+        val addDeveloperResp = request
+            .sendJsonObject(
+                JsonObject().put(
+                    "query",
+                    """mutation (${'$'}id: String!){
+                          addDeveloper (id: ${'$'}id){
+                                id
+                                accessToken
+                            }
+                        }
+                    """.trimIndent()
+                ).put("variables", JsonObject().put("id", "developer-id"))
+            ).await().bodyAsJsonObject()
+        Assertions.assertNull(addDeveloperResp.getJsonArray("errors"))
+
+        val addRoleResp = request
+            .sendJsonObject(
+                JsonObject().put(
+                    "query",
+                    """mutation (${'$'}role: String!){
+                          addRole (role: ${'$'}role)
+                        }
+                    """.trimIndent()
+                ).put("variables", JsonObject().put("role", "developer-role"))
+            ).await().bodyAsJsonObject()
+        Assertions.assertNull(addRoleResp.getJsonArray("errors"))
+
+        val addDeveloperRoleResp = request
+            .sendJsonObject(
+                JsonObject().put(
+                    "query",
+                    """mutation (${'$'}id: String!, ${'$'}role: String!){
+                          addDeveloperRole (id: ${'$'}id, role: ${'$'}role)
+                        }
+                    """.trimIndent()
+                ).put("variables", JsonObject().put("id", "developer-id").put("role", "developer-role"))
+            ).await().bodyAsJsonObject()
+        Assertions.assertNull(addDeveloperRoleResp.getJsonArray("errors"))
+
+        val addAccessPermissionResp = request
+            .sendJsonObject(
+                JsonObject().put(
+                    "query",
+                    """mutation (${'$'}type: AccessType!, ${'$'}locationPatterns: [String!]){
+                          addAccessPermission (type: ${'$'}type, locationPatterns: ${'$'}locationPatterns){
+                                id
+                                locationPatterns
+                                type
+                            }
+                        }
+                    """.trimIndent()
+                ).put(
+                    "variables",
+                    JsonObject().put("type", AccessType.WHITE_LIST).put("locationPatterns", "some-pattern")
+                )
+            ).await().bodyAsJsonObject()
+        Assertions.assertNull(addAccessPermissionResp.getJsonArray("errors"))
+        val addAccessPermission = addAccessPermissionResp.getJsonObject("data").getJsonObject("addAccessPermission")
+        val accessPermissionId = addAccessPermission.getString("id")
+
+        val addRoleAccessPermissionResp = request
+            .sendJsonObject(
+                JsonObject().put(
+                    "query",
+                    """mutation (${'$'}role: String!, ${'$'}accessPermissionId: String!){
+                          addRoleAccessPermission (role: ${'$'}role, accessPermissionId: ${'$'}accessPermissionId)
+                        }
+                    """.trimIndent()
+                ).put(
+                    "variables",
+                    JsonObject().put("accessPermissionId", accessPermissionId).put("role", "developer-role")
+                )
+            ).await().bodyAsJsonObject()
+        Assertions.assertNull(addRoleAccessPermissionResp.getJsonArray("errors"))
+
+        val getDeveloperAccessPermissions = request
+            .sendJsonObject(
+                JsonObject().put(
+                    "query",
+                    """query (${'$'}developerId: String!){
+                          getDeveloperAccessPermissions (developerId: ${'$'}developerId){
+                                id
+                                locationPatterns
+                                type
+                            }
+                        }
+                    """.trimIndent()
+                ).put("variables", JsonObject().put("developerId", "developer-id"))
+            ).await().bodyAsJsonObject()
+        Assertions.assertNull(getDeveloperAccessPermissions.getJsonArray("errors"))
+        println(getDeveloperAccessPermissions)
+        val developerAccessPermission: JsonObject = getDeveloperAccessPermissions.getJsonObject("data")
+            .getJsonArray("getDeveloperAccessPermissions")[0]
+        Assertions.assertEquals(AccessType.WHITE_LIST.name, developerAccessPermission.getString("type"))
+        Assertions.assertEquals("some-pattern", developerAccessPermission.getJsonArray("locationPatterns")[0])
     }
 
     @Test
@@ -198,7 +612,6 @@ class SourceServiceITTest : PlatformIntegrationTest() {
             ).await().bodyAsJsonObject()
         Assertions.assertNull(removeAccessPermission.getJsonArray("errors"))
         Assertions.assertTrue(removeAccessPermission.getJsonObject("data").getBoolean("removeAccessPermission"))
-
     }
 
     @Test
