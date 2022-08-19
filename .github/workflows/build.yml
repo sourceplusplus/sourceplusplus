@@ -192,11 +192,16 @@ jobs:
       - name: Push spp-platform latest Docker image
         run: docker push sourceplusplus/spp-platform:latest
 
+      - name: Trigger demo.sourceplus.plus deploy
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token: ${{ secrets.REPO_DISPATCH_ACCESS_TOKEN }}
+          event-type: deploy-demo
+
   # Delete build artifacts
   cleanup:
     needs: [jvm-build, releaseDraft, docker-push]
     runs-on: ubuntu-latest
-    if: always()
 
     steps:
       - name: Delete spp-platform

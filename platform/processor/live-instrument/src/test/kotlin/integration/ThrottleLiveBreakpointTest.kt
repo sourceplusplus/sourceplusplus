@@ -174,7 +174,7 @@ class ThrottleLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
         successOnTimeout(testContext, 15)
         //todo: should be able to verify at exactly 100
-        assertTrue(bpHitCount.get() >= 99, "bpHitCount: ${bpHitCount.get()}")
+        assertTrue(bpHitCount.get() >= 98, "bpHitCount: ${bpHitCount.get()}")
 
         //clean up
         assertNotNull(instrumentService.removeLiveInstrument(liveInstrument.id!!).await())

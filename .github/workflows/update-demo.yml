@@ -1,12 +1,8 @@
 name: Update demo.sourceplus.plus
 
 on:
-  push:
-    branches:
-      - master
-    paths-ignore:
-      - '**.md'
-      - '**.svg'
+  repository_dispatch:
+    types: [deploy-demo]
   workflow_dispatch:
 
 jobs:

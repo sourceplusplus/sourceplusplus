@@ -34,6 +34,8 @@ import java.util.*
 
 /**
  * Allows for HTTP server(s) and a TCP server(s) to reside on the same port simultaneously.
+ *
+ * Notice: Doesn't work with KEEP_ALIVE connections.
  */
 class MultiUseNetServer(private val vertx: Vertx) {
 
@@ -83,6 +85,7 @@ class MultiUseNetServer(private val vertx: Vertx) {
             .setKeyCertOptions(options?.keyCertOptions)
         val server = vertx.createNetServer(serverOptions)
         server.connectHandler { orig ->
+            log.trace { "Received connection from ${orig.remoteAddress()}" }
             orig.handler { origBuffer ->
                 orig.pause()
                 var usableServers = useMap.filter {
@@ -96,6 +99,8 @@ class MultiUseNetServer(private val vertx: Vertx) {
                     log.error("No usable servers found")
                 } else {
                     val usableNetClient = usableServers.values.first()
+                    log.trace { "Sending connection to ${usableNetClient.host}:${usableNetClient.port}" }
+
                     usableNetClient.netClient.connect(usableNetClient.port, usableNetClient.host).onSuccess { sock ->
                         orig.pipeTo(sock)
                         sock.pipeTo(orig)
