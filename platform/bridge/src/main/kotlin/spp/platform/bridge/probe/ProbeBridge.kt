@@ -178,7 +178,14 @@ class ProbeBridge(
             NetServerOptions()
         ) { handleBridgeEvent(it, subscriberCache) }.listen(0)
         ClusterConnection.multiUseNetServer.addUse(bridge) {
-            it.toString().contains(PROBE_CONNECTED)
+            log.trace { "Checking message: $it" }
+            if (it.toString().contains(PROBE_CONNECTED)) {
+                log.trace { "Valid probe connection" }
+                true
+            } else {
+                log.trace { "Invalid probe connection" }
+                false
+            }
         }
     }
 
