@@ -34,8 +34,6 @@ import java.util.*
 
 /**
  * Allows for HTTP server(s) and a TCP server(s) to reside on the same port simultaneously.
- *
- * Notice: Doesn't work with KEEP_ALIVE connections.
  */
 class MultiUseNetServer(private val vertx: Vertx) {
 
