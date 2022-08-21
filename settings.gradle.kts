@@ -21,6 +21,8 @@ pluginManagement {
 include("interfaces:cli")
 include("interfaces:jetbrains:commander")
 include("interfaces:jetbrains:commander:kotlin-compiler-wrapper")
+include("interfaces:jetbrains:common")
+include("interfaces:jetbrains:core")
 include("interfaces:jetbrains:marker")
 include("interfaces:jetbrains:marker:jvm-marker")
 include("interfaces:jetbrains:marker:py-marker")
