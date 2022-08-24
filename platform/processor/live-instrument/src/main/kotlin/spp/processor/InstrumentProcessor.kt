@@ -154,6 +154,7 @@ object InstrumentProcessor : FeedbackProcessor() {
                 val instrumentType = JsonObject.mapFrom(it).getString("type")
                 val necessaryPermission = RolePermission.valueOf("ADD_LIVE_$instrumentType")
                 if (!selfInfo.permissions.contains(necessaryPermission)) {
+                    log.warn("User ${selfInfo.developer.id} missing permission: $necessaryPermission")
                     batchPromise.fail(PermissionAccessDenied(necessaryPermission).toEventBusException())
                 }
             }
@@ -165,24 +166,28 @@ object InstrumentProcessor : FeedbackProcessor() {
             if (selfInfo.permissions.contains(necessaryPermission)) {
                 handler.handle(Future.succeededFuture(msg))
             } else {
+                log.warn("User ${selfInfo.developer.id} missing permission: $necessaryPermission")
                 handler.handle(Future.failedFuture(PermissionAccessDenied(necessaryPermission).toEventBusException()))
             }
         } else if (msg.headers().get("action").startsWith("removeLiveInstrument")) {
             if (selfInfo.permissions.contains(REMOVE_LIVE_INSTRUMENT)) {
                 handler.handle(Future.succeededFuture(msg))
             } else {
+                log.warn("User ${selfInfo.developer.id} missing permission: $REMOVE_LIVE_INSTRUMENT")
                 handler.handle(Future.failedFuture(PermissionAccessDenied(REMOVE_LIVE_INSTRUMENT).toEventBusException()))
             }
         } else if (msg.headers().get("action").startsWith("getLiveInstrument")) {
             if (selfInfo.permissions.contains(GET_LIVE_INSTRUMENTS)) {
                 handler.handle(Future.succeededFuture(msg))
             } else {
+                log.warn("User ${selfInfo.developer.id} missing permission: $GET_LIVE_INSTRUMENTS")
                 handler.handle(Future.failedFuture(PermissionAccessDenied(GET_LIVE_INSTRUMENTS).toEventBusException()))
             }
         } else if (msg.headers().get("action") == "clearLiveInstruments") {
             if (selfInfo.permissions.contains(CLEAR_ALL_LIVE_INSTRUMENTS)) {
                 handler.handle(Future.succeededFuture(msg))
             } else {
+                log.warn("User ${selfInfo.developer.id} missing permission: $CLEAR_ALL_LIVE_INSTRUMENTS")
                 handler.handle(Future.failedFuture(PermissionAccessDenied(CLEAR_ALL_LIVE_INSTRUMENTS).toEventBusException()))
             }
         } else if (RolePermission.fromString(msg.headers().get("action")) != null) {
@@ -190,6 +195,7 @@ object InstrumentProcessor : FeedbackProcessor() {
             if (selfInfo.permissions.contains(necessaryPermission)) {
                 handler.handle(Future.succeededFuture(msg))
             } else {
+                log.warn("User ${selfInfo.developer.id} missing permission: $necessaryPermission")
                 handler.handle(Future.failedFuture(PermissionAccessDenied(necessaryPermission).toEventBusException()))
             }
         } else {
