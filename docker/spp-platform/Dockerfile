@@ -8,9 +8,6 @@ ADD ./log4j2.xml /skywalking/config/log4j2.xml
 ADD ./spp-platform-*.jar /skywalking/oap-libs/
 ADD ./spp-live-*.jar /skywalking/oap-libs/
 
-RUN sed -i -e 's/SW_CORE_REST_PORT:12800/SW_CORE_REST_PORT:12801/g' /skywalking/config/application.yml
-RUN sed -i -e 's/SW_CORE_GRPC_PORT:11800/SW_CORE_GRPC_PORT:11801/g' /skywalking/config/application.yml
-
 RUN printf "\nspp-platform-core:\n  selector: \${SPP_PLATFORM_CORE:default}\n  default:\n" \
     >> /skywalking/config/application.yml
 
@@ -31,4 +28,6 @@ RUN printf "\nexporter:\n  selector: exporter\n  exporter:\n" \
 
 ADD ./ui-initialized-templates /skywalking/config/ui-initialized-templates
 
+ENV SW_CORE_GRPC_PORT=11801
+ENV SW_CORE_REST_PORT=12801
 ENV SW_SEARCHABLE_TAG_KEYS="spp.instrument_id,spp.instrument_type,http.method,http.status_code,rpc.status_code,db.type,db.instance,mq.queue,mq.topic,mq.broker"
