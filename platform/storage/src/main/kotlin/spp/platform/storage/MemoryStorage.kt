@@ -27,6 +27,7 @@ import io.vertx.core.shareddata.Shareable
 import io.vertx.kotlin.coroutines.await
 import spp.protocol.platform.auth.*
 import spp.protocol.platform.developer.Developer
+import java.security.MessageDigest
 
 open class MemoryStorage(val vertx: Vertx) : CoreStorage {
 
@@ -53,7 +54,10 @@ open class MemoryStorage(val vertx: Vertx) : CoreStorage {
     }
 
     override suspend fun getDeveloperByAccessToken(token: String): Developer? {
-        return getDevelopers().find { getAccessToken(it.id) == token }
+        return getDevelopers().find {
+            //check access token with time-constant comparison
+            MessageDigest.isEqual(getAccessToken(it.id).toByteArray(), token.toByteArray())
+        }
     }
 
     override suspend fun hasRole(role: DeveloperRole): Boolean {
@@ -313,7 +317,10 @@ open class MemoryStorage(val vertx: Vertx) : CoreStorage {
 
     override suspend fun getClientAccess(id: String): ClientAccess? {
         val clientAccessors = getClientAccessors()
-        return clientAccessors.find { it.id == id }
+        return clientAccessors.find {
+            //check secret with time-constant comparison
+            MessageDigest.isEqual(it.id.toByteArray(), id.toByteArray())
+        }
     }
 
     override suspend fun addClientAccess(id: String?, secret: String?): ClientAccess {
