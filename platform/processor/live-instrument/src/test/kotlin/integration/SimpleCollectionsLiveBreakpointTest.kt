@@ -25,11 +25,12 @@ import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.LiveSourceLocation
 
 @Suppress("UNUSED_VARIABLE")
-open class SimpleCollectionsLiveBreakpointTest : LiveInstrumentIntegrationTest() {
+class SimpleCollectionsLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
     private fun simpleCollections() {
         startEntrySpan("simpleCollections")
         val emptyList = emptyList<String>()
+        val byteArr = byteArrayOf(1, 2, 3)
         val intArr = intArrayOf(1, 2, 3)
         val stringSet = setOf("a", "b", "c")
         val doubleMap = mapOf(1.0 to 1.1, 2.0 to 2.1, 3.0 to 3.1)
@@ -57,13 +58,25 @@ open class SimpleCollectionsLiveBreakpointTest : LiveInstrumentIntegrationTest()
             testContext.verify {
                 assertTrue(bpHit.stackTrace.elements.isNotEmpty())
                 val topFrame = bpHit.stackTrace.elements.first()
-                assertEquals(8, topFrame.variables.size)
+                assertEquals(9, topFrame.variables.size)
 
                 //emptyList
                 assertEquals(listOf<String>(), topFrame.variables.find { it.name == "emptyList" }!!.value)
                 assertEquals(
                     "kotlin.collections.EmptyList",
                     topFrame.variables.find { it.name == "emptyList" }!!.liveClazz
+                )
+
+                //byteArr
+                assertEquals(
+                    listOf(1, 2, 3),
+                    topFrame.variables.find { it.name == "byteArr" }!!.value.let {
+                        (it as List<Map<String, *>>).map { it["value"] }
+                    }
+                )
+                assertEquals(
+                    "byte[]",
+                    topFrame.variables.find { it.name == "byteArr" }!!.liveClazz
                 )
 
                 //intArr
