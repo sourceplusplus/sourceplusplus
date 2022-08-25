@@ -188,6 +188,7 @@ class LiveBreakpointAnalyzer(
         }
 
         fun transformRawBreakpointHit(bpData: JsonObject): LiveBreakpointHit {
+            if (log.isTraceEnabled) log.trace("Transforming raw breakpoint hit: {}", bpData)
             val varDatum = bpData.getJsonArray("variables")
             val variables = mutableListOf<LiveVariable>()
             var thisVar: LiveVariable? = null
