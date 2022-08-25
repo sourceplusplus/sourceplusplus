@@ -323,7 +323,7 @@ class SourceServiceITTest : PlatformIntegrationTest() {
     }
 
     @Test
-    fun `ensure addRoleResp works`() = runBlocking {
+    fun `ensure addRole works`() = runBlocking {
         val addRoleResp = request.sendJsonObject(addRoleRequest).await().bodyAsJsonObject()
         Assertions.assertNull(addRoleResp.getJsonArray("errors"))
         Assertions.assertTrue(addRoleResp.getJsonObject("data").getBoolean("addRole"))
@@ -636,12 +636,13 @@ class SourceServiceITTest : PlatformIntegrationTest() {
                     """.trimIndent()
                 ).put(
                     "variables",
-                    JsonObject().put("input", mapOf("entityIds" to listOf(1,222,3)))
+                    JsonObject().put("input", mapOf("entityIds" to listOf(1, 222, 3)))
 
                 )
             ).await().bodyAsJsonObject()
         Assertions.assertNull(addLiveViewSubscriptionResp.getJsonArray("errors"))
-        val liveViewSubscription = addLiveViewSubscriptionResp.getJsonObject("data").getJsonObject("addLiveViewSubscription")
+        val liveViewSubscription =
+            addLiveViewSubscriptionResp.getJsonObject("data").getJsonObject("addLiveViewSubscription")
         Assertions.assertNotNull(liveViewSubscription.getString("subscriptionId"))
         val entityIds = liveViewSubscription.getJsonArray("entityIds")
         Assertions.assertTrue(entityIds.any {
@@ -652,36 +653,7 @@ class SourceServiceITTest : PlatformIntegrationTest() {
 
     @Test
     fun `ensure addLiveBreakpoint works`() = runBlocking {
-        val addLiveBreakpointResp = request
-            .sendJsonObject(
-                JsonObject().put(
-                    "query",
-                    """mutation (${'$'}input: LiveBreakpointInput!){
-                          addLiveBreakpoint (input: ${'$'}input){
-                                id
-                                location {
-                                    source
-                                    line
-                                }
-                                condition
-                                expiresAt
-                                hitLimit
-                                throttle {
-                                    limit
-                                    step
-                                }
-                                meta {
-                                    name
-                                    value
-                                }
-                            }
-                        }
-                    """.trimIndent()
-                ).put(
-                    "variables",
-                    JsonObject().put("input", mapOf("location" to mapOf("source" to "doing", "line" to 17)))
-                )
-            ).await().bodyAsJsonObject()
+        val addLiveBreakpointResp = request.sendJsonObject(addLiveBreakpointRequest).await().bodyAsJsonObject()
         Assertions.assertNull(addLiveBreakpointResp.getJsonArray("errors"))
         val liveBreakpoint = addLiveBreakpointResp.getJsonObject("data").getJsonObject("addLiveBreakpoint")
         val liveBreakpointLocation = liveBreakpoint.getJsonObject("location")
@@ -690,13 +662,16 @@ class SourceServiceITTest : PlatformIntegrationTest() {
     }
 
     @Test
-    fun `ensure addLiveLog works`() = runBlocking {
-        val addLiveLogResp = request
+    fun `ensure getLiveBreakpoints works`() = runBlocking {
+        val addLiveBreakpointResp = request.sendJsonObject(addLiveBreakpointRequest).await().bodyAsJsonObject()
+        Assertions.assertNull(addLiveBreakpointResp.getJsonArray("errors"))
+
+        val getLiveBreakpointsResp = request
             .sendJsonObject(
                 JsonObject().put(
                     "query",
-                    """mutation (${'$'}input: LiveLogInput!){
-                          addLiveLog (input: ${'$'}input){
+                    """query {
+                          getLiveBreakpoints {
                                 id
                                 location {
                                     source
@@ -716,14 +691,23 @@ class SourceServiceITTest : PlatformIntegrationTest() {
                             }
                         }
                     """.trimIndent()
-                ).put(
-                    "variables",
-                    JsonObject().put(
-                        "input",
-                        mapOf("location" to mapOf("source" to "doing", "line" to 19), "logFormat" to "formatting")
-                    )
                 )
             ).await().bodyAsJsonObject()
+        Assertions.assertNull(getLiveBreakpointsResp.getJsonArray("errors"))
+        val liveBreakpoints = getLiveBreakpointsResp.getJsonObject("data").getJsonArray("getLiveBreakpoints")
+        Assertions.assertTrue(liveBreakpoints.any {
+            it as JsonObject
+            it.getJsonObject("location").getString("source").equals("doing")
+        })
+        Assertions.assertTrue(liveBreakpoints.any {
+            it as JsonObject
+            it.getJsonObject("location").getInteger("line").equals(17)
+        })
+    }
+
+    @Test
+    fun `ensure addLiveLog works`() = runBlocking {
+        val addLiveLogResp = request.sendJsonObject(addLiveLogRequest).await().bodyAsJsonObject()
         Assertions.assertNull(addLiveLogResp.getJsonArray("errors"))
         val liveLog = addLiveLogResp.getJsonObject("data").getJsonObject("addLiveLog")
         val liveLogLocation = liveLog.getJsonObject("location")
@@ -732,13 +716,16 @@ class SourceServiceITTest : PlatformIntegrationTest() {
     }
 
     @Test
-    fun `ensure addLiveSpan works`() = runBlocking {
-        val addLiveSpanResp = request
+    fun `ensure getLiveLogs works`() = runBlocking {
+        val addLiveLogResp = request.sendJsonObject(addLiveLogRequest).await().bodyAsJsonObject()
+        Assertions.assertNull(addLiveLogResp.getJsonArray("errors"))
+
+        val getLiveLogsResp = request
             .sendJsonObject(
                 JsonObject().put(
                     "query",
-                    """mutation (${'$'}input: LiveSpanInput!){
-                          addLiveSpan (input: ${'$'}input){
+                    """query {
+                          getLiveLogs {
                                 id
                                 location {
                                     source
@@ -758,60 +745,237 @@ class SourceServiceITTest : PlatformIntegrationTest() {
                             }
                         }
                     """.trimIndent()
-                ).put(
-                    "variables",
-                    JsonObject().put("input",
-                        mapOf("location" to mapOf("source" to "doing"), "operationName" to "name-of-operation"))
                 )
             ).await().bodyAsJsonObject()
+        Assertions.assertNull(getLiveLogsResp.getJsonArray("errors"))
+        val liveLogs = getLiveLogsResp.getJsonObject("data").getJsonArray("getLiveLogs")
+        Assertions.assertTrue(liveLogs.any {
+            it as JsonObject
+            it.getJsonObject("location").getString("source").equals("doing")
+        })
+        Assertions.assertTrue(liveLogs.any {
+            it as JsonObject
+            it.getJsonObject("location").getInteger("line").equals(19)
+        })
+    }
+
+    @Test
+    fun `ensure addLiveSpan works`() = runBlocking {
+        val addLiveSpanResp = request.sendJsonObject(addLiveSpanRequest).await().bodyAsJsonObject()
         Assertions.assertNull(addLiveSpanResp.getJsonArray("errors"))
         val liveSpan = addLiveSpanResp.getJsonObject("data").getJsonObject("addLiveSpan")
-        val liveSpanLocation = liveSpan.getJsonObject("location")
-        Assertions.assertEquals("doing", liveSpanLocation.getString("source"))
+        Assertions.assertEquals("doing", liveSpan.getJsonObject("location").getString("source"))
+        Assertions.assertEquals("name-of-operation", liveSpan.getString("operationName"))
+    }
+
+    @Test
+    fun `ensure getLiveSpans works`() = runBlocking {
+        val addLiveSpanResp = request.sendJsonObject(addLiveSpanRequest).await().bodyAsJsonObject()
+        Assertions.assertNull(addLiveSpanResp.getJsonArray("errors"))
+
+        val getLiveLogsResp = request.sendJsonObject(
+            JsonObject().put(
+                "query",
+                """query {
+                          getLiveSpans {
+                                id
+                                location {
+                                    source
+                                    line
+                                }
+                                operationName
+                                condition
+                                expiresAt
+                                hitLimit
+                                throttle {
+                                    limit
+                                    step
+                                }
+                                meta {
+                                    name
+                                    value
+                                }
+                            }
+                        }
+                    """.trimIndent()
+            )
+        ).await().bodyAsJsonObject()
+        Assertions.assertNull(getLiveLogsResp.getJsonArray("errors"))
+        val liveSpans = getLiveLogsResp.getJsonObject("data").getJsonArray("getLiveSpans")
+        Assertions.assertTrue(liveSpans.any {
+            it as JsonObject
+            it.getJsonObject("location").getString("source").equals("doing")
+        })
+        Assertions.assertTrue(liveSpans.any {
+            it as JsonObject
+            it.getString("operationName").equals("name-of-operation")
+        })
     }
 
     @Test
     fun `ensure addLiveMeter works`() = runBlocking {
-        val addLiveMeterResp = request
-            .sendJsonObject(
-                JsonObject().put(
-                    "query",
-                    """mutation (${'$'}input: LiveMeterInput!){
-                          addLiveMeter (input: ${'$'}input){
-                                id
-                                location {
-                                    source
-                                    line
-                                }
-                                condition
-                                expiresAt
-                                hitLimit
-                                throttle {
-                                    limit
-                                    step
-                                }
-                                meta {
-                                    name
-                                    value
-                                }
-                            }
-                        }
-                    """.trimIndent()
-                ).put(
-                    "variables",
-                    JsonObject().put(
-                        "input",
-                        mapOf("location" to mapOf("source" to "doing", "line" to 19), "meterName" to "name-of-meter",
-                        "meterType" to MeterType.COUNT, "metricValue" to MetricValue(MetricValueType.NUMBER, "3")
-                        )
-                    )
-                )
-            ).await().bodyAsJsonObject()
+        val addLiveMeterResp = request.sendJsonObject(addLiveMeterRequest).await().bodyAsJsonObject()
         Assertions.assertNull(addLiveMeterResp.getJsonArray("errors"))
         val liveMeter = addLiveMeterResp.getJsonObject("data").getJsonObject("addLiveMeter")
         val liveMeterLocation = liveMeter.getJsonObject("location")
         Assertions.assertEquals("doing", liveMeterLocation.getString("source"))
         Assertions.assertEquals(19, liveMeterLocation.getInteger("line"))
+    }
+
+    @Test
+    fun `ensure getLiveMeters works`() = runBlocking {
+        val addLiveMeterResp = request.sendJsonObject(addLiveMeterRequest).await().bodyAsJsonObject()
+        Assertions.assertNull(addLiveMeterResp.getJsonArray("errors"))
+
+        val getLiveMetersResp = request.sendJsonObject(
+            JsonObject().put(
+                "query",
+                """query {
+                          getLiveMeters {
+                                id
+                                location {
+                                    source
+                                    line
+                                }
+                                condition
+                                expiresAt
+                                hitLimit
+                                throttle {
+                                    limit
+                                    step
+                                }
+                                meta {
+                                    name
+                                    value
+                                }
+                            }
+                        }
+                    """.trimIndent()
+            )
+        ).await().bodyAsJsonObject()
+        Assertions.assertNull(getLiveMetersResp.getJsonArray("errors"))
+        val liveMeters = getLiveMetersResp.getJsonObject("data").getJsonArray("getLiveMeters")
+        Assertions.assertTrue(liveMeters.any {
+            it as JsonObject
+            it.getJsonObject("location").getString("source").equals("doing")
+        })
+        Assertions.assertTrue(liveMeters.any {
+            it as JsonObject
+            it.getJsonObject("location").getInteger("line").equals(19)
+        })
+    }
+
+    @Test
+    fun `ensure getSelf works`() = runBlocking {
+        val getSelfResp = request.sendJsonObject(
+            JsonObject().put(
+                "query",
+                """query getSelf {
+                        getSelf {
+                            developer {
+                                id
+                            }
+                            roles {
+                                roleName
+                            }
+                            permissions
+                            access {
+                                id
+                                type
+                                locationPatterns
+                            }
+                        }
+                    }
+                    """.trimIndent()
+            )
+        ).await().bodyAsJsonObject()
+        Assertions.assertNull(getSelfResp.getJsonArray("errors"))
+        val selfInfo = getSelfResp.getJsonObject("data").getJsonObject("getSelf")
+        Assertions.assertEquals("system", selfInfo.getJsonObject("developer").getString("id"))
+    }
+
+    @Test
+    fun `ensure getServices works`() = runBlocking {
+        val getServicesResp = request.sendJsonObject(
+            JsonObject().put(
+                "query",
+                """query getServices {
+                        getServices {
+                            id
+                            name
+                        }
+                    }
+                    """.trimIndent()
+            )
+        ).await().bodyAsJsonObject()
+        Assertions.assertNull(getServicesResp.getJsonArray("errors"))
+        val services = getServicesResp.getJsonObject("data").getJsonArray("getServices")
+        Assertions.assertFalse(services.isEmpty)
+    }
+
+    @Test
+    fun `ensure getLiveViewSubscriptions works`() = runBlocking {
+        val getLiveViewSubscriptionsResp = request
+            .sendJsonObject(
+                JsonObject().put(
+                    "query",
+                    """query {
+                          getLiveViewSubscriptions {
+                                subscriptionId
+                                entityIds
+                                artifactQualifiedName {
+                                    identifier
+                                    commitId
+                                    artifactType
+                                    lineNumber
+                                    operationName
+                                }
+                                artifactLocation {
+                                    source
+                                    line
+                                }
+                                liveViewConfig {
+                                    viewName
+                                    viewMetrics
+                                    refreshRateLimit
+                                }
+                            }
+                        }
+                    """.trimIndent()
+                )
+            ).await().bodyAsJsonObject()
+        Assertions.assertNull(getLiveViewSubscriptionsResp.getJsonArray("errors"))
+
+        val liveViewSubscriptions =
+            getLiveViewSubscriptionsResp.getJsonObject("data").getJsonArray("getLiveViewSubscriptions")
+        Assertions.assertFalse(liveViewSubscriptions.isEmpty)
+    }
+
+    @Test
+    fun `ensure getLiveInstruments works`() = runBlocking {
+        val addLiveMeterResp = request.sendJsonObject(addLiveMeterRequest).await().bodyAsJsonObject()
+        Assertions.assertNull(addLiveMeterResp.getJsonArray("errors"))
+
+        val getLiveInstrumentsResp = request
+            .sendJsonObject(
+                JsonObject().put(
+                    "query",
+                    """query {
+                          getLiveInstruments { 
+                                id
+                                location {
+                                    source
+                                    line
+                                }
+                             }
+                        }
+                    """.trimIndent()
+                )
+            ).await().bodyAsJsonObject()
+        Assertions.assertNull(getLiveInstrumentsResp.getJsonArray("errors"))
+
+        val liveViewSubscriptions = getLiveInstrumentsResp.getJsonObject("data").getJsonArray("getLiveInstruments")
+        Assertions.assertFalse(liveViewSubscriptions.isEmpty)
     }
 
     @Test
@@ -833,55 +997,67 @@ class SourceServiceITTest : PlatformIntegrationTest() {
     }
 
     //todo: does not validate if LiveInstrument with ID exist
-    //return null
-//    @Test
-//    fun `ensure removeLiveInstrument works`() = runBlocking {
-//        val removeLiveInstrumentResp = request
-//            .sendJsonObject(
-//                JsonObject().put(
-//                    "query",
-//                    """mutation (${'$'}id: String!){
-//                          removeLiveInstrument (id: ${'$'}id){
-//                                id
-//                                location {
-//                                    source
-//                                    line
-//                                }
-//                            }
-//                        }
-//                    """.trimIndent()
-//                ).put("variables", JsonObject().put("id", "developer-role"))
-//            ).await().bodyAsJsonObject()
-//        Assertions.assertNull(removeLiveInstrumentResp.getJsonArray("errors"))
-//        Assertions.assertNotNull(removeLiveInstrumentResp.getJsonObject("data").getValue("removeLiveInstrument"))
-//    }
-//
-    //todo: not sure what to use as verification
-//    @Test
-//    fun `ensure removeLiveInstruments works`() = runBlocking {
-//
-//        val removeLiveInstrumentsResp = request
-//            .sendJsonObject(
-//                JsonObject().put(
-//                    "query",
-//                    """mutation (${'$'}source: String!, ${'$'}line: Int!){
-//                          removeLiveInstruments (source: ${'$'}source, line: ${'$'}line){
-//                                id
-//                                location {
-//                                    source
-//                                    line
-//                                }
-//                            }
-//                        }
-//                    """.trimIndent()
-//                ).put("variables", JsonObject().put("source", "developer-role").put("line", 17))
-//            ).await().bodyAsJsonObject()
-//        Assertions.assertNull(removeLiveInstrumentsResp.getJsonArray("errors"))
-//        val liveInstruments = removeLiveInstrumentsResp.getJsonObject("data").getJsonArray("removeLiveInstruments")
-//        println(liveInstruments)
-//        Assertions.assertNotNull(liveInstruments)
-////        Assertions.assertTrue(liveInstruments.size()>0)
-//    }
+    @Test
+    fun `ensure removeLiveInstrument works`() = runBlocking {
+        val addLiveMeterResp = request.sendJsonObject(addLiveMeterRequest).await().bodyAsJsonObject()
+        Assertions.assertNull(addLiveMeterResp.getJsonArray("errors"))
+        val liveMeter = addLiveMeterResp.getJsonObject("data").getJsonObject("addLiveMeter")
+        val liveMeterId = liveMeter.getString("id");
+
+        val removeLiveInstrumentResp = request
+            .sendJsonObject(
+                JsonObject().put(
+                    "query",
+                    """mutation (${'$'}id: String!){
+                          removeLiveInstrument (id: ${'$'}id){
+                                id
+                                location {
+                                    source
+                                    line
+                                }
+                            }
+                        }
+                    """.trimIndent()
+                ).put("variables", JsonObject().put("id", liveMeterId))
+            ).await().bodyAsJsonObject()
+        Assertions.assertNull(removeLiveInstrumentResp.getJsonArray("errors"))
+        val liveInstrument = removeLiveInstrumentResp.getJsonObject("data").getJsonObject("removeLiveInstrument")
+        Assertions.assertEquals(liveMeterId, liveInstrument.getString("id"))
+    }
+
+    //todo: this endpoint seem to retrieving objects
+    //needs verification
+    @Test
+    fun `ensure removeLiveInstruments works`() = runBlocking {
+        val addLiveMeterResp = request.sendJsonObject(addLiveMeterRequest).await().bodyAsJsonObject()
+        Assertions.assertNull(addLiveMeterResp.getJsonArray("errors"))
+        val liveMeter = addLiveMeterResp.getJsonObject("data").getJsonObject("addLiveMeter")
+        val liveMeterId = liveMeter.getString("id");
+
+        val removeLiveInstrumentsResp = request
+            .sendJsonObject(
+                JsonObject().put(
+                    "query",
+                    """mutation (${'$'}source: String!, ${'$'}line: Int!){
+                          removeLiveInstruments (source: ${'$'}source, line: ${'$'}line){
+                                id
+                                location {
+                                    source
+                                    line
+                                }
+                            }
+                        }
+                    """.trimIndent()
+                ).put("variables", JsonObject().put("source", "doing").put("line", 19))
+            ).await().bodyAsJsonObject()
+        Assertions.assertNull(removeLiveInstrumentsResp.getJsonArray("errors"))
+        val removedLiveInstruments =
+            removeLiveInstrumentsResp.getJsonObject("data").getJsonArray("removeLiveInstruments")
+        Assertions.assertTrue(removedLiveInstruments.any {
+            it as JsonObject
+            it.getString("id").equals(liveMeterId)
+        })
+    }
 
     @Test
     fun `ensure clearLiveInstruments works`() = runBlocking {
@@ -1156,4 +1332,125 @@ class SourceServiceITTest : PlatformIntegrationTest() {
             JsonObject().put("accessPermissionId", accessPermissionId).put("role", "developer-role")
         )
     }
+
+    private val addLiveBreakpointRequest: JsonObject = JsonObject().put(
+        "query",
+        """mutation (${'$'}input: LiveBreakpointInput!){
+                                  addLiveBreakpoint (input: ${'$'}input){
+                                    id
+                                    location {
+                                        source
+                                        line
+                                    }
+                                    condition
+                                    expiresAt
+                                    hitLimit
+                                    throttle {
+                                        limit
+                                        step
+                                    }
+                                    meta {
+                                        name
+                                        value
+                                    }
+                                  }
+                        }
+                    """.trimIndent()
+    ).put("variables", JsonObject().put("input", mapOf("location" to mapOf("source" to "doing", "line" to 17))))
+
+    private val addLiveLogRequest = JsonObject().put(
+        "query",
+        """mutation (${'$'}input: LiveLogInput!){
+                          addLiveLog (input: ${'$'}input){
+                                id
+                                location {
+                                    source
+                                    line
+                                }
+                                condition
+                                expiresAt
+                                hitLimit
+                                throttle {
+                                    limit
+                                    step
+                                }
+                                meta {
+                                    name
+                                    value
+                                }
+                            }
+                        }
+                    """.trimIndent()
+    ).put(
+        "variables",
+        JsonObject().put(
+            "input",
+            mapOf("location" to mapOf("source" to "doing", "line" to 19), "logFormat" to "formatting")
+        )
+    )
+    private val addLiveSpanRequest = JsonObject().put(
+        "query",
+        """mutation (${'$'}input: LiveSpanInput!){
+                          addLiveSpan (input: ${'$'}input){
+                                id
+                                location {
+                                    source
+                                    line
+                                }
+                                operationName
+                                condition
+                                expiresAt
+                                hitLimit
+                                throttle {
+                                    limit
+                                    step
+                                }
+                                meta {
+                                    name
+                                    value
+                                }
+                            }
+                        }
+                    """.trimIndent()
+    ).put(
+        "variables",
+        JsonObject().put(
+            "input",
+            mapOf("location" to mapOf("source" to "doing"), "operationName" to "name-of-operation")
+        )
+    )
+
+    private val addLiveMeterRequest = JsonObject().put(
+        "query",
+        """mutation (${'$'}input: LiveMeterInput!){
+                          addLiveMeter (input: ${'$'}input){
+                                id
+                                location {
+                                    source
+                                    line
+                                }
+                                condition
+                                expiresAt
+                                hitLimit
+                                throttle {
+                                    limit
+                                    step
+                                }
+                                meta {
+                                    name
+                                    value
+                                }
+                            }
+                        }
+                    """.trimIndent()
+    ).put(
+        "variables",
+        JsonObject().put(
+            "input",
+            mapOf(
+                "location" to mapOf("source" to "doing", "line" to 19), "meterName" to "name-of-meter",
+                "meterType" to MeterType.COUNT, "metricValue" to MetricValue(MetricValueType.NUMBER, "3")
+            )
+        )
+    )
 }
