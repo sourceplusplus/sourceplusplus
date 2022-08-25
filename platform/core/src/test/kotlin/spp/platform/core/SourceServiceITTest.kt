@@ -607,39 +607,8 @@ class SourceServiceITTest : PlatformIntegrationTest() {
 
     @Test
     fun `ensure addLiveViewSubscription works`() = runBlocking {
-        val addLiveViewSubscriptionResp = request
-            .sendJsonObject(
-                JsonObject().put(
-                    "query",
-                    """mutation (${'$'}input: LiveViewSubscriptionInput!){
-                          addLiveViewSubscription (input: ${'$'}input){
-                                subscriptionId
-                                entityIds
-                                artifactQualifiedName {
-                                    identifier
-                                    commitId
-                                    artifactType
-                                    lineNumber
-                                    operationName
-                                }
-                                artifactLocation {
-                                    source
-                                    line
-                                }
-                                liveViewConfig {
-                                    viewName
-                                    viewMetrics
-                                    refreshRateLimit
-                                }
-                            }
-                        }
-                    """.trimIndent()
-                ).put(
-                    "variables",
-                    JsonObject().put("input", mapOf("entityIds" to listOf(1, 222, 3)))
-
-                )
-            ).await().bodyAsJsonObject()
+        val addLiveViewSubscriptionResp =
+            request.sendJsonObject(addLiveViewSubscriptionRequest).await().bodyAsJsonObject()
         Assertions.assertNull(addLiveViewSubscriptionResp.getJsonArray("errors"))
         val liveViewSubscription =
             addLiveViewSubscriptionResp.getJsonObject("data").getJsonObject("addLiveViewSubscription")
@@ -915,6 +884,10 @@ class SourceServiceITTest : PlatformIntegrationTest() {
 
     @Test
     fun `ensure getLiveViewSubscriptions works`() = runBlocking {
+        val addLiveViewSubscriptionResp =
+            request.sendJsonObject(addLiveViewSubscriptionRequest).await().bodyAsJsonObject()
+        Assertions.assertNull(addLiveViewSubscriptionResp.getJsonArray("errors"))
+
         val getLiveViewSubscriptionsResp = request
             .sendJsonObject(
                 JsonObject().put(
@@ -949,6 +922,14 @@ class SourceServiceITTest : PlatformIntegrationTest() {
         val liveViewSubscriptions =
             getLiveViewSubscriptionsResp.getJsonObject("data").getJsonArray("getLiveViewSubscriptions")
         Assertions.assertFalse(liveViewSubscriptions.isEmpty)
+        Assertions.assertTrue(liveViewSubscriptions.any { it1 ->
+            it1 as JsonObject
+            val entityIds = it1.getJsonArray("entityIds")
+            entityIds.any { it2 ->
+                it2 as String
+                it2 == "222"
+            }
+        })
     }
 
     @Test
@@ -1332,6 +1313,38 @@ class SourceServiceITTest : PlatformIntegrationTest() {
             JsonObject().put("accessPermissionId", accessPermissionId).put("role", "developer-role")
         )
     }
+
+
+    private val addLiveViewSubscriptionRequest = JsonObject().put(
+        "query",
+        """mutation (${'$'}input: LiveViewSubscriptionInput!){
+                          addLiveViewSubscription (input: ${'$'}input){
+                                subscriptionId
+                                entityIds
+                                artifactQualifiedName {
+                                    identifier
+                                    commitId
+                                    artifactType
+                                    lineNumber
+                                    operationName
+                                }
+                                artifactLocation {
+                                    source
+                                    line
+                                }
+                                liveViewConfig {
+                                    viewName
+                                    viewMetrics
+                                    refreshRateLimit
+                                }
+                            }
+                        }
+                    """.trimIndent()
+    ).put(
+        "variables",
+        JsonObject().put("input", mapOf("entityIds" to listOf(1, 222, 3)))
+
+    )
 
     private val addLiveBreakpointRequest: JsonObject = JsonObject().put(
         "query",
