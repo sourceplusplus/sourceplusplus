@@ -155,9 +155,12 @@ class LiveBreakpointAnalyzer(
 
         private fun toLiveVariable(varName: String, scope: LiveVariableScope?, varData: JsonObject): LiveVariable {
             val liveClass = varData.getString("@class")
-            val liveIdentity = varData.getString("@id") ?: varData.getString("@identity")
+            val liveIdentity = getLiveIdentity(varData)
             if (varData.containsKey("@skip")) {
                 return LiveVariable(varName, varData, scope = scope, liveClazz = liveClass, liveIdentity = liveIdentity)
+            } else if (varData.containsKey("@ref")) {
+                //no need to transform the value, it's a reference
+                return LiveVariable(varName, null, scope = scope, liveClazz = liveClass, liveIdentity = liveIdentity)
             }
 
             val innerVars = mutableListOf<LiveVariable>()
@@ -205,12 +208,12 @@ class LiveBreakpointAnalyzer(
                     try {
                         liveArr.copy(
                             liveClazz = Type.getType(outerVal.getString("@class")).className,
-                            liveIdentity = outerVal.getString("@id") ?: outerVal.getString("@identity")
+                            liveIdentity = getLiveIdentity(outerVal)
                         )
                     } catch (ignore: IllegalArgumentException) {
                         liveArr.copy(
                             liveClazz = outerVal.getString("@class"),
-                            liveIdentity = outerVal.getString("@id") ?: outerVal.getString("@identity")
+                            liveIdentity = getLiveIdentity(outerVal)
                         )
                     }
                 } else {
@@ -219,7 +222,7 @@ class LiveBreakpointAnalyzer(
                         outerVal[varName],
                         scope = scope,
                         liveClazz = outerVal.getString("@class"),
-                        liveIdentity = outerVal.getString("@id") ?: outerVal.getString("@identity")
+                        liveIdentity = getLiveIdentity(outerVal)
                     )
                 }
                 liveVar = liveVar.copy(presentation = LiveVariablePresentation.format(liveVar.liveClazz, liveVar))
@@ -268,6 +271,10 @@ class LiveBreakpointAnalyzer(
                 bpData.getString("service"),
                 stackTrace
             )
+        }
+
+        private fun getLiveIdentity(varData: JsonObject): String? {
+            return varData.getString("@id") ?: varData.getString("@identity") ?: varData.getString("@ref")
         }
     }
 
