@@ -110,7 +110,7 @@ class SmallMapLiveBreakpointTest : LiveInstrumentIntegrationTest() {
             ).onSuccess {
                 //trigger live breakpoint
                 vertx.setTimer(5000) { //todo: have to wait since not applyImmediately
-                    smallMapStringKey()
+                    smallMapNullValue()
                 }
             }.onFailure {
                 testContext.failNow(it)
@@ -124,7 +124,7 @@ class SmallMapLiveBreakpointTest : LiveInstrumentIntegrationTest() {
     @Disabled("Non-string keys are not supported") //todo: fix this
     fun `small map with int key`() {
         setupLineLabels {
-            smallMapStringKey()
+            smallMapIntKey()
         }
 
         val testContext = VertxTestContext()
@@ -173,7 +173,7 @@ class SmallMapLiveBreakpointTest : LiveInstrumentIntegrationTest() {
             ).onSuccess {
                 //trigger live breakpoint
                 vertx.setTimer(5000) { //todo: have to wait since not applyImmediately
-                    smallMapStringKey()
+                    smallMapIntKey()
                 }
             }.onFailure {
                 testContext.failNow(it)
