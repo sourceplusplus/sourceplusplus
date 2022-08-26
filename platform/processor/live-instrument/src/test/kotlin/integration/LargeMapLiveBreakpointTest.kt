@@ -57,14 +57,19 @@ class LargeMapLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                     largeMapVariable.liveClazz
                 )
 
-                val mapValues = largeMapVariable.value as Map<String, Any>
-                assertEquals(104, mapValues.size)
-                for ((index, value) in mapValues.entries.toList().subList(1, 100).withIndex()) {
-                    assertEquals(index.toString(), value.value)
+                val mapValues = largeMapVariable.value as List<Map<String, Any>>
+                assertEquals(101, mapValues.size)
+                for ((index, value) in mapValues.subList(0, 100).withIndex()) {
+                    assertEquals(index.toString(), value["name"])
+
+                    //todo: SmallMapLiveBreakpointTest doesn't create child LiveVariables
+                    val actualValue = (value["value"] as List<Map<String, Any>>).first()
+                    assertEquals(index.toString(), actualValue["value"])
                 }
-                assertEquals("MAX_ARRAY_SIZE_EXCEEDED", mapValues["@skip"])
-                assertEquals(100_000, mapValues["@skip[size]"])
-                assertEquals(100, mapValues["@skip[max]"])
+                val lastValue = mapValues.last()["value"] as Map<String, Any>
+                assertEquals("MAX_ARRAY_SIZE_EXCEEDED", lastValue["@skip"])
+                assertEquals(100_000, lastValue["@skip[size]"])
+                assertEquals(100, lastValue["@skip[max]"])
             }
 
             //test passed
@@ -95,6 +100,6 @@ class LargeMapLiveBreakpointTest : LiveInstrumentIntegrationTest() {
             }
         }
 
-        errorOnTimeout(testContext, 100)
+        errorOnTimeout(testContext)
     }
 }
