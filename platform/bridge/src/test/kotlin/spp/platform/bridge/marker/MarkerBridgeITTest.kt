@@ -80,7 +80,7 @@ class MarkerBridgeITTest : PlatformIntegrationTest() {
         }
         connectPromise.future().await()
 
-        delay(2000) //ensure probe is connected
+        delay(2000) //ensure marker is connected
 
         //verify marker count increased
         val increasedMarkerCount = liveService.getStats().await()
