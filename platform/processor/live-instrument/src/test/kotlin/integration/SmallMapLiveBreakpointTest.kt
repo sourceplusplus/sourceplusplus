@@ -27,6 +27,16 @@ import spp.protocol.instrument.LiveSourceLocation
 @Suppress("unused")
 class SmallMapLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
+    private fun smallMapNullValue() {
+        startEntrySpan("smallMapNullValue")
+        val smallMap = LinkedHashMap<Int, String?>()
+        for (i in 0 until 10) {
+            smallMap[i] = null
+        }
+        addLineLabel("done") { Throwable().stackTrace[0].lineNumber }
+        stopSpan()
+    }
+
     private fun smallMapIntKey() {
         startEntrySpan("smallMapIntKey")
         val smallMap = LinkedHashMap<Int, String>()
@@ -45,6 +55,69 @@ class SmallMapLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         }
         addLineLabel("done") { Throwable().stackTrace[0].lineNumber }
         stopSpan()
+    }
+
+    @Test
+    fun `small map with null value`() {
+        setupLineLabels {
+            smallMapNullValue()
+        }
+
+        val testContext = VertxTestContext()
+        onBreakpointHit { bpHit ->
+            testContext.verify {
+                assertTrue(bpHit.stackTrace.elements.isNotEmpty())
+                val topFrame = bpHit.stackTrace.elements.first()
+                assertEquals(2, topFrame.variables.size)
+
+                //smallMap
+                val smallMapVariable = topFrame.variables.first { it.name == "smallMap" }
+                assertNotNull(smallMapVariable)
+                assertEquals(
+                    "java.util.LinkedHashMap",
+                    smallMapVariable.liveClazz
+                )
+                assertNotNull(smallMapVariable.liveIdentity)
+
+                val mapValues = smallMapVariable.value as List<Map<String, Any>>
+                assertEquals(10, mapValues.size)
+                for (i in 0 until 10) {
+                    val map = mapValues[i]
+                    assertEquals(7, map.size)
+                    assertEquals(i.toString(), map["name"])
+                    assertNull(map["value"])
+                }
+            }
+
+            //test passed
+            testContext.completeNow()
+        }.completionHandler {
+            if (it.failed()) {
+                testContext.failNow(it.cause())
+                return@completionHandler
+            }
+
+            //add live breakpoint
+            instrumentService.addLiveInstrument(
+                LiveBreakpoint(
+                    location = LiveSourceLocation(
+                        SmallMapLiveBreakpointTest::class.qualifiedName!!,
+                        getLineNumber("done"),
+                        //"spp-test-probe" //todo: impl this so applyImmediately can be used
+                    ),
+                    //applyImmediately = true //todo: can't use applyImmediately
+                )
+            ).onSuccess {
+                //trigger live breakpoint
+                vertx.setTimer(5000) { //todo: have to wait since not applyImmediately
+                    smallMapStringKey()
+                }
+            }.onFailure {
+                testContext.failNow(it)
+            }
+        }
+
+        errorOnTimeout(testContext)
     }
 
     @Test
