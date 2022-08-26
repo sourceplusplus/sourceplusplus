@@ -130,6 +130,7 @@ class SmallMapLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                     "java.util.LinkedHashMap",
                     smallMapVariable.liveClazz
                 )
+                assertNotNull(smallMapVariable.liveIdentity)
 
                 val mapValues = smallMapVariable.value as List<Map<String, Any>>
                 assertEquals(10, mapValues.size)
