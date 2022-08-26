@@ -63,7 +63,7 @@ class LargeListLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                     assertEquals(1, value["value"])
                 }
                 val lastValue = listValues.last()["value"] as Map<String, Any>
-                assertEquals("MAX_ARRAY_SIZE_EXCEEDED", lastValue["@skip"])
+                assertEquals("MAX_COLLECTION_SIZE_EXCEEDED", lastValue["@skip"])
                 assertEquals(100_000, lastValue["@skip[size]"])
                 assertEquals(100, lastValue["@skip[max]"])
             }

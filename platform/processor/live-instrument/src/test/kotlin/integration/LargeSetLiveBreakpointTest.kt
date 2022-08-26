@@ -24,22 +24,22 @@ import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.LiveSourceLocation
 
 @Suppress("unused")
-class LargeMapLiveBreakpointTest : LiveInstrumentIntegrationTest() {
+class LargeSetLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
-    private fun largeMap() {
-        startEntrySpan("largeMap")
-        val largeMap = LinkedHashMap<String, String>()
+    private fun largeSet() {
+        startEntrySpan("largeSet")
+        val largeSet = HashSet<Int>()
         for (i in 0 until 100_000) {
-            largeMap[i.toString()] = i.toString()
+            largeSet.add(i)
         }
         addLineLabel("done") { Throwable().stackTrace[0].lineNumber }
         stopSpan()
     }
 
     @Test
-    fun `large map`() {
+    fun `large set`() {
         setupLineLabels {
-            largeMap()
+            largeSet()
         }
 
         val testContext = VertxTestContext()
@@ -49,24 +49,20 @@ class LargeMapLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                 val topFrame = bpHit.stackTrace.elements.first()
                 assertEquals(2, topFrame.variables.size)
 
-                //largeMap
-                val largeMapVariable = topFrame.variables.first { it.name == "largeMap" }
-                assertNotNull(largeMapVariable)
+                //largeSet
+                val largeSetVariable = topFrame.variables.first { it.name == "largeSet" }
+                assertNotNull(largeSetVariable)
                 assertEquals(
-                    "java.util.LinkedHashMap",
-                    largeMapVariable.liveClazz
+                    "java.util.HashSet",
+                    largeSetVariable.liveClazz
                 )
 
-                val mapValues = largeMapVariable.value as List<Map<String, Any>>
-                assertEquals(101, mapValues.size)
-                for ((index, value) in mapValues.subList(0, 100).withIndex()) {
-                    assertEquals(index.toString(), value["name"])
-
-                    //todo: SmallMapLiveBreakpointTest doesn't create child LiveVariables
-                    val actualValue = (value["value"] as List<Map<String, Any>>).first()
-                    assertEquals(index.toString(), actualValue["value"])
+                val setValues = largeSetVariable.value as List<Map<String, Any>>
+                assertEquals(101, setValues.size)
+                for ((index, value) in setValues.subList(0, 100).withIndex()) {
+                    assertEquals(index, value["value"])
                 }
-                val lastValue = mapValues.last()["value"] as Map<String, Any>
+                val lastValue = setValues.last()["value"] as Map<String, Any>
                 assertEquals("MAX_COLLECTION_SIZE_EXCEEDED", lastValue["@skip"])
                 assertEquals(100_000, lastValue["@skip[size]"])
                 assertEquals(100, lastValue["@skip[max]"])
@@ -84,7 +80,7 @@ class LargeMapLiveBreakpointTest : LiveInstrumentIntegrationTest() {
             instrumentService.addLiveInstrument(
                 LiveBreakpoint(
                     location = LiveSourceLocation(
-                        LargeMapLiveBreakpointTest::class.qualifiedName!!,
+                        LargeSetLiveBreakpointTest::class.qualifiedName!!,
                         getLineNumber("done"),
                         //"spp-test-probe" //todo: impl this so applyImmediately can be used
                     ),
@@ -93,7 +89,7 @@ class LargeMapLiveBreakpointTest : LiveInstrumentIntegrationTest() {
             ).onSuccess {
                 //trigger live breakpoint
                 vertx.setTimer(5000) { //todo: have to wait since not applyImmediately
-                    largeMap()
+                    largeSet()
                 }
             }.onFailure {
                 testContext.failNow(it)
