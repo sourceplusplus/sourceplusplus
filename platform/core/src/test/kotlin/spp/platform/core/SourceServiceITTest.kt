@@ -62,7 +62,7 @@ class SourceServiceITTest : PlatformIntegrationTest() {
             .sendJsonObject(
                 JsonObject().put(
                     "query",
-                    """ mutation {
+                    """mutation {
                           reset
                         }
                     """.trimIndent()
@@ -180,9 +180,6 @@ class SourceServiceITTest : PlatformIntegrationTest() {
     fun `ensure getDataRedactions works`() = runBlocking {
         val addDataRedactionResp = request.sendJsonObject(addDataRedactionRequest).await().bodyAsJsonObject()
         Assertions.assertNull(addDataRedactionResp.getJsonArray("errors"))
-        val dataRedaction = addDataRedactionResp.getJsonObject("data").getJsonObject("addDataRedaction")
-        Assertions.assertEquals("some-id", dataRedaction.getString("id"))
-        Assertions.assertEquals(RedactionType.VALUE_REGEX.name, dataRedaction.getString("type"))
 
         val getDataRedactionsResp = request
             .sendJsonObject(
@@ -201,16 +198,20 @@ class SourceServiceITTest : PlatformIntegrationTest() {
             ).await().bodyAsJsonObject()
         Assertions.assertNull(getDataRedactionsResp.getJsonArray("errors"))
         val dataRedactions = getDataRedactionsResp.getJsonObject("data").getJsonArray("getDataRedactions")
-        Assertions.assertTrue(dataRedactions.size() > 0)
+        Assertions.assertTrue(dataRedactions.any {
+            it as JsonObject
+            it.getString("id").equals("some-id")
+        })
+        Assertions.assertTrue(dataRedactions.any {
+            it as JsonObject
+            it.getString("type").equals(RedactionType.VALUE_REGEX.name)
+        })
     }
 
     @Test
     fun `ensure removeDataRedaction works`() = runBlocking {
         val addDataRedactionResp = request.sendJsonObject(addDataRedactionRequest).await().bodyAsJsonObject()
         Assertions.assertNull(addDataRedactionResp.getJsonArray("errors"))
-        val dataRedaction = addDataRedactionResp.getJsonObject("data").getJsonObject("addDataRedaction")
-        Assertions.assertEquals("some-id", dataRedaction.getString("id"))
-        Assertions.assertEquals(RedactionType.VALUE_REGEX.name, dataRedaction.getString("type"))
 
         val removeDataRedactionResp = request
             .sendJsonObject(
@@ -230,8 +231,8 @@ class SourceServiceITTest : PlatformIntegrationTest() {
     fun `ensure getAccessPermission with ID works`() = runBlocking {
         val addAccessPermissionResp = request.sendJsonObject(addAccessPermissionRequest).await().bodyAsJsonObject()
         Assertions.assertNull(addAccessPermissionResp.getJsonArray("errors"))
-        val accessPermission = addAccessPermissionResp.getJsonObject("data").getJsonObject("addAccessPermission")
 
+        val accessPermission = addAccessPermissionResp.getJsonObject("data").getJsonObject("addAccessPermission")
         val accessPermissionId = accessPermission.getString("id")
         val getAccessPermissionResp = request
             .sendJsonObject(
@@ -258,6 +259,7 @@ class SourceServiceITTest : PlatformIntegrationTest() {
     fun `ensure addDeveloper works`() = runBlocking {
         val addDeveloperResp = request.sendJsonObject(addDeveloperRequest).await().bodyAsJsonObject()
         Assertions.assertNull(addDeveloperResp.getJsonArray("errors"))
+
         val developer: JsonObject = addDeveloperResp.getJsonObject("data").getJsonObject("addDeveloper")
         Assertions.assertEquals("developer-id", developer.getString("id"))
         Assertions.assertNotNull(developer.getString("accessToken"))
@@ -267,10 +269,10 @@ class SourceServiceITTest : PlatformIntegrationTest() {
     fun `ensure refreshDeveloperToken works`() = runBlocking {
         val addDeveloperResp = request.sendJsonObject(addDeveloperRequest).await().bodyAsJsonObject()
         Assertions.assertNull(addDeveloperResp.getJsonArray("errors"))
+
         val developer: JsonObject = addDeveloperResp.getJsonObject("data").getJsonObject("addDeveloper")
         val developerId = developer.getString("id")
         val developerAccessToken = developer.getString("accessToken")
-
         val getDevelopersResp = request
             .sendJsonObject(
                 JsonObject().put(
@@ -313,10 +315,6 @@ class SourceServiceITTest : PlatformIntegrationTest() {
         Assertions.assertTrue(developers.any {
             it as JsonObject
             it.getString("id").equals("developer-id")
-        })
-        Assertions.assertTrue(developers.any {
-            it as JsonObject
-            it.getString("accessToken") == null
         })
     }
 
@@ -649,6 +647,7 @@ class SourceServiceITTest : PlatformIntegrationTest() {
         val accessPermission = addAccessPermissionResp.getJsonObject("data").getJsonObject("addAccessPermission")
         val accessPermissionId = accessPermission.getString("id")
 
+        //todo: role is not checked if it has the accessPermissionId
 //        val addRoleAccessPermissionResp =
 //            request.sendJsonObject(addRoleAccessPermissionRequest(accessPermissionId)).await().bodyAsJsonObject()
 //        Assertions.assertNull(addRoleAccessPermissionResp.getJsonArray("errors"))
@@ -1259,7 +1258,7 @@ class SourceServiceITTest : PlatformIntegrationTest() {
             .sendJsonObject(
                 JsonObject().put(
                     "query",
-                    """ query {
+                    """query {
                           getClientAccessors {
                             id,
                             secret
@@ -1280,35 +1279,18 @@ class SourceServiceITTest : PlatformIntegrationTest() {
         })
     }
 
+    //todo: No GraphQL for this endpoint
     @Test
-    fun `ensure getting client accessor works`() = runBlocking {
+    fun `ensure getting client access works`() = runBlocking {
         val clientAccess = liveManagementService.getClientAccess("test-id").await()
         Assertions.assertEquals("test-id", clientAccess?.id)
         Assertions.assertEquals("test-secret", clientAccess?.secret)
-
-        //todo: No GraphQL for this endpoint
-//        val getClientAccessResp = request
-//            .sendJsonObject(
-//                JsonObject().put(
-//                    "query",
-//                    """query (${'$'}id: String!){
-//                          getClientAccess (id: ${'$'}id){
-//                            id,
-//                            secret
-//                          }
-//                        }
-//                    """.trimIndent()
-//                ).put("variables", JsonObject().put("id", "test-id"))
-//            ).await().bodyAsJsonObject()
-//        assertNull(getClientAccessResp.getJsonArray("errors"))
-//        val clientAccessJsonObject = getClientAccessResp.getJsonObject("data").getJsonObject("getClientAccessors")
-//        Assertions.assertEquals(clientAccessJsonObject.getString("id"), "test-id")
-//        Assertions.assertEquals(clientAccessJsonObject.getString("secret"), "test-secret")
     }
 
+    //todo: does not accept custom id nor secret
     @Test
     fun `ensure adding new client accessor works`() = runBlocking {
-        //todo: does not accept custom id nor secret
+
         val generatedClientAccess = liveManagementService.addClientAccess().await()
         Assertions.assertNotNull(generatedClientAccess.id)
         Assertions.assertNotNull(generatedClientAccess.secret)
@@ -1350,7 +1332,7 @@ class SourceServiceITTest : PlatformIntegrationTest() {
             .sendJsonObject(
                 JsonObject().put(
                     "query",
-                    """ mutation (${'$'}id: String!){
+                    """mutation (${'$'}id: String!){
                           removeClientAccess (id: ${'$'}id)
                         }
                     """.trimIndent()
@@ -1378,7 +1360,7 @@ class SourceServiceITTest : PlatformIntegrationTest() {
             .sendJsonObject(
                 JsonObject().put(
                     "query",
-                    """ mutation (${'$'}id: String!){
+                    """mutation (${'$'}id: String!){
                           updateClientAccess (id: ${'$'}id){
                             id,
                             secret
