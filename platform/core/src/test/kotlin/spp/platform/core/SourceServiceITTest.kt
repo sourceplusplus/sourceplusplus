@@ -121,9 +121,6 @@ class SourceServiceITTest : PlatformIntegrationTest() {
     fun `ensure updateDataRedaction works`() = runBlocking {
         val addDataRedactionResp = request.sendJsonObject(addDataRedactionRequest).await().bodyAsJsonObject()
         Assertions.assertNull(addDataRedactionResp.getJsonArray("errors"))
-        val dataRedaction = addDataRedactionResp.getJsonObject("data").getJsonObject("addDataRedaction")
-        Assertions.assertEquals("some-id", dataRedaction.getString("id"))
-        Assertions.assertEquals(RedactionType.VALUE_REGEX.name, dataRedaction.getString("type"))
 
         val updateDataRedactionResp = request
             .sendJsonObject(
@@ -152,36 +149,32 @@ class SourceServiceITTest : PlatformIntegrationTest() {
         Assertions.assertEquals("other-replacement", updatedDataRedaction.getString("replacement"))
     }
 
-    //todo: fails with Exception in thread "vert.x-eventloop-thread-1" java.lang.NullPointerException
-    //	at spp.platform.storage.RedisStorage.getDataRedaction$suspendImpl(RedisStorage.kt:203)
-//    @Test
-//    fun `ensure getDataRedaction with ID works`() = runBlocking {
-//    val addDataRedactionResp = request.sendJsonObject(addDataRedactionRequest).await().bodyAsJsonObject()
-//        Assertions.assertNull(addDataRedactionResp.getJsonArray("errors"))
-//        val dataRedaction = addDataRedactionResp.getJsonObject("data").getJsonObject("addDataRedaction")
-//        Assertions.assertEquals("some-id", dataRedaction.getString("id"))
-//        Assertions.assertEquals(RedactionType.VALUE_REGEX.name, dataRedaction.getString("type"))
-//
-//        val getDataRedactionResp = request
-//            .sendJsonObject(
-//                JsonObject().put(
-//                    "query",
-//                    """query (${'$'}id: String!){
-//                          getDataRedaction (id: ${'$'}id){
-//                                id
-//                                type
-//                                lookup
-//                                replacement
-//                            }
-//                        }
-//                    """.trimIndent()
-//                ).put("variables", JsonObject().put("id", "other-id"))
-//            ).await().bodyAsJsonObject()
-//        Assertions.assertNull(getDataRedactionResp.getJsonArray("errors"))
-//        val updatedDataRedaction = getDataRedactionResp.getJsonObject("data").getJsonObject("addAccessPermission")
-//        Assertions.assertEquals(AccessType.WHITE_LIST.name, updatedDataRedaction.getString("type"))
-//        Assertions.assertEquals("some-pattern", updatedDataRedaction.getJsonArray("locationPatterns")[0])
-//    }
+    @Test
+    fun `ensure getDataRedaction with ID works`() = runBlocking {
+        val addDataRedactionResp = request.sendJsonObject(addDataRedactionRequest).await().bodyAsJsonObject()
+        Assertions.assertNull(addDataRedactionResp.getJsonArray("errors"))
+
+        val getDataRedactionResp = request
+            .sendJsonObject(
+                JsonObject().put(
+                    "query",
+                    """query (${'$'}id: String!){
+                          getDataRedaction (id: ${'$'}id){
+                                id
+                                type
+                                lookup
+                                replacement
+                            }
+                        }
+                    """.trimIndent()
+                ).put("variables", JsonObject().put("id", "some-id"))
+            ).await().bodyAsJsonObject()
+        Assertions.assertNull(getDataRedactionResp.getJsonArray("errors"))
+        val updatedDataRedaction = getDataRedactionResp.getJsonObject("data").getJsonObject("getDataRedaction")
+        Assertions.assertEquals(RedactionType.VALUE_REGEX.name, updatedDataRedaction.getString("type"))
+        Assertions.assertEquals("some-lookup", updatedDataRedaction.getString("lookup"))
+        Assertions.assertEquals("some-replacement", updatedDataRedaction.getString("replacement"))
+    }
 
     @Test
     fun `ensure getDataRedactions works`() = runBlocking {
@@ -238,8 +231,6 @@ class SourceServiceITTest : PlatformIntegrationTest() {
         val addAccessPermissionResp = request.sendJsonObject(addAccessPermissionRequest).await().bodyAsJsonObject()
         Assertions.assertNull(addAccessPermissionResp.getJsonArray("errors"))
         val accessPermission = addAccessPermissionResp.getJsonObject("data").getJsonObject("addAccessPermission")
-        Assertions.assertEquals(AccessType.WHITE_LIST.name, accessPermission.getString("type"))
-        Assertions.assertEquals("some-pattern", accessPermission.getJsonArray("locationPatterns")[0])
 
         val accessPermissionId = accessPermission.getString("id")
         val getAccessPermissionResp = request
@@ -727,8 +718,6 @@ class SourceServiceITTest : PlatformIntegrationTest() {
         val addAccessPermissionResp = request.sendJsonObject(addAccessPermissionRequest).await().bodyAsJsonObject()
         Assertions.assertNull(addAccessPermissionResp.getJsonArray("errors"))
         val accessPermission = addAccessPermissionResp.getJsonObject("data").getJsonObject("addAccessPermission")
-        Assertions.assertEquals(AccessType.WHITE_LIST.name, accessPermission.getString("type"))
-        Assertions.assertEquals("some-pattern", accessPermission.getJsonArray("locationPatterns")[0])
 
         val accessPermissionId = accessPermission.getString("id")
         val removeAccessPermission = request
@@ -1499,7 +1488,6 @@ class SourceServiceITTest : PlatformIntegrationTest() {
         )
     }
 
-
     private val addLiveViewSubscriptionRequest = JsonObject().put(
         "query",
         """mutation (${'$'}input: LiveViewSubscriptionInput!){
@@ -1586,6 +1574,7 @@ class SourceServiceITTest : PlatformIntegrationTest() {
             mapOf("location" to mapOf("source" to "doing", "line" to 19), "logFormat" to "formatting")
         )
     )
+
     private val addLiveSpanRequest = JsonObject().put(
         "query",
         """mutation (${'$'}input: LiveSpanInput!){

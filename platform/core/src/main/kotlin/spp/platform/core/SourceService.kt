@@ -446,7 +446,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
             }
 
             val id = env.getArgument<String>("id")
-            if (SourceStorage.hasDataRedaction(id)) {
+            if (!SourceStorage.hasDataRedaction(id)) {
                 completableFuture.completeExceptionally(IllegalStateException("Non-existing data redaction: $id"))
             } else {
                 completableFuture.complete(SourceStorage.getDataRedaction(id))
