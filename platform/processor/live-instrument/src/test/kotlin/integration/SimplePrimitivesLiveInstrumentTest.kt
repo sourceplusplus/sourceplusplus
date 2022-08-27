@@ -25,7 +25,7 @@ import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.LiveSourceLocation
 
 @Suppress("UNUSED_VARIABLE")
-open class SimplePrimitivesLiveInstrumentTest : LiveInstrumentIntegrationTest() {
+class SimplePrimitivesLiveInstrumentTest : LiveInstrumentIntegrationTest() {
 
     private fun simplePrimitives() {
         startEntrySpan("simplePrimitives")
