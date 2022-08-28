@@ -56,17 +56,16 @@ class SourceServiceITTest : PlatformIntegrationTest() {
         }
     }
 
+    private fun getGraphql(path: String): String {
+        return SourceService::class.java.getResource("/graphql/$path.graphql")?.readText()
+            ?: throw IllegalStateException("GraphQL file not found: $path")
+    }
+
     @BeforeEach
     fun `reset`() = runBlocking {
         val resetResp = request
             .sendJsonObject(
-                JsonObject().put(
-                    "query",
-                    """mutation {
-                          reset
-                        }
-                    """.trimIndent()
-                )
+                JsonObject().put("query", getGraphql("system/reset"))
             ).await().bodyAsJsonObject()
         assertTrue(resetResp.getJsonObject("data").getBoolean("reset"))
     }
