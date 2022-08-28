@@ -36,13 +36,13 @@ include("platform:dashboard")
 include("platform:storage")
 include("platform:processor:live-instrument")
 include("platform:processor:live-view")
+include("probes:jvm:control")
+include("probes:jvm:services")
+include("probes:python")
 include("protocol")
 include("protocol:codegen")
-
-include(":probes:jvm:control")
-include(":probes:jvm:services")
-
-include(":probes:python")
+include("tutorials:jvm")
+include("tutorials:python")
 
 include("example-web-app")
 project(":example-web-app").projectDir = File("docker/e2e/example-web-app")
