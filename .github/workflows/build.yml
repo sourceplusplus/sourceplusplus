@@ -13,6 +13,9 @@ on:
       - '**.svg'
   workflow_dispatch:
 
+env:
+  GRADLE_OPTS: -Xmx5g -Xms5g
+
 jobs:
   jvm-build:
     if: ${{ !contains(github.event.pull_request.head.ref, '#docs') && !(startsWith(github.event.head_commit.message, 'Merge pull request') && contains(github.event.head_commit.message, '#docs')) }}
