@@ -34,3 +34,7 @@
 	path = tutorials/jvm
 	url = https://github.com/sourceplusplus/tutorial-jvm
 	branch = master
+[submodule "documentation"]
+	path = documentation
+	url = https://github.com/sourceplusplus/documentation
+	branch = master
