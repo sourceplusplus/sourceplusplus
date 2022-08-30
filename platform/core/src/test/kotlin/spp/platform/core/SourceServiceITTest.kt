@@ -76,20 +76,10 @@ class SourceServiceITTest : PlatformIntegrationTest() {
         assertNull(addAccessPermissionResp.getJsonArray("errors"))
 
         val getAccessPermissionsResp = request
-            .sendJsonObject(
-                JsonObject().put(
-                    "query",
-                    """query {
-                          getAccessPermissions {
-                                id
-                                locationPatterns
-                                type
-                            }
-                        }
-                    """.trimIndent()
-                )
-            ).await().bodyAsJsonObject()
+            .sendJsonObject(JsonObject().put("query", getGraphql("access/get-access-permissions")))
+            .await().bodyAsJsonObject()
         assertNull(getAccessPermissionsResp.getJsonArray("errors"))
+
         val accessPermission: JsonObject = getAccessPermissionsResp.getJsonObject("data")
             .getJsonArray("getAccessPermissions")[0]
         assertEquals(AccessType.WHITE_LIST.name, accessPermission.getString("type"))
@@ -125,15 +115,7 @@ class SourceServiceITTest : PlatformIntegrationTest() {
             .sendJsonObject(
                 JsonObject().put(
                     "query",
-                    """mutation (${'$'}id: String!, ${'$'}type: RedactionType!, ${'$'}lookup: String!, ${'$'}replacement: String!){
-                          updateDataRedaction (id: ${'$'}id, type: ${'$'}type, lookup: ${'$'}lookup, replacement: ${'$'}replacement){
-                                id
-                                type
-                                lookup
-                                replacement
-                            }
-                        }
-                    """.trimIndent()
+                    getGraphql("data-redaction/update-data-redaction")
                 ).put(
                     "variables",
                     JsonObject().put("id", "some-id").put("type", RedactionType.IDENTIFIER_MATCH)
@@ -156,16 +138,7 @@ class SourceServiceITTest : PlatformIntegrationTest() {
         val getDataRedactionResp = request
             .sendJsonObject(
                 JsonObject().put(
-                    "query",
-                    """query (${'$'}id: String!){
-                          getDataRedaction (id: ${'$'}id){
-                                id
-                                type
-                                lookup
-                                replacement
-                            }
-                        }
-                    """.trimIndent()
+                    "query", getGraphql("data-redaction/get-data-redaction")
                 ).put("variables", JsonObject().put("id", "some-id"))
             ).await().bodyAsJsonObject()
         assertNull(getDataRedactionResp.getJsonArray("errors"))
@@ -183,17 +156,8 @@ class SourceServiceITTest : PlatformIntegrationTest() {
         val getDataRedactionsResp = request
             .sendJsonObject(
                 JsonObject().put(
-                    "query",
-                    """query {
-                          getDataRedactions {
-                                id
-                                type
-                                lookup
-                                replacement
-                            }
-                        }
-                    """.trimIndent()
-                ).put("variables", JsonObject().put("id", "some-id"))
+                    "query", getGraphql("data-redaction/get-data-redactions")
+                )
             ).await().bodyAsJsonObject()
         assertNull(getDataRedactionsResp.getJsonArray("errors"))
         val dataRedactions = getDataRedactionsResp.getJsonObject("data").getJsonArray("getDataRedactions")
@@ -215,11 +179,7 @@ class SourceServiceITTest : PlatformIntegrationTest() {
         val removeDataRedactionResp = request
             .sendJsonObject(
                 JsonObject().put(
-                    "query",
-                    """mutation (${'$'}id: String!){
-                          removeDataRedaction (id: ${'$'}id)
-                        }
-                    """.trimIndent()
+                    "query", getGraphql("data-redaction/remove-data-redaction")
                 ).put("variables", JsonObject().put("id", "some-id"))
             ).await().bodyAsJsonObject()
         assertNull(removeDataRedactionResp.getJsonArray("errors"))
@@ -236,18 +196,11 @@ class SourceServiceITTest : PlatformIntegrationTest() {
         val getAccessPermissionResp = request
             .sendJsonObject(
                 JsonObject().put(
-                    "query",
-                    """query (${'$'}id: String!){
-                          getAccessPermission (id: ${'$'}id){
-                                id
-                                locationPatterns
-                                type
-                            }
-                        }
-                    """.trimIndent()
+                    "query", getGraphql("access/get-access-permission")
                 ).put("variables", JsonObject().put("id", accessPermissionId))
             ).await().bodyAsJsonObject()
         assertNull(getAccessPermissionResp.getJsonArray("errors"))
+
         val accessPermission2: JsonObject = getAccessPermissionResp.getJsonObject("data")
             .getJsonObject("getAccessPermission")
         assertEquals(AccessType.WHITE_LIST.name, accessPermission2.getString("type"))
@@ -272,20 +225,12 @@ class SourceServiceITTest : PlatformIntegrationTest() {
         val developer: JsonObject = addDeveloperResp.getJsonObject("data").getJsonObject("addDeveloper")
         val developerId = developer.getString("id")
         val developerAccessToken = developer.getString("accessToken")
-        val getDevelopersResp = request
-            .sendJsonObject(
-                JsonObject().put(
-                    "query",
-                    """mutation (${'$'}id: String!){
-                          refreshDeveloperToken (id: ${'$'}id){
-                                id
-                                accessToken
-                            }
-                        }
-                    """.trimIndent()
-                ).put("variables", JsonObject().put("id", developerId))
-            ).await().bodyAsJsonObject()
+        val getDevelopersResp = request.sendJsonObject(
+            JsonObject().put("query", getGraphql("developer/refresh-developer-token"))
+                .put("variables", JsonObject().put("id", developerId))
+        ).await().bodyAsJsonObject()
         assertNull(getDevelopersResp.getJsonArray("errors"))
+
         val developerRefreshed = getDevelopersResp.getJsonObject("data").getJsonObject("refreshDeveloperToken")
         assertEquals(developerId, developerRefreshed.getString("id"))
         assertNotEquals(developerAccessToken, developerRefreshed.getString("accessToken"))
@@ -298,18 +243,10 @@ class SourceServiceITTest : PlatformIntegrationTest() {
 
         val getDevelopersResp = request
             .sendJsonObject(
-                JsonObject().put(
-                    "query",
-                    """query {
-                          getDevelopers {
-                                id
-                                accessToken
-                            }
-                        }
-                    """.trimIndent()
-                )
+                JsonObject().put("query", getGraphql("developer/get-developers"))
             ).await().bodyAsJsonObject()
         assertNull(getDevelopersResp.getJsonArray("errors"))
+
         val developers = getDevelopersResp.getJsonObject("data").getJsonArray("getDevelopers")
         assertTrue(developers.any {
             it as JsonObject
@@ -325,11 +262,7 @@ class SourceServiceITTest : PlatformIntegrationTest() {
         val removeDeveloperResp = request
             .sendJsonObject(
                 JsonObject().put(
-                    "query",
-                    """mutation (${'$'}id: String!){
-                          removeDeveloper (id: ${'$'}id)
-                        }
-                    """.trimIndent()
+                    "query", getGraphql("developer/remove-developer")
                 ).put("variables", JsonObject().put("id", "developer-id"))
             ).await().bodyAsJsonObject()
         assertNull(removeDeveloperResp.getJsonArray("errors"))
@@ -347,15 +280,7 @@ class SourceServiceITTest : PlatformIntegrationTest() {
     fun `ensure getRoles works`() = runBlocking {
         val getRolesResp = request
             .sendJsonObject(
-                JsonObject().put(
-                    "query",
-                    """query {
-                          getRoles {
-                                roleName    
-                            }
-                        }
-                    """.trimIndent()
-                )
+                JsonObject().put("query", getGraphql("role/get-roles"))
             ).await().bodyAsJsonObject()
         assertNull(getRolesResp.getJsonArray("errors"))
         val roles = getRolesResp.getJsonObject("data").getJsonArray("getRoles")
@@ -389,11 +314,7 @@ class SourceServiceITTest : PlatformIntegrationTest() {
         val removeRoleDataRedactionResp = request
             .sendJsonObject(
                 JsonObject().put(
-                    "query",
-                    """mutation (${'$'}role: String!, ${'$'}dataRedactionId: String!){
-                          removeRoleDataRedaction (role: ${'$'}role, dataRedactionId: ${'$'}dataRedactionId)
-                        }
-                    """.trimIndent()
+                    "query", getGraphql("data-redaction/remove-role-data-redaction")
                 ).put("variables", JsonObject().put("role", "developer-role").put("dataRedactionId", "some-id"))
             ).await().bodyAsJsonObject()
         assertNull(removeRoleDataRedactionResp.getJsonArray("errors"))
@@ -415,16 +336,7 @@ class SourceServiceITTest : PlatformIntegrationTest() {
         val getRoleDataRedactionsResp = request
             .sendJsonObject(
                 JsonObject().put(
-                    "query",
-                    """query (${'$'}role: String!){
-                          getRoleDataRedactions (role: ${'$'}role){
-                                 id
-                                type
-                                lookup
-                                replacement
-                            }
-                        }
-                    """.trimIndent()
+                    "query", getGraphql("data-redaction/get-role-data-redaction")
                 ).put("variables", JsonObject().put("role", "developer-role"))
             ).await().bodyAsJsonObject()
         assertNull(getRoleDataRedactionsResp.getJsonArray("errors"))
@@ -459,18 +371,8 @@ class SourceServiceITTest : PlatformIntegrationTest() {
 
         val getDeveloperDataRedactionsResp = request
             .sendJsonObject(
-                JsonObject().put(
-                    "query",
-                    """query (${'$'}developerId: String!){
-                          getDeveloperDataRedactions (developerId: ${'$'}developerId){
-                                 id
-                                type
-                                lookup
-                                replacement
-                            }
-                        }
-                    """.trimIndent()
-                ).put("variables", JsonObject().put("developerId", "developer-id"))
+                JsonObject().put("query", getGraphql("data-redaction/get-developer-data-redaction"))
+                    .put("variables", JsonObject().put("developerId", "developer-id"))
             ).await().bodyAsJsonObject()
         assertNull(getDeveloperDataRedactionsResp.getJsonArray("errors"))
         val developerDataRedactions =
@@ -490,16 +392,10 @@ class SourceServiceITTest : PlatformIntegrationTest() {
         val addRoleResp = request.sendJsonObject(addRoleRequest).await().bodyAsJsonObject()
         assertNull(addRoleResp.getJsonArray("errors"))
 
-        val removeRoleResp = request
-            .sendJsonObject(
-                JsonObject().put(
-                    "query",
-                    """mutation (${'$'}role: String!){
-                          removeRole (role: ${'$'}role)
-                        }
-                    """.trimIndent()
-                ).put("variables", JsonObject().put("role", "developer-role"))
-            ).await().bodyAsJsonObject()
+        val removeRoleResp = request.sendJsonObject(
+            JsonObject().put("query", getGraphql("role/remove-role"))
+                .put("variables", JsonObject().put("role", "developer-role"))
+        ).await().bodyAsJsonObject()
         assertNull(removeRoleResp.getJsonArray("errors"))
         assertTrue(removeRoleResp.getJsonObject("data").getBoolean("removeRole"))
     }
@@ -528,18 +424,10 @@ class SourceServiceITTest : PlatformIntegrationTest() {
         val addDeveloperRoleResp = request.sendJsonObject(addDeveloperRoleRequest).await().bodyAsJsonObject()
         assertNull(addDeveloperRoleResp.getJsonArray("errors"))
 
-        val getDeveloperRolesResp = request
-            .sendJsonObject(
-                JsonObject().put(
-                    "query",
-                    """query (${'$'}id: String!){
-                          getDeveloperRoles (id: ${'$'}id){
-                                roleName    
-                            }
-                        }
-                    """.trimIndent()
-                ).put("variables", JsonObject().put("id", "developer-id"))
-            ).await().bodyAsJsonObject()
+        val getDeveloperRolesResp = request.sendJsonObject(
+            JsonObject().put("query", getGraphql("role/get-developer-roles"))
+                .put("variables", JsonObject().put("id", "developer-id"))
+        ).await().bodyAsJsonObject()
         assertNull(getDeveloperRolesResp.getJsonArray("errors"))
     }
 
@@ -557,16 +445,10 @@ class SourceServiceITTest : PlatformIntegrationTest() {
         val addRolePermissionResp = request.sendJsonObject(addRolePermissionRequest).await().bodyAsJsonObject()
         assertNull(addRolePermissionResp.getJsonArray("errors"))
 
-        val getDeveloperPermissionsResp = request
-            .sendJsonObject(
-                JsonObject().put(
-                    "query",
-                    """query (${'$'}id: String!){
-                          getDeveloperPermissions (id: ${'$'}id)
-                        }
-                    """.trimIndent()
-                ).put("variables", JsonObject().put("id", "developer-id"))
-            ).await().bodyAsJsonObject()
+        val getDeveloperPermissionsResp = request.sendJsonObject(
+            JsonObject().put("query", getGraphql("permission/get-developer-permissions"))
+                .put("variables", JsonObject().put("id", "developer-id"))
+        ).await().bodyAsJsonObject()
         assertNull(getDeveloperPermissionsResp.getJsonArray("errors"))
         val developerPermissions =
             getDeveloperPermissionsResp.getJsonObject("data").getJsonArray("getDeveloperPermissions")
@@ -587,16 +469,10 @@ class SourceServiceITTest : PlatformIntegrationTest() {
         val addDeveloperRoleResp = request.sendJsonObject(addDeveloperRoleRequest).await().bodyAsJsonObject()
         assertNull(addDeveloperRoleResp.getJsonArray("errors"))
 
-        val removeDeveloperRoleResp = request
-            .sendJsonObject(
-                JsonObject().put(
-                    "query",
-                    """mutation (${'$'}id: String!, ${'$'}role: String!){
-                          removeDeveloperRole (id: ${'$'}id, role: ${'$'}role)
-                        }
-                    """.trimIndent()
-                ).put("variables", JsonObject().put("id", "developer-id").put("role", "developer-role"))
-            ).await().bodyAsJsonObject()
+        val removeDeveloperRoleResp = request.sendJsonObject(
+            JsonObject().put("query", getGraphql("role/remove-developer-role"))
+                .put("variables", JsonObject().put("id", "developer-id").put("role", "developer-role"))
+        ).await().bodyAsJsonObject()
         assertNull(removeDeveloperRoleResp.getJsonArray("errors"))
         assertTrue(removeDeveloperRoleResp.getJsonObject("data").getBoolean("removeDeveloperRole"))
     }
@@ -615,20 +491,10 @@ class SourceServiceITTest : PlatformIntegrationTest() {
             request.sendJsonObject(addRoleAccessPermissionRequest(accessPermissionId)).await().bodyAsJsonObject()
         assertNull(addRoleAccessPermissionResp.getJsonArray("errors"))
 
-        val getRoleAccessPermissions = request
-            .sendJsonObject(
-                JsonObject().put(
-                    "query",
-                    """query (${'$'}role: String!){
-                          getRoleAccessPermissions (role: ${'$'}role){
-                                id
-                                locationPatterns
-                                type
-                            }
-                        }
-                    """.trimIndent()
-                ).put("variables", JsonObject().put("role", "developer-role"))
-            ).await().bodyAsJsonObject()
+        val getRoleAccessPermissions = request.sendJsonObject(
+            JsonObject().put("query", getGraphql("access/get-role-access-permissions"))
+                .put("variables", JsonObject().put("role", "developer-role"))
+        ).await().bodyAsJsonObject()
         assertNull(getRoleAccessPermissions.getJsonArray("errors"))
         val roleAccessPermission: JsonObject = getRoleAccessPermissions.getJsonObject("data")
             .getJsonArray("getRoleAccessPermissions")[0]
@@ -651,19 +517,12 @@ class SourceServiceITTest : PlatformIntegrationTest() {
 //            request.sendJsonObject(addRoleAccessPermissionRequest(accessPermissionId)).await().bodyAsJsonObject()
 //        Assertions.assertNull(addRoleAccessPermissionResp.getJsonArray("errors"))
 
-        val removeRoleAccessPermissionResp = request
-            .sendJsonObject(
-                JsonObject().put(
-                    "query",
-                    """mutation (${'$'}role: String!, ${'$'}accessPermissionId: String!){
-                          removeRoleAccessPermission (role: ${'$'}role, accessPermissionId: ${'$'}accessPermissionId)
-                        }
-                    """.trimIndent()
-                ).put(
-                    "variables",
-                    JsonObject().put("role", "developer-role").put("accessPermissionId", accessPermissionId)
-                )
-            ).await().bodyAsJsonObject()
+        val removeRoleAccessPermissionResp = request.sendJsonObject(
+            JsonObject().put("query", getGraphql("access/remove-role-access-permission")).put(
+                "variables",
+                JsonObject().put("role", "developer-role").put("accessPermissionId", accessPermissionId)
+            )
+        ).await().bodyAsJsonObject()
         assertNull(removeRoleAccessPermissionResp.getJsonArray("errors"))
         assertTrue(
             removeRoleAccessPermissionResp.getJsonObject("data").getBoolean("removeRoleAccessPermission")
@@ -690,20 +549,10 @@ class SourceServiceITTest : PlatformIntegrationTest() {
             request.sendJsonObject(addRoleAccessPermissionRequest(accessPermissionId)).await().bodyAsJsonObject()
         assertNull(addRoleAccessPermissionResp.getJsonArray("errors"))
 
-        val getDeveloperAccessPermissions = request
-            .sendJsonObject(
-                JsonObject().put(
-                    "query",
-                    """query (${'$'}developerId: String!){
-                          getDeveloperAccessPermissions (developerId: ${'$'}developerId){
-                                id
-                                locationPatterns
-                                type
-                            }
-                        }
-                    """.trimIndent()
-                ).put("variables", JsonObject().put("developerId", "developer-id"))
-            ).await().bodyAsJsonObject()
+        val getDeveloperAccessPermissions = request.sendJsonObject(
+            JsonObject().put("query", getGraphql("access/get-developer-access-permissions"))
+                .put("variables", JsonObject().put("developerId", "developer-id"))
+        ).await().bodyAsJsonObject()
         assertNull(getDeveloperAccessPermissions.getJsonArray("errors"))
         val developerAccessPermission: JsonObject = getDeveloperAccessPermissions.getJsonObject("data")
             .getJsonArray("getDeveloperAccessPermissions")[0]
@@ -718,16 +567,10 @@ class SourceServiceITTest : PlatformIntegrationTest() {
         val accessPermission = addAccessPermissionResp.getJsonObject("data").getJsonObject("addAccessPermission")
 
         val accessPermissionId = accessPermission.getString("id")
-        val removeAccessPermission = request
-            .sendJsonObject(
-                JsonObject().put(
-                    "query",
-                    """mutation (${'$'}id: String!){
-                          removeAccessPermission (id: ${'$'}id)
-                        }
-                    """.trimIndent()
-                ).put("variables", JsonObject().put("id", accessPermissionId))
-            ).await().bodyAsJsonObject()
+        val removeAccessPermission = request.sendJsonObject(
+            JsonObject().put("query", getGraphql("access/remove-access-permission"))
+                .put("variables", JsonObject().put("id", accessPermissionId))
+        ).await().bodyAsJsonObject()
         assertNull(removeAccessPermission.getJsonArray("errors"))
         assertTrue(removeAccessPermission.getJsonObject("data").getBoolean("removeAccessPermission"))
     }
@@ -741,16 +584,10 @@ class SourceServiceITTest : PlatformIntegrationTest() {
             }
         }
 
-        val getRolePermissionsResp = request
-            .sendJsonObject(
-                JsonObject().put(
-                    "query",
-                    """query (${'$'}role: String!){
-                          getRolePermissions (role: ${'$'}role)
-                        }
-                    """.trimIndent()
-                ).put("variables", JsonObject().put("role", ROLE_MANAGER.roleName))
-            ).await().bodyAsJsonObject()
+        val getRolePermissionsResp = request.sendJsonObject(
+            JsonObject().put("query", getGraphql("permission/get-role-permissions"))
+                .put("variables", JsonObject().put("role", ROLE_MANAGER.roleName))
+        ).await().bodyAsJsonObject()
         assertNull(getRolePermissionsResp.getJsonArray("errors"))
         val getRolePermissions = getRolePermissionsResp.getJsonObject("data").getJsonArray("getRolePermissions")
         RolePermission.values().forEach {
@@ -800,33 +637,9 @@ class SourceServiceITTest : PlatformIntegrationTest() {
         val addLiveBreakpointResp = request.sendJsonObject(addLiveBreakpointRequest).await().bodyAsJsonObject()
         assertNull(addLiveBreakpointResp.getJsonArray("errors"))
 
-        val getLiveBreakpointsResp = request
-            .sendJsonObject(
-                JsonObject().put(
-                    "query",
-                    """query {
-                          getLiveBreakpoints {
-                                id
-                                location {
-                                    source
-                                    line
-                                }
-                                condition
-                                expiresAt
-                                hitLimit
-                                throttle {
-                                    limit
-                                    step
-                                }
-                                meta {
-                                    name
-                                    value
-                                }
-                            }
-                        }
-                    """.trimIndent()
-                )
-            ).await().bodyAsJsonObject()
+        val getLiveBreakpointsResp =
+            request.sendJsonObject(JsonObject().put("query", getGraphql("instrument/get-live-breakpoints")))
+                .await().bodyAsJsonObject()
         assertNull(getLiveBreakpointsResp.getJsonArray("errors"))
         val liveBreakpoints = getLiveBreakpointsResp.getJsonObject("data").getJsonArray("getLiveBreakpoints")
         assertTrue(liveBreakpoints.any {
@@ -854,34 +667,11 @@ class SourceServiceITTest : PlatformIntegrationTest() {
         val addLiveLogResp = request.sendJsonObject(addLiveLogRequest).await().bodyAsJsonObject()
         assertNull(addLiveLogResp.getJsonArray("errors"))
 
-        val getLiveLogsResp = request
-            .sendJsonObject(
-                JsonObject().put(
-                    "query",
-                    """query {
-                          getLiveLogs {
-                                id
-                                location {
-                                    source
-                                    line
-                                }
-                                condition
-                                expiresAt
-                                hitLimit
-                                throttle {
-                                    limit
-                                    step
-                                }
-                                meta {
-                                    name
-                                    value
-                                }
-                            }
-                        }
-                    """.trimIndent()
-                )
-            ).await().bodyAsJsonObject()
+        val getLiveLogsResp =
+            request.sendJsonObject(JsonObject().put("query", getGraphql("instrument/get-live-logs")))
+                .await().bodyAsJsonObject()
         assertNull(getLiveLogsResp.getJsonArray("errors"))
+
         val liveLogs = getLiveLogsResp.getJsonObject("data").getJsonArray("getLiveLogs")
         assertTrue(liveLogs.any {
             it as JsonObject
@@ -907,35 +697,11 @@ class SourceServiceITTest : PlatformIntegrationTest() {
         val addLiveSpanResp = request.sendJsonObject(addLiveSpanRequest).await().bodyAsJsonObject()
         assertNull(addLiveSpanResp.getJsonArray("errors"))
 
-        val getLiveLogsResp = request.sendJsonObject(
-            JsonObject().put(
-                "query",
-                """query {
-                          getLiveSpans {
-                                id
-                                location {
-                                    source
-                                    line
-                                }
-                                operationName
-                                condition
-                                expiresAt
-                                hitLimit
-                                throttle {
-                                    limit
-                                    step
-                                }
-                                meta {
-                                    name
-                                    value
-                                }
-                            }
-                        }
-                    """.trimIndent()
-            )
-        ).await().bodyAsJsonObject()
-        assertNull(getLiveLogsResp.getJsonArray("errors"))
-        val liveSpans = getLiveLogsResp.getJsonObject("data").getJsonArray("getLiveSpans")
+        val getLiveSpansResp =
+            request.sendJsonObject(JsonObject().put("query", getGraphql("instrument/get-live-spans"))).await()
+                .bodyAsJsonObject()
+        assertNull(getLiveSpansResp.getJsonArray("errors"))
+        val liveSpans = getLiveSpansResp.getJsonObject("data").getJsonArray("getLiveSpans")
         assertTrue(liveSpans.any {
             it as JsonObject
             it.getJsonObject("location").getString("source").equals("doing")
@@ -961,32 +727,9 @@ class SourceServiceITTest : PlatformIntegrationTest() {
         val addLiveMeterResp = request.sendJsonObject(addLiveMeterRequest).await().bodyAsJsonObject()
         assertNull(addLiveMeterResp.getJsonArray("errors"))
 
-        val getLiveMetersResp = request.sendJsonObject(
-            JsonObject().put(
-                "query",
-                """query {
-                          getLiveMeters {
-                                id
-                                location {
-                                    source
-                                    line
-                                }
-                                condition
-                                expiresAt
-                                hitLimit
-                                throttle {
-                                    limit
-                                    step
-                                }
-                                meta {
-                                    name
-                                    value
-                                }
-                            }
-                        }
-                    """.trimIndent()
-            )
-        ).await().bodyAsJsonObject()
+        val getLiveMetersResp =
+            request.sendJsonObject(JsonObject().put("query", getGraphql("instrument/get-live-meters")))
+                .await().bodyAsJsonObject()
         assertNull(getLiveMetersResp.getJsonArray("errors"))
         val liveMeters = getLiveMetersResp.getJsonObject("data").getJsonArray("getLiveMeters")
         assertTrue(liveMeters.any {
@@ -1001,28 +744,8 @@ class SourceServiceITTest : PlatformIntegrationTest() {
 
     @Test
     fun `ensure getSelf works`() = runBlocking {
-        val getSelfResp = request.sendJsonObject(
-            JsonObject().put(
-                "query",
-                """query getSelf {
-                        getSelf {
-                            developer {
-                                id
-                            }
-                            roles {
-                                roleName
-                            }
-                            permissions
-                            access {
-                                id
-                                type
-                                locationPatterns
-                            }
-                        }
-                    }
-                    """.trimIndent()
-            )
-        ).await().bodyAsJsonObject()
+        val getSelfResp = request.sendJsonObject(JsonObject().put("query", getGraphql("developer/get-self")))
+            .await().bodyAsJsonObject()
         assertNull(getSelfResp.getJsonArray("errors"))
         val selfInfo = getSelfResp.getJsonObject("data").getJsonObject("getSelf")
         assertEquals("system", selfInfo.getJsonObject("developer").getString("id"))
@@ -1030,18 +753,9 @@ class SourceServiceITTest : PlatformIntegrationTest() {
 
     @Test
     fun `ensure getServices works`() = runBlocking {
-        val getServicesResp = request.sendJsonObject(
-            JsonObject().put(
-                "query",
-                """query getServices {
-                        getServices {
-                            id
-                            name
-                        }
-                    }
-                    """.trimIndent()
-            )
-        ).await().bodyAsJsonObject()
+        val getServicesResp =
+            request.sendJsonObject(JsonObject().put("query", getGraphql("system/get-services"))).await()
+                .bodyAsJsonObject()
         assertNull(getServicesResp.getJsonArray("errors"))
         val services = getServicesResp.getJsonObject("data").getJsonArray("getServices")
         assertFalse(services.isEmpty)
@@ -1053,35 +767,9 @@ class SourceServiceITTest : PlatformIntegrationTest() {
             request.sendJsonObject(addLiveViewSubscriptionRequest).await().bodyAsJsonObject()
         assertNull(addLiveViewSubscriptionResp.getJsonArray("errors"))
 
-        val getLiveViewSubscriptionsResp = request
-            .sendJsonObject(
-                JsonObject().put(
-                    "query",
-                    """query {
-                          getLiveViewSubscriptions {
-                                subscriptionId
-                                entityIds
-                                artifactQualifiedName {
-                                    identifier
-                                    commitId
-                                    artifactType
-                                    lineNumber
-                                    operationName
-                                }
-                                artifactLocation {
-                                    source
-                                    line
-                                }
-                                liveViewConfig {
-                                    viewName
-                                    viewMetrics
-                                    refreshRateLimit
-                                }
-                            }
-                        }
-                    """.trimIndent()
-                )
-            ).await().bodyAsJsonObject()
+        val getLiveViewSubscriptionsResp =
+            request.sendJsonObject(JsonObject().put("query", getGraphql("view/get-live-view-subscriptions"))).await()
+                .bodyAsJsonObject()
         assertNull(getLiveViewSubscriptionsResp.getJsonArray("errors"))
 
         val liveViewSubscriptions =
@@ -1102,22 +790,9 @@ class SourceServiceITTest : PlatformIntegrationTest() {
         val addLiveMeterResp = request.sendJsonObject(addLiveMeterRequest).await().bodyAsJsonObject()
         assertNull(addLiveMeterResp.getJsonArray("errors"))
 
-        val getLiveInstrumentsResp = request
-            .sendJsonObject(
-                JsonObject().put(
-                    "query",
-                    """query {
-                          getLiveInstruments { 
-                                id
-                                location {
-                                    source
-                                    line
-                                }
-                             }
-                        }
-                    """.trimIndent()
-                )
-            ).await().bodyAsJsonObject()
+        val getLiveInstrumentsResp =
+            request.sendJsonObject(JsonObject().put("query", getGraphql("instrument/get-live-instruments")))
+                .await().bodyAsJsonObject()
         assertNull(getLiveInstrumentsResp.getJsonArray("errors"))
 
         val liveViewSubscriptions = getLiveInstrumentsResp.getJsonObject("data").getJsonArray("getLiveInstruments")
@@ -1126,16 +801,9 @@ class SourceServiceITTest : PlatformIntegrationTest() {
 
     @Test
     fun `ensure clearLiveViewSubscriptions works`() = runBlocking {
-        val clearLiveViewSubscriptionsResp = request
-            .sendJsonObject(
-                JsonObject().put(
-                    "query",
-                    """mutation {
-                          clearLiveViewSubscriptions
-                        }
-                    """.trimIndent()
-                )
-            ).await().bodyAsJsonObject()
+        val clearLiveViewSubscriptionsResp =
+            request.sendJsonObject(JsonObject().put("query", getGraphql("view/clear-live-view-subscriptions")))
+                .await().bodyAsJsonObject()
         assertNull(clearLiveViewSubscriptionsResp.getJsonArray("errors"))
         assertTrue(
             clearLiveViewSubscriptionsResp.getJsonObject("data").getBoolean("clearLiveViewSubscriptions")
@@ -1150,22 +818,10 @@ class SourceServiceITTest : PlatformIntegrationTest() {
         val liveMeter = addLiveMeterResp.getJsonObject("data").getJsonObject("addLiveMeter")
         val liveMeterId = liveMeter.getString("id");
 
-        val removeLiveInstrumentResp = request
-            .sendJsonObject(
-                JsonObject().put(
-                    "query",
-                    """mutation (${'$'}id: String!){
-                          removeLiveInstrument (id: ${'$'}id){
-                                id
-                                location {
-                                    source
-                                    line
-                                }
-                            }
-                        }
-                    """.trimIndent()
-                ).put("variables", JsonObject().put("id", liveMeterId))
-            ).await().bodyAsJsonObject()
+        val removeLiveInstrumentResp = request.sendJsonObject(
+            JsonObject().put("query", getGraphql("instrument/remove-live-instrument"))
+                .put("variables", JsonObject().put("id", liveMeterId))
+        ).await().bodyAsJsonObject()
         assertNull(removeLiveInstrumentResp.getJsonArray("errors"))
         val liveInstrument = removeLiveInstrumentResp.getJsonObject("data").getJsonObject("removeLiveInstrument")
         assertEquals(liveMeterId, liveInstrument.getString("id"))
@@ -1180,22 +836,10 @@ class SourceServiceITTest : PlatformIntegrationTest() {
         val liveMeter = addLiveMeterResp.getJsonObject("data").getJsonObject("addLiveMeter")
         val liveMeterId = liveMeter.getString("id");
 
-        val removeLiveInstrumentsResp = request
-            .sendJsonObject(
-                JsonObject().put(
-                    "query",
-                    """mutation (${'$'}source: String!, ${'$'}line: Int!){
-                          removeLiveInstruments (source: ${'$'}source, line: ${'$'}line){
-                                id
-                                location {
-                                    source
-                                    line
-                                }
-                            }
-                        }
-                    """.trimIndent()
-                ).put("variables", JsonObject().put("source", "doing").put("line", 19))
-            ).await().bodyAsJsonObject()
+        val removeLiveInstrumentsResp = request.sendJsonObject(
+            JsonObject().put("query", getGraphql("instrument/remove-live-instruments"))
+                .put("variables", JsonObject().put("source", "doing").put("line", 19))
+        ).await().bodyAsJsonObject()
         assertNull(removeLiveInstrumentsResp.getJsonArray("errors"))
         val removedLiveInstruments =
             removeLiveInstrumentsResp.getJsonObject("data").getJsonArray("removeLiveInstruments")
@@ -1207,16 +851,9 @@ class SourceServiceITTest : PlatformIntegrationTest() {
 
     @Test
     fun `ensure clearLiveInstruments works`() = runBlocking {
-        val clearLiveInstrumentsResp = request
-            .sendJsonObject(
-                JsonObject().put(
-                    "query",
-                    """mutation {
-                          clearLiveInstruments
-                        }
-                    """.trimIndent()
-                )
-            ).await().bodyAsJsonObject()
+        val clearLiveInstrumentsResp =
+            request.sendJsonObject(JsonObject().put("query", getGraphql("instrument/clear-live-instruments")))
+                .await().bodyAsJsonObject()
         assertNull(clearLiveInstrumentsResp.getJsonArray("errors"))
         assertNotNull(clearLiveInstrumentsResp.getJsonObject("data").getBoolean("clearLiveInstruments"))
     }
@@ -1230,19 +867,10 @@ class SourceServiceITTest : PlatformIntegrationTest() {
         assertNull(addRolePermissionResp.getJsonArray("errors"))
         assertTrue(addRolePermissionResp.getJsonObject("data").getBoolean("addRolePermission"))
 
-        val removeRolePermissionResp = request
-            .sendJsonObject(
-                JsonObject().put(
-                    "query",
-                    """mutation (${'$'}role: String!, ${'$'}permission: String!){
-                          removeRolePermission (role: ${'$'}role, permission: ${'$'}permission)
-                        }
-                    """.trimIndent()
-                ).put(
-                    "variables",
-                    JsonObject().put("role", "developer-role").put("permission", RolePermission.ADD_ROLE)
-                )
-            ).await().bodyAsJsonObject()
+        val removeRolePermissionResp = request.sendJsonObject(
+            JsonObject().put("query", getGraphql("permission/remove-role-permission"))
+                .put("variables", JsonObject().put("role", "developer-role").put("permission", RolePermission.ADD_ROLE))
+        ).await().bodyAsJsonObject()
         assertNull(removeRolePermissionResp.getJsonArray("errors"))
         assertTrue(removeRolePermissionResp.getJsonObject("data").getBoolean("removeRolePermission"))
     }
@@ -1253,19 +881,9 @@ class SourceServiceITTest : PlatformIntegrationTest() {
         assertNotNull(testClientAccessList.find { it.id == "test-id" })
         assertNotNull(testClientAccessList.find { it.secret == "test-secret" })
 
-        val getClientAccessorsResp = request
-            .sendJsonObject(
-                JsonObject().put(
-                    "query",
-                    """query {
-                          getClientAccessors {
-                            id,
-                            secret
-                          }
-                        }
-                    """.trimIndent()
-                )
-            ).await().bodyAsJsonObject()
+        val getClientAccessorsResp =
+            request.sendJsonObject(JsonObject().put("query", getGraphql("client/get-client-accessors"))).await()
+                .bodyAsJsonObject()
         assertNull(getClientAccessorsResp.getJsonArray("errors"))
         val testClientAccessJsonArray = getClientAccessorsResp.getJsonObject("data").getJsonArray("getClientAccessors")
         assertTrue(testClientAccessJsonArray.any {
@@ -1294,19 +912,9 @@ class SourceServiceITTest : PlatformIntegrationTest() {
         assertNotNull(generatedClientAccess.id)
         assertNotNull(generatedClientAccess.secret)
 
-        val addClientAccessResp = request
-            .sendJsonObject(
-                JsonObject().put(
-                    "query",
-                    """mutation {
-                          addClientAccess {
-                            id,
-                            secret
-                          }
-                        }
-                    """.trimIndent()
-                )
-            ).await().bodyAsJsonObject()
+        val addClientAccessResp =
+            request.sendJsonObject(JsonObject().put("query", getGraphql("client/add-client-access")))
+                .await().bodyAsJsonObject()
         assertNull(addClientAccessResp.getJsonArray("errors"))
         val generatedClientAccessGql = addClientAccessResp.getJsonObject("data").getJsonObject("addClientAccess")
         assertNotNull(generatedClientAccessGql.getString("id"))
@@ -1327,16 +935,10 @@ class SourceServiceITTest : PlatformIntegrationTest() {
         val addedClientAccess = liveManagementService.getClientAccessors().await()
         assertNotNull(addedClientAccess.find { it.id == clientId })
 
-        val removeClientAccessResp = request
-            .sendJsonObject(
-                JsonObject().put(
-                    "query",
-                    """mutation (${'$'}id: String!){
-                          removeClientAccess (id: ${'$'}id)
-                        }
-                    """.trimIndent()
-                ).put("variables", JsonObject().put("id", clientId))
-            ).await().bodyAsJsonObject()
+        val removeClientAccessResp = request.sendJsonObject(
+            JsonObject().put("query", getGraphql("client/remove-client-access"))
+                .put("variables", JsonObject().put("id", clientId))
+        ).await().bodyAsJsonObject()
         assertNull(removeClientAccessResp.getJsonArray("errors"))
 
         assertTrue(removeClientAccessResp.getJsonObject("data").getBoolean("removeClientAccess"))
@@ -1355,19 +957,10 @@ class SourceServiceITTest : PlatformIntegrationTest() {
         assertEquals(clientId, updatedClientAccess.id)
         assertNotEquals(clientSecret, updatedClientAccess.secret)
 
-        val updateClientAccessResp = request
-            .sendJsonObject(
-                JsonObject().put(
-                    "query",
-                    """mutation (${'$'}id: String!){
-                          updateClientAccess (id: ${'$'}id){
-                            id,
-                            secret
-                          }
-                        }
-                    """.trimIndent()
-                ).put("variables", JsonObject().put("id", clientId))
-            ).await().bodyAsJsonObject()
+        val updateClientAccessResp = request.sendJsonObject(
+            JsonObject().put("query", getGraphql("client/update-client-access"))
+                .put("variables", JsonObject().put("id", clientId))
+        ).await().bodyAsJsonObject()
         assertNull(updateClientAccessResp.getJsonArray("errors"))
 
         val updatedClientAccessJsonObject =
@@ -1377,178 +970,49 @@ class SourceServiceITTest : PlatformIntegrationTest() {
 
     }
 
-    private val addDataRedactionRequest: JsonObject = JsonObject().put(
-        "query",
-        """mutation (${'$'}id: String!, ${'$'}type: RedactionType!, ${'$'}lookup: String!, ${'$'}replacement: String!){
-                          addDataRedaction (id: ${'$'}id, type: ${'$'}type, lookup: ${'$'}lookup, replacement: ${'$'}replacement){
-                                id
-                                type
-                                lookup
-                                replacement
-                            }
-                        }
-                    """.trimIndent()
-    ).put(
-        "variables",
-        JsonObject().put("id", "some-id").put("type", RedactionType.VALUE_REGEX)
-            .put("lookup", "some-lookup")
-            .put("replacement", "some-replacement")
-    )
+    private val addDataRedactionRequest: JsonObject =
+        JsonObject().put("query", getGraphql("data-redaction/add-data-redaction")).put(
+            "variables",
+            JsonObject().put("id", "some-id").put("type", RedactionType.VALUE_REGEX).put("lookup", "some-lookup")
+                .put("replacement", "some-replacement")
+        )
 
-    private val addRoleDataRedactionRequest = JsonObject().put(
-        "query",
-        """mutation (${'$'}role: String!, ${'$'}dataRedactionId: String!){
-                          addRoleDataRedaction (role: ${'$'}role, dataRedactionId: ${'$'}dataRedactionId)
-                        }
-                    """.trimIndent()
-    ).put("variables", JsonObject().put("role", "developer-role").put("dataRedactionId", "some-id"))
+    private val addRoleDataRedactionRequest =
+        JsonObject().put("query", getGraphql("data-redaction/add-role-data-redaction"))
+            .put("variables", JsonObject().put("role", "developer-role").put("dataRedactionId", "some-id"))
 
-    private val addAccessPermissionRequest: JsonObject = JsonObject().put(
-        "query",
-        """mutation (${'$'}type: AccessType!, ${'$'}locationPatterns: [String!]){
-                          addAccessPermission (type: ${'$'}type, locationPatterns: ${'$'}locationPatterns){
-                                id
-                                locationPatterns
-                                type
-                            }
-                        }
-                    """.trimIndent()
-    ).put(
-        "variables",
-        JsonObject().put("type", AccessType.WHITE_LIST).put("locationPatterns", "some-pattern")
-    )
+    private val addAccessPermissionRequest: JsonObject =
+        JsonObject().put("query", getGraphql("access/add-access-permission")).put(
+            "variables", JsonObject().put("type", AccessType.WHITE_LIST).put("locationPatterns", "some-pattern")
+        )
 
-    private val addDeveloperRequest: JsonObject = JsonObject().put(
-        "query",
-        """mutation (${'$'}id: String!){
-                          addDeveloper (id: ${'$'}id){
-                                id
-                                accessToken
-                            }
-                        }
-                    """.trimIndent()
-    ).put("variables", JsonObject().put("id", "developer-id"))
+    private val addDeveloperRequest: JsonObject = JsonObject().put("query", getGraphql("developer/add-developer"))
+        .put("variables", JsonObject().put("id", "developer-id"))
 
-    private val addDeveloperRoleRequest: JsonObject = JsonObject().put(
-        "query",
-        """mutation (${'$'}id: String!, ${'$'}role: String!){
-                          addDeveloperRole (id: ${'$'}id, role: ${'$'}role)
-                        }
-                    """.trimIndent()
-    ).put("variables", JsonObject().put("id", "developer-id").put("role", "developer-role"))
+    private val addDeveloperRoleRequest: JsonObject =
+        JsonObject().put("query", getGraphql("role/add-developer-role"))
+            .put("variables", JsonObject().put("id", "developer-id").put("role", "developer-role"))
 
-    private val addRoleRequest: JsonObject = JsonObject().put(
-        "query",
-        """mutation (${'$'}role: String!){
-                          addRole (role: ${'$'}role)
-                        }
-                    """.trimIndent()
-    ).put("variables", JsonObject().put("role", "developer-role"))
+    private val addRoleRequest: JsonObject = JsonObject().put("query", getGraphql("role/add-role"))
+        .put("variables", JsonObject().put("role", "developer-role"))
 
-    private val addRolePermissionRequest = JsonObject().put(
-        "query",
-        """mutation (${'$'}role: String!, ${'$'}permission: String!){
-                          addRolePermission (role: ${'$'}role, permission: ${'$'}permission)
-                        }
-                    """.trimIndent()
-    ).put(
-        "variables",
-        JsonObject().put("role", "developer-role").put("permission", RolePermission.ADD_ROLE)
-    )
+    private val addRolePermissionRequest = JsonObject().put("query", getGraphql("permission/add-role-permission"))
+        .put("variables", JsonObject().put("role", "developer-role").put("permission", RolePermission.ADD_ROLE))
 
     private fun addRoleAccessPermissionRequest(accessPermissionId: String): JsonObject {
-        return JsonObject().put(
-            "query",
-            """mutation (${'$'}role: String!, ${'$'}accessPermissionId: String!){
-                          addRoleAccessPermission (role: ${'$'}role, accessPermissionId: ${'$'}accessPermissionId)
-                        }
-                    """.trimIndent()
-        ).put(
-            "variables",
-            JsonObject().put("accessPermissionId", accessPermissionId).put("role", "developer-role")
-        )
+        return JsonObject().put("query", getGraphql("access/add-role-access-permission"))
+            .put("variables", JsonObject().put("accessPermissionId", accessPermissionId).put("role", "developer-role"))
     }
 
-    private val addLiveViewSubscriptionRequest = JsonObject().put(
-        "query",
-        """mutation (${'$'}input: LiveViewSubscriptionInput!){
-                          addLiveViewSubscription (input: ${'$'}input){
-                                subscriptionId
-                                entityIds
-                                artifactQualifiedName {
-                                    identifier
-                                    commitId
-                                    artifactType
-                                    lineNumber
-                                    operationName
-                                }
-                                artifactLocation {
-                                    source
-                                    line
-                                }
-                                liveViewConfig {
-                                    viewName
-                                    viewMetrics
-                                    refreshRateLimit
-                                }
-                            }
-                        }
-                    """.trimIndent()
-    ).put(
-        "variables",
-        JsonObject().put("input", mapOf("entityIds" to listOf(1, 222, 3)))
+    private val addLiveViewSubscriptionRequest =
+        JsonObject().put("query", getGraphql("view/add-live-view-subscription"))
+            .put("variables", JsonObject().put("input", mapOf("entityIds" to listOf(1, 222, 3))))
 
-    )
+    private val addLiveBreakpointRequest: JsonObject =
+        JsonObject().put("query", getGraphql("instrument/add-live-breakpoint"))
+            .put("variables", JsonObject().put("input", mapOf("location" to mapOf("source" to "doing", "line" to 17))))
 
-    private val addLiveBreakpointRequest: JsonObject = JsonObject().put(
-        "query",
-        """mutation (${'$'}input: LiveBreakpointInput!){
-                                  addLiveBreakpoint (input: ${'$'}input){
-                                    id
-                                    location {
-                                        source
-                                        line
-                                    }
-                                    condition
-                                    expiresAt
-                                    hitLimit
-                                    throttle {
-                                        limit
-                                        step
-                                    }
-                                    meta {
-                                        name
-                                        value
-                                    }
-                                  }
-                        }
-                    """.trimIndent()
-    ).put("variables", JsonObject().put("input", mapOf("location" to mapOf("source" to "doing", "line" to 17))))
-
-    private val addLiveLogRequest = JsonObject().put(
-        "query",
-        """mutation (${'$'}input: LiveLogInput!){
-                          addLiveLog (input: ${'$'}input){
-                                id
-                                location {
-                                    source
-                                    line
-                                }
-                                condition
-                                expiresAt
-                                hitLimit
-                                throttle {
-                                    limit
-                                    step
-                                }
-                                meta {
-                                    name
-                                    value
-                                }
-                            }
-                        }
-                    """.trimIndent()
-    ).put(
+    private val addLiveLogRequest = JsonObject().put("query", getGraphql("instrument/add-live-log")).put(
         "variables",
         JsonObject().put(
             "input",
@@ -1556,31 +1020,7 @@ class SourceServiceITTest : PlatformIntegrationTest() {
         )
     )
 
-    private val addLiveSpanRequest = JsonObject().put(
-        "query",
-        """mutation (${'$'}input: LiveSpanInput!){
-                          addLiveSpan (input: ${'$'}input){
-                                id
-                                location {
-                                    source
-                                    line
-                                }
-                                operationName
-                                condition
-                                expiresAt
-                                hitLimit
-                                throttle {
-                                    limit
-                                    step
-                                }
-                                meta {
-                                    name
-                                    value
-                                }
-                            }
-                        }
-                    """.trimIndent()
-    ).put(
+    private val addLiveSpanRequest = JsonObject().put("query", getGraphql("instrument/add-live-span")).put(
         "variables",
         JsonObject().put(
             "input",
@@ -1588,30 +1028,7 @@ class SourceServiceITTest : PlatformIntegrationTest() {
         )
     )
 
-    private val addLiveMeterRequest = JsonObject().put(
-        "query",
-        """mutation (${'$'}input: LiveMeterInput!){
-                          addLiveMeter (input: ${'$'}input){
-                                id
-                                location {
-                                    source
-                                    line
-                                }
-                                condition
-                                expiresAt
-                                hitLimit
-                                throttle {
-                                    limit
-                                    step
-                                }
-                                meta {
-                                    name
-                                    value
-                                }
-                            }
-                        }
-                    """.trimIndent()
-    ).put(
+    private val addLiveMeterRequest = JsonObject().put("query", getGraphql("instrument/add-live-meter")).put(
         "variables",
         JsonObject().put(
             "input",
