@@ -34,3 +34,7 @@
 	path = tutorials/jvm
 	url = https://github.com/sourceplusplus/tutorial-jvm
 	branch = master
+[submodule "probes/nodejs"]
+	path = probes/nodejs
+	url = https://github.com/sourceplusplus/probe-nodejs
+	branch = master
