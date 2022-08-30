@@ -6,6 +6,10 @@
 	path = probes/jvm
 	url = https://github.com/sourceplusplus/probe-jvm
 	branch = master
+[submodule "probes/nodejs"]
+	path = probes/nodejs
+	url = https://github.com/sourceplusplus/probe-nodejs
+	branch = master
 [submodule "probes/python"]
 	path = probes/python
 	url = https://github.com/sourceplusplus/probe-python
