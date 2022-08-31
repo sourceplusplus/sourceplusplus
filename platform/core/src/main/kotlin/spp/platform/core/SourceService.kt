@@ -1690,11 +1690,16 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
             }
 
             val input = JsonObject.mapFrom(env.getArgument("input"))
+            val liveViewConfig = LiveViewConfig(
+                input.getJsonObject("liveViewConfig").getString("viewName"),
+                input.getJsonObject("liveViewConfig").getJsonArray("viewMetrics").map { it.toString() },
+                input.getJsonObject("liveViewConfig").getInteger("refreshRateLimit") ?: -1,
+            )
             val subscription = LiveViewSubscription(
                 entityIds = input.getJsonArray("entityIds").list.map { it as String },
                 artifactQualifiedName = ArtifactQualifiedName("todo", type = ArtifactType.CLASS),
                 artifactLocation = LiveSourceLocation("todo", -1),
-                liveViewConfig = LiveViewConfig("LOGS", listOf("endpoint_logs"))
+                liveViewConfig = liveViewConfig
             )
 
             EventBusService.getProxy(
