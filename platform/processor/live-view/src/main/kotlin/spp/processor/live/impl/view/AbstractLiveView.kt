@@ -19,32 +19,73 @@ package spp.processor.live.impl.view
 
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
-import org.apache.skywalking.oap.server.core.analysis.metrics.WithMetadata
-import org.apache.skywalking.oap.server.core.exporter.ExportEvent
+import mu.KotlinLogging
+import org.apache.skywalking.oap.server.core.analysis.metrics.*
+import org.joor.Reflect
 import spp.platform.common.ClusterConnection
 import spp.processor.live.impl.view.util.EntityNaming
 import spp.processor.live.impl.view.util.ViewSubscriber
+import java.util.concurrent.ConcurrentHashMap
 
 abstract class AbstractLiveView {
 
-    //todo: only ActivityView uses, should probably be moved there
+    companion object {
+        private val log = KotlinLogging.logger {}
+    }
+
+    private val rtMetricCache = ConcurrentHashMap<String, Pair<Double, Long>>()
+
     @Synchronized
-    fun handleEvent(subs: Set<ViewSubscriber>, event: ExportEvent) {
-        val jsonEvent = JsonObject.mapFrom(event)
+    fun handleEvent(subs: Set<ViewSubscriber>, metrics: Metrics, realTime: Boolean) {
+        val metricId by lazy { Reflect.on(metrics).call("id0").get<String>() }
+        val fullMetricId = metrics.javaClass.simpleName + "_" + metricId
+        if (metrics.javaClass.simpleName.contains("EndpointCpm")) {
+            rtMetricCache.compute(fullMetricId) { _: String, v: Pair<Double, Long>? ->
+                if (v != null) {
+                    Pair(v.first + (metrics as CPMMetrics).total.toDouble(), v.second + 1)
+                } else {
+                    Pair(1.0, 1)
+                }
+            }
+        }
+        if (metrics.javaClass.simpleName.contains("EndpointSla")) {
+            rtMetricCache.compute(fullMetricId) { _: String, v: Pair<Double, Long>? ->
+                if (v != null) {
+                    Pair(v.first + (metrics as PercentMetrics).match, v.second + 1)
+                } else {
+                    Pair((metrics as PercentMetrics).total.toDouble(), 1)
+                }
+            }
+        }
+        if (metrics.javaClass.simpleName.contains("EndpointRespTime")) {
+            rtMetricCache.compute(fullMetricId) { _: String, v: Pair<Double, Long>? ->
+                if (v != null) {
+                    Pair((metrics as LongAvgMetrics).summation.toDouble(), v.second + 1)
+                } else {
+                    Pair((metrics as LongAvgMetrics).summation.toDouble(), 1)
+                }
+            }
+        }
+
+        val jsonMetric = JsonObject.mapFrom(metrics)
+        jsonMetric.put("realtime", realTime)
+        jsonMetric.put("metric_type", metrics.javaClass.simpleName)
+        jsonMetric.put("full_metric_id", fullMetricId)
+
         subs.forEach { sub ->
             var hasAllEvents = false
-            var waitingEventsForBucket = sub.waitingEvents[event.metrics.timeBucket]
+            var waitingEventsForBucket = sub.waitingEvents[metrics.timeBucket]
             if (waitingEventsForBucket == null) {
                 waitingEventsForBucket = mutableListOf()
-                sub.waitingEvents[event.metrics.timeBucket] = waitingEventsForBucket
+                sub.waitingEvents[metrics.timeBucket] = waitingEventsForBucket
             }
 
             if (sub.subscription.liveViewConfig.viewMetrics.size > 1) {
                 if (waitingEventsForBucket.isEmpty()) {
-                    waitingEventsForBucket.add(event)
+                    waitingEventsForBucket.add(jsonMetric)
                 } else {
-                    waitingEventsForBucket.removeIf { it.metrics::class.java == event.metrics::class.java }
-                    waitingEventsForBucket.add(event)
+                    waitingEventsForBucket.removeIf { it.getString("metric_type") == metrics::class.simpleName }
+                    waitingEventsForBucket.add(jsonMetric)
                     if (sub.subscription.liveViewConfig.viewMetrics.size == waitingEventsForBucket.size) {
                         hasAllEvents = true
                     }
@@ -61,11 +102,18 @@ abstract class AbstractLiveView {
                 if (waitingEventsForBucket.isNotEmpty()) {
                     val multiMetrics = JsonArray()
                     waitingEventsForBucket.forEach {
-                        multiMetrics.add(
-                            JsonObject.mapFrom(it).getJsonObject("metrics")
-                                .put("artifactQualifiedName", JsonObject.mapFrom(sub.subscription.artifactQualifiedName))
-                                .put("entityName", EntityNaming.getEntityName((it.metrics as WithMetadata).meta))
-                        )
+                        val metricsOb = JsonObject.mapFrom(it)
+                            .put(
+                                "artifactQualifiedName",
+                                JsonObject.mapFrom(sub.subscription.artifactQualifiedName)
+                            )
+                            .put("entityName", EntityNaming.getEntityName((metrics as WithMetadata).meta))
+                        if (metricsOb.getBoolean("realtime") == true) {
+                            setRealtimeValue(metricsOb)
+                        }
+                        log.trace { "Sending multi-metrics $metricsOb to ${sub.subscriberId}" }
+
+                        multiMetrics.add(metricsOb)
                     }
 
                     ClusterConnection.getVertx().eventBus().send(
@@ -73,12 +121,28 @@ abstract class AbstractLiveView {
                         JsonObject().put("metrics", multiMetrics).put("multiMetrics", true)
                     )
                 } else {
+                    if (jsonMetric.getBoolean("realtime") == true) {
+                        setRealtimeValue(jsonMetric)
+                    }
+
+                    log.trace { "Sending metrics $jsonMetric to ${sub.subscriberId}" }
                     ClusterConnection.getVertx().eventBus().send(
                         sub.consumer.address(),
-                        jsonEvent.getJsonObject("metrics").put("multiMetrics", false)
+                        jsonMetric.put("multiMetrics", false)
                     )
                 }
             }
+        }
+    }
+
+    private fun setRealtimeValue(jsonEvent: JsonObject) {
+        if (jsonEvent.getString("metric_type").contains("EndpointSla")) {
+            val sla = rtMetricCache[jsonEvent.getString("full_metric_id")]!!
+            val realtimeValue = (sla.first / sla.second) * 10000
+            jsonEvent.put("percentage", realtimeValue)
+        } else {
+            val realtimeValue = rtMetricCache[jsonEvent.getString("full_metric_id")]!!.first
+            jsonEvent.put("value", realtimeValue.toLong())
         }
     }
 }

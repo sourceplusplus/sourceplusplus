@@ -20,7 +20,7 @@ RUN printf "\nspp-live-dashboard:\n  selector: \${SPP_LIVE_DASHBOARD:default}\n 
 RUN printf "\nspp-live-instrument:\n  selector: \${SPP_LIVE_INSTRUMENT:default}\n  default:\n" \
     >> /skywalking/config/application.yml
 
-RUN printf "\nexporter:\n  selector: exporter\n  exporter:\n" \
+RUN printf "\nexporter:\n  selector: \${SPP_LIVE_VIEW:default}\n  default:\n" \
     >> /skywalking/config/application.yml
 
 ADD ./config/spp-platform.crt /skywalking/config/

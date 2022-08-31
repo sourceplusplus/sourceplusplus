@@ -22,11 +22,8 @@ import io.vertx.core.Promise
 import io.vertx.core.Vertx
 import io.vertx.core.json.JsonObject
 import io.vertx.kotlin.coroutines.CoroutineVerticle
-import io.vertx.kotlin.coroutines.dispatcher
-import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
 import spp.platform.common.DeveloperAuth
-import spp.processor.live.impl.view.LiveActivityView
 import spp.processor.live.impl.view.LiveLogsView
 import spp.processor.live.impl.view.LiveMeterView
 import spp.processor.live.impl.view.LiveTracesView
@@ -48,7 +45,6 @@ class LiveViewProcessorImpl : CoroutineVerticle(), LiveViewService {
 
     private val subscriptionCache = MetricTypeSubscriptionCache()
     val meterView = LiveMeterView(subscriptionCache)
-    val activityView = LiveActivityView(subscriptionCache)
     val tracesView = LiveTracesView(subscriptionCache)
     val logsView = LiveLogsView(subscriptionCache)
 
@@ -113,26 +109,11 @@ class LiveViewProcessorImpl : CoroutineVerticle(), LiveViewService {
                     consumer
                 )
 
-                if (sub.liveViewConfig.viewName == "LIVE_METER") {
-                    sub.entityIds.forEach {
-                        subscriptionCache.computeIfAbsent(it) { EntitySubscribersCache() }
-                        sub.liveViewConfig.viewMetrics.forEach { viewMetric ->
-                            subscriptionCache[it]!!.computeIfAbsent(viewMetric) { mutableSetOf() }
-                            (subscriptionCache[it]!![viewMetric]!! as MutableSet).add(subscriber)
-                        }
-
-                        //send first event immediately (if available)
-                        launch(vertx.dispatcher()) {
-                            meterView.sendMeterEvent(it, sub.artifactLocation, subscriptionCache[it]!!, -1)
-                        }
-                    }
-                } else {
-                    sub.liveViewConfig.viewMetrics.forEach {
-                        subscriptionCache.computeIfAbsent(it) { EntitySubscribersCache() }
-                        sub.entityIds.forEach { entityId ->
-                            subscriptionCache[it]!!.computeIfAbsent(entityId) { mutableSetOf() }
-                            (subscriptionCache[it]!![entityId]!! as MutableSet).add(subscriber)
-                        }
+                sub.liveViewConfig.viewMetrics.forEach {
+                    subscriptionCache.computeIfAbsent(it) { EntitySubscribersCache() }
+                    sub.entityIds.forEach { entityId ->
+                        subscriptionCache[it]!!.computeIfAbsent(entityId) { mutableSetOf() }
+                        (subscriptionCache[it]!![entityId]!! as MutableSet).add(subscriber)
                     }
                 }
 

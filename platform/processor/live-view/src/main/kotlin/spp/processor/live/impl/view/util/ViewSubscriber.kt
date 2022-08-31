@@ -19,14 +19,13 @@ package spp.processor.live.impl.view.util
 
 import io.vertx.core.eventbus.MessageConsumer
 import io.vertx.core.json.JsonObject
-import org.apache.skywalking.oap.server.core.exporter.ExportEvent
 import spp.protocol.view.LiveViewSubscription
 
 data class ViewSubscriber(
     val subscription: LiveViewSubscription,
     val subscriberId: String,
     var lastUpdated: Long,
-    var waitingEvents: MutableMap<Long, MutableList<ExportEvent>>,
+    var waitingEvents: MutableMap<Long, MutableList<JsonObject>>,
     val consumer: MessageConsumer<JsonObject>
 ) {
     override fun equals(other: Any?): Boolean {

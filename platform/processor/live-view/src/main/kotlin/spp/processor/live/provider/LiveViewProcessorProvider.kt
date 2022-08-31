@@ -25,14 +25,18 @@ import org.apache.skywalking.oap.server.analyzer.provider.trace.parser.ISegmentP
 import org.apache.skywalking.oap.server.analyzer.provider.trace.parser.SegmentParserListenerManager
 import org.apache.skywalking.oap.server.analyzer.provider.trace.parser.SegmentParserServiceImpl
 import org.apache.skywalking.oap.server.core.CoreModule
+import org.apache.skywalking.oap.server.core.analysis.worker.MetricsStreamProcessor
+import org.apache.skywalking.oap.server.core.exporter.ExportEvent
 import org.apache.skywalking.oap.server.core.exporter.MetricValuesExportService
 import org.apache.skywalking.oap.server.core.storage.StorageModule
 import org.apache.skywalking.oap.server.library.module.ModuleConfig
 import org.apache.skywalking.oap.server.library.module.ModuleDefine
 import org.apache.skywalking.oap.server.library.module.ModuleProvider
+import org.joor.Reflect
 import org.slf4j.LoggerFactory
 import spp.processor.ViewProcessor
 import spp.processor.ViewProcessor.liveViewProcessor
+import spp.processor.live.impl.SPPMetricsStreamProcessor
 
 class LiveViewModule : ModuleDefine("exporter") {
     override fun services(): Array<Class<*>> = arrayOf(MetricValuesExportService::class.java)
@@ -44,14 +48,18 @@ class LiveViewProcessorProvider : ModuleProvider() {
         private val log = LoggerFactory.getLogger(LiveViewProcessorProvider::class.java)
     }
 
-    override fun name(): String = "exporter"
+    override fun name(): String = "default"
     override fun module(): Class<out ModuleDefine> = LiveViewModule::class.java
     override fun createConfigBeanIfAbsent(): ModuleConfig? = null
     override fun prepare() {
-        //todo: metrics/trace/logs view. should cover user defined as well
+        //todo: should be able to hook into metrics in a smarter way
+        val sppMetricsStreamProcessor = SPPMetricsStreamProcessor(MetricsStreamProcessor.getInstance())
+        Reflect.on(MetricsStreamProcessor.getInstance()).set("PROCESSOR", sppMetricsStreamProcessor)
+
         registerServiceImplementation(MetricValuesExportService::class.java, MetricValuesExportService {
-            liveViewProcessor.activityView.export(it)
-            liveViewProcessor.meterView.export(it)
+            if (it.type == ExportEvent.EventType.TOTAL) {
+                liveViewProcessor.meterView.export(it.metrics, false)
+            }
         })
     }
 
