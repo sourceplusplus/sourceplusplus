@@ -39,3 +39,5 @@ skywalking:
     level: "OFF"
   agent:
     service_name: "spp-test-probe"
+  meter:
+    report_interval: 10
