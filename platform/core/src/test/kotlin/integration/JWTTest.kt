@@ -121,7 +121,6 @@ class JWTTest : PlatformIntegrationTest() {
         log.info("Add developer role resp: {}", addDeveloperRoleResp)
         assertFalse(addDeveloperRoleResp.containsKey("errors"))
 
-        val instrumentService = LiveInstrumentService.createProxy(vertx, TEST_JWT_TOKEN)
         instrumentService.getLiveInstruments(null).onComplete {
             if (it.failed()) {
                 val cause = ServiceExceptionConverter.fromEventBusException(it.cause().message!!)
@@ -242,7 +241,6 @@ class JWTTest : PlatformIntegrationTest() {
         log.info("Add role access permission resp: {}", addRoleAccessPermissionResp)
         assertFalse(addRoleAccessPermissionResp.containsKey("errors"))
 
-        val instrumentService = LiveInstrumentService.createProxy(vertx, TEST_JWT_TOKEN)
         instrumentService.addLiveInstrument(
             LiveBreakpoint(
                 LiveSourceLocation("integration.JWTTest", 2),
