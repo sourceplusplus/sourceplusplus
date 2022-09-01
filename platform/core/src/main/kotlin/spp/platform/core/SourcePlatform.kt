@@ -57,7 +57,7 @@ import spp.platform.common.util.SelfSignedCertGenerator
 import spp.platform.core.service.ServiceProvider
 import spp.platform.storage.SourceStorage
 import spp.protocol.SourceServices.Utilize
-import spp.protocol.service.LiveService
+import spp.protocol.service.LiveManagementService
 import java.io.File
 import java.io.FileWriter
 import java.io.StringReader
@@ -239,7 +239,6 @@ class SourcePlatform : CoroutineVerticle() {
         //Health checks
         val healthChecks = HealthChecks.create(vertx)
         addServiceCheck(healthChecks, Utilize.LIVE_MANAGEMENT_SERVICE)
-        addServiceCheck(healthChecks, Utilize.LIVE_SERVICE)
         addServiceCheck(healthChecks, Utilize.LIVE_INSTRUMENT)
         addServiceCheck(healthChecks, Utilize.LIVE_VIEW)
         router["/health"].handler(HealthCheckHandler.createWithHealthChecks(healthChecks))
@@ -364,7 +363,7 @@ class SourcePlatform : CoroutineVerticle() {
         log.debug("Get platform clients request. Developer: {}", selfId)
 
         launch(vertx.dispatcher()) {
-            LiveService.createProxy(vertx, accessToken).getClients().onSuccess {
+            LiveManagementService.createProxy(vertx, accessToken).getClients().onSuccess {
                 ctx.response()
                     .putHeader("Content-Type", "application/json")
                     .end(it.toString())
@@ -400,7 +399,7 @@ class SourcePlatform : CoroutineVerticle() {
         log.info("Get platform stats request. Developer: {}", selfId)
 
         launch(vertx.dispatcher()) {
-            LiveService.createProxy(vertx, accessToken).getStats().onSuccess {
+            LiveManagementService.createProxy(vertx, accessToken).getStats().onSuccess {
                 ctx.response()
                     .putHeader("Content-Type", "application/json")
                     .end(it.toString())

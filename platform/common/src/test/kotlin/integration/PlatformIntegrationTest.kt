@@ -30,7 +30,6 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.slf4j.LoggerFactory
 import spp.protocol.service.LiveInstrumentService
 import spp.protocol.service.LiveManagementService
-import spp.protocol.service.LiveService
 import spp.protocol.service.LiveViewService
 
 @ExtendWith(VertxExtension::class)
@@ -101,10 +100,6 @@ open class PlatformIntegrationTest {
     val liveManagementService: LiveManagementService
         get() {
             return LiveManagementService.createProxy(vertx, SYSTEM_JWT_TOKEN)
-        }
-    val liveService: LiveService
-        get() {
-            return LiveService.createProxy(vertx, SYSTEM_JWT_TOKEN)
         }
     val instrumentService: LiveInstrumentService
         get() {

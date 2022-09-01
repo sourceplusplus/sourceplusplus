@@ -147,7 +147,7 @@ class MarkerBridge(
         return listOf(
             PermittedOptions().setAddress("get-records"),
             PermittedOptions().setAddress(MARKER_CONNECTED),
-            PermittedOptions().setAddress(Utilize.LIVE_SERVICE),
+            PermittedOptions().setAddress(Utilize.LIVE_MANAGEMENT_SERVICE),
             PermittedOptions().setAddress(Utilize.LIVE_INSTRUMENT),
             PermittedOptions().setAddress(Utilize.LIVE_VIEW)
         )

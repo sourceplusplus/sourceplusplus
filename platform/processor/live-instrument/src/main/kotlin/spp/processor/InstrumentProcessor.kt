@@ -47,7 +47,7 @@ import spp.protocol.platform.auth.RolePermission
 import spp.protocol.platform.auth.RolePermission.*
 import spp.protocol.platform.developer.SelfInfo
 import spp.protocol.service.LiveInstrumentService
-import spp.protocol.service.LiveService
+import spp.protocol.service.LiveManagementService
 import spp.protocol.service.error.InstrumentAccessDenied
 import spp.protocol.service.error.PermissionAccessDenied
 import kotlin.system.exitProcess
@@ -123,8 +123,8 @@ object InstrumentProcessor : FeedbackProcessor() {
     private fun permissionAndAccessCheckInterceptor(): ServiceInterceptor {
         return ServiceInterceptor { _, _, msg ->
             val promise = Promise.promise<Message<JsonObject>>()
-            val liveService = LiveService.createProxy(vertx, msg.headers().get("auth-token"))
-            liveService.getSelf().onSuccess { selfInfo ->
+            val liveManagementService = LiveManagementService.createProxy(vertx, msg.headers().get("auth-token"))
+            liveManagementService.getSelf().onSuccess { selfInfo ->
                 validateRolePermission(selfInfo, msg) {
                     if (it.succeeded()) {
                         if (msg.headers().get("action").startsWith("addLiveInstrument")) {
