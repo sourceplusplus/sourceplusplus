@@ -33,7 +33,6 @@ import org.slf4j.LoggerFactory
 import spp.platform.common.DeveloperAuth
 import spp.protocol.SourceServices.Utilize
 import spp.protocol.service.LiveManagementService
-import spp.protocol.service.LiveService
 import kotlin.system.exitProcess
 
 class ServiceProvider(private val jwtAuth: JWTAuth?) : CoroutineVerticle() {
@@ -62,11 +61,6 @@ class ServiceProvider(private val jwtAuth: JWTAuth?) : CoroutineVerticle() {
                 ServiceDiscovery.create(vertx, ServiceDiscoveryOptions())
             }
 
-            liveService = publishService(
-                Utilize.LIVE_SERVICE,
-                LiveService::class.java,
-                LiveServiceProvider(vertx)
-            )
             liveManagementService = publishService(
                 Utilize.LIVE_MANAGEMENT_SERVICE,
                 LiveManagementService::class.java,

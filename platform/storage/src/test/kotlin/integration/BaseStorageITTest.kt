@@ -239,7 +239,7 @@ abstract class BaseStorageITTest<T : CoreStorage> {
         storageInstance.addPermissionToRole(developerRole, RolePermission.REMOVE_ROLE_PERMISSION)
         val rolePermissions = storageInstance.getRolePermissions(developerRole)
         assertEquals(3, rolePermissions.size)
-        assertNotNull(rolePermissions.find { it.commandType == CommandType.LIVE_SERVICE })
+        assertNotNull(rolePermissions.find { it.commandType == CommandType.LIVE_MANAGEMENT_SERVICE })
     }
 
     @Test
@@ -249,12 +249,12 @@ abstract class BaseStorageITTest<T : CoreStorage> {
         storageInstance.addPermissionToRole(developerRole, RolePermission.ADD_DEVELOPER_ROLE)
         val rolePermissions = storageInstance.getRolePermissions(developerRole)
         assertEquals(1, rolePermissions.size)
-        assertNotNull(rolePermissions.find { it.commandType == CommandType.LIVE_SERVICE })
+        assertNotNull(rolePermissions.find { it.commandType == CommandType.LIVE_MANAGEMENT_SERVICE })
 
         storageInstance.removePermissionFromRole(developerRole, RolePermission.ADD_DEVELOPER_ROLE)
         val updatedRolePermissions = storageInstance.getRolePermissions(developerRole)
         assertEquals(0, updatedRolePermissions.size)
-        assertNull(updatedRolePermissions.find { it.commandType == CommandType.LIVE_SERVICE })
+        assertNull(updatedRolePermissions.find { it.commandType == CommandType.LIVE_MANAGEMENT_SERVICE })
     }
 
     @Test
