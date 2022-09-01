@@ -121,4 +121,82 @@ class SimpleCountLiveMeterTest : LiveInstrumentIntegrationTest() {
 
         assertEquals(100, totalCount)
     }
+
+    @Test
+    fun testDoubleCountIncrement(): Unit = runBlocking {
+        setupLineLabels {
+            triggerCount()
+        }
+
+        val testContext = VertxTestContext()
+        val meterId = UUID.randomUUID().toString()
+        val liveMeter = LiveMeter(
+            "simple-double-count-meter",
+            MeterType.COUNT,
+            MetricValue(MetricValueType.NUMBER, "2"),
+            location = LiveSourceLocation(
+                SimpleCountLiveMeterTest::class.qualifiedName!!,
+                getLineNumber("done"),
+                //"spp-test-probe" //todo: impl this so applyImmediately can be used
+            ),
+            id = meterId,
+            meta = mapOf("metric.mode" to "RATE")
+            //applyImmediately = true //todo: can't use applyImmediately
+        )
+
+        viewService.addLiveViewSubscription(
+            LiveViewSubscription(
+                entityIds = listOf(liveMeter.toMetricId()),
+                artifactQualifiedName = ArtifactQualifiedName(
+                    SimpleCountLiveMeterTest::class.qualifiedName!!,
+                    type = ArtifactType.EXPRESSION
+                ),
+                artifactLocation = LiveSourceLocation(
+                    SimpleCountLiveMeterTest::class.qualifiedName!!,
+                    getLineNumber("done")
+                ),
+                liveViewConfig = LiveViewConfig(
+                    "test",
+                    listOf(liveMeter.toMetricId())
+                )
+            )
+        ).await()
+        val consumer = vertx.eventBus().consumer<JsonObject>(
+            toLiveViewSubscriberAddress("system")
+        )
+
+        var totalCount = 0
+        consumer.handler {
+            val liveViewEvent = Json.decodeValue(it.body().toString(), LiveViewEvent::class.java)
+            val rawMetrics = JsonObject(liveViewEvent.metricsData)
+            testContext.verify {
+                val meta = rawMetrics.getJsonObject("meta")
+                assertEquals(liveMeter.toMetricId(), meta.getString("metricsName"))
+
+                totalCount += rawMetrics.getInteger("value")
+                if (totalCount >= 200) {
+                    testContext.completeNow()
+                }
+            }
+        }
+
+        instrumentService.addLiveInstrument(liveMeter).onSuccess {
+            //trigger live meter 100 times
+            vertx.setTimer(5000) { //todo: have to wait since not applyImmediately
+                for (i in 0 until 100) {
+                    triggerCount()
+                }
+            }
+        }.onFailure {
+            testContext.failNow(it)
+        }
+
+        errorOnTimeout(testContext)
+
+        //clean up
+        consumer.unregister()
+        assertNotNull(instrumentService.removeLiveInstrument(meterId).await())
+
+        assertEquals(200, totalCount)
+    }
 }
