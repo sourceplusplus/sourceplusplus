@@ -17,12 +17,14 @@
  */
 package spp.platform.common
 
+import io.vertx.core.buffer.Buffer
 import io.vertx.core.json.JsonObject
+import io.vertx.core.shareddata.ClusterSerializable
 
 data class DeveloperAuth(
-    val selfId: String,
-    val accessToken: String? = null,
-) {
+    var selfId: String = "",
+    var accessToken: String? = null,
+) : ClusterSerializable {
 
     override fun toString(): String = selfId
 
@@ -34,6 +36,17 @@ data class DeveloperAuth(
     }
 
     override fun hashCode(): Int = selfId.hashCode()
+
+    override fun writeToBuffer(buffer: Buffer) {
+        buffer.appendBuffer(JsonObject.mapFrom(this).toBuffer())
+    }
+
+    override fun readFromBuffer(pos: Int, buffer: Buffer): Int {
+        val json = buffer.toJsonObject()
+        selfId = json.getString("selfId")
+        accessToken = json.getString("accessToken")
+        return pos + buffer.length()
+    }
 
     companion object {
         fun from(jsonObject: JsonObject): DeveloperAuth {

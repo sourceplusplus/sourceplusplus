@@ -17,7 +17,6 @@
  */
 package spp.platform.core
 
-import com.google.common.cache.CacheBuilder
 import com.google.common.net.HttpHeaders
 import graphql.language.Field
 import graphql.language.OperationDefinition
@@ -41,6 +40,7 @@ import kotlinx.coroutines.launch
 import mu.KotlinLogging
 import spp.platform.common.util.CertsToJksOptionsConverter
 import spp.platform.common.util.Msg
+import spp.platform.storage.ExpiringSharedData
 import spp.platform.storage.SourceStorage
 import spp.protocol.platform.PlatformAddress.PROCESSOR_CONNECTED
 import spp.protocol.platform.auth.DataRedaction
@@ -55,11 +55,13 @@ class SkyWalkingInterceptor(private val router: Router) : CoroutineVerticle() {
         private val log = KotlinLogging.logger {}
     }
 
-    private val probeAuthCache = CacheBuilder.newBuilder()
-        .expireAfterAccess(1, TimeUnit.MINUTES)
-        .build<String, Boolean>()
+    private lateinit var probeAuthCache: ExpiringSharedData<String, Boolean>
 
     override suspend fun start() {
+        probeAuthCache = ExpiringSharedData.newBuilder()
+            .expireAfterAccess(1, TimeUnit.MINUTES)
+            .build("probeAuthCache", vertx, SourceStorage.storage)
+
         //start grpc proxy once SkyWalking is available
         val processorConnectedConsumer = vertx.eventBus().consumer<JsonObject>(PROCESSOR_CONNECTED)
         processorConnectedConsumer.handler {
@@ -193,40 +195,48 @@ class SkyWalkingInterceptor(private val router: Router) : CoroutineVerticle() {
         val skywalkingGrpcServer = SocketAddress.inetSocketAddress(swGrpcPort, swHost)
 
         grpcServer.callHandler { req ->
-            val authHeader = req.headers().get("authentication")
-            if (authHeader != null && probeAuthCache.getIfPresent(authHeader) != null) {
-                proxyGrpcRequest(req, grpcClient, skywalkingGrpcServer)
-            } else {
-                val authEnabled = config.getJsonObject("client-access")?.getString("enabled")?.toBooleanStrictOrNull()
-                if (authEnabled == true) {
-                    val authParts = authHeader?.split(":") ?: emptyList()
-                    val clientId = authParts.getOrNull(0)
-                    val clientSecret = authParts.getOrNull(1)
-                    if (clientId == null || clientSecret == null) {
-                        req.response().status(GrpcStatus.PERMISSION_DENIED).end()
-                        return@callHandler
-                    }
+            launch(vertx.dispatcher()) {
+                handleCall(req, grpcClient, skywalkingGrpcServer)
+            }
+        }
+    }
 
-                    val tenantId = authParts.getOrNull(2)
-                    if (tenantId != null) {
-                        Vertx.currentContext().putLocal("tenant_id", tenantId)
-                    } else {
-                        Vertx.currentContext().removeLocal("tenant_id")
-                    }
+    private suspend fun handleCall(
+        req: GrpcServerRequest<Buffer, Buffer>,
+        grpcClient: GrpcClient,
+        skywalkingGrpcServer: SocketAddress
+    ) {
+        val authHeader = req.headers().get("authentication")
+        if (authHeader != null && probeAuthCache.getIfPresent(authHeader) != null) {
+            proxyGrpcRequest(req, grpcClient, skywalkingGrpcServer)
+        } else {
+            val authEnabled = config.getJsonObject("client-access")?.getString("enabled")?.toBooleanStrictOrNull()
+            if (authEnabled == true) {
+                val authParts = authHeader?.split(":") ?: emptyList()
+                val clientId = authParts.getOrNull(0)
+                val clientSecret = authParts.getOrNull(1)
+                if (clientId == null || clientSecret == null) {
+                    req.response().status(GrpcStatus.PERMISSION_DENIED).end()
+                    return
+                }
 
-                    launch(vertx.dispatcher()) {
-                        val clientAccess = SourceStorage.getClientAccess(clientId)
-                        if (clientAccess == null || clientAccess.secret != clientSecret) {
-                            req.response().status(GrpcStatus.PERMISSION_DENIED).end()
-                            return@launch
-                        } else {
-                            probeAuthCache.put(authHeader, true)
-                            proxyGrpcRequest(req, grpcClient, skywalkingGrpcServer)
-                        }
-                    }
+                val tenantId = authParts.getOrNull(2)
+                if (tenantId != null) {
+                    Vertx.currentContext().putLocal("tenant_id", tenantId)
                 } else {
+                    Vertx.currentContext().removeLocal("tenant_id")
+                }
+
+                val clientAccess = SourceStorage.getClientAccess(clientId)
+                if (clientAccess == null || clientAccess.secret != clientSecret) {
+                    req.response().status(GrpcStatus.PERMISSION_DENIED).end()
+                    return
+                } else {
+                    probeAuthCache.put(authHeader, true)
                     proxyGrpcRequest(req, grpcClient, skywalkingGrpcServer)
                 }
+            } else {
+                proxyGrpcRequest(req, grpcClient, skywalkingGrpcServer)
             }
         }
     }
