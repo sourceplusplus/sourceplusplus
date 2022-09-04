@@ -72,7 +72,7 @@ class SimpleCountLiveMeterTest : LiveInstrumentIntegrationTest() {
             //applyImmediately = true //todo: can't use applyImmediately
         )
 
-        viewService.addLiveViewSubscription(
+        val subscriptionId = viewService.addLiveViewSubscription(
             LiveViewSubscription(
                 entityIds = listOf(liveMeter.toMetricId()),
                 artifactQualifiedName = ArtifactQualifiedName(
@@ -88,7 +88,7 @@ class SimpleCountLiveMeterTest : LiveInstrumentIntegrationTest() {
                     listOf(liveMeter.toMetricId())
                 )
             )
-        ).await()
+        ).await().subscriptionId!!
         val consumer = vertx.eventBus().consumer<JsonObject>(
             toLiveViewSubscriberAddress("system")
         )
@@ -125,6 +125,7 @@ class SimpleCountLiveMeterTest : LiveInstrumentIntegrationTest() {
         //clean up
         consumer.unregister()
         assertNotNull(instrumentService.removeLiveInstrument(meterId).await())
+        assertNotNull(viewService.removeLiveViewSubscription(subscriptionId).await())
 
         assertEquals(100, totalCount)
     }
@@ -152,7 +153,7 @@ class SimpleCountLiveMeterTest : LiveInstrumentIntegrationTest() {
             //applyImmediately = true //todo: can't use applyImmediately
         )
 
-        viewService.addLiveViewSubscription(
+        val subscriptionId = viewService.addLiveViewSubscription(
             LiveViewSubscription(
                 entityIds = listOf(liveMeter.toMetricId()),
                 artifactQualifiedName = ArtifactQualifiedName(
@@ -168,7 +169,7 @@ class SimpleCountLiveMeterTest : LiveInstrumentIntegrationTest() {
                     listOf(liveMeter.toMetricId())
                 )
             )
-        ).await()
+        ).await().subscriptionId!!
         val consumer = vertx.eventBus().consumer<JsonObject>(
             toLiveViewSubscriberAddress("system")
         )
@@ -205,6 +206,7 @@ class SimpleCountLiveMeterTest : LiveInstrumentIntegrationTest() {
         //clean up
         consumer.unregister()
         assertNotNull(instrumentService.removeLiveInstrument(meterId).await())
+        assertNotNull(viewService.removeLiveViewSubscription(subscriptionId).await())
 
         assertEquals(200, totalCount)
     }
