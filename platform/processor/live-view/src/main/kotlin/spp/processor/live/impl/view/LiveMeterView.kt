@@ -24,20 +24,22 @@ import org.apache.skywalking.oap.server.core.analysis.metrics.*
 import org.joor.Reflect
 import spp.platform.common.ClusterConnection
 import spp.platform.common.util.Msg
+import spp.platform.storage.ExpiringSharedData
 import spp.processor.live.impl.view.util.EntityNaming
 import spp.processor.live.impl.view.util.MetricTypeSubscriptionCache
 import spp.processor.live.impl.view.util.ViewSubscriber
-import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.CopyOnWriteArrayList
 
-class LiveMeterView(private val subscriptionCache: MetricTypeSubscriptionCache) {
+class LiveMeterView(
+    private val rtMetricCache: ExpiringSharedData<String, Pair<Double, Long>>,
+    private val subscriptionCache: MetricTypeSubscriptionCache
+) {
 
     companion object {
         private val log = KotlinLogging.logger {}
     }
 
-    private val rtMetricCache = ConcurrentHashMap<String, Pair<Double, Long>>()
-
-    fun export(metrics: Metrics, realTime: Boolean) {
+    suspend fun export(metrics: Metrics, realTime: Boolean) {
         if (metrics !is WithMetadata) return
         val metadata = (metrics as WithMetadata).meta
         val entityName = EntityNaming.getEntityName(metadata)
@@ -61,8 +63,7 @@ class LiveMeterView(private val subscriptionCache: MetricTypeSubscriptionCache) 
         }
     }
 
-    @Synchronized
-    fun handleEvent(subs: Set<ViewSubscriber>, metrics: Metrics, realTime: Boolean) {
+    private suspend fun handleEvent(subs: Set<ViewSubscriber>, metrics: Metrics, realTime: Boolean) {
         val metricId by lazy { Reflect.on(metrics).call("id0").get<String>() }
         val fullMetricId = metrics.javaClass.simpleName + "_" + metricId
         if (metrics.javaClass.simpleName.contains("EndpointCpm")) {
@@ -97,12 +98,17 @@ class LiveMeterView(private val subscriptionCache: MetricTypeSubscriptionCache) 
         jsonMetric.put("realtime", realTime)
         jsonMetric.put("metric_type", metrics.javaClass.simpleName)
         jsonMetric.put("full_metric_id", fullMetricId)
+        if (realTime) {
+            jsonMetric.getJsonObject("meta").apply {
+                put("metricsName", getString("metricsName") + "_realtime")
+            }
+        }
 
         subs.forEach { sub ->
             var hasAllEvents = false
             var waitingEventsForBucket = sub.waitingEvents[metrics.timeBucket]
             if (waitingEventsForBucket == null) {
-                waitingEventsForBucket = mutableListOf()
+                waitingEventsForBucket = CopyOnWriteArrayList()
                 sub.waitingEvents[metrics.timeBucket] = waitingEventsForBucket
             }
 
@@ -142,9 +148,20 @@ class LiveMeterView(private val subscriptionCache: MetricTypeSubscriptionCache) 
                         multiMetrics.add(metricsOb)
                     }
 
+                    //ensure metrics sorted by subscription order
+                    val sortedMetrics = JsonArray()
+                    sub.subscription.liveViewConfig.viewMetrics.forEach { metricType ->
+                        multiMetrics.forEach {
+                            val metricData = JsonObject.mapFrom(it)
+                            if (metricData.getJsonObject("meta").getString("metricsName") == metricType) {
+                                sortedMetrics.add(metricData)
+                            }
+                        }
+                    }
+
                     ClusterConnection.getVertx().eventBus().send(
                         sub.consumer.address(),
-                        JsonObject().put("metrics", multiMetrics).put("multiMetrics", true)
+                        JsonObject().put("metrics", sortedMetrics).put("multiMetrics", true)
                     )
                 } else {
                     if (jsonMetric.getBoolean("realtime") == true) {
@@ -161,14 +178,14 @@ class LiveMeterView(private val subscriptionCache: MetricTypeSubscriptionCache) 
         }
     }
 
-    private fun setRealtimeValue(jsonEvent: JsonObject) {
+    private suspend fun setRealtimeValue(jsonEvent: JsonObject) {
         val metricType = jsonEvent.getString("metric_type")
         if (metricType.contains("EndpointSla")) {
-            val sla = rtMetricCache[jsonEvent.getString("full_metric_id")]!!
+            val sla = rtMetricCache.getIfPresent(jsonEvent.getString("full_metric_id"))!!
             val realtimeValue = (sla.first / sla.second) * 10000
             jsonEvent.put("percentage", realtimeValue)
         } else if (!metricType.startsWith("spp_")) {
-            val realtimeValue = rtMetricCache[jsonEvent.getString("full_metric_id")]!!.first
+            val realtimeValue = rtMetricCache.getIfPresent(jsonEvent.getString("full_metric_id"))!!.first
             jsonEvent.put("value", realtimeValue.toLong())
         }
     }

@@ -17,19 +17,25 @@
  */
 package spp.processor.live.impl
 
+import io.vertx.kotlin.coroutines.dispatcher
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import org.apache.skywalking.oap.server.core.analysis.Stream
 import org.apache.skywalking.oap.server.core.analysis.StreamDefinition
 import org.apache.skywalking.oap.server.core.analysis.metrics.Metrics
 import org.apache.skywalking.oap.server.core.analysis.worker.MetricsPersistentWorker
 import org.apache.skywalking.oap.server.core.analysis.worker.MetricsStreamProcessor
 import org.apache.skywalking.oap.server.library.module.ModuleDefineHolder
+import spp.platform.common.ClusterConnection
 import spp.processor.ViewProcessor
 
 class SPPMetricsStreamProcessor(private val realProcessor: MetricsStreamProcessor) : MetricsStreamProcessor() {
 
     override fun `in`(metrics: Metrics) {
         realProcessor.`in`(metrics)
-        ViewProcessor.liveViewProcessor.meterView.export(metrics, true)
+        GlobalScope.launch(ClusterConnection.getVertx().dispatcher()) {
+            ViewProcessor.liveViewProcessor.meterView.export(metrics, true)
+        }
     }
 
     override fun create(moduleDefineHolder: ModuleDefineHolder?, stream: Stream?, metricsClass: Class<out Metrics>?) {
