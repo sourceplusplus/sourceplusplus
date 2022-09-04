@@ -22,6 +22,7 @@ import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
 import kotlinx.coroutines.runBlocking
+import mu.KotlinLogging
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
@@ -40,6 +41,10 @@ import java.util.*
 
 class SimpleCountLiveMeterTest : LiveInstrumentIntegrationTest() {
 
+    companion object {
+        private val log = KotlinLogging.logger {}
+    }
+
     private fun triggerCount() {
         addLineLabel("done") { Throwable().stackTrace[0].lineNumber }
     }
@@ -50,8 +55,9 @@ class SimpleCountLiveMeterTest : LiveInstrumentIntegrationTest() {
             triggerCount()
         }
 
-        val testContext = VertxTestContext()
         val meterId = UUID.randomUUID().toString()
+        log.info("Using meter id: {}", meterId)
+
         val liveMeter = LiveMeter(
             "simple-count-meter",
             MeterType.COUNT,
@@ -87,6 +93,7 @@ class SimpleCountLiveMeterTest : LiveInstrumentIntegrationTest() {
             toLiveViewSubscriberAddress("system")
         )
 
+        val testContext = VertxTestContext()
         var totalCount = 0
         consumer.handler {
             val liveViewEvent = Json.decodeValue(it.body().toString(), LiveViewEvent::class.java)
@@ -105,7 +112,7 @@ class SimpleCountLiveMeterTest : LiveInstrumentIntegrationTest() {
         instrumentService.addLiveInstrument(liveMeter).onSuccess {
             //trigger live meter 100 times
             vertx.setTimer(5000) { //todo: have to wait since not applyImmediately
-                for (i in 0 until 100) {
+                repeat((0 until 100).count()) {
                     triggerCount()
                 }
             }
@@ -128,8 +135,9 @@ class SimpleCountLiveMeterTest : LiveInstrumentIntegrationTest() {
             triggerCount()
         }
 
-        val testContext = VertxTestContext()
         val meterId = UUID.randomUUID().toString()
+        log.info("Using meter id: {}", meterId)
+
         val liveMeter = LiveMeter(
             "simple-double-count-meter",
             MeterType.COUNT,
@@ -165,6 +173,7 @@ class SimpleCountLiveMeterTest : LiveInstrumentIntegrationTest() {
             toLiveViewSubscriberAddress("system")
         )
 
+        val testContext = VertxTestContext()
         var totalCount = 0
         consumer.handler {
             val liveViewEvent = Json.decodeValue(it.body().toString(), LiveViewEvent::class.java)
@@ -183,7 +192,7 @@ class SimpleCountLiveMeterTest : LiveInstrumentIntegrationTest() {
         instrumentService.addLiveInstrument(liveMeter).onSuccess {
             //trigger live meter 100 times
             vertx.setTimer(5000) { //todo: have to wait since not applyImmediately
-                for (i in 0 until 100) {
+                repeat((0 until 100).count()) {
                     triggerCount()
                 }
             }
