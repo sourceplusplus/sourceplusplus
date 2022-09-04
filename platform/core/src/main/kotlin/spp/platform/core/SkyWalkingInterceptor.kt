@@ -55,6 +55,7 @@ class SkyWalkingInterceptor(private val router: Router) : CoroutineVerticle() {
         private val log = KotlinLogging.logger {}
     }
 
+    //using memory cache to avoid hitting storage for every request
     private val probeAuthCache = CacheBuilder.newBuilder()
         .expireAfterAccess(1, TimeUnit.MINUTES)
         .build<String, Boolean>()
