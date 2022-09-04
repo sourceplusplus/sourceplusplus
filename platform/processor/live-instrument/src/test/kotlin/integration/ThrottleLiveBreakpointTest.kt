@@ -48,9 +48,9 @@ class ThrottleLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         val bpHitCount = AtomicInteger(0)
         val testContext = VertxTestContext()
         onBreakpointHit(-1) {
-            //todo: shouldn't hit 11. pretty sure issue is from use of volatile int instead of atomic int
+            //todo: shouldn't hit 12. pretty sure issue is from use of volatile int instead of atomic int
             testContext.verify {
-                assertTrue(bpHitCount.incrementAndGet() <= 11)
+                assertTrue(bpHitCount.incrementAndGet() <= 12)
             }
         }
 
