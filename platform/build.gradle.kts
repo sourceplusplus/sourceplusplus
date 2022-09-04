@@ -3,6 +3,7 @@ plugins {
     id("com.avast.gradle.docker-compose")
     id("io.gitlab.arturbosch.detekt")
     id("org.jetbrains.kotlin.jvm") apply false
+    id("org.jetbrains.kotlin.plugin.noarg")
 }
 
 val platformGroup: String by project
@@ -34,6 +35,7 @@ subprojects {
     apply(plugin = "org.jetbrains.kotlin.jvm")
     apply(plugin = "com.diffplug.spotless")
     apply<io.gitlab.arturbosch.detekt.DetektPlugin>()
+    apply(plugin = "org.jetbrains.kotlin.plugin.noarg")
 
     val detektPlugins by configurations
     val implementation by configurations
@@ -169,6 +171,10 @@ subprojects {
             outputs.upToDateWhen { false }
             showStandardStreams = true
         }
+    }
+
+    configure<org.jetbrains.kotlin.noarg.gradle.NoArgExtension> {
+        annotation("spp.platform.common.util.NoArg")
     }
 }
 

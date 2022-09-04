@@ -22,11 +22,19 @@ import io.vertx.core.Promise
 import io.vertx.core.Vertx
 import io.vertx.core.json.JsonObject
 import io.vertx.kotlin.coroutines.CoroutineVerticle
-import io.vertx.kotlin.coroutines.dispatcher
-import kotlinx.coroutines.launch
+import org.apache.skywalking.oap.log.analyzer.module.LogAnalyzerModule
+import org.apache.skywalking.oap.log.analyzer.provider.log.ILogAnalyzerService
+import org.apache.skywalking.oap.log.analyzer.provider.log.LogAnalyzerServiceImpl
+import org.apache.skywalking.oap.server.analyzer.module.AnalyzerModule
+import org.apache.skywalking.oap.server.analyzer.provider.trace.parser.ISegmentParserService
+import org.apache.skywalking.oap.server.analyzer.provider.trace.parser.SegmentParserListenerManager
+import org.apache.skywalking.oap.server.analyzer.provider.trace.parser.SegmentParserServiceImpl
 import org.slf4j.LoggerFactory
 import spp.platform.common.DeveloperAuth
-import spp.processor.live.impl.view.LiveActivityView
+import spp.platform.common.FeedbackProcessor
+import spp.platform.storage.ExpiringSharedData
+import spp.platform.storage.SourceStorage
+import spp.processor.ViewProcessor
 import spp.processor.live.impl.view.LiveLogsView
 import spp.processor.live.impl.view.LiveMeterView
 import spp.processor.live.impl.view.LiveTracesView
@@ -39,6 +47,7 @@ import spp.protocol.service.LiveViewService
 import spp.protocol.view.LiveViewEvent
 import spp.protocol.view.LiveViewSubscription
 import java.util.*
+import java.util.concurrent.TimeUnit
 
 class LiveViewProcessorImpl : CoroutineVerticle(), LiveViewService {
 
@@ -47,13 +56,31 @@ class LiveViewProcessorImpl : CoroutineVerticle(), LiveViewService {
     }
 
     private val subscriptionCache = MetricTypeSubscriptionCache()
-    val meterView = LiveMeterView(subscriptionCache)
-    val activityView = LiveActivityView(subscriptionCache)
-    val tracesView = LiveTracesView(subscriptionCache)
-    val logsView = LiveLogsView(subscriptionCache)
+    lateinit var meterView: LiveMeterView
+    lateinit var tracesView: LiveTracesView
+    lateinit var logsView: LiveLogsView
 
     override suspend fun start() {
         log.info("Starting LiveViewProcessorImpl")
+        val realtimeMetricCache = ExpiringSharedData.newBuilder()
+            .expireAfterAccess(3, TimeUnit.MINUTES)
+            .build<String, Pair<Double, Long>>("realtimeMetricCache", vertx, SourceStorage.storage)
+        meterView = LiveMeterView(realtimeMetricCache, subscriptionCache)
+        tracesView = LiveTracesView(subscriptionCache)
+        logsView = LiveLogsView(subscriptionCache)
+
+        //live traces view
+        val segmentParserService = FeedbackProcessor.module!!.find(AnalyzerModule.NAME)
+            .provider().getService(ISegmentParserService::class.java) as SegmentParserServiceImpl
+        val listenerManagerField = segmentParserService.javaClass.getDeclaredField("listenerManager")
+        listenerManagerField.trySetAccessible()
+        val listenerManager = listenerManagerField.get(segmentParserService) as SegmentParserListenerManager
+        listenerManager.add(ViewProcessor.liveViewProcessor.tracesView)
+
+        //live logs view
+        val logParserService = FeedbackProcessor.module!!.find(LogAnalyzerModule.NAME)
+            .provider().getService(ILogAnalyzerService::class.java) as LogAnalyzerServiceImpl
+        logParserService.addListenerFactory(ViewProcessor.liveViewProcessor.logsView)
 
         vertx.eventBus().consumer<JsonObject>(MARKER_DISCONNECTED) {
             val devAuth = DeveloperAuth.from(it.body())
@@ -113,26 +140,11 @@ class LiveViewProcessorImpl : CoroutineVerticle(), LiveViewService {
                     consumer
                 )
 
-                if (sub.liveViewConfig.viewName == "LIVE_METER") {
-                    sub.entityIds.forEach {
-                        subscriptionCache.computeIfAbsent(it) { EntitySubscribersCache() }
-                        sub.liveViewConfig.viewMetrics.forEach { viewMetric ->
-                            subscriptionCache[it]!!.computeIfAbsent(viewMetric) { mutableSetOf() }
-                            (subscriptionCache[it]!![viewMetric]!! as MutableSet).add(subscriber)
-                        }
-
-                        //send first event immediately (if available)
-                        launch(vertx.dispatcher()) {
-                            meterView.sendMeterEvent(it, sub.artifactLocation, subscriptionCache[it]!!, -1)
-                        }
-                    }
-                } else {
-                    sub.liveViewConfig.viewMetrics.forEach {
-                        subscriptionCache.computeIfAbsent(it) { EntitySubscribersCache() }
-                        sub.entityIds.forEach { entityId ->
-                            subscriptionCache[it]!!.computeIfAbsent(entityId) { mutableSetOf() }
-                            (subscriptionCache[it]!![entityId]!! as MutableSet).add(subscriber)
-                        }
+                sub.liveViewConfig.viewMetrics.forEach {
+                    subscriptionCache.computeIfAbsent(it) { EntitySubscribersCache() }
+                    sub.entityIds.forEach { entityId ->
+                        subscriptionCache[it]!!.computeIfAbsent(entityId) { mutableSetOf() }
+                        (subscriptionCache[it]!![entityId]!! as MutableSet).add(subscriber)
                     }
                 }
 

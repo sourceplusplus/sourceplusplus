@@ -10,6 +10,7 @@ version = project.properties["platformVersion"] as String? ?: projectVersion
 
 dependencies {
     compileOnly(project(":platform:common"))
+    compileOnly(project(":platform:storage"))
 
     //todo: properly add test dependency
     testImplementation(project(":platform:common").dependencyProject.extensions.getByType(SourceSetContainer::class).test.get().output)

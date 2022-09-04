@@ -17,191 +17,177 @@
  */
 package spp.processor.live.impl.view
 
-import io.vertx.core.*
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
-import kotlinx.datetime.*
-import org.apache.skywalking.oap.server.core.exporter.ExportEvent
-import org.apache.skywalking.oap.server.core.exporter.MetricValuesExportService
-import org.apache.skywalking.oap.server.core.query.enumeration.Scope
-import org.apache.skywalking.oap.server.core.query.enumeration.Step
-import org.apache.skywalking.oap.server.core.query.input.Duration
-import org.apache.skywalking.oap.server.core.query.input.Entity
-import org.apache.skywalking.oap.server.core.query.input.MetricsCondition
+import mu.KotlinLogging
+import org.apache.skywalking.oap.server.core.analysis.metrics.*
 import org.joor.Reflect
-import org.slf4j.LoggerFactory
 import spp.platform.common.ClusterConnection
-import spp.platform.common.extend.getMeterServiceInstances
-import spp.platform.common.extend.getMeterServices
-import spp.processor.ViewProcessor.metadata
-import spp.processor.ViewProcessor.metricsQueryService
-import spp.processor.live.impl.view.util.EntitySubscribersCache
+import spp.platform.common.util.Msg
+import spp.platform.storage.ExpiringSharedData
+import spp.processor.live.impl.view.util.EntityNaming
 import spp.processor.live.impl.view.util.MetricTypeSubscriptionCache
-import spp.protocol.instrument.DurationStep
-import spp.protocol.instrument.LiveSourceLocation
-import java.time.ZoneOffset
-import java.time.format.DateTimeFormatter
+import spp.processor.live.impl.view.util.ViewSubscriber
+import java.util.concurrent.CopyOnWriteArrayList
 
 class LiveMeterView(
-    private val subscriptionCache: MetricTypeSubscriptionCache
-) : MetricValuesExportService {
+    private val rtMetricCache: ExpiringSharedData<String, Pair<Double, Long>>,
+    private val subscriptionCache: MetricTypeSubscriptionCache //todo: use ExpiringSharedData
+) {
 
     companion object {
-        private val log = LoggerFactory.getLogger(LiveMeterView::class.java)
+        private val log = KotlinLogging.logger {}
     }
 
-    override fun export(event: ExportEvent) {
-        if (event.type == ExportEvent.EventType.INCREMENT) return
-        val metricName = event.metrics.javaClass.simpleName
-        if (!metricName.startsWith("spp_")) return
-        if (log.isTraceEnabled) log.trace("Processing exported meter event: {}", event)
+    suspend fun export(metrics: Metrics, realTime: Boolean) {
+        if (metrics !is WithMetadata) return
+        val metadata = (metrics as WithMetadata).meta
+        val entityName = EntityNaming.getEntityName(metadata)
+        if (entityName.isNullOrEmpty()) return
+        if (log.isTraceEnabled) log.trace("Processing exported metrics: {}", metrics)
 
-        val subbedMetrics = subscriptionCache[metricName]
-        if (subbedMetrics != null) {
-            //todo: location should be coming from subscription, as is functions as service/serviceInstance wildcard
-            val location = LiveSourceLocation("", 0)
-            sendMeterEvent(metricName, location, subbedMetrics, event.metrics.timeBucket)
+        var metricName = metadata.metricsName
+        if (realTime && !metricName.startsWith("spp_")) {
+            metricName = "${metricName}_realtime"
+        } else if (metricName.startsWith("spp_") && !realTime) {
+            return // ignore, spp_ metrics are exported only in realtime mode
+        }
+        val subbedArtifacts = subscriptionCache[metricName]
+        if (subbedArtifacts != null) {
+            val subs = subbedArtifacts[entityName].orEmpty() +
+                    subbedArtifacts[metadata.id].orEmpty() + subbedArtifacts[metricName].orEmpty()
+            if (subs.isNotEmpty()) {
+                log.trace { Msg.msg("Exporting event $metricName to {} subscribers", subs.size) }
+                handleEvent(subs, metrics, realTime)
+            }
         }
     }
 
-    fun sendMeterEvent(
-        metricName: String,
-        location: LiveSourceLocation,
-        subbedMetrics: EntitySubscribersCache,
-        timeBucket: Long
-    ) {
-        val metricFutures = mutableListOf<Future<JsonObject>>()
-        val minutePromise = Promise.promise<JsonObject>()
-        getLiveMeterMetrics(
-            metricName,
-            location,
-            Clock.System.now().minus(1, DateTimeUnit.MINUTE),
-            Clock.System.now(),
-            DurationStep.MINUTE,
-            minutePromise
-        )
-        metricFutures.add(minutePromise.future())
+    private suspend fun handleEvent(subs: Set<ViewSubscriber>, metrics: Metrics, realTime: Boolean) {
+        val metricId by lazy { Reflect.on(metrics).call("id0").get<String>() }
+        val fullMetricId = metrics.javaClass.simpleName + "_" + metricId
+        if (metrics.javaClass.simpleName.contains("EndpointCpm")) {
+            rtMetricCache.compute(fullMetricId) { _: String, v: Pair<Double, Long>? ->
+                if (v != null) {
+                    Pair(v.first + (metrics as CPMMetrics).total.toDouble(), v.second + 1)
+                } else {
+                    Pair(1.0, 1)
+                }
+            }
+        }
+        if (metrics.javaClass.simpleName.contains("EndpointSla")) {
+            rtMetricCache.compute(fullMetricId) { _: String, v: Pair<Double, Long>? ->
+                if (v != null) {
+                    Pair(v.first + (metrics as PercentMetrics).match, v.second + 1)
+                } else {
+                    Pair((metrics as PercentMetrics).total.toDouble(), 1)
+                }
+            }
+        }
+        if (metrics.javaClass.simpleName.contains("EndpointRespTime")) {
+            rtMetricCache.compute(fullMetricId) { _: String, v: Pair<Double, Long>? ->
+                if (v != null) {
+                    Pair((metrics as LongAvgMetrics).summation.toDouble(), v.second + 1)
+                } else {
+                    Pair((metrics as LongAvgMetrics).summation.toDouble(), 1)
+                }
+            }
+        }
 
-        val hourPromise = Promise.promise<JsonObject>()
-        getLiveMeterMetrics(
-            metricName,
-            location,
-            Clock.System.now().minus(1, DateTimeUnit.HOUR),
-            Clock.System.now(),
-            DurationStep.HOUR,
-            hourPromise
-        )
-        metricFutures.add(hourPromise.future())
+        val jsonMetric = JsonObject.mapFrom(metrics)
+        jsonMetric.put("realtime", realTime)
+        jsonMetric.put("metric_type", metrics.javaClass.simpleName)
+        jsonMetric.put("full_metric_id", fullMetricId)
+        if (realTime) {
+            val metricsName = jsonMetric.getJsonObject("meta").getString("metricsName")
+            if (!metricsName.startsWith("spp_")) {
+                jsonMetric.getJsonObject("meta").put("metricsName", "${metricsName}_realtime")
+            }
+        }
 
-        val dayPromise = Promise.promise<JsonObject>()
-        getLiveMeterMetrics(
-            metricName,
-            location,
-            Clock.System.now().minus(24, DateTimeUnit.HOUR),
-            Clock.System.now(),
-            DurationStep.DAY,
-            dayPromise
-        )
-        metricFutures.add(dayPromise.future())
+        subs.forEach { sub ->
+            var hasAllEvents = false
+            var waitingEventsForBucket = sub.waitingEvents[metrics.timeBucket]
+            if (waitingEventsForBucket == null) {
+                waitingEventsForBucket = CopyOnWriteArrayList()
+                sub.waitingEvents[metrics.timeBucket] = waitingEventsForBucket
+            }
 
-        CompositeFuture.all(metricFutures as List<Future<JsonObject>>).onComplete {
-            if (it.succeeded()) {
-                val minute = minutePromise.future().result()
-                val hour = hourPromise.future().result()
-                val day = dayPromise.future().result()
-
-                subbedMetrics.values.flatten().forEach {
-                    ClusterConnection.getVertx().eventBus().send(
-                        it.consumer.address(),
-                        JsonObject()
-                            .put("last_minute", minute.getJsonArray("values").firstOrNull() ?: 0) //todo: seems to want last
-                            .put("last_hour", hour.getJsonArray("values").firstOrNull() ?: 0)
-                            .put("last_day", day.getJsonArray("values").firstOrNull() ?: 0)
-                            .put("timeBucket", timeBucket)
-                            .put("multiMetrics", false)
-                    )
+            if (sub.subscription.liveViewConfig.viewMetrics.size > 1) {
+                if (waitingEventsForBucket.isEmpty()) {
+                    waitingEventsForBucket.add(jsonMetric)
+                } else {
+                    waitingEventsForBucket.removeIf { it.getString("metric_type") == metrics::class.simpleName }
+                    waitingEventsForBucket.add(jsonMetric)
+                    if (sub.subscription.liveViewConfig.viewMetrics.size == waitingEventsForBucket.size) {
+                        hasAllEvents = true
+                    }
+                    //todo: network errors/etc might make it so waitingEventsForBucket never completes
+                    // remove on timeout (maybe still send with partial status)
                 }
             } else {
-                log.error("Failed to get live meter metrics", it.cause())
+                hasAllEvents = true
+            }
+
+            if (hasAllEvents && System.currentTimeMillis() - sub.lastUpdated >= sub.subscription.liveViewConfig.refreshRateLimit) {
+                sub.lastUpdated = System.currentTimeMillis()
+
+                if (waitingEventsForBucket.isNotEmpty()) {
+                    val multiMetrics = JsonArray()
+                    waitingEventsForBucket.forEach {
+                        val metricsOb = JsonObject.mapFrom(it)
+                            .put(
+                                "artifactQualifiedName",
+                                JsonObject.mapFrom(sub.subscription.artifactQualifiedName)
+                            )
+                            .put("entityName", EntityNaming.getEntityName((metrics as WithMetadata).meta))
+                        if (metricsOb.getBoolean("realtime") == true) {
+                            setRealtimeValue(metricsOb)
+                        }
+                        log.trace { "Sending multi-metrics $metricsOb to ${sub.subscriberId}" }
+
+                        multiMetrics.add(metricsOb)
+                    }
+
+                    //ensure metrics sorted by subscription order
+                    val sortedMetrics = JsonArray()
+                    sub.subscription.liveViewConfig.viewMetrics.forEach { metricType ->
+                        multiMetrics.forEach {
+                            val metricData = JsonObject.mapFrom(it)
+                            if (metricData.getJsonObject("meta").getString("metricsName") == metricType) {
+                                sortedMetrics.add(metricData)
+                            }
+                        }
+                    }
+
+                    ClusterConnection.getVertx().eventBus().send(
+                        sub.consumer.address(),
+                        JsonObject().put("metrics", sortedMetrics).put("multiMetrics", true)
+                    )
+                } else {
+                    if (jsonMetric.getBoolean("realtime") == true) {
+                        setRealtimeValue(jsonMetric)
+                    }
+
+                    log.trace { "Sending metrics $jsonMetric to ${sub.subscriberId}" }
+                    ClusterConnection.getVertx().eventBus().send(
+                        sub.consumer.address(),
+                        jsonMetric.put("multiMetrics", false)
+                    )
+                }
             }
         }
     }
 
-    //todo: taken from LiveInstrumentProcessorImpl, should be moved to common service
-    fun getLiveMeterMetrics(
-        metricId: String,
-        location: LiveSourceLocation,
-        start: Instant,
-        stop: Instant,
-        step: DurationStep,
-        handler: Handler<AsyncResult<JsonObject>>
-    ) {
-        log.debug("Getting live meter metrics. Metric id: {}", metricId)
-        val services = metadata.getMeterServices(location.service ?: "")
-        if (services.isEmpty()) {
-            log.info("No services found")
-            handler.handle(Future.succeededFuture(JsonObject().put("values", JsonArray())))
-            return
+    private suspend fun setRealtimeValue(jsonEvent: JsonObject) {
+        val metricType = jsonEvent.getString("metric_type")
+        if (metricType.contains("EndpointSla")) {
+            val sla = rtMetricCache.getIfPresent(jsonEvent.getString("full_metric_id"))!!
+            val realtimeValue = (sla.first / sla.second) * 10000
+            jsonEvent.put("percentage", realtimeValue)
+        } else if (!metricType.startsWith("spp_")) {
+            val realtimeValue = rtMetricCache.getIfPresent(jsonEvent.getString("full_metric_id"))!!.first
+            jsonEvent.put("value", realtimeValue.toLong())
         }
-
-        val values = mutableListOf<Any>()
-        services.forEach { service ->
-            val instances = metadata.getMeterServiceInstances(
-                start.toEpochMilliseconds(), stop.toEpochMilliseconds(), service.id
-            )
-            if (instances.isEmpty()) {
-                log.info("No instances found for service: ${service.id}")
-                return@forEach
-            }
-
-            instances.forEach { instance ->
-                val serviceInstance = location.serviceInstance
-                if (serviceInstance != null && serviceInstance != instance.name) {
-                    return@forEach
-                }
-
-                val condition = MetricsCondition().apply {
-                    name = metricId
-                    entity = Entity().apply {
-                        setScope(Scope.ServiceInstance)
-                        setNormal(true)
-                        setServiceName(service.name)
-                        setServiceInstanceName(instance.name)
-                    }
-                }
-                if (metricId.contains("histogram")) {
-                    val value = metricsQueryService.readHeatMap(condition, Duration().apply {
-                        Reflect.on(this).set(
-                            "start",
-                            DateTimeFormatter.ofPattern(step.pattern).withZone(ZoneOffset.UTC)
-                                .format(start.toJavaInstant())
-                        )
-                        Reflect.on(this).set(
-                            "end",
-                            DateTimeFormatter.ofPattern(step.pattern).withZone(ZoneOffset.UTC)
-                                .format(stop.toJavaInstant())
-                        )
-                        Reflect.on(this).set("step", Step.valueOf(step.name))
-                    })
-                    values.add(value)
-                } else {
-                    val value = metricsQueryService.readMetricsValue(condition, Duration().apply {
-                        Reflect.on(this).set(
-                            "start",
-                            DateTimeFormatter.ofPattern(step.pattern).withZone(ZoneOffset.UTC)
-                                .format(start.toJavaInstant())
-                        )
-                        Reflect.on(this).set(
-                            "end",
-                            DateTimeFormatter.ofPattern(step.pattern).withZone(ZoneOffset.UTC)
-                                .format(stop.toJavaInstant())
-                        )
-                        Reflect.on(this).set("step", Step.valueOf(step.name))
-                    })
-                    values.add(value)
-                }
-            }
-        }
-        handler.handle(Future.succeededFuture(JsonObject().put("values", JsonArray(values))))
     }
 }

@@ -40,8 +40,8 @@ type LiveViewConfig {
 
 input LiveViewConfigInput {
     viewName: String!
-    viewMetrics: [String!]
-    refreshRateLimit: Int!
+    viewMetrics: [String!]!
+    refreshRateLimit: Int
 }
 
 type LiveViewSubscription {
@@ -55,7 +55,7 @@ type LiveViewSubscription {
 input LiveViewSubscriptionInput {
     entityIds: [String!]!
     #artifactQualifiedName: ArtifactQualifiedNameInput!
-    #liveViewConfig: LiveViewConfigInput!
+    liveViewConfig: LiveViewConfigInput!
 }
 
 type Self {

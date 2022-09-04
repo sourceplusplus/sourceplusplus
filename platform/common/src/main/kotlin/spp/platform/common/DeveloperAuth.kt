@@ -20,9 +20,11 @@ package spp.platform.common
 import io.vertx.core.buffer.Buffer
 import io.vertx.core.json.JsonObject
 import io.vertx.core.shareddata.ClusterSerializable
+import spp.platform.common.util.NoArg
 
+@NoArg
 data class DeveloperAuth(
-    var selfId: String = "",
+    var selfId: String,
     var accessToken: String? = null,
 ) : ClusterSerializable {
 
