@@ -99,8 +99,9 @@ class LiveMeterView(
         jsonMetric.put("metric_type", metrics.javaClass.simpleName)
         jsonMetric.put("full_metric_id", fullMetricId)
         if (realTime) {
-            jsonMetric.getJsonObject("meta").apply {
-                put("metricsName", getString("metricsName") + "_realtime")
+            val metricsName = jsonMetric.getJsonObject("meta").getString("metricsName")
+            if (!metricsName.startsWith("spp_")) {
+                jsonMetric.getJsonObject("meta").put("metricsName", "${metricsName}_realtime")
             }
         }
 
