@@ -32,7 +32,7 @@ import java.util.concurrent.CopyOnWriteArrayList
 
 class LiveMeterView(
     private val rtMetricCache: ExpiringSharedData<String, Pair<Double, Long>>,
-    private val subscriptionCache: MetricTypeSubscriptionCache
+    private val subscriptionCache: MetricTypeSubscriptionCache //todo: use ExpiringSharedData
 ) {
 
     companion object {
