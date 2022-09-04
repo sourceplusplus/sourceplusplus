@@ -60,7 +60,7 @@ import spp.protocol.platform.developer.Developer
 import spp.protocol.platform.developer.SelfInfo
 import spp.protocol.platform.general.Service
 import spp.protocol.service.LiveInstrumentService
-import spp.protocol.service.LiveService
+import spp.protocol.service.LiveManagementService
 import spp.protocol.service.LiveViewService
 import spp.protocol.service.error.InstrumentAccessDenied
 import spp.protocol.view.LiveViewConfig
@@ -600,7 +600,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
         }
 
         EventBusService.getProxy(
-            discovery, LiveService::class.java,
+            discovery, LiveManagementService::class.java,
             JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("auth-token", accessToken)) } }
         ) {
             if (it.succeeded()) {
@@ -627,7 +627,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
         }
 
         EventBusService.getProxy(
-            discovery, LiveService::class.java,
+            discovery, LiveManagementService::class.java,
             JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("auth-token", accessToken)) } }
         ) {
             if (it.succeeded()) {

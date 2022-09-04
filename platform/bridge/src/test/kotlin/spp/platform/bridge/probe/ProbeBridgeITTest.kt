@@ -61,7 +61,7 @@ class ProbeBridgeITTest : PlatformIntegrationTest() {
         val testContext = VertxTestContext()
 
         //get probe count
-        val probeCount = liveService.getStats().await()
+        val probeCount = liveManagementService.getStats().await()
             .getJsonObject("platform").getInteger("connected-probes")
 
         //connect new probe
@@ -107,7 +107,7 @@ class ProbeBridgeITTest : PlatformIntegrationTest() {
         delay(2000) //ensure probe is connected
 
         //verify probe count increased
-        val increasedProbeCount = liveService.getStats().await()
+        val increasedProbeCount = liveManagementService.getStats().await()
             .getJsonObject("platform").getInteger("connected-probes")
         testContext.verify {
             assertEquals(probeCount + 1, increasedProbeCount)
@@ -119,7 +119,7 @@ class ProbeBridgeITTest : PlatformIntegrationTest() {
         delay(2000) //ensure probe is disconnected
 
         //verify probe count decreased
-        val decreasedProbeCount = liveService.getStats().await()
+        val decreasedProbeCount = liveManagementService.getStats().await()
             .getJsonObject("platform").getInteger("connected-probes")
         testContext.verify {
             assertEquals(probeCount, decreasedProbeCount)
