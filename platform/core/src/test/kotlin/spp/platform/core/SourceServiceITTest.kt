@@ -616,10 +616,17 @@ class SourceServiceITTest : PlatformIntegrationTest() {
             addLiveViewSubscriptionResp.getJsonObject("data").getJsonObject("addLiveViewSubscription")
         assertNotNull(liveViewSubscription.getString("subscriptionId"))
         val entityIds = liveViewSubscription.getJsonArray("entityIds")
-        assertTrue(entityIds.any {
-            it as String
-            it == "222"
-        })
+        assertEquals(3, entityIds.size())
+        assertTrue(entityIds.contains("1"))
+        assertTrue(entityIds.contains("222"))
+        assertTrue(entityIds.contains("3"))
+
+        val liveViewConfig = liveViewSubscription.getJsonObject("liveViewConfig")
+        assertEquals("test", liveViewConfig.getString("viewName"))
+        val viewMetrics = liveViewConfig.getJsonArray("viewMetrics")
+        assertEquals(1, viewMetrics.size())
+        assertEquals("test-metric", viewMetrics.getString(0))
+        assertEquals(-1, liveViewConfig.getInteger("refreshRateLimit"))
     }
 
     @Test
@@ -1005,8 +1012,17 @@ class SourceServiceITTest : PlatformIntegrationTest() {
     }
 
     private val addLiveViewSubscriptionRequest =
-        JsonObject().put("query", getGraphql("view/add-live-view-subscription"))
-            .put("variables", JsonObject().put("input", mapOf("entityIds" to listOf(1, 222, 3))))
+        JsonObject().put("query", getGraphql("view/add-live-view-subscription")).put(
+            "variables", JsonObject().put(
+                "input", mapOf(
+                    "entityIds" to listOf(1, 222, 3),
+                    "liveViewConfig" to mapOf(
+                        "viewName" to "test",
+                        "viewMetrics" to listOf("test-metric")
+                    )
+                )
+            )
+        )
 
     private val addLiveBreakpointRequest: JsonObject =
         JsonObject().put("query", getGraphql("instrument/add-live-breakpoint"))
