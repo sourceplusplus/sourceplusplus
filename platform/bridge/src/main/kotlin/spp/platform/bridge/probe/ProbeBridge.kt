@@ -244,7 +244,7 @@ class ProbeBridge(
                     }
                     it.complete(true)
                 } else {
-                    log.error("Failed to validate probe auth", clientAuth.cause())
+                    log.error("Failed to validate probe auth. Reason: ${clientAuth.cause().message}")
                     it.complete(false)
                 }
             }
