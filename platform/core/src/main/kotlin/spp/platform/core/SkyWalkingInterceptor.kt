@@ -194,6 +194,7 @@ class SkyWalkingInterceptor(private val router: Router) : CoroutineVerticle() {
         val skywalkingGrpcServer = SocketAddress.inetSocketAddress(swGrpcPort, swHost)
 
         grpcServer.callHandler { req ->
+            req.pause()
             val authHeader = req.headers().get("authentication")
             if (authHeader != null && probeAuthCache.getIfPresent(authHeader) != null) {
                 proxyGrpcRequest(req, grpcClient, skywalkingGrpcServer)
@@ -238,25 +239,34 @@ class SkyWalkingInterceptor(private val router: Router) : CoroutineVerticle() {
         skywalkingGrpcServer: SocketAddress
     ) {
         log.trace { "Proxying gRPC call: ${req.fullMethodName()}" }
-        req.messageHandler { msg ->
-            log.trace { "Received stream message. Bytes: ${msg.payload().bytes.size}" }
-            grpcClient.request(skywalkingGrpcServer).onSuccess {
-                val grpcRequest = it
-                    .serviceName(req.serviceName())
-                    .methodName(req.methodName().substring(1))
-                req.headers().get("authentication")?.let { grpcRequest.headers().add("authentication", it) }
-                grpcRequest.endMessage(msg)
-                grpcRequest.response().onSuccess {
-                    log.trace { "Piping response. Status: ${it.status()}" }
-                    it.pipeTo(req.response())
-                }.onFailure {
-                    log.error("Failed to send response: ${it.message}")
-                    req.response().end()
+        grpcClient.request(skywalkingGrpcServer).onSuccess { proxyRequest ->
+            req.headers().get("authentication")?.let { proxyRequest.headers().add("authentication", it) }
+
+            proxyRequest.response().onSuccess { proxyResponse ->
+                proxyResponse.messageHandler { msg ->
+                    log.trace { "Sending stream message. Bytes: ${msg.payload().bytes.size}" }
+                    req.response().writeMessage(msg)
                 }
+                proxyResponse.errorHandler { error ->
+                    req.response().status(error.status)
+                }
+                proxyResponse.endHandler { req.response().end() }
             }.onFailure {
-                log.error("Failed to send message: $it")
-                req.response().end()
+                log.error(it) { "Failed to get proxy response" }
+                req.response().status(GrpcStatus.UNKNOWN).end()
             }
+
+            proxyRequest.fullMethodName(req.fullMethodName())
+            req.messageHandler { msg ->
+                log.trace { "Received stream message. Bytes: ${msg.payload().bytes.size}" }
+                proxyRequest.writeMessage(msg)
+            }
+            req.endHandler { proxyRequest.end() }
+            req.resume()
+        }.onFailure {
+            log.error(it) { "Failed to send proxy request" }
+            req.response().status(GrpcStatus.UNKNOWN).end()
+            req.resume()
         }
     }
 
