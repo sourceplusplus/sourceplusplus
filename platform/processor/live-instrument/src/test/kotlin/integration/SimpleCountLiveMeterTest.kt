@@ -23,8 +23,7 @@ import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import spp.protocol.SourceServices.Provide.toLiveViewSubscriberAddress
 import spp.protocol.artifact.ArtifactQualifiedName
@@ -98,6 +97,8 @@ class SimpleCountLiveMeterTest : LiveInstrumentIntegrationTest() {
         consumer.handler {
             val liveViewEvent = Json.decodeValue(it.body().toString(), LiveViewEvent::class.java)
             val rawMetrics = JsonObject(liveViewEvent.metricsData)
+            log.info("Received metrics: {}", rawMetrics)
+
             testContext.verify {
                 val meta = rawMetrics.getJsonObject("meta")
                 assertEquals(liveMeter.toMetricId(), meta.getString("metricsName"))
@@ -179,6 +180,8 @@ class SimpleCountLiveMeterTest : LiveInstrumentIntegrationTest() {
         consumer.handler {
             val liveViewEvent = Json.decodeValue(it.body().toString(), LiveViewEvent::class.java)
             val rawMetrics = JsonObject(liveViewEvent.metricsData)
+            log.info("Received metrics: {}", rawMetrics)
+
             testContext.verify {
                 val meta = rawMetrics.getJsonObject("meta")
                 assertEquals(liveMeter.toMetricId(), meta.getString("metricsName"))
@@ -209,5 +212,133 @@ class SimpleCountLiveMeterTest : LiveInstrumentIntegrationTest() {
         assertNotNull(viewService.removeLiveViewSubscription(subscriptionId).await())
 
         assertEquals(200, totalCount)
+    }
+
+    @Test
+    fun `one method two counts`(): Unit = runBlocking {
+        setupLineLabels {
+            triggerCount()
+        }
+
+        val meterId1 = UUID.randomUUID().toString()
+        log.info("Using meter id: {}", meterId1)
+
+        val liveMeter1 = LiveMeter(
+            "count1-meter",
+            MeterType.COUNT,
+            MetricValue(MetricValueType.NUMBER, "1"),
+            location = LiveSourceLocation(
+                SimpleCountLiveMeterTest::class.qualifiedName!!,
+                getLineNumber("done"),
+                //"spp-test-probe" //todo: impl this so applyImmediately can be used
+            ),
+            id = meterId1,
+            meta = mapOf("metric.mode" to "RATE")
+            //applyImmediately = true //todo: can't use applyImmediately
+        )
+
+        val subscriptionId1 = viewService.addLiveViewSubscription(
+            LiveViewSubscription(
+                entityIds = listOf(liveMeter1.toMetricId()),
+                artifactQualifiedName = ArtifactQualifiedName(
+                    SimpleCountLiveMeterTest::class.qualifiedName!!,
+                    type = ArtifactType.EXPRESSION
+                ),
+                artifactLocation = LiveSourceLocation(
+                    SimpleCountLiveMeterTest::class.qualifiedName!!,
+                    getLineNumber("done")
+                ),
+                liveViewConfig = LiveViewConfig(
+                    "test",
+                    listOf(liveMeter1.toMetricId())
+                )
+            )
+        ).await().subscriptionId!!
+
+        val meterId2 = UUID.randomUUID().toString()
+        log.info("Using meter id: {}", meterId2)
+
+        val liveMeter2 = LiveMeter(
+            "count2-meter",
+            MeterType.COUNT,
+            MetricValue(MetricValueType.NUMBER, "100"),
+            location = LiveSourceLocation(
+                SimpleCountLiveMeterTest::class.qualifiedName!!,
+                getLineNumber("done"),
+                //"spp-test-probe" //todo: impl this so applyImmediately can be used
+            ),
+            id = meterId2,
+            meta = mapOf("metric.mode" to "RATE")
+            //applyImmediately = true //todo: can't use applyImmediately
+        )
+
+        val subscriptionId2 = viewService.addLiveViewSubscription(
+            LiveViewSubscription(
+                entityIds = listOf(liveMeter2.toMetricId()),
+                artifactQualifiedName = ArtifactQualifiedName(
+                    SimpleCountLiveMeterTest::class.qualifiedName!!,
+                    type = ArtifactType.EXPRESSION
+                ),
+                artifactLocation = LiveSourceLocation(
+                    SimpleCountLiveMeterTest::class.qualifiedName!!,
+                    getLineNumber("done")
+                ),
+                liveViewConfig = LiveViewConfig(
+                    "test",
+                    listOf(liveMeter2.toMetricId())
+                )
+            )
+        ).await().subscriptionId!!
+
+        val consumer = vertx.eventBus().consumer<JsonObject>(
+            toLiveViewSubscriberAddress("system")
+        )
+
+        val testContext = VertxTestContext()
+        var totalCount = 0
+        consumer.handler {
+            val liveViewEvent = Json.decodeValue(it.body().toString(), LiveViewEvent::class.java)
+            val rawMetrics = JsonObject(liveViewEvent.metricsData)
+            log.info("Received metrics: {}", rawMetrics)
+
+            testContext.verify {
+                val meta = rawMetrics.getJsonObject("meta")
+                assertTrue(
+                    liveMeter1.toMetricId() == meta.getString("metricsName") ||
+                            liveMeter2.toMetricId() == meta.getString("metricsName")
+                )
+
+                totalCount += rawMetrics.getInteger("value")
+                if (totalCount >= 202) {
+                    testContext.completeNow()
+                }
+            }
+        }
+
+        instrumentService.addLiveInstrument(liveMeter1).onSuccess {
+            vertx.setTimer(5000) { //todo: have to wait since not applyImmediately
+                triggerCount()
+            }
+        }.onFailure {
+            testContext.failNow(it)
+        }
+        instrumentService.addLiveInstrument(liveMeter2).onSuccess {
+            vertx.setTimer(5000) { //todo: have to wait since not applyImmediately
+                triggerCount()
+            }
+        }.onFailure {
+            testContext.failNow(it)
+        }
+
+        errorOnTimeout(testContext)
+
+        //clean up
+        consumer.unregister()
+        assertNotNull(instrumentService.removeLiveInstrument(meterId1).await())
+        assertNotNull(instrumentService.removeLiveInstrument(meterId2).await())
+        assertNotNull(viewService.removeLiveViewSubscription(subscriptionId1).await())
+        assertNotNull(viewService.removeLiveViewSubscription(subscriptionId2).await())
+
+        assertEquals(202, totalCount)
     }
 }
