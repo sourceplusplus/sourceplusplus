@@ -23,6 +23,7 @@ import kotlinx.coroutines.launch
 import org.apache.skywalking.oap.server.core.analysis.Stream
 import org.apache.skywalking.oap.server.core.analysis.StreamDefinition
 import org.apache.skywalking.oap.server.core.analysis.metrics.Metrics
+import org.apache.skywalking.oap.server.core.analysis.metrics.WithMetadata
 import org.apache.skywalking.oap.server.core.analysis.worker.MetricsPersistentWorker
 import org.apache.skywalking.oap.server.core.analysis.worker.MetricsStreamProcessor
 import org.apache.skywalking.oap.server.library.module.ModuleDefineHolder
@@ -42,6 +43,9 @@ class SPPMetricsStreamProcessor : MetricsStreamProcessor() {
         GlobalScope.launch(ClusterConnection.getVertx().dispatcher()) {
             val copiedMetrics = metrics::class.java.newInstance()
             copiedMetrics.deserialize(metrics.serialize().build())
+            if (copiedMetrics.javaClass.simpleName.startsWith("spp_")) {
+                Reflect.on(copiedMetrics).set("metadata", (metrics as WithMetadata).meta)
+            }
 
             val metricId by lazy { Reflect.on(copiedMetrics).call("id0").get<String>() }
             val fullMetricId = copiedMetrics.javaClass.simpleName + "_" + metricId
