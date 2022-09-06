@@ -23,6 +23,7 @@ import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import io.vertx.core.shareddata.AsyncMap
 import io.vertx.core.shareddata.Counter
+import io.vertx.core.shareddata.Lock
 import io.vertx.core.shareddata.Shareable
 import io.vertx.kotlin.coroutines.await
 import spp.protocol.platform.auth.*
@@ -33,6 +34,10 @@ open class MemoryStorage(val vertx: Vertx) : CoreStorage {
 
     override suspend fun counter(name: String): Counter {
         return vertx.sharedData().getCounter(namespace(name)).await()
+    }
+
+    override suspend fun lock(name: String): Lock {
+        return vertx.sharedData().getLock(namespace(name)).await()
     }
 
     override suspend fun <K, V> map(name: String): AsyncMap<K, V> {

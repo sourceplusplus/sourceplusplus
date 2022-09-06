@@ -20,6 +20,7 @@ package spp.platform.storage
 import io.vertx.core.json.JsonObject
 import io.vertx.core.shareddata.AsyncMap
 import io.vertx.core.shareddata.Counter
+import io.vertx.core.shareddata.Lock
 import spp.protocol.platform.auth.*
 import spp.protocol.platform.developer.Developer
 import java.util.*
@@ -28,6 +29,7 @@ interface CoreStorage {
 
     suspend fun init(config: JsonObject) = Unit
     suspend fun counter(name: String): Counter
+    suspend fun lock(name: String): Lock
     suspend fun <K, V> map(name: String): AsyncMap<K, V>
     suspend fun <T> get(name: String): T?
     suspend fun <T> put(name: String, value: T)
