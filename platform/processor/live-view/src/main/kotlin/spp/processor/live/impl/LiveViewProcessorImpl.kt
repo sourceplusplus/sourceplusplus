@@ -32,8 +32,6 @@ import org.apache.skywalking.oap.server.analyzer.provider.trace.parser.SegmentPa
 import org.slf4j.LoggerFactory
 import spp.platform.common.DeveloperAuth
 import spp.platform.common.FeedbackProcessor
-import spp.platform.storage.ExpiringSharedData
-import spp.platform.storage.SourceStorage
 import spp.processor.ViewProcessor
 import spp.processor.live.impl.view.LiveLogsView
 import spp.processor.live.impl.view.LiveMeterView
@@ -47,7 +45,6 @@ import spp.protocol.service.LiveViewService
 import spp.protocol.view.LiveViewEvent
 import spp.protocol.view.LiveViewSubscription
 import java.util.*
-import java.util.concurrent.TimeUnit
 
 class LiveViewProcessorImpl : CoroutineVerticle(), LiveViewService {
 
@@ -56,18 +53,12 @@ class LiveViewProcessorImpl : CoroutineVerticle(), LiveViewService {
     }
 
     private val subscriptionCache = MetricTypeSubscriptionCache()
-    lateinit var meterView: LiveMeterView
-    lateinit var tracesView: LiveTracesView
-    lateinit var logsView: LiveLogsView
+    val meterView = LiveMeterView(subscriptionCache)
+    val tracesView = LiveTracesView(subscriptionCache)
+    val logsView = LiveLogsView(subscriptionCache)
 
     override suspend fun start() {
         log.info("Starting LiveViewProcessorImpl")
-        val realtimeMetricCache = ExpiringSharedData.newBuilder()
-            .expireAfterAccess(3, TimeUnit.MINUTES)
-            .build<String, Pair<Double, Long>>("realtimeMetricCache", vertx, SourceStorage.storage)
-        meterView = LiveMeterView(realtimeMetricCache, subscriptionCache)
-        tracesView = LiveTracesView(subscriptionCache)
-        logsView = LiveLogsView(subscriptionCache)
 
         //live traces view
         val segmentParserService = FeedbackProcessor.module!!.find(AnalyzerModule.NAME)

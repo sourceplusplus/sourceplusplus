@@ -20,18 +20,19 @@ package spp.processor.live.impl.view
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import mu.KotlinLogging
-import org.apache.skywalking.oap.server.core.analysis.metrics.*
+import org.apache.skywalking.oap.server.core.analysis.metrics.Metrics
+import org.apache.skywalking.oap.server.core.analysis.metrics.PercentMetrics
+import org.apache.skywalking.oap.server.core.analysis.metrics.WithMetadata
 import org.joor.Reflect
 import spp.platform.common.ClusterConnection
 import spp.platform.common.util.Msg
-import spp.platform.storage.ExpiringSharedData
+import spp.processor.ViewProcessor.realtimeMetricCache
 import spp.processor.live.impl.view.util.EntityNaming
 import spp.processor.live.impl.view.util.MetricTypeSubscriptionCache
 import spp.processor.live.impl.view.util.ViewSubscriber
 import java.util.concurrent.CopyOnWriteArrayList
 
 class LiveMeterView(
-    private val rtMetricCache: ExpiringSharedData<String, Pair<Double, Long>>,
     private val subscriptionCache: MetricTypeSubscriptionCache //todo: use ExpiringSharedData
 ) {
 
@@ -44,7 +45,7 @@ class LiveMeterView(
         val metadata = (metrics as WithMetadata).meta
         val entityName = EntityNaming.getEntityName(metadata)
         if (entityName.isNullOrEmpty()) return
-        if (log.isTraceEnabled) log.trace("Processing exported metrics: {}", metrics)
+        log.trace { Msg.msg("Processing exported metrics: {}", metrics) }
 
         var metricName = metadata.metricsName
         if (realTime && !metricName.startsWith("spp_")) {
@@ -66,33 +67,6 @@ class LiveMeterView(
     private suspend fun handleEvent(subs: Set<ViewSubscriber>, metrics: Metrics, realTime: Boolean) {
         val metricId by lazy { Reflect.on(metrics).call("id0").get<String>() }
         val fullMetricId = metrics.javaClass.simpleName + "_" + metricId
-        if (metrics.javaClass.simpleName.contains("EndpointCpm")) {
-            rtMetricCache.compute(fullMetricId) { _: String, v: Pair<Double, Long>? ->
-                if (v != null) {
-                    Pair(v.first + (metrics as CPMMetrics).total.toDouble(), v.second + 1)
-                } else {
-                    Pair(1.0, 1)
-                }
-            }
-        }
-        if (metrics.javaClass.simpleName.contains("EndpointSla")) {
-            rtMetricCache.compute(fullMetricId) { _: String, v: Pair<Double, Long>? ->
-                if (v != null) {
-                    Pair(v.first + (metrics as PercentMetrics).match, v.second + 1)
-                } else {
-                    Pair((metrics as PercentMetrics).total.toDouble(), 1)
-                }
-            }
-        }
-        if (metrics.javaClass.simpleName.contains("EndpointRespTime")) {
-            rtMetricCache.compute(fullMetricId) { _: String, v: Pair<Double, Long>? ->
-                if (v != null) {
-                    Pair((metrics as LongAvgMetrics).summation.toDouble(), v.second + 1)
-                } else {
-                    Pair((metrics as LongAvgMetrics).summation.toDouble(), 1)
-                }
-            }
-        }
 
         val jsonMetric = JsonObject.mapFrom(metrics)
         jsonMetric.put("realtime", realTime)
@@ -103,6 +77,7 @@ class LiveMeterView(
             if (!metricsName.startsWith("spp_")) {
                 jsonMetric.getJsonObject("meta").put("metricsName", "${metricsName}_realtime")
             }
+            setRealtimeValue(jsonMetric, metrics)
         }
 
         subs.forEach { sub ->
@@ -141,9 +116,6 @@ class LiveMeterView(
                                 JsonObject.mapFrom(sub.subscription.artifactQualifiedName)
                             )
                             .put("entityName", EntityNaming.getEntityName((metrics as WithMetadata).meta))
-                        if (metricsOb.getBoolean("realtime") == true) {
-                            setRealtimeValue(metricsOb)
-                        }
                         log.trace { "Sending multi-metrics $metricsOb to ${sub.subscriberId}" }
 
                         multiMetrics.add(metricsOb)
@@ -165,10 +137,6 @@ class LiveMeterView(
                         JsonObject().put("metrics", sortedMetrics).put("multiMetrics", true)
                     )
                 } else {
-                    if (jsonMetric.getBoolean("realtime") == true) {
-                        setRealtimeValue(jsonMetric)
-                    }
-
                     log.trace { "Sending metrics $jsonMetric to ${sub.subscriberId}" }
                     ClusterConnection.getVertx().eventBus().send(
                         sub.consumer.address(),
@@ -179,15 +147,13 @@ class LiveMeterView(
         }
     }
 
-    private suspend fun setRealtimeValue(jsonEvent: JsonObject) {
-        val metricType = jsonEvent.getString("metric_type")
-        if (metricType.contains("EndpointSla")) {
-            val sla = rtMetricCache.getIfPresent(jsonEvent.getString("full_metric_id"))!!
-            val realtimeValue = (sla.first / sla.second) * 10000
+    private suspend fun setRealtimeValue(jsonEvent: JsonObject, metrics: Metrics) {
+        val rtMetrics = realtimeMetricCache.getIfPresent(jsonEvent.getString("full_metric_id"))!!
+        val realtimeValue = rtMetrics.calculateAndGetValue()
+        if (metrics is PercentMetrics) {
             jsonEvent.put("percentage", realtimeValue)
-        } else if (!metricType.startsWith("spp_")) {
-            val realtimeValue = rtMetricCache.getIfPresent(jsonEvent.getString("full_metric_id"))!!.first
-            jsonEvent.put("value", realtimeValue.toLong())
+        } else {
+            jsonEvent.put("value", realtimeValue)
         }
     }
 }

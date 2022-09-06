@@ -26,15 +26,33 @@ import org.apache.skywalking.oap.server.core.analysis.metrics.Metrics
 import org.apache.skywalking.oap.server.core.analysis.worker.MetricsPersistentWorker
 import org.apache.skywalking.oap.server.core.analysis.worker.MetricsStreamProcessor
 import org.apache.skywalking.oap.server.library.module.ModuleDefineHolder
+import org.joor.Reflect
 import spp.platform.common.ClusterConnection
 import spp.processor.ViewProcessor
+import spp.processor.ViewProcessor.realtimeMetricCache
+import spp.processor.live.impl.view.model.ClusterMetrics
 
-class SPPMetricsStreamProcessor(private val realProcessor: MetricsStreamProcessor) : MetricsStreamProcessor() {
+class SPPMetricsStreamProcessor : MetricsStreamProcessor() {
+
+    private val realProcessor: MetricsStreamProcessor by lazy { MetricsStreamProcessor() }
 
     override fun `in`(metrics: Metrics) {
         realProcessor.`in`(metrics)
+
         GlobalScope.launch(ClusterConnection.getVertx().dispatcher()) {
-            ViewProcessor.liveViewProcessor.meterView.export(metrics, true)
+            val copiedMetrics = metrics::class.java.newInstance()
+            copiedMetrics.deserialize(metrics.serialize().build())
+
+            val metricId by lazy { Reflect.on(copiedMetrics).call("id0").get<String>() }
+            val fullMetricId = copiedMetrics.javaClass.simpleName + "_" + metricId
+            realtimeMetricCache.compute(fullMetricId) { _, old ->
+                val new = ClusterMetrics(copiedMetrics)
+                if (old != null) {
+                    new.metrics.combine(old.metrics)
+                }
+                new
+            }
+            ViewProcessor.liveViewProcessor.meterView.export(copiedMetrics, true)
         }
     }
 

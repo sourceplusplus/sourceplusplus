@@ -20,6 +20,7 @@ package spp.processor.live.provider
 import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.apache.skywalking.oap.log.analyzer.module.LogAnalyzerModule
 import org.apache.skywalking.oap.server.analyzer.module.AnalyzerModule
 import org.apache.skywalking.oap.server.core.CoreModule
@@ -33,9 +34,12 @@ import org.apache.skywalking.oap.server.library.module.ModuleProvider
 import org.joor.Reflect
 import org.slf4j.LoggerFactory
 import spp.platform.common.ClusterConnection
+import spp.platform.storage.ExpiringSharedData
+import spp.platform.storage.SourceStorage
 import spp.processor.ViewProcessor
 import spp.processor.ViewProcessor.liveViewProcessor
 import spp.processor.live.impl.SPPMetricsStreamProcessor
+import java.util.concurrent.TimeUnit
 
 class LiveViewModule : ModuleDefine("exporter") {
     override fun services(): Array<Class<*>> = arrayOf(MetricValuesExportService::class.java)
@@ -52,8 +56,8 @@ class LiveViewProcessorProvider : ModuleProvider() {
     override fun createConfigBeanIfAbsent(): ModuleConfig? = null
     override fun prepare() {
         //todo: should be able to hook into metrics in a smarter way
-        val sppMetricsStreamProcessor = SPPMetricsStreamProcessor(MetricsStreamProcessor.getInstance())
-        Reflect.on(MetricsStreamProcessor.getInstance()).set("PROCESSOR", sppMetricsStreamProcessor)
+        val sppMetricsStreamProcessor = SPPMetricsStreamProcessor()
+        Reflect.onClass(MetricsStreamProcessor::class.java).set("PROCESSOR", sppMetricsStreamProcessor)
 
         registerServiceImplementation(MetricValuesExportService::class.java, MetricValuesExportService {
             if (it.type == ExportEvent.EventType.TOTAL) {
@@ -67,6 +71,12 @@ class LiveViewProcessorProvider : ModuleProvider() {
     override fun start() {
         log.info("Starting LiveViewProcessorProvider")
         ViewProcessor.bootProcessor(manager)
+
+        runBlocking {
+            ViewProcessor.realtimeMetricCache = ExpiringSharedData.newBuilder()
+                .expireAfterAccess(3, TimeUnit.MINUTES)
+                .build("realtimeMetricCache", ClusterConnection.getVertx(), SourceStorage.storage)
+        }
     }
 
     override fun notifyAfterCompleted() = Unit

@@ -37,13 +37,16 @@ import org.apache.skywalking.oap.server.library.module.ModuleManager
 import org.slf4j.LoggerFactory
 import spp.platform.common.ClusterConnection.discovery
 import spp.platform.common.FeedbackProcessor
+import spp.platform.storage.ExpiringSharedData
 import spp.processor.live.impl.LiveViewProcessorImpl
+import spp.processor.live.impl.view.model.ClusterMetrics
 import spp.protocol.SourceServices
 import spp.protocol.service.LiveViewService
 import kotlin.system.exitProcess
 
 object ViewProcessor : FeedbackProcessor() {
 
+    lateinit var realtimeMetricCache: ExpiringSharedData<String, ClusterMetrics>
     lateinit var metricsQueryService: MetricsQueryService
     lateinit var metadata: IMetadataQueryDAO
     private val log = LoggerFactory.getLogger(ViewProcessor::class.java)
