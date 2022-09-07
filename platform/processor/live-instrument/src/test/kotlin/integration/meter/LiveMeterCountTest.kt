@@ -15,8 +15,9 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package integration
+package integration.meter
 
+import integration.LiveInstrumentIntegrationTest
 import io.vertx.core.json.Json
 import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxTestContext
@@ -38,7 +39,7 @@ import spp.protocol.view.LiveViewEvent
 import spp.protocol.view.LiveViewSubscription
 import java.util.*
 
-class SimpleCountLiveMeterTest : LiveInstrumentIntegrationTest() {
+class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
 
     companion object {
         private val log = KotlinLogging.logger {}
@@ -62,12 +63,11 @@ class SimpleCountLiveMeterTest : LiveInstrumentIntegrationTest() {
             MeterType.COUNT,
             MetricValue(MetricValueType.NUMBER, "1"),
             location = LiveSourceLocation(
-                SimpleCountLiveMeterTest::class.qualifiedName!!,
+                LiveMeterCountTest::class.qualifiedName!!,
                 getLineNumber("done"),
                 //"spp-test-probe" //todo: impl this so applyImmediately can be used
             ),
             id = meterId,
-            meta = mapOf("metric.mode" to "RATE")
             //applyImmediately = true //todo: can't use applyImmediately
         )
 
@@ -75,11 +75,11 @@ class SimpleCountLiveMeterTest : LiveInstrumentIntegrationTest() {
             LiveViewSubscription(
                 entityIds = listOf(liveMeter.toMetricId()),
                 artifactQualifiedName = ArtifactQualifiedName(
-                    SimpleCountLiveMeterTest::class.qualifiedName!!,
+                    LiveMeterCountTest::class.qualifiedName!!,
                     type = ArtifactType.EXPRESSION
                 ),
                 artifactLocation = LiveSourceLocation(
-                    SimpleCountLiveMeterTest::class.qualifiedName!!,
+                    LiveMeterCountTest::class.qualifiedName!!,
                     getLineNumber("done")
                 ),
                 liveViewConfig = LiveViewConfig(
@@ -145,12 +145,11 @@ class SimpleCountLiveMeterTest : LiveInstrumentIntegrationTest() {
             MeterType.COUNT,
             MetricValue(MetricValueType.NUMBER, "2"),
             location = LiveSourceLocation(
-                SimpleCountLiveMeterTest::class.qualifiedName!!,
+                LiveMeterCountTest::class.qualifiedName!!,
                 getLineNumber("done"),
                 //"spp-test-probe" //todo: impl this so applyImmediately can be used
             ),
             id = meterId,
-            meta = mapOf("metric.mode" to "RATE")
             //applyImmediately = true //todo: can't use applyImmediately
         )
 
@@ -158,11 +157,11 @@ class SimpleCountLiveMeterTest : LiveInstrumentIntegrationTest() {
             LiveViewSubscription(
                 entityIds = listOf(liveMeter.toMetricId()),
                 artifactQualifiedName = ArtifactQualifiedName(
-                    SimpleCountLiveMeterTest::class.qualifiedName!!,
+                    LiveMeterCountTest::class.qualifiedName!!,
                     type = ArtifactType.EXPRESSION
                 ),
                 artifactLocation = LiveSourceLocation(
-                    SimpleCountLiveMeterTest::class.qualifiedName!!,
+                    LiveMeterCountTest::class.qualifiedName!!,
                     getLineNumber("done")
                 ),
                 liveViewConfig = LiveViewConfig(
@@ -228,12 +227,11 @@ class SimpleCountLiveMeterTest : LiveInstrumentIntegrationTest() {
             MeterType.COUNT,
             MetricValue(MetricValueType.NUMBER, "1"),
             location = LiveSourceLocation(
-                SimpleCountLiveMeterTest::class.qualifiedName!!,
+                LiveMeterCountTest::class.qualifiedName!!,
                 getLineNumber("done"),
                 //"spp-test-probe" //todo: impl this so applyImmediately can be used
             ),
             id = meterId1,
-            meta = mapOf("metric.mode" to "RATE")
             //applyImmediately = true //todo: can't use applyImmediately
         )
 
@@ -241,11 +239,11 @@ class SimpleCountLiveMeterTest : LiveInstrumentIntegrationTest() {
             LiveViewSubscription(
                 entityIds = listOf(liveMeter1.toMetricId()),
                 artifactQualifiedName = ArtifactQualifiedName(
-                    SimpleCountLiveMeterTest::class.qualifiedName!!,
+                    LiveMeterCountTest::class.qualifiedName!!,
                     type = ArtifactType.EXPRESSION
                 ),
                 artifactLocation = LiveSourceLocation(
-                    SimpleCountLiveMeterTest::class.qualifiedName!!,
+                    LiveMeterCountTest::class.qualifiedName!!,
                     getLineNumber("done")
                 ),
                 liveViewConfig = LiveViewConfig(
@@ -263,7 +261,7 @@ class SimpleCountLiveMeterTest : LiveInstrumentIntegrationTest() {
             MeterType.COUNT,
             MetricValue(MetricValueType.NUMBER, "100"),
             location = LiveSourceLocation(
-                SimpleCountLiveMeterTest::class.qualifiedName!!,
+                LiveMeterCountTest::class.qualifiedName!!,
                 getLineNumber("done"),
                 //"spp-test-probe" //todo: impl this so applyImmediately can be used
             ),
@@ -276,11 +274,11 @@ class SimpleCountLiveMeterTest : LiveInstrumentIntegrationTest() {
             LiveViewSubscription(
                 entityIds = listOf(liveMeter2.toMetricId()),
                 artifactQualifiedName = ArtifactQualifiedName(
-                    SimpleCountLiveMeterTest::class.qualifiedName!!,
+                    LiveMeterCountTest::class.qualifiedName!!,
                     type = ArtifactType.EXPRESSION
                 ),
                 artifactLocation = LiveSourceLocation(
-                    SimpleCountLiveMeterTest::class.qualifiedName!!,
+                    LiveMeterCountTest::class.qualifiedName!!,
                     getLineNumber("done")
                 ),
                 liveViewConfig = LiveViewConfig(
