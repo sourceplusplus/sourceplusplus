@@ -15,8 +15,9 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package integration
+package integration.meter
 
+import integration.LiveInstrumentIntegrationTest
 import io.vertx.core.json.Json
 import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxTestContext
@@ -40,7 +41,7 @@ import java.io.ByteArrayOutputStream
 import java.io.ObjectOutputStream
 import java.util.*
 
-class SimpleGaugeLiveMeterTest : LiveInstrumentIntegrationTest() {
+class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
 
     companion object {
         private val log = KotlinLogging.logger {}
@@ -70,7 +71,7 @@ class SimpleGaugeLiveMeterTest : LiveInstrumentIntegrationTest() {
             MeterType.GAUGE,
             MetricValue(MetricValueType.SUPPLIER, encodedSupplier),
             location = LiveSourceLocation(
-                SimpleGaugeLiveMeterTest::class.qualifiedName!!,
+                LiveMeterGaugeTest::class.qualifiedName!!,
                 getLineNumber("done"),
                 //"spp-test-probe" //todo: impl this so applyImmediately can be used
             ),
@@ -82,11 +83,11 @@ class SimpleGaugeLiveMeterTest : LiveInstrumentIntegrationTest() {
             LiveViewSubscription(
                 entityIds = listOf(liveMeter.toMetricId()),
                 artifactQualifiedName = ArtifactQualifiedName(
-                    SimpleGaugeLiveMeterTest::class.qualifiedName!!,
+                    LiveMeterGaugeTest::class.qualifiedName!!,
                     type = ArtifactType.EXPRESSION
                 ),
                 artifactLocation = LiveSourceLocation(
-                    SimpleGaugeLiveMeterTest::class.qualifiedName!!,
+                    LiveMeterGaugeTest::class.qualifiedName!!,
                     getLineNumber("done")
                 ),
                 liveViewConfig = LiveViewConfig(
