@@ -1,0 +1,43 @@
+spp:
+  authentication:
+    client_id: "test-id"
+    client_secret: "test-secret"
+  platform_host: "localhost"
+  platform_port: 12800
+  platform_certificate: |
+    MIIFLzCCAxegAwIBAgIGAYG9v8lfMA0GCSqGSIb3DQEBCwUAMBcxFTATBgNVBAMM
+    DHNwcC1wbGF0Zm9ybTAeFw0yMjA3MDIwNzExMTFaFw0yMzA3MDIwNzExMTFaMBcx
+    FTATBgNVBAMMDHNwcC1wbGF0Zm9ybTCCAiIwDQYJKoZIhvcNAQEBBQADggIPADCC
+    AgoCggIBAJglr80YnYGgFu3ZmTqU1ZuYX9Na9W78kYfeEtE/v/LPzXOPCU3duHvI
+    q5W5Ev6fvww6iRK32tQmZ84CTr3L5HMIbgKHFHe7TFp+0Eb+2MdqFp1K8dRobUKd
+    vehIQsRi5I+I7lq0bQwT7cgysT/+sYUBWr6ZZSIe3Emqn+xHuwX9MXHSNzTRwZzQ
+    EYIECbih8Zxa7stxp3wowKB3Z9cLppfJ04JQ5eEXaNrVNUfPZb+eGCEcnPthN5vZ
+    WSz0G0OLkEaU5UH8FsvSBrpJmmHRIjEiYUpEITusk/QEPTBGS7nPPyhEvVj75/Q0
+    euMUZU7xSQfBblHO3nj/YoskCPCGI7wG7ah1FiXGDq6sfUAeG285CdBYKZYI2gWr
+    pPya21L7aOy9qLZw2SJ4HQ92qow9fHV52meDPeuyLJjhzHZoCKuOus0IdjztYJ8p
+    bAoZJtsjW9nVh0VCBIYpwkjZzWBsJvCObWJS/UBHKZwNH2sM7DQVqsJQTG2RGxts
+    d7GEn9AEzzehjBRQXhW22OH5PkujFw2vu23J6kUw33P5lDUOybAK4Bp10dP+tTzS
+    60MjspN+N0ZKcgiYegB0/W7Pkc2pGrmVpmv1F4znCuXkn8nUSqzGZ0eX5ehZZ1Wa
+    j4Nc2/WlIvuAdPM/SEn4gzZoZ+FdOQEoZmsDdjOxBwihgeNF3WefAgMBAAGjgYAw
+    fjArBgNVHREBAf8EITAfggxzcHAtcGxhdGZvcm2HBH8AAAGCCWxvY2FsaG9zdDAd
+    BgNVHQ4EFgQUQYUL1pWw3KzgUXBO+2Gh8mwsSxQwHwYDVR0jBBgwFoAUQYUL1pWw
+    3KzgUXBO+2Gh8mwsSxQwDwYDVR0TAQH/BAUwAwEB/zANBgkqhkiG9w0BAQsFAAOC
+    AgEAQyBpimXMYDuIEL8PXCab8EzoRfsu+Ot5ZdcwkAE/93H0YnTHr7+79WzTnIcj
+    VW/MQ4keDQSljjA6x9Te2+qH2eMFuPPa0X5iXkLQaJro3kaVzi/NWbHkJ2RSemsw
+    6lqx0G0f1ojoIXcgmurwlTRyoU/5wikX2WTS8VSA9Tylv5K6nYXaEU5eMCCdt9rI
+    5RQGMatQDNPmwJCgwkW2+zpDJTBSPl7i7qym5+ljCKD+Vuawq9SRTU1I3BZXB1bN
+    LdlZLrCbnM9nSW64oXG7X5h2t2N8PifCg/kwiE5UHO9snv1a6bjHyVyBXOhS4zJT
+    JhM8i8911uCaxc6e+fBknT4t2V7DET3MCxUQ2fvJ75JgBD3OPo6qcpdOwWwrQiyC
+    nITRe+LLhZQfyIsfbXoNE930uFNQvoYoHIovrOm6nUPCzBRx9YOZpdOkbYi3V6tA
+    ooUtSLrQVO++tk4pZsvLRwZ5Yku+/J/nzjYDk+dtCxd5bM3vHAfhEjzvijouVCA3
+    +7VjhiWpBSNeUt7ENX9s2GGs0OjUCAoOFoOENDcZdu7u9hrzUIhHsFGTyL0DQ1lT
+    Ip40RbmWHOunjHYEZRbJhB2Mo+hcIMGpARIq3WSYQFZnxBbchqnUnVvvo/bE5yB8
+    g6TYnkFuMFHg/LvA7RX1v2Xha5YSEHBBV7V2emBmZc1Tpkk=
+  delete_probe_directory_on_boot: false
+skywalking:
+  logging:
+    level: "OFF"
+  agent:
+    service_name: "spp-test-probe"
+  meter:
+    report_interval: 10

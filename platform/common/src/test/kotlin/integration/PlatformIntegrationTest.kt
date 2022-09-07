@@ -20,6 +20,7 @@ package integration
 import io.vertx.core.Vertx
 import io.vertx.core.VertxOptions
 import io.vertx.junit5.VertxExtension
+import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
 import io.vertx.spi.cluster.redis.RedisClusterManager
 import io.vertx.spi.cluster.redis.config.RedisConfig
@@ -31,6 +32,7 @@ import org.slf4j.LoggerFactory
 import spp.protocol.service.LiveInstrumentService
 import spp.protocol.service.LiveManagementService
 import spp.protocol.service.LiveViewService
+import java.util.concurrent.TimeUnit
 
 @ExtendWith(VertxExtension::class)
 open class PlatformIntegrationTest {
@@ -109,4 +111,24 @@ open class PlatformIntegrationTest {
         get() {
             return LiveViewService.createProxy(vertx, SYSTEM_JWT_TOKEN)
         }
+
+    fun errorOnTimeout(testContext: VertxTestContext, waitTime: Long = 15) {
+        if (testContext.awaitCompletion(waitTime, TimeUnit.SECONDS)) {
+            if (testContext.failed()) {
+                throw testContext.causeOfFailure()
+            }
+        } else {
+            throw RuntimeException("Test timed out")
+        }
+    }
+
+    fun successOnTimeout(testContext: VertxTestContext, waitTime: Long = 15) {
+        if (testContext.awaitCompletion(waitTime, TimeUnit.SECONDS)) {
+            if (testContext.failed()) {
+                throw testContext.causeOfFailure()
+            }
+        } else {
+            testContext.completeNow()
+        }
+    }
 }

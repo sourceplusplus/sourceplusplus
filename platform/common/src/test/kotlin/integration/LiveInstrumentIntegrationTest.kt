@@ -20,7 +20,6 @@ package integration
 import io.vertx.core.eventbus.MessageConsumer
 import io.vertx.core.json.Json
 import io.vertx.core.json.JsonObject
-import io.vertx.junit5.VertxTestContext
 import org.joor.Reflect
 import spp.protocol.SourceServices.Provide.toLiveInstrumentSubscriberAddress
 import spp.protocol.instrument.event.LiveBreakpointHit
@@ -28,7 +27,6 @@ import spp.protocol.instrument.event.LiveInstrumentEvent
 import spp.protocol.instrument.event.LiveInstrumentEventType
 import spp.protocol.instrument.event.LiveLogHit
 import spp.protocol.marshall.ProtocolMarshaller
-import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 
 abstract class LiveInstrumentIntegrationTest : PlatformIntegrationTest() {
@@ -98,26 +96,6 @@ abstract class LiveInstrumentIntegrationTest : PlatformIntegrationTest() {
                 invoke.invoke(logHit)
                 consumer.unregister()
             }
-        }
-    }
-
-    fun errorOnTimeout(testContext: VertxTestContext, waitTime: Long = 15) {
-        if (testContext.awaitCompletion(waitTime, TimeUnit.SECONDS)) {
-            if (testContext.failed()) {
-                throw testContext.causeOfFailure()
-            }
-        } else {
-            throw RuntimeException("Test timed out")
-        }
-    }
-
-    fun successOnTimeout(testContext: VertxTestContext, waitTime: Long = 15) {
-        if (testContext.awaitCompletion(waitTime, TimeUnit.SECONDS)) {
-            if (testContext.failed()) {
-                throw testContext.causeOfFailure()
-            }
-        } else {
-            testContext.completeNow()
         }
     }
 }

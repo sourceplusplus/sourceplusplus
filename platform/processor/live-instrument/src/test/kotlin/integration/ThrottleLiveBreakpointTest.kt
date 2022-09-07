@@ -78,7 +78,7 @@ class ThrottleLiveBreakpointTest : LiveInstrumentIntegrationTest() {
             }
         }
 
-        successOnTimeout(testContext, 15)
+        successOnTimeout(testContext, 20)
         assertTrue(bpHitCount.get() >= 10, "bpHitCount: ${bpHitCount.get()}")
 
         //clean up
@@ -126,7 +126,7 @@ class ThrottleLiveBreakpointTest : LiveInstrumentIntegrationTest() {
             }
         }
 
-        successOnTimeout(testContext, 15)
+        successOnTimeout(testContext, 20)
         assertTrue(bpHitCount.get() >= 20, "bpHitCount: ${bpHitCount.get()}")
 
         //clean up
@@ -172,7 +172,7 @@ class ThrottleLiveBreakpointTest : LiveInstrumentIntegrationTest() {
             }
         }
 
-        successOnTimeout(testContext, 15)
+        successOnTimeout(testContext, 20)
         //todo: should be able to verify at exactly 100
         assertTrue(bpHitCount.get() >= 98, "bpHitCount: ${bpHitCount.get()}")
 
