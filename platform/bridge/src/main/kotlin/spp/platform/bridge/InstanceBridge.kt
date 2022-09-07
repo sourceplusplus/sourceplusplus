@@ -59,7 +59,7 @@ abstract class InstanceBridge(private val jwtAuth: JWTAuth?) : CoroutineVerticle
                     if (it.succeeded()) {
                         handler.handle(Future.succeededFuture(it.result()))
                     } else {
-                        log.warn("Failed to authenticate ${event.type()} event", it.cause())
+                        log.warn("Failed to authenticate ${event.type()} event. Reason: ${it.cause().message}")
                         handler.handle(Future.failedFuture((it.cause())))
                     }
                 }
