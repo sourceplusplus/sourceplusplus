@@ -39,7 +39,7 @@ import spp.protocol.platform.auth.RolePermission
 import spp.protocol.platform.developer.Developer
 import spp.protocol.platform.developer.SelfInfo
 import spp.protocol.platform.general.Service
-import spp.protocol.platform.status.ActiveInstance
+import spp.protocol.platform.status.InstanceConnection
 import spp.protocol.service.LiveManagementService
 import spp.protocol.service.LiveViewService
 import java.time.Instant
@@ -212,15 +212,15 @@ class LiveManagementServiceProvider(private val vertx: Vertx) : LiveManagementSe
         return promise.future()
     }
 
-    override fun getActiveProbes(): Future<List<ActiveInstance>> {
-        val promise = Promise.promise<List<ActiveInstance>>()
+    override fun getActiveProbes(): Future<List<InstanceConnection>> {
+        val promise = Promise.promise<List<InstanceConnection>>()
         GlobalScope.launch(vertx.dispatcher()) {
             val devAuth = Vertx.currentContext().getLocal<DeveloperAuth>("developer")
             val bridgeService = SourceBridgeService.service(vertx, devAuth?.accessToken).await()
             if (bridgeService != null) {
                 promise.complete(
                     bridgeService.getActiveProbes().await().list.map {
-                        ProtocolMarshaller.deserializeActiveInstance(JsonObject.mapFrom(it))
+                        ProtocolMarshaller.deserializeInstanceConnection(JsonObject.mapFrom(it))
                     }
                 )
             }
