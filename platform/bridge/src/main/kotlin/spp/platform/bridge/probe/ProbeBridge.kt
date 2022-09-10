@@ -20,6 +20,7 @@ package spp.platform.bridge.probe
 import io.vertx.core.DeploymentOptions
 import io.vertx.core.Handler
 import io.vertx.core.Vertx
+import io.vertx.core.buffer.Buffer
 import io.vertx.core.eventbus.DeliveryOptions
 import io.vertx.core.json.Json
 import io.vertx.core.json.JsonArray
@@ -67,6 +68,7 @@ class ProbeBridge(
 
     companion object {
         private val log = KotlinLogging.logger {}
+        private val PING_MESSAGE = Buffer.buffer("\u0000\u0000\u0000\u0010{\"type\": \"ping\"}".toByteArray())
     }
 
     override suspend fun start() {
@@ -179,7 +181,10 @@ class ProbeBridge(
         ) { handleBridgeEvent(it, subscriberCache) }.listen(0)
         ClusterConnection.multiUseNetServer.addUse(bridge) {
             log.trace { "Checking message: $it" }
-            if (it.toString().contains(PROBE_CONNECTED)) {
+
+            //Python probes always send ping as first message.
+            //If first message is ping, assume it's a probe connection.
+            if (it.toString().contains(PROBE_CONNECTED) || it == PING_MESSAGE) {
                 log.trace { "Valid probe connection" }
                 true
             } else {
