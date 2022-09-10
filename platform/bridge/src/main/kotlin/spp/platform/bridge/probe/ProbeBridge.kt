@@ -51,7 +51,6 @@ import spp.protocol.platform.PlatformAddress.PROBE_CONNECTED
 import spp.protocol.platform.ProbeAddress
 import spp.protocol.platform.ProcessorAddress
 import spp.protocol.platform.auth.ClientAccess
-import spp.protocol.platform.status.ActiveInstance
 import spp.protocol.platform.status.InstanceConnection
 import java.time.Duration
 import java.time.Instant
@@ -97,14 +96,14 @@ class ProbeBridge(
                 launch(vertx.dispatcher()) {
                     val map = SourceStorage.map<String, JsonObject>(BridgeAddress.ACTIVE_PROBES)
                     map.get(probeId).onSuccess {
-                        val updatedActiveInstance = it
-                        val remotes = updatedActiveInstance.getJsonObject("meta").getJsonArray("remotes")
+                        val updatedInstanceConnection = it
+                        val remotes = updatedInstanceConnection.getJsonObject("meta").getJsonArray("remotes")
                         if (remotes == null) {
-                            updatedActiveInstance.getJsonObject("meta").put("remotes", JsonArray().add(remote))
+                            updatedInstanceConnection.getJsonObject("meta").put("remotes", JsonArray().add(remote))
                         } else {
                             remotes.add(remote)
                         }
-                        map.put(probeId, updatedActiveInstance).onSuccess {
+                        map.put(probeId, updatedInstanceConnection).onSuccess {
                             log.debug { Msg.msg("Probe {} registered {}", probeId, remote) }
                         }.onFailure {
                             log.error("Failed to update active probe", it)
@@ -120,14 +119,14 @@ class ProbeBridge(
             }
         }
         vertx.eventBus().consumer<JsonObject>(PROBE_CONNECTED) {
+            val connectionTime = System.currentTimeMillis()
             val conn = Json.decodeValue(it.body().toString(), InstanceConnection::class.java)
-            val latency = System.currentTimeMillis() - conn.connectionTime
+            val latency = connectionTime - conn.connectionTime
             log.debug { Msg.msg("Establishing connection with probe {}", conn.instanceId) }
 
-            val activeInstance = ActiveInstance(conn.instanceId, System.currentTimeMillis(), conn.meta)
             launch(vertx.dispatcher()) {
                 val map = SourceStorage.map<String, JsonObject>(BridgeAddress.ACTIVE_PROBES)
-                map.put(conn.instanceId, JsonObject.mapFrom(activeInstance)).onSuccess {
+                map.put(conn.instanceId, JsonObject.mapFrom(conn.copy(connectionTime = connectionTime))).onSuccess {
                     map.size().onSuccess {
                         log.info("Probe connected. Latency: {}ms - Probes connected: {}", latency, it)
                     }.onFailure {

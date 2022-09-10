@@ -45,7 +45,6 @@ import spp.protocol.SourceServices.Provide
 import spp.protocol.SourceServices.Utilize
 import spp.protocol.platform.PlatformAddress.MARKER_CONNECTED
 import spp.protocol.platform.PlatformAddress.MARKER_DISCONNECTED
-import spp.protocol.platform.status.ActiveInstance
 import spp.protocol.platform.status.InstanceConnection
 import java.time.Duration
 import java.time.Instant
@@ -161,17 +160,17 @@ class MarkerBridge(
     }
 
     private fun handleConnection(rawConnectionBody: JsonObject) {
+        val connectionTime = System.currentTimeMillis()
         val conn = Json.decodeValue(rawConnectionBody.toString(), InstanceConnection::class.java)
-        val latency = System.currentTimeMillis() - conn.connectionTime
+        val latency = connectionTime - conn.connectionTime
         log.trace { "Establishing connection with marker ${conn.instanceId}" }
 
         val selfId = Vertx.currentContext().getLocal<DeveloperAuth>("developer").selfId
         conn.meta["selfId"] = selfId
 
-        val activeInstance = ActiveInstance(conn.instanceId, System.currentTimeMillis(), conn.meta)
         launch(vertx.dispatcher()) {
             val map = SourceStorage.map<String, JsonObject>(BridgeAddress.ACTIVE_MARKERS)
-            map.put(conn.instanceId, JsonObject.mapFrom(activeInstance)).await()
+            map.put(conn.instanceId, JsonObject.mapFrom(conn.copy(connectionTime = connectionTime))).await()
             log.info("Marker connected. Latency: {}ms - Markers connected: {}", latency, map.size().await())
 
             SourceStorage.counter(MARKER_CONNECTED).incrementAndGet().await()
