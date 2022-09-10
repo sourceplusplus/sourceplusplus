@@ -20,6 +20,7 @@ package spp.platform.bridge.probe
 import io.vertx.core.DeploymentOptions
 import io.vertx.core.Handler
 import io.vertx.core.Vertx
+import io.vertx.core.buffer.Buffer
 import io.vertx.core.eventbus.DeliveryOptions
 import io.vertx.core.json.Json
 import io.vertx.core.json.JsonArray
@@ -50,7 +51,6 @@ import spp.protocol.platform.PlatformAddress.PROBE_CONNECTED
 import spp.protocol.platform.ProbeAddress
 import spp.protocol.platform.ProcessorAddress
 import spp.protocol.platform.auth.ClientAccess
-import spp.protocol.platform.status.ActiveInstance
 import spp.protocol.platform.status.InstanceConnection
 import java.time.Duration
 import java.time.Instant
@@ -67,6 +67,7 @@ class ProbeBridge(
 
     companion object {
         private val log = KotlinLogging.logger {}
+        private val PING_MESSAGE = Buffer.buffer("\u0000\u0000\u0000\u0010{\"type\": \"ping\"}".toByteArray())
     }
 
     override suspend fun start() {
@@ -95,14 +96,14 @@ class ProbeBridge(
                 launch(vertx.dispatcher()) {
                     val map = SourceStorage.map<String, JsonObject>(BridgeAddress.ACTIVE_PROBES)
                     map.get(probeId).onSuccess {
-                        val updatedActiveInstance = it
-                        val remotes = updatedActiveInstance.getJsonObject("meta").getJsonArray("remotes")
+                        val updatedInstanceConnection = it
+                        val remotes = updatedInstanceConnection.getJsonObject("meta").getJsonArray("remotes")
                         if (remotes == null) {
-                            updatedActiveInstance.getJsonObject("meta").put("remotes", JsonArray().add(remote))
+                            updatedInstanceConnection.getJsonObject("meta").put("remotes", JsonArray().add(remote))
                         } else {
                             remotes.add(remote)
                         }
-                        map.put(probeId, updatedActiveInstance).onSuccess {
+                        map.put(probeId, updatedInstanceConnection).onSuccess {
                             log.debug { Msg.msg("Probe {} registered {}", probeId, remote) }
                         }.onFailure {
                             log.error("Failed to update active probe", it)
@@ -118,14 +119,14 @@ class ProbeBridge(
             }
         }
         vertx.eventBus().consumer<JsonObject>(PROBE_CONNECTED) {
+            val connectionTime = System.currentTimeMillis()
             val conn = Json.decodeValue(it.body().toString(), InstanceConnection::class.java)
-            val latency = System.currentTimeMillis() - conn.connectionTime
+            val latency = connectionTime - conn.connectionTime
             log.debug { Msg.msg("Establishing connection with probe {}", conn.instanceId) }
 
-            val activeInstance = ActiveInstance(conn.instanceId, System.currentTimeMillis(), conn.meta)
             launch(vertx.dispatcher()) {
                 val map = SourceStorage.map<String, JsonObject>(BridgeAddress.ACTIVE_PROBES)
-                map.put(conn.instanceId, JsonObject.mapFrom(activeInstance)).onSuccess {
+                map.put(conn.instanceId, JsonObject.mapFrom(conn.copy(connectionTime = connectionTime))).onSuccess {
                     map.size().onSuccess {
                         log.info("Probe connected. Latency: {}ms - Probes connected: {}", latency, it)
                     }.onFailure {
@@ -144,12 +145,12 @@ class ProbeBridge(
         vertx.eventBus().consumer<JsonObject>(PlatformAddress.PROBE_DISCONNECTED) {
             val conn = Json.decodeValue(it.body().toString(), InstanceConnection::class.java)
             launch(vertx.dispatcher()) {
-                val activeProbe = SourceStorage.map<String, JsonObject>(BridgeAddress.ACTIVE_PROBES)
-                    .remove(conn.instanceId).await()
-                val connectedAt = Instant.ofEpochMilli(activeProbe.getLong("connectedAt"))
-                val connectionTime = Duration.between(Instant.now(), connectedAt)
+                val map = SourceStorage.map<String, JsonObject>(BridgeAddress.ACTIVE_PROBES)
+                val activeProbe = map.remove(conn.instanceId).await()
+                val connectionTime = Instant.ofEpochMilli(activeProbe.getLong("connectionTime"))
+                val connectionDuration = Duration.between(Instant.now(), connectionTime)
                 val probesRemaining = SourceStorage.counter(PROBE_CONNECTED).decrementAndGet().await()
-                log.info("Probe disconnected. Connection time: {} - Remaining: {}", connectionTime, probesRemaining)
+                log.info("Probe disconnected. Connection time: {} - Remaining: {}", connectionDuration, probesRemaining)
 
                 activeProbe.getJsonObject("meta").getJsonArray("remotes")?.forEach {
                     SourceStorage.counter(it.toString()).decrementAndGet().await()
@@ -179,7 +180,10 @@ class ProbeBridge(
         ) { handleBridgeEvent(it, subscriberCache) }.listen(0)
         ClusterConnection.multiUseNetServer.addUse(bridge) {
             log.trace { "Checking message: $it" }
-            if (it.toString().contains(PROBE_CONNECTED)) {
+
+            //Python probes may send ping as first message.
+            //If first message is ping, assume it's a probe connection.
+            if (it.toString().contains(PROBE_CONNECTED) || it == PING_MESSAGE) {
                 log.trace { "Valid probe connection" }
                 true
             } else {
