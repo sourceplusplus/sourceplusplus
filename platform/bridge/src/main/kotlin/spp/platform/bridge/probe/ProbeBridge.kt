@@ -146,12 +146,12 @@ class ProbeBridge(
         vertx.eventBus().consumer<JsonObject>(PlatformAddress.PROBE_DISCONNECTED) {
             val conn = Json.decodeValue(it.body().toString(), InstanceConnection::class.java)
             launch(vertx.dispatcher()) {
-                val activeProbe = SourceStorage.map<String, JsonObject>(BridgeAddress.ACTIVE_PROBES)
-                    .remove(conn.instanceId).await()
-                val connectedAt = Instant.ofEpochMilli(activeProbe.getLong("connectedAt"))
-                val connectionTime = Duration.between(Instant.now(), connectedAt)
+                val map = SourceStorage.map<String, JsonObject>(BridgeAddress.ACTIVE_PROBES)
+                val activeProbe = map.remove(conn.instanceId).await()
+                val connectionTime = Instant.ofEpochMilli(activeProbe.getLong("connectionTime"))
+                val connectionDuration = Duration.between(Instant.now(), connectionTime)
                 val probesRemaining = SourceStorage.counter(PROBE_CONNECTED).decrementAndGet().await()
-                log.info("Probe disconnected. Connection time: {} - Remaining: {}", connectionTime, probesRemaining)
+                log.info("Probe disconnected. Connection time: {} - Remaining: {}", connectionDuration, probesRemaining)
 
                 activeProbe.getJsonObject("meta").getJsonArray("remotes")?.forEach {
                     SourceStorage.counter(it.toString()).decrementAndGet().await()

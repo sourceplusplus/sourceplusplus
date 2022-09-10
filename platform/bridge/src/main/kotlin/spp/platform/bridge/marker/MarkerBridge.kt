@@ -182,11 +182,11 @@ class MarkerBridge(
         val conn = Json.decodeValue(rawConnectionBody.toString(), InstanceConnection::class.java)
         launch(vertx.dispatcher()) {
             val map = SourceStorage.map<String, JsonObject>(BridgeAddress.ACTIVE_MARKERS)
-            val it = map.remove(conn.instanceId).await()
-            val connectedAt = Instant.ofEpochMilli(it.getLong("connectedAt"))
-            log.info("Marker disconnected. Connection time: {}", Duration.between(Instant.now(), connectedAt))
-
-            SourceStorage.counter(MARKER_CONNECTED).decrementAndGet().await()
+            val activeMarker = map.remove(conn.instanceId).await()
+            val connectionTime = Instant.ofEpochMilli(activeMarker.getLong("connectionTime"))
+            val connectionDuration = Duration.between(Instant.now(), connectionTime)
+            val markersRemaining = SourceStorage.counter(MARKER_CONNECTED).decrementAndGet().await()
+            log.info("Marker disconnected. Connection time: {} - Remaining: {}", connectionDuration, markersRemaining)
         }
     }
 }
