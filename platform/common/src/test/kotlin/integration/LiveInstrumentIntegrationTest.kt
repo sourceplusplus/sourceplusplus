@@ -77,7 +77,7 @@ abstract class LiveInstrumentIntegrationTest : PlatformIntegrationTest() {
         return consumer.handler {
             val event = Json.decodeValue(it.body().toString(), LiveInstrumentEvent::class.java)
             if (event.eventType == LiveInstrumentEventType.BREAKPOINT_HIT) {
-                val bpHit = ProtocolMarshaller.deserializeLiveBreakpointHit(JsonObject(event.data))
+                val bpHit = LiveBreakpointHit(JsonObject(event.data))
                 invoke.invoke(bpHit)
 
                 if (hitCount.incrementAndGet() == hitLimit) {
@@ -92,7 +92,7 @@ abstract class LiveInstrumentIntegrationTest : PlatformIntegrationTest() {
         return consumer.handler {
             val event = Json.decodeValue(it.body().toString(), LiveInstrumentEvent::class.java)
             if (event.eventType == LiveInstrumentEventType.LOG_HIT) {
-                val logHit = ProtocolMarshaller.deserializeLiveLogHit(JsonObject(event.data))
+                val logHit = LiveLogHit(JsonObject(event.data))
                 invoke.invoke(logHit)
                 consumer.unregister()
             }

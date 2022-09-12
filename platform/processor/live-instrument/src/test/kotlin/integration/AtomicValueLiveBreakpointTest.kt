@@ -17,13 +17,14 @@
  */
 package integration
 
+import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxTestContext
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.LiveSourceLocation
-import spp.protocol.marshall.ProtocolMarshaller
+import spp.protocol.instrument.variable.LiveVariable
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
 
@@ -60,16 +61,16 @@ class AtomicValueLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                     atomicMapVariable.liveClazz
                 )
                 assertNotNull(atomicMapVariable.liveIdentity)
-                val atomicMapValue = ProtocolMarshaller.deserializeLiveVariable(
-                    JsonObject.mapFrom((atomicMapVariable.value as List<*>).first())
+                val atomicMapValue = LiveVariable(
+                    JsonObject.mapFrom((atomicMapVariable.value as JsonArray).first())
                 )
                 assertNotNull(atomicMapValue)
                 assertEquals(
                     "java.util.Collections\$SingletonMap",
                     atomicMapValue.liveClazz
                 )
-                val atomicMapFinalValue = ProtocolMarshaller.deserializeLiveVariable(
-                    JsonObject.mapFrom((atomicMapValue.value as List<*>).first())
+                val atomicMapFinalValue = LiveVariable(
+                    JsonObject.mapFrom((atomicMapValue.value as JsonArray).first())
                 )
                 assertNotNull(atomicMapFinalValue)
                 assertEquals("test", atomicMapFinalValue.name)
@@ -83,8 +84,8 @@ class AtomicValueLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                     atomicStringVariable.liveClazz
                 )
                 assertNotNull(atomicStringVariable.liveIdentity)
-                val atomicStringValue = ProtocolMarshaller.deserializeLiveVariable(
-                    JsonObject.mapFrom((atomicStringVariable.value as List<*>).first())
+                val atomicStringValue = LiveVariable(
+                    JsonObject.mapFrom((atomicStringVariable.value as JsonArray).first())
                 )
                 assertNotNull(atomicStringValue)
                 assertEquals("test", atomicStringValue.value)

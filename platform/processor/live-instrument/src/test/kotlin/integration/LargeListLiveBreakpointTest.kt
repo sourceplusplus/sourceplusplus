@@ -17,6 +17,8 @@
  */
 package integration
 
+import io.vertx.core.json.JsonArray
+import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxTestContext
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
@@ -57,15 +59,17 @@ class LargeListLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                     largeListVariable.liveClazz
                 )
 
-                val listValues = largeListVariable.value as List<Map<String, Any>>
-                assertEquals(101, listValues.size)
-                for (value in listValues.subList(0, 100)) {
-                    assertEquals(1, value["value"])
+                val listValues = largeListVariable.value as JsonArray
+                assertEquals(101, listValues.size())
+
+                for (i in 0..99) {
+                    val value = listValues.getJsonObject(i)
+                    assertEquals(1, value.getInteger("value"))
                 }
-                val lastValue = listValues.last()["value"] as Map<String, Any>
-                assertEquals("MAX_COLLECTION_SIZE_EXCEEDED", lastValue["@skip"])
-                assertEquals(100_000, lastValue["@skip[size]"])
-                assertEquals(100, lastValue["@skip[max]"])
+                val lastValue = (listValues.last() as JsonObject).getJsonObject("value")
+                assertEquals("MAX_COLLECTION_SIZE_EXCEEDED", lastValue.getString("@skip"))
+                assertEquals(100_000, lastValue.getInteger("@skip[size]"))
+                assertEquals(100, lastValue.getInteger("@skip[max]"))
             }
 
             //test passed

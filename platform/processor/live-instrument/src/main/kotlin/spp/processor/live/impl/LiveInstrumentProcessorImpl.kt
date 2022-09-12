@@ -24,9 +24,6 @@ import io.vertx.core.json.Json
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import io.vertx.kotlin.coroutines.CoroutineVerticle
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
-import kotlinx.datetime.toJavaInstant
 import mu.KotlinLogging
 import org.apache.skywalking.oap.meter.analyzer.MetricConvert
 import org.apache.skywalking.oap.server.analyzer.module.AnalyzerModule
@@ -64,6 +61,7 @@ import spp.protocol.platform.ProbeAddress.LIVE_INSTRUMENT_REMOTE
 import spp.protocol.platform.ProcessorAddress
 import spp.protocol.platform.ProcessorAddress.REMOTE_REGISTERED
 import spp.protocol.service.LiveInstrumentService
+import java.time.Instant
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.util.*
@@ -402,7 +400,7 @@ class LiveInstrumentProcessorImpl : CoroutineVerticle(), LiveInstrumentService {
         if (log.isTraceEnabled) log.trace("Got live instrument removed: {}", it.body())
         val instrumentCommand = it.body().getString("command")
         val instrumentData = if (instrumentCommand != null) {
-            val command = ProtocolMarshaller.deserializeLiveInstrumentCommand(JsonObject(instrumentCommand))
+            val command = LiveInstrumentCommand(JsonObject(instrumentCommand))
             JsonObject.mapFrom(command.instruments.first()) //todo: check for multiple
         } else if (it.body().containsKey("instrument")) {
             JsonObject(it.body().getString("instrument"))
@@ -415,7 +413,7 @@ class LiveInstrumentProcessorImpl : CoroutineVerticle(), LiveInstrumentService {
             //publish remove command to all probes & markers
             removeLiveInstrument(
                 instrumentRemoval.developerAuth,
-                Instant.fromEpochMilliseconds(it.body().getLong("occurredAt")),
+                Instant.ofEpochMilli(it.body().getLong("occurredAt")),
                 instrumentRemoval.instrument,
                 it.body().getString("cause")
             )
@@ -610,7 +608,7 @@ class LiveInstrumentProcessorImpl : CoroutineVerticle(), LiveInstrumentService {
         }
 
         //publish remove command to all probes
-        removeLiveInstrument(devAuth, Clock.System.now(), instrumentRemoval.instrument, null)
+        removeLiveInstrument(devAuth, Instant.now(), instrumentRemoval.instrument, null)
         return Future.succeededFuture(instrumentRemoval.instrument)
     }
 
@@ -720,7 +718,7 @@ class LiveInstrumentProcessorImpl : CoroutineVerticle(), LiveInstrumentService {
         val values = mutableListOf<Any>()
         services.forEach { service ->
             val instances = metadata.getMeterServiceInstances(
-                start.toEpochMilliseconds(), stop.toEpochMilliseconds(), service.id
+                start.toEpochMilli(), stop.toEpochMilli(), service.id
             )
             if (instances.isEmpty()) {
                 log.info("No instances found for service: ${service.id}")
@@ -747,12 +745,12 @@ class LiveInstrumentProcessorImpl : CoroutineVerticle(), LiveInstrumentService {
                         Reflect.on(this).set(
                             "start",
                             DateTimeFormatter.ofPattern(step.pattern).withZone(ZoneOffset.UTC)
-                                .format(start.toJavaInstant())
+                                .format(start)
                         )
                         Reflect.on(this).set(
                             "end",
                             DateTimeFormatter.ofPattern(step.pattern).withZone(ZoneOffset.UTC)
-                                .format(stop.toJavaInstant())
+                                .format(stop)
                         )
                         Reflect.on(this).set("step", Step.valueOf(step.name))
                     })
@@ -762,12 +760,12 @@ class LiveInstrumentProcessorImpl : CoroutineVerticle(), LiveInstrumentService {
                         Reflect.on(this).set(
                             "start",
                             DateTimeFormatter.ofPattern(step.pattern).withZone(ZoneOffset.UTC)
-                                .format(start.toJavaInstant())
+                                .format(start)
                         )
                         Reflect.on(this).set(
                             "end",
                             DateTimeFormatter.ofPattern(step.pattern).withZone(ZoneOffset.UTC)
-                                .format(stop.toJavaInstant())
+                                .format(stop)
                         )
                         Reflect.on(this).set("step", Step.valueOf(step.name))
                     })

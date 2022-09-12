@@ -17,6 +17,8 @@
  */
 package integration
 
+import io.vertx.core.json.JsonArray
+import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxTestContext
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -75,45 +77,45 @@ class DeepObjectLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                 )
 
                 //layer2
-                val layer2Object = (layer1Object.value as List<*>)[0] as Map<String, *>
+                val layer2Object = (layer1Object.value as JsonArray).first() as JsonObject
                 assertEquals(
                     "integration.DeepObjectLiveBreakpointTest\$Layer1\$Layer2",
-                    layer2Object["liveClazz"]
+                    layer2Object.getString("liveClazz")
                 )
 
                 //layer3
-                val layer3Object = (layer2Object["value"] as List<*>)[0] as Map<String, *>
+                val layer3Object = layer2Object.getJsonArray("value").first() as JsonObject
                 assertEquals(
                     "integration.DeepObjectLiveBreakpointTest\$Layer1\$Layer2\$Layer3",
-                    layer3Object["liveClazz"]
+                    layer3Object.getString("liveClazz")
                 )
 
                 //layer4
-                val layer4Object = (layer3Object["value"] as List<*>)[0] as Map<String, *>
+                val layer4Object = (layer3Object.getJsonArray("value")).first() as JsonObject
                 assertEquals(
                     "integration.DeepObjectLiveBreakpointTest\$Layer1\$Layer2\$Layer3\$Layer4",
-                    layer4Object["liveClazz"]
+                    layer4Object.getString("liveClazz")
                 )
 
                 //layer5
-                val layer5Object = (layer4Object["value"] as List<*>)[0] as Map<String, *>
+                val layer5Object = layer4Object.getJsonArray("value").first() as JsonObject
                 assertEquals(
                     "integration.DeepObjectLiveBreakpointTest\$Layer1\$Layer2\$Layer3\$Layer4\$Layer5",
-                    layer5Object["liveClazz"]
+                    layer5Object.getString("liveClazz")
                 )
 
                 //finalInt
-                val finalInt = (layer5Object["value"] as List<*>)[0] as Map<String, *>
+                val finalInt = layer5Object.getJsonArray("value").first() as JsonObject
                 assertEquals(
                     "java.lang.Integer",
-                    finalInt["liveClazz"]
+                    finalInt.getString("liveClazz")
                 )
 
                 //max depth exceeded
-                val finalIntValue = finalInt["value"] as Map<String, *>
+                val finalIntValue = finalInt.getJsonObject("value")
                 assertEquals(
                     "MAX_DEPTH_EXCEEDED",
-                    finalIntValue["@skip"]
+                    finalIntValue.getString("@skip")
                 )
             }
 

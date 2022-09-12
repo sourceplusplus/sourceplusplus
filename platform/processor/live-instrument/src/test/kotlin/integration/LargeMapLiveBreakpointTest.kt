@@ -17,6 +17,8 @@
  */
 package integration
 
+import io.vertx.core.json.JsonArray
+import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxTestContext
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
@@ -57,19 +59,20 @@ class LargeMapLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                     largeMapVariable.liveClazz
                 )
 
-                val mapValues = largeMapVariable.value as List<Map<String, Any>>
-                assertEquals(101, mapValues.size)
-                for ((index, value) in mapValues.subList(0, 100).withIndex()) {
-                    assertEquals(index.toString(), value["name"])
+                val mapValues = largeMapVariable.value as JsonArray
+                assertEquals(101, mapValues.size())
+                for (index in 0..99) {
+                    val value = mapValues.getJsonObject(index)
+                    assertEquals(index.toString(), value.getString("name"))
 
                     //todo: SmallMapLiveBreakpointTest doesn't create child LiveVariables
-                    val actualValue = (value["value"] as List<Map<String, Any>>).first()
-                    assertEquals(index.toString(), actualValue["value"])
+                    val actualValue = value.getJsonArray("value").first() as JsonObject
+                    assertEquals(index.toString(), actualValue.getString("value"))
                 }
-                val lastValue = mapValues.last()["value"] as Map<String, Any>
-                assertEquals("MAX_COLLECTION_SIZE_EXCEEDED", lastValue["@skip"])
-                assertEquals(100_000, lastValue["@skip[size]"])
-                assertEquals(100, lastValue["@skip[max]"])
+                val lastValue = (mapValues.last() as JsonObject).getJsonObject("value")
+                assertEquals("MAX_COLLECTION_SIZE_EXCEEDED", lastValue.getString("@skip"))
+                assertEquals(100_000, lastValue.getInteger("@skip[size]"))
+                assertEquals(100, lastValue.getInteger("@skip[max]"))
             }
 
             //test passed

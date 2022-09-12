@@ -19,8 +19,6 @@ package spp.processor.live.impl.view
 
 import io.vertx.core.json.Json
 import io.vertx.core.json.JsonObject
-import kotlinx.datetime.toJavaInstant
-import kotlinx.datetime.toKotlinInstant
 import org.apache.skywalking.apm.network.language.agent.v3.SegmentObject
 import org.apache.skywalking.apm.network.language.agent.v3.SpanObject
 import org.apache.skywalking.oap.server.analyzer.provider.AnalyzerModuleConfig
@@ -75,8 +73,8 @@ class LiveTracesView(private val subscriptionCache: MetricTypeSubscriptionCache)
                     },
                     segment.service,
                     segment.serviceInstance,
-                    Instant.ofEpochMilli(span.startTime).toKotlinInstant(),
-                    Instant.ofEpochMilli(span.endTime).toKotlinInstant(),
+                    Instant.ofEpochMilli(span.startTime),
+                    Instant.ofEpochMilli(span.endTime),
                     entityId,
                     subs.first().subscription.artifactQualifiedName,
                     span.spanType.name,
@@ -88,13 +86,13 @@ class LiveTracesView(private val subscriptionCache: MetricTypeSubscriptionCache)
                     span.spanLayer.name,
                     span.tagsList.associate { it.key to it.value },
                     span.logsList.flatMap { log -> log.dataList.map { Pair(log.time, it.value) } }
-                        .map { TraceSpanLogEntry(Instant.ofEpochMilli(it.first).toKotlinInstant(), it.second) }
+                        .map { TraceSpanLogEntry(Instant.ofEpochMilli(it.first), it.second) }
                 )
                 val trace = Trace(
                     segment.traceId,
                     listOf(span.operationName),
                     (span.endTime - span.startTime).toInt(),
-                    Instant.ofEpochMilli(span.startTime).toKotlinInstant(),
+                    Instant.ofEpochMilli(span.startTime),
                     span.isError,
                     listOf(segment.traceId),
                     false,
@@ -117,7 +115,7 @@ class LiveTracesView(private val subscriptionCache: MetricTypeSubscriptionCache)
                         .put("multiMetrics", false)
                         .put("artifactQualifiedName", JsonObject.mapFrom(sub.subscription.artifactQualifiedName))
                         .put("entityId", entityId)
-                        .put("timeBucket", formatter.format(trace.start.toJavaInstant()))
+                        .put("timeBucket", formatter.format(trace.start))
                         .put("trace", JsonObject.mapFrom(trace))
                     ClusterConnection.getVertx().eventBus().send(sub.consumer.address(), event)
                 }

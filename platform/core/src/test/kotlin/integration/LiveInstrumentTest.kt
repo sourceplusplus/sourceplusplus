@@ -30,9 +30,9 @@ import spp.protocol.SourceServices.Provide.toLiveInstrumentSubscriberAddress
 import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.LiveLog
 import spp.protocol.instrument.LiveSourceLocation
+import spp.protocol.instrument.event.LiveBreakpointHit
 import spp.protocol.instrument.event.LiveInstrumentEvent
 import spp.protocol.instrument.event.LiveInstrumentEventType
-import spp.protocol.marshall.ProtocolMarshaller
 import java.util.concurrent.TimeUnit
 
 @ExtendWith(VertxExtension::class)
@@ -143,7 +143,7 @@ class LiveInstrumentTest : PlatformIntegrationTest() {
             when (liveEvent.eventType) {
                 LiveInstrumentEventType.BREAKPOINT_HIT -> {
                     log.info("Got hit")
-                    val bpHit = ProtocolMarshaller.deserializeLiveBreakpointHit(JsonObject(liveEvent.data))
+                    val bpHit = LiveBreakpointHit(JsonObject(liveEvent.data))
                     testContext.verify {
                         assertTrue(bpHit.stackTrace.elements.isNotEmpty())
                         val topFrame = bpHit.stackTrace.elements.first()
@@ -211,7 +211,7 @@ class LiveInstrumentTest : PlatformIntegrationTest() {
             when (liveEvent.eventType) {
                 LiveInstrumentEventType.BREAKPOINT_HIT -> {
                     log.info("Got hit")
-                    val bpHit = ProtocolMarshaller.deserializeLiveBreakpointHit(JsonObject(liveEvent.data))
+                    val bpHit = LiveBreakpointHit(JsonObject(liveEvent.data))
                     testContext.verify {
                         assertTrue(bpHit.stackTrace.elements.isNotEmpty())
                         val topFrame = bpHit.stackTrace.elements.first()
@@ -279,7 +279,7 @@ class LiveInstrumentTest : PlatformIntegrationTest() {
             when (liveEvent.eventType) {
                 LiveInstrumentEventType.BREAKPOINT_HIT -> {
                     log.info("Got hit")
-                    val bpHit = ProtocolMarshaller.deserializeLiveBreakpointHit(JsonObject(liveEvent.data))
+                    val bpHit = LiveBreakpointHit(JsonObject(liveEvent.data))
                     testContext.verify {
                         assertTrue(bpHit.stackTrace.elements.isNotEmpty())
                         val topFrame = bpHit.stackTrace.elements.first()
@@ -347,7 +347,7 @@ class LiveInstrumentTest : PlatformIntegrationTest() {
             when (liveEvent.eventType) {
                 LiveInstrumentEventType.BREAKPOINT_HIT -> {
                     log.info("Got hit")
-                    val bpHit = ProtocolMarshaller.deserializeLiveBreakpointHit(JsonObject(liveEvent.data))
+                    val bpHit = LiveBreakpointHit(JsonObject(liveEvent.data))
                     testContext.verify {
                         assertTrue(bpHit.stackTrace.elements.isNotEmpty())
                         val topFrame = bpHit.stackTrace.elements.first()

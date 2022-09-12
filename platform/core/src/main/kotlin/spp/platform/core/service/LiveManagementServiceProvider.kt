@@ -31,7 +31,6 @@ import spp.platform.common.DeveloperAuth
 import spp.platform.common.service.SourceBridgeService
 import spp.platform.storage.SourceStorage
 import spp.protocol.SourceServices
-import spp.protocol.marshall.ProtocolMarshaller
 import spp.protocol.platform.ProbeAddress
 import spp.protocol.platform.auth.ClientAccess
 import spp.protocol.platform.auth.DeveloperRole
@@ -220,7 +219,7 @@ class LiveManagementServiceProvider(private val vertx: Vertx) : LiveManagementSe
             if (bridgeService != null) {
                 promise.complete(
                     bridgeService.getActiveProbes().await().list.map {
-                        ProtocolMarshaller.deserializeInstanceConnection(JsonObject.mapFrom(it))
+                        InstanceConnection(JsonObject.mapFrom(it))
                     }
                 )
             }

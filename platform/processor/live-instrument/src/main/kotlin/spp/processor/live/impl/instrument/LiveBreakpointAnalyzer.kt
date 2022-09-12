@@ -21,7 +21,6 @@ import io.vertx.core.json.Json
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import io.vertx.kotlin.core.json.get
-import kotlinx.datetime.Instant
 import net.bytebuddy.jar.asm.Type
 import org.apache.skywalking.apm.network.language.agent.v3.SegmentObject
 import org.apache.skywalking.apm.network.language.agent.v3.SpanObject
@@ -41,6 +40,7 @@ import spp.protocol.instrument.event.LiveInstrumentEvent
 import spp.protocol.instrument.event.LiveInstrumentEventType
 import spp.protocol.instrument.variable.LiveVariable
 import spp.protocol.instrument.variable.LiveVariableScope
+import java.time.Instant
 import java.util.concurrent.atomic.AtomicInteger
 
 class LiveBreakpointAnalyzer(
@@ -269,7 +269,7 @@ class LiveBreakpointAnalyzer(
             return LiveBreakpointHit(
                 bpData.getString("breakpoint_id"),
                 bpData.getString("trace_id"),
-                Instant.fromEpochMilliseconds(bpData.getLong("occurred_at")),
+                Instant.ofEpochMilli(bpData.getLong("occurred_at")),
                 bpData.getString("service_instance"),
                 bpData.getString("service"),
                 stackTrace

@@ -29,9 +29,10 @@ import org.slf4j.LoggerFactory
 import spp.protocol.SourceServices.Provide.toLiveInstrumentSubscriberAddress
 import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.LiveSourceLocation
+import spp.protocol.instrument.event.LiveBreakpointHit
 import spp.protocol.instrument.event.LiveInstrumentEvent
 import spp.protocol.instrument.event.LiveInstrumentEventType
-import spp.protocol.marshall.ProtocolMarshaller
+import spp.protocol.instrument.event.LiveInstrumentRemoved
 import spp.protocol.marshall.ServiceExceptionConverter
 import spp.protocol.service.error.LiveInstrumentException
 import java.util.*
@@ -73,7 +74,7 @@ class LiveBreakpointTest : PlatformIntegrationTest() {
                 LiveInstrumentEventType.BREAKPOINT_REMOVED -> {
                     log.info("Got removed")
                     testContext.verify {
-                        val remEvent = ProtocolMarshaller.deserializeLiveInstrumentRemoved(JsonObject(liveEvent.data))
+                        val remEvent = LiveInstrumentRemoved(JsonObject(liveEvent.data))
                         assertEquals(instrumentId, remEvent.liveInstrument.id)
                     }
                     gotRemoved = true
@@ -85,7 +86,7 @@ class LiveBreakpointTest : PlatformIntegrationTest() {
                     }
                     gotHit = true
 
-                    val bpHit = ProtocolMarshaller.deserializeLiveBreakpointHit(JsonObject(liveEvent.data))
+                    val bpHit = LiveBreakpointHit(JsonObject(liveEvent.data))
                     testContext.verify {
                         assertTrue(bpHit.stackTrace.elements.isNotEmpty())
                         val topFrame = bpHit.stackTrace.elements.first()
@@ -215,7 +216,7 @@ class LiveBreakpointTest : PlatformIntegrationTest() {
                 LiveInstrumentEventType.BREAKPOINT_REMOVED -> {
                     log.info("Got removed")
                     testContext.verify {
-                        val remEvent = ProtocolMarshaller.deserializeLiveInstrumentRemoved(JsonObject(liveEvent.data))
+                        val remEvent = LiveInstrumentRemoved(JsonObject(liveEvent.data))
                         assertEquals(instrumentId, remEvent.liveInstrument.id)
                     }
                     gotRemoved = true

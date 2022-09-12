@@ -33,7 +33,6 @@ import io.vertx.servicediscovery.Record
 import io.vertx.servicediscovery.types.EventBusService
 import io.vertx.serviceproxy.ServiceBinder
 import io.vertx.serviceproxy.ServiceInterceptor
-import kotlinx.datetime.Instant
 import org.apache.skywalking.oap.server.core.analysis.metrics.DataTable
 import org.apache.skywalking.oap.server.library.module.ModuleManager
 import org.slf4j.LoggerFactory
@@ -41,7 +40,6 @@ import spp.platform.common.ClusterConnection.discovery
 import spp.platform.common.FeedbackProcessor
 import spp.processor.live.impl.LiveInstrumentProcessorImpl
 import spp.protocol.SourceServices
-import spp.protocol.marshall.KSerializers
 import spp.protocol.platform.auth.AccessChecker
 import spp.protocol.platform.auth.RolePermission
 import spp.protocol.platform.auth.RolePermission.*
@@ -91,10 +89,6 @@ object InstrumentProcessor : FeedbackProcessor() {
                 gen.writeEndObject()
             }
         })
-        DatabindCodec.mapper().registerModule(module)
-
-        module.addSerializer(Instant::class.java, KSerializers.KotlinInstantSerializer())
-        module.addDeserializer(Instant::class.java, KSerializers.KotlinInstantDeserializer())
         DatabindCodec.mapper().registerModule(module)
 
         vertx.deployVerticle(liveInstrumentProcessor).await()

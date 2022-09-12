@@ -31,7 +31,7 @@ import spp.protocol.instrument.LiveLog
 import spp.protocol.instrument.LiveSourceLocation
 import spp.protocol.instrument.event.LiveInstrumentEvent
 import spp.protocol.instrument.event.LiveInstrumentEventType
-import spp.protocol.marshall.ProtocolMarshaller
+import spp.protocol.instrument.event.LiveInstrumentRemoved
 import spp.protocol.marshall.ServiceExceptionConverter
 import spp.protocol.service.error.LiveInstrumentException
 import java.util.*
@@ -80,7 +80,7 @@ class LiveLogTest : PlatformIntegrationTest() {
                 LiveInstrumentEventType.LOG_REMOVED -> {
                     log.info("Got removed")
                     testContext.verify {
-                        val remEvent = ProtocolMarshaller.deserializeLiveInstrumentRemoved(JsonObject(liveEvent.data))
+                        val remEvent = LiveInstrumentRemoved(JsonObject(liveEvent.data))
                         assertEquals(instrumentId, remEvent.liveInstrument.id)
                     }
                     gotRemoved = true

@@ -17,6 +17,8 @@
  */
 package integration
 
+import io.vertx.core.json.JsonArray
+import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxTestContext
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -61,7 +63,7 @@ class SimpleCollectionsLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                 assertEquals(9, topFrame.variables.size)
 
                 //emptyList
-                assertEquals(listOf<String>(), topFrame.variables.find { it.name == "emptyList" }!!.value)
+                assertEquals(JsonArray(), topFrame.variables.find { it.name == "emptyList" }!!.value)
                 assertEquals(
                     "kotlin.collections.EmptyList",
                     topFrame.variables.find { it.name == "emptyList" }!!.liveClazz
@@ -71,7 +73,7 @@ class SimpleCollectionsLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                 assertEquals(
                     listOf(1, 2, 3),
                     topFrame.variables.find { it.name == "byteArr" }!!.value.let {
-                        (it as List<Map<String, *>>).map { it["value"] }
+                        (it as JsonArray).map { JsonObject.mapFrom(it) }.map { it.getInteger("value") }
                     }
                 )
                 assertEquals(
@@ -83,7 +85,7 @@ class SimpleCollectionsLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                 assertEquals(
                     listOf(1, 2, 3),
                     topFrame.variables.find { it.name == "intArr" }!!.value.let {
-                        (it as List<Map<String, *>>).map { it["value"] }
+                        (it as JsonArray).map { JsonObject.mapFrom(it) }.map { it.getInteger("value") }
                     }
                 )
                 assertEquals(
@@ -95,7 +97,7 @@ class SimpleCollectionsLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                 assertEquals(
                     listOf("a", "b", "c"),
                     topFrame.variables.find { it.name == "stringSet" }!!.value.let {
-                        (it as List<Map<String, *>>).map { it["value"] }
+                        (it as JsonArray).map { JsonObject.mapFrom(it) }.map { it.getString("value") }
                     }
                 )
                 assertEquals(
@@ -107,7 +109,8 @@ class SimpleCollectionsLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                 assertEquals(
                     listOf(1.0 to 1.1, 2.0 to 2.1, 3.0 to 3.1),
                     topFrame.variables.find { it.name == "doubleMap" }!!.value.let {
-                        (it as List<Map<String, *>>).map { it["name"].toString().toDouble() to it["value"] }
+                        (it as JsonArray).map { JsonObject.mapFrom(it) }
+                            .map { it.getString("name").toDouble() to it.getDouble("value") }
                     }
                 )
                 assertEquals(
