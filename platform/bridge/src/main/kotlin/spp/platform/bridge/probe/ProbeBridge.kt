@@ -120,7 +120,7 @@ class ProbeBridge(
         }
         vertx.eventBus().consumer<JsonObject>(PROBE_CONNECTED) {
             val connectionTime = System.currentTimeMillis()
-            val conn = Json.decodeValue(it.body().toString(), InstanceConnection::class.java)
+            val conn = InstanceConnection(it.body())
             val latency = connectionTime - conn.connectionTime
             log.debug { Msg.msg("Establishing connection with probe {}", conn.instanceId) }
 
@@ -143,7 +143,7 @@ class ProbeBridge(
             }
         }
         vertx.eventBus().consumer<JsonObject>(PlatformAddress.PROBE_DISCONNECTED) {
-            val conn = Json.decodeValue(it.body().toString(), InstanceConnection::class.java)
+            val conn = InstanceConnection(it.body())
             launch(vertx.dispatcher()) {
                 val map = SourceStorage.map<String, JsonObject>(BridgeAddress.ACTIVE_PROBES)
                 val activeProbe = map.remove(conn.instanceId).await()
@@ -220,9 +220,7 @@ class ProbeBridge(
                 if (clientAuth.succeeded()) {
                     val writeHandlerID = getWriteHandlerID(it)
                     if (it.rawMessage.getString("address") == PROBE_CONNECTED) {
-                        val conn = Json.decodeValue(
-                            it.rawMessage.getJsonObject("body").toString(), InstanceConnection::class.java
-                        )
+                        val conn = InstanceConnection(it.rawMessage.getJsonObject("body"))
                         subscriberCache[writeHandlerID] = conn.instanceId
 
                         setCloseHandler(it) { _ ->

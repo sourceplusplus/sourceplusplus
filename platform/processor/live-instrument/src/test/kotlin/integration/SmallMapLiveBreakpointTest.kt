@@ -17,6 +17,7 @@
  */
 package integration
 
+import io.vertx.core.json.JsonArray
 import io.vertx.junit5.VertxTestContext
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Disabled
@@ -79,13 +80,13 @@ class SmallMapLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                 )
                 assertNotNull(smallMapVariable.liveIdentity)
 
-                val mapValues = smallMapVariable.value as List<Map<String, Any>>
-                assertEquals(10, mapValues.size)
+                val mapValues = smallMapVariable.value as JsonArray
+                assertEquals(10, mapValues.size())
                 for (i in 0 until 10) {
-                    val map = mapValues[i]
-                    assertEquals(7, map.size)
-                    assertEquals(i.toString(), map["name"])
-                    assertNull(map["value"])
+                    val map = mapValues.getJsonObject(i)
+                    assertEquals(7, map.size())
+                    assertEquals(i.toString(), map.getString("name"))
+                    assertNull(map.getValue("value"))
                 }
             }
 
@@ -142,13 +143,13 @@ class SmallMapLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                     smallMapVariable.liveClazz
                 )
 
-                val mapValues = smallMapVariable.value as List<Map<String, Any>>
-                assertEquals(10, mapValues.size)
+                val mapValues = smallMapVariable.value as JsonArray
+                assertEquals(10, mapValues.size())
                 for (i in 0 until 10) {
-                    val map = mapValues[i]
-                    assertEquals(7, map.size)
-                    assertEquals(i.toString(), map["name"])
-                    assertEquals(i, map["value"])
+                    val map = mapValues.getJsonObject(i)
+                    assertEquals(7, map.size())
+                    assertEquals(i.toString(), map.getString("name"))
+                    assertEquals(i, map.getInteger("value"))
                 }
             }
 
@@ -205,13 +206,13 @@ class SmallMapLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                 )
                 assertNotNull(smallMapVariable.liveIdentity)
 
-                val mapValues = smallMapVariable.value as List<Map<String, Any>>
-                assertEquals(10, mapValues.size)
+                val mapValues = smallMapVariable.value as JsonArray
+                assertEquals(10, mapValues.size())
                 for (i in 0 until 10) {
-                    val map = mapValues[i]
-                    assertEquals(7, map.size)
-                    assertEquals(i.toString(), map["name"])
-                    assertEquals(i, map["value"])
+                    val map = mapValues.getJsonObject(i)
+                    assertEquals(7, map.size())
+                    assertEquals(i.toString(), map.getString("name"))
+                    assertEquals(i, map.getInteger("value"))
                 }
             }
 

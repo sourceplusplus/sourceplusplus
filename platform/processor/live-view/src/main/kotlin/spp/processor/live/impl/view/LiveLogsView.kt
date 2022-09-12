@@ -19,8 +19,6 @@ package spp.processor.live.impl.view
 
 import com.google.protobuf.Message
 import io.vertx.core.json.JsonObject
-import kotlinx.datetime.toJavaInstant
-import kotlinx.datetime.toKotlinInstant
 import org.apache.skywalking.apm.network.logging.v3.LogData
 import org.apache.skywalking.oap.log.analyzer.provider.log.listener.LogAnalysisListener
 import org.apache.skywalking.oap.log.analyzer.provider.log.listener.LogAnalysisListenerFactory
@@ -53,7 +51,7 @@ class LiveLogsView(private val subscriptionCache: MetricTypeSubscriptionCache) :
                 val subs = subbedArtifacts[logPattern]
                 subs?.forEach { sub ->
                     val log = Log(
-                        Instant.ofEpochMilli(logData.timestamp).toKotlinInstant(),
+                        Instant.ofEpochMilli(logData.timestamp),
                         logPattern,
                         logData.tags.dataList.find { it.key == "level" }!!.value,
                         logData.tags.dataList.find { it.key == "logger" }?.value,
@@ -66,7 +64,7 @@ class LiveLogsView(private val subscriptionCache: MetricTypeSubscriptionCache) :
                         .put("multiMetrics", false)
                         .put("artifactQualifiedName", JsonObject.mapFrom(sub.subscription.artifactQualifiedName))
                         .put("entityId", logPattern)
-                        .put("timeBucket", formatter.format(log.timestamp.toJavaInstant()))
+                        .put("timeBucket", formatter.format(log.timestamp))
                         .put("log", JsonObject.mapFrom(log))
                     ClusterConnection.getVertx().eventBus().send(sub.consumer.address(), event)
                 }

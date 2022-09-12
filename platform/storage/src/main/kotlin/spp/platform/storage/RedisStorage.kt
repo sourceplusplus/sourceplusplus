@@ -26,7 +26,6 @@ import io.vertx.core.shareddata.Lock
 import io.vertx.kotlin.coroutines.await
 import io.vertx.redis.client.Redis
 import io.vertx.redis.client.RedisAPI
-import spp.protocol.marshall.ProtocolMarshaller
 import spp.protocol.platform.auth.*
 import spp.protocol.platform.developer.Developer
 import java.nio.charset.StandardCharsets.UTF_8
@@ -204,9 +203,7 @@ open class RedisStorage(val vertx: Vertx) : CoreStorage {
     }
 
     override suspend fun getDataRedaction(id: String): DataRedaction {
-        return ProtocolMarshaller.deserializeDataRedaction(
-            JsonObject(redis.get(namespace("data_redactions:$id")).await().toString(UTF_8))
-        )
+        return DataRedaction(JsonObject(redis.get(namespace("data_redactions:$id")).await().toString(UTF_8)))
     }
 
     override suspend fun addDataRedaction(id: String, type: RedactionType, lookup: String, replacement: String) {
@@ -270,7 +267,7 @@ open class RedisStorage(val vertx: Vertx) : CoreStorage {
 
     override suspend fun getClientAccessors(): List<ClientAccess> {
         val clientAccessors = redis.smembers(namespace("client_access")).await()
-        return clientAccessors.map { Json.decodeValue(it.toString(UTF_8), ClientAccess::class.java) }
+        return clientAccessors.map { ClientAccess(JsonObject(it.toString(UTF_8))) }
     }
 
     override suspend fun getClientAccess(id: String): ClientAccess? {

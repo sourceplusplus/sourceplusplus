@@ -17,6 +17,8 @@
  */
 package integration
 
+import io.vertx.core.json.JsonArray
+import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxTestContext
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
@@ -55,7 +57,8 @@ class NullArrayLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                 )
                 assertArrayEquals(
                     arrayOfNulls<Any?>(10),
-                    (nullArrayVariable.value as List<Map<*, *>>).map { it["value"] }.toTypedArray()
+                    (nullArrayVariable.value as JsonArray)
+                        .map { JsonObject.mapFrom(it) }.map { it.getString("value") }.toTypedArray()
                 )
             }
 

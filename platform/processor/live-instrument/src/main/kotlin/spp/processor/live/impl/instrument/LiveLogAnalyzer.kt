@@ -21,7 +21,6 @@ import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
 import com.google.protobuf.Message
 import io.vertx.core.json.JsonObject
-import kotlinx.datetime.Instant
 import org.apache.skywalking.apm.network.logging.v3.LogData
 import org.apache.skywalking.oap.log.analyzer.provider.log.listener.LogAnalysisListener
 import org.apache.skywalking.oap.log.analyzer.provider.log.listener.LogAnalysisListenerFactory
@@ -35,6 +34,7 @@ import spp.protocol.artifact.log.LogResult
 import spp.protocol.instrument.event.LiveInstrumentEvent
 import spp.protocol.instrument.event.LiveInstrumentEventType
 import spp.protocol.instrument.event.LiveLogHit
+import java.time.Instant
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.collections.set
@@ -84,15 +84,15 @@ class LiveLogAnalyzer : LogAnalysisListener, LogAnalysisListenerFactory {
         handleLogHit(
             LiveLogHit(
                 logId!!,
-                Instant.fromEpochMilliseconds(logData.timestamp),
+                Instant.ofEpochMilli(logData.timestamp),
                 logData.serviceInstance,
                 logData.service,
                 LogResult(
                     orderType = LogOrderType.NEWEST_LOGS,
-                    timestamp = Instant.fromEpochMilliseconds(logData.timestamp),
+                    timestamp = Instant.ofEpochMilli(logData.timestamp),
                     logs = listOf(
                         Log(
-                            timestamp = Instant.fromEpochMilliseconds(logData.timestamp),
+                            timestamp = Instant.ofEpochMilli(logData.timestamp),
                             content = logData.body.text.text,
                             level = "Live",
                             logger = logger,

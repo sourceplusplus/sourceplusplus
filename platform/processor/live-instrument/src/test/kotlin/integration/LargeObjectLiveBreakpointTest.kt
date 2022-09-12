@@ -17,6 +17,7 @@
  */
 package integration
 
+import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxTestContext
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -49,18 +50,18 @@ class LargeObjectLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
                 //max size exceeded
                 val twoMbArrVariable = topFrame.variables.first { it.name == "twoMbArr" }
-                val twoMbArrVariableData = twoMbArrVariable.value as Map<String, *>
+                val twoMbArrVariableData = twoMbArrVariable.value as JsonObject
                 assertEquals(
                     "MAX_SIZE_EXCEEDED",
-                    twoMbArrVariableData["@skip"]
+                    twoMbArrVariableData.getString("@skip")
                 )
                 assertEquals(
                     "[B",
-                    twoMbArrVariableData["@class"]
+                    twoMbArrVariableData.getString("@class")
                 )
                 assertEquals(
                     (1024 * 1024 * 2) + 16, //2mb + 16 bytes for byte[] size
-                    twoMbArrVariableData["@size"].toString().toInt()
+                    twoMbArrVariableData.getString("@size").toInt()
                 )
             }
 

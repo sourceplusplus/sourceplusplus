@@ -17,6 +17,8 @@
  */
 package integration
 
+import io.vertx.core.json.JsonArray
+import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxTestContext
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
@@ -65,20 +67,20 @@ class CyclicObjectLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                 val cyclicObjectId = cyclicObject.liveIdentity
                 assertNotNull(cyclicObjectId)
 
-                val bottomObject = (cyclicObject.value as List<Map<String, *>>).first()
+                val bottomObject = (cyclicObject.value as JsonArray).first() as JsonObject
                 assertEquals(
                     "integration.CyclicObjectLiveBreakpointTest\$BottomObject",
-                    bottomObject["liveClazz"]
+                    bottomObject.getString("liveClazz")
                 )
 
-                val topObject = (bottomObject["value"] as List<Map<String, *>>).first()
+                val topObject = (bottomObject.getJsonArray("value")).first() as JsonObject
                 assertNotNull(topObject)
                 assertEquals(
                     "integration.CyclicObjectLiveBreakpointTest\$TopObject",
-                    topObject["liveClazz"]
+                    topObject.getString("liveClazz")
                 )
 
-                val topObjectId = topObject["liveIdentity"] as String
+                val topObjectId = topObject.getString("liveIdentity")
                 assertNotNull(topObjectId)
                 assertEquals(cyclicObjectId, topObjectId)
             }

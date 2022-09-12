@@ -19,7 +19,6 @@ package spp.platform.bridge.marker
 
 import io.vertx.core.Handler
 import io.vertx.core.Vertx
-import io.vertx.core.json.Json
 import io.vertx.core.json.JsonObject
 import io.vertx.core.net.NetServerOptions
 import io.vertx.ext.auth.jwt.JWTAuth
@@ -161,7 +160,7 @@ class MarkerBridge(
 
     private fun handleConnection(rawConnectionBody: JsonObject) {
         val connectionTime = System.currentTimeMillis()
-        val conn = Json.decodeValue(rawConnectionBody.toString(), InstanceConnection::class.java)
+        val conn = InstanceConnection(rawConnectionBody)
         val latency = connectionTime - conn.connectionTime
         log.trace { "Establishing connection with marker ${conn.instanceId}" }
 
@@ -178,7 +177,7 @@ class MarkerBridge(
     }
 
     private fun handleDisconnection(rawConnectionBody: JsonObject) {
-        val conn = Json.decodeValue(rawConnectionBody.toString(), InstanceConnection::class.java)
+        val conn = InstanceConnection(rawConnectionBody)
         launch(vertx.dispatcher()) {
             val map = SourceStorage.map<String, JsonObject>(BridgeAddress.ACTIVE_MARKERS)
             val activeMarker = map.remove(conn.instanceId).await()

@@ -17,7 +17,6 @@
  */
 package integration
 
-import io.vertx.core.json.Json
 import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
@@ -69,7 +68,7 @@ class RealtimeLiveViewTest : PlatformIntegrationTest() {
         var totalCount = 0
         val countSet = mutableSetOf<String>()
         consumer.handler {
-            val liveViewEvent = Json.decodeValue(it.body().toString(), LiveViewEvent::class.java)
+            val liveViewEvent = LiveViewEvent(it.body())
             val rawMetrics = JsonObject(liveViewEvent.metricsData)
             if (rawMetrics.getString("serviceId") != "c3BwLXRlc3QtcHJvYmU=.1") {
                 return@handler
