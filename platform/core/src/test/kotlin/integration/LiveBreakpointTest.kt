@@ -139,15 +139,14 @@ class LiveBreakpointTest : PlatformIntegrationTest() {
                 id = instrumentId,
                 location = LiveSourceLocation("spp.example.webapp.controller.LiveInstrumentController", 25),
             )
-        ).onComplete {
-            if (it.failed()) {
-                testContext.failNow(it.cause())
-            }
+        ).onFailure {
+            testContext.failNow(it)
         }
 
         if (testContext.awaitCompletion(60, TimeUnit.SECONDS)) {
+            instrumentListener.unregister()
+
             if (testContext.failed()) {
-                instrumentListener.unregister()
                 log.info("Got added: $gotAdded")
                 log.info("Got applied: $gotApplied")
                 log.info("Got hit: $gotHit")
@@ -223,15 +222,14 @@ class LiveBreakpointTest : PlatformIntegrationTest() {
                 location = LiveSourceLocation("spp.example.webapp.model.User", 42),
                 condition = "2==2"
             )
-        ).onComplete {
-            if (it.failed()) {
-                testContext.failNow(it.cause())
-            }
+        ).onFailure {
+            testContext.failNow(it)
         }
 
         if (testContext.awaitCompletion(60, TimeUnit.SECONDS)) {
+            instrumentListener.unregister()
+
             if (testContext.failed()) {
-                instrumentListener.unregister()
                 log.info("Got added: $gotAdded")
                 log.info("Got applied: $gotApplied")
                 log.info("Got hit: $gotHit")
