@@ -19,6 +19,8 @@ package integration
 
 import io.vertx.junit5.VertxExtension
 import io.vertx.junit5.VertxTestContext
+import io.vertx.kotlin.coroutines.await
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
@@ -43,7 +45,7 @@ class LiveBreakpointTest : PlatformIntegrationTest() {
     private val log = LoggerFactory.getLogger(LiveBreakpointTest::class.java)
 
     @Test
-    fun verifyLiveVariables() {
+    fun verifyLiveVariables(): Unit = runBlocking {
         val testContext = VertxTestContext()
         var gotAdded = false
         var gotApplied = false
@@ -132,7 +134,7 @@ class LiveBreakpointTest : PlatformIntegrationTest() {
                     testContext.completeNow()
                 }
             }
-        })
+        }).await()
 
         instrumentService.addLiveInstrument(
             LiveBreakpoint(
@@ -164,7 +166,7 @@ class LiveBreakpointTest : PlatformIntegrationTest() {
     }
 
     @Test
-    fun addHitRemove() {
+    fun addHitRemove(): Unit = runBlocking {
         val testContext = VertxTestContext()
         var gotAdded = false
         var gotApplied = false
@@ -214,7 +216,7 @@ class LiveBreakpointTest : PlatformIntegrationTest() {
                     testContext.completeNow()
                 }
             }
-        })
+        }).await()
 
         instrumentService.addLiveInstrument(
             LiveBreakpoint(
