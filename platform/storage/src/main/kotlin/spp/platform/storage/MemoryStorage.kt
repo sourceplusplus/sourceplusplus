@@ -317,7 +317,7 @@ open class MemoryStorage(val vertx: Vertx) : CoreStorage {
     override suspend fun getClientAccessors(): List<ClientAccess> {
         val clientAccessStorage = vertx.sharedData().getAsyncMap<String, Any>(namespace("client_access")).await()
         return (clientAccessStorage.get("client_accessors").await() as JsonArray? ?: JsonArray())
-            .list.map { Json.decodeValue(it.toString(), ClientAccess::class.java) }
+            .list.map { ClientAccess(JsonObject(it.toString())) }
     }
 
     override suspend fun getClientAccess(id: String): ClientAccess? {
