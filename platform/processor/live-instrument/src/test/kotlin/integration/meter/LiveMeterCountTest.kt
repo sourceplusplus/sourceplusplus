@@ -18,7 +18,6 @@
 package integration.meter
 
 import integration.LiveInstrumentIntegrationTest
-import io.vertx.core.json.Json
 import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
