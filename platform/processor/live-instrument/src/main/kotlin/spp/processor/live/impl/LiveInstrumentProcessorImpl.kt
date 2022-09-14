@@ -634,9 +634,15 @@ class LiveInstrumentProcessorImpl : CoroutineVerticle(), LiveInstrumentService {
                 LiveInstrumentType.METER -> LiveInstrumentEventType.METER_REMOVED
                 LiveInstrumentType.SPAN -> LiveInstrumentEventType.SPAN_REMOVED
             }
+
+            val removedArray = JsonArray()
+            result.forEach {
+                removedArray.add(JsonObject.mapFrom(LiveInstrumentRemoved(it.instrument, Instant.now(), null)))
+            }
+            val eventData = Json.encode(removedArray)
             vertx.eventBus().publish(
                 toLiveInstrumentSubscriberAddress(devAuth.selfId),
-                JsonObject.mapFrom(LiveInstrumentEvent(eventType, Json.encode(result)))
+                JsonObject.mapFrom(LiveInstrumentEvent(eventType, eventData))
             )
         }
         return Future.succeededFuture(result.filter { it.instrument.type == instrumentType }.map { it.instrument })
