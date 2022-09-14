@@ -47,6 +47,7 @@ import spp.protocol.platform.auth.DataRedaction
 import spp.protocol.platform.auth.RedactionType
 import java.io.File
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.regex.Pattern
 
 class SkyWalkingInterceptor(private val router: Router) : CoroutineVerticle() {
@@ -244,7 +245,7 @@ class SkyWalkingInterceptor(private val router: Router) : CoroutineVerticle() {
 
             proxyRequest.response().onSuccess { proxyResponse ->
                 proxyResponse.messageHandler { msg ->
-                    log.trace { "Sending stream message. Bytes: ${msg.payload().bytes.size}" }
+                    log.trace { "Sending stream message (${req.fullMethodName()}). Bytes: ${msg.payload().bytes.size}" }
                     req.response().writeMessage(msg)
                 }
                 proxyResponse.errorHandler { error ->
@@ -256,12 +257,21 @@ class SkyWalkingInterceptor(private val router: Router) : CoroutineVerticle() {
                 req.response().status(GrpcStatus.UNKNOWN).end()
             }
 
+            val wroteData = AtomicBoolean()
             proxyRequest.fullMethodName(req.fullMethodName())
             req.messageHandler { msg ->
-                log.trace { "Received stream message. Bytes: ${msg.payload().bytes.size}" }
+                wroteData.set(true)
+
+                log.trace { "Received stream message (${req.fullMethodName()}). Bytes: ${msg.payload().bytes.size}" }
                 proxyRequest.writeMessage(msg)
             }
-            req.endHandler { proxyRequest.end() }
+            req.endHandler {
+                //todo: understand why this is needed for streaming calls
+                if (!wroteData.get()) {
+                    proxyRequest.write(Buffer.buffer())
+                }
+                proxyRequest.end()
+            }
             req.resume()
         }.onFailure {
             log.error(it) { "Failed to send proxy request" }
