@@ -144,10 +144,7 @@ class LiveInstrumentProcessorImpl : CoroutineVerticle(), LiveInstrumentService {
         return addLiveInstrument(devAuth, instrument)
     }
 
-    private fun addLiveInstrument(
-        devAuth: DeveloperAuth,
-        instrument: LiveInstrument
-    ): Future<LiveInstrument> {
+    private fun addLiveInstrument(devAuth: DeveloperAuth, instrument: LiveInstrument): Future<LiveInstrument> {
         log.info(
             "Received add live instrument request. Developer: {} - Location: {}",
             devAuth, instrument.location.let { it.source + ":" + it.line }
@@ -499,7 +496,9 @@ class LiveInstrumentProcessorImpl : CoroutineVerticle(), LiveInstrumentService {
     }
 
     fun _addLiveInstrument(
-        devAuth: DeveloperAuth, liveInstrument: LiveInstrument, alertSubscribers: Boolean = true
+        devAuth: DeveloperAuth,
+        liveInstrument: LiveInstrument,
+        alertSubscribers: Boolean = true
     ): Future<LiveInstrument> {
         log.debug("Adding live instrument: $liveInstrument")
         val debuggerCommand = LiveInstrumentCommand(CommandType.ADD_LIVE_INSTRUMENT, setOf(liveInstrument))
@@ -548,7 +547,10 @@ class LiveInstrumentProcessorImpl : CoroutineVerticle(), LiveInstrumentService {
     }
 
     private fun removeLiveInstrument(
-        devAuth: DeveloperAuth, occurredAt: Instant, liveInstrument: LiveInstrument, cause: String?
+        devAuth: DeveloperAuth,
+        occurredAt: Instant,
+        liveInstrument: LiveInstrument,
+        cause: String?
     ) {
         log.debug("Removing live instrument: ${liveInstrument.id}")
         val devInstrument = DeveloperInstrument(devAuth, liveInstrument)
@@ -598,9 +600,7 @@ class LiveInstrumentProcessorImpl : CoroutineVerticle(), LiveInstrumentService {
         }
     }
 
-    fun removeLiveInstrument(
-        devAuth: DeveloperAuth, instrumentRemoval: DeveloperInstrument
-    ): Future<LiveInstrument?> {
+    fun removeLiveInstrument(devAuth: DeveloperAuth, instrumentRemoval: DeveloperInstrument): Future<LiveInstrument?> {
         if (instrumentRemoval.instrument.id == null) {
             //unpublished instrument; just remove from platform
             liveInstruments.remove(instrumentRemoval)
@@ -613,7 +613,9 @@ class LiveInstrumentProcessorImpl : CoroutineVerticle(), LiveInstrumentService {
     }
 
     fun removeInstruments(
-        devAuth: DeveloperAuth, location: LiveSourceLocation, instrumentType: LiveInstrumentType
+        devAuth: DeveloperAuth,
+        location: LiveSourceLocation,
+        instrumentType: LiveInstrumentType
     ): Future<List<LiveInstrument>> {
         log.debug("Removing live instrument(s): $location")
         val debuggerCommand = LiveInstrumentCommand(CommandType.REMOVE_LIVE_INSTRUMENT, locations = setOf(location))
@@ -634,9 +636,15 @@ class LiveInstrumentProcessorImpl : CoroutineVerticle(), LiveInstrumentService {
                 LiveInstrumentType.METER -> LiveInstrumentEventType.METER_REMOVED
                 LiveInstrumentType.SPAN -> LiveInstrumentEventType.SPAN_REMOVED
             }
+
+            val removedArray = JsonArray()
+            result.forEach {
+                removedArray.add(JsonObject.mapFrom(LiveInstrumentRemoved(it.instrument, Instant.now(), null)))
+            }
+            val eventData = Json.encode(removedArray)
             vertx.eventBus().publish(
                 toLiveInstrumentSubscriberAddress(devAuth.selfId),
-                JsonObject.mapFrom(LiveInstrumentEvent(eventType, Json.encode(result)))
+                JsonObject.mapFrom(LiveInstrumentEvent(eventType, eventData))
             )
         }
         return Future.succeededFuture(result.filter { it.instrument.type == instrumentType }.map { it.instrument })

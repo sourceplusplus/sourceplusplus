@@ -173,6 +173,11 @@ subprojects {
         }
     }
 
+    tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+        kotlinOptions.jvmTarget = "1.8"
+        kotlinOptions.freeCompilerArgs = listOf("-Xjvm-default=all")
+    }
+
     configure<org.jetbrains.kotlin.noarg.gradle.NoArgExtension> {
         annotation("spp.platform.common.util.NoArg")
     }

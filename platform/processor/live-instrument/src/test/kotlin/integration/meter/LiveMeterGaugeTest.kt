@@ -18,7 +18,6 @@
 package integration.meter
 
 import integration.LiveInstrumentIntegrationTest
-import io.vertx.core.json.Json
 import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
@@ -102,7 +101,7 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
 
         val testContext = VertxTestContext()
         consumer.handler {
-            val liveViewEvent = Json.decodeValue(it.body().toString(), LiveViewEvent::class.java)
+            val liveViewEvent = LiveViewEvent(it.body())
             val rawMetrics = JsonObject(liveViewEvent.metricsData)
             testContext.verify {
                 val meta = rawMetrics.getJsonObject("meta")

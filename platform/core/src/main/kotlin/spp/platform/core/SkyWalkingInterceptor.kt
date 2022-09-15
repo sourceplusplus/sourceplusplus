@@ -32,6 +32,7 @@ import io.vertx.ext.web.Router
 import io.vertx.ext.web.handler.BodyHandler
 import io.vertx.grpc.client.GrpcClient
 import io.vertx.grpc.common.GrpcStatus
+import io.vertx.grpc.common.ServiceName
 import io.vertx.grpc.server.GrpcServer
 import io.vertx.grpc.server.GrpcServerRequest
 import io.vertx.kotlin.coroutines.CoroutineVerticle
@@ -39,6 +40,7 @@ import io.vertx.kotlin.coroutines.await
 import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.launch
 import mu.KotlinLogging
+import org.joor.Reflect
 import spp.platform.common.util.CertsToJksOptionsConverter
 import spp.platform.common.util.Msg
 import spp.platform.storage.SourceStorage
@@ -184,7 +186,7 @@ class SkyWalkingInterceptor(private val router: Router) : CoroutineVerticle() {
         val swHost = config.getJsonObject("skywalking-oap").getString("host")
         val swGrpcPort = config.getJsonObject("skywalking-oap").getString("grpc_port").toInt()
         val http2Client = HttpClientOptions()
-            .setUseAlpn(true)
+            .setUseAlpn(true) //required by H2
             .setVerifyHost(false)
             .setTrustAll(true)
             .setDefaultHost(swHost)
@@ -266,11 +268,26 @@ class SkyWalkingInterceptor(private val router: Router) : CoroutineVerticle() {
                 proxyRequest.writeMessage(msg)
             }
             req.endHandler {
-                //todo: understand why this is needed for streaming calls
                 if (!wroteData.get()) {
-                    proxyRequest.write(Buffer.buffer())
+                    //stream calls need at least the headers to be sent
+                    //if no messages are passed through the proxy, the headers will never be sent
+                    //here we ensure at least the headers are sent
+                    //todo: find a better way to handle this
+                    val httpRequest = Reflect.on(proxyRequest).get<HttpClientRequest>("httpRequest")
+                    val serviceName: ServiceName = Reflect.on(proxyRequest).get("serviceName")
+                    val methodName: String = Reflect.on(proxyRequest).get("methodName")
+                    val uri = serviceName.pathOf(methodName)
+                    req.headers().forEach { t, u ->
+                        httpRequest.headers().add(t, u)
+                    }
+                    httpRequest.uri = uri
+                    httpRequest.end(Buffer.buffer()).onFailure {
+                        log.error(it) { "Failed to write to proxy request" }
+                        req.response().status(GrpcStatus.UNKNOWN).end()
+                    }
+                } else {
+                    proxyRequest.end()
                 }
-                proxyRequest.end()
             }
             req.resume()
         }.onFailure {
