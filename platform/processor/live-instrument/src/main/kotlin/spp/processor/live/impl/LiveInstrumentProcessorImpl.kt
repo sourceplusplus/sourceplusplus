@@ -567,7 +567,7 @@ class LiveInstrumentProcessorImpl : CoroutineVerticle(), LiveInstrumentService {
                 val ebException = ServiceExceptionConverter.fromEventBusException(cause, true)
                 waitingHandler.handle(Future.failedFuture(ebException))
             } else {
-                TODO("$cause")
+                waitingHandler.handle(Future.failedFuture("Live instrument was removed"))
             }
         } else {
             val eventType = when (liveInstrument.type) {
