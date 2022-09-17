@@ -147,7 +147,7 @@ jobs:
           draft: true
 
       - name: Download spp-platform artifact
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: spp-platform-${{ needs.jvm-build.outputs.release_version }}.tar.gz
 
@@ -175,7 +175,7 @@ jobs:
         run: echo ${{ secrets.DOCKERHUB_PASSWORD }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
 
       - name: Download spp-platform artifact
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: spp-platform-${{ needs.jvm-build.outputs.release_version }}.tar.gz
           path: ./docker/spp-platform
