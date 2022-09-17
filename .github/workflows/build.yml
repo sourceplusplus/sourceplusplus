@@ -31,7 +31,7 @@ jobs:
       release_version: ${{ steps.properties.outputs.release_version }}
     steps:
       - uses: docker-practice/actions-setup-docker@master
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           submodules: 'recursive'
 
@@ -167,7 +167,7 @@ jobs:
     if: github.ref == 'refs/heads/master'
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           submodules: true
 
