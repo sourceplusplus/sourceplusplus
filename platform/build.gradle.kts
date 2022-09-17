@@ -77,7 +77,7 @@ subprojects {
         implementation("io.vertx:vertx-web-graphql:$vertxVersion") {
             exclude(group = "com.graphql-java")
         }
-        compileOnly("com.graphql-java:graphql-java:18.1")
+        compileOnly("com.graphql-java:graphql-java:230521-nf-execution")
         implementation("io.vertx:vertx-auth-jwt:$vertxVersion")
         implementation("io.vertx:vertx-redis-client:$vertxVersion")
         implementation("io.vertx:vertx-tcp-eventbus-bridge:$vertxVersion")
