@@ -111,7 +111,7 @@ class LiveMeterRateTest : LiveInstrumentIntegrationTest() {
                 assertEquals(liveMeter.toMetricId(), meta.getString("metricsName"))
 
                 rate = rawMetrics.getInteger("value")
-                if (rate >= 55) { //allow for some variance
+                if (rate >= 54) { //allow for some variance
                     testContext.completeNow()
                 }
             }
@@ -141,6 +141,6 @@ class LiveMeterRateTest : LiveInstrumentIntegrationTest() {
         assertNotNull(instrumentService.removeLiveInstrument(meterId).await())
         assertNotNull(viewService.removeLiveViewSubscription(subscriptionId).await())
 
-        assertTrue(rate >= 55) //allow for some variance
+        assertTrue(rate >= 54) //allow for some variance
     }
 }
