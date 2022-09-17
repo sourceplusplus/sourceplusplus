@@ -55,7 +55,7 @@ jobs:
         run: docker push sourceplusplus/spp-platform:${{ env.SPP_PLATFORM_VERSION }}
 
       - name: Update spp-platform Docker Hub description
-        uses: peter-evans/dockerhub-description@v2
+        uses: peter-evans/dockerhub-description@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
