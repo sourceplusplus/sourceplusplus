@@ -40,9 +40,10 @@ class SPPMetricsStreamProcessor : MetricsStreamProcessor() {
     override fun `in`(metrics: Metrics) {
         realProcessor.`in`(metrics)
 
+        val copiedMetrics = metrics::class.java.newInstance()
+        copiedMetrics.deserialize(metrics.serialize().build())
+
         GlobalScope.launch(ClusterConnection.getVertx().dispatcher()) {
-            val copiedMetrics = metrics::class.java.newInstance()
-            copiedMetrics.deserialize(metrics.serialize().build())
             if (copiedMetrics.javaClass.simpleName.startsWith("spp_")) {
                 Reflect.on(copiedMetrics).set("metadata", (metrics as WithMetadata).meta)
             }
