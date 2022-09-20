@@ -38,8 +38,9 @@ import java.time.Instant
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatterBuilder
 
-class LiveTracesView(private val subscriptionCache: MetricTypeSubscriptionCache) :
-    AnalysisListenerFactory, EntryAnalysisListener {
+class LiveTracesView(
+    private val subscriptionCache: MetricTypeSubscriptionCache
+) : AnalysisListenerFactory, EntryAnalysisListener {
 
     companion object {
         private val log = LoggerFactory.getLogger(LiveTracesView::class.java)
