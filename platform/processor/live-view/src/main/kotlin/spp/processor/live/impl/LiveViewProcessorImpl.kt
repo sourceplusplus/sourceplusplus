@@ -52,6 +52,7 @@ class LiveViewProcessorImpl : CoroutineVerticle(), LiveViewService {
         private val log = LoggerFactory.getLogger(LiveViewProcessorImpl::class.java)
     }
 
+    //todo: use ExpiringSharedData
     private val subscriptionCache = MetricTypeSubscriptionCache()
     val meterView = LiveMeterView(subscriptionCache)
     val tracesView = LiveTracesView(subscriptionCache)
