@@ -32,9 +32,7 @@ import spp.processor.live.impl.view.util.MetricTypeSubscriptionCache
 import spp.processor.live.impl.view.util.ViewSubscriber
 import java.util.concurrent.CopyOnWriteArrayList
 
-class LiveMeterView(
-    private val subscriptionCache: MetricTypeSubscriptionCache //todo: use ExpiringSharedData
-) {
+class LiveMeterView(private val subscriptionCache: MetricTypeSubscriptionCache) {
 
     companion object {
         private val log = KotlinLogging.logger {}
@@ -80,69 +78,71 @@ class LiveMeterView(
             setRealtimeValue(jsonMetric, metrics)
         }
 
-        subs.forEach { sub ->
-            var hasAllEvents = false
-            var waitingEventsForBucket = sub.waitingEvents[metrics.timeBucket]
-            if (waitingEventsForBucket == null) {
-                waitingEventsForBucket = CopyOnWriteArrayList()
-                sub.waitingEvents[metrics.timeBucket] = waitingEventsForBucket
-            }
+        subs.forEach { handleSubscriberEvent(it, metrics, jsonMetric) }
+    }
 
-            if (sub.subscription.liveViewConfig.viewMetrics.size > 1) {
-                if (waitingEventsForBucket.isEmpty()) {
-                    waitingEventsForBucket.add(jsonMetric)
-                } else {
-                    waitingEventsForBucket.removeIf { it.getString("metric_type") == metrics::class.simpleName }
-                    waitingEventsForBucket.add(jsonMetric)
-                    if (sub.subscription.liveViewConfig.viewMetrics.size == waitingEventsForBucket.size) {
-                        hasAllEvents = true
-                    }
-                    //todo: network errors/etc might make it so waitingEventsForBucket never completes
-                    // remove on timeout (maybe still send with partial status)
-                }
+    private fun handleSubscriberEvent(sub: ViewSubscriber, metrics: Metrics, jsonMetric: JsonObject) {
+        var hasAllEvents = false
+        var waitingEventsForBucket = sub.waitingEvents[metrics.timeBucket]
+        if (waitingEventsForBucket == null) {
+            waitingEventsForBucket = CopyOnWriteArrayList()
+            sub.waitingEvents[metrics.timeBucket] = waitingEventsForBucket
+        }
+
+        if (sub.subscription.liveViewConfig.viewMetrics.size > 1) {
+            if (waitingEventsForBucket.isEmpty()) {
+                waitingEventsForBucket.add(jsonMetric)
             } else {
-                hasAllEvents = true
+                waitingEventsForBucket.removeIf { it.getString("metric_type") == metrics::class.simpleName }
+                waitingEventsForBucket.add(jsonMetric)
+                if (sub.subscription.liveViewConfig.viewMetrics.size == waitingEventsForBucket.size) {
+                    hasAllEvents = true
+                }
+                //todo: network errors/etc might make it so waitingEventsForBucket never completes
+                // remove on timeout (maybe still send with partial status)
             }
+        } else {
+            hasAllEvents = true
+        }
 
-            if (hasAllEvents && System.currentTimeMillis() - sub.lastUpdated >= sub.subscription.liveViewConfig.refreshRateLimit) {
-                sub.lastUpdated = System.currentTimeMillis()
+        if (hasAllEvents && System.currentTimeMillis() - sub.lastUpdated >= sub.subscription.liveViewConfig.refreshRateLimit) {
+            sub.lastUpdated = System.currentTimeMillis()
 
-                if (waitingEventsForBucket.isNotEmpty()) {
-                    val multiMetrics = JsonArray()
-                    waitingEventsForBucket.forEach {
-                        val metricsOb = JsonObject.mapFrom(it)
-                            .put(
-                                "artifactQualifiedName",
-                                JsonObject.mapFrom(sub.subscription.artifactQualifiedName)
-                            )
-                            .put("entityName", EntityNaming.getEntityName((metrics as WithMetadata).meta))
-                        log.trace { "Sending multi-metrics $metricsOb to ${sub.subscriberId}" }
+            if (waitingEventsForBucket.isNotEmpty()) {
+                val multiMetrics = JsonArray()
+                waitingEventsForBucket.forEach {
+                    val metricsOb = JsonObject.mapFrom(it)
+                        .put(
+                            "artifactQualifiedName",
+                            JsonObject.mapFrom(sub.subscription.artifactQualifiedName)
+                        )
+                        .put("entityName", EntityNaming.getEntityName((metrics as WithMetadata).meta))
+                    log.trace { "Sending multi-metrics $metricsOb to ${sub.subscriberId}" }
 
-                        multiMetrics.add(metricsOb)
-                    }
+                    multiMetrics.add(metricsOb)
+                }
 
-                    //ensure metrics sorted by subscription order
-                    val sortedMetrics = JsonArray()
-                    sub.subscription.liveViewConfig.viewMetrics.forEach { metricType ->
-                        multiMetrics.forEach {
-                            val metricData = JsonObject.mapFrom(it)
-                            if (metricData.getJsonObject("meta").getString("metricsName") == metricType) {
-                                sortedMetrics.add(metricData)
-                            }
+                //ensure metrics sorted by subscription order
+                val sortedMetrics = JsonArray()
+                sub.subscription.liveViewConfig.viewMetrics.forEach { metricType ->
+                    multiMetrics.forEach {
+                        val metricData = JsonObject.mapFrom(it)
+                        if (metricData.getJsonObject("meta").getString("metricsName") == metricType) {
+                            sortedMetrics.add(metricData)
                         }
                     }
-
-                    ClusterConnection.getVertx().eventBus().send(
-                        sub.consumer.address(),
-                        JsonObject().put("metrics", sortedMetrics).put("multiMetrics", true)
-                    )
-                } else {
-                    log.trace { "Sending metrics $jsonMetric to ${sub.subscriberId}" }
-                    ClusterConnection.getVertx().eventBus().send(
-                        sub.consumer.address(),
-                        jsonMetric.put("multiMetrics", false)
-                    )
                 }
+
+                ClusterConnection.getVertx().eventBus().send(
+                    sub.consumer.address(),
+                    JsonObject().put("metrics", sortedMetrics).put("multiMetrics", true)
+                )
+            } else {
+                log.trace { "Sending metrics $jsonMetric to ${sub.subscriberId}" }
+                ClusterConnection.getVertx().eventBus().send(
+                    sub.consumer.address(),
+                    jsonMetric.put("multiMetrics", false)
+                )
             }
         }
     }
