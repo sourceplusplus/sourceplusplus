@@ -33,19 +33,11 @@ import org.apache.skywalking.oap.server.analyzer.provider.meter.process.MeterPro
 import org.apache.skywalking.oap.server.core.CoreModule
 import org.apache.skywalking.oap.server.core.analysis.meter.MeterSystem
 import org.apache.skywalking.oap.server.core.query.MetricsQueryService
-import org.apache.skywalking.oap.server.core.query.enumeration.Scope
-import org.apache.skywalking.oap.server.core.query.enumeration.Step
-import org.apache.skywalking.oap.server.core.query.input.Duration
-import org.apache.skywalking.oap.server.core.query.input.Entity
-import org.apache.skywalking.oap.server.core.query.input.MetricsCondition
 import org.apache.skywalking.oap.server.core.storage.StorageModule
 import org.apache.skywalking.oap.server.core.storage.query.IMetadataQueryDAO
 import org.apache.skywalking.oap.server.core.version.Version
-import org.joor.Reflect
 import spp.platform.common.DeveloperAuth
 import spp.platform.common.FeedbackProcessor
-import spp.platform.common.extend.getMeterServiceInstances
-import spp.platform.common.extend.getMeterServices
 import spp.protocol.SourceServices.Provide.toLiveInstrumentSubscriberAddress
 import spp.protocol.artifact.exception.LiveStackTrace
 import spp.protocol.instrument.*
@@ -62,8 +54,6 @@ import spp.protocol.platform.ProcessorAddress
 import spp.protocol.platform.ProcessorAddress.REMOTE_REGISTERED
 import spp.protocol.service.LiveInstrumentService
 import java.time.Instant
-import java.time.ZoneOffset
-import java.time.format.DateTimeFormatter
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
@@ -708,79 +698,5 @@ class LiveInstrumentProcessorImpl : CoroutineVerticle(), LiveInstrumentService {
         }
         meterProcessService.converts().add(MetricConvert(meterConfig, meterSystem))
         return Future.succeededFuture(JsonObject())
-    }
-
-    override fun getLiveMeterMetrics(
-        liveMeter: LiveMeter,
-        start: Instant,
-        stop: Instant,
-        step: DurationStep
-    ): Future<JsonObject> {
-        log.debug("Getting live meter metrics. Metric id: {}", liveMeter.toMetricId())
-        val services = metadata.getMeterServices(liveMeter.location.service ?: "")
-        if (services.isEmpty()) {
-            log.info("No services found")
-            return Future.succeededFuture(JsonObject().put("values", JsonArray()))
-        }
-
-        val values = mutableListOf<Any>()
-        services.forEach { service ->
-            val instances = metadata.getMeterServiceInstances(
-                start.toEpochMilli(), stop.toEpochMilli(), service.id
-            )
-            if (instances.isEmpty()) {
-                log.info("No instances found for service: ${service.id}")
-                return@forEach
-            }
-
-            instances.forEach { instance ->
-                val serviceInstance = liveMeter.location.serviceInstance
-                if (serviceInstance != null && serviceInstance != instance.name) {
-                    return@forEach
-                }
-
-                val condition = MetricsCondition().apply {
-                    name = liveMeter.toMetricId()
-                    entity = Entity().apply {
-                        setScope(Scope.ServiceInstance)
-                        setNormal(true)
-                        setServiceName(service.name)
-                        setServiceInstanceName(instance.name)
-                    }
-                }
-                if (liveMeter.toMetricId().contains("histogram")) {
-                    val value = metricsQueryService.readHeatMap(condition, Duration().apply {
-                        Reflect.on(this).set(
-                            "start",
-                            DateTimeFormatter.ofPattern(step.pattern).withZone(ZoneOffset.UTC)
-                                .format(start)
-                        )
-                        Reflect.on(this).set(
-                            "end",
-                            DateTimeFormatter.ofPattern(step.pattern).withZone(ZoneOffset.UTC)
-                                .format(stop)
-                        )
-                        Reflect.on(this).set("step", Step.valueOf(step.name))
-                    })
-                    values.add(value)
-                } else {
-                    val value = metricsQueryService.readMetricsValue(condition, Duration().apply {
-                        Reflect.on(this).set(
-                            "start",
-                            DateTimeFormatter.ofPattern(step.pattern).withZone(ZoneOffset.UTC)
-                                .format(start)
-                        )
-                        Reflect.on(this).set(
-                            "end",
-                            DateTimeFormatter.ofPattern(step.pattern).withZone(ZoneOffset.UTC)
-                                .format(stop)
-                        )
-                        Reflect.on(this).set("step", Step.valueOf(step.name))
-                    })
-                    values.add(value)
-                }
-            }
-        }
-        return Future.succeededFuture(JsonObject().put("values", JsonArray(values)))
     }
 }
