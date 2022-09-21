@@ -73,6 +73,7 @@ The Source++ documentation is available [here](https://docs.sourceplus.plus).
 ├── docker                    # Docker setup files
     ├── e2e                   # End-to-end testing environment
     └── spp-platform          # Live coding server image
+├── documentation             # Live coding documentation
 ├── interfaces                # Live coding clients
     ├── cli                   # Command-line interface
     └── jetbrains             # JetBrains IDE plugin
@@ -87,8 +88,12 @@ The Source++ documentation is available [here](https://docs.sourceplus.plus).
     └── storage               # Platform persistent memory
 ├── probes                    # Live coding probes
     ├── jvm                   # JVM support
+    ├── nodejs                # Node.js support
     └── python                # Python support
-└── protocol                  # Communication protocol
+├── protocol                  # Communication protocol
+├── tutorials                 # Tutorial projects
+    ├── jvm                   # JVM tutorial
+    └── python                # Python tutorial
 ```
 
 ## License
