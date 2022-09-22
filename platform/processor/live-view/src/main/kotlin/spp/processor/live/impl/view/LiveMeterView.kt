@@ -63,7 +63,7 @@ class LiveMeterView(private val subscriptionCache: MetricTypeSubscriptionCache) 
     }
 
     private suspend fun handleEvent(subs: Set<ViewSubscriber>, metrics: Metrics, realTime: Boolean) {
-        val metricId by lazy { Reflect.on(metrics).call("id0").get<String>() }
+        val metricId = Reflect.on(metrics).call("id0").get<String>()
         val fullMetricId = metrics.javaClass.simpleName + "_" + metricId
 
         val jsonMetric = JsonObject.mapFrom(metrics)
