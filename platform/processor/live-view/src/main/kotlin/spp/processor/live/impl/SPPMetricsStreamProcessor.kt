@@ -48,7 +48,7 @@ class SPPMetricsStreamProcessor : MetricsStreamProcessor() {
                 Reflect.on(copiedMetrics).set("metadata", (metrics as WithMetadata).meta)
             }
 
-            val metricId by lazy { Reflect.on(copiedMetrics).call("id0").get<String>() }
+            val metricId = Reflect.on(copiedMetrics).call("id0").get<String>()
             val fullMetricId = copiedMetrics.javaClass.simpleName + "_" + metricId
             realtimeMetricCache.compute(fullMetricId) { _, old ->
                 val new = ClusterMetrics(copiedMetrics)
