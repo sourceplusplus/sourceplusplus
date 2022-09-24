@@ -72,7 +72,7 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
 
         val subscriptionId = viewService.addLiveViewSubscription(
             LiveViewSubscription(
-                entityIds = listOf(liveMeter.toMetricId()),
+                entityIds = mutableSetOf(liveMeter.toMetricId()),
                 artifactQualifiedName = ArtifactQualifiedName(
                     LiveMeterCountTest::class.qualifiedName!!,
                     type = ArtifactType.EXPRESSION
@@ -154,7 +154,7 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
 
         val subscriptionId = viewService.addLiveViewSubscription(
             LiveViewSubscription(
-                entityIds = listOf(liveMeter.toMetricId()),
+                entityIds = mutableSetOf(liveMeter.toMetricId()),
                 artifactQualifiedName = ArtifactQualifiedName(
                     LiveMeterCountTest::class.qualifiedName!!,
                     type = ArtifactType.EXPRESSION
@@ -236,7 +236,7 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
 
         val subscriptionId1 = viewService.addLiveViewSubscription(
             LiveViewSubscription(
-                entityIds = listOf(liveMeter1.toMetricId()),
+                entityIds = mutableSetOf(liveMeter1.toMetricId()),
                 artifactQualifiedName = ArtifactQualifiedName(
                     LiveMeterCountTest::class.qualifiedName!!,
                     type = ArtifactType.EXPRESSION
@@ -271,7 +271,7 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
 
         val subscriptionId2 = viewService.addLiveViewSubscription(
             LiveViewSubscription(
-                entityIds = listOf(liveMeter2.toMetricId()),
+                entityIds = mutableSetOf(liveMeter2.toMetricId()),
                 artifactQualifiedName = ArtifactQualifiedName(
                     LiveMeterCountTest::class.qualifiedName!!,
                     type = ArtifactType.EXPRESSION

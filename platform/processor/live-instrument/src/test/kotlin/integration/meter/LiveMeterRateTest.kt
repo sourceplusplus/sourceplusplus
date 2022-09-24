@@ -80,7 +80,7 @@ class LiveMeterRateTest : LiveInstrumentIntegrationTest() {
 
         val subscriptionId = viewService.addLiveViewSubscription(
             LiveViewSubscription(
-                entityIds = listOf(liveMeter.toMetricId()),
+                entityIds = mutableSetOf(liveMeter.toMetricId()),
                 artifactQualifiedName = ArtifactQualifiedName(
                     LiveMeterRateTest::class.qualifiedName!!,
                     type = ArtifactType.EXPRESSION
