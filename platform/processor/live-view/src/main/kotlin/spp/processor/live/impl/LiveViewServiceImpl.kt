@@ -183,6 +183,70 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
         return promise.future()
     }
 
+    override fun updateLiveViewSubscription(
+        id: String,
+        subscription: LiveViewSubscription
+    ): Future<LiveViewSubscription> {
+        log.debug("Updating live view subscription: {}", id)
+        val promise = Promise.promise<LiveViewSubscription>()
+
+        var viewSubscriber: ViewSubscriber? = null
+        subscriptionCache.forEach {
+            it.value.forEach {
+                it.value.forEach {
+                    if (it.subscription.subscriptionId == id) {
+                        viewSubscriber = it
+                    }
+                }
+            }
+        }
+
+        if (viewSubscriber != null) {
+            viewSubscriber!!.subscription.entityIds.addAll(subscription.entityIds)
+
+            subscription.liveViewConfig.viewMetrics.forEach {
+                subscriptionCache.computeIfAbsent(it) { EntitySubscribersCache() }
+                subscription.entityIds.forEach { entityId ->
+                    subscriptionCache[it]!!.computeIfAbsent(entityId) { mutableSetOf() }
+                    (subscriptionCache[it]!![entityId]!! as MutableSet).add(viewSubscriber!!)
+                }
+            }
+
+            promise.complete(subscription)
+        } else {
+            promise.fail(IllegalStateException("Invalid subscription id"))
+        }
+
+        return promise.future()
+    }
+
+    override fun getLiveViewSubscription(id: String): Future<LiveViewSubscription> {
+        log.debug("Getting live view subscription: {}", id)
+        val promise = Promise.promise<LiveViewSubscription>()
+        var subbedUser: ViewSubscriber? = null
+        subscriptionCache.flatMap { it.value.values }.forEach { subList ->
+            val subscription = subList.firstOrNull { it.subscription.subscriptionId == id }
+            if (subscription != null) {
+                subbedUser = subscription
+            }
+        }
+
+        if (subbedUser != null) {
+            promise.complete(
+                LiveViewSubscription(
+                    subbedUser!!.subscription.subscriptionId,
+                    subbedUser!!.subscription.entityIds,
+                    subbedUser!!.subscription.artifactQualifiedName,
+                    subbedUser!!.subscription.artifactLocation,
+                    subbedUser!!.subscription.liveViewConfig
+                )
+            )
+        } else {
+            promise.fail(IllegalStateException("Invalid subscription id"))
+        }
+        return promise.future()
+    }
+
     override fun getLiveViewSubscriptions(): Future<List<LiveViewSubscription>> {
         val devAuth = Vertx.currentContext().getLocal<DeveloperAuth>("developer")
         val viewSubscriptions = mutableSetOf<LiveViewSubscription>()
