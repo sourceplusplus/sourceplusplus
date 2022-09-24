@@ -30,7 +30,7 @@ import org.apache.skywalking.oap.server.core.query.TraceQueryService
 import org.apache.skywalking.oap.server.library.module.ModuleManager
 import org.slf4j.LoggerFactory
 import spp.platform.common.ClusterConnection
-import spp.processor.InstrumentProcessor.liveInstrumentProcessor
+import spp.processor.InstrumentProcessor.liveInstrumentService
 import spp.protocol.SourceServices.Provide.toLiveInstrumentSubscriberAddress
 import spp.protocol.artifact.exception.LiveStackTrace
 import spp.protocol.artifact.exception.LiveStackTraceElement
@@ -289,7 +289,7 @@ class LiveBreakpointAnalyzer(
         } else {
             println("No trace found for trace id: ${hit.traceId}")
         }
-        val liveInstrument = liveInstrumentProcessor._getDeveloperInstrumentById(hit.breakpointId)
+        val liveInstrument = liveInstrumentService._getDeveloperInstrumentById(hit.breakpointId)
         if (liveInstrument != null) {
             val instrumentMeta = liveInstrument.instrument.meta as MutableMap<String, Any>
             if ((instrumentMeta["hit_count"] as AtomicInteger?)?.incrementAndGet() == 1) {
@@ -298,7 +298,7 @@ class LiveBreakpointAnalyzer(
             instrumentMeta["last_hit_at"] = System.currentTimeMillis().toString()
         }
 
-        val devInstrument = liveInstrument ?: liveInstrumentProcessor.getCachedDeveloperInstrument(hit.breakpointId)
+        val devInstrument = liveInstrument ?: liveInstrumentService.getCachedDeveloperInstrument(hit.breakpointId)
         ClusterConnection.getVertx().eventBus().publish(
             toLiveInstrumentSubscriberAddress(devInstrument.developerAuth.selfId),
             JsonObject.mapFrom(LiveInstrumentEvent(LiveInstrumentEventType.BREAKPOINT_HIT, Json.encode(hit)))

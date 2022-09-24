@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory
 import spp.platform.common.ClusterConnection.discovery
 import spp.platform.common.FeedbackProcessor
 import spp.platform.storage.ExpiringSharedData
-import spp.processor.live.impl.LiveViewProcessorImpl
+import spp.processor.live.impl.LiveViewServiceImpl
 import spp.processor.live.impl.view.model.ClusterMetrics
 import spp.protocol.SourceServices
 import spp.protocol.service.LiveViewService
@@ -50,7 +50,7 @@ object ViewProcessor : FeedbackProcessor() {
     lateinit var metricsQueryService: MetricsQueryService
     lateinit var metadata: IMetadataQueryDAO
     private val log = LoggerFactory.getLogger(ViewProcessor::class.java)
-    val liveViewProcessor = LiveViewProcessorImpl()
+    val liveViewService = LiveViewServiceImpl()
     private var liveViewRecord: Record? = null
 
     override fun bootProcessor(moduleManager: ModuleManager) {
@@ -68,19 +68,19 @@ object ViewProcessor : FeedbackProcessor() {
     }
 
     override fun onConnected(vertx: Vertx) {
-        log.info("Deploying source processor")
+        log.info("Deploying view processor")
         vertx.deployVerticle(ViewProcessor) {
             if (it.succeeded()) {
                 processorVerticleId = it.result()
             } else {
-                log.error("Failed to deploy source processor", it.cause())
+                log.error("Failed to deploy view processor", it.cause())
                 exitProcess(-1)
             }
         }
     }
 
     override suspend fun start() {
-        log.info("Starting ViewProcessorVerticle")
+        log.info("Starting ViewProcessor")
         val module = SimpleModule()
         module.addSerializer(DataTable::class.java, object : JsonSerializer<DataTable>() {
             override fun serialize(value: DataTable, gen: JsonGenerator, provider: SerializerProvider) {
@@ -95,12 +95,12 @@ object ViewProcessor : FeedbackProcessor() {
         })
         DatabindCodec.mapper().registerModule(module)
 
-        vertx.deployVerticle(liveViewProcessor).await()
+        vertx.deployVerticle(liveViewService).await()
 
         ServiceBinder(vertx).setIncludeDebugInfo(true)
             .setAddress(SourceServices.Utilize.LIVE_VIEW)
             .addInterceptor(developerAuthInterceptor())
-            .register(LiveViewService::class.java, liveViewProcessor)
+            .register(LiveViewService::class.java, liveViewService)
         liveViewRecord = EventBusService.createRecord(
             SourceServices.Utilize.LIVE_VIEW,
             SourceServices.Utilize.LIVE_VIEW,
@@ -109,21 +109,21 @@ object ViewProcessor : FeedbackProcessor() {
         )
         discovery.publish(liveViewRecord) {
             if (it.succeeded()) {
-                log.info("Live view processor published")
+                log.info("Live view service published")
             } else {
-                log.error("Failed to publish live view processor", it.cause())
+                log.error("Failed to publish live view service", it.cause())
                 exitProcess(-1)
             }
         }
     }
 
     override suspend fun stop() {
-        log.info("Stopping ViewProcessorVerticle")
+        log.info("Stopping ViewProcessor")
         discovery.unpublish(liveViewRecord!!.registration).onComplete {
             if (it.succeeded()) {
-                log.info("Live view processor unpublished")
+                log.info("Live view service unpublished")
             } else {
-                log.error("Failed to unpublish live view processor", it.cause())
+                log.error("Failed to unpublish live view service", it.cause())
             }
         }.await()
     }

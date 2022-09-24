@@ -57,7 +57,7 @@ class SPPMetricsStreamProcessor : MetricsStreamProcessor() {
                 }
                 new
             }
-            ViewProcessor.liveViewProcessor.meterView.export(copiedMetrics, true)
+            ViewProcessor.liveViewService.meterView.export(copiedMetrics, true)
         }
     }
 
