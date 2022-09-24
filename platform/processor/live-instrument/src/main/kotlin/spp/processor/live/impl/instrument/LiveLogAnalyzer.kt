@@ -26,7 +26,7 @@ import org.apache.skywalking.oap.log.analyzer.provider.log.listener.LogAnalysisL
 import org.apache.skywalking.oap.log.analyzer.provider.log.listener.LogAnalysisListenerFactory
 import org.slf4j.LoggerFactory
 import spp.platform.common.ClusterConnection
-import spp.processor.InstrumentProcessor.liveInstrumentProcessor
+import spp.processor.InstrumentProcessor.liveInstrumentService
 import spp.protocol.SourceServices.Provide.toLiveInstrumentSubscriberAddress
 import spp.protocol.artifact.log.Log
 import spp.protocol.artifact.log.LogOrderType
@@ -110,7 +110,7 @@ class LiveLogAnalyzer : LogAnalysisListener, LogAnalysisListenerFactory {
 
     private fun handleLogHit(hit: LiveLogHit) {
         if (log.isTraceEnabled) log.trace("Live log hit: {}", hit)
-        val liveInstrument = liveInstrumentProcessor._getDeveloperInstrumentById(hit.logId)
+        val liveInstrument = liveInstrumentService._getDeveloperInstrumentById(hit.logId)
         if (liveInstrument != null) {
             val instrumentMeta = liveInstrument.instrument.meta as MutableMap<String, Any>
             if ((instrumentMeta["hit_count"] as AtomicInteger?)?.incrementAndGet() == 1) {
@@ -119,7 +119,7 @@ class LiveLogAnalyzer : LogAnalysisListener, LogAnalysisListenerFactory {
             instrumentMeta["last_hit_at"] = System.currentTimeMillis().toString()
         }
 
-        val devInstrument = liveInstrument ?: liveInstrumentProcessor.getCachedDeveloperInstrument(hit.logId)
+        val devInstrument = liveInstrument ?: liveInstrumentService.getCachedDeveloperInstrument(hit.logId)
         ClusterConnection.getVertx().eventBus().publish(
             toLiveInstrumentSubscriberAddress(devInstrument.developerAuth.selfId),
             JsonObject.mapFrom(

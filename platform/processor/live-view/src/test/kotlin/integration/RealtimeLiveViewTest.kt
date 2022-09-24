@@ -45,7 +45,7 @@ class RealtimeLiveViewTest : PlatformIntegrationTest() {
 
         val subscriptionId = viewService.addLiveViewSubscription(
             LiveViewSubscription(
-                entityIds = listOf("instance_jvm_cpu_realtime"),
+                entityIds = mutableSetOf("instance_jvm_cpu_realtime"),
                 artifactQualifiedName = ArtifactQualifiedName( //todo: optional artifact
                     "unneeded",
                     type = ArtifactType.EXPRESSION

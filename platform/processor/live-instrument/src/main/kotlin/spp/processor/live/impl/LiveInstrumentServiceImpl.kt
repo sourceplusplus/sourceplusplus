@@ -59,7 +59,7 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 
-class LiveInstrumentProcessorImpl : CoroutineVerticle(), LiveInstrumentService {
+class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
 
     companion object {
         private val log = KotlinLogging.logger {}
