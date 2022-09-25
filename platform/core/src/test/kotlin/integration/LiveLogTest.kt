@@ -30,7 +30,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.slf4j.LoggerFactory
 import spp.protocol.SourceServices.Provide.toLiveInstrumentSubscriberAddress
-import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.LiveLog
 import spp.protocol.instrument.LiveSourceLocation
 import spp.protocol.instrument.event.LiveInstrumentEvent
@@ -151,7 +150,7 @@ class LiveLogTest : PlatformIntegrationTest() {
 
         //todo: don't care about added event. can remove directly after add but need #537
         vertx.addLiveInstrumentListener("system", object : LiveInstrumentListener {
-            override fun onBreakpointAddedEvent(event: LiveBreakpoint) {
+            override fun onLogAddedEvent(event: LiveLog) {
                 testContext.verify {
                     assertEquals(instrumentId, event.id)
                 }
