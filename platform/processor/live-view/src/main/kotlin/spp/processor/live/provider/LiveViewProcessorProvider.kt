@@ -37,7 +37,7 @@ import spp.platform.common.ClusterConnection
 import spp.platform.storage.ExpiringSharedData
 import spp.platform.storage.SourceStorage
 import spp.processor.ViewProcessor
-import spp.processor.ViewProcessor.liveViewProcessor
+import spp.processor.ViewProcessor.liveViewService
 import spp.processor.live.impl.SPPMetricsStreamProcessor
 import java.util.concurrent.TimeUnit
 
@@ -62,7 +62,7 @@ class LiveViewProcessorProvider : ModuleProvider() {
         registerServiceImplementation(MetricValuesExportService::class.java, MetricValuesExportService {
             if (it.type == ExportEvent.EventType.TOTAL) {
                 GlobalScope.launch(ClusterConnection.getVertx().dispatcher()) {
-                    liveViewProcessor.meterView.export(it.metrics, false)
+                    liveViewService.meterView.export(it.metrics, false)
                 }
             }
         })

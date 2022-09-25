@@ -38,7 +38,7 @@ import org.apache.skywalking.oap.server.library.module.ModuleManager
 import org.slf4j.LoggerFactory
 import spp.platform.common.ClusterConnection.discovery
 import spp.platform.common.FeedbackProcessor
-import spp.processor.live.impl.LiveInstrumentProcessorImpl
+import spp.processor.live.impl.LiveInstrumentServiceImpl
 import spp.protocol.SourceServices
 import spp.protocol.platform.auth.AccessChecker
 import spp.protocol.platform.auth.RolePermission
@@ -54,7 +54,7 @@ object InstrumentProcessor : FeedbackProcessor() {
 
     private val log = LoggerFactory.getLogger(InstrumentProcessor::class.java)
     private var liveInstrumentRecord: Record? = null
-    val liveInstrumentProcessor = LiveInstrumentProcessorImpl()
+    val liveInstrumentService = LiveInstrumentServiceImpl()
 
     override fun bootProcessor(moduleManager: ModuleManager) {
         module = moduleManager
@@ -64,19 +64,19 @@ object InstrumentProcessor : FeedbackProcessor() {
     }
 
     override fun onConnected(vertx: Vertx) {
-        log.info("Deploying source processor")
+        log.info("Deploying instrument processor")
         vertx.deployVerticle(InstrumentProcessor) {
             if (it.succeeded()) {
                 processorVerticleId = it.result()
             } else {
-                log.error("Failed to deploy source processor", it.cause())
+                log.error("Failed to deploy instrument processor", it.cause())
                 exitProcess(-1)
             }
         }
     }
 
     override suspend fun start() {
-        log.info("Starting InstrumentProcessorVerticle")
+        log.info("Starting InstrumentProcessor")
         val module = SimpleModule()
         module.addSerializer(DataTable::class.java, object : JsonSerializer<DataTable>() {
             override fun serialize(value: DataTable, gen: JsonGenerator, provider: SerializerProvider) {
@@ -91,13 +91,13 @@ object InstrumentProcessor : FeedbackProcessor() {
         })
         DatabindCodec.mapper().registerModule(module)
 
-        vertx.deployVerticle(liveInstrumentProcessor).await()
+        vertx.deployVerticle(liveInstrumentService).await()
 
         ServiceBinder(vertx).setIncludeDebugInfo(true)
             .addInterceptor(developerAuthInterceptor())
             .addInterceptor(permissionAndAccessCheckInterceptor())
             .setAddress(SourceServices.Utilize.LIVE_INSTRUMENT)
-            .register(LiveInstrumentService::class.java, liveInstrumentProcessor)
+            .register(LiveInstrumentService::class.java, liveInstrumentService)
         liveInstrumentRecord = EventBusService.createRecord(
             SourceServices.Utilize.LIVE_INSTRUMENT,
             SourceServices.Utilize.LIVE_INSTRUMENT,
@@ -106,9 +106,9 @@ object InstrumentProcessor : FeedbackProcessor() {
         )
         discovery.publish(liveInstrumentRecord) {
             if (it.succeeded()) {
-                log.info("Live instrument processor published")
+                log.info("Live instrument service published")
             } else {
-                log.error("Failed to publish live instrument processor", it.cause())
+                log.error("Failed to publish live instrument service", it.cause())
                 exitProcess(-1)
             }
         }
@@ -237,12 +237,12 @@ object InstrumentProcessor : FeedbackProcessor() {
     }
 
     override suspend fun stop() {
-        log.info("Stopping InstrumentProcessorVerticle")
+        log.info("Stopping InstrumentProcessor")
         discovery.unpublish(liveInstrumentRecord!!.registration).onComplete {
             if (it.succeeded()) {
-                log.info("Live instrument processor unpublished")
+                log.info("Live instrument service unpublished")
             } else {
-                log.error("Failed to unpublish live instrument processor", it.cause())
+                log.error("Failed to unpublish live instrument service", it.cause())
             }
         }.await()
     }

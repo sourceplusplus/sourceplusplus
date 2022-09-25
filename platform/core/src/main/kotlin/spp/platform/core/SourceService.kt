@@ -1696,7 +1696,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
                 input.getJsonObject("liveViewConfig").getInteger("refreshRateLimit") ?: -1,
             )
             val subscription = LiveViewSubscription(
-                entityIds = input.getJsonArray("entityIds").list.map { it as String },
+                entityIds = input.getJsonArray("entityIds").list.map { it as String }.toMutableSet(),
                 artifactQualifiedName = ArtifactQualifiedName("todo", type = ArtifactType.CLASS),
                 artifactLocation = LiveSourceLocation("todo", -1),
                 liveViewConfig = liveViewConfig

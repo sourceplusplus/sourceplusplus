@@ -46,10 +46,10 @@ import spp.protocol.view.LiveViewEvent
 import spp.protocol.view.LiveViewSubscription
 import java.util.*
 
-class LiveViewProcessorImpl : CoroutineVerticle(), LiveViewService {
+class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
 
     companion object {
-        private val log = LoggerFactory.getLogger(LiveViewProcessorImpl::class.java)
+        private val log = LoggerFactory.getLogger(LiveViewServiceImpl::class.java)
     }
 
     //todo: use ExpiringSharedData
@@ -59,7 +59,7 @@ class LiveViewProcessorImpl : CoroutineVerticle(), LiveViewService {
     val logsView = LiveLogsView(subscriptionCache)
 
     override suspend fun start() {
-        log.info("Starting LiveViewProcessorImpl")
+        log.info("Starting LiveViewServiceImpl")
 
         //live traces view
         val segmentParserService = FeedbackProcessor.module!!.find(AnalyzerModule.NAME)
@@ -67,12 +67,12 @@ class LiveViewProcessorImpl : CoroutineVerticle(), LiveViewService {
         val listenerManagerField = segmentParserService.javaClass.getDeclaredField("listenerManager")
         listenerManagerField.trySetAccessible()
         val listenerManager = listenerManagerField.get(segmentParserService) as SegmentParserListenerManager
-        listenerManager.add(ViewProcessor.liveViewProcessor.tracesView)
+        listenerManager.add(ViewProcessor.liveViewService.tracesView)
 
         //live logs view
         val logParserService = FeedbackProcessor.module!!.find(LogAnalyzerModule.NAME)
             .provider().getService(ILogAnalyzerService::class.java) as LogAnalyzerServiceImpl
-        logParserService.addListenerFactory(ViewProcessor.liveViewProcessor.logsView)
+        logParserService.addListenerFactory(ViewProcessor.liveViewService.logsView)
 
         vertx.eventBus().consumer<JsonObject>(MARKER_DISCONNECTED) {
             val devAuth = DeveloperAuth.from(it.body())
@@ -148,12 +148,12 @@ class LiveViewProcessorImpl : CoroutineVerticle(), LiveViewService {
         return promise.future()
     }
 
-    override fun removeLiveViewSubscription(subscriptionId: String): Future<LiveViewSubscription> {
-        log.debug("Removing live view subscription: {}", subscriptionId)
+    override fun removeLiveViewSubscription(id: String): Future<LiveViewSubscription> {
+        log.debug("Removing live view subscription: {}", id)
         val promise = Promise.promise<LiveViewSubscription>()
         var unsubbedUser: ViewSubscriber? = null
         subscriptionCache.flatMap { it.value.values }.forEach { subList ->
-            val subscription = subList.firstOrNull { it.subscription.subscriptionId == subscriptionId }
+            val subscription = subList.firstOrNull { it.subscription.subscriptionId == id }
             if (subscription != null) {
                 (subList as MutableSet).remove(subscription)
                 unsubbedUser = subscription
@@ -163,7 +163,7 @@ class LiveViewProcessorImpl : CoroutineVerticle(), LiveViewService {
         if (unsubbedUser != null) {
             unsubbedUser!!.consumer.unregister {
                 if (it.succeeded()) {
-                    log.info("Removed live view subscription: {}", subscriptionId)
+                    log.info("Removed live view subscription: {}", id)
                     promise.complete(
                         LiveViewSubscription(
                             unsubbedUser!!.subscription.subscriptionId,
@@ -177,6 +177,70 @@ class LiveViewProcessorImpl : CoroutineVerticle(), LiveViewService {
                     promise.fail(it.cause())
                 }
             }
+        } else {
+            promise.fail(IllegalStateException("Invalid subscription id"))
+        }
+        return promise.future()
+    }
+
+    override fun updateLiveViewSubscription(
+        id: String,
+        subscription: LiveViewSubscription
+    ): Future<LiveViewSubscription> {
+        log.debug("Updating live view subscription: {}", id)
+        val promise = Promise.promise<LiveViewSubscription>()
+
+        var viewSubscriber: ViewSubscriber? = null
+        subscriptionCache.forEach {
+            it.value.forEach {
+                it.value.forEach {
+                    if (it.subscription.subscriptionId == id) {
+                        viewSubscriber = it
+                    }
+                }
+            }
+        }
+
+        if (viewSubscriber != null) {
+            viewSubscriber!!.subscription.entityIds.addAll(subscription.entityIds)
+
+            subscription.liveViewConfig.viewMetrics.forEach {
+                subscriptionCache.computeIfAbsent(it) { EntitySubscribersCache() }
+                subscription.entityIds.forEach { entityId ->
+                    subscriptionCache[it]!!.computeIfAbsent(entityId) { mutableSetOf() }
+                    (subscriptionCache[it]!![entityId]!! as MutableSet).add(viewSubscriber!!)
+                }
+            }
+
+            promise.complete(subscription)
+        } else {
+            promise.fail(IllegalStateException("Invalid subscription id"))
+        }
+
+        return promise.future()
+    }
+
+    override fun getLiveViewSubscription(id: String): Future<LiveViewSubscription> {
+        log.debug("Getting live view subscription: {}", id)
+        val promise = Promise.promise<LiveViewSubscription>()
+        var subbedUser: ViewSubscriber? = null
+        subscriptionCache.flatMap { it.value.values }.forEach { subList ->
+            val subscription = subList.firstOrNull { it.subscription.subscriptionId == id }
+            if (subscription != null) {
+                subbedUser = subscription
+            }
+        }
+
+        if (subbedUser != null) {
+            promise.complete(
+                LiveViewSubscription(
+                    subbedUser!!.subscription.subscriptionId,
+                    subbedUser!!.subscription.entityIds,
+                    subbedUser!!.subscription.artifactQualifiedName,
+                    subbedUser!!.subscription.artifactLocation,
+                    subbedUser!!.subscription.liveViewConfig
+                )
+            )
         } else {
             promise.fail(IllegalStateException("Invalid subscription id"))
         }
