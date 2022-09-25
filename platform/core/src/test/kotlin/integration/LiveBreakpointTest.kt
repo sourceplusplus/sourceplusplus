@@ -36,8 +36,8 @@ import spp.protocol.marshall.ServiceExceptionConverter
 import spp.protocol.service.error.LiveInstrumentException
 import spp.protocol.service.listen.LiveInstrumentListener
 import spp.protocol.service.listen.addLiveInstrumentListener
-import java.util.*
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicInteger
 
 @ExtendWith(VertxExtension::class)
 class LiveBreakpointTest : PlatformIntegrationTest() {
@@ -275,13 +275,7 @@ class LiveBreakpointTest : PlatformIntegrationTest() {
             }
         }
 
-        if (testContext.awaitCompletion(10, TimeUnit.SECONDS)) {
-            if (testContext.failed()) {
-                throw testContext.causeOfFailure()
-            }
-        } else {
-            throw RuntimeException("Test timed out")
-        }
+        errorOnTimeout(testContext)
     }
 
     @Test
@@ -314,18 +308,34 @@ class LiveBreakpointTest : PlatformIntegrationTest() {
             }
         }
 
-        if (testContext.awaitCompletion(10, TimeUnit.SECONDS)) {
-            if (testContext.failed()) {
-                throw testContext.causeOfFailure()
-            }
-        } else {
-            throw RuntimeException("Test timed out")
-        }
+        errorOnTimeout(testContext)
     }
 
     @Test
-    fun removeMultipleByLocation() {
+    fun removeMultipleByLocation(): Unit = runBlocking {
         val testContext = VertxTestContext()
+
+        //todo: don't care about added event. can remove directly after add but need #537
+        val addedCount = AtomicInteger(0)
+        vertx.addLiveInstrumentListener("system", object : LiveInstrumentListener {
+            override fun onBreakpointAddedEvent(event: LiveBreakpoint) {
+                if (addedCount.incrementAndGet() == 2) {
+                    instrumentService.removeLiveInstruments(
+                        LiveSourceLocation("spp.example.webapp.model.User", 42)
+                    ).onComplete {
+                        if (it.succeeded()) {
+                            testContext.verify {
+                                assertEquals(2, it.result().size)
+                                testContext.completeNow()
+                            }
+                        } else {
+                            testContext.failNow(it.cause())
+                        }
+                    }
+                }
+            }
+        }).await()
+
         instrumentService.addLiveInstruments(
             listOf(
                 LiveBreakpoint(
@@ -342,30 +352,12 @@ class LiveBreakpointTest : PlatformIntegrationTest() {
         ).onComplete {
             if (it.succeeded()) {
                 testContext.verify { assertEquals(2, it.result().size) }
-                instrumentService.removeLiveInstruments(
-                    LiveSourceLocation("spp.example.webapp.model.User", 42)
-                ).onComplete {
-                    if (it.succeeded()) {
-                        testContext.verify {
-                            assertEquals(2, it.result().size)
-                            testContext.completeNow()
-                        }
-                    } else {
-                        testContext.failNow(it.cause())
-                    }
-                }
             } else {
                 testContext.failNow(it.cause())
             }
         }
 
-        if (testContext.awaitCompletion(10, TimeUnit.SECONDS)) {
-            if (testContext.failed()) {
-                throw testContext.causeOfFailure()
-            }
-        } else {
-            throw RuntimeException("Test timed out")
-        }
+        errorOnTimeout(testContext)
     }
 
     @Test
@@ -395,13 +387,7 @@ class LiveBreakpointTest : PlatformIntegrationTest() {
             }
         }
 
-        if (testContext.awaitCompletion(10, TimeUnit.SECONDS)) {
-            if (testContext.failed()) {
-                throw testContext.causeOfFailure()
-            }
-        } else {
-            throw RuntimeException("Test timed out")
-        }
+        errorOnTimeout(testContext)
     }
 
     @RepeatedTest(2) //ensures can try again (in case things have changed on probe side)
@@ -427,12 +413,6 @@ class LiveBreakpointTest : PlatformIntegrationTest() {
             }
         }
 
-        if (testContext.awaitCompletion(10, TimeUnit.SECONDS)) {
-            if (testContext.failed()) {
-                throw testContext.causeOfFailure()
-            }
-        } else {
-            throw RuntimeException("Test timed out")
-        }
+        errorOnTimeout(testContext)
     }
 }
