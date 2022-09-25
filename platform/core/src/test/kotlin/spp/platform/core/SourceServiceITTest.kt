@@ -577,7 +577,7 @@ class SourceServiceITTest : PlatformIntegrationTest() {
 
     @Test
     fun `ensure all role permissions are known`() = runBlocking {
-        val knownRolePermissions = liveManagementService.getRolePermissions(ROLE_MANAGER.roleName).await()
+        val knownRolePermissions = managementService.getRolePermissions(ROLE_MANAGER.roleName).await()
         RolePermission.values().forEach {
             assert(knownRolePermissions.contains(it)) {
                 "Role permission $it is not known"
@@ -884,7 +884,7 @@ class SourceServiceITTest : PlatformIntegrationTest() {
 
     @Test
     fun `ensure default-test client accessor is present`() = runBlocking {
-        val testClientAccessList = liveManagementService.getClientAccessors().await()
+        val testClientAccessList = managementService.getClientAccessors().await()
         assertNotNull(testClientAccessList.find { it.id == "test-id" })
         assertNotNull(testClientAccessList.find { it.secret == "test-secret" })
 
@@ -906,7 +906,7 @@ class SourceServiceITTest : PlatformIntegrationTest() {
     //todo: No GraphQL for this endpoint
     @Test
     fun `ensure getting client access works`() = runBlocking {
-        val clientAccess = liveManagementService.getClientAccess("test-id").await()
+        val clientAccess = managementService.getClientAccess("test-id").await()
         assertEquals("test-id", clientAccess?.id)
         assertEquals("test-secret", clientAccess?.secret)
     }
@@ -915,7 +915,7 @@ class SourceServiceITTest : PlatformIntegrationTest() {
     @Test
     fun `ensure adding new client accessor works`() = runBlocking {
 
-        val generatedClientAccess = liveManagementService.addClientAccess().await()
+        val generatedClientAccess = managementService.addClientAccess().await()
         assertNotNull(generatedClientAccess.id)
         assertNotNull(generatedClientAccess.secret)
 
@@ -930,16 +930,16 @@ class SourceServiceITTest : PlatformIntegrationTest() {
 
     @Test
     fun `ensure remove client access works`() = runBlocking {
-        val clientAccessList = liveManagementService.getClientAccessors().await()
+        val clientAccessList = managementService.getClientAccessors().await()
         assertNotNull(clientAccessList.find { it.id == "test-id" })
 
-        assertTrue(liveManagementService.removeClientAccess("test-id").await())
+        assertTrue(managementService.removeClientAccess("test-id").await())
 
-        val removedClientAccessList = liveManagementService.getClientAccessors().await()
+        val removedClientAccessList = managementService.getClientAccessors().await()
         assertNull(removedClientAccessList.find { it.id == "test-id" })
 
-        val clientId = liveManagementService.addClientAccess().await().id
-        val addedClientAccess = liveManagementService.getClientAccessors().await()
+        val clientId = managementService.addClientAccess().await().id
+        val addedClientAccess = managementService.getClientAccessors().await()
         assertNotNull(addedClientAccess.find { it.id == clientId })
 
         val removeClientAccessResp = request.sendJsonObject(
@@ -950,17 +950,17 @@ class SourceServiceITTest : PlatformIntegrationTest() {
 
         assertTrue(removeClientAccessResp.getJsonObject("data").getBoolean("removeClientAccess"))
 
-        val removedClientAccessListGql = liveManagementService.getClientAccessors().await()
+        val removedClientAccessListGql = managementService.getClientAccessors().await()
         assertNull(removedClientAccessListGql.find { it.id == clientId })
     }
 
     @Test
     fun `ensure update client access works`() = runBlocking {
-        val clientAccess = liveManagementService.addClientAccess().await()
+        val clientAccess = managementService.addClientAccess().await()
         val clientId = clientAccess.id
         val clientSecret = clientAccess.secret
 
-        val updatedClientAccess = liveManagementService.updateClientAccess(clientId).await()
+        val updatedClientAccess = managementService.updateClientAccess(clientId).await()
         assertEquals(clientId, updatedClientAccess.id)
         assertNotEquals(clientSecret, updatedClientAccess.secret)
 
