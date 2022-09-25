@@ -73,15 +73,7 @@ class LiveLogSubscriptionTest : LiveInstrumentIntegrationTest() {
 
         val subscriptionId = viewService.addLiveViewSubscription(
             LiveViewSubscription(
-                entityIds = listOf(liveLog.logFormat),
-                artifactQualifiedName = ArtifactQualifiedName(
-                    LiveLogSubscriptionTest::class.qualifiedName!!,
-                    type = ArtifactType.EXPRESSION
-                ),
-                artifactLocation = LiveSourceLocation(
-                    LiveLogSubscriptionTest::class.qualifiedName!!,
-                    getLineNumber("done")
-                ),
+                entityIds = mutableSetOf(liveLog.logFormat),
                 liveViewConfig = LiveViewConfig(
                     "test",
                     listOf("endpoint_logs")
