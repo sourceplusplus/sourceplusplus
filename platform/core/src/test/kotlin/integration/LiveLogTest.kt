@@ -28,6 +28,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.slf4j.LoggerFactory
 import spp.protocol.SourceServices.Provide.toLiveInstrumentSubscriberAddress
+import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.LiveLog
 import spp.protocol.instrument.LiveSourceLocation
 import spp.protocol.instrument.event.LiveInstrumentEvent
@@ -35,6 +36,8 @@ import spp.protocol.instrument.event.LiveInstrumentEventType
 import spp.protocol.instrument.event.LiveInstrumentRemoved
 import spp.protocol.marshall.ServiceExceptionConverter
 import spp.protocol.service.error.LiveInstrumentException
+import spp.protocol.service.listen.LiveInstrumentListener
+import spp.protocol.service.listen.addLiveInstrumentListener
 import java.util.concurrent.TimeUnit
 
 @ExtendWith(VertxExtension::class)
@@ -139,6 +142,27 @@ class LiveLogTest : PlatformIntegrationTest() {
     fun removeById() {
         val testContext = VertxTestContext()
         val instrumentId = "live-log-test-remove-by-id"
+
+        //todo: don't care about added event. can remove directly after add but need #537
+        vertx.addLiveInstrumentListener("system", object : LiveInstrumentListener {
+            override fun onBreakpointAddedEvent(event: LiveBreakpoint) {
+                testContext.verify {
+                    assertEquals(instrumentId, event.id)
+                }
+
+                instrumentService.removeLiveInstrument(instrumentId).onComplete {
+                    if (it.succeeded()) {
+                        testContext.verify {
+                            assertEquals(instrumentId, it.result()!!.id!!)
+                        }
+                        testContext.completeNow()
+                    } else {
+                        testContext.failNow(it.cause())
+                    }
+                }
+            }
+        })
+
         instrumentService.addLiveInstrument(
             LiveLog(
                 id = instrumentId,
@@ -152,29 +176,12 @@ class LiveLogTest : PlatformIntegrationTest() {
                 testContext.verify {
                     assertEquals(instrumentId, originalId)
                 }
-
-                instrumentService.removeLiveInstrument(originalId).onComplete {
-                    if (it.succeeded()) {
-                        testContext.verify {
-                            assertEquals(originalId, it.result()!!.id!!)
-                        }
-                        testContext.completeNow()
-                    } else {
-                        testContext.failNow(it.cause())
-                    }
-                }
             } else {
                 testContext.failNow(it.cause())
             }
         }
 
-        if (testContext.awaitCompletion(10, TimeUnit.SECONDS)) {
-            if (testContext.failed()) {
-                throw testContext.causeOfFailure()
-            }
-        } else {
-            throw RuntimeException("Test timed out")
-        }
+        errorOnTimeout(testContext)
     }
 
     @Test
@@ -208,13 +215,7 @@ class LiveLogTest : PlatformIntegrationTest() {
             }
         }
 
-        if (testContext.awaitCompletion(10, TimeUnit.SECONDS)) {
-            if (testContext.failed()) {
-                throw testContext.causeOfFailure()
-            }
-        } else {
-            throw RuntimeException("Test timed out")
-        }
+        errorOnTimeout(testContext)
     }
 
     @Test
@@ -255,13 +256,7 @@ class LiveLogTest : PlatformIntegrationTest() {
             }
         }
 
-        if (testContext.awaitCompletion(10, TimeUnit.SECONDS)) {
-            if (testContext.failed()) {
-                throw testContext.causeOfFailure()
-            }
-        } else {
-            throw RuntimeException("Test timed out")
-        }
+        errorOnTimeout(testContext)
     }
 
     @Test
@@ -292,13 +287,7 @@ class LiveLogTest : PlatformIntegrationTest() {
             }
         }
 
-        if (testContext.awaitCompletion(10, TimeUnit.SECONDS)) {
-            if (testContext.failed()) {
-                throw testContext.causeOfFailure()
-            }
-        } else {
-            throw RuntimeException("Test timed out")
-        }
+        errorOnTimeout(testContext)
     }
 
     @RepeatedTest(2) //ensures can try again (in case things have changed on probe side)
@@ -324,12 +313,6 @@ class LiveLogTest : PlatformIntegrationTest() {
             }
         }
 
-        if (testContext.awaitCompletion(10, TimeUnit.SECONDS)) {
-            if (testContext.failed()) {
-                throw testContext.causeOfFailure()
-            }
-        } else {
-            throw RuntimeException("Test timed out")
-        }
+        errorOnTimeout(testContext)
     }
 }
