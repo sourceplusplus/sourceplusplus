@@ -21,7 +21,8 @@ import io.vertx.core.json.Json
 import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxExtension
 import io.vertx.junit5.VertxTestContext
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -34,7 +35,6 @@ import spp.protocol.instrument.event.LiveInstrumentEventType
 import spp.protocol.instrument.event.LiveInstrumentRemoved
 import spp.protocol.marshall.ServiceExceptionConverter
 import spp.protocol.service.error.LiveInstrumentException
-import java.util.*
 import java.util.concurrent.TimeUnit
 
 @ExtendWith(VertxExtension::class)
@@ -49,7 +49,7 @@ class LiveLogTest : PlatformIntegrationTest() {
         var gotApplied = false
         var gotHit = false
         var gotRemoved = false
-        val instrumentId = UUID.randomUUID().toString()
+        val instrumentId = "live-log-test-add-hit-remove"
 
         val consumer = vertx.eventBus().consumer<JsonObject>(toLiveInstrumentSubscriberAddress("system"))
         consumer.handler {
@@ -138,8 +138,10 @@ class LiveLogTest : PlatformIntegrationTest() {
     @Test
     fun removeById() {
         val testContext = VertxTestContext()
+        val instrumentId = "live-log-test-remove-by-id"
         instrumentService.addLiveInstrument(
             LiveLog(
+                id = instrumentId,
                 location = LiveSourceLocation("spp.example.webapp.model.User", 42),
                 condition = "1==2",
                 logFormat = "removeById"
@@ -147,6 +149,10 @@ class LiveLogTest : PlatformIntegrationTest() {
         ).onComplete {
             if (it.succeeded()) {
                 val originalId = it.result().id!!
+                testContext.verify {
+                    assertEquals(instrumentId, originalId)
+                }
+
                 instrumentService.removeLiveInstrument(originalId).onComplete {
                     if (it.succeeded()) {
                         testContext.verify {
@@ -176,6 +182,7 @@ class LiveLogTest : PlatformIntegrationTest() {
         val testContext = VertxTestContext()
         instrumentService.addLiveInstrument(
             LiveLog(
+                id = "live-log-test-remove-by-location",
                 location = LiveSourceLocation("spp.example.webapp.model.User", 42),
                 condition = "1==2",
                 logFormat = "removeByLocation"
@@ -216,11 +223,13 @@ class LiveLogTest : PlatformIntegrationTest() {
         instrumentService.addLiveInstruments(
             listOf(
                 LiveLog(
+                    id = "live-log-test-remove-multiple-by-location-1",
                     location = LiveSourceLocation("spp.example.webapp.model.User", 42),
                     condition = "1==2",
                     logFormat = "removeMultipleByLocation"
                 ),
                 LiveLog(
+                    id = "live-log-test-remove-multiple-by-location-2",
                     location = LiveSourceLocation("spp.example.webapp.model.User", 42),
                     condition = "1==3",
                     logFormat = "removeMultipleByLocation"
@@ -260,6 +269,7 @@ class LiveLogTest : PlatformIntegrationTest() {
         val testContext = VertxTestContext()
         instrumentService.addLiveInstrument(
             LiveLog(
+                id = "live-log-test-invalid-condition",
                 location = LiveSourceLocation("spp.example.webapp.model.User", 42),
                 condition = "1===2",
                 logFormat = "addLogWithInvalidCondition",
@@ -296,6 +306,7 @@ class LiveLogTest : PlatformIntegrationTest() {
         val testContext = VertxTestContext()
         instrumentService.addLiveInstrument(
             LiveLog(
+                id = "live-log-test-invalid-class",
                 location = LiveSourceLocation("bad.Clazz", 48),
                 logFormat = "applyImmediatelyWithInvalidClass",
                 applyImmediately = true
