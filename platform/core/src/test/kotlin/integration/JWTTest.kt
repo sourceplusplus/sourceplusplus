@@ -26,6 +26,7 @@ import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.slf4j.LoggerFactory
@@ -41,6 +42,11 @@ import java.util.concurrent.TimeUnit
 class JWTTest : PlatformIntegrationTest() {
 
     private val log = LoggerFactory.getLogger(JWTTest::class.java)
+
+    @BeforeEach
+    fun reset(): Unit = runBlocking {
+        //managementService.reset() //todo: this
+    }
 
     @Test
     fun verifySuccessful() = runBlocking {
