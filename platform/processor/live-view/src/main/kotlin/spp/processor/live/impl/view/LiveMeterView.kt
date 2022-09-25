@@ -43,9 +43,14 @@ class LiveMeterView(private val subscriptionCache: MetricTypeSubscriptionCache) 
         val metadata = (metrics as WithMetadata).meta
         val entityName = EntityNaming.getEntityName(metadata)
         if (entityName.isNullOrEmpty()) return
-        log.trace { Msg.msg("Processing exported metrics: {}", metrics) }
 
         var metricName = metadata.metricsName
+        if (metricName.startsWith("spp_")) {
+            log.debug { Msg.msg("Processing Source++ metrics: {} - Data: {}", metricName, metrics) }
+        } else {
+            log.trace { Msg.msg("Processing SkyWalking metrics: {} - Data: {}", metricName, metrics) }
+        }
+
         if (realTime && !metricName.startsWith("spp_")) {
             metricName = "${metricName}_realtime"
         } else if (metricName.startsWith("spp_") && !realTime) {
@@ -56,7 +61,7 @@ class LiveMeterView(private val subscriptionCache: MetricTypeSubscriptionCache) 
             val subs = subbedArtifacts[entityName].orEmpty() +
                     subbedArtifacts[metadata.id].orEmpty() + subbedArtifacts[metricName].orEmpty()
             if (subs.isNotEmpty()) {
-                log.trace { Msg.msg("Exporting event $metricName to {} subscribers", subs.size) }
+                log.debug { Msg.msg("Exporting event $metricName to {} subscribers", subs.size) }
                 handleEvent(subs, metrics, realTime)
             }
         }
