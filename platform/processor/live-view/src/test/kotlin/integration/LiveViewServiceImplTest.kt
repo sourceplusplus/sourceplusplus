@@ -20,6 +20,7 @@ package integration
 import io.vertx.kotlin.coroutines.await
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import spp.protocol.view.LiveViewConfig
@@ -38,7 +39,7 @@ class LiveViewServiceImplTest : PlatformIntegrationTest() {
             entityIds = mutableSetOf("test-id"),
             liveViewConfig = LiveViewConfig(
                 "test",
-                listOf("test-id")
+                listOf("test-metric")
             )
         )
         val subscriptionId = viewService.addLiveViewSubscription(subscription).await().subscriptionId!!
@@ -50,12 +51,42 @@ class LiveViewServiceImplTest : PlatformIntegrationTest() {
     }
 
     @Test
-    fun `test updateLiveViewSubscription`(): Unit = runBlocking {
+    fun `test updateLiveViewSubscription add entity id`(): Unit = runBlocking {
         val subscription = LiveViewSubscription(
-            entityIds = mutableSetOf("test-id"),
+            entityIds = mutableSetOf("test-id-1"),
             liveViewConfig = LiveViewConfig(
                 "test",
-                listOf("test-id")
+                listOf("test-metric")
+            )
+        )
+        val subscriptionId = viewService.addLiveViewSubscription(subscription).await().subscriptionId!!
+
+        val updatedSubscription = subscription.copy(entityIds = mutableSetOf("test-id-1", "test-id-2"))
+        viewService.updateLiveViewSubscription(subscriptionId, updatedSubscription).await()
+
+        val subscriptions = viewService.getLiveViewSubscriptions().await()
+        assertEquals(1, subscriptions.size)
+        assertEquals(subscriptionId, subscriptions[0].subscriptionId)
+        assertEquals(
+            updatedSubscription.copy(
+                subscriptionId = subscriptionId,
+                entityIds = mutableSetOf("test-id-1", "test-id-2")
+            ), subscriptions[0]
+        )
+
+        val subscriptionStats = managementService.getStats().await().getJsonObject("subscriptions")
+        val endpointLogs = subscriptionStats.getJsonObject("test-metric")
+        assertEquals(1, endpointLogs.getInteger("test-id-1"))
+        assertEquals(1, endpointLogs.getInteger("test-id-2"))
+    }
+
+    @Test
+    fun `test updateLiveViewSubscription replace entity id`(): Unit = runBlocking {
+        val subscription = LiveViewSubscription(
+            entityIds = mutableSetOf("test-id-1"),
+            liveViewConfig = LiveViewConfig(
+                "test",
+                listOf("test-metric")
             )
         )
         val subscriptionId = viewService.addLiveViewSubscription(subscription).await().subscriptionId!!
@@ -69,9 +100,14 @@ class LiveViewServiceImplTest : PlatformIntegrationTest() {
         assertEquals(
             updatedSubscription.copy(
                 subscriptionId = subscriptionId,
-                entityIds = mutableSetOf("test-id", "test-id-2")
+                entityIds = mutableSetOf("test-id-2")
             ), subscriptions[0]
         )
+
+        val subscriptionStats = managementService.getStats().await().getJsonObject("subscriptions")
+        val endpointLogs = subscriptionStats.getJsonObject("test-metric")
+        assertNull(endpointLogs.getInteger("test-id-1"))
+        assertEquals(1, endpointLogs.getInteger("test-id-2"))
     }
 
     @Test
@@ -80,7 +116,7 @@ class LiveViewServiceImplTest : PlatformIntegrationTest() {
             entityIds = mutableSetOf("test-id"),
             liveViewConfig = LiveViewConfig(
                 "test",
-                listOf("test-id")
+                listOf("test-metric")
             )
         )
         val subscriptionId = viewService.addLiveViewSubscription(subscription).await().subscriptionId!!
@@ -99,7 +135,7 @@ class LiveViewServiceImplTest : PlatformIntegrationTest() {
             entityIds = mutableSetOf("test-id"),
             liveViewConfig = LiveViewConfig(
                 "test",
-                listOf("test-id")
+                listOf("test-metric")
             )
         )
         val subscriptionId = viewService.addLiveViewSubscription(subscription).await().subscriptionId!!
@@ -115,7 +151,7 @@ class LiveViewServiceImplTest : PlatformIntegrationTest() {
             entityIds = mutableSetOf("test-id-1"),
             liveViewConfig = LiveViewConfig(
                 "test",
-                listOf("test-id-1")
+                listOf("test-metric-1")
             )
         )
         val subscriptionId1 = viewService.addLiveViewSubscription(subscription1).await().subscriptionId!!
@@ -124,17 +160,17 @@ class LiveViewServiceImplTest : PlatformIntegrationTest() {
             entityIds = mutableSetOf("test-id-2"),
             liveViewConfig = LiveViewConfig(
                 "test",
-                listOf("test-id-2")
+                listOf("test-metric-2")
             )
         )
         val subscriptionId2 = viewService.addLiveViewSubscription(subscription2).await().subscriptionId!!
 
         val subscriptions = viewService.getLiveViewSubscriptions().await()
         assertEquals(2, subscriptions.size)
-        assertEquals(subscriptionId1, subscriptions[1].subscriptionId)
-        assertEquals(subscription1.copy(subscriptionId = subscriptionId1), subscriptions[1])
-        assertEquals(subscriptionId2, subscriptions[0].subscriptionId)
-        assertEquals(subscription2.copy(subscriptionId = subscriptionId2), subscriptions[0])
+        assertEquals(subscriptionId1, subscriptions[0].subscriptionId)
+        assertEquals(subscription1.copy(subscriptionId = subscriptionId1), subscriptions[0])
+        assertEquals(subscriptionId2, subscriptions[1].subscriptionId)
+        assertEquals(subscription2.copy(subscriptionId = subscriptionId2), subscriptions[1])
     }
 
     @Test
@@ -143,7 +179,7 @@ class LiveViewServiceImplTest : PlatformIntegrationTest() {
             entityIds = mutableSetOf("test-id-1"),
             liveViewConfig = LiveViewConfig(
                 "test",
-                listOf("test-id-1")
+                listOf("test-metric-1")
             )
         )
         viewService.addLiveViewSubscription(subscription1).await()
@@ -152,7 +188,7 @@ class LiveViewServiceImplTest : PlatformIntegrationTest() {
             entityIds = mutableSetOf("test-id-2"),
             liveViewConfig = LiveViewConfig(
                 "test",
-                listOf("test-id-2")
+                listOf("test-metric-2")
             )
         )
         viewService.addLiveViewSubscription(subscription2).await()

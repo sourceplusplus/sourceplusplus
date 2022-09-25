@@ -202,11 +202,24 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
         }
 
         if (viewSubscriber != null) {
-            viewSubscriber!!.subscription.entityIds.addAll(subscription.entityIds)
+            val removedEntityIds = viewSubscriber!!.subscription.entityIds - subscription.entityIds
+            val addedEntityIds = subscription.entityIds - viewSubscriber!!.subscription.entityIds
+            viewSubscriber!!.subscription.entityIds.removeAll(removedEntityIds)
+            viewSubscriber!!.subscription.entityIds.addAll(addedEntityIds)
 
             subscription.liveViewConfig.viewMetrics.forEach {
                 subscriptionCache.computeIfAbsent(it) { EntitySubscribersCache() }
-                subscription.entityIds.forEach { entityId ->
+
+                removedEntityIds.forEach { entityId ->
+                    val entityIdMetrics = subscriptionCache[it]!![entityId]!! as MutableSet
+                    entityIdMetrics.removeIf {
+                        it.subscription.subscriptionId == id
+                    }
+                    if (entityIdMetrics.isEmpty()) {
+                        subscriptionCache[it]!!.remove(entityId)
+                    }
+                }
+                addedEntityIds.forEach { entityId ->
                     subscriptionCache[it]!!.computeIfAbsent(entityId) { mutableSetOf() }
                     (subscriptionCache[it]!![entityId]!! as MutableSet).add(viewSubscriber!!)
                 }
