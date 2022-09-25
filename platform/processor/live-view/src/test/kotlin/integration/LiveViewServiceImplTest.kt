@@ -182,7 +182,7 @@ class LiveViewServiceImplTest : PlatformIntegrationTest() {
                 listOf("test-metric-1")
             )
         )
-        viewService.addLiveViewSubscription(subscription1).await()
+        val subId1 = viewService.addLiveViewSubscription(subscription1).await().subscriptionId!!
 
         val subscription2 = LiveViewSubscription(
             entityIds = mutableSetOf("test-id-2"),
@@ -191,17 +191,17 @@ class LiveViewServiceImplTest : PlatformIntegrationTest() {
                 listOf("test-metric-2")
             )
         )
-        viewService.addLiveViewSubscription(subscription2).await()
+        val subId2 = viewService.addLiveViewSubscription(subscription2).await().subscriptionId!!
 
         val clearedSubscriptions = viewService.clearLiveViewSubscriptions().await()
         assertEquals(2, clearedSubscriptions.size)
         assertEquals(
-            subscription1.copy(subscriptionId = clearedSubscriptions[1].subscriptionId),
-            clearedSubscriptions[1]
+            subscription1.copy(subscriptionId = subId1),
+            clearedSubscriptions.find { it.subscriptionId == subId1 }
         )
         assertEquals(
-            subscription2.copy(subscriptionId = clearedSubscriptions[0].subscriptionId),
-            clearedSubscriptions[0]
+            subscription2.copy(subscriptionId = subId2),
+            clearedSubscriptions.find { it.subscriptionId == subId2 }
         )
 
         val subscriptions = viewService.getLiveViewSubscriptions().await()
