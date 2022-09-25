@@ -296,11 +296,24 @@ class LiveLogTest : PlatformIntegrationTest() {
     }
 
     @RepeatedTest(2) //ensures can try again (in case things have changed on probe side)
-    fun applyImmediatelyWithInvalidClass() {
+    fun applyImmediatelyWithInvalidClass(): Unit = runBlocking {
         val testContext = VertxTestContext()
+        val instrumentId = "live-log-test-invalid-class"
+
+        //todo: don't care about added event. can remove directly after add but need #537
+        vertx.addLiveInstrumentListener("system", object : LiveInstrumentListener {
+            override fun onLogAddedEvent(event: LiveLog) {
+                testContext.verify {
+                    assertEquals(instrumentId, event.id)
+                }
+
+                testContext.completeNow()
+            }
+        }).await()
+
         instrumentService.addLiveInstrument(
             LiveLog(
-                id = "live-log-test-invalid-class",
+                id = instrumentId,
                 location = LiveSourceLocation("bad.Clazz", 48),
                 logFormat = "applyImmediatelyWithInvalidClass",
                 applyImmediately = true
@@ -314,7 +327,6 @@ class LiveLogTest : PlatformIntegrationTest() {
                     assertEquals(LiveInstrumentException.ErrorType.CLASS_NOT_FOUND, ex.errorType)
                     assertEquals("bad.Clazz", ex.message)
                 }
-                testContext.completeNow()
             }
         }
 
