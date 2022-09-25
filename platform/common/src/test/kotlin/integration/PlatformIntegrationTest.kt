@@ -99,7 +99,7 @@ open class PlatformIntegrationTest {
 
     val vertx: Vertx = vertx()
 
-    val liveManagementService: LiveManagementService
+    val managementService: LiveManagementService
         get() {
             return LiveManagementService.createProxy(vertx, SYSTEM_JWT_TOKEN)
         }

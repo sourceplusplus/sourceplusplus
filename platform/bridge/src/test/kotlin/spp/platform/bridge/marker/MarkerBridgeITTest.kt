@@ -41,7 +41,7 @@ class MarkerBridgeITTest : PlatformIntegrationTest() {
         val testContext = VertxTestContext()
 
         //get marker count
-        val markerCount = liveManagementService.getStats().await()
+        val markerCount = managementService.getStats().await()
             .getJsonObject("platform").getInteger("connected-markers")
 
         //connect new marker
@@ -83,7 +83,7 @@ class MarkerBridgeITTest : PlatformIntegrationTest() {
         delay(2000) //ensure marker is connected
 
         //verify marker count increased
-        val increasedMarkerCount = liveManagementService.getStats().await()
+        val increasedMarkerCount = managementService.getStats().await()
             .getJsonObject("platform").getInteger("connected-markers")
         testContext.verify {
             assertEquals(markerCount + 1, increasedMarkerCount)
@@ -95,7 +95,7 @@ class MarkerBridgeITTest : PlatformIntegrationTest() {
         delay(2000) //ensure probe is disconnected
 
         //verify marker count decreased
-        val decreasedMarkerCount = liveManagementService.getStats().await()
+        val decreasedMarkerCount = managementService.getStats().await()
             .getJsonObject("platform").getInteger("connected-markers")
         testContext.verify {
             assertEquals(markerCount, decreasedMarkerCount)

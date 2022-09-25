@@ -44,14 +44,14 @@ class ProbeBridgeITTest : PlatformIntegrationTest() {
     @BeforeEach
     fun addClientAccess(): Unit = runBlocking {
         if (clientAccess == null) {
-            clientAccess = liveManagementService.addClientAccess().await()
+            clientAccess = managementService.addClientAccess().await()
         }
     }
 
     @AfterEach
     fun removeClientAccess(): Unit = runBlocking {
         if (clientAccess != null) {
-            liveManagementService.removeClientAccess(clientAccess!!.id).await()
+            managementService.removeClientAccess(clientAccess!!.id).await()
             clientAccess = null
         }
     }
@@ -61,7 +61,7 @@ class ProbeBridgeITTest : PlatformIntegrationTest() {
         val testContext = VertxTestContext()
 
         //get probe count
-        val probeCount = liveManagementService.getStats().await()
+        val probeCount = managementService.getStats().await()
             .getJsonObject("platform").getInteger("connected-probes")
 
         //connect new probe
@@ -107,7 +107,7 @@ class ProbeBridgeITTest : PlatformIntegrationTest() {
         delay(2000) //ensure probe is connected
 
         //verify probe count increased
-        val increasedProbeCount = liveManagementService.getStats().await()
+        val increasedProbeCount = managementService.getStats().await()
             .getJsonObject("platform").getInteger("connected-probes")
         testContext.verify {
             assertEquals(probeCount + 1, increasedProbeCount)
@@ -119,7 +119,7 @@ class ProbeBridgeITTest : PlatformIntegrationTest() {
         delay(2000) //ensure probe is disconnected
 
         //verify probe count decreased
-        val decreasedProbeCount = liveManagementService.getStats().await()
+        val decreasedProbeCount = managementService.getStats().await()
             .getJsonObject("platform").getInteger("connected-probes")
         testContext.verify {
             assertEquals(probeCount, decreasedProbeCount)
