@@ -21,6 +21,8 @@ import io.vertx.core.json.Json
 import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxExtension
 import io.vertx.junit5.VertxTestContext
+import io.vertx.kotlin.coroutines.await
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.RepeatedTest
@@ -66,6 +68,7 @@ class LiveLogTest : PlatformIntegrationTest() {
                     }
                     gotAdded = true
                 }
+
                 LiveInstrumentEventType.LOG_APPLIED -> {
                     log.info("Got applied")
                     testContext.verify {
@@ -73,6 +76,7 @@ class LiveLogTest : PlatformIntegrationTest() {
                     }
                     gotApplied = true
                 }
+
                 LiveInstrumentEventType.LOG_HIT -> {
                     log.info("Got hit")
                     testContext.verify {
@@ -80,6 +84,7 @@ class LiveLogTest : PlatformIntegrationTest() {
                     }
                     gotHit = true
                 }
+
                 LiveInstrumentEventType.LOG_REMOVED -> {
                     log.info("Got removed")
                     testContext.verify {
@@ -88,6 +93,7 @@ class LiveLogTest : PlatformIntegrationTest() {
                     }
                     gotRemoved = true
                 }
+
                 else -> testContext.failNow("Got event: " + it.body())
             }
 
@@ -139,7 +145,7 @@ class LiveLogTest : PlatformIntegrationTest() {
     }
 
     @Test
-    fun removeById() {
+    fun removeById(): Unit = runBlocking {
         val testContext = VertxTestContext()
         val instrumentId = "live-log-test-remove-by-id"
 
@@ -161,7 +167,7 @@ class LiveLogTest : PlatformIntegrationTest() {
                     }
                 }
             }
-        })
+        }).await()
 
         instrumentService.addLiveInstrument(
             LiveLog(
