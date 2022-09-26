@@ -27,6 +27,7 @@ import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import mu.KotlinLogging
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import spp.protocol.SourceServices
@@ -36,13 +37,19 @@ import java.util.*
 
 class MarkerBridgeITTest : PlatformIntegrationTest() {
 
+    companion object {
+        private val log = KotlinLogging.logger {}
+    }
+
     @Test
     fun testMarkerCounter(): Unit = runBlocking {
         val testContext = VertxTestContext()
 
         //get marker count
+        log.info("Getting marker count")
         val markerCount = managementService.getStats().await()
             .getJsonObject("platform").getInteger("connected-markers")
+        log.info("Marker count: $markerCount")
 
         //connect new marker
         val client = vertx.createHttpClient(
@@ -56,6 +63,7 @@ class MarkerBridgeITTest : PlatformIntegrationTest() {
         val wsOptions = WebSocketConnectOptions()
             .setURI("https://localhost:12800/marker/eventbus/websocket")
         val ws = client.webSocket(wsOptions).await()
+        log.info("Connected to marker eventbus")
 
         //send connected message
         val replyAddress = UUID.randomUUID().toString()
@@ -67,6 +75,7 @@ class MarkerBridgeITTest : PlatformIntegrationTest() {
         val pc = InstanceConnection("test-marker-id", System.currentTimeMillis())
         msg.put("body", JsonObject.mapFrom(pc))
         ws.writeFrame(WebSocketFrame.textFrame(msg.encode(), true))
+        log.info("Sent connected message")
 
         val connectPromise = Promise.promise<Void>()
         ws.handler { buff ->
@@ -78,6 +87,8 @@ class MarkerBridgeITTest : PlatformIntegrationTest() {
             }
             connectPromise.complete()
         }
+
+        log.info("Waiting for connection acknowledgment")
         connectPromise.future().await()
 
         delay(2000) //ensure marker is connected

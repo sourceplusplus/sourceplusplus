@@ -26,7 +26,7 @@ import io.vertx.kotlin.coroutines.await
 import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import org.slf4j.LoggerFactory
+import mu.KotlinLogging
 import spp.platform.common.DeveloperAuth
 import spp.platform.common.service.SourceBridgeService
 import spp.platform.storage.SourceStorage
@@ -49,24 +49,24 @@ import java.time.temporal.ChronoUnit
 class LiveManagementServiceProvider(private val vertx: Vertx) : LiveManagementService {
 
     companion object {
-        private val log = LoggerFactory.getLogger(LiveManagementServiceProvider::class.java)
+        private val log = KotlinLogging.logger {}
         private val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HHmm")
             .withZone(ZoneId.systemDefault())
     }
 
     override fun getClients(): Future<JsonObject> {
+        log.trace { "Getting clients" }
         val promise = Promise.promise<JsonObject>()
         GlobalScope.launch(vertx.dispatcher()) {
             promise.complete(
                 JsonObject().apply {
                     val devAuth = Vertx.currentContext().getLocal<DeveloperAuth>("developer")
-                    var bridgeService = SourceBridgeService.service(vertx, devAuth?.accessToken).await()
+                    val bridgeService = SourceBridgeService.service(vertx, devAuth?.accessToken).await()
                     if (bridgeService != null) {
+                        log.trace { "Getting clients from bridge service" }
                         put("markers", bridgeService.getActiveMarkers().await())
-                    }
-                    bridgeService = SourceBridgeService.service(vertx, devAuth?.accessToken).await()
-                    if (bridgeService != null) {
                         put("probes", bridgeService.getActiveProbes().await())
+                        log.trace { "Added markers/probes clients to response" }
                     }
                 }
             )
@@ -75,7 +75,7 @@ class LiveManagementServiceProvider(private val vertx: Vertx) : LiveManagementSe
     }
 
     override fun getStats(): Future<JsonObject> {
-        log.trace("Getting platform stats")
+        log.trace { "Getting platform stats" }
         val promise = Promise.promise<JsonObject>()
         val devAuth = Vertx.currentContext().getLocal<DeveloperAuth>("developer")
 
@@ -104,16 +104,16 @@ class LiveManagementServiceProvider(private val vertx: Vertx) : LiveManagementSe
     }
 
     private suspend fun getPlatformStats(): JsonObject {
+        log.trace { "Getting platform stats" }
         return JsonObject()
             .apply {
                 val devAuth = Vertx.currentContext().getLocal<DeveloperAuth>("developer")
-                var bridgeService = SourceBridgeService.service(vertx, devAuth?.accessToken).await()
+                val bridgeService = SourceBridgeService.service(vertx, devAuth?.accessToken).await()
                 if (bridgeService != null) {
+                    log.trace { "Getting platform stats from bridge service" }
                     put("connected-markers", bridgeService.getConnectedMarkers().await())
-                }
-                bridgeService = SourceBridgeService.service(vertx, devAuth?.accessToken).await()
-                if (bridgeService != null) {
                     put("connected-probes", bridgeService.getConnectedProbes().await())
+                    log.trace { "Added markers/probes counts to response" }
                 }
             }
             .put(
@@ -147,9 +147,9 @@ class LiveManagementServiceProvider(private val vertx: Vertx) : LiveManagementSe
     }
 
     override fun getSelf(): Future<SelfInfo> {
+        log.trace { "Getting self info" }
         val promise = Promise.promise<SelfInfo>()
         val selfId = Vertx.currentContext().getLocal<DeveloperAuth>("developer").selfId
-        log.trace("Getting self info")
 
         GlobalScope.launch(vertx.dispatcher()) {
             promise.complete(
@@ -165,6 +165,7 @@ class LiveManagementServiceProvider(private val vertx: Vertx) : LiveManagementSe
     }
 
     override fun getServices(): Future<List<Service>> {
+        log.trace { "Getting services" }
         val promise = Promise.promise<List<Service>>()
         val forward = JsonObject()
         forward.put("developer_id", Vertx.currentContext().getLocal<DeveloperAuth>("developer").selfId)
@@ -212,6 +213,7 @@ class LiveManagementServiceProvider(private val vertx: Vertx) : LiveManagementSe
     }
 
     override fun getActiveProbes(): Future<List<InstanceConnection>> {
+        log.trace { "Getting active probes" }
         val promise = Promise.promise<List<InstanceConnection>>()
         GlobalScope.launch(vertx.dispatcher()) {
             val devAuth = Vertx.currentContext().getLocal<DeveloperAuth>("developer")
@@ -228,6 +230,7 @@ class LiveManagementServiceProvider(private val vertx: Vertx) : LiveManagementSe
     }
 
     override fun getRolePermissions(role: String): Future<List<RolePermission>> {
+        log.trace { "Getting role permissions" }
         val promise = Promise.promise<List<RolePermission>>()
         GlobalScope.launch(vertx.dispatcher()) {
             try {
@@ -242,6 +245,7 @@ class LiveManagementServiceProvider(private val vertx: Vertx) : LiveManagementSe
     }
 
     override fun getClientAccessors(): Future<List<ClientAccess>> {
+        log.trace { "Getting client accessors" }
         val promise = Promise.promise<List<ClientAccess>>()
         GlobalScope.launch(vertx.dispatcher()) {
             promise.complete(SourceStorage.getClientAccessors())
@@ -250,6 +254,7 @@ class LiveManagementServiceProvider(private val vertx: Vertx) : LiveManagementSe
     }
 
     override fun getClientAccess(id: String): Future<ClientAccess?> {
+        log.trace { "Getting client access" }
         val promise = Promise.promise<ClientAccess?>()
         GlobalScope.launch(vertx.dispatcher()) {
             promise.complete(SourceStorage.getClientAccess(id))
@@ -258,6 +263,7 @@ class LiveManagementServiceProvider(private val vertx: Vertx) : LiveManagementSe
     }
 
     override fun addClientAccess(): Future<ClientAccess> {
+        log.trace { "Adding client access" }
         val promise = Promise.promise<ClientAccess>()
         GlobalScope.launch(vertx.dispatcher()) {
             promise.complete(SourceStorage.addClientAccess())
@@ -266,6 +272,7 @@ class LiveManagementServiceProvider(private val vertx: Vertx) : LiveManagementSe
     }
 
     override fun removeClientAccess(id: String): Future<Boolean> {
+        log.trace { "Removing client access with id: $id" }
         val promise = Promise.promise<Boolean>()
         GlobalScope.launch(vertx.dispatcher()) {
             promise.complete(SourceStorage.removeClientAccess(id))
@@ -274,6 +281,7 @@ class LiveManagementServiceProvider(private val vertx: Vertx) : LiveManagementSe
     }
 
     override fun updateClientAccess(id: String): Future<ClientAccess> {
+        log.trace { "Updating client access with id: $id" }
         val promise = Promise.promise<ClientAccess>()
         GlobalScope.launch(vertx.dispatcher()) {
             promise.complete(SourceStorage.updateClientAccess(id))
