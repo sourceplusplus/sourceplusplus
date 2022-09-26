@@ -25,9 +25,9 @@ import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import io.vertx.kotlin.coroutines.CoroutineVerticle
 import mu.KotlinLogging
+import org.apache.skywalking.oap.meter.analyzer.Analyzer
 import org.apache.skywalking.oap.meter.analyzer.MetricConvert
 import org.apache.skywalking.oap.server.analyzer.module.AnalyzerModule
-import org.apache.skywalking.oap.server.analyzer.provider.meter.config.MeterConfig
 import org.apache.skywalking.oap.server.analyzer.provider.meter.process.IMeterProcessService
 import org.apache.skywalking.oap.server.analyzer.provider.meter.process.MeterProcessService
 import org.apache.skywalking.oap.server.core.CoreModule
@@ -35,9 +35,10 @@ import org.apache.skywalking.oap.server.core.analysis.meter.MeterSystem
 import org.apache.skywalking.oap.server.core.query.MetricsQueryService
 import org.apache.skywalking.oap.server.core.storage.StorageModule
 import org.apache.skywalking.oap.server.core.storage.query.IMetadataQueryDAO
-import org.apache.skywalking.oap.server.core.version.Version
+import org.joor.Reflect
 import spp.platform.common.DeveloperAuth
 import spp.platform.common.FeedbackProcessor
+import spp.processor.live.impl.instrument.meter.LiveMeterRule
 import spp.protocol.SourceServices.Provide.toLiveInstrumentSubscriberAddress
 import spp.protocol.artifact.exception.LiveStackTrace
 import spp.protocol.instrument.*
@@ -46,7 +47,6 @@ import spp.protocol.instrument.command.LiveInstrumentCommand
 import spp.protocol.instrument.event.LiveInstrumentEvent
 import spp.protocol.instrument.event.LiveInstrumentEventType
 import spp.protocol.instrument.event.LiveInstrumentRemoved
-import spp.protocol.instrument.meter.MeterType
 import spp.protocol.marshall.ProtocolMarshaller
 import spp.protocol.marshall.ServiceExceptionConverter
 import spp.protocol.platform.ProbeAddress.LIVE_INSTRUMENT_REMOTE
@@ -215,22 +215,21 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
                         }
                     )
 
-                    setupLiveMeter(pendingMeter).onComplete {
-                        if (it.succeeded()) {
-                            if (pendingMeter.applyImmediately) {
-                                addApplyImmediatelyHandler(pendingMeter.id!!, promise)
-                                _addLiveInstrument(devAuth, pendingMeter)
+                    //save live meter to SkyWalking meter process service
+                    LiveMeterRule.toMeterConfig(pendingMeter)?.let {
+                        meterProcessService.converts().add(MetricConvert(it, meterSystem))
+                    }
+
+                    if (pendingMeter.applyImmediately) {
+                        addApplyImmediatelyHandler(pendingMeter.id!!, promise)
+                        _addLiveInstrument(devAuth, pendingMeter)
+                    } else {
+                        _addLiveInstrument(devAuth, pendingMeter).onComplete {
+                            if (it.succeeded()) {
+                                promise.complete(it.result())
                             } else {
-                                _addLiveInstrument(devAuth, pendingMeter).onComplete {
-                                    if (it.succeeded()) {
-                                        promise.complete(it.result())
-                                    } else {
-                                        promise.fail(it.cause())
-                                    }
-                                }
+                                promise.fail(it.cause())
                             }
-                        } else {
-                            promise.fail(it.cause())
                         }
                     }
                 }
@@ -597,6 +596,19 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
             return Future.succeededFuture(instrumentRemoval.instrument)
         }
 
+        //if live meter, also remove from SkyWalking meter process service
+        if (instrumentRemoval.instrument is LiveMeter) {
+            meterProcessService.converts().removeIf {
+                val analyzers = Reflect.on(it).field("analyzers").get<ArrayList<Analyzer>>()
+                analyzers.removeIf {
+                    val metricName = Reflect.on(it).field("metricName").get<String>()
+                    metricName == instrumentRemoval.instrument.toMetricId()
+                }
+
+                analyzers.isEmpty()
+            }
+        }
+
         //publish remove command to all probes
         removeLiveInstrument(devAuth, Instant.now(), instrumentRemoval.instrument, null)
         return Future.succeededFuture(instrumentRemoval.instrument)
@@ -638,65 +650,5 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
             )
         }
         return Future.succeededFuture(result.filter { it.instrument.type == instrumentType }.map { it.instrument })
-    }
-
-    override fun setupLiveMeter(liveMeter: LiveMeter): Future<JsonObject> {
-        val meterConfig = MeterConfig()
-        when (liveMeter.meterType) {
-            MeterType.COUNT -> {
-                meterConfig.metricPrefix = METRIC_PREFIX
-                meterConfig.metricsRules = mutableListOf(
-                    MeterConfig.Rule().apply {
-                        val idVariable = liveMeter.toMetricIdWithoutPrefix()
-                        name = idVariable
-                        exp = if (Version.CURRENT.buildVersion.startsWith("8")) {
-                            "($idVariable.sum(['service', 'instance']).downsampling(SUM)).instance(['service'], ['instance'])"
-                        } else if (Version.CURRENT.buildVersion.startsWith("9")) {
-                            "($idVariable.sum(['service', 'instance']).downsampling(SUM)).instance(['service'], ['instance'], Layer.GENERAL)"
-                        } else {
-                            return Future.failedFuture("Unsupported version: ${Version.CURRENT.buildVersion}")
-                        }
-                    }
-                )
-            }
-
-            MeterType.GAUGE -> {
-                meterConfig.metricPrefix = METRIC_PREFIX
-                meterConfig.metricsRules = mutableListOf(
-                    MeterConfig.Rule().apply {
-                        val idVariable = liveMeter.toMetricIdWithoutPrefix()
-                        name = idVariable
-                        exp = if (Version.CURRENT.buildVersion.startsWith("8")) {
-                            "($idVariable.downsampling(LATEST)).instance(['service'], ['instance'])"
-                        } else if (Version.CURRENT.buildVersion.startsWith("9")) {
-                            "($idVariable.downsampling(LATEST)).instance(['service'], ['instance'], Layer.GENERAL)"
-                        } else {
-                            return Future.failedFuture("Unsupported version: ${Version.CURRENT.buildVersion}")
-                        }
-                    }
-                )
-            }
-
-            MeterType.HISTOGRAM -> {
-                meterConfig.metricPrefix = METRIC_PREFIX
-                meterConfig.metricsRules = mutableListOf(
-                    MeterConfig.Rule().apply {
-                        val idVariable = liveMeter.toMetricIdWithoutPrefix()
-                        name = idVariable
-                        exp = if (Version.CURRENT.buildVersion.startsWith("8")) {
-                            "($idVariable.sum(['le', 'service', 'instance']).increase('PT5M').histogram().histogram_percentile([50,70,90,99])).instance(['service'], ['instance'])"
-                        } else if (Version.CURRENT.buildVersion.startsWith("9")) {
-                            "($idVariable.sum(['le', 'service', 'instance']).increase('PT5M').histogram().histogram_percentile([50,70,90,99])).instance(['service'], ['instance'], Layer.GENERAL)"
-                        } else {
-                            return Future.failedFuture("Unsupported version: ${Version.CURRENT.buildVersion}")
-                        }
-                    }
-                )
-            }
-
-            else -> throw UnsupportedOperationException("Unsupported meter type: ${liveMeter.meterType}")
-        }
-        meterProcessService.converts().add(MetricConvert(meterConfig, meterSystem))
-        return Future.succeededFuture(JsonObject())
     }
 }
