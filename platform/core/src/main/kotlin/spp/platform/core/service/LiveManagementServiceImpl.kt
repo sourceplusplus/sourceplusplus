@@ -46,7 +46,7 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 
-class LiveManagementServiceProvider(private val vertx: Vertx) : LiveManagementService {
+class LiveManagementServiceImpl(private val vertx: Vertx) : LiveManagementService {
 
     companion object {
         private val log = KotlinLogging.logger {}

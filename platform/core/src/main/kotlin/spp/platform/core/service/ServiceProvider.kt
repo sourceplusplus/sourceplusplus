@@ -64,7 +64,7 @@ class ServiceProvider(private val jwtAuth: JWTAuth?) : CoroutineVerticle() {
             liveManagementService = publishService(
                 Utilize.LIVE_MANAGEMENT_SERVICE,
                 LiveManagementService::class.java,
-                LiveManagementServiceProvider(vertx)
+                LiveManagementServiceImpl(vertx)
             )
         } catch (throwable: Throwable) {
             throwable.printStackTrace()
