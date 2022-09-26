@@ -19,10 +19,10 @@ package spp.processor.live.impl.view
 
 import com.google.protobuf.Message
 import io.vertx.core.json.JsonObject
+import mu.KotlinLogging
 import org.apache.skywalking.apm.network.logging.v3.LogData
 import org.apache.skywalking.oap.log.analyzer.provider.log.listener.LogAnalysisListener
 import org.apache.skywalking.oap.log.analyzer.provider.log.listener.LogAnalysisListenerFactory
-import org.slf4j.LoggerFactory
 import spp.platform.common.ClusterConnection
 import spp.processor.live.impl.view.util.MetricTypeSubscriptionCache
 import spp.protocol.artifact.log.Log
@@ -33,7 +33,7 @@ import java.time.format.DateTimeFormatterBuilder
 class LiveLogsView(private val subscriptionCache: MetricTypeSubscriptionCache) : LogAnalysisListenerFactory {
 
     companion object {
-        private val log = LoggerFactory.getLogger(LiveLogsView::class.java)
+        private val log = KotlinLogging.logger {}
 
         private val formatter = DateTimeFormatterBuilder()
             .appendPattern("yyyyMMddHHmm")
@@ -50,7 +50,9 @@ class LiveLogsView(private val subscriptionCache: MetricTypeSubscriptionCache) :
                 val logPattern = logData.body.text.text
                 val subs = subbedArtifacts[logPattern]
                 subs?.forEach { sub ->
-                    val log = Log(
+                    log.debug { "Sending log pattern $logPattern to subscriber $sub" }
+
+                    val logRecord = Log(
                         Instant.ofEpochMilli(logData.timestamp),
                         logPattern,
                         logData.tags.dataList.find { it.key == "level" }!!.value,
@@ -64,8 +66,8 @@ class LiveLogsView(private val subscriptionCache: MetricTypeSubscriptionCache) :
                         .put("multiMetrics", false)
                         .put("artifactQualifiedName", JsonObject.mapFrom(sub.subscription.artifactQualifiedName))
                         .put("entityId", logPattern)
-                        .put("timeBucket", formatter.format(log.timestamp))
-                        .put("log", JsonObject.mapFrom(log))
+                        .put("timeBucket", formatter.format(logRecord.timestamp))
+                        .put("log", JsonObject.mapFrom(logRecord))
                     ClusterConnection.getVertx().eventBus().send(sub.consumer.address(), event)
                 }
             }
