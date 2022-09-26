@@ -47,8 +47,6 @@ class LiveMeterView(private val subscriptionCache: MetricTypeSubscriptionCache) 
         var metricName = metadata.metricsName
         if (metricName.startsWith("spp_")) {
             log.debug { Msg.msg("Processing Source++ metrics: {} - Data: {}", metricName, metrics) }
-        } else {
-            log.trace { Msg.msg("Processing SkyWalking metrics: {} - Data: {}", metricName, metrics) }
         }
 
         if (realTime && !metricName.startsWith("spp_")) {
