@@ -20,16 +20,20 @@ package integration
 import io.vertx.core.eventbus.MessageConsumer
 import io.vertx.core.json.Json
 import io.vertx.core.json.JsonObject
+import mu.KotlinLogging
 import org.joor.Reflect
 import spp.protocol.SourceServices.Provide.toLiveInstrumentSubscriberAddress
 import spp.protocol.instrument.event.LiveBreakpointHit
 import spp.protocol.instrument.event.LiveInstrumentEvent
 import spp.protocol.instrument.event.LiveInstrumentEventType
 import spp.protocol.instrument.event.LiveLogHit
-import spp.protocol.marshall.ProtocolMarshaller
 import java.util.concurrent.atomic.AtomicInteger
 
 abstract class LiveInstrumentIntegrationTest : PlatformIntegrationTest() {
+
+    companion object {
+        private val log = KotlinLogging.logger {}
+    }
 
     private val lineLabels = mutableMapOf<String, Int>()
     private var setupLineLabels = false
@@ -83,6 +87,8 @@ abstract class LiveInstrumentIntegrationTest : PlatformIntegrationTest() {
                 if (hitCount.incrementAndGet() == hitLimit) {
                     consumer.unregister()
                 }
+            } else {
+                log.debug { "Ignoring event: $event" }
             }
         }
     }
@@ -95,6 +101,8 @@ abstract class LiveInstrumentIntegrationTest : PlatformIntegrationTest() {
                 val logHit = LiveLogHit(JsonObject(event.data))
                 invoke.invoke(logHit)
                 consumer.unregister()
+            } else {
+                log.debug { "Ignoring event: $event" }
             }
         }
     }
