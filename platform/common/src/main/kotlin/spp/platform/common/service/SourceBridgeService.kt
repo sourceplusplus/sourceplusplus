@@ -26,6 +26,7 @@ import io.vertx.core.Vertx
 import io.vertx.core.eventbus.DeliveryOptions
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
+import mu.KotlinLogging
 import spp.platform.common.ClusterConnection.discovery
 import spp.platform.common.PlatformServices.BRIDGE_SERVICE
 
@@ -35,15 +36,20 @@ interface SourceBridgeService {
 
     @GenIgnore
     companion object {
+        private val log = KotlinLogging.logger {}
+
         @GenIgnore
         @JvmStatic
         fun service(vertx: Vertx, authToken: String? = null): Future<SourceBridgeService?> {
+            log.trace { "Getting SourceBridgeService" }
             val promise = Promise.promise<SourceBridgeService?>()
             discovery.getRecord(JsonObject().put("name", BRIDGE_SERVICE)).onComplete {
                 if (it.succeeded()) {
                     if (it.result() == null) {
+                        log.trace { "SourceBridgeService not found" }
                         promise.complete(null)
                     } else {
+                        log.trace { "SourceBridgeService found" }
                         val deliveryOptions = DeliveryOptions().apply {
                             authToken?.let { addHeader("auth-token", it) }
                         }

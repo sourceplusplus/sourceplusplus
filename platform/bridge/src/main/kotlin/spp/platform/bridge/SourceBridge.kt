@@ -38,6 +38,7 @@ class SourceBridge : CoroutineVerticle(), SourceBridgeService {
     }
 
     override fun getActiveMarkers(): Future<JsonArray> {
+        log.trace { "Getting active markers" }
         val promise = Promise.promise<JsonArray>()
         launch(vertx.dispatcher()) {
             val map = SourceStorage.map<String, JsonObject>(BridgeAddress.ACTIVE_MARKERS)
@@ -52,6 +53,7 @@ class SourceBridge : CoroutineVerticle(), SourceBridgeService {
     }
 
     override fun getActiveProbes(): Future<JsonArray> {
+        log.trace { "Getting active probes" }
         val promise = Promise.promise<JsonArray>()
         launch(vertx.dispatcher()) {
             val map = SourceStorage.map<String, JsonObject>(BridgeAddress.ACTIVE_PROBES)
@@ -66,6 +68,7 @@ class SourceBridge : CoroutineVerticle(), SourceBridgeService {
     }
 
     override fun getConnectedMarkers(): Future<Int> {
+        log.trace { "Getting connected markers" }
         val promise = Promise.promise<Int>()
         launch(vertx.dispatcher()) {
             promise.complete(SourceStorage.counter(MARKER_CONNECTED).get().await().toInt())
@@ -74,6 +77,7 @@ class SourceBridge : CoroutineVerticle(), SourceBridgeService {
     }
 
     override fun getConnectedProbes(): Future<Int> {
+        log.trace { "Getting connected probes" }
         val promise = Promise.promise<Int>()
         launch(vertx.dispatcher()) {
             promise.complete(SourceStorage.counter(PROBE_CONNECTED).get().await().toInt())

@@ -63,9 +63,10 @@ class LiveManagementServiceProvider(private val vertx: Vertx) : LiveManagementSe
                     val devAuth = Vertx.currentContext().getLocal<DeveloperAuth>("developer")
                     val bridgeService = SourceBridgeService.service(vertx, devAuth?.accessToken).await()
                     if (bridgeService != null) {
+                        log.trace { "Getting clients from bridge service" }
                         put("markers", bridgeService.getActiveMarkers().await())
                         put("probes", bridgeService.getActiveProbes().await())
-                        log.trace { "Bridge service found. Added markers/probes clients" }
+                        log.trace { "Added markers/probes clients to response" }
                     }
                 }
             )
@@ -109,9 +110,10 @@ class LiveManagementServiceProvider(private val vertx: Vertx) : LiveManagementSe
                 val devAuth = Vertx.currentContext().getLocal<DeveloperAuth>("developer")
                 val bridgeService = SourceBridgeService.service(vertx, devAuth?.accessToken).await()
                 if (bridgeService != null) {
+                    log.trace { "Getting platform stats from bridge service" }
                     put("connected-markers", bridgeService.getConnectedMarkers().await())
                     put("connected-probes", bridgeService.getConnectedProbes().await())
-                    log.trace { "Bridge service found. Added markers/probes counts" }
+                    log.trace { "Added markers/probes counts to response" }
                 }
             }
             .put(
