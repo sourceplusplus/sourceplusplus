@@ -106,13 +106,14 @@ class LiveLogSubscriptionTest : LiveInstrumentIntegrationTest() {
             vertx.setTimer(5000) {  //todo: have to wait since not applyImmediately
                 for (i in 0 until 5) {
                     triggerLog()
+                    Thread.sleep(2000)
                 }
             }
         }.onFailure {
             testContext.failNow(it)
         }
 
-        errorOnTimeout(testContext)
+        errorOnTimeout(testContext, 30)
 
         //clean up
         consumer.unregister()
