@@ -56,7 +56,7 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
             triggerGauge()
         }
 
-        val meterId = UUID.randomUUID().toString()
+        val meterId = "test-gauge"
         log.info("Using meter id: {}", meterId)
 
         val supplier: () -> Double = { System.currentTimeMillis().toDouble() }

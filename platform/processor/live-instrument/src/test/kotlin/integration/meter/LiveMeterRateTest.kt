@@ -61,7 +61,7 @@ class LiveMeterRateTest : LiveInstrumentIntegrationTest() {
             triggerRate()
         }
 
-        val meterId = UUID.randomUUID().toString()
+        val meterId = "test-60-calls-per-minute-rate"
         log.info("Using meter id: {}", meterId)
 
         val liveMeter = LiveMeter(

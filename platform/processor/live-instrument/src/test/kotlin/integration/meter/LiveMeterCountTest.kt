@@ -54,7 +54,7 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
             triggerCount()
         }
 
-        val meterId = UUID.randomUUID().toString()
+        val meterId = "test-count-increment"
         log.info("Using meter id: {}", meterId)
 
         val liveMeter = LiveMeter(
@@ -136,7 +136,7 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
             triggerCount()
         }
 
-        val meterId = UUID.randomUUID().toString()
+        val meterId = "test-double-count-increment"
         log.info("Using meter id: {}", meterId)
 
         val liveMeter = LiveMeter(
@@ -218,7 +218,7 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
             triggerCount()
         }
 
-        val meterId1 = UUID.randomUUID().toString()
+        val meterId1 = "test-one-method-two-counts-1"
         log.info("Using meter id: {}", meterId1)
 
         val liveMeter1 = LiveMeter(
@@ -252,7 +252,7 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
             )
         ).await().subscriptionId!!
 
-        val meterId2 = UUID.randomUUID().toString()
+        val meterId2 = "test-one-method-two-counts-2"
         log.info("Using meter id: {}", meterId2)
 
         val liveMeter2 = LiveMeter(
