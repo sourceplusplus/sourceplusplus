@@ -46,6 +46,7 @@ class MarkerBridgeITTest : PlatformIntegrationTest() {
         val testContext = VertxTestContext()
 
         //get marker count
+        log.info("Getting marker count")
         val markerCount = managementService.getStats().await()
             .getJsonObject("platform").getInteger("connected-markers")
         log.info("Marker count: $markerCount")
