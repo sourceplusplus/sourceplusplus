@@ -65,7 +65,6 @@ class LiveMeterRateTest : LiveInstrumentIntegrationTest() {
         log.info("Using meter id: {}", meterId)
 
         val liveMeter = LiveMeter(
-            "simple-count-meter",
             MeterType.COUNT,
             MetricValue(MetricValueType.NUMBER, "1"),
             location = LiveSourceLocation(

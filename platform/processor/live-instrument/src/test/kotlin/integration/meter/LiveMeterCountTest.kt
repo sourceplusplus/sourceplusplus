@@ -36,7 +36,6 @@ import spp.protocol.instrument.meter.MetricValueType
 import spp.protocol.view.LiveViewConfig
 import spp.protocol.view.LiveViewEvent
 import spp.protocol.view.LiveViewSubscription
-import java.util.*
 
 class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
 
@@ -58,7 +57,6 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
         log.info("Using meter id: {}", meterId)
 
         val liveMeter = LiveMeter(
-            "simple-count-meter",
             MeterType.COUNT,
             MetricValue(MetricValueType.NUMBER, "1"),
             location = LiveSourceLocation(
@@ -140,7 +138,6 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
         log.info("Using meter id: {}", meterId)
 
         val liveMeter = LiveMeter(
-            "simple-double-count-meter",
             MeterType.COUNT,
             MetricValue(MetricValueType.NUMBER, "2"),
             location = LiveSourceLocation(
@@ -222,7 +219,6 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
         log.info("Using meter id: {}", meterId1)
 
         val liveMeter1 = LiveMeter(
-            "count1-meter",
             MeterType.COUNT,
             MetricValue(MetricValueType.NUMBER, "1"),
             location = LiveSourceLocation(
@@ -256,7 +252,6 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
         log.info("Using meter id: {}", meterId2)
 
         val liveMeter2 = LiveMeter(
-            "count2-meter",
             MeterType.COUNT,
             MetricValue(MetricValueType.NUMBER, "100"),
             location = LiveSourceLocation(
@@ -312,14 +307,16 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
             }
         }
 
-        instrumentService.addLiveInstrument(liveMeter1).onSuccess {
+        instrumentService.addLiveMeter(liveMeter1).onSuccess {
+            val metricId = it.toMetricId()
+            println(metricId)
             vertx.setTimer(5000) { //todo: have to wait since not applyImmediately
                 triggerCount()
             }
         }.onFailure {
             testContext.failNow(it)
         }
-        instrumentService.addLiveInstrument(liveMeter2).onSuccess {
+        instrumentService.addLiveMeter(liveMeter2).onSuccess {
             vertx.setTimer(5000) { //todo: have to wait since not applyImmediately
                 triggerCount()
             }

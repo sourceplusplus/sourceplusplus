@@ -1582,7 +1582,6 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
                 if (it.succeeded()) {
                     it.result().addLiveInstrument(
                         LiveMeter(
-                            meterName = input.getString("meterName"),
                             meterType = MeterType.valueOf(input.getString("meterType")),
                             metricValue = metricValue,
                             location = LiveSourceLocation(locationSource, locationLine),

@@ -144,7 +144,11 @@ enum MeterType {
 
 enum MetricValueType {
     NUMBER,
-    SUPPLIER
+    NUMBER_SUPPLIER,
+    NUMBER_EXPRESSION,
+    VALUE,
+    VALUE_SUPPLIER,
+    VALUE_EXPRESSION
 }
 
 type MetricValue {
@@ -187,9 +191,9 @@ interface LiveInstrument {
 }
 
 type LiveMeter implements LiveInstrument {
-    meterName: String!
     meterType: MeterType!
     metricValue: MetricValue!
+    meterDescription: String
     id: String!
     location: LiveSourceLocation!
     condition: String
@@ -204,9 +208,9 @@ type LiveMeter implements LiveInstrument {
 }
 
 input LiveMeterInput {
-    meterName: String!
     meterType: MeterType!
     metricValue: MetricValueInput!
+    meterDescription: String
     location: LiveSourceLocationInput!
     condition: String
     expiresAt: Long

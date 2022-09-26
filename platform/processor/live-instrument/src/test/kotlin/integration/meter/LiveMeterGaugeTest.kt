@@ -66,7 +66,6 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
         })
 
         val liveMeter = LiveMeter(
-            "simple-gauge-meter",
             MeterType.GAUGE,
             MetricValue(MetricValueType.NUMBER_SUPPLIER, encodedSupplier),
             location = LiveSourceLocation(
