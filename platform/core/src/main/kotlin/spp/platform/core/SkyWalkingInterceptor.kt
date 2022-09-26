@@ -241,13 +241,11 @@ class SkyWalkingInterceptor(private val router: Router) : CoroutineVerticle() {
         grpcClient: GrpcClient,
         skywalkingGrpcServer: SocketAddress
     ) {
-        log.trace { "Proxying gRPC call: ${req.fullMethodName()}" }
         grpcClient.request(skywalkingGrpcServer).onSuccess { proxyRequest ->
             req.headers().get("authentication")?.let { proxyRequest.headers().add("authentication", it) }
 
             proxyRequest.response().onSuccess { proxyResponse ->
                 proxyResponse.messageHandler { msg ->
-                    log.trace { "Sending stream message (${req.fullMethodName()}). Bytes: ${msg.payload().bytes.size}" }
                     req.response().writeMessage(msg)
                 }
                 proxyResponse.errorHandler { error ->
@@ -264,7 +262,6 @@ class SkyWalkingInterceptor(private val router: Router) : CoroutineVerticle() {
             req.messageHandler { msg ->
                 wroteData.set(true)
 
-                log.trace { "Received stream message (${req.fullMethodName()}). Bytes: ${msg.payload().bytes.size}" }
                 proxyRequest.writeMessage(msg)
             }
             req.endHandler {
