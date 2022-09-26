@@ -31,6 +31,7 @@ import org.apache.skywalking.oap.server.library.module.ModuleManager
 import org.slf4j.LoggerFactory
 import spp.platform.common.ClusterConnection
 import spp.processor.InstrumentProcessor.liveInstrumentService
+import spp.processor.live.impl.instrument.breakpoint.LiveVariablePresentation
 import spp.protocol.SourceServices.Provide.toLiveInstrumentSubscriberAddress
 import spp.protocol.artifact.exception.LiveStackTrace
 import spp.protocol.artifact.exception.LiveStackTraceElement
