@@ -29,6 +29,10 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import spp.platform.storage.CoreStorage
 import spp.platform.storage.SourceStorage
+import spp.protocol.instrument.*
+import spp.protocol.instrument.meter.MeterType
+import spp.protocol.instrument.meter.MetricValue
+import spp.protocol.instrument.meter.MetricValueType
 import spp.protocol.platform.auth.*
 
 @ExtendWith(VertxExtension::class)
@@ -79,12 +83,18 @@ abstract class BaseStorageITTest<T : CoreStorage> {
             "resetDataRedaction"
         )
         assertNotNull(SourceStorage.getDataRedactions().find { it.id == "resetDataRedaction" })
+        SourceStorage.addLiveInstrument(LiveBreakpoint(
+            location = LiveSourceLocation("resetLiveInstrument", 0),
+            id = "resetLiveInstrument"
+        ))
+        assertNotNull(SourceStorage.getLiveInstruments().find { it.id == "resetLiveInstrument" })
 
         SourceStorage.reset()
 
         assertFalse(SourceStorage.getRoles().contains(DeveloperRole.fromString("resetRole")))
         assertNull(SourceStorage.getDevelopers().find { it.id == "resetDeveloper" })
         assertNull(SourceStorage.getDataRedactions().find { it.id == "resetDataRedaction" })
+        assertNull(SourceStorage.getLiveInstruments().find { it.id == "resetLiveInstrument" })
     }
 
     @Test
@@ -481,5 +491,128 @@ abstract class BaseStorageITTest<T : CoreStorage> {
         storageInstance.refreshClientAccess(id)
         val updatedClientAccess = storageInstance.getClientAccess(id)
         assertNotEquals(secret, updatedClientAccess?.secret)
+    }
+
+    @Test
+    fun addLiveInstrument(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+        val id = "breakpoint1"
+        assertEquals(0, storageInstance.getLiveInstruments().size)
+        val instrument = LiveBreakpoint(
+            location = LiveSourceLocation("file1", 1),
+            id = id
+        )
+        storageInstance.addLiveInstrument(instrument)
+        assertEquals(1, storageInstance.getLiveInstruments().size)
+        assertEquals(instrument, storageInstance.getLiveInstruments().first())
+    }
+
+    @Test
+    fun getLiveInstrument(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+        val id = "breakpoint2"
+        val instrument = LiveBreakpoint(
+            location = LiveSourceLocation("file2", 2),
+            id = id
+        )
+        storageInstance.addLiveInstrument(instrument)
+        assertEquals(1, storageInstance.getLiveInstruments().size)
+        assertEquals(instrument, storageInstance.getLiveInstrument(id))
+    }
+
+    @Test
+    fun removeLiveInstrument(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+        val id = "breakpoint3"
+        val instrument = LiveBreakpoint(
+            location = LiveSourceLocation("file3", 3),
+            id = id
+        )
+        storageInstance.addLiveInstrument(instrument)
+        assertEquals(1, storageInstance.getLiveInstruments().size)
+        assertEquals(instrument, storageInstance.getLiveInstrument(id))
+        storageInstance.removeLiveInstrument(id)
+        assertEquals(0, storageInstance.getLiveInstruments().size)
+        assertNull(storageInstance.getLiveInstrument(id))
+    }
+
+    @Test
+    fun updateLiveInstrument(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+        val id = "breakpoint4"
+        val instrument = LiveBreakpoint(
+            location = LiveSourceLocation("file4", 1),
+            id = id
+        )
+        storageInstance.addLiveInstrument(instrument)
+        assertEquals(instrument, storageInstance.getLiveInstrument(id))
+
+        val updatedInstrument = LiveBreakpoint(
+            location = LiveSourceLocation("file4", 1),
+            id = id,
+            applied = true
+        )
+        storageInstance.updateLiveInstrument(id, updatedInstrument)
+        assertEquals(updatedInstrument, storageInstance.getLiveInstrument(id))
+    }
+
+    @Test
+    fun getLiveInstruments(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+        val breakpointId = "breakpoint5"
+        val breakpoint = LiveBreakpoint(
+            location = LiveSourceLocation("file5", 1),
+            id = breakpointId
+        )
+        val logId = "log6"
+        val log = LiveLog(
+            "Log Message",
+            location = LiveSourceLocation("file6", 1),
+            id = logId
+        )
+        val meterId = "watch7"
+        val meter = LiveMeter(
+            MeterType.COUNT,
+            MetricValue(MetricValueType.VALUE, "5"),
+            location = LiveSourceLocation("file7", 1),
+            id = meterId
+        )
+        val spanId = "span8"
+        val span = LiveSpan(
+            "Span Name",
+            location = LiveSourceLocation("file8", 1),
+            id = spanId
+        )
+
+        storageInstance.addLiveInstrument(breakpoint)
+        storageInstance.addLiveInstrument(log)
+        storageInstance.addLiveInstrument(meter)
+        storageInstance.addLiveInstrument(span)
+
+        val instruments = storageInstance.getLiveInstruments()
+        assertEquals(4, instruments.size)
+        assertEquals(breakpoint, instruments.first { it.id == breakpointId })
+        assertEquals(log, instruments.first { it.id == logId })
+        assertEquals(meter, instruments.first { it.id == meterId })
+        assertEquals(span, instruments.first { it.id == spanId })
+    }
+
+    @Test
+    fun getPendingLiveInstruments(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+        val pendingBreakpointId = "breakpoint9"
+        val pendingBreakpoint = LiveBreakpoint(
+            location = LiveSourceLocation("file9", 1),
+            id = pendingBreakpointId,
+            pending = true
+        )
+        val otherBreakpointId = "breakpoint10"
+        val otherBreakpoint = LiveBreakpoint(
+            location = LiveSourceLocation("file10", 1),
+            id = otherBreakpointId
+        )
+
+        storageInstance.addLiveInstrument(pendingBreakpoint)
+        storageInstance.addLiveInstrument(otherBreakpoint)
+
+        assertEquals(2, storageInstance.getLiveInstruments().size)
+
+        val pendingInstruments = storageInstance.getPendingLiveInstruments()
+        assertEquals(1, pendingInstruments.size)
+        assertEquals(pendingBreakpoint, pendingInstruments.first())
     }
 }

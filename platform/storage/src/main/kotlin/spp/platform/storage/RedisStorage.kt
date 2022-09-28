@@ -26,6 +26,7 @@ import io.vertx.core.shareddata.Lock
 import io.vertx.kotlin.coroutines.await
 import io.vertx.redis.client.Redis
 import io.vertx.redis.client.RedisAPI
+import spp.protocol.instrument.LiveInstrument
 import spp.protocol.platform.auth.*
 import spp.protocol.platform.developer.Developer
 import java.nio.charset.StandardCharsets.UTF_8
@@ -263,6 +264,40 @@ open class RedisStorage(val vertx: Vertx) : CoreStorage {
     override suspend fun getRolePermissions(role: DeveloperRole): Set<RolePermission> {
         val permissions = redis.smembers(namespace("roles:${role.roleName}:permissions")).await()
         return permissions.map { RolePermission.valueOf(it.toString(UTF_8)) }.toSet()
+    }
+
+    override suspend fun addLiveInstrument(instrument: LiveInstrument): LiveInstrument {
+        redis.sadd(listOf(namespace("live_instruments"), instrument.id)).await()
+        redis.set(listOf(namespace("live_instruments:${instrument.id}"), Json.encode(instrument))).await()
+        return instrument
+    }
+
+    override suspend fun updateLiveInstrument(id: String, instrument: LiveInstrument): LiveInstrument {
+        redis.set(listOf(namespace("live_instruments:$id"), Json.encode(instrument))).await()
+        return instrument
+    }
+
+    override suspend fun removeLiveInstrument(id: String): Boolean {
+        redis.srem(listOf(namespace("live_instruments"), id)).await()
+        return redis.del(listOf(namespace("live_instruments:$id"))).await().toBoolean()
+    }
+
+    override suspend fun getLiveInstrument(id: String): LiveInstrument? {
+        val instrument = redis.get(namespace("live_instruments:$id")).await()
+        return if (instrument != null) {
+            LiveInstrument.fromJson(JsonObject(instrument.toString(UTF_8)))
+        } else {
+            null
+        }
+    }
+
+    override suspend fun getLiveInstruments(): List<LiveInstrument> {
+        val instruments = redis.smembers(namespace("live_instruments")).await()
+        return instruments.mapNotNull { getLiveInstrument(it.toString(UTF_8)) }
+    }
+
+    override suspend fun getPendingLiveInstruments(): List<LiveInstrument> {
+        return getLiveInstruments().filter { it.pending }
     }
 
     override suspend fun getClientAccessors(): List<ClientAccess> {
