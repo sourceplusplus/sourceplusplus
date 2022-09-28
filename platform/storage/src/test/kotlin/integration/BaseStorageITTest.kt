@@ -503,7 +503,7 @@ abstract class BaseStorageITTest<T : CoreStorage> {
         )
         storageInstance.addLiveInstrument(instrument)
         assertEquals(1, storageInstance.getLiveInstruments().size)
-        assertEquals(instrument, storageInstance.getLiveInstruments().first())
+        assertEquals(instrument.toJson(), storageInstance.getLiveInstruments().first().toJson())
     }
 
     @Test
@@ -515,7 +515,7 @@ abstract class BaseStorageITTest<T : CoreStorage> {
         )
         storageInstance.addLiveInstrument(instrument)
         assertEquals(1, storageInstance.getLiveInstruments().size)
-        assertEquals(instrument, storageInstance.getLiveInstrument(id))
+        assertEquals(instrument.toJson(), storageInstance.getLiveInstrument(id)!!.toJson())
     }
 
     @Test
@@ -527,7 +527,7 @@ abstract class BaseStorageITTest<T : CoreStorage> {
         )
         storageInstance.addLiveInstrument(instrument)
         assertEquals(1, storageInstance.getLiveInstruments().size)
-        assertEquals(instrument, storageInstance.getLiveInstrument(id))
+        assertEquals(instrument.toJson(), storageInstance.getLiveInstrument(id)!!.toJson())
         storageInstance.removeLiveInstrument(id)
         assertEquals(0, storageInstance.getLiveInstruments().size)
         assertNull(storageInstance.getLiveInstrument(id))
@@ -541,7 +541,7 @@ abstract class BaseStorageITTest<T : CoreStorage> {
             id = id
         )
         storageInstance.addLiveInstrument(instrument)
-        assertEquals(instrument, storageInstance.getLiveInstrument(id))
+        assertEquals(instrument.toJson(), storageInstance.getLiveInstrument(id)!!.toJson())
 
         val updatedInstrument = LiveBreakpoint(
             location = LiveSourceLocation("file4", 1),
@@ -549,7 +549,7 @@ abstract class BaseStorageITTest<T : CoreStorage> {
             applied = true
         )
         storageInstance.updateLiveInstrument(id, updatedInstrument)
-        assertEquals(updatedInstrument, storageInstance.getLiveInstrument(id))
+        assertEquals(updatedInstrument.toJson(), storageInstance.getLiveInstrument(id)!!.toJson())
     }
 
     @Test
@@ -586,10 +586,10 @@ abstract class BaseStorageITTest<T : CoreStorage> {
 
         val instruments = storageInstance.getLiveInstruments()
         assertEquals(4, instruments.size)
-        assertEquals(breakpoint, instruments.first { it.id == breakpointId })
-        assertEquals(log, instruments.first { it.id == logId })
-        assertEquals(meter, instruments.first { it.id == meterId })
-        assertEquals(span, instruments.first { it.id == spanId })
+        assertEquals(breakpoint.toJson(), instruments.first { it.id == breakpointId }.toJson())
+        assertEquals(log.toJson(), instruments.first { it.id == logId }.toJson())
+        assertEquals(meter.toJson(), instruments.first { it.id == meterId }.toJson())
+        assertEquals(span.toJson(), instruments.first { it.id == spanId }.toJson())
     }
 
     @Test
@@ -613,6 +613,6 @@ abstract class BaseStorageITTest<T : CoreStorage> {
 
         val pendingInstruments = storageInstance.getPendingLiveInstruments()
         assertEquals(1, pendingInstruments.size)
-        assertEquals(pendingBreakpoint, pendingInstruments.first())
+        assertEquals(pendingBreakpoint.toJson(), pendingInstruments.first().toJson())
     }
 }
