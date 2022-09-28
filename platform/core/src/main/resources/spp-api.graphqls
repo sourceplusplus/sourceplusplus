@@ -210,6 +210,7 @@ type LiveMeter implements LiveInstrument {
 input LiveMeterInput {
     meterType: MeterType!
     metricValue: MetricValueInput!
+    id: String
     meterDescription: String
     location: LiveSourceLocationInput!
     condition: String

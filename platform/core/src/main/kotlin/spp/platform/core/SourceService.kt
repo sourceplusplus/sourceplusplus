@@ -1563,6 +1563,8 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
                 metricValueInput.getString("value")
             )
 
+            val meterDescription: String? = input.getString("meterDescription")
+            val id: String? = input.getString("id")
             val condition = input.getString("condition")
             val expiresAt = input.getLong("expiresAt")
             val hitLimit = input.getInteger("hitLimit")
@@ -1584,6 +1586,8 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
                         LiveMeter(
                             meterType = MeterType.valueOf(input.getString("meterType")),
                             metricValue = metricValue,
+                            meterDescription = meterDescription,
+                            id = id,
                             location = LiveSourceLocation(locationSource, locationLine),
                             condition = condition,
                             expiresAt = expiresAt,
