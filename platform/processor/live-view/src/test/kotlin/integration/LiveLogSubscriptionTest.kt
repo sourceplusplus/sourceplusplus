@@ -27,14 +27,12 @@ import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import spp.protocol.SourceServices
-import spp.protocol.artifact.ArtifactQualifiedName
-import spp.protocol.artifact.ArtifactType
 import spp.protocol.artifact.log.Log
 import spp.protocol.instrument.LiveLog
 import spp.protocol.instrument.LiveSourceLocation
+import spp.protocol.view.LiveView
 import spp.protocol.view.LiveViewConfig
 import spp.protocol.view.LiveViewEvent
-import spp.protocol.view.LiveViewSubscription
 import java.util.*
 
 class LiveLogSubscriptionTest : LiveInstrumentIntegrationTest() {
@@ -49,7 +47,7 @@ class LiveLogSubscriptionTest : LiveInstrumentIntegrationTest() {
 
     @BeforeEach
     fun reset(): Unit = runBlocking {
-        viewService.clearLiveViewSubscriptions().await()
+        viewService.clearLiveViews().await()
     }
 
     @Test
@@ -71,8 +69,8 @@ class LiveLogSubscriptionTest : LiveInstrumentIntegrationTest() {
             hitLimit = 5
         )
 
-        val subscriptionId = viewService.addLiveViewSubscription(
-            LiveViewSubscription(
+        val subscriptionId = viewService.addLiveView(
+            LiveView(
                 entityIds = mutableSetOf(liveLog.logFormat),
                 liveViewConfig = LiveViewConfig(
                     "test",
@@ -81,7 +79,7 @@ class LiveLogSubscriptionTest : LiveInstrumentIntegrationTest() {
             )
         ).await().subscriptionId!!
         val consumer = vertx.eventBus().consumer<JsonObject>(
-            SourceServices.Provide.toLiveViewSubscriberAddress("system")
+            SourceServices.Subscribe.toLiveViewSubscriberAddress("system")
         )
 
         val testContext = VertxTestContext()
@@ -117,6 +115,6 @@ class LiveLogSubscriptionTest : LiveInstrumentIntegrationTest() {
 
         //clean up
         consumer.unregister()
-        assertNotNull(viewService.removeLiveViewSubscription(subscriptionId).await())
+        assertNotNull(viewService.removeLiveView(subscriptionId).await())
     }
 }

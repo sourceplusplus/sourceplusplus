@@ -98,12 +98,12 @@ object ViewProcessor : FeedbackProcessor() {
         vertx.deployVerticle(liveViewService).await()
 
         ServiceBinder(vertx).setIncludeDebugInfo(true)
-            .setAddress(SourceServices.Utilize.LIVE_VIEW)
+            .setAddress(SourceServices.LIVE_VIEW)
             .addInterceptor(developerAuthInterceptor())
             .register(LiveViewService::class.java, liveViewService)
         liveViewRecord = EventBusService.createRecord(
-            SourceServices.Utilize.LIVE_VIEW,
-            SourceServices.Utilize.LIVE_VIEW,
+            SourceServices.LIVE_VIEW,
+            SourceServices.LIVE_VIEW,
             LiveViewService::class.java,
             JsonObject().put("INSTANCE_ID", INSTANCE_ID)
         )

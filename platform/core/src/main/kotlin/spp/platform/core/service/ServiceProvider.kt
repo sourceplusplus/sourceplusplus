@@ -31,7 +31,7 @@ import io.vertx.servicediscovery.types.EventBusService
 import io.vertx.serviceproxy.ServiceBinder
 import org.slf4j.LoggerFactory
 import spp.platform.common.DeveloperAuth
-import spp.protocol.SourceServices.Utilize
+import spp.protocol.SourceServices.LIVE_MANAGEMENT_SERVICE
 import spp.protocol.service.LiveManagementService
 import kotlin.system.exitProcess
 
@@ -62,7 +62,7 @@ class ServiceProvider(private val jwtAuth: JWTAuth?) : CoroutineVerticle() {
             }
 
             liveManagementService = publishService(
-                Utilize.LIVE_MANAGEMENT_SERVICE,
+                LIVE_MANAGEMENT_SERVICE,
                 LiveManagementService::class.java,
                 LiveManagementServiceImpl(vertx)
             )

@@ -185,7 +185,7 @@ class MarkerBridgeITTest : PlatformIntegrationTest() {
         //attempt register live instrument subscriber
         val msg = JsonObject()
             .put("type", "register")
-            .put("address", SourceServices.Provide.LIVE_INSTRUMENT_SUBSCRIBER + ":test-marker-id")
+            .put("address", SourceServices.Subscribe.LIVE_INSTRUMENT_SUBSCRIBER + ":test-marker-id")
         val pc = InstanceConnection("test-marker-id", System.currentTimeMillis())
         msg.put("body", JsonObject.mapFrom(pc))
         ws.writeFrame(WebSocketFrame.textFrame(msg.encode(), true))

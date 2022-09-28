@@ -40,8 +40,10 @@ import spp.platform.common.ClusterConnection
 import spp.platform.common.ClusterConnection.router
 import spp.platform.common.DeveloperAuth
 import spp.platform.storage.SourceStorage
-import spp.protocol.SourceServices.Provide
-import spp.protocol.SourceServices.Utilize
+import spp.protocol.SourceServices.LIVE_INSTRUMENT
+import spp.protocol.SourceServices.LIVE_MANAGEMENT_SERVICE
+import spp.protocol.SourceServices.LIVE_VIEW
+import spp.protocol.SourceServices.Subscribe
 import spp.protocol.platform.PlatformAddress.MARKER_CONNECTED
 import spp.protocol.platform.PlatformAddress.MARKER_DISCONNECTED
 import spp.protocol.platform.status.InstanceConnection
@@ -145,16 +147,16 @@ class MarkerBridge(
         return listOf(
             PermittedOptions().setAddress("get-records"),
             PermittedOptions().setAddress(MARKER_CONNECTED),
-            PermittedOptions().setAddress(Utilize.LIVE_MANAGEMENT_SERVICE),
-            PermittedOptions().setAddress(Utilize.LIVE_INSTRUMENT),
-            PermittedOptions().setAddress(Utilize.LIVE_VIEW)
+            PermittedOptions().setAddress(LIVE_MANAGEMENT_SERVICE),
+            PermittedOptions().setAddress(LIVE_INSTRUMENT),
+            PermittedOptions().setAddress(LIVE_VIEW)
         )
     }
 
     private fun getOutboundPermitted(): List<PermittedOptions> {
         return listOf(
-            PermittedOptions().setAddressRegex(Provide.LIVE_INSTRUMENT_SUBSCRIBER + "\\:.+"),
-            PermittedOptions().setAddressRegex(Provide.LIVE_VIEW_SUBSCRIBER + "\\:.+")
+            PermittedOptions().setAddressRegex(Subscribe.LIVE_INSTRUMENT_SUBSCRIBER + "\\:.+"),
+            PermittedOptions().setAddressRegex(Subscribe.LIVE_VIEW_SUBSCRIBER + "\\:.+")
         )
     }
 

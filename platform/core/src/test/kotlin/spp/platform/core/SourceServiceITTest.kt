@@ -608,20 +608,20 @@ class SourceServiceITTest : PlatformIntegrationTest() {
     }
 
     @Test
-    fun `ensure addLiveViewSubscription works`() = runBlocking {
-        val addLiveViewSubscriptionResp =
-            request.sendJsonObject(addLiveViewSubscriptionRequest).await().bodyAsJsonObject()
-        assertNull(addLiveViewSubscriptionResp.getJsonArray("errors"))
-        val liveViewSubscription =
-            addLiveViewSubscriptionResp.getJsonObject("data").getJsonObject("addLiveViewSubscription")
-        assertNotNull(liveViewSubscription.getString("subscriptionId"))
-        val entityIds = liveViewSubscription.getJsonArray("entityIds")
+    fun `ensure addLiveView works`() = runBlocking {
+        val addLiveViewResp =
+            request.sendJsonObject(addLiveViewRequest).await().bodyAsJsonObject()
+        assertNull(addLiveViewResp.getJsonArray("errors"))
+        val liveView =
+            addLiveViewResp.getJsonObject("data").getJsonObject("addLiveView")
+        assertNotNull(liveView.getString("subscriptionId"))
+        val entityIds = liveView.getJsonArray("entityIds")
         assertEquals(3, entityIds.size())
         assertTrue(entityIds.contains("1"))
         assertTrue(entityIds.contains("222"))
         assertTrue(entityIds.contains("3"))
 
-        val liveViewConfig = liveViewSubscription.getJsonObject("liveViewConfig")
+        val liveViewConfig = liveView.getJsonObject("liveViewConfig")
         assertEquals("test", liveViewConfig.getString("viewName"))
         val viewMetrics = liveViewConfig.getJsonArray("viewMetrics")
         assertEquals(1, viewMetrics.size())
@@ -769,20 +769,20 @@ class SourceServiceITTest : PlatformIntegrationTest() {
     }
 
     @Test
-    fun `ensure getLiveViewSubscriptions works`() = runBlocking {
-        val addLiveViewSubscriptionResp =
-            request.sendJsonObject(addLiveViewSubscriptionRequest).await().bodyAsJsonObject()
-        assertNull(addLiveViewSubscriptionResp.getJsonArray("errors"))
+    fun `ensure getLiveViews works`() = runBlocking {
+        val addLiveViewResp =
+            request.sendJsonObject(addLiveViewRequest).await().bodyAsJsonObject()
+        assertNull(addLiveViewResp.getJsonArray("errors"))
 
-        val getLiveViewSubscriptionsResp =
-            request.sendJsonObject(JsonObject().put("query", getGraphql("view/get-live-view-subscriptions"))).await()
+        val getLiveViewsResp =
+            request.sendJsonObject(JsonObject().put("query", getGraphql("view/get-live-views"))).await()
                 .bodyAsJsonObject()
-        assertNull(getLiveViewSubscriptionsResp.getJsonArray("errors"))
+        assertNull(getLiveViewsResp.getJsonArray("errors"))
 
-        val liveViewSubscriptions =
-            getLiveViewSubscriptionsResp.getJsonObject("data").getJsonArray("getLiveViewSubscriptions")
-        assertFalse(liveViewSubscriptions.isEmpty)
-        assertTrue(liveViewSubscriptions.any { it1 ->
+        val liveViews =
+            getLiveViewsResp.getJsonObject("data").getJsonArray("getLiveViews")
+        assertFalse(liveViews.isEmpty)
+        assertTrue(liveViews.any { it1 ->
             it1 as JsonObject
             val entityIds = it1.getJsonArray("entityIds")
             entityIds.any { it2 ->
@@ -802,18 +802,18 @@ class SourceServiceITTest : PlatformIntegrationTest() {
                 .await().bodyAsJsonObject()
         assertNull(getLiveInstrumentsResp.getJsonArray("errors"))
 
-        val liveViewSubscriptions = getLiveInstrumentsResp.getJsonObject("data").getJsonArray("getLiveInstruments")
-        assertFalse(liveViewSubscriptions.isEmpty)
+        val liveViews = getLiveInstrumentsResp.getJsonObject("data").getJsonArray("getLiveInstruments")
+        assertFalse(liveViews.isEmpty)
     }
 
     @Test
-    fun `ensure clearLiveViewSubscriptions works`() = runBlocking {
-        val clearLiveViewSubscriptionsResp =
-            request.sendJsonObject(JsonObject().put("query", getGraphql("view/clear-live-view-subscriptions")))
+    fun `ensure clearLiveViews works`() = runBlocking {
+        val clearLiveViewsResp =
+            request.sendJsonObject(JsonObject().put("query", getGraphql("view/clear-live-views")))
                 .await().bodyAsJsonObject()
-        assertNull(clearLiveViewSubscriptionsResp.getJsonArray("errors"))
+        assertNull(clearLiveViewsResp.getJsonArray("errors"))
         assertTrue(
-            clearLiveViewSubscriptionsResp.getJsonObject("data").getBoolean("clearLiveViewSubscriptions")
+            clearLiveViewsResp.getJsonObject("data").getBoolean("clearLiveViews")
         )
     }
 
@@ -1011,8 +1011,8 @@ class SourceServiceITTest : PlatformIntegrationTest() {
             .put("variables", JsonObject().put("accessPermissionId", accessPermissionId).put("role", "developer-role"))
     }
 
-    private val addLiveViewSubscriptionRequest =
-        JsonObject().put("query", getGraphql("view/add-live-view-subscription")).put(
+    private val addLiveViewRequest =
+        JsonObject().put("query", getGraphql("view/add-live-view")).put(
             "variables", JsonObject().put(
                 "input", mapOf(
                     "entityIds" to listOf(1, 222, 3),

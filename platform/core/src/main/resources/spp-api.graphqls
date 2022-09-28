@@ -44,7 +44,7 @@ input LiveViewConfigInput {
     refreshRateLimit: Int
 }
 
-type LiveViewSubscription {
+type LiveView {
     subscriptionId: String
     entityIds: [String!]
     artifactQualifiedName: ArtifactQualifiedName
@@ -52,7 +52,7 @@ type LiveViewSubscription {
     liveViewConfig: LiveViewConfig
 }
 
-input LiveViewSubscriptionInput {
+input LiveViewInput {
     entityIds: [String!]!
     #artifactQualifiedName: ArtifactQualifiedNameInput!
     liveViewConfig: LiveViewConfigInput!
@@ -372,7 +372,7 @@ type Query {
     getSelf: Self!
     getServices: [Service!]!
 
-    getLiveViewSubscriptions: [LiveViewSubscription!]!
+    getLiveViews: [LiveView!]!
 
     getClientAccessors: [ClientAccess!]!
 }
@@ -409,8 +409,8 @@ type Mutation {
     addLiveMeter(input: LiveMeterInput!): LiveMeter!
     addLiveSpan(input: LiveSpanInput!): LiveSpan!
 
-    addLiveViewSubscription(input: LiveViewSubscriptionInput!): LiveViewSubscription!
-    clearLiveViewSubscriptions: Boolean!
+    addLiveView(input: LiveViewInput!): LiveView!
+    clearLiveViews: Boolean!
 
     addClientAccess: ClientAccess!
     removeClientAccess(id: String!): Boolean!
