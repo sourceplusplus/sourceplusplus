@@ -25,7 +25,7 @@ import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
-import spp.protocol.SourceServices.Provide.toLiveViewSubscriberAddress
+import spp.protocol.SourceServices.Subscribe.toLiveViewSubscriberAddress
 import spp.protocol.artifact.ArtifactQualifiedName
 import spp.protocol.artifact.ArtifactType
 import spp.protocol.instrument.LiveMeter
@@ -33,9 +33,9 @@ import spp.protocol.instrument.LiveSourceLocation
 import spp.protocol.instrument.meter.MeterType
 import spp.protocol.instrument.meter.MetricValue
 import spp.protocol.instrument.meter.MetricValueType
+import spp.protocol.view.LiveView
 import spp.protocol.view.LiveViewConfig
 import spp.protocol.view.LiveViewEvent
-import spp.protocol.view.LiveViewSubscription
 
 class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
 
@@ -68,8 +68,8 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
             //applyImmediately = true //todo: can't use applyImmediately
         )
 
-        val subscriptionId = viewService.addLiveViewSubscription(
-            LiveViewSubscription(
+        val subscriptionId = viewService.addLiveView(
+            LiveView(
                 entityIds = mutableSetOf(liveMeter.toMetricId()),
                 artifactQualifiedName = ArtifactQualifiedName(
                     LiveMeterCountTest::class.qualifiedName!!,
@@ -79,7 +79,7 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
                     LiveMeterCountTest::class.qualifiedName!!,
                     getLineNumber("done")
                 ),
-                liveViewConfig = LiveViewConfig(
+                viewConfig = LiveViewConfig(
                     "test",
                     listOf(liveMeter.toMetricId())
                 )
@@ -123,7 +123,7 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
         //clean up
         consumer.unregister()
         assertNotNull(instrumentService.removeLiveInstrument(meterId).await())
-        assertNotNull(viewService.removeLiveViewSubscription(subscriptionId).await())
+        assertNotNull(viewService.removeLiveView(subscriptionId).await())
 
         assertEquals(100, totalCount)
     }
@@ -149,8 +149,8 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
             //applyImmediately = true //todo: can't use applyImmediately
         )
 
-        val subscriptionId = viewService.addLiveViewSubscription(
-            LiveViewSubscription(
+        val subscriptionId = viewService.addLiveView(
+            LiveView(
                 entityIds = mutableSetOf(liveMeter.toMetricId()),
                 artifactQualifiedName = ArtifactQualifiedName(
                     LiveMeterCountTest::class.qualifiedName!!,
@@ -160,7 +160,7 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
                     LiveMeterCountTest::class.qualifiedName!!,
                     getLineNumber("done")
                 ),
-                liveViewConfig = LiveViewConfig(
+                viewConfig = LiveViewConfig(
                     "test",
                     listOf(liveMeter.toMetricId())
                 )
@@ -204,7 +204,7 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
         //clean up
         consumer.unregister()
         assertNotNull(instrumentService.removeLiveInstrument(meterId).await())
-        assertNotNull(viewService.removeLiveViewSubscription(subscriptionId).await())
+        assertNotNull(viewService.removeLiveView(subscriptionId).await())
 
         assertEquals(200, totalCount)
     }
@@ -230,8 +230,8 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
             //applyImmediately = true //todo: can't use applyImmediately
         )
 
-        val subscriptionId1 = viewService.addLiveViewSubscription(
-            LiveViewSubscription(
+        val subscriptionId1 = viewService.addLiveView(
+            LiveView(
                 entityIds = mutableSetOf(liveMeter1.toMetricId()),
                 artifactQualifiedName = ArtifactQualifiedName(
                     LiveMeterCountTest::class.qualifiedName!!,
@@ -241,7 +241,7 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
                     LiveMeterCountTest::class.qualifiedName!!,
                     getLineNumber("done")
                 ),
-                liveViewConfig = LiveViewConfig(
+                viewConfig = LiveViewConfig(
                     "test",
                     listOf(liveMeter1.toMetricId())
                 )
@@ -264,8 +264,8 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
             //applyImmediately = true //todo: can't use applyImmediately
         )
 
-        val subscriptionId2 = viewService.addLiveViewSubscription(
-            LiveViewSubscription(
+        val subscriptionId2 = viewService.addLiveView(
+            LiveView(
                 entityIds = mutableSetOf(liveMeter2.toMetricId()),
                 artifactQualifiedName = ArtifactQualifiedName(
                     LiveMeterCountTest::class.qualifiedName!!,
@@ -275,7 +275,7 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
                     LiveMeterCountTest::class.qualifiedName!!,
                     getLineNumber("done")
                 ),
-                liveViewConfig = LiveViewConfig(
+                viewConfig = LiveViewConfig(
                     "test",
                     listOf(liveMeter2.toMetricId())
                 )
@@ -330,8 +330,8 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
         consumer.unregister()
         assertNotNull(instrumentService.removeLiveInstrument(meterId1).await())
         assertNotNull(instrumentService.removeLiveInstrument(meterId2).await())
-        assertNotNull(viewService.removeLiveViewSubscription(subscriptionId1).await())
-        assertNotNull(viewService.removeLiveViewSubscription(subscriptionId2).await())
+        assertNotNull(viewService.removeLiveView(subscriptionId1).await())
+        assertNotNull(viewService.removeLiveView(subscriptionId2).await())
 
         assertEquals(202, totalCount)
     }

@@ -56,7 +56,9 @@ import spp.platform.common.util.CertsToJksOptionsConverter
 import spp.platform.common.util.SelfSignedCertGenerator
 import spp.platform.core.service.ServiceProvider
 import spp.platform.storage.SourceStorage
-import spp.protocol.SourceServices.Utilize
+import spp.protocol.SourceServices.LIVE_INSTRUMENT
+import spp.protocol.SourceServices.LIVE_MANAGEMENT_SERVICE
+import spp.protocol.SourceServices.LIVE_VIEW
 import spp.protocol.service.LiveManagementService
 import java.io.File
 import java.io.FileWriter
@@ -238,9 +240,9 @@ class SourcePlatform : CoroutineVerticle() {
 
         //Health checks
         val healthChecks = HealthChecks.create(vertx)
-        addServiceCheck(healthChecks, Utilize.LIVE_MANAGEMENT_SERVICE)
-        addServiceCheck(healthChecks, Utilize.LIVE_INSTRUMENT)
-        addServiceCheck(healthChecks, Utilize.LIVE_VIEW)
+        addServiceCheck(healthChecks, LIVE_MANAGEMENT_SERVICE)
+        addServiceCheck(healthChecks, LIVE_INSTRUMENT)
+        addServiceCheck(healthChecks, LIVE_VIEW)
         router["/health"].handler(HealthCheckHandler.createWithHealthChecks(healthChecks))
         router["/stats"].handler(this::getStats)
         router["/clients"].handler(this::getClients)

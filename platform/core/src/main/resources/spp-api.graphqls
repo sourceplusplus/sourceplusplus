@@ -44,18 +44,18 @@ input LiveViewConfigInput {
     refreshRateLimit: Int
 }
 
-type LiveViewSubscription {
+type LiveView {
     subscriptionId: String
     entityIds: [String!]
     artifactQualifiedName: ArtifactQualifiedName
     artifactLocation: LiveSourceLocation
-    liveViewConfig: LiveViewConfig
+    viewConfig: LiveViewConfig
 }
 
-input LiveViewSubscriptionInput {
+input LiveViewInput {
     entityIds: [String!]!
     #artifactQualifiedName: ArtifactQualifiedNameInput!
-    liveViewConfig: LiveViewConfigInput!
+    viewConfig: LiveViewConfigInput!
 }
 
 type Self {
@@ -210,6 +210,7 @@ type LiveMeter implements LiveInstrument {
 input LiveMeterInput {
     meterType: MeterType!
     metricValue: MetricValueInput!
+    id: String
     meterDescription: String
     location: LiveSourceLocationInput!
     condition: String
@@ -372,7 +373,7 @@ type Query {
     getSelf: Self!
     getServices: [Service!]!
 
-    getLiveViewSubscriptions: [LiveViewSubscription!]!
+    getLiveViews: [LiveView!]!
 
     getClientAccessors: [ClientAccess!]!
 }
@@ -409,12 +410,12 @@ type Mutation {
     addLiveMeter(input: LiveMeterInput!): LiveMeter!
     addLiveSpan(input: LiveSpanInput!): LiveSpan!
 
-    addLiveViewSubscription(input: LiveViewSubscriptionInput!): LiveViewSubscription!
-    clearLiveViewSubscriptions: Boolean!
+    addLiveView(input: LiveViewInput!): LiveView!
+    clearLiveViews: Boolean!
 
     addClientAccess: ClientAccess!
     removeClientAccess(id: String!): Boolean!
-    updateClientAccess(id: String!): ClientAccess!
+    refreshClientAccess(id: String!): ClientAccess!
 }
 
 scalar Long

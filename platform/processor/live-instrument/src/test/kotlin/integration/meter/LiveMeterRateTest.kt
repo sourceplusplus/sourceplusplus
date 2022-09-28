@@ -27,7 +27,7 @@ import mu.KotlinLogging
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import spp.protocol.SourceServices.Provide.toLiveViewSubscriberAddress
+import spp.protocol.SourceServices.Subscribe.toLiveViewSubscriberAddress
 import spp.protocol.artifact.ArtifactQualifiedName
 import spp.protocol.artifact.ArtifactType
 import spp.protocol.instrument.LiveMeter
@@ -35,10 +35,9 @@ import spp.protocol.instrument.LiveSourceLocation
 import spp.protocol.instrument.meter.MeterType
 import spp.protocol.instrument.meter.MetricValue
 import spp.protocol.instrument.meter.MetricValueType
+import spp.protocol.view.LiveView
 import spp.protocol.view.LiveViewConfig
 import spp.protocol.view.LiveViewEvent
-import spp.protocol.view.LiveViewSubscription
-import java.util.*
 
 class LiveMeterRateTest : LiveInstrumentIntegrationTest() {
 
@@ -52,7 +51,7 @@ class LiveMeterRateTest : LiveInstrumentIntegrationTest() {
 
     @BeforeEach
     fun reset(): Unit = runBlocking {
-        viewService.clearLiveViewSubscriptions().await()
+        viewService.clearLiveViews().await()
     }
 
     @Test
@@ -77,8 +76,8 @@ class LiveMeterRateTest : LiveInstrumentIntegrationTest() {
             //applyImmediately = true //todo: can't use applyImmediately
         )
 
-        val subscriptionId = viewService.addLiveViewSubscription(
-            LiveViewSubscription(
+        val subscriptionId = viewService.addLiveView(
+            LiveView(
                 entityIds = mutableSetOf(liveMeter.toMetricId()),
                 artifactQualifiedName = ArtifactQualifiedName(
                     LiveMeterRateTest::class.qualifiedName!!,
@@ -88,7 +87,7 @@ class LiveMeterRateTest : LiveInstrumentIntegrationTest() {
                     LiveMeterRateTest::class.qualifiedName!!,
                     getLineNumber("done")
                 ),
-                liveViewConfig = LiveViewConfig(
+                viewConfig = LiveViewConfig(
                     "test",
                     listOf(liveMeter.toMetricId())
                 )
@@ -110,7 +109,7 @@ class LiveMeterRateTest : LiveInstrumentIntegrationTest() {
                 assertEquals(liveMeter.toMetricId(), meta.getString("metricsName"))
 
                 rate = rawMetrics.getInteger("value")
-                if (rate >= 54) { //allow for some variance
+                if (rate >= 50) { //allow for some variance (GH actions are sporadic)
                     testContext.completeNow()
                 }
             }
@@ -138,8 +137,8 @@ class LiveMeterRateTest : LiveInstrumentIntegrationTest() {
         //clean up
         consumer.unregister()
         assertNotNull(instrumentService.removeLiveInstrument(meterId).await())
-        assertNotNull(viewService.removeLiveViewSubscription(subscriptionId).await())
+        assertNotNull(viewService.removeLiveView(subscriptionId).await())
 
-        assertTrue(rate >= 54) //allow for some variance
+        assertTrue(rate >= 50) //allow for some variance (GH actions are sporadic)
     }
 }

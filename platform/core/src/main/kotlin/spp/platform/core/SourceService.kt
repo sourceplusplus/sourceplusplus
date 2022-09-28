@@ -63,8 +63,8 @@ import spp.protocol.service.LiveInstrumentService
 import spp.protocol.service.LiveManagementService
 import spp.protocol.service.LiveViewService
 import spp.protocol.service.error.InstrumentAccessDenied
+import spp.protocol.view.LiveView
 import spp.protocol.view.LiveViewConfig
-import spp.protocol.view.LiveViewSubscription
 import java.util.*
 import java.util.concurrent.CompletableFuture
 import kotlin.properties.Delegates
@@ -216,8 +216,8 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
                     "getServices",
                     this::getServices
                 ).dataFetcher(
-                    "getLiveViewSubscriptions",
-                    this::getLiveViewSubscriptions
+                    "getLiveViews",
+                    this::getLiveViews
                 ).dataFetcher(
                     "getClientAccessors",
                     this::getClientAccessors
@@ -305,11 +305,11 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
                     "addLiveSpan",
                     this::addLiveSpan
                 ).dataFetcher(
-                    "addLiveViewSubscription",
-                    this::addLiveViewSubscription
+                    "addLiveView",
+                    this::addLiveView
                 ).dataFetcher(
-                    "clearLiveViewSubscriptions",
-                    this::clearLiveViewSubscriptions
+                    "clearLiveViews",
+                    this::clearLiveViews
                 ).dataFetcher(
                     "addClientAccess",
                     this::addClientAccess
@@ -317,8 +317,8 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
                     "removeClientAccess",
                     this::removeClientAccess
                 ).dataFetcher(
-                    "updateClientAccess",
-                    this::updateClientAccess
+                    "refreshClientAccess",
+                    this::refreshClientAccess
                 )
             }.build()
         val schemaGenerator = SchemaGenerator()
@@ -1563,6 +1563,8 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
                 metricValueInput.getString("value")
             )
 
+            val meterDescription: String? = input.getString("meterDescription")
+            val id: String? = input.getString("id")
             val condition = input.getString("condition")
             val expiresAt = input.getLong("expiresAt")
             val hitLimit = input.getInteger("hitLimit")
@@ -1584,6 +1586,8 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
                         LiveMeter(
                             meterType = MeterType.valueOf(input.getString("meterType")),
                             metricValue = metricValue,
+                            meterDescription = meterDescription,
+                            id = id,
                             location = LiveSourceLocation(locationSource, locationLine),
                             condition = condition,
                             expiresAt = expiresAt,
@@ -1675,8 +1679,8 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
         return completableFuture
     }
 
-    private fun addLiveViewSubscription(env: DataFetchingEnvironment): CompletableFuture<LiveViewSubscription> {
-        val completableFuture = CompletableFuture<LiveViewSubscription>()
+    private fun addLiveView(env: DataFetchingEnvironment): CompletableFuture<LiveView> {
+        val completableFuture = CompletableFuture<LiveView>()
         var accessToken: String? = null
         launch(vertx.dispatcher()) {
             if (jwtEnabled) {
@@ -1689,16 +1693,16 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
             }
 
             val input = JsonObject.mapFrom(env.getArgument("input"))
-            val liveViewConfig = LiveViewConfig(
-                input.getJsonObject("liveViewConfig").getString("viewName"),
-                input.getJsonObject("liveViewConfig").getJsonArray("viewMetrics").map { it.toString() },
-                input.getJsonObject("liveViewConfig").getInteger("refreshRateLimit") ?: -1,
+            val viewConfig = LiveViewConfig(
+                input.getJsonObject("viewConfig").getString("viewName"),
+                input.getJsonObject("viewConfig").getJsonArray("viewMetrics").map { it.toString() },
+                input.getJsonObject("viewConfig").getInteger("refreshRateLimit") ?: -1,
             )
-            val subscription = LiveViewSubscription(
+            val subscription = LiveView(
                 entityIds = input.getJsonArray("entityIds").list.map { it as String }.toMutableSet(),
                 artifactQualifiedName = ArtifactQualifiedName("todo", type = ArtifactType.CLASS),
                 artifactLocation = LiveSourceLocation("todo", -1),
-                liveViewConfig = liveViewConfig
+                viewConfig = viewConfig
             )
 
             EventBusService.getProxy(
@@ -1706,7 +1710,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
                 JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("auth-token", accessToken)) } }
             ) {
                 if (it.succeeded()) {
-                    it.result().addLiveViewSubscription(subscription).onComplete {
+                    it.result().addLiveView(subscription).onComplete {
                         if (it.succeeded()) {
                             completableFuture.complete(it.result())
                         } else {
@@ -1721,8 +1725,8 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
         return completableFuture
     }
 
-    private fun getLiveViewSubscriptions(env: DataFetchingEnvironment): CompletableFuture<List<LiveViewSubscription>> {
-        val completableFuture = CompletableFuture<List<LiveViewSubscription>>()
+    private fun getLiveViews(env: DataFetchingEnvironment): CompletableFuture<List<LiveView>> {
+        val completableFuture = CompletableFuture<List<LiveView>>()
         var accessToken: String? = null
         launch(vertx.dispatcher()) {
             if (jwtEnabled) {
@@ -1739,7 +1743,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
                 JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("auth-token", accessToken)) } }
             ) {
                 if (it.succeeded()) {
-                    it.result().getLiveViewSubscriptions().onComplete {
+                    it.result().getLiveViews().onComplete {
                         if (it.succeeded()) {
                             completableFuture.complete(it.result())
                         } else {
@@ -1754,7 +1758,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
         return completableFuture
     }
 
-    private fun clearLiveViewSubscriptions(env: DataFetchingEnvironment): CompletableFuture<Boolean> {
+    private fun clearLiveViews(env: DataFetchingEnvironment): CompletableFuture<Boolean> {
         val completableFuture = CompletableFuture<Boolean>()
         var accessToken: String? = null
         launch(vertx.dispatcher()) {
@@ -1772,7 +1776,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
                 JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("auth-token", accessToken)) } }
             ) {
                 if (it.succeeded()) {
-                    it.result().clearLiveViewSubscriptions().onComplete {
+                    it.result().clearLiveViews().onComplete {
                         if (it.succeeded()) {
                             completableFuture.complete(true)
                         } else {
@@ -1835,7 +1839,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
         return completableFuture
     }
 
-    private fun updateClientAccess(env: DataFetchingEnvironment): CompletableFuture<ClientAccess> {
+    private fun refreshClientAccess(env: DataFetchingEnvironment): CompletableFuture<ClientAccess> {
         val completableFuture = CompletableFuture<ClientAccess>()
         launch(vertx.dispatcher()) {
             if (jwtEnabled) {
@@ -1847,7 +1851,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
             }
 
             try {
-                completableFuture.complete(SourceStorage.updateClientAccess(env.getArgument("id")))
+                completableFuture.complete(SourceStorage.refreshClientAccess(env.getArgument("id")))
             } catch (e: Exception) {
                 completableFuture.completeExceptionally(e)
             }

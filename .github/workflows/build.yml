@@ -87,6 +87,16 @@ jobs:
           name: docker-logs
           path: ./platform/build/containers-logs
 
+      - run: docker cp spp-example-webapp:/tmp/spp-probe/logs/skywalking-api.log ./build/skywalking-api.log
+        if: ${{ always() }}
+
+      - name: Upload skywalking-api.log artifact
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: skywalking-api.log
+          path: ./build/skywalking-api.log
+
       - name: Make distribution
         if: github.ref == 'refs/heads/master'
         run: ./gradlew makeDist -x :interfaces:booster-ui:buildSkyWalkingUI -Dbuild.profile=release -PplatformVersion=$BUILD_VERSION

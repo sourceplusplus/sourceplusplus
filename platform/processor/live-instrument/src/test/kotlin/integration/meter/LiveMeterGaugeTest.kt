@@ -25,7 +25,7 @@ import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
-import spp.protocol.SourceServices.Provide.toLiveViewSubscriberAddress
+import spp.protocol.SourceServices.Subscribe.toLiveViewSubscriberAddress
 import spp.protocol.artifact.ArtifactQualifiedName
 import spp.protocol.artifact.ArtifactType
 import spp.protocol.instrument.LiveMeter
@@ -33,9 +33,9 @@ import spp.protocol.instrument.LiveSourceLocation
 import spp.protocol.instrument.meter.MeterType
 import spp.protocol.instrument.meter.MetricValue
 import spp.protocol.instrument.meter.MetricValueType
+import spp.protocol.view.LiveView
 import spp.protocol.view.LiveViewConfig
 import spp.protocol.view.LiveViewEvent
-import spp.protocol.view.LiveViewSubscription
 import java.io.ByteArrayOutputStream
 import java.io.ObjectOutputStream
 import java.util.*
@@ -77,8 +77,8 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
             //applyImmediately = true //todo: can't use applyImmediately
         )
 
-        val subscriptionId = viewService.addLiveViewSubscription(
-            LiveViewSubscription(
+        val subscriptionId = viewService.addLiveView(
+            LiveView(
                 entityIds = mutableSetOf(liveMeter.toMetricId()),
                 artifactQualifiedName = ArtifactQualifiedName(
                     LiveMeterGaugeTest::class.qualifiedName!!,
@@ -88,7 +88,7 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
                     LiveMeterGaugeTest::class.qualifiedName!!,
                     getLineNumber("done")
                 ),
-                liveViewConfig = LiveViewConfig(
+                viewConfig = LiveViewConfig(
                     "test",
                     listOf(liveMeter.toMetricId())
                 )
@@ -129,6 +129,6 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
         //clean up
         consumer.unregister()
         assertNotNull(instrumentService.removeLiveInstrument(meterId).await())
-        assertNotNull(viewService.removeLiveViewSubscription(subscriptionId).await())
+        assertNotNull(viewService.removeLiveView(subscriptionId).await())
     }
 }

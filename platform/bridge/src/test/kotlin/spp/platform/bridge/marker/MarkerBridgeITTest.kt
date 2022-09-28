@@ -23,6 +23,7 @@ import io.vertx.core.http.HttpClientOptions
 import io.vertx.core.http.WebSocketConnectOptions
 import io.vertx.core.http.WebSocketFrame
 import io.vertx.core.json.JsonObject
+import io.vertx.junit5.Timeout
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
 import kotlinx.coroutines.delay
@@ -42,6 +43,7 @@ class MarkerBridgeITTest : PlatformIntegrationTest() {
     }
 
     @Test
+    @Timeout(10)
     fun testMarkerCounter(): Unit = runBlocking {
         val testContext = VertxTestContext()
 
@@ -185,7 +187,7 @@ class MarkerBridgeITTest : PlatformIntegrationTest() {
         //attempt register live instrument subscriber
         val msg = JsonObject()
             .put("type", "register")
-            .put("address", SourceServices.Provide.LIVE_INSTRUMENT_SUBSCRIBER + ":test-marker-id")
+            .put("address", SourceServices.Subscribe.LIVE_INSTRUMENT_SUBSCRIBER + ":test-marker-id")
         val pc = InstanceConnection("test-marker-id", System.currentTimeMillis())
         msg.put("body", JsonObject.mapFrom(pc))
         ws.writeFrame(WebSocketFrame.textFrame(msg.encode(), true))

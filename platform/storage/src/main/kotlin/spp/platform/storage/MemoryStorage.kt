@@ -401,7 +401,7 @@ open class MemoryStorage(val vertx: Vertx) : CoreStorage {
         return false
     }
 
-    override suspend fun updateClientAccess(id: String): ClientAccess {
+    override suspend fun refreshClientAccess(id: String): ClientAccess {
         val clientAccessStorage = vertx.sharedData().getAsyncMap<String, Any>(namespace("client_access")).await()
         val clientAccessors = clientAccessStorage.get("client_accessors").await() as JsonArray? ?: JsonArray()
         val existingClientAccess = clientAccessors.list.find { (it as JsonObject).getString("id") == id } as JsonObject?

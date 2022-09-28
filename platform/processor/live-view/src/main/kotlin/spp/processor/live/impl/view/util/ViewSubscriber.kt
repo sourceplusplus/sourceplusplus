@@ -19,10 +19,10 @@ package spp.processor.live.impl.view.util
 
 import io.vertx.core.eventbus.MessageConsumer
 import io.vertx.core.json.JsonObject
-import spp.protocol.view.LiveViewSubscription
+import spp.protocol.view.LiveView
 
 data class ViewSubscriber(
-    val subscription: LiveViewSubscription,
+    val subscription: LiveView,
     val subscriberId: String,
     var lastUpdated: Long,
     var waitingEvents: MutableMap<Long, MutableList<JsonObject>>,

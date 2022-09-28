@@ -1,8 +1,8 @@
 # ![](.github/media/sourcepp_logo.svg)
 
-[![License](https://img.shields.io/github/license/sourceplusplus/live-platform)](LICENSE)
-![GitHub release](https://img.shields.io/github/v/release/sourceplusplus/live-platform?include_prereleases)
-[![Build](https://github.com/sourceplusplus/live-platform/actions/workflows/build.yml/badge.svg)](https://github.com/sourceplusplus/live-platform/actions/workflows/build.yml)
+[![License](https://img.shields.io/github/license/sourceplusplus/sourceplusplus)](LICENSE)
+![GitHub release](https://img.shields.io/github/v/release/sourceplusplus/sourceplusplus?include_prereleases)
+[![Build](https://github.com/sourceplusplus/sourceplusplus/actions/workflows/build.yml/badge.svg)](https://github.com/sourceplusplus/sourceplusplus/actions/workflows/build.yml)
 
 Source++ is an open-source live coding platform. Add breakpoints, logs, metrics, and distributed tracing to live production software in real-time on-demand, right from your IDE or CLI.
 
@@ -29,9 +29,9 @@ Powered by [Apache SkyWalking](https://github.com/apache/skywalking), Source++ e
 <br/>
 <ol>
 <li>Install <a href="https://docs.docker.com/get-docker/">Docker</a> and <a href="https://docs.docker.com/compose/install/">Docker Compose</a> on your system (if not already installed).</li>
-<li>Download the <a href="https://github.com/sourceplusplus/live-platform/blob/master/docker/docker-compose.yml" download><code>docker-compose.yml</code></a> file into a new empty directory (can be anywhere).
+<li>Download the <a href="https://github.com/sourceplusplus/sourceplusplus/blob/master/docker/docker-compose.yml" download><code>docker-compose.yml</code></a> file into a new empty directory (can be anywhere).
 <pre lang="bash"><code style="white-space: pre-line">mkdir ~/spp-platform && cd ~/spp-platform
-curl -O 'https://raw.githubusercontent.com/sourceplusplus/live-platform/master/docker/docker-compose.yml'</code></pre></li>
+curl -O 'https://raw.githubusercontent.com/sourceplusplus/sourceplusplus/master/docker/docker-compose.yml'</code></pre></li>
 <li>Start services.
 <pre lang="bash"><code style="white-space: pre-line">docker-compose up</code></pre></li>
 </ol>

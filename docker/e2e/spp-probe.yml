@@ -4,6 +4,7 @@ spp:
     client_secret: "test-secret"
   platform_host: "spp-platform"
   platform_port: 12800
+  ssl_enabled: true
   platform_certificate: |
     MIIFLzCCAxegAwIBAgIGAYG9v8lfMA0GCSqGSIb3DQEBCwUAMBcxFTATBgNVBAMM
     DHNwcC1wbGF0Zm9ybTAeFw0yMjA3MDIwNzExMTFaFw0yMzA3MDIwNzExMTFaMBcx

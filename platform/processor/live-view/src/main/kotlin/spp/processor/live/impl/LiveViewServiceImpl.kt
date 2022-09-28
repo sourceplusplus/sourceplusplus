@@ -39,11 +39,11 @@ import spp.processor.live.impl.view.LiveTracesView
 import spp.processor.live.impl.view.util.EntitySubscribersCache
 import spp.processor.live.impl.view.util.MetricTypeSubscriptionCache
 import spp.processor.live.impl.view.util.ViewSubscriber
-import spp.protocol.SourceServices.Provide.toLiveViewSubscriberAddress
+import spp.protocol.SourceServices.Subscribe.toLiveViewSubscriberAddress
 import spp.protocol.platform.PlatformAddress.MARKER_DISCONNECTED
 import spp.protocol.service.LiveViewService
+import spp.protocol.view.LiveView
 import spp.protocol.view.LiveViewEvent
-import spp.protocol.view.LiveViewSubscription
 import java.util.*
 
 class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
@@ -76,22 +76,22 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
 
         vertx.eventBus().consumer<JsonObject>(MARKER_DISCONNECTED) {
             val devAuth = DeveloperAuth.from(it.body())
-            clearLiveViewSubscriptions(devAuth.selfId).onComplete {
+            clearLiveViews(devAuth.selfId).onComplete {
                 if (it.succeeded()) {
-                    log.info("Cleared live view subscriptions for disconnected marker: {}", devAuth.selfId)
+                    log.info("Cleared live views for disconnected marker: {}", devAuth.selfId)
                 } else {
-                    log.error("Failed to clear live view subscriptions on marker disconnection", it.cause())
+                    log.error("Failed to clear live views on marker disconnection", it.cause())
                 }
             }
         }
     }
 
-    override fun addLiveViewSubscription(subscription: LiveViewSubscription): Future<LiveViewSubscription> {
-        val promise = Promise.promise<LiveViewSubscription>()
+    override fun addLiveView(subscription: LiveView): Future<LiveView> {
+        val promise = Promise.promise<LiveView>()
         val devAuth = Vertx.currentContext().getLocal<DeveloperAuth>("developer")
         val address = "view." + UUID.randomUUID().toString()
         val sub = subscription.copy(subscriptionId = address)
-        log.info("Adding live view subscription: {}", sub)
+        log.info("Adding live view: {}", sub)
 
         val consumer = vertx.eventBus().consumer<JsonObject>(address)
         consumer.handler {
@@ -104,7 +104,7 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
                     sub.entityIds.first(),
                     sub.artifactQualifiedName,
                     firstEvent.getString("timeBucket"),
-                    sub.liveViewConfig,
+                    sub.viewConfig,
                     events.toString()
                 )
             } else {
@@ -113,7 +113,7 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
                     sub.entityIds.first(),
                     sub.artifactQualifiedName,
                     event.getString("timeBucket"),
-                    sub.liveViewConfig,
+                    sub.viewConfig,
                     event.toString()
                 )
             }
@@ -132,7 +132,7 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
                     consumer
                 )
 
-                sub.liveViewConfig.viewMetrics.forEach {
+                sub.viewConfig.viewMetrics.forEach {
                     subscriptionCache.computeIfAbsent(it) { EntitySubscribersCache() }
                     sub.entityIds.forEach { entityId ->
                         subscriptionCache[it]!!.computeIfAbsent(entityId) { mutableSetOf() }
@@ -148,9 +148,9 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
         return promise.future()
     }
 
-    override fun removeLiveViewSubscription(id: String): Future<LiveViewSubscription> {
-        log.debug("Removing live view subscription: {}", id)
-        val promise = Promise.promise<LiveViewSubscription>()
+    override fun removeLiveView(id: String): Future<LiveView> {
+        log.debug("Removing live view: {}", id)
+        val promise = Promise.promise<LiveView>()
         var unsubbedUser: ViewSubscriber? = null
         subscriptionCache.flatMap { it.value.values }.forEach { subList ->
             val subscription = subList.firstOrNull { it.subscription.subscriptionId == id }
@@ -163,14 +163,14 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
         if (unsubbedUser != null) {
             unsubbedUser!!.consumer.unregister {
                 if (it.succeeded()) {
-                    log.info("Removed live view subscription: {}", id)
+                    log.info("Removed live view: {}", id)
                     promise.complete(
-                        LiveViewSubscription(
+                        LiveView(
                             unsubbedUser!!.subscription.subscriptionId,
                             unsubbedUser!!.subscription.entityIds,
                             unsubbedUser!!.subscription.artifactQualifiedName,
                             unsubbedUser!!.subscription.artifactLocation,
-                            unsubbedUser!!.subscription.liveViewConfig
+                            unsubbedUser!!.subscription.viewConfig
                         )
                     )
                 } else {
@@ -183,12 +183,12 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
         return promise.future()
     }
 
-    override fun updateLiveViewSubscription(
+    override fun updateLiveView(
         id: String,
-        subscription: LiveViewSubscription
-    ): Future<LiveViewSubscription> {
-        log.debug("Updating live view subscription: {}", id)
-        val promise = Promise.promise<LiveViewSubscription>()
+        subscription: LiveView
+    ): Future<LiveView> {
+        log.debug("Updating live view: {}", id)
+        val promise = Promise.promise<LiveView>()
 
         var viewSubscriber: ViewSubscriber? = null
         subscriptionCache.forEach {
@@ -207,7 +207,7 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
             viewSubscriber!!.subscription.entityIds.removeAll(removedEntityIds)
             viewSubscriber!!.subscription.entityIds.addAll(addedEntityIds)
 
-            subscription.liveViewConfig.viewMetrics.forEach {
+            subscription.viewConfig.viewMetrics.forEach {
                 subscriptionCache.computeIfAbsent(it) { EntitySubscribersCache() }
 
                 removedEntityIds.forEach { entityId ->
@@ -233,9 +233,9 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
         return promise.future()
     }
 
-    override fun getLiveViewSubscription(id: String): Future<LiveViewSubscription> {
-        log.debug("Getting live view subscription: {}", id)
-        val promise = Promise.promise<LiveViewSubscription>()
+    override fun getLiveView(id: String): Future<LiveView> {
+        log.debug("Getting live view: {}", id)
+        val promise = Promise.promise<LiveView>()
         var subbedUser: ViewSubscriber? = null
         subscriptionCache.flatMap { it.value.values }.forEach { subList ->
             val subscription = subList.firstOrNull { it.subscription.subscriptionId == id }
@@ -246,12 +246,12 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
 
         if (subbedUser != null) {
             promise.complete(
-                LiveViewSubscription(
+                LiveView(
                     subbedUser!!.subscription.subscriptionId,
                     subbedUser!!.subscription.entityIds,
                     subbedUser!!.subscription.artifactQualifiedName,
                     subbedUser!!.subscription.artifactLocation,
-                    subbedUser!!.subscription.liveViewConfig
+                    subbedUser!!.subscription.viewConfig
                 )
             )
         } else {
@@ -260,9 +260,9 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
         return promise.future()
     }
 
-    override fun getLiveViewSubscriptions(): Future<List<LiveViewSubscription>> {
+    override fun getLiveViews(): Future<List<LiveView>> {
         val devAuth = Vertx.currentContext().getLocal<DeveloperAuth>("developer")
-        val viewSubscriptions = mutableSetOf<LiveViewSubscription>()
+        val viewSubscriptions = mutableSetOf<LiveView>()
         subscriptionCache.forEach {
             it.value.forEach {
                 it.value.forEach {
@@ -275,13 +275,13 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
         return Future.succeededFuture(viewSubscriptions.toList())
     }
 
-    override fun clearLiveViewSubscriptions(): Future<List<LiveViewSubscription>> {
+    override fun clearLiveViews(): Future<List<LiveView>> {
         val devAuth = Vertx.currentContext().getLocal<DeveloperAuth>("developer")
-        return clearLiveViewSubscriptions(devAuth.selfId)
+        return clearLiveViews(devAuth.selfId)
     }
 
-    private fun clearLiveViewSubscriptions(subscriberId: String): Future<List<LiveViewSubscription>> {
-        val promise = Promise.promise<List<LiveViewSubscription>>()
+    private fun clearLiveViews(subscriberId: String): Future<List<LiveView>> {
+        val promise = Promise.promise<List<LiveView>>()
         val removedSubs = mutableSetOf<ViewSubscriber>()
         subscriptionCache.entries.removeIf {
             it.value.entries.removeIf {
@@ -306,7 +306,7 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
         return promise.future()
     }
 
-    override fun getLiveViewSubscriptionStats(): Future<JsonObject> {
+    override fun getLiveViewStats(): Future<JsonObject> {
         val subStats = JsonObject()
         subscriptionCache.forEach { type ->
             subStats.put(type.key, JsonObject())

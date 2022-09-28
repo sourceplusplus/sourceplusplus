@@ -7,9 +7,3 @@ services:
     ports:
       - "11800:11800"
       - "12800:12800"
-      - "443:443"
-      - "80:80"
-    environment:
-      - SPP_JWT_ENABLED=false
-      - SPP_HTTP_SSL_ENABLED=false
-      - SPP_GRPC_SSL_ENABLED=false

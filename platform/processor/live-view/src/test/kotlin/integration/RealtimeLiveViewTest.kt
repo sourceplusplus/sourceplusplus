@@ -29,9 +29,9 @@ import spp.protocol.SourceServices
 import spp.protocol.artifact.ArtifactQualifiedName
 import spp.protocol.artifact.ArtifactType
 import spp.protocol.instrument.LiveSourceLocation
+import spp.protocol.view.LiveView
 import spp.protocol.view.LiveViewConfig
 import spp.protocol.view.LiveViewEvent
-import spp.protocol.view.LiveViewSubscription
 
 class RealtimeLiveViewTest : PlatformIntegrationTest() {
 
@@ -41,10 +41,10 @@ class RealtimeLiveViewTest : PlatformIntegrationTest() {
 
     @Test
     fun `realtime instance_jvm_cpu`(): Unit = runBlocking {
-        viewService.clearLiveViewSubscriptions().await()
+        viewService.clearLiveViews().await()
 
-        val subscriptionId = viewService.addLiveViewSubscription(
-            LiveViewSubscription(
+        val subscriptionId = viewService.addLiveView(
+            LiveView(
                 entityIds = mutableSetOf("instance_jvm_cpu_realtime"),
                 artifactQualifiedName = ArtifactQualifiedName( //todo: optional artifact
                     "unneeded",
@@ -54,14 +54,14 @@ class RealtimeLiveViewTest : PlatformIntegrationTest() {
                     "unneeded", //todo: optional location
                     -1
                 ),
-                liveViewConfig = LiveViewConfig(
+                viewConfig = LiveViewConfig(
                     "test",
                     listOf("instance_jvm_cpu_realtime")
                 )
             )
         ).await().subscriptionId!!
         val consumer = vertx.eventBus().consumer<JsonObject>(
-            SourceServices.Provide.toLiveViewSubscriberAddress("system")
+            SourceServices.Subscribe.toLiveViewSubscriberAddress("system")
         )
 
         val testContext = VertxTestContext()
@@ -94,6 +94,6 @@ class RealtimeLiveViewTest : PlatformIntegrationTest() {
 
         //clean up
         consumer.unregister()
-        assertNotNull(viewService.removeLiveViewSubscription(subscriptionId).await())
+        assertNotNull(viewService.removeLiveView(subscriptionId).await())
     }
 }

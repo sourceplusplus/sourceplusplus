@@ -1,15 +1,15 @@
 spp-platform:
   host: ${SPP_PLATFORM_HOST:-0.0.0.0}
   jwt:
-    enabled: ${SPP_JWT_ENABLED:-true}
+    enabled: ${SPP_JWT_ENABLED:-false}
     access_token: ${SPP_JWT_ACCESS_TOKEN:-change-me}
   http:
-    port: ${SPP_HTTP_PORT:-443,12800}
-    ssl_enabled: ${SPP_HTTP_SSL_ENABLED:-true}
-    redirect_to_https: ${SPP_HTTP_REDIRECT_TO_HTTPS:-true}
+    port: ${SPP_HTTP_PORT:-12800}
+    ssl_enabled: ${SPP_HTTP_SSL_ENABLED:-false}
+    redirect_to_https: ${SPP_HTTP_REDIRECT_TO_HTTPS:-false}
   grpc:
     port: ${SPP_GRPC_PORT:-11800}
-    ssl_enabled: ${SPP_GRPC_SSL_ENABLED:-true}
+    ssl_enabled: ${SPP_GRPC_SSL_ENABLED:-false}
   logging:
     level: ${SPP_LOGGING_LEVEL:-info}
   pii-redaction:

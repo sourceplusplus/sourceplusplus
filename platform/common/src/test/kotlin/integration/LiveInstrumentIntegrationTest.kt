@@ -22,7 +22,7 @@ import io.vertx.core.json.Json
 import io.vertx.core.json.JsonObject
 import mu.KotlinLogging
 import org.joor.Reflect
-import spp.protocol.SourceServices.Provide.toLiveInstrumentSubscriberAddress
+import spp.protocol.SourceServices.Subscribe.toLiveInstrumentSubscriberAddress
 import spp.protocol.instrument.event.LiveBreakpointHit
 import spp.protocol.instrument.event.LiveInstrumentEvent
 import spp.protocol.instrument.event.LiveInstrumentEventType

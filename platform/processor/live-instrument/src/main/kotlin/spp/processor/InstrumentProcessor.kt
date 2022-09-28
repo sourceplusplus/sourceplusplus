@@ -96,11 +96,11 @@ object InstrumentProcessor : FeedbackProcessor() {
         ServiceBinder(vertx).setIncludeDebugInfo(true)
             .addInterceptor(developerAuthInterceptor())
             .addInterceptor(permissionAndAccessCheckInterceptor())
-            .setAddress(SourceServices.Utilize.LIVE_INSTRUMENT)
+            .setAddress(SourceServices.LIVE_INSTRUMENT)
             .register(LiveInstrumentService::class.java, liveInstrumentService)
         liveInstrumentRecord = EventBusService.createRecord(
-            SourceServices.Utilize.LIVE_INSTRUMENT,
-            SourceServices.Utilize.LIVE_INSTRUMENT,
+            SourceServices.LIVE_INSTRUMENT,
+            SourceServices.LIVE_INSTRUMENT,
             LiveInstrumentService::class.java,
             JsonObject().put("INSTANCE_ID", INSTANCE_ID)
         )

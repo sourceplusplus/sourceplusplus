@@ -13,7 +13,7 @@ configure<PublishingExtension> {
     repositories {
         maven {
             name = "GitHubPackages"
-            url = uri("https://maven.pkg.github.com/sourceplusplus/live-platform")
+            url = uri("https://maven.pkg.github.com/sourceplusplus/sourceplusplus")
             credentials {
                 username = System.getenv("GH_PUBLISH_USERNAME")?.toString()
                 password = System.getenv("GH_PUBLISH_TOKEN")?.toString()

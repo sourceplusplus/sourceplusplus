@@ -80,7 +80,7 @@ class LiveManagementServiceImpl(private val vertx: Vertx) : LiveManagementServic
         val devAuth = Vertx.currentContext().getLocal<DeveloperAuth>("developer")
 
         val subStats = Promise.promise<JsonObject>()
-        LiveViewService.createProxy(vertx, devAuth.accessToken).getLiveViewSubscriptionStats().onComplete {
+        LiveViewService.createProxy(vertx, devAuth.accessToken).getLiveViewStats().onComplete {
             if (it.succeeded()) {
                 subStats.complete(it.result())
             } else {
@@ -123,16 +123,16 @@ class LiveManagementServiceImpl(private val vertx: Vertx) : LiveManagementServic
                         "core",
                         JsonObject()
                             .put(
-                                SourceServices.Utilize.LIVE_MANAGEMENT_SERVICE,
-                                SourceStorage.counter(SourceServices.Utilize.LIVE_MANAGEMENT_SERVICE).get().await()
+                                SourceServices.LIVE_MANAGEMENT_SERVICE,
+                                SourceStorage.counter(SourceServices.LIVE_MANAGEMENT_SERVICE).get().await()
                             )
                             .put(
-                                SourceServices.Utilize.LIVE_INSTRUMENT,
-                                SourceStorage.counter(SourceServices.Utilize.LIVE_INSTRUMENT).get().await()
+                                SourceServices.LIVE_INSTRUMENT,
+                                SourceStorage.counter(SourceServices.LIVE_INSTRUMENT).get().await()
                             )
                             .put(
-                                SourceServices.Utilize.LIVE_VIEW,
-                                SourceStorage.counter(SourceServices.Utilize.LIVE_VIEW).get().await()
+                                SourceServices.LIVE_VIEW,
+                                SourceStorage.counter(SourceServices.LIVE_VIEW).get().await()
                             )
                     )
                     .put(
@@ -280,11 +280,11 @@ class LiveManagementServiceImpl(private val vertx: Vertx) : LiveManagementServic
         return promise.future()
     }
 
-    override fun updateClientAccess(id: String): Future<ClientAccess> {
-        log.trace { "Updating client access with id: $id" }
+    override fun refreshClientAccess(id: String): Future<ClientAccess> {
+        log.trace { "Refreshing client access with id: $id" }
         val promise = Promise.promise<ClientAccess>()
         GlobalScope.launch(vertx.dispatcher()) {
-            promise.complete(SourceStorage.updateClientAccess(id))
+            promise.complete(SourceStorage.refreshClientAccess(id))
         }
         return promise.future()
     }

@@ -181,8 +181,8 @@ object SourceStorage {
         return storage.removeClientAccess(id)
     }
 
-    suspend fun updateClientAccess(id: String): ClientAccess {
-        return storage.updateClientAccess(id)
+    suspend fun refreshClientAccess(id: String): ClientAccess {
+        return storage.refreshClientAccess(id)
     }
 
     suspend fun getDevelopers(): List<Developer> {
