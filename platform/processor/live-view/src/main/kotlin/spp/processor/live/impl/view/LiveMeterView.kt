@@ -92,13 +92,13 @@ class LiveMeterView(private val subscriptionCache: MetricTypeSubscriptionCache) 
             sub.waitingEvents[metrics.timeBucket] = waitingEventsForBucket
         }
 
-        if (sub.subscription.liveViewConfig.viewMetrics.size > 1) {
+        if (sub.subscription.viewConfig.viewMetrics.size > 1) {
             if (waitingEventsForBucket.isEmpty()) {
                 waitingEventsForBucket.add(jsonMetric)
             } else {
                 waitingEventsForBucket.removeIf { it.getString("metric_type") == metrics::class.simpleName }
                 waitingEventsForBucket.add(jsonMetric)
-                if (sub.subscription.liveViewConfig.viewMetrics.size == waitingEventsForBucket.size) {
+                if (sub.subscription.viewConfig.viewMetrics.size == waitingEventsForBucket.size) {
                     hasAllEvents = true
                 }
                 //todo: network errors/etc might make it so waitingEventsForBucket never completes
@@ -108,7 +108,7 @@ class LiveMeterView(private val subscriptionCache: MetricTypeSubscriptionCache) 
             hasAllEvents = true
         }
 
-        if (hasAllEvents && System.currentTimeMillis() - sub.lastUpdated >= sub.subscription.liveViewConfig.refreshRateLimit) {
+        if (hasAllEvents && System.currentTimeMillis() - sub.lastUpdated >= sub.subscription.viewConfig.refreshRateLimit) {
             sub.lastUpdated = System.currentTimeMillis()
 
             if (waitingEventsForBucket.isNotEmpty()) {
@@ -127,7 +127,7 @@ class LiveMeterView(private val subscriptionCache: MetricTypeSubscriptionCache) 
 
                 //ensure metrics sorted by subscription order
                 val sortedMetrics = JsonArray()
-                sub.subscription.liveViewConfig.viewMetrics.forEach { metricType ->
+                sub.subscription.viewConfig.viewMetrics.forEach { metricType ->
                     multiMetrics.forEach {
                         val metricData = JsonObject.mapFrom(it)
                         if (metricData.getJsonObject("meta").getString("metricsName") == metricType) {

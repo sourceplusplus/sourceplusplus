@@ -72,7 +72,7 @@ class LiveLogSubscriptionTest : LiveInstrumentIntegrationTest() {
         val subscriptionId = viewService.addLiveView(
             LiveView(
                 entityIds = mutableSetOf(liveLog.logFormat),
-                liveViewConfig = LiveViewConfig(
+                viewConfig = LiveViewConfig(
                     "test",
                     listOf("endpoint_logs")
                 )

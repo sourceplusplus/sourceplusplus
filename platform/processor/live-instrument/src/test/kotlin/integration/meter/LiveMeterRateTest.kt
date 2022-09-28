@@ -87,7 +87,7 @@ class LiveMeterRateTest : LiveInstrumentIntegrationTest() {
                     LiveMeterRateTest::class.qualifiedName!!,
                     getLineNumber("done")
                 ),
-                liveViewConfig = LiveViewConfig(
+                viewConfig = LiveViewConfig(
                     "test",
                     listOf(liveMeter.toMetricId())
                 )

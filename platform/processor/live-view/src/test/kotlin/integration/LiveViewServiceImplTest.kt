@@ -37,7 +37,7 @@ class LiveViewServiceImplTest : PlatformIntegrationTest() {
     fun `test addLiveView`(): Unit = runBlocking {
         val subscription = LiveView(
             entityIds = mutableSetOf("test-id"),
-            liveViewConfig = LiveViewConfig(
+            viewConfig = LiveViewConfig(
                 "test",
                 listOf("test-metric")
             )
@@ -54,7 +54,7 @@ class LiveViewServiceImplTest : PlatformIntegrationTest() {
     fun `test updateLiveView add entity id`(): Unit = runBlocking {
         val subscription = LiveView(
             entityIds = mutableSetOf("test-id-1"),
-            liveViewConfig = LiveViewConfig(
+            viewConfig = LiveViewConfig(
                 "test",
                 listOf("test-metric")
             )
@@ -84,7 +84,7 @@ class LiveViewServiceImplTest : PlatformIntegrationTest() {
     fun `test updateLiveView replace entity id`(): Unit = runBlocking {
         val subscription = LiveView(
             entityIds = mutableSetOf("test-id-1"),
-            liveViewConfig = LiveViewConfig(
+            viewConfig = LiveViewConfig(
                 "test",
                 listOf("test-metric")
             )
@@ -114,7 +114,7 @@ class LiveViewServiceImplTest : PlatformIntegrationTest() {
     fun `test removeLiveView`(): Unit = runBlocking {
         val subscription = LiveView(
             entityIds = mutableSetOf("test-id"),
-            liveViewConfig = LiveViewConfig(
+            viewConfig = LiveViewConfig(
                 "test",
                 listOf("test-metric")
             )
@@ -133,7 +133,7 @@ class LiveViewServiceImplTest : PlatformIntegrationTest() {
     fun `test getLiveView`(): Unit = runBlocking {
         val subscription = LiveView(
             entityIds = mutableSetOf("test-id"),
-            liveViewConfig = LiveViewConfig(
+            viewConfig = LiveViewConfig(
                 "test",
                 listOf("test-metric")
             )
@@ -149,7 +149,7 @@ class LiveViewServiceImplTest : PlatformIntegrationTest() {
     fun `test getLiveViews`(): Unit = runBlocking {
         val subscription1 = LiveView(
             entityIds = mutableSetOf("test-id-1"),
-            liveViewConfig = LiveViewConfig(
+            viewConfig = LiveViewConfig(
                 "test",
                 listOf("test-metric-1")
             )
@@ -158,7 +158,7 @@ class LiveViewServiceImplTest : PlatformIntegrationTest() {
 
         val subscription2 = LiveView(
             entityIds = mutableSetOf("test-id-2"),
-            liveViewConfig = LiveViewConfig(
+            viewConfig = LiveViewConfig(
                 "test",
                 listOf("test-metric-2")
             )
@@ -177,7 +177,7 @@ class LiveViewServiceImplTest : PlatformIntegrationTest() {
     fun `test clearLiveViews`(): Unit = runBlocking {
         val subscription1 = LiveView(
             entityIds = mutableSetOf("test-id-1"),
-            liveViewConfig = LiveViewConfig(
+            viewConfig = LiveViewConfig(
                 "test",
                 listOf("test-metric-1")
             )
@@ -186,7 +186,7 @@ class LiveViewServiceImplTest : PlatformIntegrationTest() {
 
         val subscription2 = LiveView(
             entityIds = mutableSetOf("test-id-2"),
-            liveViewConfig = LiveViewConfig(
+            viewConfig = LiveViewConfig(
                 "test",
                 listOf("test-metric-2")
             )

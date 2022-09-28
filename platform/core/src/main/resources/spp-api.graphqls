@@ -49,13 +49,13 @@ type LiveView {
     entityIds: [String!]
     artifactQualifiedName: ArtifactQualifiedName
     artifactLocation: LiveSourceLocation
-    liveViewConfig: LiveViewConfig
+    viewConfig: LiveViewConfig
 }
 
 input LiveViewInput {
     entityIds: [String!]!
     #artifactQualifiedName: ArtifactQualifiedNameInput!
-    liveViewConfig: LiveViewConfigInput!
+    viewConfig: LiveViewConfigInput!
 }
 
 type Self {

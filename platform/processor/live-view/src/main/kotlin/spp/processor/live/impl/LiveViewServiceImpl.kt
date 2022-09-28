@@ -104,7 +104,7 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
                     sub.entityIds.first(),
                     sub.artifactQualifiedName,
                     firstEvent.getString("timeBucket"),
-                    sub.liveViewConfig,
+                    sub.viewConfig,
                     events.toString()
                 )
             } else {
@@ -113,7 +113,7 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
                     sub.entityIds.first(),
                     sub.artifactQualifiedName,
                     event.getString("timeBucket"),
-                    sub.liveViewConfig,
+                    sub.viewConfig,
                     event.toString()
                 )
             }
@@ -132,7 +132,7 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
                     consumer
                 )
 
-                sub.liveViewConfig.viewMetrics.forEach {
+                sub.viewConfig.viewMetrics.forEach {
                     subscriptionCache.computeIfAbsent(it) { EntitySubscribersCache() }
                     sub.entityIds.forEach { entityId ->
                         subscriptionCache[it]!!.computeIfAbsent(entityId) { mutableSetOf() }
@@ -170,7 +170,7 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
                             unsubbedUser!!.subscription.entityIds,
                             unsubbedUser!!.subscription.artifactQualifiedName,
                             unsubbedUser!!.subscription.artifactLocation,
-                            unsubbedUser!!.subscription.liveViewConfig
+                            unsubbedUser!!.subscription.viewConfig
                         )
                     )
                 } else {
@@ -207,7 +207,7 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
             viewSubscriber!!.subscription.entityIds.removeAll(removedEntityIds)
             viewSubscriber!!.subscription.entityIds.addAll(addedEntityIds)
 
-            subscription.liveViewConfig.viewMetrics.forEach {
+            subscription.viewConfig.viewMetrics.forEach {
                 subscriptionCache.computeIfAbsent(it) { EntitySubscribersCache() }
 
                 removedEntityIds.forEach { entityId ->
@@ -251,7 +251,7 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
                     subbedUser!!.subscription.entityIds,
                     subbedUser!!.subscription.artifactQualifiedName,
                     subbedUser!!.subscription.artifactLocation,
-                    subbedUser!!.subscription.liveViewConfig
+                    subbedUser!!.subscription.viewConfig
                 )
             )
         } else {

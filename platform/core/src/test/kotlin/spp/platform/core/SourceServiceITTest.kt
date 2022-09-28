@@ -621,12 +621,12 @@ class SourceServiceITTest : PlatformIntegrationTest() {
         assertTrue(entityIds.contains("222"))
         assertTrue(entityIds.contains("3"))
 
-        val liveViewConfig = liveView.getJsonObject("liveViewConfig")
-        assertEquals("test", liveViewConfig.getString("viewName"))
-        val viewMetrics = liveViewConfig.getJsonArray("viewMetrics")
+        val viewConfig = liveView.getJsonObject("viewConfig")
+        assertEquals("test", viewConfig.getString("viewName"))
+        val viewMetrics = viewConfig.getJsonArray("viewMetrics")
         assertEquals(1, viewMetrics.size())
         assertEquals("test-metric", viewMetrics.getString(0))
-        assertEquals(-1, liveViewConfig.getInteger("refreshRateLimit"))
+        assertEquals(-1, viewConfig.getInteger("refreshRateLimit"))
     }
 
     @Test
@@ -1016,7 +1016,7 @@ class SourceServiceITTest : PlatformIntegrationTest() {
             "variables", JsonObject().put(
                 "input", mapOf(
                     "entityIds" to listOf(1, 222, 3),
-                    "liveViewConfig" to mapOf(
+                    "viewConfig" to mapOf(
                         "viewName" to "test",
                         "viewMetrics" to listOf("test-metric")
                     )

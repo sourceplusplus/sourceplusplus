@@ -88,7 +88,7 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
                     LiveMeterGaugeTest::class.qualifiedName!!,
                     getLineNumber("done")
                 ),
-                liveViewConfig = LiveViewConfig(
+                viewConfig = LiveViewConfig(
                     "test",
                     listOf(liveMeter.toMetricId())
                 )

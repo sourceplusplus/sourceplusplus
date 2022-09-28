@@ -79,7 +79,7 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
                     LiveMeterCountTest::class.qualifiedName!!,
                     getLineNumber("done")
                 ),
-                liveViewConfig = LiveViewConfig(
+                viewConfig = LiveViewConfig(
                     "test",
                     listOf(liveMeter.toMetricId())
                 )
@@ -160,7 +160,7 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
                     LiveMeterCountTest::class.qualifiedName!!,
                     getLineNumber("done")
                 ),
-                liveViewConfig = LiveViewConfig(
+                viewConfig = LiveViewConfig(
                     "test",
                     listOf(liveMeter.toMetricId())
                 )
@@ -241,7 +241,7 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
                     LiveMeterCountTest::class.qualifiedName!!,
                     getLineNumber("done")
                 ),
-                liveViewConfig = LiveViewConfig(
+                viewConfig = LiveViewConfig(
                     "test",
                     listOf(liveMeter1.toMetricId())
                 )
@@ -275,7 +275,7 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
                     LiveMeterCountTest::class.qualifiedName!!,
                     getLineNumber("done")
                 ),
-                liveViewConfig = LiveViewConfig(
+                viewConfig = LiveViewConfig(
                     "test",
                     listOf(liveMeter2.toMetricId())
                 )

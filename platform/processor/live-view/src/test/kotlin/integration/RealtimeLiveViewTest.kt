@@ -54,7 +54,7 @@ class RealtimeLiveViewTest : PlatformIntegrationTest() {
                     "unneeded", //todo: optional location
                     -1
                 ),
-                liveViewConfig = LiveViewConfig(
+                viewConfig = LiveViewConfig(
                     "test",
                     listOf("instance_jvm_cpu_realtime")
                 )
