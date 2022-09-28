@@ -471,14 +471,14 @@ abstract class BaseStorageITTest<T : CoreStorage> {
     }
 
     @Test
-    fun updateClientAccess(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+    fun refreshClientAccess(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
         val id = "clientId3"
         val secret = "clientSecret3"
         storageInstance.addClientAccess(id, secret)
         val clientAccess = storageInstance.getClientAccess(id)
         assertEquals(secret, clientAccess?.secret)
 
-        storageInstance.updateClientAccess(id)
+        storageInstance.refreshClientAccess(id)
         val updatedClientAccess = storageInstance.getClientAccess(id)
         assertNotEquals(secret, updatedClientAccess?.secret)
     }

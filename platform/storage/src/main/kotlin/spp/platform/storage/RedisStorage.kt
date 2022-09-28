@@ -300,7 +300,7 @@ open class RedisStorage(val vertx: Vertx) : CoreStorage {
         return false
     }
 
-    override suspend fun updateClientAccess(id: String): ClientAccess {
+    override suspend fun refreshClientAccess(id: String): ClientAccess {
         val clientAccessors = getClientAccessors()
         if (clientAccessors.find { it.id == id } == null) {
             throw IllegalArgumentException("Client accessor with id $id does not exist")

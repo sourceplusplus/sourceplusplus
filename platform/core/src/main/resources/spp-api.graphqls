@@ -414,7 +414,7 @@ type Mutation {
 
     addClientAccess: ClientAccess!
     removeClientAccess(id: String!): Boolean!
-    updateClientAccess(id: String!): ClientAccess!
+    refreshClientAccess(id: String!): ClientAccess!
 }
 
 scalar Long

@@ -280,11 +280,11 @@ class LiveManagementServiceImpl(private val vertx: Vertx) : LiveManagementServic
         return promise.future()
     }
 
-    override fun updateClientAccess(id: String): Future<ClientAccess> {
-        log.trace { "Updating client access with id: $id" }
+    override fun refreshClientAccess(id: String): Future<ClientAccess> {
+        log.trace { "Refreshing client access with id: $id" }
         val promise = Promise.promise<ClientAccess>()
         GlobalScope.launch(vertx.dispatcher()) {
-            promise.complete(SourceStorage.updateClientAccess(id))
+            promise.complete(SourceStorage.refreshClientAccess(id))
         }
         return promise.future()
     }

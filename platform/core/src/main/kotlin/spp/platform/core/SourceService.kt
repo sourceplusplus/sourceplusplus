@@ -317,8 +317,8 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
                     "removeClientAccess",
                     this::removeClientAccess
                 ).dataFetcher(
-                    "updateClientAccess",
-                    this::updateClientAccess
+                    "refreshClientAccess",
+                    this::refreshClientAccess
                 )
             }.build()
         val schemaGenerator = SchemaGenerator()
@@ -1835,7 +1835,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
         return completableFuture
     }
 
-    private fun updateClientAccess(env: DataFetchingEnvironment): CompletableFuture<ClientAccess> {
+    private fun refreshClientAccess(env: DataFetchingEnvironment): CompletableFuture<ClientAccess> {
         val completableFuture = CompletableFuture<ClientAccess>()
         launch(vertx.dispatcher()) {
             if (jwtEnabled) {
@@ -1847,7 +1847,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
             }
 
             try {
-                completableFuture.complete(SourceStorage.updateClientAccess(env.getArgument("id")))
+                completableFuture.complete(SourceStorage.refreshClientAccess(env.getArgument("id")))
             } catch (e: Exception) {
                 completableFuture.completeExceptionally(e)
             }

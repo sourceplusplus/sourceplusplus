@@ -955,23 +955,23 @@ class SourceServiceITTest : PlatformIntegrationTest() {
     }
 
     @Test
-    fun `ensure update client access works`() = runBlocking {
+    fun `ensure refresh client access works`() = runBlocking {
         val clientAccess = managementService.addClientAccess().await()
         val clientId = clientAccess.id
         val clientSecret = clientAccess.secret
 
-        val updatedClientAccess = managementService.updateClientAccess(clientId).await()
+        val updatedClientAccess = managementService.refreshClientAccess(clientId).await()
         assertEquals(clientId, updatedClientAccess.id)
         assertNotEquals(clientSecret, updatedClientAccess.secret)
 
-        val updateClientAccessResp = request.sendJsonObject(
-            JsonObject().put("query", getGraphql("client/update-client-access"))
+        val refreshClientAccessResp = request.sendJsonObject(
+            JsonObject().put("query", getGraphql("client/refresh-client-access"))
                 .put("variables", JsonObject().put("id", clientId))
         ).await().bodyAsJsonObject()
-        assertNull(updateClientAccessResp.getJsonArray("errors"))
+        assertNull(refreshClientAccessResp.getJsonArray("errors"))
 
         val updatedClientAccessJsonObject =
-            updateClientAccessResp.getJsonObject("data").getJsonObject("updateClientAccess")
+            refreshClientAccessResp.getJsonObject("data").getJsonObject("refreshClientAccess")
         assertEquals(clientId, updatedClientAccessJsonObject.getString("id"))
         assertNotEquals(clientSecret, updatedClientAccessJsonObject.getString("secret"))
 
