@@ -32,6 +32,7 @@ import org.apache.commons.lang3.RandomStringUtils
 import org.slf4j.LoggerFactory
 import spp.platform.common.ClusterConnection.config
 import spp.platform.common.ClusterConnection.getVertx
+import spp.protocol.instrument.LiveInstrument
 import spp.protocol.platform.auth.*
 import spp.protocol.platform.developer.Developer
 import spp.protocol.service.error.PermissionAccessDenied
@@ -139,6 +140,7 @@ object SourceStorage {
         getRoles().forEach { removeRole(it) }
         getDevelopers().forEach { removeDeveloper(it.id) }
         getClientAccessors().forEach { removeClientAccess(it.id) }
+        getLiveInstruments().forEach { removeLiveInstrument(it.id!!) }
         installDefaults(get("system_access_token", DEFAULT_ACCESS_TOKEN))
         return true
     }
@@ -377,5 +379,47 @@ object SourceStorage {
             promise.complete()
         }
         return promise.future()
+    }
+
+    /**
+     * Add a new [LiveInstrument] to the platform.
+     */
+    suspend fun addLiveInstrument(instrument: LiveInstrument): LiveInstrument {
+        return storage.addLiveInstrument(instrument)
+    }
+
+    /**
+     * Update an existing [LiveInstrument] on the platform with the given id.
+     */
+    suspend fun updateLiveInstrument(id: String, instrument: LiveInstrument): LiveInstrument {
+        return storage.updateLiveInstrument(id, instrument)
+    }
+
+    /**
+     * Remove the [LiveInstrument] with the given id.
+     */
+    suspend fun removeLiveInstrument(id: String): Boolean {
+        return storage.removeLiveInstrument(id)
+    }
+
+    /**
+     * Get the [LiveInstrument] with the given id.
+     */
+    suspend fun getLiveInstrument(id: String): LiveInstrument? {
+        return storage.getLiveInstrument(id)
+    }
+
+    /**
+     * Retrieve all [LiveInstrument]s.
+     */
+    suspend fun getLiveInstruments(): List<LiveInstrument> {
+        return storage.getLiveInstruments()
+    }
+
+    /**
+     * Retrieve all [LiveInstrument]s where [LiveInstrument.pending] is true.
+     */
+    suspend fun getPendingLiveInstruments(): List<LiveInstrument> {
+        return storage.getPendingLiveInstruments()
     }
 }

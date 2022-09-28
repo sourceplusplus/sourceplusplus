@@ -21,6 +21,7 @@ import io.vertx.core.json.JsonObject
 import io.vertx.core.shareddata.AsyncMap
 import io.vertx.core.shareddata.Counter
 import io.vertx.core.shareddata.Lock
+import spp.protocol.instrument.LiveInstrument
 import spp.protocol.platform.auth.*
 import spp.protocol.platform.developer.Developer
 import java.util.*
@@ -73,6 +74,36 @@ interface CoreStorage {
     suspend fun addPermissionToRole(role: DeveloperRole, permission: RolePermission)
     suspend fun removePermissionFromRole(role: DeveloperRole, permission: RolePermission)
     suspend fun getRolePermissions(role: DeveloperRole): Set<RolePermission>
+
+    /**
+     * Add a new [LiveInstrument] to the platform.
+     */
+    suspend fun addLiveInstrument(instrument: LiveInstrument): LiveInstrument
+
+    /**
+     * Update an existing [LiveInstrument] on the platform with the given id.
+     */
+    suspend fun updateLiveInstrument(id: String, instrument: LiveInstrument): LiveInstrument
+
+    /**
+     * Remove the [LiveInstrument] with the given id.
+     */
+    suspend fun removeLiveInstrument(id: String): Boolean
+
+    /**
+     * Get the [LiveInstrument] with the given id.
+     */
+    suspend fun getLiveInstrument(id: String): LiveInstrument?
+
+    /**
+     * Retrieve all [LiveInstrument]s.
+     */
+    suspend fun getLiveInstruments(): List<LiveInstrument>
+
+    /**
+     * Retrieve all [LiveInstrument]s where [LiveInstrument.pending] is true.
+     */
+    suspend fun getPendingLiveInstruments(): List<LiveInstrument>
 
     suspend fun namespace(location: String): String = location
 
