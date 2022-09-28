@@ -12,8 +12,8 @@ docker run -d --name=spp-platform -p 11800:11800 -p 12800:12800 sourceplusplus/s
 
 | Name                 | Required | Default Value | 
 |:---------------------|----------|---------------|
-| SPP_JWT_ENABLED      | no       | true          |
-| SPP_HTTP_SSL_ENABLED | no       | true          |
+| SPP_JWT_ENABLED      | no       | false         |
+| SPP_HTTP_SSL_ENABLED | no       | false         |
 
 ## How to use the container
 
