@@ -42,3 +42,11 @@
 	path = documentation
 	url = https://github.com/sourceplusplus/documentation
 	branch = master
+[submodule "demos/java"]
+	path = demos/java
+	url = https://github.com/sourceplusplus/demo-java
+	branch = master
+[submodule "demos/kotlin"]
+	path = demos/kotlin
+	url = https://github.com/sourceplusplus/demo-kotlin
+	branch = master
