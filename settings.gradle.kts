@@ -18,6 +18,8 @@ pluginManagement {
     }
 }
 
+include("demos:java")
+include("demos:kotlin")
 include("interfaces:cli")
 include("interfaces:jetbrains:commander")
 include("interfaces:jetbrains:commander:kotlin-compiler-wrapper")
