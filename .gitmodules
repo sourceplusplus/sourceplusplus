@@ -50,3 +50,7 @@
 	path = demos/kotlin
 	url = https://github.com/sourceplusplus/demo-kotlin
 	branch = master
+[submodule "demos/nodejs"]
+	path = demos/nodejs
+	url = https://github.com/sourceplusplus/demo-nodejs
+	branch = master
