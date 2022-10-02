@@ -50,12 +50,14 @@ curl -O 'https://raw.githubusercontent.com/sourceplusplus/sourceplusplus/master/
 ## Get Started
 
 <!-- - [Get Source++](https://sourceplusplus.com/get/) -->
-- Tutorials
-  - [JVM](https://github.com/sourceplusplus/tutorial-java)
-  - [Python](https://github.com/sourceplusplus/tutorial-python)
+- Demos
+  - [Java](https://github.com/sourceplusplus/demo-java)
+  - [Kotlin](https://github.com/sourceplusplus/demo-kotlin)
+  - [Node.js](https://github.com/sourceplusplus/demo-nodejs)
 - Probes
   - [JVM](https://github.com/sourceplusplus/probe-jvm)
   - [Python](https://github.com/sourceplusplus/probe-python)
+  - [Node.js](https://github.com/sourceplusplus/probe-nodejs)
 - Interfaces
   - [JetBrains Plugin](https://github.com/sourceplusplus/interface-jetbrains)
   - [CLI](https://github.com/sourceplusplus/interface-cli)
