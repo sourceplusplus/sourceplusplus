@@ -18,7 +18,6 @@
 package spp.platform.storage
 
 import io.vertx.core.Vertx
-import io.vertx.core.json.Json
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import io.vertx.core.shareddata.AsyncMap
@@ -50,7 +49,7 @@ open class MemoryStorage(val vertx: Vertx) : CoreStorage {
     }
 
     override suspend fun <K, V> map(name: String): AsyncMap<K, V> {
-        return vertx.sharedData().getAsyncMap<K, V>(namespace(name)).await()
+        return vertx.sharedData().getAsyncMap<K, V>(namespace("maps:$name")).await()
     }
 
     override suspend fun <T> get(name: String): T? {

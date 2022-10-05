@@ -60,7 +60,7 @@ open class RedisStorage(val vertx: Vertx) : CoreStorage {
     }
 
     override suspend fun <K, V> map(name: String): AsyncMap<K, V> {
-        return vertx.sharedData().getAsyncMap<K, V>(namespace(name)).await()
+        return vertx.sharedData().getAsyncMap<K, V>(namespace("maps:$name")).await()
     }
 
     override suspend fun <T> get(name: String): T? {
