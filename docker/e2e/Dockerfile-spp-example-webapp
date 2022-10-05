@@ -1,4 +1,4 @@
-FROM openjdk:11-jre
+FROM openjdk:11.0.16-jre
 ADD ./example-web-app/build/distributions/example-jvm-boot-1.0-SNAPSHOT.zip /example-jvm-boot-1.0-SNAPSHOT.zip
 
 RUN mkdir /tmp/spp-probe
