@@ -21,10 +21,12 @@ import com.fasterxml.jackson.module.kotlin.KotlinModule
 import io.vertx.core.buffer.Buffer
 import io.vertx.core.json.JsonObject
 import io.vertx.core.json.jackson.DatabindCodec
+import io.vertx.kotlin.coroutines.await
+import io.vertx.redis.client.impl.types.NumberType
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
 import spp.platform.common.DeveloperAuth
 import spp.platform.storage.ExpiringSharedData
@@ -40,7 +42,7 @@ class ExpiringSharedDataITTest : PlatformIntegrationTest() {
 
         val sharedData = ExpiringSharedData.newBuilder()
             .expireAfterWrite(1, TimeUnit.SECONDS)
-            .build<String, String>("test1", vertx, storage)
+            .build<String, String>("test1", storage)
         val key = "key"
         val value = "value"
         sharedData.put(key, value)
@@ -56,7 +58,7 @@ class ExpiringSharedDataITTest : PlatformIntegrationTest() {
 
         val sharedData = ExpiringSharedData.newBuilder()
             .expireAfterAccess(1, TimeUnit.SECONDS)
-            .build<String, String>("test2", vertx, storage)
+            .build<String, String>("test2", storage)
         val key = "key"
         val value = "value"
         sharedData.put(key, value)
@@ -80,7 +82,7 @@ class ExpiringSharedDataITTest : PlatformIntegrationTest() {
 
         val sharedData = ExpiringSharedData.newBuilder()
             .expireAfterWrite(1, TimeUnit.SECONDS)
-            .build<String, Pair<String, String>>("test3", vertx, storage)
+            .build<String, Pair<String, String>>("test3", storage)
         val key = "key"
         val value = "first" to "second"
         sharedData.put(key, value)
@@ -100,7 +102,7 @@ class ExpiringSharedDataITTest : PlatformIntegrationTest() {
 
         val sharedData = ExpiringSharedData.newBuilder()
             .expireAfterWrite(1, TimeUnit.SECONDS)
-            .build<String, DeveloperAuth>("test4", vertx, storage)
+            .build<String, DeveloperAuth>("test4", storage)
         val key = "key"
         val value = DeveloperAuth("selfId", "accessToken")
         sharedData.put(key, value)
@@ -113,5 +115,47 @@ class ExpiringSharedDataITTest : PlatformIntegrationTest() {
         val readValue = DeveloperAuth("test", "test")
             .apply { readFromBuffer(0, buffer) }
         assertEquals(value, readValue)
+    }
+
+    @RepeatedTest(2)
+    fun `ensure lock lease time works`() = runBlocking {
+        val storage = RedisStorage(vertx)
+        storage.init(JsonObject().put("host", "localhost").put("port", 6379))
+
+        val sharedData = ExpiringSharedData.newBuilder().build<String, String>("lease-test", storage)
+        val lockName = "lock-test-" + System.currentTimeMillis()
+        sharedData.getLock(lockName, 1000)
+
+        //try to acquire lock
+        try {
+            sharedData.getLock(lockName, 1000)
+            fail("Should not be able to acquire lock")
+        } catch (e: Exception) {
+            assertTrue(e.message!!.startsWith("Timed out waiting to get lock"))
+        }
+
+        //wait for lock to expire
+        delay(7_500)
+
+        //try to acquire lock again
+        val lock2 = sharedData.getLock(lockName, 1000)
+        lock2.release()
+
+        //clean up locks
+        sharedData.cleanup()
+    }
+
+    @Test
+    fun `ensure locks have ttl`(): Unit = runBlocking {
+        val storage = RedisStorage(vertx)
+        storage.init(JsonObject().put("host", "localhost").put("port", 6379))
+
+        val sharedData = ExpiringSharedData.newBuilder().build<String, String>("ttl-test", storage)
+        val lockName = "lock-test-" + System.currentTimeMillis()
+        sharedData.getLock(lockName, 1000)
+
+        val ttl = storage.redis.ttl("cluster:__vertx:locks:expiring_shared_data:ttl-test:lock:$lockName").await()
+        assertTrue(ttl is NumberType)
+        assertTrue((ttl as NumberType).toNumber().toInt() > 0)
     }
 }

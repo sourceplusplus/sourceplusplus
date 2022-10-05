@@ -41,6 +41,14 @@ open class MemoryStorage(val vertx: Vertx) : CoreStorage {
         return vertx.sharedData().getLock(namespace(name)).await()
     }
 
+    override suspend fun lock(name: String, timeout: Long): Lock {
+        return if (timeout == -1L) {
+            lock(name)
+        } else {
+            vertx.sharedData().getLockWithTimeout(namespace(name), timeout).await()
+        }
+    }
+
     override suspend fun <K, V> map(name: String): AsyncMap<K, V> {
         return vertx.sharedData().getAsyncMap<K, V>(namespace(name)).await()
     }

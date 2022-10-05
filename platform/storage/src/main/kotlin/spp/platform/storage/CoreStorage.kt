@@ -31,6 +31,7 @@ interface CoreStorage {
     suspend fun init(config: JsonObject) = Unit
     suspend fun counter(name: String): Counter
     suspend fun lock(name: String): Lock
+    suspend fun lock(name: String, timeout: Long): Lock
     suspend fun <K, V> map(name: String): AsyncMap<K, V>
     suspend fun <T> get(name: String): T?
     suspend fun <T> put(name: String, value: T)

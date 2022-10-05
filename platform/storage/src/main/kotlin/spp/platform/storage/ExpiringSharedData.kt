@@ -18,22 +18,14 @@
 package spp.platform.storage
 
 import io.vertx.core.Promise
-import io.vertx.core.Vertx
-import io.vertx.core.shareddata.AsyncMap
 import io.vertx.core.shareddata.Lock
 import io.vertx.kotlin.coroutines.await
-import io.vertx.kotlin.coroutines.dispatcher
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 import mu.KotlinLogging
 import java.util.concurrent.TimeUnit
 
 class ExpiringSharedData<K, V> private constructor(
-    vertx: Vertx,
     private val expireAfterWriteNanos: Long = -1,
     private val expireAfterAccessNanos: Long = -1,
-    private val backingMap: AsyncMap<K, V>,
-    private val expirationMap: AsyncMap<K, Long>,
     private val mapId: String,
     private val storage: CoreStorage
 ) {
@@ -47,12 +39,26 @@ class ExpiringSharedData<K, V> private constructor(
     }
 
     private suspend fun getLock(key: K): Lock {
-        return storage.lock("expiring_shared_data:$mapId:lock:$key")
+        return getLock(key, -1)
+    }
+
+    internal suspend fun getLock(key: K, timeout: Long): Lock {
+        val lockName = "expiring_shared_data:$mapId:lock:$key"
+        val lock = storage.lock(lockName, timeout)
+
+        if (storage is RedisStorage) {
+            //add ttl to lock
+            storage.redis.expire(listOf("cluster:__vertx:locks:" + storage.namespace(lockName), "60")).await()
+        }
+
+        return lock
     }
 
     suspend fun getIfPresent(key: K): V? {
         cleanup()
 
+        val backingMap = storage.map<K, V>("expiring_shared_data:$mapId:backing_map")
+        val expirationMap = storage.map<K, Long>("expiring_shared_data:$mapId:expiration_map")
         val lock = getLock(key)
         try {
             val promise = Promise.promise<V?>()
@@ -85,6 +91,8 @@ class ExpiringSharedData<K, V> private constructor(
     suspend fun put(key: K, value: V) {
         cleanup()
 
+        val backingMap = storage.map<K, V>("expiring_shared_data:$mapId:backing_map")
+        val expirationMap = storage.map<K, Long>("expiring_shared_data:$mapId:expiration_map")
         val lock = getLock(key)
         try {
             val promise = Promise.promise<Void>()
@@ -109,17 +117,11 @@ class ExpiringSharedData<K, V> private constructor(
         }
     }
 
-    init {
-        vertx.setPeriodic(5000) {
-            GlobalScope.launch(vertx.dispatcher()) {
-                cleanup()
-            }
-        }
-    }
-
-    private suspend fun cleanup() {
+    internal suspend fun cleanup() {
         val promise = Promise.promise<List<K>>()
         val now = System.nanoTime()
+        val backingMap = storage.map<K, V>("expiring_shared_data:$mapId:backing_map")
+        val expirationMap = storage.map<K, Long>("expiring_shared_data:$mapId:expiration_map")
         expirationMap.entries().onSuccess { entries ->
             val expiredKeys = entries.filter { entry ->
                 val expiration = entry.value
@@ -135,17 +137,19 @@ class ExpiringSharedData<K, V> private constructor(
             promise.fail(it)
         }
 
+        //remove expired keys
         val expiredKeys = promise.future().await()
         expiredKeys.forEach {
             backingMap.remove(it).await()
             expirationMap.remove(it).await()
         }
-        //todo: clean up locks
     }
 
     suspend fun compute(key: K, function: (K, V?) -> V) {
         cleanup()
 
+        val backingMap = storage.map<K, V>("expiring_shared_data:$mapId:backing_map")
+        val expirationMap = storage.map<K, Long>("expiring_shared_data:$mapId:expiration_map")
         val lock = getLock(key)
         try {
             val promise = Promise.promise<Void>()
@@ -185,15 +189,10 @@ class ExpiringSharedData<K, V> private constructor(
             expireAfterAccessNanos = unit.toNanos(duration)
         }
 
-        suspend fun <K, V> build(mapId: String, vertx: Vertx, storage: CoreStorage): ExpiringSharedData<K, V> {
-            val backingMap = storage.map<K, V>("expiring_shared_data:$mapId:backing_map")
-            val expirationMap = storage.map<K, Long>("expiring_shared_data:$mapId:expiration_map")
+        fun <K, V> build(mapId: String, storage: CoreStorage): ExpiringSharedData<K, V> {
             return ExpiringSharedData(
-                vertx,
                 expireAfterWriteNanos,
                 expireAfterAccessNanos,
-                backingMap,
-                expirationMap,
                 mapId,
                 storage
             )
