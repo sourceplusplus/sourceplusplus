@@ -48,9 +48,8 @@ class ThrottleLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         val bpHitCount = AtomicInteger(0)
         val testContext = VertxTestContext()
         onBreakpointHit(-1) {
-            //todo: shouldn't hit 12. pretty sure issue is from use of volatile int instead of atomic int
             testContext.verify {
-                assertTrue(bpHitCount.incrementAndGet() <= 12)
+                assertTrue(bpHitCount.incrementAndGet() <= 10)
             }
         }
 
@@ -79,7 +78,7 @@ class ThrottleLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         }
 
         successOnTimeout(testContext, 20)
-        assertTrue(bpHitCount.get() >= 10, "bpHitCount: ${bpHitCount.get()}")
+        assertTrue(bpHitCount.get() == 10, "bpHitCount: ${bpHitCount.get()}")
 
         //clean up
         assertNotNull(instrumentService.removeLiveInstrument(liveInstrument.id!!).await())
@@ -95,9 +94,8 @@ class ThrottleLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         val bpHitCount = AtomicInteger(0)
         val testContext = VertxTestContext()
         onBreakpointHit(-1) {
-            //todo: shouldn't hit 22. pretty sure issue is from use of volatile int instead of atomic int
             testContext.verify {
-                assertTrue(bpHitCount.incrementAndGet() <= 22)
+                assertTrue(bpHitCount.incrementAndGet() <= 20)
             }
         }
 
@@ -127,7 +125,7 @@ class ThrottleLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         }
 
         successOnTimeout(testContext, 20)
-        assertTrue(bpHitCount.get() >= 20, "bpHitCount: ${bpHitCount.get()}")
+        assertTrue(bpHitCount.get() == 20, "bpHitCount: ${bpHitCount.get()}")
 
         //clean up
         assertNotNull(instrumentService.removeLiveInstrument(liveInstrument.id!!).await())
@@ -173,8 +171,7 @@ class ThrottleLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         }
 
         successOnTimeout(testContext, 20)
-        //todo: should be able to verify at exactly 100
-        assertTrue(bpHitCount.get() >= 95, "bpHitCount: ${bpHitCount.get()}")
+        assertTrue(bpHitCount.get() == 100, "bpHitCount: ${bpHitCount.get()}")
 
         //clean up
         assertNotNull(instrumentService.removeLiveInstrument(liveInstrument.id!!).await())
