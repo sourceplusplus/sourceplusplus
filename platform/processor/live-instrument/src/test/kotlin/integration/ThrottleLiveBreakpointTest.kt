@@ -20,8 +20,7 @@ package integration
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
 import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.LiveSourceLocation
@@ -77,8 +76,8 @@ class ThrottleLiveBreakpointTest : LiveInstrumentIntegrationTest() {
             }
         }
 
-        successOnTimeout(testContext, 20)
-        assertTrue(bpHitCount.get() == 10, "bpHitCount: ${bpHitCount.get()}")
+        successOnTimeout(testContext, 25)
+        assertEquals(10, bpHitCount.get())
 
         //clean up
         assertNotNull(instrumentService.removeLiveInstrument(liveInstrument.id!!).await())
@@ -124,8 +123,8 @@ class ThrottleLiveBreakpointTest : LiveInstrumentIntegrationTest() {
             }
         }
 
-        successOnTimeout(testContext, 20)
-        assertTrue(bpHitCount.get() == 20, "bpHitCount: ${bpHitCount.get()}")
+        successOnTimeout(testContext, 25)
+        assertEquals(20, bpHitCount.get())
 
         //clean up
         assertNotNull(instrumentService.removeLiveInstrument(liveInstrument.id!!).await())
@@ -170,8 +169,8 @@ class ThrottleLiveBreakpointTest : LiveInstrumentIntegrationTest() {
             }
         }
 
-        successOnTimeout(testContext, 20)
-        assertTrue(bpHitCount.get() == 100, "bpHitCount: ${bpHitCount.get()}")
+        successOnTimeout(testContext, 25)
+        assertEquals(100, bpHitCount.get())
 
         //clean up
         assertNotNull(instrumentService.removeLiveInstrument(liveInstrument.id!!).await())
