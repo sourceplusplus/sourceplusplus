@@ -54,3 +54,7 @@
 	path = demos/nodejs
 	url = https://github.com/sourceplusplus/demo-nodejs
 	branch = master
+[submodule "demos/python"]
+	path = demos/python
+	url = https://github.com/sourceplusplus/demo-python
+	branch = master
