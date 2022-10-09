@@ -30,14 +30,6 @@
 	path = interfaces/booster-ui
 	url = https://github.com/sourceplusplus/interface-booster-ui
 	branch = master
-[submodule "tutorials/python"]
-	path = tutorials/python
-	url = https://github.com/sourceplusplus/tutorial-python
-	branch = master
-[submodule "tutorials/jvm"]
-	path = tutorials/jvm
-	url = https://github.com/sourceplusplus/tutorial-jvm
-	branch = master
 [submodule "documentation"]
 	path = documentation
 	url = https://github.com/sourceplusplus/documentation
