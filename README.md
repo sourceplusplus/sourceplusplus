@@ -77,7 +77,7 @@ The Source++ documentation is available [here](https://docs.sourceplus.plus).
     ├── java                  # Java demo
     ├── kotlin                # Kotlin demo
     ├── nodejs                # Node.js demo
-    └── python                # Python tutorial
+    └── python                # Python demo
 ├── docker                    # Docker setup files
     ├── e2e                   # End-to-end testing environment
     └── spp-platform          # Live coding server image
