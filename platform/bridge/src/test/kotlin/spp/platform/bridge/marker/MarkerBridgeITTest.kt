@@ -31,9 +31,9 @@ import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import spp.protocol.SourceServices
 import spp.protocol.platform.PlatformAddress.MARKER_CONNECTED
 import spp.protocol.platform.status.InstanceConnection
+import spp.protocol.service.SourceServices
 import java.util.*
 
 class MarkerBridgeITTest : PlatformIntegrationTest() {

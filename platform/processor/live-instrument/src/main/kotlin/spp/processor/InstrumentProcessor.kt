@@ -39,13 +39,13 @@ import org.slf4j.LoggerFactory
 import spp.platform.common.ClusterConnection.discovery
 import spp.platform.common.FeedbackProcessor
 import spp.processor.live.impl.LiveInstrumentServiceImpl
-import spp.protocol.SourceServices
 import spp.protocol.platform.auth.AccessChecker
 import spp.protocol.platform.auth.RolePermission
 import spp.protocol.platform.auth.RolePermission.*
 import spp.protocol.platform.developer.SelfInfo
 import spp.protocol.service.LiveInstrumentService
 import spp.protocol.service.LiveManagementService
+import spp.protocol.service.SourceServices
 import spp.protocol.service.error.InstrumentAccessDenied
 import spp.protocol.service.error.PermissionAccessDenied
 import kotlin.system.exitProcess

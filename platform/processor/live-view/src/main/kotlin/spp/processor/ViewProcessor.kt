@@ -40,8 +40,8 @@ import spp.platform.common.FeedbackProcessor
 import spp.platform.storage.ExpiringSharedData
 import spp.processor.live.impl.LiveViewServiceImpl
 import spp.processor.live.impl.view.model.ClusterMetrics
-import spp.protocol.SourceServices
 import spp.protocol.service.LiveViewService
+import spp.protocol.service.SourceServices
 import kotlin.system.exitProcess
 
 object ViewProcessor : FeedbackProcessor() {

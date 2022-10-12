@@ -39,9 +39,9 @@ import spp.processor.live.impl.view.LiveTracesView
 import spp.processor.live.impl.view.util.EntitySubscribersCache
 import spp.processor.live.impl.view.util.MetricTypeSubscriptionCache
 import spp.processor.live.impl.view.util.ViewSubscriber
-import spp.protocol.SourceServices.Subscribe.toLiveViewSubscriberAddress
 import spp.protocol.platform.PlatformAddress.MARKER_DISCONNECTED
 import spp.protocol.service.LiveViewService
+import spp.protocol.service.SourceServices.Subscribe.toLiveViewSubscriberAddress
 import spp.protocol.view.LiveView
 import spp.protocol.view.LiveViewEvent
 import java.util.*
