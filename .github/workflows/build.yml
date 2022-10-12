@@ -218,6 +218,6 @@ jobs:
 
     steps:
       - name: Delete spp-platform
-        uses: geekyeggo/delete-artifact@v1
+        uses: geekyeggo/delete-artifact@v2
         with:
           name: spp-platform-${{ needs.jvm-build.outputs.release_version }}.tar.gz
