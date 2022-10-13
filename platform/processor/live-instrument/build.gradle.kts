@@ -19,7 +19,10 @@ dependencies {
 
 tasks {
     test {
-        jvmArgs = listOf("-javaagent:${rootProject.projectDir}/docker/e2e/spp-probe-$version.jar=${project.projectDir}/src/test/resources/spp-test-probe.yml")
+        val probeJar = "${rootProject.projectDir}/docker/e2e/spp-probe-$version.jar"
+        if (System.getProperty("test.profile") == "integration" || file(probeJar).exists()) {
+            jvmArgs = listOf("-javaagent:$probeJar=${project.projectDir}/src/test/resources/spp-test-probe.yml")
+        }
     }
 
     withType<JavaCompile> {

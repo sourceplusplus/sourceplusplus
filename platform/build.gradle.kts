@@ -161,7 +161,7 @@ subprojects {
         failFast = true
         useJUnitPlatform()
         if (System.getProperty("test.profile") != "integration") {
-            exclude("integration/**")
+            exclude("integration/**", "**/*IntegrationTest.class", "**/*ITTest.class")
         }
 
         testLogging {
