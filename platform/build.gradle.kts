@@ -140,7 +140,7 @@ subprojects {
                 append(
                     licenseHeader.replace(
                         "<one line to give the program's name and a brief idea of what it does.>",
-                        "Source++, the open-source live coding platform."
+                        "Source++, the continuous feedback platform for developers."
                     )
                         .replace("<year>", copyrightYears)
                         .replace(" <name of author>", "CodeBrig, Inc.")
