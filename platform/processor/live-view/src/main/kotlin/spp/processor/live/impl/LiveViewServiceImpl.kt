@@ -33,9 +33,9 @@ import org.slf4j.LoggerFactory
 import spp.platform.common.DeveloperAuth
 import spp.platform.common.FeedbackProcessor
 import spp.processor.ViewProcessor
-import spp.processor.live.impl.view.LiveLogsView
+import spp.processor.live.impl.view.LiveLogView
 import spp.processor.live.impl.view.LiveMeterView
-import spp.processor.live.impl.view.LiveTracesView
+import spp.processor.live.impl.view.LiveTraceView
 import spp.processor.live.impl.view.util.EntitySubscribersCache
 import spp.processor.live.impl.view.util.MetricTypeSubscriptionCache
 import spp.processor.live.impl.view.util.ViewSubscriber
@@ -55,8 +55,8 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
     //todo: use ExpiringSharedData
     private val subscriptionCache = MetricTypeSubscriptionCache()
     val meterView = LiveMeterView(subscriptionCache)
-    val tracesView = LiveTracesView(subscriptionCache)
-    val logsView = LiveLogsView(subscriptionCache)
+    val traceView = LiveTraceView(subscriptionCache)
+    val logView = LiveLogView(subscriptionCache)
 
     override suspend fun start() {
         log.info("Starting LiveViewServiceImpl")
@@ -67,12 +67,12 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
         val listenerManagerField = segmentParserService.javaClass.getDeclaredField("listenerManager")
         listenerManagerField.trySetAccessible()
         val listenerManager = listenerManagerField.get(segmentParserService) as SegmentParserListenerManager
-        listenerManager.add(ViewProcessor.liveViewService.tracesView)
+        listenerManager.add(ViewProcessor.liveViewService.traceView)
 
         //live logs view
         val logParserService = FeedbackProcessor.module!!.find(LogAnalyzerModule.NAME)
             .provider().getService(ILogAnalyzerService::class.java) as LogAnalyzerServiceImpl
-        logParserService.addListenerFactory(ViewProcessor.liveViewService.logsView)
+        logParserService.addListenerFactory(ViewProcessor.liveViewService.logView)
 
         vertx.eventBus().consumer<JsonObject>(MARKER_DISCONNECTED) {
             val devAuth = DeveloperAuth.from(it.body())

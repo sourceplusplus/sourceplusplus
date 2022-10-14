@@ -38,12 +38,12 @@ import java.time.Instant
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatterBuilder
 
-class LiveTracesView(
+class LiveTraceView(
     private val subscriptionCache: MetricTypeSubscriptionCache
 ) : AnalysisListenerFactory, EntryAnalysisListener {
 
     companion object {
-        private val log = LoggerFactory.getLogger(LiveTracesView::class.java)
+        private val log = LoggerFactory.getLogger(LiveTraceView::class.java)
 
         private val formatter = DateTimeFormatterBuilder()
             .appendPattern("yyyyMMddHHmm")

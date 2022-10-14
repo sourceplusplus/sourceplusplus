@@ -30,7 +30,7 @@ import java.time.Instant
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatterBuilder
 
-class LiveLogsView(private val subscriptionCache: MetricTypeSubscriptionCache) : LogAnalysisListenerFactory {
+class LiveLogView(private val subscriptionCache: MetricTypeSubscriptionCache) : LogAnalysisListenerFactory {
 
     companion object {
         private val log = KotlinLogging.logger {}
