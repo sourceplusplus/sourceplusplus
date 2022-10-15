@@ -56,8 +56,18 @@ class LiveMeterView(private val subscriptionCache: MetricTypeSubscriptionCache) 
         }
         val subbedArtifacts = subscriptionCache[metricName]
         if (subbedArtifacts != null) {
-            val subs = subbedArtifacts[entityName].orEmpty() +
+            var subs = subbedArtifacts[entityName].orEmpty() +
                     subbedArtifacts[metadata.id].orEmpty() + subbedArtifacts[metricName].orEmpty()
+
+            //remove subscribers with additional filters
+            subs = subs.filter {
+                val service = it.subscription.artifactLocation?.service
+                if (service != null && service != EntityNaming.getServiceId(metrics)) {
+                    return@filter false
+                }
+                return@filter true
+            }.toSet()
+
             if (subs.isNotEmpty()) {
                 log.debug { Msg.msg("Exporting event $metricName to {} subscribers", subs.size) }
                 handleEvent(subs, metrics, realTime)
