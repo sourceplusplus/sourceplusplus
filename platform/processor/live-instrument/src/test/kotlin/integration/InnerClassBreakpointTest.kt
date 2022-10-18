@@ -18,6 +18,8 @@
 package integration
 
 import io.vertx.junit5.VertxTestContext
+import io.vertx.kotlin.coroutines.await
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import spp.protocol.instrument.LiveBreakpoint
@@ -37,7 +39,7 @@ class InnerClassBreakpointTest : LiveInstrumentIntegrationTest() {
     }
 
     @Test
-    fun `inner class`() {
+    fun `inner class`() = runBlocking {
         setupLineLabels {
             InnerClass().doHit()
         }
@@ -59,28 +61,22 @@ class InnerClassBreakpointTest : LiveInstrumentIntegrationTest() {
 
             //test passed
             testContext.completeNow()
-        }.completionHandler {
-            if (it.failed()) {
-                testContext.failNow(it.cause())
-                return@completionHandler
-            }
+        }.completionHandler().await()
 
-            //add live breakpoint
-            instrumentService.addLiveInstrument(
-                LiveBreakpoint(
-                    location = LiveSourceLocation(
-                        InnerClass::class.java.name,
-                        getLineNumber("done"),
-                        "spp-test-probe"
-                    ),
-                    applyImmediately = true
-                )
-            ).onSuccess {
-                InnerClass().doHit() //trigger live breakpoint
-            }.onFailure {
-                testContext.failNow(it)
-            }
-        }
+        //add live breakpoint
+        instrumentService.addLiveInstrument(
+            LiveBreakpoint(
+                location = LiveSourceLocation(
+                    InnerClass::class.java.name,
+                    getLineNumber("done"),
+                    "spp-test-probe"
+                ),
+                applyImmediately = true
+            )
+        ).await()
+
+        //trigger live breakpoint
+        InnerClass().doHit()
 
         errorOnTimeout(testContext)
     }

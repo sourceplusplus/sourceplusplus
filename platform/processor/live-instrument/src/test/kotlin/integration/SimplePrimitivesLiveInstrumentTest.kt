@@ -18,6 +18,8 @@
 package integration
 
 import io.vertx.junit5.VertxTestContext
+import io.vertx.kotlin.coroutines.await
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -43,7 +45,7 @@ class SimplePrimitivesLiveInstrumentTest : LiveInstrumentIntegrationTest() {
     }
 
     @Test
-    fun `primitive values`() {
+    fun `primitive values`() = runBlocking {
         setupLineLabels {
             simplePrimitives()
         }
@@ -124,28 +126,22 @@ class SimplePrimitivesLiveInstrumentTest : LiveInstrumentIntegrationTest() {
 
             //test passed
             testContext.completeNow()
-        }.completionHandler {
-            if (it.failed()) {
-                testContext.failNow(it.cause())
-                return@completionHandler
-            }
+        }.completionHandler().await()
 
-            //add live breakpoint
-            instrumentService.addLiveInstrument(
-                LiveBreakpoint(
-                    location = LiveSourceLocation(
-                        SimplePrimitivesLiveInstrumentTest::class.qualifiedName!!,
-                        getLineNumber("done"),
-                        "spp-test-probe"
-                    ),
-                    applyImmediately = true
-                )
-            ).onSuccess {
-                simplePrimitives() //trigger live breakpoint
-            }.onFailure {
-                testContext.failNow(it)
-            }
-        }
+        //add live breakpoint
+        instrumentService.addLiveInstrument(
+            LiveBreakpoint(
+                location = LiveSourceLocation(
+                    SimplePrimitivesLiveInstrumentTest::class.qualifiedName!!,
+                    getLineNumber("done"),
+                    "spp-test-probe"
+                ),
+                applyImmediately = true
+            )
+        ).await()
+
+        //trigger live breakpoint
+        simplePrimitives()
 
         errorOnTimeout(testContext)
     }

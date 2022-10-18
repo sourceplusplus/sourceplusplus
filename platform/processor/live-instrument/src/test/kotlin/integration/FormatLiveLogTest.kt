@@ -75,7 +75,8 @@ class FormatLiveLogTest : LiveInstrumentIntegrationTest() {
             )
         ).await()
 
-        formatLiveLog() //trigger live log
+        //trigger live log
+        formatLiveLog()
 
         errorOnTimeout(testContext)
     }

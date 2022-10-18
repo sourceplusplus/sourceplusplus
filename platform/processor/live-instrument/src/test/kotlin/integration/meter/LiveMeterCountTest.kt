@@ -107,13 +107,11 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
             }
         }
 
-        instrumentService.addLiveInstrument(liveMeter).onSuccess {
-            //trigger live meter 100 times
-            repeat((0 until 100).count()) {
-                triggerCount()
-            }
-        }.onFailure {
-            testContext.failNow(it)
+        instrumentService.addLiveInstrument(liveMeter).await()
+
+        //trigger live meter 100 times
+        repeat((0 until 100).count()) {
+            triggerCount()
         }
 
         errorOnTimeout(testContext)
@@ -186,13 +184,11 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
             }
         }
 
-        instrumentService.addLiveInstrument(liveMeter).onSuccess {
-            //trigger live meter 100 times
-            repeat((0 until 100).count()) {
-                triggerCount()
-            }
-        }.onFailure {
-            testContext.failNow(it)
+        instrumentService.addLiveInstrument(liveMeter).await()
+
+        //trigger live meter 100 times
+        repeat((0 until 100).count()) {
+            triggerCount()
         }
 
         errorOnTimeout(testContext)

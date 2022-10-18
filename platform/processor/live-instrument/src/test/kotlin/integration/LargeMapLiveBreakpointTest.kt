@@ -20,6 +20,8 @@ package integration
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxTestContext
+import io.vertx.kotlin.coroutines.await
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import spp.protocol.instrument.LiveBreakpoint
@@ -39,7 +41,7 @@ class LargeMapLiveBreakpointTest : LiveInstrumentIntegrationTest() {
     }
 
     @Test
-    fun `large map`() {
+    fun `large map`() = runBlocking {
         setupLineLabels {
             largeMap()
         }
@@ -77,28 +79,22 @@ class LargeMapLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
             //test passed
             testContext.completeNow()
-        }.completionHandler {
-            if (it.failed()) {
-                testContext.failNow(it.cause())
-                return@completionHandler
-            }
+        }.completionHandler().await()
 
-            //add live breakpoint
-            instrumentService.addLiveInstrument(
-                LiveBreakpoint(
-                    location = LiveSourceLocation(
-                        LargeMapLiveBreakpointTest::class.qualifiedName!!,
-                        getLineNumber("done"),
-                        "spp-test-probe"
-                    ),
-                    applyImmediately = true
-                )
-            ).onSuccess {
-                largeMap() //trigger live breakpoint
-            }.onFailure {
-                testContext.failNow(it)
-            }
-        }
+        //add live breakpoint
+        instrumentService.addLiveInstrument(
+            LiveBreakpoint(
+                location = LiveSourceLocation(
+                    LargeMapLiveBreakpointTest::class.qualifiedName!!,
+                    getLineNumber("done"),
+                    "spp-test-probe"
+                ),
+                applyImmediately = true
+            )
+        ).await()
+
+        //trigger live breakpoint
+        largeMap()
 
         errorOnTimeout(testContext)
     }

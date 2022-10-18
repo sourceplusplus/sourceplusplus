@@ -20,6 +20,8 @@ package integration
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxTestContext
+import io.vertx.kotlin.coroutines.await
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import spp.protocol.instrument.LiveBreakpoint
@@ -46,7 +48,7 @@ class CyclicObjectLiveBreakpointTest : LiveInstrumentIntegrationTest() {
     }
 
     @Test
-    fun `cyclic object`() {
+    fun `cyclic object`() = runBlocking {
         setupLineLabels {
             cyclicObject()
         }
@@ -87,28 +89,22 @@ class CyclicObjectLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
             //test passed
             testContext.completeNow()
-        }.completionHandler {
-            if (it.failed()) {
-                testContext.failNow(it.cause())
-                return@completionHandler
-            }
+        }.completionHandler().await()
 
-            //add live breakpoint
-            instrumentService.addLiveInstrument(
-                LiveBreakpoint(
-                    location = LiveSourceLocation(
-                        CyclicObjectLiveBreakpointTest::class.qualifiedName!!,
-                        getLineNumber("done"),
-                        "spp-test-probe"
-                    ),
-                    applyImmediately = true
-                )
-            ).onSuccess {
-                cyclicObject() //trigger live breakpoint
-            }.onFailure {
-                testContext.failNow(it)
-            }
-        }
+        //add live breakpoint
+        instrumentService.addLiveInstrument(
+            LiveBreakpoint(
+                location = LiveSourceLocation(
+                    CyclicObjectLiveBreakpointTest::class.qualifiedName!!,
+                    getLineNumber("done"),
+                    "spp-test-probe"
+                ),
+                applyImmediately = true
+            )
+        ).await()
+
+        //trigger live breakpoint
+        cyclicObject()
 
         errorOnTimeout(testContext)
     }

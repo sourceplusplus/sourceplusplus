@@ -116,11 +116,9 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
             testContext.completeNow()
         }
 
-        instrumentService.addLiveInstrument(liveMeter).onSuccess {
-            triggerGauge()
-        }.onFailure {
-            testContext.failNow(it)
-        }
+        instrumentService.addLiveInstrument(liveMeter).await()
+
+        triggerGauge()
 
         errorOnTimeout(testContext)
 

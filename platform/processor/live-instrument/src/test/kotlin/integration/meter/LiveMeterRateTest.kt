@@ -115,19 +115,17 @@ class LiveMeterRateTest : LiveInstrumentIntegrationTest() {
             }
         }
 
-        instrumentService.addLiveInstrument(liveMeter).onSuccess {
-            vertx.executeBlocking<Void> {
-                runBlocking {
-                    //trigger live meter 100 times once per second
-                    repeat((0 until 100).count()) {
-                        triggerRate()
-                        delay(1000)
-                    }
+        instrumentService.addLiveInstrument(liveMeter).await()
+
+        vertx.executeBlocking<Void> {
+            runBlocking {
+                //trigger live meter 100 times once per second
+                repeat((0 until 100).count()) {
+                    triggerRate()
+                    delay(1000)
                 }
-                it.complete()
             }
-        }.onFailure {
-            testContext.failNow(it)
+            it.complete()
         }
 
         errorOnTimeout(testContext, 150)
@@ -137,6 +135,6 @@ class LiveMeterRateTest : LiveInstrumentIntegrationTest() {
         assertNotNull(instrumentService.removeLiveInstrument(meterId).await())
         assertNotNull(viewService.removeLiveView(subscriptionId).await())
 
-        assertTrue(rate >= 50) //allow for some variance (GH actions are sporadic)
+        assertTrue(rate >= 50, rate.toString()) //allow for some variance (GH actions are sporadic)
     }
 }

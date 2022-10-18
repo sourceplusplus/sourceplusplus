@@ -20,6 +20,8 @@ package integration
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxTestContext
+import io.vertx.kotlin.coroutines.await
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import spp.protocol.instrument.LiveBreakpoint
@@ -36,7 +38,7 @@ class NullArrayLiveBreakpointTest : LiveInstrumentIntegrationTest() {
     }
 
     @Test
-    fun `null array`() {
+    fun `null array`() = runBlocking {
         setupLineLabels {
             nullArray()
         }
@@ -64,28 +66,22 @@ class NullArrayLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
             //test passed
             testContext.completeNow()
-        }.completionHandler {
-            if (it.failed()) {
-                testContext.failNow(it.cause())
-                return@completionHandler
-            }
+        }.completionHandler().await()
 
-            //add live breakpoint
-            instrumentService.addLiveInstrument(
-                LiveBreakpoint(
-                    location = LiveSourceLocation(
-                        NullArrayLiveBreakpointTest::class.qualifiedName!!,
-                        getLineNumber("done"),
-                        "spp-test-probe"
-                    ),
-                    applyImmediately = true
-                )
-            ).onSuccess {
-                nullArray() //trigger live breakpoint
-            }.onFailure {
-                testContext.failNow(it)
-            }
-        }
+        //add live breakpoint
+        instrumentService.addLiveInstrument(
+            LiveBreakpoint(
+                location = LiveSourceLocation(
+                    NullArrayLiveBreakpointTest::class.qualifiedName!!,
+                    getLineNumber("done"),
+                    "spp-test-probe"
+                ),
+                applyImmediately = true
+            )
+        ).await()
+
+        //trigger live breakpoint
+        nullArray()
 
         errorOnTimeout(testContext)
     }
