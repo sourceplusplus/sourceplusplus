@@ -64,9 +64,11 @@ class LiveLogSubscriptionTest : LiveInstrumentIntegrationTest() {
             emptyList(),
             LiveSourceLocation(
                 LiveLogSubscriptionTest::class.qualifiedName!!,
-                getLineNumber("done")
+                getLineNumber("done"),
+                "spp-test-probe"
             ),
-            hitLimit = 5
+            hitLimit = 5,
+            applyImmediately = true
         )
 
         val subscriptionId = viewService.addLiveView(
@@ -100,15 +102,11 @@ class LiveLogSubscriptionTest : LiveInstrumentIntegrationTest() {
             }
         }
 
-        instrumentService.addLiveInstrument(liveLog).onSuccess {
-            vertx.setTimer(5000) {  //todo: have to wait since not applyImmediately
-                for (i in 0 until 5) {
-                    triggerLog()
-                    Thread.sleep(2000)
-                }
-            }
-        }.onFailure {
-            testContext.failNow(it)
+        instrumentService.addLiveInstrument(liveLog).await()
+
+        for (i in 0 until 5) {
+            triggerLog()
+            Thread.sleep(2000)
         }
 
         errorOnTimeout(testContext, 30)

@@ -69,25 +69,25 @@ class RemoveByLocationLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                     location = LiveSourceLocation(
                         RemoveByLocationLiveBreakpointTest::class.qualifiedName!!,
                         getLineNumber("line1"),
-                        //"spp-test-probe" //todo: impl this so applyImmediately can be used
+                        //"spp-test-probe"
                     ),
                     hitLimit = 2,
-                    //applyImmediately = true //todo: can't use applyImmediately
+                    //applyImmediately = true
                 ),
                 LiveBreakpoint(
                     location = LiveSourceLocation(
                         RemoveByLocationLiveBreakpointTest::class.qualifiedName!!,
                         getLineNumber("line2"),
-                        //"spp-test-probe" //todo: impl this so applyImmediately can be used
+                        //"spp-test-probe"
                     ),
                     hitLimit = 2,
-                    //applyImmediately = true //todo: can't use applyImmediately
+                    //applyImmediately = true
                 )
             )
         ).await()
 
         //trigger live breakpoint
-        vertx.setTimer(5000) { //todo: have to wait since not applyImmediately
+        vertx.setTimer(5000) { //todo: wait since applyImmediately doesn't work on multi adds
             removeMultipleByLine()
         }
 
