@@ -224,6 +224,8 @@ class LiveManagementServiceImpl(private val vertx: Vertx) : LiveManagementServic
                         InstanceConnection(JsonObject.mapFrom(it))
                     }
                 )
+            } else {
+                promise.fail("Bridge service is not available")
             }
         }
         return promise.future()
@@ -310,6 +312,8 @@ class LiveManagementServiceImpl(private val vertx: Vertx) : LiveManagementServic
             if (bridgeService != null) {
                 val instance = bridgeService.updateActiveProbeMetadata(id, metadata).await()
                 promise.complete(InstanceConnection(JsonObject.mapFrom(instance)))
+            } else {
+                promise.fail("Bridge service is not available")
             }
         }
         return promise.future()
