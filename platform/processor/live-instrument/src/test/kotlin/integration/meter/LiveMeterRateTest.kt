@@ -69,11 +69,11 @@ class LiveMeterRateTest : LiveInstrumentIntegrationTest() {
             location = LiveSourceLocation(
                 LiveMeterRateTest::class.qualifiedName!!,
                 getLineNumber("done"),
-                //"spp-test-probe" //todo: impl this so applyImmediately can be used
+                "spp-test-probe"
             ),
             id = meterId,
-            meta = mapOf("metric.mode" to "RATE")
-            //applyImmediately = true //todo: can't use applyImmediately
+            meta = mapOf("metric.mode" to "RATE"),
+            applyImmediately = true
         )
 
         val subscriptionId = viewService.addLiveView(
@@ -116,17 +116,15 @@ class LiveMeterRateTest : LiveInstrumentIntegrationTest() {
         }
 
         instrumentService.addLiveInstrument(liveMeter).onSuccess {
-            vertx.setTimer(5000) { //todo: have to wait since not applyImmediately
-                vertx.executeBlocking<Void> {
-                    runBlocking {
-                        //trigger live meter 100 times once per second
-                        repeat((0 until 100).count()) {
-                            triggerRate()
-                            delay(1000)
-                        }
+            vertx.executeBlocking<Void> {
+                runBlocking {
+                    //trigger live meter 100 times once per second
+                    repeat((0 until 100).count()) {
+                        triggerRate()
+                        delay(1000)
                     }
-                    it.complete()
                 }
+                it.complete()
             }
         }.onFailure {
             testContext.failNow(it)

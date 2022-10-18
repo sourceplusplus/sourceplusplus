@@ -89,15 +89,12 @@ class LargeMapLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                     location = LiveSourceLocation(
                         LargeMapLiveBreakpointTest::class.qualifiedName!!,
                         getLineNumber("done"),
-                        //"spp-test-probe" //todo: impl this so applyImmediately can be used
+                        "spp-test-probe"
                     ),
-                    //applyImmediately = true //todo: can't use applyImmediately
+                    applyImmediately = true
                 )
             ).onSuccess {
-                //trigger live breakpoint
-                vertx.setTimer(5000) { //todo: have to wait since not applyImmediately
-                    largeMap()
-                }
+                largeMap() //trigger live breakpoint
             }.onFailure {
                 testContext.failNow(it)
             }

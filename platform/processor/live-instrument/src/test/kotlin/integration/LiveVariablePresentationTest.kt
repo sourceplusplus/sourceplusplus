@@ -200,12 +200,12 @@ class LiveVariablePresentationTest : LiveInstrumentIntegrationTest() {
                     location = LiveSourceLocation(
                         LiveVariablePresentationTest::class.qualifiedName!!,
                         getLineNumber("done"),
+                        "spp-test-probe"
                     ),
+                    applyImmediately = true
                 )
             ).onSuccess {
-                vertx.setTimer(5000) {
-                    liveVariablePresentation()
-                }
+                liveVariablePresentation() //trigger live breakpoint
             }.onFailure {
                 testContext.failNow(it)
             }

@@ -58,21 +58,19 @@ class ThrottleLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                 location = LiveSourceLocation(
                     ThrottleLiveBreakpointTest::class.qualifiedName!!,
                     getLineNumber("done"),
-                    //"spp-test-probe" //todo: impl this so applyImmediately can be used
+                    "spp-test-probe"
                 ),
                 hitLimit = -1,
-                //applyImmediately = true //todo: can't use applyImmediately
+                applyImmediately = true
             )
         ).await()
 
         //trigger live breakpoint (100 times)
-        vertx.setTimer(5000) { //todo: have to wait since not applyImmediately
-            val counter = AtomicInteger(0)
-            vertx.setPeriodic(100) {
-                throttleTest()
-                if (counter.incrementAndGet() >= 100) {
-                    vertx.cancelTimer(it)
-                }
+        val counter = AtomicInteger(0)
+        vertx.setPeriodic(100) {
+            throttleTest()
+            if (counter.incrementAndGet() >= 100) {
+                vertx.cancelTimer(it)
             }
         }
 
@@ -104,22 +102,20 @@ class ThrottleLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                 location = LiveSourceLocation(
                     ThrottleLiveBreakpointTest::class.qualifiedName!!,
                     getLineNumber("done"),
-                    //"spp-test-probe" //todo: impl this so applyImmediately can be used
+                    "spp-test-probe"
                 ),
                 hitLimit = -1,
-                throttle = InstrumentThrottle(2, ThrottleStep.SECOND)
-                //applyImmediately = true //todo: can't use applyImmediately
+                throttle = InstrumentThrottle(2, ThrottleStep.SECOND),
+                applyImmediately = true
             )
         ).await()
 
         //trigger live breakpoint (100 times)
-        vertx.setTimer(5000) { //todo: have to wait since not applyImmediately
-            val counter = AtomicInteger(0)
-            vertx.setPeriodic(100) {
-                throttleTest()
-                if (counter.incrementAndGet() >= 100) {
-                    vertx.cancelTimer(it)
-                }
+        val counter = AtomicInteger(0)
+        vertx.setPeriodic(100) {
+            throttleTest()
+            if (counter.incrementAndGet() >= 100) {
+                vertx.cancelTimer(it)
             }
         }
 
@@ -150,22 +146,20 @@ class ThrottleLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                 location = LiveSourceLocation(
                     ThrottleLiveBreakpointTest::class.qualifiedName!!,
                     getLineNumber("done"),
-                    //"spp-test-probe" //todo: impl this so applyImmediately can be used
+                    "spp-test-probe"
                 ),
                 hitLimit = -1,
-                throttle = InstrumentThrottle(1000, ThrottleStep.SECOND) //todo: impl NOP throttle
-                //applyImmediately = true //todo: can't use applyImmediately
+                throttle = InstrumentThrottle(1000, ThrottleStep.SECOND), //todo: impl NOP throttle
+                applyImmediately = true
             )
         ).await()
 
         //trigger live breakpoint (100 times)
-        vertx.setTimer(5000) { //todo: have to wait since not applyImmediately
-            val counter = AtomicInteger(0)
-            vertx.setPeriodic(100) {
-                throttleTest()
-                if (counter.incrementAndGet() >= 100) {
-                    vertx.cancelTimer(it)
-                }
+        val counter = AtomicInteger(0)
+        vertx.setPeriodic(100) {
+            throttleTest()
+            if (counter.incrementAndGet() >= 100) {
+                vertx.cancelTimer(it)
             }
         }
 

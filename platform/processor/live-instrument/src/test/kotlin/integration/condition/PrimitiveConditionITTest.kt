@@ -70,17 +70,15 @@ class PrimitiveConditionITTest : LiveInstrumentIntegrationTest() {
                 location = LiveSourceLocation(
                     PrimitiveConditionITTest::class.qualifiedName!!,
                     getLineNumber("done"),
-                    //"spp-test-probe" //todo: impl this so applyImmediately can be used
+                    "spp-test-probe"
                 ),
-                condition = "staticFields[fieldI] == 100"
-                //applyImmediately = true //todo: can't use applyImmediately
+                condition = "staticFields[fieldI] == 100",
+                applyImmediately = true
             )
         ).await()
 
         //trigger live breakpoint
-        vertx.setTimer(5000) { //todo: have to wait since not applyImmediately
-            primitiveStaticVariable()
-        }
+        primitiveStaticVariable()
 
         errorOnTimeout(testContext)
     }
@@ -102,17 +100,15 @@ class PrimitiveConditionITTest : LiveInstrumentIntegrationTest() {
                 location = LiveSourceLocation(
                     PrimitiveConditionITTest::class.qualifiedName!!,
                     getLineNumber("done"),
-                    //"spp-test-probe" //todo: impl this so applyImmediately can be used
+                    "spp-test-probe"
                 ),
-                condition = "fields[instanceI] == 100"
-                //applyImmediately = true //todo: can't use applyImmediately
+                condition = "fields[instanceI] == 100",
+                applyImmediately = true
             )
         ).await()
 
         //trigger live breakpoint
-        vertx.setTimer(5000) { //todo: have to wait since not applyImmediately
-            primitiveInstanceVariable()
-        }
+        primitiveInstanceVariable()
 
         errorOnTimeout(testContext)
     }
@@ -134,17 +130,15 @@ class PrimitiveConditionITTest : LiveInstrumentIntegrationTest() {
                 location = LiveSourceLocation(
                     PrimitiveConditionITTest::class.qualifiedName!!,
                     getLineNumber("done"),
-                    //"spp-test-probe" //todo: impl this so applyImmediately can be used
+                    "spp-test-probe"
                 ),
-                condition = "localVariables[localI] == 100"
-                //applyImmediately = true //todo: can't use applyImmediately
+                condition = "localVariables[localI] == 100",
+                applyImmediately = true
             )
         ).await()
 
         //trigger live breakpoint
-        vertx.setTimer(5000) { //todo: have to wait since not applyImmediately
-            primitiveLocalVariable()
-        }
+        primitiveLocalVariable()
 
         errorOnTimeout(testContext)
     }

@@ -136,15 +136,12 @@ class SimplePrimitivesLiveInstrumentTest : LiveInstrumentIntegrationTest() {
                     location = LiveSourceLocation(
                         SimplePrimitivesLiveInstrumentTest::class.qualifiedName!!,
                         getLineNumber("done"),
-                        //"spp-test-probe" //todo: impl this so applyImmediately can be used
+                        "spp-test-probe"
                     ),
-                    //applyImmediately = true //todo: can't use applyImmediately
+                    applyImmediately = true
                 )
             ).onSuccess {
-                //trigger live breakpoint
-                vertx.setTimer(5000) { //todo: have to wait since not applyImmediately
-                    simplePrimitives()
-                }
+                simplePrimitives() //trigger live breakpoint
             }.onFailure {
                 testContext.failNow(it)
             }

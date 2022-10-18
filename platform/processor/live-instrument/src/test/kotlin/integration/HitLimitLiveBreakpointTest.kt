@@ -55,21 +55,19 @@ class HitLimitLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                 location = LiveSourceLocation(
                     HitLimitLiveBreakpointTest::class.qualifiedName!!,
                     getLineNumber("done"),
-                    //"spp-test-probe" //todo: impl this so applyImmediately can be used
+                    "spp-test-probe"
                 ),
                 hitLimit = 11,
-                throttle = InstrumentThrottle(100, ThrottleStep.SECOND)
-                //applyImmediately = true //todo: can't use applyImmediately
+                throttle = InstrumentThrottle(100, ThrottleStep.SECOND),
+                applyImmediately = true
             )
         ).await()
 
         //trigger live breakpoint 10 times
-        vertx.setTimer(5000) { //todo: have to wait since not applyImmediately
-            for (i in 0 until 10) {
-                hitLimit()
-            }
-            hitsDoneLatch.countDown()
+        for (i in 0 until 10) {
+            hitLimit()
         }
+        hitsDoneLatch.countDown()
 
         withContext(Dispatchers.IO) {
             hitsDoneLatch.await(10, TimeUnit.SECONDS)

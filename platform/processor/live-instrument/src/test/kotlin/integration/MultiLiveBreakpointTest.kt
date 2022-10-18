@@ -72,24 +72,21 @@ class MultiLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                         location = LiveSourceLocation(
                             MultiLiveBreakpointTest::class.qualifiedName!!,
                             getLineNumber("line1"),
-                            //"spp-test-probe" //todo: impl this so applyImmediately can be used
+                            "spp-test-probe"
                         ),
-                        //applyImmediately = true //todo: can't use applyImmediately
+                        applyImmediately = true
                     ),
                     LiveBreakpoint(
                         location = LiveSourceLocation(
                             MultiLiveBreakpointTest::class.qualifiedName!!,
                             getLineNumber("line1"),
-                            //"spp-test-probe" //todo: impl this so applyImmediately can be used
+                            "spp-test-probe"
                         ),
-                        //applyImmediately = true //todo: can't use applyImmediately
+                        applyImmediately = true
                     )
                 )
             ).onSuccess {
-                //trigger live breakpoint
-                vertx.setTimer(5000) { //todo: have to wait since not applyImmediately
-                    multiLineTest()
-                }
+                multiLineTest() //trigger live breakpoint
             }.onFailure {
                 testContext.failNow(it)
             }
@@ -146,24 +143,21 @@ class MultiLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                         location = LiveSourceLocation(
                             MultiLiveBreakpointTest::class.qualifiedName!!,
                             getLineNumber("line1"),
-                            //"spp-test-probe" //todo: impl this so applyImmediately can be used
+                            "spp-test-probe"
                         ),
-                        //applyImmediately = true //todo: can't use applyImmediately
+                        applyImmediately = true
                     ),
                     LiveBreakpoint(
                         location = LiveSourceLocation(
                             MultiLiveBreakpointTest::class.qualifiedName!!,
                             getLineNumber("line2"),
-                            //"spp-test-probe" //todo: impl this so applyImmediately can be used
+                            "spp-test-probe"
                         ),
-                        //applyImmediately = true //todo: can't use applyImmediately
+                        applyImmediately = true
                     )
                 )
             ).onSuccess {
-                //trigger live breakpoint
-                vertx.setTimer(5000) { //todo: have to wait since not applyImmediately
-                    multiLineTest()
-                }
+                multiLineTest() //trigger live breakpoint
             }.onFailure {
                 testContext.failNow(it)
             }

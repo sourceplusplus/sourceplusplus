@@ -68,17 +68,14 @@ class FormatLiveLogTest : LiveInstrumentIntegrationTest() {
                 location = LiveSourceLocation(
                     FormatLiveLogTest::class.qualifiedName!!,
                     getLineNumber("done"),
-                    //"spp-test-probe" //todo: impl this so applyImmediately can be used
+                    "spp-test-probe"
                 ),
-                hitLimit = 1
-                //applyImmediately = true //todo: can't use applyImmediately
+                hitLimit = 1,
+                applyImmediately = true
             )
         ).await()
 
-        //trigger live log
-        vertx.setTimer(5000) { //todo: have to wait since not applyImmediately
-            formatLiveLog()
-        }
+        formatLiveLog() //trigger live log
 
         errorOnTimeout(testContext)
     }
