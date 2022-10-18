@@ -30,6 +30,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import spp.protocol.platform.PlatformAddress.PROBE_CONNECTED
@@ -219,6 +220,98 @@ class ProbeBridgeITTest : PlatformIntegrationTest() {
             connectPromise.complete()
         }
         connectPromise.future().await()
+
+        //disconnect probe
+        ws.close().await()
+        client.close().await()
+
+        if (testContext.failed()) {
+            throw testContext.causeOfFailure()
+        }
+    }
+
+    @Test
+    fun testUpdateActiveProbeMetadata(): Unit = runBlocking {
+        val testContext = VertxTestContext()
+
+        //connect new probe
+        val client = vertx.createHttpClient(
+            HttpClientOptions()
+                .setDefaultHost("localhost")
+                .setDefaultPort(12800)
+                .setSsl(true)
+                .setTrustAll(true)
+                .setVerifyHost(false)
+        )
+        val wsOptions = WebSocketConnectOptions()
+            .setURI("https://localhost:12800/probe/eventbus/websocket")
+        val ws = client.webSocket(wsOptions).await()
+
+        //send connected message
+        val replyAddress = UUID.randomUUID().toString()
+        val msg = JsonObject()
+            .put("type", "send")
+            .put("address", PROBE_CONNECTED)
+            .put("replyAddress", replyAddress)
+            .put(
+                "headers", JsonObject()
+                    .put("client_id", clientAccess!!.id)
+                    .put("client_secret", clientAccess!!.secret)
+            )
+        val pc = InstanceConnection("testUpdateActiveProbeMetadata", System.currentTimeMillis())
+        msg.put("body", JsonObject.mapFrom(pc))
+        ws.writeFrame(WebSocketFrame.textFrame(msg.encode(), true))
+
+        val connectPromise = Promise.promise<Void>()
+        ws.handler { buff ->
+            val str: String = buff.toString()
+            val received = JsonObject(str)
+            val rec: Any = received.getValue("body")
+            testContext.verify {
+                assertEquals(true, rec)
+            }
+            connectPromise.complete()
+        }
+        connectPromise.future().await()
+
+        delay(2000) //ensure probe is connected
+
+        //get probe metadata
+        val probeConnection = managementService.getActiveProbe("testUpdateActiveProbeMetadata").await()
+        testContext.verify {
+            assertNotNull(probeConnection)
+            assertEquals("testUpdateActiveProbeMetadata", probeConnection!!.instanceId)
+        }
+        val probeMetadata = probeConnection!!.meta
+        assertEquals(emptyMap<String, Any>(), probeMetadata)
+
+        //add probe metadata
+        val result = managementService.updateActiveProbeMetadata(
+            "testUpdateActiveProbeMetadata",
+            JsonObject(mapOf("key" to "value"))
+        ).await()
+        testContext.verify {
+            assertEquals("testUpdateActiveProbeMetadata", result.instanceId)
+            assertEquals(mapOf("key" to "value"), result.meta)
+        }
+
+        //update probe metadata
+        val result2 = managementService.updateActiveProbeMetadata(
+            "testUpdateActiveProbeMetadata",
+            JsonObject(mapOf("key" to "value2"))
+        ).await()
+        testContext.verify {
+            assertEquals("testUpdateActiveProbeMetadata", result2.instanceId)
+            assertEquals(mapOf("key" to "value2"), result2.meta)
+        }
+
+        //get probe metadata
+        val probeConnection2 = managementService.getActiveProbe("testUpdateActiveProbeMetadata").await()
+        testContext.verify {
+            assertNotNull(probeConnection2)
+            assertEquals("testUpdateActiveProbeMetadata", probeConnection2!!.instanceId)
+            assertEquals(mapOf("key" to "value2"), probeConnection2.meta)
+        }
 
         //disconnect probe
         ws.close().await()

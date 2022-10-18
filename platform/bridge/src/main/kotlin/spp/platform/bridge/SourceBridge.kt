@@ -84,4 +84,31 @@ class SourceBridge : CoroutineVerticle(), SourceBridgeService {
         }
         return promise.future()
     }
+
+    override fun updateActiveProbeMetadata(id: String, metadata: JsonObject): Future<JsonObject> {
+        log.trace { "Updating probe metadata for $id" }
+        val promise = Promise.promise<JsonObject>()
+        launch(vertx.dispatcher()) {
+            val map = ProbeBridge.getActiveProbesMap()
+            map.get(id).onSuccess {
+                if (it == null) {
+                    promise.fail("Probe $id not found")
+                } else {
+                    val updatedInstanceConnection = it.apply {
+                        getJsonObject("meta").mergeIn(metadata)
+                    }
+                    map.put(id, it).onSuccess {
+                        promise.complete(updatedInstanceConnection)
+                    }.onFailure {
+                        log.error("Failed to update probe metadata for $id", it)
+                        promise.fail(it)
+                    }
+                }
+            }.onFailure {
+                log.error("Failed to update probe metadata for $id", it)
+                promise.fail(it)
+            }
+        }
+        return promise.future()
+    }
 }
