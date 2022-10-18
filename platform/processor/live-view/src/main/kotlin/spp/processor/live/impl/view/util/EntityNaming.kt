@@ -1,5 +1,5 @@
 /*
- * Source++, the open-source live coding platform.
+ * Source++, the continuous feedback platform for developers.
  * Copyright (C) 2022 CodeBrig, Inc.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -18,8 +18,10 @@
 package spp.processor.live.impl.view.util
 
 import org.apache.skywalking.oap.server.core.analysis.IDManager
+import org.apache.skywalking.oap.server.core.analysis.metrics.Metrics
 import org.apache.skywalking.oap.server.core.analysis.metrics.MetricsMetaInfo
 import org.apache.skywalking.oap.server.core.source.DefaultScopeDefine
+import org.joor.Reflect
 
 object EntityNaming {
 
@@ -93,5 +95,13 @@ object EntityNaming {
         } else {
             null
         }
+    }
+
+    fun getServiceId(metrics: Metrics): String? {
+        val fields = Reflect.on(metrics).fields()
+        if (fields.containsKey("serviceId")) {
+            return fields["serviceId"]?.toString()
+        }
+        return null
     }
 }

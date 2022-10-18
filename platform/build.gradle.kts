@@ -51,7 +51,7 @@ subprojects {
         compileOnly("org.slf4j:slf4j-api:$slf4jVersion")
         implementation("io.vertx:vertx-tcp-eventbus-bridge:$vertxVersion")
         implementation("io.vertx:vertx-web:$vertxVersion")
-        implementation("io.github.microutils:kotlin-logging-jvm:3.0.0")
+        implementation("io.github.microutils:kotlin-logging-jvm:3.0.2")
         implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jacksonVersion")
         implementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:$jacksonVersion")
         implementation("com.fasterxml.jackson.datatype:jackson-datatype-guava:$jacksonVersion")
@@ -140,7 +140,7 @@ subprojects {
                 append(
                     licenseHeader.replace(
                         "<one line to give the program's name and a brief idea of what it does.>",
-                        "Source++, the open-source live coding platform."
+                        "Source++, the continuous feedback platform for developers."
                     )
                         .replace("<year>", copyrightYears)
                         .replace(" <name of author>", "CodeBrig, Inc.")
@@ -161,7 +161,7 @@ subprojects {
         failFast = true
         useJUnitPlatform()
         if (System.getProperty("test.profile") != "integration") {
-            exclude("integration/**")
+            exclude("integration/**", "**/*IntegrationTest.class", "**/*ITTest.class")
         }
 
         testLogging {

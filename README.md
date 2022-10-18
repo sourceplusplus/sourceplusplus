@@ -72,6 +72,12 @@ The Source++ documentation is available [here](https://docs.sourceplus.plus).
 
 ## Directory Structure
 ```graphql
+├── demos                     # Feature demonstrations
+    ├── groovy                # Groovy demo
+    ├── java                  # Java demo
+    ├── kotlin                # Kotlin demo
+    ├── nodejs                # Node.js demo
+    └── python                # Python demo
 ├── docker                    # Docker setup files
     ├── e2e                   # End-to-end testing environment
     └── spp-platform          # Live coding server image
@@ -92,10 +98,7 @@ The Source++ documentation is available [here](https://docs.sourceplus.plus).
     ├── jvm                   # JVM support
     ├── nodejs                # Node.js support
     └── python                # Python support
-├── protocol                  # Communication protocol
-├── tutorials                 # Tutorial projects
-    ├── jvm                   # JVM tutorial
-    └── python                # Python tutorial
+└── protocol                  # Communication protocol
 ```
 
 ## License

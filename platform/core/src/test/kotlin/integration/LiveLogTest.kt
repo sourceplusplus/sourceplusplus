@@ -1,5 +1,5 @@
 /*
- * Source++, the open-source live coding platform.
+ * Source++, the continuous feedback platform for developers.
  * Copyright (C) 2022 CodeBrig, Inc.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -29,13 +29,13 @@ import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.slf4j.LoggerFactory
-import spp.protocol.SourceServices.Subscribe.toLiveInstrumentSubscriberAddress
 import spp.protocol.instrument.LiveLog
 import spp.protocol.instrument.LiveSourceLocation
 import spp.protocol.instrument.event.LiveInstrumentEvent
 import spp.protocol.instrument.event.LiveInstrumentEventType
 import spp.protocol.instrument.event.LiveInstrumentRemoved
 import spp.protocol.marshall.ServiceExceptionConverter
+import spp.protocol.service.SourceServices.Subscribe.toLiveInstrumentSubscriberAddress
 import spp.protocol.service.error.LiveInstrumentException
 import spp.protocol.service.listen.LiveInstrumentListener
 import spp.protocol.service.listen.addLiveInstrumentListener

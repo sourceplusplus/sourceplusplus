@@ -1,5 +1,5 @@
 /*
- * Source++, the open-source live coding platform.
+ * Source++, the continuous feedback platform for developers.
  * Copyright (C) 2022 CodeBrig, Inc.
  *
  * This program is free software: you can redistribute it and/or modify

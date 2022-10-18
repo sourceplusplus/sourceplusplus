@@ -1,5 +1,5 @@
 /*
- * Source++, the open-source live coding platform.
+ * Source++, the continuous feedback platform for developers.
  * Copyright (C) 2022 CodeBrig, Inc.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -27,7 +27,6 @@ import mu.KotlinLogging
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import spp.protocol.SourceServices.Subscribe.toLiveViewSubscriberAddress
 import spp.protocol.artifact.ArtifactQualifiedName
 import spp.protocol.artifact.ArtifactType
 import spp.protocol.instrument.LiveMeter
@@ -35,6 +34,7 @@ import spp.protocol.instrument.LiveSourceLocation
 import spp.protocol.instrument.meter.MeterType
 import spp.protocol.instrument.meter.MetricValue
 import spp.protocol.instrument.meter.MetricValueType
+import spp.protocol.service.SourceServices.Subscribe.toLiveViewSubscriberAddress
 import spp.protocol.view.LiveView
 import spp.protocol.view.LiveViewConfig
 import spp.protocol.view.LiveViewEvent

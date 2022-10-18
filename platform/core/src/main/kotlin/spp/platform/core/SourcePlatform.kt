@@ -1,5 +1,5 @@
 /*
- * Source++, the open-source live coding platform.
+ * Source++, the continuous feedback platform for developers.
  * Copyright (C) 2022 CodeBrig, Inc.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -56,10 +56,10 @@ import spp.platform.common.util.CertsToJksOptionsConverter
 import spp.platform.common.util.SelfSignedCertGenerator
 import spp.platform.core.service.ServiceProvider
 import spp.platform.storage.SourceStorage
-import spp.protocol.SourceServices.LIVE_INSTRUMENT
-import spp.protocol.SourceServices.LIVE_MANAGEMENT_SERVICE
-import spp.protocol.SourceServices.LIVE_VIEW
 import spp.protocol.service.LiveManagementService
+import spp.protocol.service.SourceServices.LIVE_INSTRUMENT
+import spp.protocol.service.SourceServices.LIVE_MANAGEMENT_SERVICE
+import spp.protocol.service.SourceServices.LIVE_VIEW
 import java.io.File
 import java.io.FileWriter
 import java.io.StringReader

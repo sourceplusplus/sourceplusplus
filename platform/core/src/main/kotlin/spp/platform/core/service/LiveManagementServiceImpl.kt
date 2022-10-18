@@ -1,5 +1,5 @@
 /*
- * Source++, the open-source live coding platform.
+ * Source++, the continuous feedback platform for developers.
  * Copyright (C) 2022 CodeBrig, Inc.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -30,7 +30,6 @@ import mu.KotlinLogging
 import spp.platform.common.DeveloperAuth
 import spp.platform.common.service.SourceBridgeService
 import spp.platform.storage.SourceStorage
-import spp.protocol.SourceServices
 import spp.protocol.platform.ProbeAddress
 import spp.protocol.platform.auth.ClientAccess
 import spp.protocol.platform.auth.DeveloperRole
@@ -41,6 +40,7 @@ import spp.protocol.platform.general.Service
 import spp.protocol.platform.status.InstanceConnection
 import spp.protocol.service.LiveManagementService
 import spp.protocol.service.LiveViewService
+import spp.protocol.service.SourceServices
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -224,6 +224,8 @@ class LiveManagementServiceImpl(private val vertx: Vertx) : LiveManagementServic
                         InstanceConnection(JsonObject.mapFrom(it))
                     }
                 )
+            } else {
+                promise.fail("Bridge service is not available")
             }
         }
         return promise.future()
@@ -285,6 +287,34 @@ class LiveManagementServiceImpl(private val vertx: Vertx) : LiveManagementServic
         val promise = Promise.promise<ClientAccess>()
         GlobalScope.launch(vertx.dispatcher()) {
             promise.complete(SourceStorage.refreshClientAccess(id))
+        }
+        return promise.future()
+    }
+
+    override fun getActiveProbe(id: String): Future<InstanceConnection?> {
+        log.trace { "Getting active probe with id: $id" }
+        val promise = Promise.promise<InstanceConnection?>()
+        getActiveProbes().onSuccess {
+            promise.complete(it.find { it.instanceId == id })
+        }.onFailure {
+            log.error("Failed to get active probes", it)
+            promise.fail(it)
+        }
+        return promise.future()
+    }
+
+    override fun updateActiveProbeMetadata(id: String, metadata: JsonObject): Future<InstanceConnection> {
+        log.trace { "Updating active probe metadata with id: $id" }
+        val promise = Promise.promise<InstanceConnection>()
+        GlobalScope.launch(vertx.dispatcher()) {
+            val devAuth = Vertx.currentContext().getLocal<DeveloperAuth>("developer")
+            val bridgeService = SourceBridgeService.service(vertx, devAuth?.accessToken).await()
+            if (bridgeService != null) {
+                val instance = bridgeService.updateActiveProbeMetadata(id, metadata).await()
+                promise.complete(InstanceConnection(JsonObject.mapFrom(instance)))
+            } else {
+                promise.fail("Bridge service is not available")
+            }
         }
         return promise.future()
     }

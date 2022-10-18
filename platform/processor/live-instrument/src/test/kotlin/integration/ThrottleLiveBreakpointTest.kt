@@ -1,5 +1,5 @@
 /*
- * Source++, the open-source live coding platform.
+ * Source++, the continuous feedback platform for developers.
  * Copyright (C) 2022 CodeBrig, Inc.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -48,7 +48,7 @@ class ThrottleLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         val testContext = VertxTestContext()
         onBreakpointHit(-1) {
             testContext.verify {
-                assertTrue(bpHitCount.incrementAndGet() <= 10)
+                assertTrue(bpHitCount.incrementAndGet() <= 11) //allow for some variance
             }
         }
 
@@ -77,7 +77,7 @@ class ThrottleLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         }
 
         successOnTimeout(testContext, 25)
-        assertEquals(10, bpHitCount.get())
+        assertEquals(10.0, bpHitCount.get().toDouble(), 1.0) //allow for some variance
 
         //clean up
         assertNotNull(instrumentService.removeLiveInstrument(liveInstrument.id!!).await())
@@ -124,7 +124,7 @@ class ThrottleLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         }
 
         successOnTimeout(testContext, 25)
-        assertEquals(20, bpHitCount.get())
+        assertEquals(20.0, bpHitCount.get().toDouble(), 1.0) //allow for some variance
 
         //clean up
         assertNotNull(instrumentService.removeLiveInstrument(liveInstrument.id!!).await())

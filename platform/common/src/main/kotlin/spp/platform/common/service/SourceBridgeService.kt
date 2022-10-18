@@ -1,5 +1,5 @@
 /*
- * Source++, the open-source live coding platform.
+ * Source++, the continuous feedback platform for developers.
  * Copyright (C) 2022 CodeBrig, Inc.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -67,4 +67,5 @@ interface SourceBridgeService {
     fun getActiveProbes(): Future<JsonArray>
     fun getConnectedMarkers(): Future<Int>
     fun getConnectedProbes(): Future<Int>
+    fun updateActiveProbeMetadata(id: String, metadata: JsonObject): Future<JsonObject>
 }

@@ -1,5 +1,5 @@
 /*
- * Source++, the open-source live coding platform.
+ * Source++, the continuous feedback platform for developers.
  * Copyright (C) 2022 CodeBrig, Inc.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -38,12 +38,12 @@ import java.time.Instant
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatterBuilder
 
-class LiveTracesView(
+class LiveTraceView(
     private val subscriptionCache: MetricTypeSubscriptionCache
 ) : AnalysisListenerFactory, EntryAnalysisListener {
 
     companion object {
-        private val log = LoggerFactory.getLogger(LiveTracesView::class.java)
+        private val log = LoggerFactory.getLogger(LiveTraceView::class.java)
 
         private val formatter = DateTimeFormatterBuilder()
             .appendPattern("yyyyMMddHHmm")

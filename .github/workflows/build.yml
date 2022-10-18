@@ -21,7 +21,7 @@ jobs:
     if: ${{ !contains(github.event.pull_request.head.ref, '#docs') && !(startsWith(github.event.head_commit.message, 'Merge pull request') && contains(github.event.head_commit.message, '#docs')) }}
 
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 40
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}
       cancel-in-progress: true
@@ -218,6 +218,6 @@ jobs:
 
     steps:
       - name: Delete spp-platform
-        uses: geekyeggo/delete-artifact@v1
+        uses: geekyeggo/delete-artifact@v2
         with:
           name: spp-platform-${{ needs.jvm-build.outputs.release_version }}.tar.gz

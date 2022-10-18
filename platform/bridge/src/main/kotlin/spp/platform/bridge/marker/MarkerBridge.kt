@@ -1,5 +1,5 @@
 /*
- * Source++, the open-source live coding platform.
+ * Source++, the continuous feedback platform for developers.
  * Copyright (C) 2022 CodeBrig, Inc.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -40,13 +40,13 @@ import spp.platform.common.ClusterConnection
 import spp.platform.common.ClusterConnection.router
 import spp.platform.common.DeveloperAuth
 import spp.platform.storage.SourceStorage
-import spp.protocol.SourceServices.LIVE_INSTRUMENT
-import spp.protocol.SourceServices.LIVE_MANAGEMENT_SERVICE
-import spp.protocol.SourceServices.LIVE_VIEW
-import spp.protocol.SourceServices.Subscribe
 import spp.protocol.platform.PlatformAddress.MARKER_CONNECTED
 import spp.protocol.platform.PlatformAddress.MARKER_DISCONNECTED
 import spp.protocol.platform.status.InstanceConnection
+import spp.protocol.service.SourceServices.LIVE_INSTRUMENT
+import spp.protocol.service.SourceServices.LIVE_MANAGEMENT_SERVICE
+import spp.protocol.service.SourceServices.LIVE_VIEW
+import spp.protocol.service.SourceServices.Subscribe
 import java.time.Duration
 import java.time.Instant
 

@@ -1,5 +1,5 @@
 /*
- * Source++, the open-source live coding platform.
+ * Source++, the continuous feedback platform for developers.
  * Copyright (C) 2022 CodeBrig, Inc.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -41,8 +41,8 @@ import spp.platform.storage.ExpiringSharedData
 import spp.platform.storage.SourceStorage
 import spp.processor.live.impl.LiveViewServiceImpl
 import spp.processor.live.impl.view.model.ClusterMetrics
-import spp.protocol.SourceServices
 import spp.protocol.service.LiveViewService
+import spp.protocol.service.SourceServices
 import java.util.concurrent.TimeUnit
 import kotlin.system.exitProcess
 

@@ -1,5 +1,5 @@
 /*
- * Source++, the open-source live coding platform.
+ * Source++, the continuous feedback platform for developers.
  * Copyright (C) 2022 CodeBrig, Inc.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -30,7 +30,7 @@ import java.time.Instant
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatterBuilder
 
-class LiveLogsView(private val subscriptionCache: MetricTypeSubscriptionCache) : LogAnalysisListenerFactory {
+class LiveLogView(private val subscriptionCache: MetricTypeSubscriptionCache) : LogAnalysisListenerFactory {
 
     companion object {
         private val log = KotlinLogging.logger {}

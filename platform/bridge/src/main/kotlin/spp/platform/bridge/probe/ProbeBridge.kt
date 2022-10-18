@@ -1,5 +1,5 @@
 /*
- * Source++, the open-source live coding platform.
+ * Source++, the continuous feedback platform for developers.
  * Copyright (C) 2022 CodeBrig, Inc.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -26,6 +26,7 @@ import io.vertx.core.json.Json
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import io.vertx.core.net.NetServerOptions
+import io.vertx.core.shareddata.AsyncMap
 import io.vertx.ext.auth.jwt.JWTAuth
 import io.vertx.ext.bridge.BaseBridgeEvent
 import io.vertx.ext.bridge.BridgeEventType.*
@@ -68,6 +69,10 @@ class ProbeBridge(
     companion object {
         private val log = KotlinLogging.logger {}
         private val PING_MESSAGE = Buffer.buffer("\u0000\u0000\u0000\u0010{\"type\": \"ping\"}".toByteArray())
+
+        suspend fun getActiveProbesMap(): AsyncMap<String, JsonObject> {
+            return SourceStorage.map(BridgeAddress.ACTIVE_PROBES)
+        }
     }
 
     override suspend fun start() {
@@ -94,7 +99,7 @@ class ProbeBridge(
                 }
 
                 launch(vertx.dispatcher()) {
-                    val map = SourceStorage.map<String, JsonObject>(BridgeAddress.ACTIVE_PROBES)
+                    val map = getActiveProbesMap()
                     map.get(probeId).onSuccess {
                         val updatedInstanceConnection = it
                         val remotes = updatedInstanceConnection.getJsonObject("meta").getJsonArray("remotes")
@@ -125,7 +130,7 @@ class ProbeBridge(
             log.debug { Msg.msg("Establishing connection with probe {}", conn.instanceId) }
 
             launch(vertx.dispatcher()) {
-                val map = SourceStorage.map<String, JsonObject>(BridgeAddress.ACTIVE_PROBES)
+                val map = getActiveProbesMap()
                 map.put(conn.instanceId, JsonObject.mapFrom(conn.copy(connectionTime = connectionTime))).onSuccess {
                     map.size().onSuccess {
                         log.info("Probe connected. Latency: {}ms - Probes connected: {}", latency, it)
@@ -145,7 +150,7 @@ class ProbeBridge(
         vertx.eventBus().consumer<JsonObject>(PlatformAddress.PROBE_DISCONNECTED) {
             val conn = InstanceConnection(it.body())
             launch(vertx.dispatcher()) {
-                val map = SourceStorage.map<String, JsonObject>(BridgeAddress.ACTIVE_PROBES)
+                val map = getActiveProbesMap()
                 val activeProbe = map.remove(conn.instanceId).await()
                 val connectionTime = Instant.ofEpochMilli(activeProbe.getLong("connectionTime"))
                 val connectionDuration = Duration.between(Instant.now(), connectionTime)

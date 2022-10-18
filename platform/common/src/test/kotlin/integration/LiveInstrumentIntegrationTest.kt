@@ -1,5 +1,5 @@
 /*
- * Source++, the open-source live coding platform.
+ * Source++, the continuous feedback platform for developers.
  * Copyright (C) 2022 CodeBrig, Inc.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -22,11 +22,11 @@ import io.vertx.core.json.Json
 import io.vertx.core.json.JsonObject
 import mu.KotlinLogging
 import org.joor.Reflect
-import spp.protocol.SourceServices.Subscribe.toLiveInstrumentSubscriberAddress
 import spp.protocol.instrument.event.LiveBreakpointHit
 import spp.protocol.instrument.event.LiveInstrumentEvent
 import spp.protocol.instrument.event.LiveInstrumentEventType
 import spp.protocol.instrument.event.LiveLogHit
+import spp.protocol.service.SourceServices.Subscribe.toLiveInstrumentSubscriberAddress
 import java.util.concurrent.atomic.AtomicInteger
 
 abstract class LiveInstrumentIntegrationTest : PlatformIntegrationTest() {
