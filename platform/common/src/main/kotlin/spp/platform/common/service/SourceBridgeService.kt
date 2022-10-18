@@ -67,4 +67,5 @@ interface SourceBridgeService {
     fun getActiveProbes(): Future<JsonArray>
     fun getConnectedMarkers(): Future<Int>
     fun getConnectedProbes(): Future<Int>
+    fun updateActiveProbeMetadata(id: String, metadata: JsonObject): Future<JsonObject>
 }

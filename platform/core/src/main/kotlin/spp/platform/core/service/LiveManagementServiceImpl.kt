@@ -224,6 +224,8 @@ class LiveManagementServiceImpl(private val vertx: Vertx) : LiveManagementServic
                         InstanceConnection(JsonObject.mapFrom(it))
                     }
                 )
+            } else {
+                promise.fail("Bridge service is not available")
             }
         }
         return promise.future()
@@ -285,6 +287,34 @@ class LiveManagementServiceImpl(private val vertx: Vertx) : LiveManagementServic
         val promise = Promise.promise<ClientAccess>()
         GlobalScope.launch(vertx.dispatcher()) {
             promise.complete(SourceStorage.refreshClientAccess(id))
+        }
+        return promise.future()
+    }
+
+    override fun getActiveProbe(id: String): Future<InstanceConnection?> {
+        log.trace { "Getting active probe with id: $id" }
+        val promise = Promise.promise<InstanceConnection?>()
+        getActiveProbes().onSuccess {
+            promise.complete(it.find { it.instanceId == id })
+        }.onFailure {
+            log.error("Failed to get active probes", it)
+            promise.fail(it)
+        }
+        return promise.future()
+    }
+
+    override fun updateActiveProbeMetadata(id: String, metadata: JsonObject): Future<InstanceConnection> {
+        log.trace { "Updating active probe metadata with id: $id" }
+        val promise = Promise.promise<InstanceConnection>()
+        GlobalScope.launch(vertx.dispatcher()) {
+            val devAuth = Vertx.currentContext().getLocal<DeveloperAuth>("developer")
+            val bridgeService = SourceBridgeService.service(vertx, devAuth?.accessToken).await()
+            if (bridgeService != null) {
+                val instance = bridgeService.updateActiveProbeMetadata(id, metadata).await()
+                promise.complete(InstanceConnection(JsonObject.mapFrom(instance)))
+            } else {
+                promise.fail("Bridge service is not available")
+            }
         }
         return promise.future()
     }
