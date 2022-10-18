@@ -20,6 +20,8 @@ package integration
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxTestContext
+import io.vertx.kotlin.coroutines.await
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import spp.protocol.instrument.LiveBreakpoint
@@ -38,7 +40,7 @@ class LargeArrayLiveBreakpointTest : LiveInstrumentIntegrationTest() {
     }
 
     @Test
-    fun `large array`() {
+    fun `large array`() = runBlocking {
         setupLineLabels {
             largeArray()
         }
@@ -72,31 +74,23 @@ class LargeArrayLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
             //test passed
             testContext.completeNow()
-        }.completionHandler {
-            if (it.failed()) {
-                testContext.failNow(it.cause())
-                return@completionHandler
-            }
+        }.completionHandler().await()
 
-            //add live breakpoint
-            instrumentService.addLiveInstrument(
-                LiveBreakpoint(
-                    location = LiveSourceLocation(
-                        LargeArrayLiveBreakpointTest::class.qualifiedName!!,
-                        getLineNumber("done"),
-                        //"spp-test-probe" //todo: impl this so applyImmediately can be used
-                    ),
-                    //applyImmediately = true //todo: can't use applyImmediately
-                )
-            ).onSuccess {
-                //trigger live breakpoint
-                vertx.setTimer(5000) { //todo: have to wait since not applyImmediately
-                    largeArray()
-                }
-            }.onFailure {
-                testContext.failNow(it)
-            }
-        }
+        //add live breakpoint
+        instrumentService.addLiveInstrument(
+            LiveBreakpoint(
+                id = "large-array-bp",
+                location = LiveSourceLocation(
+                    LargeArrayLiveBreakpointTest::class.qualifiedName!!,
+                    getLineNumber("done"),
+                    "spp-test-probe"
+                ),
+                applyImmediately = true
+            )
+        ).await()
+
+        //trigger live breakpoint
+        largeArray()
 
         errorOnTimeout(testContext)
     }

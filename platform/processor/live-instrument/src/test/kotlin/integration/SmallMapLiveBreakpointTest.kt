@@ -19,6 +19,8 @@ package integration
 
 import io.vertx.core.json.JsonArray
 import io.vertx.junit5.VertxTestContext
+import io.vertx.kotlin.coroutines.await
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
@@ -59,7 +61,7 @@ class SmallMapLiveBreakpointTest : LiveInstrumentIntegrationTest() {
     }
 
     @Test
-    fun `small map with null value`() {
+    fun `small map with null value`() = runBlocking {
         setupLineLabels {
             smallMapNullValue()
         }
@@ -92,38 +94,29 @@ class SmallMapLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
             //test passed
             testContext.completeNow()
-        }.completionHandler {
-            if (it.failed()) {
-                testContext.failNow(it.cause())
-                return@completionHandler
-            }
+        }.completionHandler().await()
 
-            //add live breakpoint
-            instrumentService.addLiveInstrument(
-                LiveBreakpoint(
-                    location = LiveSourceLocation(
-                        SmallMapLiveBreakpointTest::class.qualifiedName!!,
-                        getLineNumber("done"),
-                        //"spp-test-probe" //todo: impl this so applyImmediately can be used
-                    ),
-                    //applyImmediately = true //todo: can't use applyImmediately
-                )
-            ).onSuccess {
-                //trigger live breakpoint
-                vertx.setTimer(5000) { //todo: have to wait since not applyImmediately
-                    smallMapNullValue()
-                }
-            }.onFailure {
-                testContext.failNow(it)
-            }
-        }
+        //add live breakpoint
+        instrumentService.addLiveInstrument(
+            LiveBreakpoint(
+                location = LiveSourceLocation(
+                    SmallMapLiveBreakpointTest::class.qualifiedName!!,
+                    getLineNumber("done"),
+                    "spp-test-probe"
+                ),
+                applyImmediately = true
+            )
+        ).await()
+
+        //trigger live breakpoint
+        smallMapNullValue()
 
         errorOnTimeout(testContext)
     }
 
     @Test
     @Disabled("Non-string keys are not supported") //todo: fix this
-    fun `small map with int key`() {
+    fun `small map with int key`() = runBlocking {
         setupLineLabels {
             smallMapIntKey()
         }
@@ -155,37 +148,28 @@ class SmallMapLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
             //test passed
             testContext.completeNow()
-        }.completionHandler {
-            if (it.failed()) {
-                testContext.failNow(it.cause())
-                return@completionHandler
-            }
+        }.completionHandler().await()
 
-            //add live breakpoint
-            instrumentService.addLiveInstrument(
-                LiveBreakpoint(
-                    location = LiveSourceLocation(
-                        SmallMapLiveBreakpointTest::class.qualifiedName!!,
-                        getLineNumber("done"),
-                        //"spp-test-probe" //todo: impl this so applyImmediately can be used
-                    ),
-                    //applyImmediately = true //todo: can't use applyImmediately
-                )
-            ).onSuccess {
-                //trigger live breakpoint
-                vertx.setTimer(5000) { //todo: have to wait since not applyImmediately
-                    smallMapIntKey()
-                }
-            }.onFailure {
-                testContext.failNow(it)
-            }
-        }
+        //add live breakpoint
+        instrumentService.addLiveInstrument(
+            LiveBreakpoint(
+                location = LiveSourceLocation(
+                    SmallMapLiveBreakpointTest::class.qualifiedName!!,
+                    getLineNumber("done"),
+                    "spp-test-probe"
+                ),
+                applyImmediately = true
+            )
+        ).await()
+
+        //trigger live breakpoint
+        smallMapIntKey()
 
         errorOnTimeout(testContext)
     }
 
     @Test
-    fun `small map with string key`() {
+    fun `small map with string key`() = runBlocking {
         setupLineLabels {
             smallMapStringKey()
         }
@@ -218,31 +202,22 @@ class SmallMapLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
             //test passed
             testContext.completeNow()
-        }.completionHandler {
-            if (it.failed()) {
-                testContext.failNow(it.cause())
-                return@completionHandler
-            }
+        }.completionHandler().await()
 
-            //add live breakpoint
-            instrumentService.addLiveInstrument(
-                LiveBreakpoint(
-                    location = LiveSourceLocation(
-                        SmallMapLiveBreakpointTest::class.qualifiedName!!,
-                        getLineNumber("done"),
-                        //"spp-test-probe" //todo: impl this so applyImmediately can be used
-                    ),
-                    //applyImmediately = true //todo: can't use applyImmediately
-                )
-            ).onSuccess {
-                //trigger live breakpoint
-                vertx.setTimer(5000) { //todo: have to wait since not applyImmediately
-                    smallMapStringKey()
-                }
-            }.onFailure {
-                testContext.failNow(it)
-            }
-        }
+        //add live breakpoint
+        instrumentService.addLiveInstrument(
+            LiveBreakpoint(
+                location = LiveSourceLocation(
+                    SmallMapLiveBreakpointTest::class.qualifiedName!!,
+                    getLineNumber("done"),
+                    "spp-test-probe"
+                ),
+                applyImmediately = true
+            )
+        ).await()
+
+        //trigger live breakpoint
+        smallMapStringKey()
 
         errorOnTimeout(testContext)
     }

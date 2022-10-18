@@ -60,42 +60,35 @@ class RemoveByLocationLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                     gotAllHitsLatch.countDown()
                 }
             }
-        }.completionHandler {
-            if (it.failed()) {
-                testContext.failNow(it.cause())
-                return@completionHandler
-            }
+        }.completionHandler().await()
 
-            //add live breakpoint
-            instrumentService.addLiveInstruments(
-                listOf(
-                    LiveBreakpoint(
-                        location = LiveSourceLocation(
-                            RemoveByLocationLiveBreakpointTest::class.qualifiedName!!,
-                            getLineNumber("line1"),
-                            //"spp-test-probe" //todo: impl this so applyImmediately can be used
-                        ),
-                        hitLimit = 2,
-                        //applyImmediately = true //todo: can't use applyImmediately
+        //add live breakpoint
+        instrumentService.addLiveInstruments(
+            listOf(
+                LiveBreakpoint(
+                    location = LiveSourceLocation(
+                        RemoveByLocationLiveBreakpointTest::class.qualifiedName!!,
+                        getLineNumber("line1"),
+                        //"spp-test-probe"
                     ),
-                    LiveBreakpoint(
-                        location = LiveSourceLocation(
-                            RemoveByLocationLiveBreakpointTest::class.qualifiedName!!,
-                            getLineNumber("line2"),
-                            //"spp-test-probe" //todo: impl this so applyImmediately can be used
-                        ),
-                        hitLimit = 2,
-                        //applyImmediately = true //todo: can't use applyImmediately
-                    )
+                    hitLimit = 2,
+                    //applyImmediately = true
+                ),
+                LiveBreakpoint(
+                    location = LiveSourceLocation(
+                        RemoveByLocationLiveBreakpointTest::class.qualifiedName!!,
+                        getLineNumber("line2"),
+                        //"spp-test-probe"
+                    ),
+                    hitLimit = 2,
+                    //applyImmediately = true
                 )
-            ).onSuccess {
-                //trigger live breakpoint
-                vertx.setTimer(5000) { //todo: have to wait since not applyImmediately
-                    removeMultipleByLine()
-                }
-            }.onFailure {
-                testContext.failNow(it)
-            }
+            )
+        ).await()
+
+        //trigger live breakpoint
+        vertx.setTimer(5000) { //todo: wait since applyImmediately doesn't work on multi adds
+            removeMultipleByLine()
         }
 
         if (!gotAllHitsLatch.await(30, TimeUnit.SECONDS)) {

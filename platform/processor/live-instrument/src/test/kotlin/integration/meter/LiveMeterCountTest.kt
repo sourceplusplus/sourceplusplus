@@ -62,10 +62,10 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
             location = LiveSourceLocation(
                 LiveMeterCountTest::class.qualifiedName!!,
                 getLineNumber("done"),
-                //"spp-test-probe" //todo: impl this so applyImmediately can be used
+                "spp-test-probe"
             ),
             id = meterId,
-            //applyImmediately = true //todo: can't use applyImmediately
+            applyImmediately = true
         )
 
         val subscriptionId = viewService.addLiveView(
@@ -107,15 +107,11 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
             }
         }
 
-        instrumentService.addLiveInstrument(liveMeter).onSuccess {
-            //trigger live meter 100 times
-            vertx.setTimer(5000) { //todo: have to wait since not applyImmediately
-                repeat((0 until 100).count()) {
-                    triggerCount()
-                }
-            }
-        }.onFailure {
-            testContext.failNow(it)
+        instrumentService.addLiveInstrument(liveMeter).await()
+
+        //trigger live meter 100 times
+        repeat((0 until 100).count()) {
+            triggerCount()
         }
 
         errorOnTimeout(testContext)
@@ -143,10 +139,10 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
             location = LiveSourceLocation(
                 LiveMeterCountTest::class.qualifiedName!!,
                 getLineNumber("done"),
-                //"spp-test-probe" //todo: impl this so applyImmediately can be used
+                "spp-test-probe"
             ),
             id = meterId,
-            //applyImmediately = true //todo: can't use applyImmediately
+            applyImmediately = true
         )
 
         val subscriptionId = viewService.addLiveView(
@@ -188,15 +184,11 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
             }
         }
 
-        instrumentService.addLiveInstrument(liveMeter).onSuccess {
-            //trigger live meter 100 times
-            vertx.setTimer(5000) { //todo: have to wait since not applyImmediately
-                repeat((0 until 100).count()) {
-                    triggerCount()
-                }
-            }
-        }.onFailure {
-            testContext.failNow(it)
+        instrumentService.addLiveInstrument(liveMeter).await()
+
+        //trigger live meter 100 times
+        repeat((0 until 100).count()) {
+            triggerCount()
         }
 
         errorOnTimeout(testContext)
