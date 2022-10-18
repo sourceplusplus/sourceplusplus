@@ -26,6 +26,7 @@ import io.vertx.kotlin.coroutines.await
 import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.launch
 import mu.KotlinLogging
+import spp.platform.bridge.probe.ProbeBridge
 import spp.platform.common.service.SourceBridgeService
 import spp.platform.storage.SourceStorage
 import spp.protocol.platform.PlatformAddress.MARKER_CONNECTED
@@ -56,7 +57,7 @@ class SourceBridge : CoroutineVerticle(), SourceBridgeService {
         log.trace { "Getting active probes" }
         val promise = Promise.promise<JsonArray>()
         launch(vertx.dispatcher()) {
-            val map = SourceStorage.map<String, JsonObject>(BridgeAddress.ACTIVE_PROBES)
+            val map = ProbeBridge.getActiveProbesMap()
             map.values().onSuccess {
                 promise.complete(JsonArray().apply { it.forEach { add(it) } })
             }.onFailure {
