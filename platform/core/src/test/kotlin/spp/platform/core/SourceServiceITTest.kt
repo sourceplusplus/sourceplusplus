@@ -58,7 +58,7 @@ class SourceServiceITTest : PlatformIntegrationTest() {
 
     private fun getGraphql(path: String): String {
         return SourceService::class.java.getResource("/graphql/$path.graphql")?.readText()
-            ?: throw IllegalStateException("GraphQL file not found: $path")
+            ?: error("GraphQL file not found: $path")
     }
 
     @BeforeEach
@@ -823,7 +823,7 @@ class SourceServiceITTest : PlatformIntegrationTest() {
         val addLiveMeterResp = request.sendJsonObject(addLiveMeterRequest).await().bodyAsJsonObject()
         assertNull(addLiveMeterResp.getJsonArray("errors"))
         val liveMeter = addLiveMeterResp.getJsonObject("data").getJsonObject("addLiveMeter")
-        val liveMeterId = liveMeter.getString("id");
+        val liveMeterId = liveMeter.getString("id")
 
         val removeLiveInstrumentResp = request.sendJsonObject(
             JsonObject().put("query", getGraphql("instrument/remove-live-instrument"))
@@ -841,7 +841,7 @@ class SourceServiceITTest : PlatformIntegrationTest() {
         val addLiveMeterResp = request.sendJsonObject(addLiveMeterRequest).await().bodyAsJsonObject()
         assertNull(addLiveMeterResp.getJsonArray("errors"))
         val liveMeter = addLiveMeterResp.getJsonObject("data").getJsonObject("addLiveMeter")
-        val liveMeterId = liveMeter.getString("id");
+        val liveMeterId = liveMeter.getString("id")
 
         val removeLiveInstrumentsResp = request.sendJsonObject(
             JsonObject().put("query", getGraphql("instrument/remove-live-instruments"))
@@ -974,7 +974,6 @@ class SourceServiceITTest : PlatformIntegrationTest() {
             refreshClientAccessResp.getJsonObject("data").getJsonObject("refreshClientAccess")
         assertEquals(clientId, updatedClientAccessJsonObject.getString("id"))
         assertNotEquals(clientSecret, updatedClientAccessJsonObject.getString("secret"))
-
     }
 
     private val addDataRedactionRequest: JsonObject =

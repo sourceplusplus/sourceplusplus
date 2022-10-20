@@ -135,7 +135,7 @@ open class PlatformIntegrationTest {
         }
     }
 
-    fun <T> MessageConsumer<T>.completionHandler() : Future<Void> {
+    fun <T> MessageConsumer<T>.completionHandler(): Future<Void> {
         val promise = Promise.promise<Void>()
         completionHandler { promise.handle(it) }
         return promise.future()
