@@ -18,7 +18,6 @@
 package spp.platform.storage
 
 import io.vertx.core.Vertx
-import io.vertx.core.json.Json
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import io.vertx.core.shareddata.AsyncMap
