@@ -22,6 +22,7 @@ import io.vertx.core.Promise
 import io.vertx.core.Vertx
 import io.vertx.core.json.JsonObject
 import io.vertx.kotlin.coroutines.CoroutineVerticle
+import mu.KotlinLogging
 import org.apache.skywalking.oap.log.analyzer.module.LogAnalyzerModule
 import org.apache.skywalking.oap.log.analyzer.provider.log.ILogAnalyzerService
 import org.apache.skywalking.oap.log.analyzer.provider.log.LogAnalyzerServiceImpl
@@ -29,9 +30,9 @@ import org.apache.skywalking.oap.server.analyzer.module.AnalyzerModule
 import org.apache.skywalking.oap.server.analyzer.provider.trace.parser.ISegmentParserService
 import org.apache.skywalking.oap.server.analyzer.provider.trace.parser.SegmentParserListenerManager
 import org.apache.skywalking.oap.server.analyzer.provider.trace.parser.SegmentParserServiceImpl
-import org.slf4j.LoggerFactory
 import spp.platform.common.DeveloperAuth
 import spp.platform.common.FeedbackProcessor
+import spp.platform.common.util.args
 import spp.processor.ViewProcessor
 import spp.processor.live.impl.view.LiveLogView
 import spp.processor.live.impl.view.LiveMeterView
@@ -49,7 +50,7 @@ import java.util.*
 class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
 
     companion object {
-        private val log = LoggerFactory.getLogger(LiveViewServiceImpl::class.java)
+        private val log = KotlinLogging.logger {}
     }
 
     //todo: use ExpiringSharedData
@@ -149,7 +150,7 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
     }
 
     override fun removeLiveView(id: String): Future<LiveView> {
-        log.debug("Removing live view: {}", id)
+        log.debug { "Removing live view: {}".args(id) }
         val promise = Promise.promise<LiveView>()
         var unsubbedUser: ViewSubscriber? = null
         subscriptionCache.flatMap { it.value.values }.forEach { subList ->
@@ -187,7 +188,7 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
         id: String,
         subscription: LiveView
     ): Future<LiveView> {
-        log.debug("Updating live view: {}", id)
+        log.debug { "Updating live view: {}".args(id) }
         val promise = Promise.promise<LiveView>()
 
         var viewSubscriber: ViewSubscriber? = null
@@ -234,7 +235,7 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
     }
 
     override fun getLiveView(id: String): Future<LiveView> {
-        log.debug("Getting live view: {}", id)
+        log.debug { "Getting live view: {}".args(id) }
         val promise = Promise.promise<LiveView>()
         var subbedUser: ViewSubscriber? = null
         subscriptionCache.flatMap { it.value.values }.forEach { subList ->

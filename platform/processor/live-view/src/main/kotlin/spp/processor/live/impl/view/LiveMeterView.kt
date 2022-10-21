@@ -25,7 +25,7 @@ import org.apache.skywalking.oap.server.core.analysis.metrics.PercentMetrics
 import org.apache.skywalking.oap.server.core.analysis.metrics.WithMetadata
 import org.joor.Reflect
 import spp.platform.common.ClusterConnection
-import spp.platform.common.util.Msg
+import spp.platform.common.util.args
 import spp.processor.ViewProcessor.realtimeMetricCache
 import spp.processor.live.impl.view.util.EntityNaming
 import spp.processor.live.impl.view.util.MetricTypeSubscriptionCache
@@ -46,7 +46,7 @@ class LiveMeterView(private val subscriptionCache: MetricTypeSubscriptionCache) 
 
         var metricName = metadata.metricsName
         if (metricName.startsWith("spp_")) {
-            log.debug { Msg.msg("Processing Source++ metrics: {} - Data: {}", metricName, metrics) }
+            log.debug { "Processing Source++ metrics: {} - Data: {}".args(metricName, metrics) }
         }
 
         if (realTime && !metricName.startsWith("spp_")) {
@@ -69,7 +69,7 @@ class LiveMeterView(private val subscriptionCache: MetricTypeSubscriptionCache) 
             }.toSet()
 
             if (subs.isNotEmpty()) {
-                log.debug { Msg.msg("Exporting event $metricName to {} subscribers", subs.size) }
+                log.debug { "Exporting event $metricName to {} subscribers".args(subs.size) }
                 handleEvent(subs, metrics, realTime)
             }
         }

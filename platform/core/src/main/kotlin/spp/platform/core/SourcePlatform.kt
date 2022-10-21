@@ -54,6 +54,7 @@ import spp.platform.common.ClusterConnection.discovery
 import spp.platform.common.ClusterConnection.router
 import spp.platform.common.util.CertsToJksOptionsConverter
 import spp.platform.common.util.SelfSignedCertGenerator
+import spp.platform.common.util.args
 import spp.platform.core.service.ServiceProvider
 import spp.platform.storage.SourceStorage
 import spp.protocol.service.LiveManagementService
@@ -179,7 +180,7 @@ class SourcePlatform : CoroutineVerticle() {
 
         router["/api/new-token"].handler { ctx: RoutingContext ->
             if (!jwtEnabled) {
-                log.debug("Skipped generating JWT token. Reason: JWT authentication disabled")
+                log.debug { "Skipped generating JWT token. Reason: JWT authentication disabled" }
                 ctx.response().setStatusCode(202).end()
                 return@handler
             }
@@ -197,7 +198,7 @@ class SourcePlatform : CoroutineVerticle() {
             }
 
             val token = accessTokenParam[0]
-            log.debug("Verifying access token: $token")
+            log.debug { "Verifying access token: {}".args(token) }
             launch(vertx.dispatcher()) {
                 val dev = SourceStorage.getDeveloperByAccessToken(token)
                 if (dev != null) {
@@ -267,7 +268,7 @@ class SourcePlatform : CoroutineVerticle() {
             launch(vertx.dispatcher()) {
                 val records = JsonArray(discovery.getRecords { true }.await().map { it.toJson() })
                 it.reply(records)
-                log.debug("Sent currently available services")
+                log.debug { "Sent currently available services" }
                 //todo: fix double reply (sm is sending two requests)
             }
         }
@@ -283,10 +284,10 @@ class SourcePlatform : CoroutineVerticle() {
         ).await()
 
         if (httpSslEnabled) {
-            log.debug("Starting HTTPS server(s)")
+            log.debug { "Starting HTTPS server(s)" }
         } else {
             log.warn("TLS protocol disabled")
-            log.debug("Starting HTTP server(s)")
+            log.debug { "Starting HTTP server(s)" }
         }
         val httpPorts = httpConfig.getString("port").split(",").map { it.toInt() }
 
@@ -318,9 +319,9 @@ class SourcePlatform : CoroutineVerticle() {
                 log.trace { "Redirecting HTTP to $redirectUrl" }
                 it.response().putHeader("Location", redirectUrl).setStatusCode(302).end()
             }.listen(80).await()
-            log.debug("HTTP redirect server started. Port: {}", redirectServer.actualPort())
+            log.debug { "HTTP redirect server started. Port: {}".args(redirectServer.actualPort()) }
         }
-        log.debug("Source++ Platform initialized")
+        log.debug { "Source++ Platform initialized" }
     }
 
     private fun generateSecurityCertificates(keyFile: File, certFile: File) {
@@ -362,7 +363,7 @@ class SourcePlatform : CoroutineVerticle() {
                 selfId = "system"
             }
         }
-        log.debug("Get platform clients request. Developer: {}", selfId)
+        log.debug { "Get platform clients request. Developer: {}".args(selfId) }
 
         launch(vertx.dispatcher()) {
             LiveManagementService.createProxy(vertx, accessToken).getClients().onSuccess {

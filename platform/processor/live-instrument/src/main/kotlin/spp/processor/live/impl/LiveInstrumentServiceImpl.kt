@@ -39,6 +39,7 @@ import org.joor.Reflect
 import spp.platform.common.DeveloperAuth
 import spp.platform.common.FeedbackProcessor
 import spp.platform.common.service.SourceBridgeService
+import spp.platform.common.util.args
 import spp.processor.live.impl.instrument.meter.LiveMeterRule
 import spp.protocol.artifact.exception.LiveStackTrace
 import spp.protocol.instrument.*
@@ -115,7 +116,7 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
             // it has been applied to any instrument at all at any point
             val remote = it.body().getString("address").substringBefore(":")
             if (remote == LIVE_INSTRUMENT_REMOTE) {
-                log.debug("Live instrument remote registered. Sending active live instruments")
+                log.debug { "Live instrument remote registered. Sending active live instruments" }
                 liveInstruments.forEach {
                     _addLiveInstrument(it.developerAuth, it.instrument, false)
                 }
@@ -385,7 +386,7 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
     }
 
     private fun handleInstrumentRemoved(it: Message<JsonObject>) {
-        if (log.isTraceEnabled) log.trace("Got live instrument removed: {}", it.body())
+        log.trace { "Got live instrument removed: {}".args(it.body()) }
         val instrumentCommand = it.body().getString("command")
         val instrumentData = if (instrumentCommand != null) {
             val command = LiveInstrumentCommand(JsonObject(instrumentCommand))
@@ -462,7 +463,7 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
                     toLiveInstrumentSubscriberAddress(it.developerAuth.selfId),
                     JsonObject.mapFrom(LiveInstrumentEvent(eventType, Json.encode(appliedInstrument)))
                 )
-                if (log.isTraceEnabled) log.trace("Published live instrument applied")
+                log.trace { "Published live instrument applied" }
                 return@forEach
             }
         }
@@ -491,7 +492,7 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
         liveInstrument: LiveInstrument,
         alertSubscribers: Boolean = true
     ): Future<LiveInstrument> {
-        log.debug("Adding live instrument: $liveInstrument")
+        log.debug { "Adding live instrument: {}".args(liveInstrument) }
         val debuggerCommand = LiveInstrumentCommand(CommandType.ADD_LIVE_INSTRUMENT, setOf(liveInstrument))
 
         val devInstrument = DeveloperInstrument(devAuth, liveInstrument)
@@ -522,7 +523,7 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
             }
 
             it.getActiveProbes().onComplete {
-                log.trace("Dispatching command ${debuggerCommand.commandType} to connected probe(s)")
+                log.trace { "Dispatching command {} to connected probe(s)".args(debuggerCommand.commandType) }
                 val alertProbes = it.result().list.map { InstanceConnection(JsonObject.mapFrom(it)) }
                 alertProbes.forEach { probe ->
                     val probeCommand = LiveInstrumentCommand(
@@ -568,7 +569,7 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
         liveInstrument: LiveInstrument,
         cause: String?
     ) {
-        log.debug("Removing live instrument: ${liveInstrument.id}")
+        log.debug { "Removing live instrument: {}".args(liveInstrument.id) }
         val devInstrument = DeveloperInstrument(devAuth, liveInstrument)
         developerInstrumentCache.put(devInstrument.instrument.id!!, devInstrument)
         liveInstruments.remove(devInstrument)
@@ -607,7 +608,7 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
     }
 
     fun removeLiveInstrument(developerAuth: DeveloperAuth, instrumentId: String): Future<LiveInstrument?> {
-        if (log.isTraceEnabled) log.trace("Removing live instrument: $instrumentId")
+        log.trace { "Removing live instrument: {}".args(instrumentId) }
         val instrumentRemoval = liveInstruments.find { it.instrument.id == instrumentId }
         return if (instrumentRemoval != null) {
             removeLiveInstrument(developerAuth, instrumentRemoval)
@@ -646,7 +647,7 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
         location: LiveSourceLocation,
         instrumentType: LiveInstrumentType
     ): Future<List<LiveInstrument>> {
-        log.debug("Removing live instrument(s): $location")
+        log.debug { "Removing live instrument(s): {}".args(location) }
         val debuggerCommand = LiveInstrumentCommand(CommandType.REMOVE_LIVE_INSTRUMENT, locations = setOf(location))
 
         val result = liveInstruments.filter {
@@ -657,7 +658,7 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
             log.info("Could not find live instrument(s) at: $location")
         } else {
             dispatchCommand(devAuth, LIVE_INSTRUMENT_REMOTE, debuggerCommand)
-            log.debug("Removed live instrument(s) at: $location")
+            log.debug { "Removed live instrument(s) at: {}".args(location) }
 
             val eventType = when (instrumentType) {
                 LiveInstrumentType.BREAKPOINT -> LiveInstrumentEventType.BREAKPOINT_REMOVED

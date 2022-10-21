@@ -28,10 +28,11 @@ import io.vertx.ext.web.sstore.SessionStore
 import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import mu.KotlinLogging
 import org.apache.commons.lang3.RandomStringUtils
-import org.slf4j.LoggerFactory
 import spp.platform.common.ClusterConnection.config
 import spp.platform.common.ClusterConnection.getVertx
+import spp.platform.common.util.args
 import spp.protocol.instrument.LiveInstrument
 import spp.protocol.platform.auth.*
 import spp.protocol.platform.developer.Developer
@@ -41,7 +42,7 @@ import java.util.concurrent.CompletableFuture
 object SourceStorage {
 
     private const val DEFAULT_ACCESS_TOKEN = "change-me"
-    private val log = LoggerFactory.getLogger(SourceStorage::class.java)
+    private val log = KotlinLogging.logger {}
 
     lateinit var storage: CoreStorage
     lateinit var sessionStore: SessionStore
@@ -345,7 +346,7 @@ object SourceStorage {
     }
 
     suspend fun hasPermission(id: String, permission: RolePermission): Boolean {
-        log.trace("Checking permission: $permission - Id: $id")
+        log.trace { "Checking permission: {} - Id: {}".args(permission, id) }
         return getDeveloperRoles(id).any { getRolePermissions(it).contains(permission) }
     }
 

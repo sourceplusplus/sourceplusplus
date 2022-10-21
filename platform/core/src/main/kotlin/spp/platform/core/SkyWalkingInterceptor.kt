@@ -42,7 +42,7 @@ import kotlinx.coroutines.launch
 import mu.KotlinLogging
 import org.joor.Reflect
 import spp.platform.common.util.CertsToJksOptionsConverter
-import spp.platform.common.util.Msg
+import spp.platform.common.util.args
 import spp.platform.storage.SourceStorage
 import spp.protocol.platform.PlatformAddress.PROCESSOR_CONNECTED
 import spp.protocol.platform.auth.DataRedaction
@@ -96,7 +96,7 @@ class SkyWalkingInterceptor(private val router: Router) : CoroutineVerticle() {
 
             val headers: JsonObject? = request.getJsonObject("headers")
             val method = HttpMethod.valueOf(request.getString("method"))!!
-            log.trace { Msg.msg("Forwarding SkyWalking request: {}", body) }
+            log.trace { "Forwarding SkyWalking request: {}".args(body) }
 
             launch {
                 val forward = try {
@@ -105,7 +105,7 @@ class SkyWalkingInterceptor(private val router: Router) : CoroutineVerticle() {
                             .setMethod(method).setPort(swRestPort).setHost(swHost).setURI("/graphql")
                     ).await()
                 } catch (e: Exception) {
-                    log.error(e) { Msg.msg("Failed to forward SkyWalking request: {}", body) }
+                    log.error(e) { "Failed to forward SkyWalking request: {}".args(body) }
                     req.fail(500, e.message)
                     return@launch
                 }
@@ -123,7 +123,7 @@ class SkyWalkingInterceptor(private val router: Router) : CoroutineVerticle() {
                             }
                         }
 
-                        log.trace { Msg.msg("Forwarding SkyWalking response: {}", respBody.toString()) }
+                        log.trace { "Forwarding SkyWalking response: {}".args(respBody.toString()) }
                         val respOb = JsonObject()
                         respOb.put("status", resp.statusCode())
                         respOb.put("body", respBody.toString())

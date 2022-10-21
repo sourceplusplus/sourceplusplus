@@ -45,7 +45,7 @@ import spp.platform.bridge.BridgeAddress
 import spp.platform.bridge.InstanceBridge
 import spp.platform.common.ClientAuth
 import spp.platform.common.ClusterConnection
-import spp.platform.common.util.Msg
+import spp.platform.common.util.args
 import spp.platform.storage.SourceStorage
 import spp.protocol.platform.PlatformAddress
 import spp.protocol.platform.PlatformAddress.PROBE_CONNECTED
@@ -87,13 +87,13 @@ class ProbeBridge(
         vertx.eventBus().consumer<JsonObject>(ProcessorAddress.REMOTE_REGISTERED) {
             val remote = it.body().getString("address").substringBefore(":")
             val probeId = it.headers().get("probe_id")
-            log.debug { Msg.msg("Probe {} registering remote: {}", probeId, remote) }
+            log.debug { "Probe {} registering remote: {}".args(probeId, remote) }
 
             val clientAuth: ClientAuth? = it.headers().get("client_auth")?.let {
                 ClientAuth.from(it)
             }
             if (clientAuth != null) {
-                log.trace { Msg.msg("Using client auth: {}", clientAuth) }
+                log.trace { "Using client auth: {}".args(clientAuth) }
                 Vertx.currentContext().putLocal("client", clientAuth)
             }
 
@@ -108,7 +108,7 @@ class ProbeBridge(
                         remotes.add(remote)
                     }
                     map.put(probeId, updatedInstanceConnection).onSuccess {
-                        log.debug { Msg.msg("Probe {} registered {}", probeId, remote) }
+                        log.debug { "Probe {} registered {}".args(probeId, remote) }
                     }.onFailure {
                         log.error("Failed to update active probe", it)
                     }
@@ -125,7 +125,7 @@ class ProbeBridge(
             val connectionTime = System.currentTimeMillis()
             val conn = InstanceConnection(it.body())
             val latency = connectionTime - conn.connectionTime
-            log.debug { Msg.msg("Establishing connection with probe {}", conn.instanceId) }
+            log.debug { "Establishing connection with probe {}".args(conn.instanceId) }
 
             launch(vertx.dispatcher()) {
                 val map = getActiveProbesMap()
