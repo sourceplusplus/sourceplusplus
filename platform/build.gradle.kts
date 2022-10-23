@@ -70,7 +70,7 @@ subprojects {
         implementation("io.vertx:vertx-grpc-server:$vertxVersion") { exclude(group = "io.grpc") }
         implementation("io.vertx:vertx-grpc-client:$vertxVersion") { exclude(group = "io.grpc") }
         implementation("io.vertx:vertx-grpc-common:$vertxVersion") { exclude(group = "io.grpc") }
-        implementation("com.google.protobuf:protobuf-java:3.21.7")
+        implementation("com.google.protobuf:protobuf-java:3.21.8")
         implementation("io.vertx:vertx-service-discovery:$vertxVersion")
         implementation("io.vertx:vertx-service-proxy:$vertxVersion")
         implementation("io.vertx:vertx-health-check:$vertxVersion")
