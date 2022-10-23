@@ -21,6 +21,7 @@ import io.vertx.core.json.Json
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import io.vertx.kotlin.core.json.get
+import mu.KotlinLogging
 import net.bytebuddy.jar.asm.Type
 import org.apache.skywalking.apm.network.language.agent.v3.SegmentObject
 import org.apache.skywalking.apm.network.language.agent.v3.SpanObject
@@ -28,8 +29,8 @@ import org.apache.skywalking.oap.server.analyzer.provider.AnalyzerModuleConfig
 import org.apache.skywalking.oap.server.analyzer.provider.trace.parser.listener.*
 import org.apache.skywalking.oap.server.core.query.TraceQueryService
 import org.apache.skywalking.oap.server.library.module.ModuleManager
-import org.slf4j.LoggerFactory
 import spp.platform.common.ClusterConnection
+import spp.platform.common.util.args
 import spp.processor.InstrumentProcessor.liveInstrumentService
 import spp.processor.live.impl.instrument.breakpoint.LiveVariablePresentation
 import spp.protocol.artifact.exception.LiveStackTrace
@@ -145,7 +146,7 @@ class LiveBreakpointAnalyzer(
     }
 
     companion object {
-        private val log = LoggerFactory.getLogger(LiveBreakpointAnalyzer::class.java)
+        private val log = KotlinLogging.logger {}
 
         const val LOCAL_VARIABLE = "spp.local-variable:"
         const val GLOBAL_VARIABLE = "spp.global-variable:"
@@ -192,7 +193,7 @@ class LiveBreakpointAnalyzer(
         }
 
         fun transformRawBreakpointHit(bpData: JsonObject): LiveBreakpointHit {
-            if (log.isTraceEnabled) log.trace("Transforming raw breakpoint hit: {}", bpData)
+            log.trace { "Transforming raw breakpoint hit: {}".args(bpData) }
             val varDatum = bpData.getJsonArray("variables")
             val variables = mutableListOf<LiveVariable>()
             var thisVar: LiveVariable? = null
@@ -283,7 +284,7 @@ class LiveBreakpointAnalyzer(
     }
 
     private fun handleBreakpointHit(hit: LiveBreakpointHit) {
-        if (log.isTraceEnabled) log.trace("Live breakpoint hit: {}", hit)
+        log.trace { "Live breakpoint hit: {}".args(hit) }
         val value = traceQueryService.queryTrace(hit.traceId)
         if (value.spans.isNotEmpty()) {
             println(value)
@@ -304,7 +305,7 @@ class LiveBreakpointAnalyzer(
             toLiveInstrumentSubscriberAddress(devInstrument.developerAuth.selfId),
             JsonObject.mapFrom(LiveInstrumentEvent(LiveInstrumentEventType.BREAKPOINT_HIT, Json.encode(hit)))
         )
-        if (log.isTraceEnabled) log.trace("Published live breakpoint hit")
+        log.trace { "Published live breakpoint hit" }
     }
 
     override fun create(p0: ModuleManager, p1: AnalyzerModuleConfig) = LiveBreakpointAnalyzer(traceQueryService)

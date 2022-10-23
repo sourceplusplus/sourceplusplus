@@ -36,6 +36,7 @@ import org.apache.commons.text.lookup.StringLookupFactory
 import org.apache.logging.log4j.Level
 import org.apache.logging.log4j.core.config.Configurator
 import spp.platform.common.util.MultiUseNetServer
+import spp.platform.common.util.args
 import java.io.File
 import java.util.*
 import java.util.regex.Pattern
@@ -94,7 +95,7 @@ object ClusterConnection {
                     val host = storageConfig.getString("host")
                     val port = storageConfig.getString("port").toInt()
                     val clusterStorageAddress = "redis://$host:$port"
-                    log.debug("Cluster storage address: $clusterStorageAddress")
+                    log.debug { "Cluster storage address: {}".args(clusterStorageAddress) }
 
                     val clusterManager = RedisClusterManager(
                         RedisConfig()

@@ -17,8 +17,11 @@
  */
 package integration
 
+import io.vertx.core.Future
+import io.vertx.core.Promise
 import io.vertx.core.Vertx
 import io.vertx.core.VertxOptions
+import io.vertx.core.eventbus.MessageConsumer
 import io.vertx.junit5.VertxExtension
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
@@ -133,5 +136,11 @@ open class PlatformIntegrationTest {
         } else {
             testContext.completeNow()
         }
+    }
+
+    fun <T> MessageConsumer<T>.completionHandler(): Future<Void> {
+        val promise = Promise.promise<Void>()
+        completionHandler { promise.handle(it) }
+        return promise.future()
     }
 }

@@ -71,10 +71,10 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
             location = LiveSourceLocation(
                 LiveMeterGaugeTest::class.qualifiedName!!,
                 getLineNumber("done"),
-                //"spp-test-probe" //todo: impl this so applyImmediately can be used
+                "spp-test-probe"
             ),
             id = meterId,
-            //applyImmediately = true //todo: can't use applyImmediately
+            applyImmediately = true
         )
 
         val subscriptionId = viewService.addLiveView(
@@ -116,13 +116,9 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
             testContext.completeNow()
         }
 
-        instrumentService.addLiveInstrument(liveMeter).onSuccess {
-            vertx.setTimer(5000) { //todo: have to wait since not applyImmediately
-                triggerGauge()
-            }
-        }.onFailure {
-            testContext.failNow(it)
-        }
+        instrumentService.addLiveInstrument(liveMeter).await()
+
+        triggerGauge()
 
         errorOnTimeout(testContext)
 

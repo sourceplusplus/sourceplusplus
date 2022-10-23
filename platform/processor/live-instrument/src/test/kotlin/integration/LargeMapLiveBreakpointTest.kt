@@ -20,6 +20,8 @@ package integration
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxTestContext
+import io.vertx.kotlin.coroutines.await
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import spp.protocol.instrument.LiveBreakpoint
@@ -39,7 +41,7 @@ class LargeMapLiveBreakpointTest : LiveInstrumentIntegrationTest() {
     }
 
     @Test
-    fun `large map`() {
+    fun `large map`() = runBlocking {
         setupLineLabels {
             largeMap()
         }
@@ -59,49 +61,35 @@ class LargeMapLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                     largeMapVariable.liveClazz
                 )
 
-                val mapValues = largeMapVariable.value as JsonArray
-                assertEquals(101, mapValues.size())
+                val mapValues = largeMapVariable.value as JsonObject
+                assertEquals(105, mapValues.size())
                 for (index in 0..99) {
-                    val value = mapValues.getJsonObject(index)
-                    assertEquals(index.toString(), value.getString("name"))
-
-                    //todo: SmallMapLiveBreakpointTest doesn't create child LiveVariables
-                    val actualValue = value.getJsonArray("value").first() as JsonObject
-                    assertEquals(index.toString(), actualValue.getString("value"))
+                    assertEquals(index.toString(), mapValues.getString(index.toString()))
                 }
-                val lastValue = (mapValues.last() as JsonObject).getJsonObject("value")
-                assertEquals("MAX_COLLECTION_SIZE_EXCEEDED", lastValue.getString("@skip"))
-                assertEquals(100_000, lastValue.getInteger("@skip[size]"))
-                assertEquals(100, lastValue.getInteger("@skip[max]"))
+                assertEquals("MAX_COLLECTION_SIZE_EXCEEDED", mapValues.getString("@skip"))
+                assertEquals(100_000, mapValues.getInteger("@skip[size]"))
+                assertEquals(100, mapValues.getInteger("@skip[max]"))
+                assertNotNull(mapValues.getString("@id"))
             }
 
             //test passed
             testContext.completeNow()
-        }.completionHandler {
-            if (it.failed()) {
-                testContext.failNow(it.cause())
-                return@completionHandler
-            }
+        }.completionHandler().await()
 
-            //add live breakpoint
-            instrumentService.addLiveInstrument(
-                LiveBreakpoint(
-                    location = LiveSourceLocation(
-                        LargeMapLiveBreakpointTest::class.qualifiedName!!,
-                        getLineNumber("done"),
-                        //"spp-test-probe" //todo: impl this so applyImmediately can be used
-                    ),
-                    //applyImmediately = true //todo: can't use applyImmediately
-                )
-            ).onSuccess {
-                //trigger live breakpoint
-                vertx.setTimer(5000) { //todo: have to wait since not applyImmediately
-                    largeMap()
-                }
-            }.onFailure {
-                testContext.failNow(it)
-            }
-        }
+        //add live breakpoint
+        instrumentService.addLiveInstrument(
+            LiveBreakpoint(
+                location = LiveSourceLocation(
+                    LargeMapLiveBreakpointTest::class.qualifiedName!!,
+                    getLineNumber("done"),
+                    "spp-test-probe"
+                ),
+                applyImmediately = true
+            )
+        ).await()
+
+        //trigger live breakpoint
+        largeMap()
 
         errorOnTimeout(testContext)
     }

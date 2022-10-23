@@ -18,6 +18,8 @@
 package integration
 
 import io.vertx.junit5.VertxTestContext
+import io.vertx.kotlin.coroutines.await
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -50,7 +52,7 @@ class LiveVariablePresentationTest : LiveInstrumentIntegrationTest() {
     }
 
     @Test
-    fun `live variable presentation`() {
+    fun `live variable presentation`() = runBlocking {
         setupLineLabels { liveVariablePresentation() }
 
         val testContext = VertxTestContext()
@@ -188,28 +190,22 @@ class LiveVariablePresentationTest : LiveInstrumentIntegrationTest() {
 
             //test passed
             testContext.completeNow()
-        }.completionHandler {
-            if (it.failed()) {
-                testContext.failNow(it.cause())
-                return@completionHandler
-            }
+        }.completionHandler().await()
 
-            //add live breakpoint
-            instrumentService.addLiveInstrument(
-                LiveBreakpoint(
-                    location = LiveSourceLocation(
-                        LiveVariablePresentationTest::class.qualifiedName!!,
-                        getLineNumber("done"),
-                    ),
-                )
-            ).onSuccess {
-                vertx.setTimer(5000) {
-                    liveVariablePresentation()
-                }
-            }.onFailure {
-                testContext.failNow(it)
-            }
-        }
+        //add live breakpoint
+        instrumentService.addLiveInstrument(
+            LiveBreakpoint(
+                location = LiveSourceLocation(
+                    LiveVariablePresentationTest::class.qualifiedName!!,
+                    getLineNumber("done"),
+                    "spp-test-probe"
+                ),
+                applyImmediately = true
+            )
+        ).await()
+
+        //trigger live breakpoint
+        liveVariablePresentation()
 
         errorOnTimeout(testContext)
     }

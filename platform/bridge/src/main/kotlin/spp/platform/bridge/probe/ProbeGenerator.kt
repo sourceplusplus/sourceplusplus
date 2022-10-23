@@ -146,7 +146,7 @@ class ProbeGenerator(private val router: Router) : CoroutineVerticle() {
     }
 
     private fun doJVMProbeGeneration(route: RoutingContext, clientAccess: ClientAccess?) {
-        log.debug("Generating signed JVM probe")
+        log.debug { "Generating signed JVM probe" }
         val platformHost = route.request().host().substringBefore(":")
         val serviceName = route.request().getParam("service_name")?.toString() ?: "Your_ApplicationName"
         val probeVersion = route.request().getParam("version")

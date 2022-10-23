@@ -70,7 +70,7 @@ class SourceStorageProvider : ModuleProvider() {
                         val storageClass = Class.forName(storageSelector)
                         val customStorage = try {
                             storageClass.getConstructor(Vertx::class.java).newInstance(vertx)
-                        } catch (e: NoSuchMethodException) {
+                        } catch (ignore: NoSuchMethodException) {
                             storageClass.getConstructor()
                         } as CoreStorage
                         customStorage.init(SourceStorage.getStorageConfig())

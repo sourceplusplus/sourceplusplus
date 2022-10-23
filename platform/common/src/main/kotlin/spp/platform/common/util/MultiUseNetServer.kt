@@ -75,7 +75,7 @@ class MultiUseNetServer(private val vertx: Vertx) {
 
     fun listen(options: HttpServerOptions? = null, port: Int): Future<NetServer> {
         if (useMap.isEmpty()) {
-            throw IllegalStateException("No use deciders added")
+            error("No use deciders added")
         }
 
         val serverOptions = NetServerOptions()

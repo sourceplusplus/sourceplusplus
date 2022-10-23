@@ -114,8 +114,6 @@ class SourceBridgeProvider : ModuleProvider() {
                 val sourceBridgeService = SourceBridge()
                 vertx.deployVerticle(sourceBridgeService).await()
                 ServiceBinder(vertx).setIncludeDebugInfo(true)
-//                    .addInterceptor { developerAuthInterceptor(it) }
-//                    .addInterceptor { msg -> permissionAndAccessCheckInterceptor(msg) }
                     .setAddress(PlatformServices.BRIDGE_SERVICE)
                     .register(SourceBridgeService::class.java, sourceBridgeService)
                 val bridgeRecord = EventBusService.createRecord(

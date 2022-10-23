@@ -59,41 +59,32 @@ class MultiLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                     fail("Unexpected line number: ${topFrame.sourceAsLineNumber()}")
                 }
             }
-        }.completionHandler {
-            if (it.failed()) {
-                testContext.failNow(it.cause())
-                return@completionHandler
-            }
+        }.completionHandler().await()
 
-            //add live breakpoint
-            instrumentService.addLiveInstruments(
-                listOf(
-                    LiveBreakpoint(
-                        location = LiveSourceLocation(
-                            MultiLiveBreakpointTest::class.qualifiedName!!,
-                            getLineNumber("line1"),
-                            //"spp-test-probe" //todo: impl this so applyImmediately can be used
-                        ),
-                        //applyImmediately = true //todo: can't use applyImmediately
+        //add live breakpoints
+        instrumentService.addLiveInstruments(
+            listOf(
+                LiveBreakpoint(
+                    location = LiveSourceLocation(
+                        MultiLiveBreakpointTest::class.qualifiedName!!,
+                        getLineNumber("line1"),
+                        "spp-test-probe"
                     ),
-                    LiveBreakpoint(
-                        location = LiveSourceLocation(
-                            MultiLiveBreakpointTest::class.qualifiedName!!,
-                            getLineNumber("line1"),
-                            //"spp-test-probe" //todo: impl this so applyImmediately can be used
-                        ),
-                        //applyImmediately = true //todo: can't use applyImmediately
-                    )
+                    applyImmediately = true
+                ),
+                LiveBreakpoint(
+                    location = LiveSourceLocation(
+                        MultiLiveBreakpointTest::class.qualifiedName!!,
+                        getLineNumber("line1"),
+                        "spp-test-probe"
+                    ),
+                    applyImmediately = true
                 )
-            ).onSuccess {
-                //trigger live breakpoint
-                vertx.setTimer(5000) { //todo: have to wait since not applyImmediately
-                    multiLineTest()
-                }
-            }.onFailure {
-                testContext.failNow(it)
-            }
-        }
+            )
+        ).await()
+
+        //trigger live breakpoints
+        multiLineTest()
 
         if (!gotAllHitsLatch.await(30, TimeUnit.SECONDS)) {
             testContext.failNow(RuntimeException("didn't get all hits"))
@@ -133,41 +124,32 @@ class MultiLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                     fail("Unexpected line number: ${topFrame.sourceAsLineNumber()}")
                 }
             }
-        }.completionHandler {
-            if (it.failed()) {
-                testContext.failNow(it.cause())
-                return@completionHandler
-            }
+        }.completionHandler().await()
 
-            //add live breakpoint
-            instrumentService.addLiveInstruments(
-                listOf(
-                    LiveBreakpoint(
-                        location = LiveSourceLocation(
-                            MultiLiveBreakpointTest::class.qualifiedName!!,
-                            getLineNumber("line1"),
-                            //"spp-test-probe" //todo: impl this so applyImmediately can be used
-                        ),
-                        //applyImmediately = true //todo: can't use applyImmediately
+        //add live breakpoints
+        instrumentService.addLiveInstruments(
+            listOf(
+                LiveBreakpoint(
+                    location = LiveSourceLocation(
+                        MultiLiveBreakpointTest::class.qualifiedName!!,
+                        getLineNumber("line1"),
+                        "spp-test-probe"
                     ),
-                    LiveBreakpoint(
-                        location = LiveSourceLocation(
-                            MultiLiveBreakpointTest::class.qualifiedName!!,
-                            getLineNumber("line2"),
-                            //"spp-test-probe" //todo: impl this so applyImmediately can be used
-                        ),
-                        //applyImmediately = true //todo: can't use applyImmediately
-                    )
+                    applyImmediately = true
+                ),
+                LiveBreakpoint(
+                    location = LiveSourceLocation(
+                        MultiLiveBreakpointTest::class.qualifiedName!!,
+                        getLineNumber("line2"),
+                        "spp-test-probe"
+                    ),
+                    applyImmediately = true
                 )
-            ).onSuccess {
-                //trigger live breakpoint
-                vertx.setTimer(5000) { //todo: have to wait since not applyImmediately
-                    multiLineTest()
-                }
-            }.onFailure {
-                testContext.failNow(it)
-            }
-        }
+            )
+        ).await()
+
+        //trigger live breakpoints
+        multiLineTest()
 
         gotLine1Promise.future().await()
         gotLine2Promise.future().await()

@@ -21,11 +21,12 @@ import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
 import com.google.protobuf.Message
 import io.vertx.core.json.JsonObject
+import mu.KotlinLogging
 import org.apache.skywalking.apm.network.logging.v3.LogData
 import org.apache.skywalking.oap.log.analyzer.provider.log.listener.LogAnalysisListener
 import org.apache.skywalking.oap.log.analyzer.provider.log.listener.LogAnalysisListenerFactory
-import org.slf4j.LoggerFactory
 import spp.platform.common.ClusterConnection
+import spp.platform.common.util.args
 import spp.processor.InstrumentProcessor.liveInstrumentService
 import spp.protocol.artifact.log.Log
 import spp.protocol.artifact.log.LogOrderType
@@ -42,7 +43,7 @@ import kotlin.collections.set
 class LiveLogAnalyzer : LogAnalysisListener, LogAnalysisListenerFactory {
 
     companion object {
-        private val log = LoggerFactory.getLogger(LiveBreakpointAnalyzer::class.java)
+        private val log = KotlinLogging.logger {}
     }
 
     private var logPublishRateLimit = 1000
@@ -109,7 +110,7 @@ class LiveLogAnalyzer : LogAnalysisListener, LogAnalysisListenerFactory {
     }
 
     private fun handleLogHit(hit: LiveLogHit) {
-        if (log.isTraceEnabled) log.trace("Live log hit: {}", hit)
+        log.trace { "Live log hit: {}".args(hit) }
         val liveInstrument = liveInstrumentService._getDeveloperInstrumentById(hit.logId)
         if (liveInstrument != null) {
             val instrumentMeta = liveInstrument.instrument.meta as MutableMap<String, Any>
@@ -126,7 +127,7 @@ class LiveLogAnalyzer : LogAnalysisListener, LogAnalysisListenerFactory {
                 LiveInstrumentEvent(LiveInstrumentEventType.LOG_HIT, JsonObject.mapFrom(hit).toString())
             )
         )
-        if (log.isTraceEnabled) log.trace("Published live log hit")
+        log.trace { "Published live log hit" }
     }
 
     override fun create() = LiveLogAnalyzer()
