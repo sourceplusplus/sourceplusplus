@@ -61,20 +61,15 @@ class LargeMapLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                     largeMapVariable.liveClazz
                 )
 
-                val mapValues = largeMapVariable.value as JsonArray
-                assertEquals(101, mapValues.size())
+                val mapValues = largeMapVariable.value as JsonObject
+                assertEquals(105, mapValues.size())
                 for (index in 0..99) {
-                    val value = mapValues.getJsonObject(index)
-                    assertEquals(index.toString(), value.getString("name"))
-
-                    //todo: SmallMapLiveBreakpointTest doesn't create child LiveVariables
-                    val actualValue = value.getJsonArray("value").first() as JsonObject
-                    assertEquals(index.toString(), actualValue.getString("value"))
+                    assertEquals(index.toString(), mapValues.getString(index.toString()))
                 }
-                val lastValue = (mapValues.last() as JsonObject).getJsonObject("value")
-                assertEquals("MAX_COLLECTION_SIZE_EXCEEDED", lastValue.getString("@skip"))
-                assertEquals(100_000, lastValue.getInteger("@skip[size]"))
-                assertEquals(100, lastValue.getInteger("@skip[max]"))
+                assertEquals("MAX_COLLECTION_SIZE_EXCEEDED", mapValues.getString("@skip"))
+                assertEquals(100_000, mapValues.getInteger("@skip[size]"))
+                assertEquals(100, mapValues.getInteger("@skip[max]"))
+                assertNotNull(mapValues.getString("@id"))
             }
 
             //test passed
