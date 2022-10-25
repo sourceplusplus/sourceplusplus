@@ -67,7 +67,7 @@ class LiveInstrumentTest : PlatformIntegrationTest() {
     fun getLiveInstrumentById() {
         val testContext = VertxTestContext()
         instrumentService.addLiveInstrument(
-            LiveBreakpoint(LiveSourceLocation("integration.LiveInstrumentTest", 1))
+            LiveBreakpoint(location = LiveSourceLocation("integration.LiveInstrumentTest", 1))
         ).onComplete {
             if (it.succeeded()) {
                 val originalId = it.result().id!!
@@ -100,8 +100,8 @@ class LiveInstrumentTest : PlatformIntegrationTest() {
         val testContext = VertxTestContext()
         instrumentService.addLiveInstruments(
             listOf(
-                LiveBreakpoint(LiveSourceLocation("integration.LiveInstrumentTest", 1)),
-                LiveBreakpoint(LiveSourceLocation("integration.LiveInstrumentTest", 2))
+                LiveBreakpoint(location = LiveSourceLocation("integration.LiveInstrumentTest", 1)),
+                LiveBreakpoint(location = LiveSourceLocation("integration.LiveInstrumentTest", 2))
             )
         ).onComplete {
             if (it.succeeded()) {
@@ -179,7 +179,7 @@ class LiveInstrumentTest : PlatformIntegrationTest() {
             if (it.succeeded()) {
                 instrumentService.addLiveInstrument(
                     LiveBreakpoint(
-                        LiveSourceLocation("spp.example.webapp.controller.LiveInstrumentController", 16),
+                        location = LiveSourceLocation("spp.example.webapp.controller.LiveInstrumentController", 16),
                         applyImmediately = true
                     )
                 ).onComplete {
@@ -247,7 +247,7 @@ class LiveInstrumentTest : PlatformIntegrationTest() {
             if (it.succeeded()) {
                 instrumentService.addLiveInstrument(
                     LiveBreakpoint(
-                        LiveSourceLocation("spp.example.webapp.controller.LiveInstrumentController", 16),
+                        location = LiveSourceLocation("spp.example.webapp.controller.LiveInstrumentController", 16),
                         applyImmediately = true
                     )
                 ).onComplete {
@@ -315,7 +315,7 @@ class LiveInstrumentTest : PlatformIntegrationTest() {
             if (it.succeeded()) {
                 instrumentService.addLiveInstrument(
                     LiveBreakpoint(
-                        LiveSourceLocation("spp.example.webapp.edge.SingleThread", 28),
+                        location = LiveSourceLocation("spp.example.webapp.edge.SingleThread", 28),
                         applyImmediately = true
                     )
                 ).onComplete {
@@ -383,7 +383,7 @@ class LiveInstrumentTest : PlatformIntegrationTest() {
             if (it.succeeded()) {
                 instrumentService.addLiveInstrument(
                     LiveBreakpoint(
-                        LiveSourceLocation("spp.example.webapp.edge.SingleThread", 28),
+                        location = LiveSourceLocation("spp.example.webapp.edge.SingleThread", 28),
                         applyImmediately = true
                     )
                 ).onComplete {

@@ -53,7 +53,7 @@ class JWTTest : PlatformIntegrationTest() {
         val testContext = VertxTestContext()
         instrumentService.addLiveInstrument(
             LiveBreakpoint(
-                LiveSourceLocation("integration.JWTTest", 1),
+                location = LiveSourceLocation("integration.JWTTest", 1),
                 condition = "1 == 2"
             )
         ).onComplete {
@@ -251,7 +251,7 @@ class JWTTest : PlatformIntegrationTest() {
         val instrumentService = LiveInstrumentService.createProxy(vertx, TEST_JWT_TOKEN)
         instrumentService.addLiveInstrument(
             LiveBreakpoint(
-                LiveSourceLocation("integration.JWTTest", 2),
+                location = LiveSourceLocation("integration.JWTTest", 2),
                 condition = "-41 == -12"
             )
         ).onComplete {
