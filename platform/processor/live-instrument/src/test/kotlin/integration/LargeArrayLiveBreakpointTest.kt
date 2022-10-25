@@ -67,7 +67,7 @@ class LargeArrayLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                     assertEquals(1, value.getInteger("value"))
                 }
                 val lastValue = (arrayValues.last() as JsonObject).getJsonObject("value")
-                assertEquals("MAX_COLLECTION_SIZE_EXCEEDED", lastValue.getString("@skip"))
+                assertEquals("MAX_LENGTH_EXCEEDED", lastValue.getString("@skip"))
                 assertEquals(100_000, lastValue.getInteger("@skip[size]"))
                 assertEquals(100, lastValue.getInteger("@skip[max]"))
             }

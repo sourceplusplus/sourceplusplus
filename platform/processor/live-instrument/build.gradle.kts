@@ -11,7 +11,7 @@ version = project.properties["platformVersion"] as String? ?: projectVersion
 dependencies {
     compileOnly(project(":platform:common"))
 
-    testImplementation(project(":probes:jvm:control"))
+    testImplementation(project(":probes:jvm:boot"))
     testImplementation("org.apache.logging.log4j:log4j-core:2.19.0")
     //todo: properly add test dependency
     testImplementation(project(":platform:common").dependencyProject.extensions.getByType(SourceSetContainer::class).test.get().output)
