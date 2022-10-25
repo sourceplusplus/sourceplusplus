@@ -22,25 +22,18 @@ import org.bouncycastle.asn1.x500.X500Name
 import org.bouncycastle.asn1.x509.*
 import org.bouncycastle.cert.CertIOException
 import org.bouncycastle.cert.X509ExtensionUtils
-import org.bouncycastle.cert.X509v3CertificateBuilder
 import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter
 import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder
-import org.bouncycastle.crypto.params.AsymmetricKeyParameter
-import org.bouncycastle.crypto.util.PrivateKeyFactory
-import org.bouncycastle.operator.DefaultDigestAlgorithmIdentifierFinder
-import org.bouncycastle.operator.DefaultSignatureAlgorithmIdentifierFinder
 import org.bouncycastle.operator.DigestCalculator
 import org.bouncycastle.operator.OperatorCreationException
 import org.bouncycastle.operator.bc.BcDigestCalculatorProvider
-import org.bouncycastle.operator.bc.BcRSAContentSignerBuilder
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder
-import org.bouncycastle.pkcs.PKCS10CertificationRequest
-import java.io.ByteArrayInputStream
-import java.io.InputStream
 import java.math.BigInteger
-import java.security.*
+import java.security.KeyPair
+import java.security.KeyPairGenerator
+import java.security.PublicKey
+import java.security.SecureRandom
 import java.security.cert.CertificateException
-import java.security.cert.CertificateFactory
 import java.security.cert.X509Certificate
 import java.time.Duration
 import java.time.Instant
@@ -119,29 +112,5 @@ object SelfSignedCertGenerator {
         val random = SecureRandom.getInstance("SHA1PRNG", "SUN")
         keyGen.initialize(keySize, random)
         return keyGen.generateKeyPair()
-    }
-
-    fun sign(inputCSR: PKCS10CertificationRequest, caPrivate: PrivateKey, pair: KeyPair): X509Certificate {
-        val sigAlgId = DefaultSignatureAlgorithmIdentifierFinder().find("SHA1withRSA")
-        val digAlgId = DefaultDigestAlgorithmIdentifierFinder().find(sigAlgId)
-        val foo: AsymmetricKeyParameter = PrivateKeyFactory.createKey(caPrivate.encoded)
-        val keyInfo = SubjectPublicKeyInfo.getInstance(pair.public.encoded)
-        val myCertificateGenerator = X509v3CertificateBuilder(
-            X500Name("CN=issuer"), BigInteger("1"),
-            Date(
-                System.currentTimeMillis()
-            ), Date(
-                System.currentTimeMillis() + (30 * 365 * 24 * 60 * 60 * 1000)
-            ), inputCSR.subject, keyInfo
-        )
-        val sigGen = BcRSAContentSignerBuilder(sigAlgId, digAlgId).build(foo)
-        val holder = myCertificateGenerator.build(sigGen)
-        val eeX509CertificateStructure = holder.toASN1Structure()
-        val cf: CertificateFactory = CertificateFactory.getInstance("X.509", "BC")
-
-        val is1: InputStream = ByteArrayInputStream(eeX509CertificateStructure.encoded)
-        val theCert = cf.generateCertificate(is1) as X509Certificate
-        is1.close()
-        return theCert
     }
 }
