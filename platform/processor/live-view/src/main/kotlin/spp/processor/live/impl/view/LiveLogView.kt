@@ -23,6 +23,7 @@ import mu.KotlinLogging
 import org.apache.skywalking.apm.network.logging.v3.LogData
 import org.apache.skywalking.oap.log.analyzer.provider.log.listener.LogAnalysisListener
 import org.apache.skywalking.oap.log.analyzer.provider.log.listener.LogAnalysisListenerFactory
+import org.apache.skywalking.oap.server.core.analysis.IDManager
 import spp.platform.common.ClusterConnection
 import spp.processor.live.impl.view.util.MetricTypeSubscriptionCache
 import spp.protocol.artifact.log.Log
@@ -48,8 +49,18 @@ class LiveLogView(private val subscriptionCache: MetricTypeSubscriptionCache) : 
             val subbedArtifacts = subscriptionCache["endpoint_logs"]
             if (subbedArtifacts != null) {
                 val logPattern = logData.body.text.text
-                val subs = subbedArtifacts[logPattern]
-                subs?.forEach { sub ->
+                var subs = subbedArtifacts[logPattern].orEmpty()
+
+                //remove subscribers with additional filters
+                subs = subs.filter {
+                    val service = it.subscription.artifactLocation?.service
+                    if (service != null && !isSameService(service, logData.service)) {
+                        return@filter false
+                    }
+                    return@filter true
+                }.toSet()
+
+                subs.forEach { sub ->
                     log.debug { "Sending log pattern $logPattern to subscriber $sub" }
 
                     val logRecord = Log(
@@ -73,6 +84,10 @@ class LiveLogView(private val subscriptionCache: MetricTypeSubscriptionCache) : 
             }
             return this
         }
+    }
+
+    private fun isSameService(serviceIdOrName: String, serviceName: String): Boolean {
+        return serviceIdOrName == serviceName || serviceIdOrName == IDManager.ServiceID.buildId(serviceName, true)
     }
 
     override fun create() = sppLogAnalyzer
