@@ -38,6 +38,7 @@ import spp.protocol.view.LiveView
 import spp.protocol.view.LiveViewConfig
 import spp.protocol.view.LiveViewEvent
 
+@Disabled //todo: this test is flaky
 class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
 
     companion object {
@@ -125,7 +126,6 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
         assertEquals(100, totalCount)
     }
 
-    @Disabled
     @Test
     fun testDoubleCountIncrement(): Unit = runBlocking {
         setupLineLabels {
