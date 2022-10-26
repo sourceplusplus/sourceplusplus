@@ -145,7 +145,15 @@ object InstrumentProcessor : FeedbackProcessor() {
         if (msg.headers().get("action") == "addLiveInstruments") {
             val batchPromise = Promise.promise<Message<JsonObject>>()
             msg.body().getJsonArray("instruments").list.forEach {
-                val instrumentType = JsonObject.mapFrom(it).getString("type")
+                val instrumentOb = JsonObject.mapFrom(it)
+                val variableControl = instrumentOb.getJsonObject("variableControl")
+                if (variableControl != null && !selfInfo.permissions.contains(BREAKPOINT_VARIABLE_CONTROL)) {
+                    log.warn("User ${selfInfo.developer.id} missing permission: $BREAKPOINT_VARIABLE_CONTROL")
+                    handler.handle(Future.failedFuture(PermissionAccessDenied(BREAKPOINT_VARIABLE_CONTROL).toEventBusException()))
+                    return
+                }
+
+                val instrumentType = instrumentOb.getString("type")
                 val necessaryPermission = RolePermission.valueOf("ADD_LIVE_$instrumentType")
                 if (!selfInfo.permissions.contains(necessaryPermission)) {
                     log.warn("User ${selfInfo.developer.id} missing permission: $necessaryPermission")
@@ -155,6 +163,13 @@ object InstrumentProcessor : FeedbackProcessor() {
             batchPromise.tryComplete(msg)
             handler.handle(batchPromise.future())
         } else if (msg.headers().get("action") == "addLiveInstrument") {
+            val variableControl = msg.body().getJsonObject("instrument").getJsonObject("variableControl")
+            if (variableControl != null && !selfInfo.permissions.contains(BREAKPOINT_VARIABLE_CONTROL)) {
+                log.warn("User ${selfInfo.developer.id} missing permission: $BREAKPOINT_VARIABLE_CONTROL")
+                handler.handle(Future.failedFuture(PermissionAccessDenied(BREAKPOINT_VARIABLE_CONTROL).toEventBusException()))
+                return
+            }
+
             val instrumentType = msg.body().getJsonObject("instrument").getString("type")
             val necessaryPermission = RolePermission.valueOf("ADD_LIVE_$instrumentType")
             if (selfInfo.permissions.contains(necessaryPermission)) {
