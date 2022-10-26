@@ -164,7 +164,7 @@ class ThrottleLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         }
 
         successOnTimeout(testContext, 30)
-        assertEquals(100.0, bpHitCount.get().toDouble(), 2.0) //allow for some variance
+        assertEquals(100.0, bpHitCount.get().toDouble(), 3.0) //allow for some variance
 
         //clean up
         assertNotNull(instrumentService.removeLiveInstrument(liveInstrument.id!!).await())
