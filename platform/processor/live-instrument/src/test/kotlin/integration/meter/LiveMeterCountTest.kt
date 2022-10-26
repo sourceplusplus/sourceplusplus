@@ -24,6 +24,7 @@ import io.vertx.kotlin.coroutines.await
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import spp.protocol.artifact.ArtifactQualifiedName
 import spp.protocol.artifact.ArtifactType
@@ -124,6 +125,7 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
         assertEquals(100, totalCount)
     }
 
+    @Disabled
     @Test
     fun testDoubleCountIncrement(): Unit = runBlocking {
         setupLineLabels {
