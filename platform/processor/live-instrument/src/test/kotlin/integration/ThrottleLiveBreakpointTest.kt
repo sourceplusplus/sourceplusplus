@@ -74,7 +74,7 @@ class ThrottleLiveBreakpointTest : LiveInstrumentIntegrationTest() {
             }
         }
 
-        successOnTimeout(testContext, 25)
+        successOnTimeout(testContext, 30)
         assertEquals(10.0, bpHitCount.get().toDouble(), 1.0) //allow for some variance
 
         //clean up
@@ -119,7 +119,7 @@ class ThrottleLiveBreakpointTest : LiveInstrumentIntegrationTest() {
             }
         }
 
-        successOnTimeout(testContext, 25)
+        successOnTimeout(testContext, 30)
         assertEquals(20.0, bpHitCount.get().toDouble(), 1.0) //allow for some variance
 
         //clean up
@@ -163,8 +163,8 @@ class ThrottleLiveBreakpointTest : LiveInstrumentIntegrationTest() {
             }
         }
 
-        successOnTimeout(testContext, 25)
-        assertEquals(100, bpHitCount.get())
+        successOnTimeout(testContext, 30)
+        assertEquals(100.0, bpHitCount.get().toDouble(), 2.0) //allow for some variance
 
         //clean up
         assertNotNull(instrumentService.removeLiveInstrument(liveInstrument.id!!).await())
