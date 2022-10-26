@@ -63,7 +63,11 @@ class LargeObjectLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                 )
                 assertEquals(
                     (1024 * 1024 * 2) + 16, //2mb + 16 bytes for byte[] size
-                    twoMbArrVariableData.getString("@size").toInt()
+                    twoMbArrVariableData.getString("@skip[size]").toInt()
+                )
+                assertEquals(
+                    1024 * 1024, //1mb
+                    twoMbArrVariableData.getString("@skip[max]").toInt()
                 )
             }
 

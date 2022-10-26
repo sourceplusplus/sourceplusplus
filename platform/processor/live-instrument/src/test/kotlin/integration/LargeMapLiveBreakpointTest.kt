@@ -66,7 +66,7 @@ class LargeMapLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                 for (index in 0..99) {
                     assertEquals(index.toString(), mapValues.getString(index.toString()))
                 }
-                assertEquals("MAX_COLLECTION_SIZE_EXCEEDED", mapValues.getString("@skip"))
+                assertEquals("MAX_LENGTH_EXCEEDED", mapValues.getString("@skip"))
                 assertEquals(100_000, mapValues.getInteger("@skip[size]"))
                 assertEquals(100, mapValues.getInteger("@skip[max]"))
                 assertNotNull(mapValues.getString("@id"))
