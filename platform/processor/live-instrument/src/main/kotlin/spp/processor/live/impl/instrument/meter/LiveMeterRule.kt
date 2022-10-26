@@ -31,9 +31,23 @@ class LiveMeterRule(liveMeter: LiveMeter) : MeterConfig.Rule() {
                 val idVariable = liveMeter.toMetricIdWithoutPrefix()
                 name = idVariable
                 exp = if (Version.CURRENT.buildVersion.startsWith("8")) {
-                    "($idVariable.sum(['service', 'instance']).downsampling(SUM)).instance(['service'], ['instance'])"
+                    buildString {
+                        append("(")
+                        append(idVariable)
+                        append(".sum(['service', 'instance'])")
+                        append(".downsampling(SUM)")
+                        append(")")
+                        append(".instance(['service'], ['instance'])")
+                    }
                 } else if (Version.CURRENT.buildVersion.startsWith("9")) {
-                    "($idVariable.sum(['service', 'instance']).downsampling(SUM)).instance(['service'], ['instance'], Layer.GENERAL)"
+                    buildString {
+                        append("(")
+                        append(idVariable)
+                        append(".sum(['service', 'instance'])")
+                        append(".downsampling(SUM)")
+                        append(")")
+                        append(".instance(['service'], ['instance'], Layer.GENERAL)")
+                    }
                 } else {
                     error("Unsupported version: ${Version.CURRENT.buildVersion}")
                 }
@@ -43,9 +57,21 @@ class LiveMeterRule(liveMeter: LiveMeter) : MeterConfig.Rule() {
                 val idVariable = liveMeter.toMetricIdWithoutPrefix()
                 name = idVariable
                 exp = if (Version.CURRENT.buildVersion.startsWith("8")) {
-                    "($idVariable.downsampling(LATEST)).instance(['service'], ['instance'])"
+                    buildString {
+                        append("(")
+                        append(idVariable)
+                        append(".downsampling(LATEST)")
+                        append(")")
+                        append(".instance(['service'], ['instance'])")
+                    }
                 } else if (Version.CURRENT.buildVersion.startsWith("9")) {
-                    "($idVariable.downsampling(LATEST)).instance(['service'], ['instance'], Layer.GENERAL)"
+                    buildString {
+                        append("(")
+                        append(idVariable)
+                        append(".downsampling(LATEST)")
+                        append(")")
+                        append(".instance(['service'], ['instance'], Layer.GENERAL)")
+                    }
                 } else {
                     error("Unsupported version: ${Version.CURRENT.buildVersion}")
                 }
@@ -55,9 +81,27 @@ class LiveMeterRule(liveMeter: LiveMeter) : MeterConfig.Rule() {
                 val idVariable = liveMeter.toMetricIdWithoutPrefix()
                 name = idVariable
                 exp = if (Version.CURRENT.buildVersion.startsWith("8")) {
-                    "($idVariable.sum(['le', 'service', 'instance']).increase('PT5M').histogram().histogram_percentile([50,70,90,99])).instance(['service'], ['instance'])"
+                    buildString {
+                        append("(")
+                        append(idVariable)
+                        append(".sum(['le', 'service', 'instance'])")
+                        append(".increase('PT5M')")
+                        append(".histogram()")
+                        append(".histogram_percentile([50,70,90,99])")
+                        append(")")
+                        append(".instance(['service'], ['instance'])")
+                    }
                 } else if (Version.CURRENT.buildVersion.startsWith("9")) {
-                    "($idVariable.sum(['le', 'service', 'instance']).increase('PT5M').histogram().histogram_percentile([50,70,90,99])).instance(['service'], ['instance'], Layer.GENERAL)"
+                    buildString {
+                        append("(")
+                        append(idVariable)
+                        append(".sum(['le', 'service', 'instance'])")
+                        append(".increase('PT5M')")
+                        append(".histogram()")
+                        append(".histogram_percentile([50,70,90,99])")
+                        append(")")
+                        append(".instance(['service'], ['instance'], Layer.GENERAL)")
+                    }
                 } else {
                     error("Unsupported version: ${Version.CURRENT.buildVersion}")
                 }
@@ -70,7 +114,8 @@ class LiveMeterRule(liveMeter: LiveMeter) : MeterConfig.Rule() {
     companion object {
         fun toMeterConfig(liveMeter: LiveMeter): MeterConfig? {
             if (!liveMeter.metricValue.valueType.isAlwaysNumeric()) {
-                //non-numeric gauges are currently handled via live logs. SW may support this via meters in the future
+                //non-numeric gauges are currently handled via live logs.
+                // SW may support this via meters in the future
                 return null
             }
 
