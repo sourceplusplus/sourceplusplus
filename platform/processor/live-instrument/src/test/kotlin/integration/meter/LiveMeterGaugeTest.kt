@@ -38,7 +38,9 @@ import spp.protocol.view.LiveViewConfig
 import spp.protocol.view.LiveViewEvent
 import java.io.ByteArrayOutputStream
 import java.io.ObjectOutputStream
+import java.io.Serializable
 import java.util.*
+import java.util.function.Supplier
 
 class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
 
@@ -59,7 +61,9 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
         val meterId = "test-gauge"
         log.info("Using meter id: {}", meterId)
 
-        val supplier: () -> Double = { System.currentTimeMillis().toDouble() }
+        val supplier = object : Supplier<Double>, Serializable {
+            override fun get(): Double = System.currentTimeMillis().toDouble()
+        }
         val encodedSupplier = Base64.getEncoder().encodeToString(ByteArrayOutputStream().run {
             ObjectOutputStream(this).apply { writeObject(supplier) }
             toByteArray()
@@ -114,7 +118,7 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
                 assertTrue(suppliedTime <= System.currentTimeMillis())
             }
             testContext.completeNow()
-        }
+        }.completionHandler().await()
 
         instrumentService.addLiveInstrument(liveMeter).await()
 
