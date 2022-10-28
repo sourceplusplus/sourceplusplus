@@ -106,9 +106,8 @@ object ClusterConnection {
                                 RedisConfig()
                                     .setKeyNamespace("cluster")
                                     .addEndpoint(storageAddress)
-                            .addLock(LockConfig(Pattern.compile("expiring_shared_data:.*")).setLeaseTime(5000))
-                    )
-                    }
+                            .addLock(LockConfig(Pattern.compile("expiring_shared_data:.*")).setLeaseTime(5000)))
+                        }
                     }
                     runBlocking {
                         val vertx = if (clusterMode) {
