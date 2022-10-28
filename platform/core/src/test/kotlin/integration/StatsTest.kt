@@ -32,9 +32,7 @@ class StatsTest : PlatformIntegrationTest() {
     @Test
     fun verifyStats() {
         val testContext = VertxTestContext()
-        val client = WebClient.create(
-            vertx, WebClientOptions().setSsl(true).setTrustAll(true).setVerifyHost(false)
-        )
+        val client = WebClient.create(vertx, WebClientOptions())
         client.get(12800, platformHost, "/stats").bearerTokenAuthentication(SYSTEM_JWT_TOKEN).send().onComplete {
             if (it.succeeded()) {
                 val result = it.result().bodyAsJsonObject().getJsonObject("platform")
