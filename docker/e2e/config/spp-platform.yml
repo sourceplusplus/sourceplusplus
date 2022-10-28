@@ -59,6 +59,8 @@ storage:
   redis:
     host: ${SPP_STORAGE_HOST:-localhost}
     port: ${SPP_STORAGE_PORT:-6379}
+    cluster:
+      enabled: ${SPP_STORAGE_CLUSTER_ENABLED:-false}
 
 skywalking-oap:
   host: ${SPP_OAP_HOST:-localhost}
