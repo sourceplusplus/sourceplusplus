@@ -64,7 +64,7 @@ class ServiceProvider(private val jwtAuth: JWTAuth?) : CoroutineVerticle() {
             liveManagementService = publishService(
                 LIVE_MANAGEMENT_SERVICE,
                 LiveManagementService::class.java,
-                LiveManagementServiceImpl(vertx)
+                LiveManagementServiceImpl(vertx, jwtAuth)
             )
         } catch (throwable: Throwable) {
             log.error("Failed to start SkyWalking provider", throwable)

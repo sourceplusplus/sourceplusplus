@@ -22,6 +22,8 @@ import io.vertx.core.Promise
 import io.vertx.core.Vertx
 import io.vertx.core.http.HttpMethod
 import io.vertx.core.json.JsonObject
+import io.vertx.ext.auth.JWTOptions
+import io.vertx.ext.auth.jwt.JWTAuth
 import io.vertx.kotlin.coroutines.await
 import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.GlobalScope
@@ -46,7 +48,7 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 
-class LiveManagementServiceImpl(private val vertx: Vertx) : LiveManagementService {
+class LiveManagementServiceImpl(private val vertx: Vertx, private val jwt: JWTAuth?) : LiveManagementService {
 
     companion object {
         private val log = KotlinLogging.logger {}
@@ -287,6 +289,75 @@ class LiveManagementServiceImpl(private val vertx: Vertx) : LiveManagementServic
         val promise = Promise.promise<ClientAccess>()
         GlobalScope.launch(vertx.dispatcher()) {
             promise.complete(SourceStorage.refreshClientAccess(id))
+        }
+        return promise.future()
+    }
+
+    override fun getAuthToken(token: String): Future<String> {
+        log.trace { "Getting auth token" }
+        if (jwt == null) {
+            return Future.failedFuture("JWT is not enabled")
+        }
+
+        val promise = Promise.promise<String>()
+        GlobalScope.launch(vertx.dispatcher()) {
+            val dev = SourceStorage.getDeveloperByAccessToken(token)
+            if (dev != null) {
+                val jwtToken = jwt.generateToken(
+                    JsonObject().apply {
+//                        if (!tenantId.isNullOrEmpty()) {
+//                            put("tenant_id", tenantId)
+//                        }
+                    }
+                        .put("developer_id", dev.id)
+                        .put("created_at", Instant.now().toEpochMilli())
+                        //todo: reasonable expires_at
+                        .put("expires_at", Instant.now().plus(365, ChronoUnit.DAYS).toEpochMilli()),
+                    JWTOptions().setAlgorithm("RS256")
+                )
+                promise.complete(jwtToken)
+            } else {
+                log.warn("Invalid token request. Token: {}", token)
+                promise.fail("Invalid token request")
+            }
+        }
+        return promise.future()
+    }
+
+    override fun addDeveloper(id: String): Future<Developer> {
+        log.trace { "Adding developer with id: $id" }
+        val promise = Promise.promise<Developer>()
+        GlobalScope.launch(vertx.dispatcher()) {
+            promise.complete(SourceStorage.addDeveloper(id))
+        }
+        return promise.future()
+    }
+
+    override fun addRole(role: DeveloperRole): Future<Boolean> {
+        log.trace { "Adding role with name: $role" }
+        val promise = Promise.promise<Boolean>()
+        GlobalScope.launch(vertx.dispatcher()) {
+            promise.complete(SourceStorage.addRole(role))
+        }
+        return promise.future()
+    }
+
+    override fun addDeveloperRole(developerId: String, role: DeveloperRole): Future<Void> {
+        log.trace { "Adding role with id: ${role.roleName} to developer with id: $developerId" }
+        val promise = Promise.promise<Void>()
+        GlobalScope.launch(vertx.dispatcher()) {
+            SourceStorage.addRoleToDeveloper(developerId, role)
+            promise.complete()
+        }
+        return promise.future()
+    }
+
+    override fun addRolePermission(role: DeveloperRole, permission: RolePermission): Future<Void> {
+        log.trace { "Adding permission with id: ${permission.name} to role with id: ${role.roleName}" }
+        val promise = Promise.promise<Void>()
+        GlobalScope.launch(vertx.dispatcher()) {
+            SourceStorage.addPermissionToRole(role, permission)
+            promise.complete()
         }
         return promise.future()
     }

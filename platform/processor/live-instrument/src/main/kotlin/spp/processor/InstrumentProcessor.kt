@@ -47,7 +47,7 @@ import spp.protocol.service.LiveInstrumentService
 import spp.protocol.service.LiveManagementService
 import spp.protocol.service.SourceServices
 import spp.protocol.service.error.InstrumentAccessDenied
-import spp.protocol.service.error.PermissionAccessDenied
+import spp.protocol.service.error.PermissionAccessDenied.Companion.asEventBusException
 import kotlin.system.exitProcess
 
 object InstrumentProcessor : FeedbackProcessor() {
@@ -145,44 +145,59 @@ object InstrumentProcessor : FeedbackProcessor() {
         if (msg.headers().get("action") == "addLiveInstruments") {
             val batchPromise = Promise.promise<Message<JsonObject>>()
             msg.body().getJsonArray("instruments").list.forEach {
-                val instrumentType = JsonObject.mapFrom(it).getString("type")
+                val instrumentOb = JsonObject.mapFrom(it)
+                val variableControl = instrumentOb.getJsonObject("variableControl")
+                if (variableControl != null && !selfInfo.permissions.contains(BREAKPOINT_VARIABLE_CONTROL)) {
+                    log.warn("User ${selfInfo.developer.id} missing permission: $BREAKPOINT_VARIABLE_CONTROL")
+                    handler.handle(Future.failedFuture(asEventBusException(BREAKPOINT_VARIABLE_CONTROL)))
+                    return
+                }
+
+                val instrumentType = instrumentOb.getString("type")
                 val necessaryPermission = RolePermission.valueOf("ADD_LIVE_$instrumentType")
                 if (!selfInfo.permissions.contains(necessaryPermission)) {
                     log.warn("User ${selfInfo.developer.id} missing permission: $necessaryPermission")
-                    batchPromise.fail(PermissionAccessDenied(necessaryPermission).toEventBusException())
+                    batchPromise.fail(asEventBusException(necessaryPermission))
                 }
             }
             batchPromise.tryComplete(msg)
             handler.handle(batchPromise.future())
         } else if (msg.headers().get("action") == "addLiveInstrument") {
+            val variableControl = msg.body().getJsonObject("instrument").getJsonObject("variableControl")
+            if (variableControl != null && !selfInfo.permissions.contains(BREAKPOINT_VARIABLE_CONTROL)) {
+                log.warn("User ${selfInfo.developer.id} missing permission: $BREAKPOINT_VARIABLE_CONTROL")
+                handler.handle(Future.failedFuture(asEventBusException(BREAKPOINT_VARIABLE_CONTROL)))
+                return
+            }
+
             val instrumentType = msg.body().getJsonObject("instrument").getString("type")
             val necessaryPermission = RolePermission.valueOf("ADD_LIVE_$instrumentType")
             if (selfInfo.permissions.contains(necessaryPermission)) {
                 handler.handle(Future.succeededFuture(msg))
             } else {
                 log.warn("User ${selfInfo.developer.id} missing permission: $necessaryPermission")
-                handler.handle(Future.failedFuture(PermissionAccessDenied(necessaryPermission).toEventBusException()))
+                handler.handle(Future.failedFuture(asEventBusException(necessaryPermission)))
             }
         } else if (msg.headers().get("action").startsWith("removeLiveInstrument")) {
             if (selfInfo.permissions.contains(REMOVE_LIVE_INSTRUMENT)) {
                 handler.handle(Future.succeededFuture(msg))
             } else {
                 log.warn("User ${selfInfo.developer.id} missing permission: $REMOVE_LIVE_INSTRUMENT")
-                handler.handle(Future.failedFuture(PermissionAccessDenied(REMOVE_LIVE_INSTRUMENT).toEventBusException()))
+                handler.handle(Future.failedFuture(asEventBusException(REMOVE_LIVE_INSTRUMENT)))
             }
         } else if (msg.headers().get("action").startsWith("getLiveInstrument")) {
             if (selfInfo.permissions.contains(GET_LIVE_INSTRUMENTS)) {
                 handler.handle(Future.succeededFuture(msg))
             } else {
                 log.warn("User ${selfInfo.developer.id} missing permission: $GET_LIVE_INSTRUMENTS")
-                handler.handle(Future.failedFuture(PermissionAccessDenied(GET_LIVE_INSTRUMENTS).toEventBusException()))
+                handler.handle(Future.failedFuture(asEventBusException(GET_LIVE_INSTRUMENTS)))
             }
         } else if (msg.headers().get("action") == "clearLiveInstruments") {
             if (selfInfo.permissions.contains(CLEAR_ALL_LIVE_INSTRUMENTS)) {
                 handler.handle(Future.succeededFuture(msg))
             } else {
                 log.warn("User ${selfInfo.developer.id} missing permission: $CLEAR_ALL_LIVE_INSTRUMENTS")
-                handler.handle(Future.failedFuture(PermissionAccessDenied(CLEAR_ALL_LIVE_INSTRUMENTS).toEventBusException()))
+                handler.handle(Future.failedFuture(asEventBusException(CLEAR_ALL_LIVE_INSTRUMENTS)))
             }
         } else if (RolePermission.fromString(msg.headers().get("action")) != null) {
             val necessaryPermission = RolePermission.fromString(msg.headers().get("action"))!!
@@ -190,7 +205,7 @@ object InstrumentProcessor : FeedbackProcessor() {
                 handler.handle(Future.succeededFuture(msg))
             } else {
                 log.warn("User ${selfInfo.developer.id} missing permission: $necessaryPermission")
-                handler.handle(Future.failedFuture(PermissionAccessDenied(necessaryPermission).toEventBusException()))
+                handler.handle(Future.failedFuture(asEventBusException(necessaryPermission)))
             }
         } else {
             TODO()

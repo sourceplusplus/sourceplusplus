@@ -54,6 +54,7 @@ import spp.protocol.instrument.meter.MetricValue
 import spp.protocol.instrument.meter.MetricValueType
 import spp.protocol.instrument.throttle.InstrumentThrottle
 import spp.protocol.instrument.throttle.ThrottleStep
+import spp.protocol.instrument.variable.LiveVariableControl
 import spp.protocol.platform.auth.*
 import spp.protocol.platform.auth.RolePermission.*
 import spp.protocol.platform.developer.Developer
@@ -1411,6 +1412,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
             } else "system"
 
             val input = JsonObject.mapFrom(env.getArgument("input"))
+            val variableControl = input.getJsonObject("variableControl")
             val location = input.getJsonObject("location")
             val locationSource = location.getString("source")
             val locationLine = location.getInteger("line")
@@ -1439,6 +1441,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
                 if (it.succeeded()) {
                     it.result().addLiveInstrument(
                         LiveBreakpoint(
+                            variableControl = variableControl?.let { LiveVariableControl(it) },
                             location = LiveSourceLocation(locationSource, locationLine),
                             condition = condition,
                             expiresAt = expiresAt,
@@ -1874,6 +1877,20 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
         val rtnMap = (JsonObject.mapFrom(liveInstrument).map as Map<String, Any>).toMutableMap()
         val meta = rtnMap["meta"] as LinkedHashMap<String, String>
         rtnMap["meta"] = meta.map { mapOf("name" to it.key, "value" to it.value) }.toTypedArray()
+        if (liveInstrument is LiveBreakpoint && liveInstrument.variableControl != null) {
+            liveInstrument.variableControl?.variableTypeConfig.let {
+                val variableTypeMap = JsonObject.mapFrom(it).map
+                val variableTypeArray = variableTypeMap
+                    .map { mapOf("type" to it.key, "control" to it.value) }.toTypedArray()
+                (rtnMap["variableControl"] as MutableMap<String, Any>).put("variableTypeConfig", variableTypeArray)
+            }
+            liveInstrument.variableControl?.variableNameConfig.let {
+                val variableNameMap = JsonObject.mapFrom(it).map
+                val variableNameArray = variableNameMap
+                    .map { mapOf("name" to it.key, "control" to it.value) }.toTypedArray()
+                (rtnMap["variableControl"] as MutableMap<String, Any>).put("variableNameConfig", variableNameArray)
+            }
+        }
         return rtnMap
     }
 }

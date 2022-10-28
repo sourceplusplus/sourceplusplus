@@ -253,6 +253,7 @@ input LiveLogInput {
 
 type LiveBreakpoint implements LiveInstrument {
     id: String!
+    variableControl: LiveVariableControl
     location: LiveSourceLocation!
     condition: String
     expiresAt: Long
@@ -266,6 +267,7 @@ type LiveBreakpoint implements LiveInstrument {
 }
 
 input LiveBreakpointInput {
+    variableControl: LiveVariableControlInput
     location: LiveSourceLocationInput!
     condition: String
     expiresAt: Long
@@ -273,6 +275,54 @@ input LiveBreakpointInput {
     applyImmediately: Boolean
     throttle: InstrumentThrottleInput
     meta: [MetaInfoInput]
+}
+
+type LiveVariableControl {
+    maxObjectDepth: Int
+    maxObjectSize: Int
+    maxCollectionLength: Int
+    variableTypeConfig: [VariableTypeConfig]
+    variableNameConfig: [VariableNameConfig]
+}
+
+input LiveVariableControlInput {
+    maxObjectDepth: Int
+    maxObjectSize: Int
+    maxCollectionLength: Int
+    variableTypeConfig: [VariableTypeConfigInput]
+    variableNameConfig: [VariableNameConfigInput]
+}
+
+type LiveVariableControlBase {
+    maxObjectDepth: Int
+    maxObjectSize: Int
+    maxCollectionLength: Int
+}
+
+input LiveVariableControlBaseInput {
+    maxObjectDepth: Int
+    maxObjectSize: Int
+    maxCollectionLength: Int
+}
+
+type VariableTypeConfig {
+    type: String!
+    control: LiveVariableControlBase!
+}
+
+input VariableTypeConfigInput {
+    type: String!
+    control: LiveVariableControlBaseInput!
+}
+
+type VariableNameConfig {
+    name: String!
+    control: LiveVariableControlBase!
+}
+
+input VariableNameConfigInput {
+    name: String!
+    control: LiveVariableControlBaseInput!
 }
 
 type LiveSpan implements LiveInstrument {
