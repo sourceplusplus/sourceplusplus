@@ -18,6 +18,7 @@ pluginManagement {
     }
 }
 
+include("demos:groovy")
 include("demos:java")
 include("demos:kotlin")
 include("demos:nodejs")
