@@ -32,9 +32,7 @@ class ProbeGeneratorITTest : PlatformIntegrationTest() {
 
     @Test
     fun verifyGeneratedProbeConfig(): Unit = runBlocking {
-        val client = WebClient.create(
-            vertx, WebClientOptions().setSsl(true).setTrustAll(true).setVerifyHost(false)
-        )
+        val client = WebClient.create(vertx, WebClientOptions())
         val response = client.get(
             12800, platformHost, "/download/spp-probe.yml?access_token=change-me"
         ).send().await()

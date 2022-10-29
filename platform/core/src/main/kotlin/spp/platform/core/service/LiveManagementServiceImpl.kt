@@ -77,7 +77,7 @@ class LiveManagementServiceImpl(private val vertx: Vertx, private val jwt: JWTAu
     }
 
     override fun getStats(): Future<JsonObject> {
-        log.trace { "Getting platform stats" }
+        log.trace { "Getting management stats" }
         val promise = Promise.promise<JsonObject>()
         val devAuth = Vertx.currentContext().getLocal<DeveloperAuth>("developer")
 

@@ -47,10 +47,7 @@ class SourceServiceITTest : PlatformIntegrationTest() {
         @JvmStatic
         fun setupInit() {
             val platformHost = System.getenv("SPP_PLATFORM_HOST") ?: "localhost"
-            val client = WebClient.create(
-                vertx(),
-                WebClientOptions().setSsl(true).setTrustAll(true).setVerifyHost(false)
-            )
+            val client = WebClient.create(vertx(), WebClientOptions())
             request = client.post(12800, platformHost, "/graphql/spp")
                 .bearerTokenAuthentication(SYSTEM_JWT_TOKEN)
         }
@@ -62,7 +59,7 @@ class SourceServiceITTest : PlatformIntegrationTest() {
     }
 
     @BeforeEach
-    fun `reset`() = runBlocking {
+    fun reset() = runBlocking {
         val resetResp = request
             .sendJsonObject(
                 JsonObject().put("query", getGraphql("system/reset"))
