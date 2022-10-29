@@ -27,6 +27,7 @@ import io.vertx.ext.web.Router
 import io.vertx.kotlin.coroutines.await
 import io.vertx.servicediscovery.ServiceDiscovery
 import io.vertx.spi.cluster.redis.RedisClusterManager
+import io.vertx.spi.cluster.redis.config.LockConfig
 import io.vertx.spi.cluster.redis.config.RedisConfig
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
@@ -38,6 +39,7 @@ import spp.platform.common.util.MultiUseNetServer
 import spp.platform.common.util.args
 import java.io.File
 import java.util.*
+import java.util.regex.Pattern
 
 object ClusterConnection {
 
@@ -104,8 +106,9 @@ object ClusterConnection {
                                 RedisConfig()
                                     .setKeyNamespace("cluster")
                                     .addEndpoint(storageAddress)
-                            )
-                        }
+                            .addLock(LockConfig(Pattern.compile("expiring_shared_data:.*")).setLeaseTime(5000))
+                    )
+                    }
                     }
                     runBlocking {
                         val vertx = if (clusterMode) {

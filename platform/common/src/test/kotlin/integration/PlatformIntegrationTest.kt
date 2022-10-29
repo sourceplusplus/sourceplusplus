@@ -26,6 +26,7 @@ import io.vertx.junit5.VertxExtension
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
 import io.vertx.spi.cluster.redis.RedisClusterManager
+import io.vertx.spi.cluster.redis.config.LockConfig
 import io.vertx.spi.cluster.redis.config.RedisConfig
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterAll
@@ -36,6 +37,7 @@ import spp.protocol.service.LiveInstrumentService
 import spp.protocol.service.LiveManagementService
 import spp.protocol.service.LiveViewService
 import java.util.concurrent.TimeUnit
+import java.util.regex.Pattern
 
 @ExtendWith(VertxExtension::class)
 open class PlatformIntegrationTest {
@@ -80,6 +82,7 @@ open class PlatformIntegrationTest {
                 RedisConfig()
                     .setKeyNamespace("cluster")
                     .addEndpoint(clusterStorageAddress)
+                    .addLock(LockConfig(Pattern.compile("expiring_shared_data:.*")).setLeaseTime(5000))
             )
             runBlocking {
                 log.info("Starting vertx")
