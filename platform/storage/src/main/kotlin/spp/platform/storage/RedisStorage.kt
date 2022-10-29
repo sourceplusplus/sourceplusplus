@@ -151,7 +151,7 @@ open class RedisStorage(val vertx: Vertx) : CoreStorage {
 
     override suspend fun getDeveloperRoles(developerId: String): List<DeveloperRole> {
         val resp = redis.smembers(namespace("developers:$developerId:roles")).await()
-        log.trace("getDeveloperRoles: developerId=$developerId, roles=$resp")
+        log.trace("getDeveloperRoles: developerId=$developerId, roles=$resp; Type: " + resp::class.qualifiedName)
         return resp.map { DeveloperRole.fromString(it.toString(UTF_8)) }
     }
 
