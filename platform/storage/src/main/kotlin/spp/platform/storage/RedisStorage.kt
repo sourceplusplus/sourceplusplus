@@ -26,12 +26,17 @@ import io.vertx.core.shareddata.Lock
 import io.vertx.kotlin.coroutines.await
 import io.vertx.redis.client.Redis
 import io.vertx.redis.client.RedisAPI
+import mu.KotlinLogging
 import spp.protocol.instrument.LiveInstrument
 import spp.protocol.platform.auth.*
 import spp.protocol.platform.developer.Developer
 import java.nio.charset.StandardCharsets.UTF_8
 
 open class RedisStorage(val vertx: Vertx) : CoreStorage {
+
+    companion object {
+        private val log = KotlinLogging.logger {}
+    }
 
     lateinit var redisClient: Redis
     lateinit var redis: RedisAPI
@@ -145,8 +150,9 @@ open class RedisStorage(val vertx: Vertx) : CoreStorage {
     }
 
     override suspend fun getDeveloperRoles(developerId: String): List<DeveloperRole> {
-        return redis.smembers(namespace("developers:$developerId:roles")).await()
-            .map { DeveloperRole.fromString(it.toString(UTF_8)) }
+        val resp = redis.smembers(namespace("developers:$developerId:roles")).await()
+        log.trace("getDeveloperRoles: developerId=$developerId, roles=$resp")
+        return resp.map { DeveloperRole.fromString(it.toString(UTF_8)) }
     }
 
     override suspend fun getRoleAccessPermissions(role: DeveloperRole): Set<AccessPermission> {
