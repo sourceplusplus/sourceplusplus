@@ -94,6 +94,19 @@ jobs:
           name: skywalking-api.log
           path: ./build/skywalking-api.log
 
+      - name: Backup redis data
+        if: ${{ always() }}
+        run: |
+          docker exec -i redis sh -c 'exec redis-cli save'
+          docker cp redis:/data/dump.rdb ./platform/build/redis-dump.rdb
+
+      - name: Upload redis data artifact
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: redis-dump.rdb
+          path: ./platform/build/redis-dump.rdb
+
       - name: Make distribution
         if: github.ref == 'refs/heads/master'
         run: ./gradlew makeDist -x :interfaces:booster-ui:buildSkyWalkingUI -Dbuild.profile=release -PplatformVersion=$BUILD_VERSION
