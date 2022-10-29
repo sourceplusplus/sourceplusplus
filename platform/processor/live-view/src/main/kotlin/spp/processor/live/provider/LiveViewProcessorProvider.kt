@@ -23,6 +23,7 @@ import kotlinx.coroutines.launch
 import org.apache.skywalking.oap.log.analyzer.module.LogAnalyzerModule
 import org.apache.skywalking.oap.server.analyzer.module.AnalyzerModule
 import org.apache.skywalking.oap.server.core.CoreModule
+import org.apache.skywalking.oap.server.core.analysis.metrics.WithMetadata
 import org.apache.skywalking.oap.server.core.analysis.worker.MetricsStreamProcessor
 import org.apache.skywalking.oap.server.core.exporter.ExportEvent
 import org.apache.skywalking.oap.server.core.exporter.MetricValuesExportService
@@ -56,7 +57,7 @@ class LiveViewProcessorProvider : ModuleProvider() {
         Reflect.onClass(MetricsStreamProcessor::class.java).set("PROCESSOR", sppMetricsStreamProcessor)
 
         registerServiceImplementation(MetricValuesExportService::class.java, MetricValuesExportService {
-            if (it.type == ExportEvent.EventType.TOTAL) {
+            if (it.type == ExportEvent.EventType.TOTAL && it.metrics is WithMetadata) {
                 GlobalScope.launch(ClusterConnection.getVertx().dispatcher()) {
                     liveViewService.meterView.export(it.metrics, false)
                 }

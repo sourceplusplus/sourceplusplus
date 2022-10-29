@@ -39,7 +39,6 @@ class LiveMeterView(private val subscriptionCache: MetricTypeSubscriptionCache) 
     }
 
     suspend fun export(metrics: Metrics, realTime: Boolean) {
-        if (metrics !is WithMetadata) return
         val metadata = (metrics as WithMetadata).meta
         val entityName = EntityNaming.getEntityName(metadata)
         if (entityName.isNullOrEmpty()) return

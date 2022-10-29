@@ -41,6 +41,10 @@ class SPPMetricsStreamProcessor : MetricsStreamProcessor() {
     override fun `in`(metrics: Metrics) {
         realProcessor.`in`(metrics)
 
+        if (metrics !is WithMetadata) {
+            return // ignore metrics without metadata
+        }
+
         val copiedMetrics = metrics::class.java.newInstance()
         copiedMetrics.deserialize(metrics.serialize().build())
 
