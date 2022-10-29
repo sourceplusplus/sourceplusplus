@@ -83,10 +83,7 @@ class JWTTest : PlatformIntegrationTest() {
     fun verifyUnsuccessfulPermission() = runBlocking {
         val testContext = VertxTestContext()
         val platformHost = System.getenv("SPP_PLATFORM_HOST") ?: "localhost"
-        val client = WebClient.create(
-            vertx,
-            WebClientOptions().setSsl(true).setTrustAll(true).setVerifyHost(false)
-        )
+        val client = WebClient.create(vertx, WebClientOptions())
         val addDevResp = client.post(12800, platformHost, "/graphql/spp")
             .bearerTokenAuthentication(SYSTEM_JWT_TOKEN)
             .sendJsonObject(
@@ -154,10 +151,7 @@ class JWTTest : PlatformIntegrationTest() {
     fun verifyUnsuccessfulAccess() = runBlocking {
         val testContext = VertxTestContext()
         val platformHost = System.getenv("SPP_PLATFORM_HOST") ?: "localhost"
-        val client = WebClient.create(
-            vertx,
-            WebClientOptions().setSsl(true).setTrustAll(true).setVerifyHost(false)
-        )
+        val client = WebClient.create(vertx, WebClientOptions())
         val addDevResp = client.post(12800, platformHost, "/graphql/spp")
             .bearerTokenAuthentication(SYSTEM_JWT_TOKEN)
             .sendJsonObject(

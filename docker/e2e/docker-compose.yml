@@ -20,11 +20,7 @@ services:
       dockerfile: Dockerfile-spp-platform
     environment:
       - JAVA_OPTS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5106
-      - SPP_HTTP_PORT=443,12800
       - SPP_JWT_ENABLED=true
-      - SPP_HTTP_SSL_ENABLED=true
-      - SPP_HTTP_REDIRECT_TO_HTTPS=true
-      - SPP_GRPC_SSL_ENABLED=true
       - SPP_CLIENT_ACCESS_ENABLED=true
       - SPP_CLIENT_ACCESS_ID=test-id
       - SPP_CLIENT_ACCESS_SECRET=test-secret

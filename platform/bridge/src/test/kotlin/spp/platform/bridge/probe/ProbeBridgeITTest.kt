@@ -72,12 +72,9 @@ class ProbeBridgeITTest : PlatformIntegrationTest() {
             HttpClientOptions()
                 .setDefaultHost("localhost")
                 .setDefaultPort(12800)
-                .setSsl(true)
-                .setTrustAll(true)
-                .setVerifyHost(false)
         )
         val wsOptions = WebSocketConnectOptions()
-            .setURI("https://localhost:12800/probe/eventbus/websocket")
+            .setURI("http://localhost:12800/probe/eventbus/websocket")
         val ws = client.webSocket(wsOptions).await()
 
         //send connected message
@@ -142,12 +139,9 @@ class ProbeBridgeITTest : PlatformIntegrationTest() {
             HttpClientOptions()
                 .setDefaultHost("localhost")
                 .setDefaultPort(12800)
-                .setSsl(true)
-                .setTrustAll(true)
-                .setVerifyHost(false)
         )
         val wsOptions = WebSocketConnectOptions()
-            .setURI("https://localhost:12800/probe/eventbus/websocket")
+            .setURI("http://localhost:12800/probe/eventbus/websocket")
         val ws = client.webSocket(wsOptions).await()
 
         //send connected message
@@ -194,12 +188,9 @@ class ProbeBridgeITTest : PlatformIntegrationTest() {
             HttpClientOptions()
                 .setDefaultHost("localhost")
                 .setDefaultPort(12800)
-                .setSsl(true)
-                .setTrustAll(true)
-                .setVerifyHost(false)
         )
         val wsOptions = WebSocketConnectOptions()
-            .setURI("https://localhost:12800/probe/eventbus/websocket")
+            .setURI("http://localhost:12800/probe/eventbus/websocket")
         val ws = client.webSocket(wsOptions).await()
 
         //skip connected message and try to register remote
@@ -239,12 +230,9 @@ class ProbeBridgeITTest : PlatformIntegrationTest() {
             HttpClientOptions()
                 .setDefaultHost("localhost")
                 .setDefaultPort(12800)
-                .setSsl(true)
-                .setTrustAll(true)
-                .setVerifyHost(false)
         )
         val wsOptions = WebSocketConnectOptions()
-            .setURI("https://localhost:12800/probe/eventbus/websocket")
+            .setURI("http://localhost:12800/probe/eventbus/websocket")
         val ws = client.webSocket(wsOptions).await()
 
         //send connected message

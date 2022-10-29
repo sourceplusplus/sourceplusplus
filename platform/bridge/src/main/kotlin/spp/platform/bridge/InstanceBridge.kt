@@ -109,6 +109,7 @@ abstract class InstanceBridge(private val jwtAuth: JWTAuth?) : CoroutineVerticle
             return
         }
 
+        log.trace("Validating auth token: $authToken")
         jwtAuth.authenticate(JsonObject().put("token", authToken)) {
             if (it.succeeded()) {
                 Vertx.currentContext().putLocal("user", it.result())
