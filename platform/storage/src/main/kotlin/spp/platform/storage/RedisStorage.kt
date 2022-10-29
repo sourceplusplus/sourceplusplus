@@ -259,6 +259,7 @@ open class RedisStorage(val vertx: Vertx) : CoreStorage {
     }
 
     override suspend fun addRoleToDeveloper(id: String, role: DeveloperRole) {
+        log.trace { "addRoleToDeveloper: id=$id, role=$role" }
         redis.sadd(listOf(namespace("developers:$id:roles"), role.roleName)).await()
     }
 
