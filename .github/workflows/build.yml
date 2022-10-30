@@ -111,6 +111,11 @@ jobs:
           name: redis-dump.rdb
           path: ./platform/build/redis-dump.rdb
 
+      - name: Backup redis logs
+        if: ${{ always() }}
+        run: |
+          docker cp redis:/tmp/redis.log ./platform/build/redis.log
+
       - name: Upload redis monitor log artifact
         if: ${{ always() }}
         uses: actions/upload-artifact@v3
