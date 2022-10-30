@@ -76,7 +76,7 @@ jobs:
 
       - name: Monitor redis
         run: |
-          docker exec -d redis redis-cli monitor > /tmp/redis.log
+          docker exec -i redis sh -c "nohup redis-cli monitor > /tmp/redis.log &"
 
       - name: Check platform
         run: ./gradlew -p platform check -x :interfaces:booster-ui:buildSkyWalkingUI -Dtest.profile=integration -PplatformVersion=$BUILD_VERSION -PprobeVersion=$BUILD_VERSION
