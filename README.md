@@ -1,4 +1,4 @@
-# ![](.github/media/sourcepp_logo.svg)
+# ![](.github/media/sourcepp_logo.png)
 
 [![License](https://img.shields.io/github/license/sourceplusplus/sourceplusplus)](LICENSE)
 ![GitHub release](https://img.shields.io/github/v/release/sourceplusplus/sourceplusplus?include_prereleases)
