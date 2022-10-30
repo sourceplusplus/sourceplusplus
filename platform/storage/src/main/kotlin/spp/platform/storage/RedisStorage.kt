@@ -279,6 +279,7 @@ open class RedisStorage(val vertx: Vertx) : CoreStorage {
 
     override suspend fun getRolePermissions(role: DeveloperRole): Set<RolePermission> {
         val permissions = redis.smembers(namespace("roles:${role.roleName}:permissions")).await()
+        log.trace { "getRolePermissions: role=$role, permissions=$permissions; Type: " + permissions::class.qualifiedName }
         return permissions.map { RolePermission.valueOf(it.toString(UTF_8)) }.toSet()
     }
 
