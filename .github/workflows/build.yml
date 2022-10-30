@@ -114,7 +114,7 @@ jobs:
       - name: Backup redis logs
         if: ${{ always() }}
         run: |
-          docker cp redis:/tmp/redis.log ./platform/build/redis.log
+          docker cp redis:/tmp/redis.log /tmp/redis.log
 
       - name: Upload redis monitor log artifact
         if: ${{ always() }}
