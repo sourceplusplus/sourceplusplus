@@ -22,19 +22,19 @@ import io.vertx.ext.web.client.WebClientOptions
 import io.vertx.junit5.VertxExtension
 import io.vertx.junit5.VertxTestContext
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import java.util.concurrent.TimeUnit
 
+@Disabled
 @ExtendWith(VertxExtension::class)
 class StatsTest : PlatformIntegrationTest() {
 
     @Test
     fun verifyStats() {
         val testContext = VertxTestContext()
-        val client = WebClient.create(
-            vertx, WebClientOptions().setSsl(true).setTrustAll(true).setVerifyHost(false)
-        )
+        val client = WebClient.create(vertx, WebClientOptions())
         client.get(12800, platformHost, "/stats").bearerTokenAuthentication(SYSTEM_JWT_TOKEN).send().onComplete {
             if (it.succeeded()) {
                 val result = it.result().bodyAsJsonObject().getJsonObject("platform")

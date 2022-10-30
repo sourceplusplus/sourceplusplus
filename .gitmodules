@@ -22,10 +22,6 @@
 	path = interfaces/jetbrains
 	url = https://github.com/sourceplusplus/interface-jetbrains
 	branch = master
-[submodule "docker/e2e/example-web-app"]
-	path = docker/e2e/example-web-app
-	url = https://github.com/sourceplusplus/example-web-app
-	branch = master
 [submodule "interfaces/booster-ui"]
 	path = interfaces/booster-ui
 	url = https://github.com/sourceplusplus/interface-booster-ui
@@ -49,4 +45,8 @@
 [submodule "demos/python"]
 	path = demos/python
 	url = https://github.com/sourceplusplus/demo-python
+	branch = master
+[submodule "demos/groovy"]
+	path = demos/groovy
+	url = https://github.com/sourceplusplus/demo-groovy
 	branch = master

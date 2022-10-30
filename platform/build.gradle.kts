@@ -51,7 +51,7 @@ subprojects {
         compileOnly("org.slf4j:slf4j-api:$slf4jVersion")
         implementation("io.vertx:vertx-tcp-eventbus-bridge:$vertxVersion")
         implementation("io.vertx:vertx-web:$vertxVersion")
-        implementation("io.github.microutils:kotlin-logging-jvm:3.0.2")
+        implementation("io.github.microutils:kotlin-logging-jvm:3.0.3")
         implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jacksonVersion")
         implementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:$jacksonVersion")
         implementation("com.fasterxml.jackson.datatype:jackson-datatype-guava:$jacksonVersion")
@@ -222,16 +222,10 @@ dockerCompose {
     removeVolumes.set(true)
     waitForTcpPorts.set(false)
 }
-tasks.getByName("composeUp").mustRunAfter(
-    "updateDockerFiles",
-    ":example-web-app:build"
-)
+tasks.getByName("composeUp").mustRunAfter("updateDockerFiles")
 
 tasks.register("assembleUp") {
-    dependsOn(
-        "updateDockerFiles",
-        ":example-web-app:build", "composeUp"
-    )
+    dependsOn("updateDockerFiles", "composeUp")
 }
 
 tasks.getByName("assemble") {

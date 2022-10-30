@@ -58,12 +58,9 @@ class MarkerBridgeITTest : PlatformIntegrationTest() {
             HttpClientOptions()
                 .setDefaultHost("localhost")
                 .setDefaultPort(12800)
-                .setSsl(true)
-                .setTrustAll(true)
-                .setVerifyHost(false)
         )
         val wsOptions = WebSocketConnectOptions()
-            .setURI("https://localhost:12800/marker/eventbus/websocket")
+            .setURI("http://localhost:12800/marker/eventbus/websocket")
         val ws = client.webSocket(wsOptions).await()
         log.info("Connected to marker eventbus")
 
@@ -128,12 +125,9 @@ class MarkerBridgeITTest : PlatformIntegrationTest() {
             HttpClientOptions()
                 .setDefaultHost("localhost")
                 .setDefaultPort(12800)
-                .setSsl(true)
-                .setTrustAll(true)
-                .setVerifyHost(false)
         )
         val wsOptions = WebSocketConnectOptions()
-            .setURI("https://localhost:12800/marker/eventbus/websocket")
+            .setURI("http://localhost:12800/marker/eventbus/websocket")
         val ws = client.webSocket(wsOptions).await()
 
         //send connected message
@@ -176,12 +170,9 @@ class MarkerBridgeITTest : PlatformIntegrationTest() {
             HttpClientOptions()
                 .setDefaultHost("localhost")
                 .setDefaultPort(12800)
-                .setSsl(true)
-                .setTrustAll(true)
-                .setVerifyHost(false)
         )
         val wsOptions = WebSocketConnectOptions()
-            .setURI("https://localhost:12800/marker/eventbus/websocket")
+            .setURI("http://localhost:12800/marker/eventbus/websocket")
         val ws = client.webSocket(wsOptions).await()
 
         //attempt register live instrument subscriber

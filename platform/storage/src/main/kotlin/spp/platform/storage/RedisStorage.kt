@@ -26,12 +26,17 @@ import io.vertx.core.shareddata.Lock
 import io.vertx.kotlin.coroutines.await
 import io.vertx.redis.client.Redis
 import io.vertx.redis.client.RedisAPI
+import mu.KotlinLogging
 import spp.protocol.instrument.LiveInstrument
 import spp.protocol.platform.auth.*
 import spp.protocol.platform.developer.Developer
 import java.nio.charset.StandardCharsets.UTF_8
 
 open class RedisStorage(val vertx: Vertx) : CoreStorage {
+
+    companion object {
+        private val log = KotlinLogging.logger {}
+    }
 
     lateinit var redisClient: Redis
     lateinit var redis: RedisAPI
@@ -51,8 +56,16 @@ open class RedisStorage(val vertx: Vertx) : CoreStorage {
         return vertx.sharedData().getLock(namespace(name)).await()
     }
 
+    override suspend fun lock(name: String, timeout: Long): Lock {
+        return if (timeout == -1L) {
+            lock(name)
+        } else {
+            vertx.sharedData().getLockWithTimeout(namespace(name), timeout).await()
+        }
+    }
+
     override suspend fun <K, V> map(name: String): AsyncMap<K, V> {
-        return vertx.sharedData().getAsyncMap<K, V>(namespace(name)).await()
+        return vertx.sharedData().getAsyncMap<K, V>(namespace("maps:$name")).await()
     }
 
     override suspend fun <T> get(name: String): T? {
@@ -137,12 +150,14 @@ open class RedisStorage(val vertx: Vertx) : CoreStorage {
     }
 
     override suspend fun getDeveloperRoles(developerId: String): List<DeveloperRole> {
-        return redis.smembers(namespace("developers:$developerId:roles")).await()
-            .map { DeveloperRole.fromString(it.toString(UTF_8)) }
+        val roles = redis.smembers(namespace("developers:$developerId:roles")).await()
+        log.trace("getDeveloperRoles: developerId=$developerId, roles=$roles; Type: " + roles::class.qualifiedName)
+        return roles.map { DeveloperRole.fromString(it.toString(UTF_8)) }
     }
 
     override suspend fun getRoleAccessPermissions(role: DeveloperRole): Set<AccessPermission> {
         val accessPermissions = redis.smembers(namespace("roles:${role.roleName}:access_permissions")).await()
+        log.trace { "getRoleAccessPermissions: role=$role, accessPermissions=$accessPermissions; Type: " + accessPermissions::class.qualifiedName }
         return accessPermissions.map { getAccessPermission(it.toString(UTF_8)) }.toSet()
     }
 
@@ -245,6 +260,7 @@ open class RedisStorage(val vertx: Vertx) : CoreStorage {
     }
 
     override suspend fun addRoleToDeveloper(id: String, role: DeveloperRole) {
+        log.trace { "addRoleToDeveloper: id=$id, role=$role" }
         redis.sadd(listOf(namespace("developers:$id:roles"), role.roleName)).await()
     }
 

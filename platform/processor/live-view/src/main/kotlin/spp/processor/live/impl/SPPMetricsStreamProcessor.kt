@@ -17,6 +17,7 @@
  */
 package spp.processor.live.impl
 
+import io.vertx.core.Vertx
 import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -40,6 +41,10 @@ class SPPMetricsStreamProcessor : MetricsStreamProcessor() {
     override fun `in`(metrics: Metrics) {
         realProcessor.`in`(metrics)
 
+        if (metrics !is WithMetadata) {
+            return // ignore metrics without metadata
+        }
+
         val copiedMetrics = metrics::class.java.newInstance()
         copiedMetrics.deserialize(metrics.serialize().build())
 
@@ -50,6 +55,8 @@ class SPPMetricsStreamProcessor : MetricsStreamProcessor() {
 
             val metricId = Reflect.on(copiedMetrics).call("id0").get<String>()
             val fullMetricId = copiedMetrics.javaClass.simpleName + "_" + metricId
+
+            Vertx.currentContext().putLocal("current_metrics", copiedMetrics)
             realtimeMetricCache.compute(fullMetricId) { _, old ->
                 val new = ClusterMetrics(copiedMetrics)
                 if (old != null) {

@@ -40,7 +40,7 @@ class ExpiringSharedDataTest {
         val memoryStorage = MemoryStorage(vertx)
         val sharedData = ExpiringSharedData.newBuilder()
             .expireAfterWrite(1, TimeUnit.SECONDS)
-            .build<String, String>("test1", vertx, memoryStorage)
+            .build<String, String>("test1", memoryStorage)
         val key = "key"
         val value = "value"
         sharedData.put(key, value)
@@ -54,7 +54,7 @@ class ExpiringSharedDataTest {
         val memoryStorage = MemoryStorage(vertx)
         val sharedData = ExpiringSharedData.newBuilder()
             .expireAfterAccess(1, TimeUnit.SECONDS)
-            .build<String, String>("test2", vertx, memoryStorage)
+            .build<String, String>("test2", memoryStorage)
         val key = "key"
         val value = "value"
         sharedData.put(key, value)
@@ -76,7 +76,7 @@ class ExpiringSharedDataTest {
         val memoryStorage = MemoryStorage(vertx)
         val sharedData = ExpiringSharedData.newBuilder()
             .expireAfterWrite(1, TimeUnit.SECONDS)
-            .build<String, Pair<String, String>>("test3", vertx, memoryStorage)
+            .build<String, Pair<String, String>>("test3", memoryStorage)
         val key = "key"
         val value = "first" to "second"
         sharedData.put(key, value)
@@ -94,7 +94,7 @@ class ExpiringSharedDataTest {
         val memoryStorage = MemoryStorage(vertx)
         val sharedData = ExpiringSharedData.newBuilder()
             .expireAfterWrite(1, TimeUnit.SECONDS)
-            .build<String, DeveloperAuth>("test4", vertx, memoryStorage)
+            .build<String, DeveloperAuth>("test4", memoryStorage)
         val key = "key"
         val value = DeveloperAuth("selfId", "accessToken")
         sharedData.put(key, value)
