@@ -41,6 +41,9 @@ import java.io.File
 import java.util.*
 import java.util.regex.Pattern
 
+/**
+ * Shared connections and configuration for all cluster nodes.
+ */
 object ClusterConnection {
 
     private val BUILD = ResourceBundle.getBundle("build")
@@ -77,41 +80,45 @@ object ClusterConnection {
                 log.debug { "Build date: " + BUILD.getString("build_date") }
                 log.trace { "Using configuration: " + config.encode() }
 
+                var clusterMode = false
+                val options = VertxOptions()
                 if (config.getJsonObject("storage").getString("selector") == "memory") {
-                    log.info("Using standalone mode")
-                    val vertx = Vertx.vertx()
-                    discovery = ServiceDiscovery.create(vertx)
-                    router = Router.router(vertx)
-                    multiUseNetServer = MultiUseNetServer(vertx)
-                    ClusterConnection.vertx = vertx
+                    log.info("Using in-memory storage")
                 } else {
-                    log.info("Using clustered mode")
                     val storageSelector = config.getJsonObject("storage").getString("selector")
                     val storageName = CaseFormat.LOWER_CAMEL.to(
                         CaseFormat.LOWER_HYPHEN,
                         storageSelector.substringAfterLast(".").removeSuffix("Storage")
                     )
                     val storageConfig = config.getJsonObject("storage").getJsonObject(storageName)
+                    clusterMode = storageConfig.getJsonObject("cluster")
+                        ?.getString("enabled")?.toBooleanStrict() ?: false
+                    log.info("Using $storageSelector storage (cluster mode: $clusterMode)")
+
                     val host = storageConfig.getString("host")
                     val port = storageConfig.getString("port").toInt()
-                    val clusterStorageAddress = "redis://$host:$port"
-                    log.debug { "Cluster storage address: {}".args(clusterStorageAddress) }
+                    val storageAddress = "redis://$host:$port"
+                    log.debug { "Storage address: {}".args(storageAddress) }
 
-                    val clusterManager = RedisClusterManager(
-                        RedisConfig()
-                            .setKeyNamespace("cluster")
-                            .addEndpoint(clusterStorageAddress)
-                            .addLock(LockConfig(Pattern.compile("expiring_shared_data:.*")).setLeaseTime(5000))
-                    )
-                    val options = VertxOptions().setClusterManager(clusterManager)
-                    runBlocking {
-                        val vertx = Vertx.clusteredVertx(options).await()
-                        discovery = ServiceDiscovery.create(vertx)
-                        router = Router.router(vertx)
-                        multiUseNetServer = MultiUseNetServer(vertx)
-                        ClusterConnection.vertx = vertx
+                    if (clusterMode) {
+                        options.clusterManager = RedisClusterManager(
+                            RedisConfig()
+                                .setKeyNamespace("cluster")
+                                .addEndpoint(storageAddress)
+                                .addLock(LockConfig(Pattern.compile("expiring_shared_data:.*")).setLeaseTime(5000))
+                        )
                     }
                 }
+
+                val vertx = if (clusterMode) {
+                    runBlocking { Vertx.clusteredVertx(options).await() }
+                } else {
+                    Vertx.vertx(options)
+                }
+                discovery = ServiceDiscovery.create(vertx)
+                router = Router.router(vertx)
+                multiUseNetServer = MultiUseNetServer(vertx)
+                ClusterConnection.vertx = vertx
             }
         }
         return vertx
