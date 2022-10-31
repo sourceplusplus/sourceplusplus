@@ -26,6 +26,7 @@ import io.vertx.core.json.JsonObject
 import io.vertx.junit5.Timeout
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
+import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterEach
@@ -33,6 +34,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.slf4j.LoggerFactory
 import spp.protocol.platform.PlatformAddress.PROBE_CONNECTED
 import spp.protocol.platform.ProbeAddress
 import spp.protocol.platform.auth.ClientAccess
@@ -41,17 +43,21 @@ import java.util.*
 
 class ProbeBridgeITTest : PlatformIntegrationTest() {
 
+    companion object {
+        private val log = LoggerFactory.getLogger(ProbeBridgeITTest::class.java)
+    }
+
     private var clientAccess: ClientAccess? = null
 
     @BeforeEach
-    fun addClientAccess(): Unit = runBlocking {
+    fun addClientAccess(): Unit = runBlocking(vertx.dispatcher()) {
         if (clientAccess == null) {
             clientAccess = managementService.addClientAccess().await()
         }
     }
 
     @AfterEach
-    fun removeClientAccess(): Unit = runBlocking {
+    fun removeClientAccess(): Unit = runBlocking(vertx.dispatcher()) {
         if (clientAccess != null) {
             managementService.removeClientAccess(clientAccess!!.id).await()
             clientAccess = null
@@ -60,7 +66,7 @@ class ProbeBridgeITTest : PlatformIntegrationTest() {
 
     @Test
     @Timeout(10)
-    fun testProbeCounter(): Unit = runBlocking {
+    fun testProbeCounter(): Unit = runBlocking(vertx.dispatcher()) {
         val testContext = VertxTestContext()
 
         //get probe count
@@ -128,10 +134,11 @@ class ProbeBridgeITTest : PlatformIntegrationTest() {
         if (testContext.failed()) {
             throw testContext.causeOfFailure()
         }
+        log.info("testProbeCounter finished")
     }
 
     @Test
-    fun testInvalidAccess_connectedMessage(): Unit = runBlocking {
+    fun testInvalidAccess_connectedMessage(): Unit = runBlocking(vertx.dispatcher()) {
         val testContext = VertxTestContext()
 
         //connect new probe
@@ -177,10 +184,11 @@ class ProbeBridgeITTest : PlatformIntegrationTest() {
         if (testContext.failed()) {
             throw testContext.causeOfFailure()
         }
+        log.info("testInvalidAccess_connectedMessage finished")
     }
 
     @Test
-    fun testInvalidAccess_registerRemote(): Unit = runBlocking {
+    fun testInvalidAccess_registerRemote(): Unit = runBlocking(vertx.dispatcher()) {
         val testContext = VertxTestContext()
 
         //connect new probe
@@ -219,10 +227,11 @@ class ProbeBridgeITTest : PlatformIntegrationTest() {
         if (testContext.failed()) {
             throw testContext.causeOfFailure()
         }
+        log.info("testInvalidAccess_registerRemote finished")
     }
 
     @Test
-    fun testUpdateActiveProbeMetadata(): Unit = runBlocking {
+    fun testUpdateActiveProbeMetadata(): Unit = runBlocking(vertx.dispatcher()) {
         val testContext = VertxTestContext()
 
         //connect new probe
@@ -308,5 +317,6 @@ class ProbeBridgeITTest : PlatformIntegrationTest() {
         if (testContext.failed()) {
             throw testContext.causeOfFailure()
         }
+        log.info("testUpdateActiveProbeMetadata finish")
     }
 }
