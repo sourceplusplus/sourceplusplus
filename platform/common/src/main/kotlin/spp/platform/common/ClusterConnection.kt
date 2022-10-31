@@ -77,13 +77,10 @@ object ClusterConnection {
                 log.debug { "Build date: " + BUILD.getString("build_date") }
                 log.trace { "Using configuration: " + config.encode() }
 
+                var clusterMode = false
+                val options = VertxOptions()
                 if (config.getJsonObject("storage").getString("selector") == "memory") {
                     log.info("Using in-memory storage")
-                    val vertx = Vertx.vertx()
-                    discovery = ServiceDiscovery.create(vertx)
-                    router = Router.router(vertx)
-                    multiUseNetServer = MultiUseNetServer(vertx)
-                    ClusterConnection.vertx = vertx
                 } else {
                     val storageSelector = config.getJsonObject("storage").getString("selector")
                     val storageName = CaseFormat.LOWER_CAMEL.to(
@@ -91,7 +88,7 @@ object ClusterConnection {
                         storageSelector.substringAfterLast(".").removeSuffix("Storage")
                     )
                     val storageConfig = config.getJsonObject("storage").getJsonObject(storageName)
-                    val clusterMode = storageConfig.getJsonObject("cluster")
+                    clusterMode = storageConfig.getJsonObject("cluster")
                         ?.getString("enabled")?.toBooleanStrict() ?: false
                     log.info("Using $storageSelector storage (cluster mode: $clusterMode)")
 
@@ -100,28 +97,27 @@ object ClusterConnection {
                     val storageAddress = "redis://$host:$port"
                     log.debug { "Storage address: {}".args(storageAddress) }
 
-                    val options = VertxOptions().apply {
-                        if (clusterMode) {
-                            clusterManager = RedisClusterManager(
-                                RedisConfig()
-                                    .setKeyNamespace("cluster")
-                                    .addEndpoint(storageAddress)
-                                    .addLock(LockConfig(Pattern.compile("expiring_shared_data:.*")).setLeaseTime(5000))
-                            )
-                        }
+                    if (clusterMode) {
+                        options.clusterManager = RedisClusterManager(
+                            RedisConfig()
+                                .setKeyNamespace("cluster")
+                                .addEndpoint(storageAddress)
+                                .addLock(LockConfig(Pattern.compile("expiring_shared_data:.*")).setLeaseTime(5000))
+                        )
                     }
-                    runBlocking {
-                        val vertx = if (clusterMode) {
-                            Vertx.clusteredVertx(options).await()
-                        } else {
-                            Vertx.vertx(options)
-                        }
+                }
 
-                        discovery = ServiceDiscovery.create(vertx)
-                        router = Router.router(vertx)
-                        multiUseNetServer = MultiUseNetServer(vertx)
-                        ClusterConnection.vertx = vertx
+                runBlocking {
+                    val vertx = if (clusterMode) {
+                        Vertx.clusteredVertx(options).await()
+                    } else {
+                        Vertx.vertx(options)
                     }
+
+                    discovery = ServiceDiscovery.create(vertx)
+                    router = Router.router(vertx)
+                    multiUseNetServer = MultiUseNetServer(vertx)
+                    ClusterConnection.vertx = vertx
                 }
             }
         }
