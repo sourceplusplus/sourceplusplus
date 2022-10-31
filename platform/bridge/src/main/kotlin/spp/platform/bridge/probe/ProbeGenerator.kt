@@ -19,6 +19,7 @@ package spp.platform.bridge.probe
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper
+import io.vertx.core.Vertx
 import io.vertx.core.buffer.Buffer
 import io.vertx.core.eventbus.DeliveryOptions
 import io.vertx.core.file.AsyncFile
@@ -61,7 +62,8 @@ class ProbeGenerator(private val router: Router) : CoroutineVerticle() {
 
     private data class Request(
         val route: RoutingContext,
-        val clientAccess: ClientAccess? = null
+        val clientAccess: ClientAccess? = null,
+        val tenantId: String? = null,
     )
 
     override suspend fun start() {
@@ -77,6 +79,12 @@ class ProbeGenerator(private val router: Router) : CoroutineVerticle() {
                 route.response().setStatusCode(401).end("Unauthorized")
                 return@handler
             }
+            val tenantId = route.request().getParam("tenant_id")
+            if (tenantId != null) {
+                Vertx.currentContext().putLocal("tenant_id", tenantId)
+            } else {
+                Vertx.currentContext().removeLocal("tenant_id")
+            }
 
             log.info("spp-probe.yml download request. Verifying access token: {}", token)
             launch(vertx.dispatcher()) {
@@ -84,7 +92,7 @@ class ProbeGenerator(private val router: Router) : CoroutineVerticle() {
                 SourceStorage.getDeveloperByAccessToken(token)?.let {
                     vertx.eventBus().send(
                         LOCAL_GEN_PROBE_YML_ADDR,
-                        Request(route, clientAccess),
+                        Request(route, clientAccess, tenantId),
                         DeliveryOptions().setLocalOnly(true)
                     )
                 } ?: route.response().setStatusCode(401).end("Unauthorized")
@@ -132,7 +140,9 @@ class ProbeGenerator(private val router: Router) : CoroutineVerticle() {
             val config = SourceProbeConfig(platformHost, serviceName, probeVersion = "latest")
             val yamlStr = yamlMapper.writeValueAsString(
                 objectMapper.readTree(
-                    JsonObject.mapFrom(getMinimumProbeConfig(config, certificate, msg.body().clientAccess)).toString()
+                    JsonObject.mapFrom(
+                        getMinimumProbeConfig(config, certificate, msg.body().clientAccess, msg.body().tenantId)
+                    ).toString()
                 )
             )
             msg.body().route.response()
@@ -141,11 +151,11 @@ class ProbeGenerator(private val router: Router) : CoroutineVerticle() {
                 .end(yamlStr)
         }
         vertx.eventBus().localConsumer<Request>(LOCAL_GEN_JVM_PROBE_ADDR) { msg ->
-            doJVMProbeGeneration(msg.body().route, msg.body().clientAccess)
+            doJVMProbeGeneration(msg.body().route, msg.body().clientAccess, msg.body().tenantId)
         }
     }
 
-    private fun doJVMProbeGeneration(route: RoutingContext, clientAccess: ClientAccess?) {
+    private fun doJVMProbeGeneration(route: RoutingContext, clientAccess: ClientAccess?, tenantId: String?) {
         log.debug { "Generating signed JVM probe" }
         val platformHost = route.request().host().substringBefore(":")
         val serviceName = route.request().getParam("service_name")?.toString() ?: "Your_ApplicationName"
@@ -196,9 +206,25 @@ class ProbeGenerator(private val router: Router) : CoroutineVerticle() {
             val crtParser = PEMParser(StringReader(crtFile.readText()))
             val crtHolder = crtParser.readObject() as X509CertificateHolder
             val certificate = JcaX509CertificateConverter().getCertificate(crtHolder)
-            generateProbe(fileStreams.first, fileStreams.second, fileStreams.third, config, certificate, clientAccess)
+            generateProbe(
+                fileStreams.first,
+                fileStreams.second,
+                fileStreams.third,
+                config,
+                certificate,
+                clientAccess,
+                tenantId
+            )
         } else {
-            generateProbe(fileStreams.first, fileStreams.second, fileStreams.third, config, null, clientAccess)
+            generateProbe(
+                fileStreams.first,
+                fileStreams.second,
+                fileStreams.third,
+                config,
+                null,
+                clientAccess,
+                tenantId
+            )
         }
         log.info("Signed probe downloaded")
     }
@@ -210,7 +236,8 @@ class ProbeGenerator(private val router: Router) : CoroutineVerticle() {
         tempFile: File? = null,
         probeConfig: SourceProbeConfig,
         certificate: X509Certificate?,
-        clientAccess: ClientAccess?
+        clientAccess: ClientAccess?,
+        tenantId: String?
     ) {
         val buffer = ByteArray(8192)
         val responseOut = ZipOutputStream(responseStream)
@@ -242,7 +269,7 @@ class ProbeGenerator(private val router: Router) : CoroutineVerticle() {
         //write minimum probe config as spp-probe.yml inside probe jar
         val yamlStr = yamlMapper.writeValueAsString(
             objectMapper.readTree(
-                JsonObject.mapFrom(getMinimumProbeConfig(probeConfig, certificate, clientAccess)).toString()
+                JsonObject.mapFrom(getMinimumProbeConfig(probeConfig, certificate, clientAccess, tenantId)).toString()
             )
         )
         responseOut.putNextEntry(ZipEntry("spp-probe.yml"))
@@ -260,7 +287,8 @@ class ProbeGenerator(private val router: Router) : CoroutineVerticle() {
     private fun getMinimumProbeConfig(
         probeConfig: SourceProbeConfig,
         certificate: X509Certificate?,
-        clientAccess: ClientAccess?
+        clientAccess: ClientAccess?,
+        tenantId: String?
     ): MutableMap<String, MutableMap<Any, Any>> {
         //determine minimum probe config
         val minProbeConfig = mutableMapOf<String, MutableMap<Any, Any>>(
@@ -292,7 +320,11 @@ class ProbeGenerator(private val router: Router) : CoroutineVerticle() {
             minProbeConfig["spp"]!!["authentication"] = mutableMapOf(
                 "client_id" to it.id,
                 "client_secret" to it.secret
-            )
+            ).apply {
+                if (tenantId != null) {
+                    this["tenant_id"] = tenantId
+                }
+            }
         }
 
         return minProbeConfig

@@ -171,6 +171,7 @@ class LiveManagementServiceImpl(private val vertx: Vertx, private val jwt: JWTAu
         val promise = Promise.promise<List<Service>>()
         val forward = JsonObject()
         forward.put("developer_id", Vertx.currentContext().getLocal<DeveloperAuth>("developer").selfId)
+        forward.put("tenant_id", Vertx.currentContext().getLocal<String>("tenant_id"))
         forward.put("method", HttpMethod.POST.name())
         forward.put(
             "body", JsonObject()
