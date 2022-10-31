@@ -41,6 +41,9 @@ import java.io.File
 import java.util.*
 import java.util.regex.Pattern
 
+/**
+ * Shared connections and configuration for all cluster nodes.
+ */
 object ClusterConnection {
 
     private val BUILD = ResourceBundle.getBundle("build")
@@ -107,18 +110,15 @@ object ClusterConnection {
                     }
                 }
 
-                runBlocking {
-                    val vertx = if (clusterMode) {
-                        Vertx.clusteredVertx(options).await()
-                    } else {
-                        Vertx.vertx(options)
-                    }
-
-                    discovery = ServiceDiscovery.create(vertx)
-                    router = Router.router(vertx)
-                    multiUseNetServer = MultiUseNetServer(vertx)
-                    ClusterConnection.vertx = vertx
+                val vertx = if (clusterMode) {
+                    runBlocking { Vertx.clusteredVertx(options).await() }
+                } else {
+                    Vertx.vertx(options)
                 }
+                discovery = ServiceDiscovery.create(vertx)
+                router = Router.router(vertx)
+                multiUseNetServer = MultiUseNetServer(vertx)
+                ClusterConnection.vertx = vertx
             }
         }
         return vertx
