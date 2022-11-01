@@ -10,6 +10,8 @@ spp-platform:
   grpc:
     port: ${SPP_GRPC_PORT:-11800}
     ssl_enabled: ${SPP_GRPC_SSL_ENABLED:-false}
+    ssl_cert: ${SPP_GRPC_SSL_CERT:-}
+    ssl_key: ${SPP_GRPC_SSL_KEY:-}
   logging:
     level: ${SPP_LOGGING_LEVEL:-info}
   pii-redaction:

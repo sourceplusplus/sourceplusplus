@@ -177,8 +177,12 @@ class SkyWalkingInterceptor(private val router: Router) : CoroutineVerticle() {
             .setUseAlpn(true)
             .apply {
                 if (sslEnabled) {
-                    val keyFile = File("config/spp-platform.key")
-                    val certFile = File("config/spp-platform.crt")
+                    val certFile = File(
+                        grpcConfig.getString("ssl_cert").orEmpty().ifEmpty { "config/spp-platform.crt" }
+                    )
+                    val keyFile = File(
+                        grpcConfig.getString("ssl_key").orEmpty().ifEmpty { "config/spp-platform.key" }
+                    )
                     val jksOptions = CertsToJksOptionsConverter(
                         certFile.absolutePath, keyFile.absolutePath
                     ).createJksOptions()
