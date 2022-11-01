@@ -312,7 +312,7 @@ class ProbeGenerator(private val router: Router) : CoroutineVerticle() {
         val minProbeConfig = mutableMapOf<String, MutableMap<Any, Any>>(
             "spp" to mutableMapOf(
                 "platform_host" to probeConfig.platformHost,
-                "platform_port" to probeConfig.platformPort,
+                "platform_port" to probeConfig.platformPort
             ),
             "skywalking" to mutableMapOf(
                 "agent" to mutableMapOf(
