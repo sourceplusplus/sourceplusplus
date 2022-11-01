@@ -19,6 +19,7 @@ package integration
 
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
+import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
@@ -41,7 +42,7 @@ class RemoveByLocationLiveBreakpointTest : LiveInstrumentIntegrationTest() {
     }
 
     @Test
-    fun `remove multiple by line number`() = runBlocking {
+    fun `remove multiple by line number`() = runBlocking(vertx.dispatcher()) {
         setupLineLabels {
             removeMultipleByLine()
         }

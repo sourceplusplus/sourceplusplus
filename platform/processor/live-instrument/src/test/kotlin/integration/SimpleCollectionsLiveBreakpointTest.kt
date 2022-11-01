@@ -21,6 +21,7 @@ import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
+import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -52,7 +53,7 @@ class SimpleCollectionsLiveBreakpointTest : LiveInstrumentIntegrationTest() {
     }
 
     @Test
-    fun `primitive collections`() = runBlocking {
+    fun `primitive collections`() = runBlocking(vertx.dispatcher()) {
         setupLineLabels {
             simpleCollections()
         }

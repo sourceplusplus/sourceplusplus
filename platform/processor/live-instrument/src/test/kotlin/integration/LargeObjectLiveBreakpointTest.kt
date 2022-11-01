@@ -20,6 +20,7 @@ package integration
 import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
+import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -38,7 +39,7 @@ class LargeObjectLiveBreakpointTest : LiveInstrumentIntegrationTest() {
     }
 
     @Test
-    fun `max size exceeded`() = runBlocking {
+    fun `max size exceeded`() = runBlocking(vertx.dispatcher()) {
         setupLineLabels {
             largeObject()
         }

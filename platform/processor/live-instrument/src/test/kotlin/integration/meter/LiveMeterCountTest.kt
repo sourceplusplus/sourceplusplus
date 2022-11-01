@@ -21,6 +21,7 @@ import integration.LiveInstrumentIntegrationTest
 import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
+import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import org.junit.jupiter.api.Assertions.*
@@ -50,7 +51,7 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
     }
 
     @Test
-    fun testCountIncrement(): Unit = runBlocking {
+    fun testCountIncrement(): Unit = runBlocking(vertx.dispatcher()) {
         setupLineLabels {
             triggerCount()
         }
@@ -127,7 +128,7 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
     }
 
     @Test
-    fun testDoubleCountIncrement(): Unit = runBlocking {
+    fun testDoubleCountIncrement(): Unit = runBlocking(vertx.dispatcher()) {
         setupLineLabels {
             triggerCount()
         }
@@ -204,7 +205,7 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
     }
 
     @Test
-    fun `one method two counts`(): Unit = runBlocking {
+    fun `one method two counts`(): Unit = runBlocking(vertx.dispatcher()) {
         setupLineLabels {
             triggerCount()
         }

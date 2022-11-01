@@ -20,6 +20,7 @@ package integration.condition
 import integration.LiveInstrumentIntegrationTest
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
+import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import spp.protocol.instrument.LiveBreakpoint
@@ -54,7 +55,7 @@ class PrimitiveConditionITTest : LiveInstrumentIntegrationTest() {
     }
 
     @Test
-    fun `primitive static variable`() = runBlocking {
+    fun `primitive static variable`() = runBlocking(vertx.dispatcher()) {
         setupLineLabels {
             primitiveStaticVariable()
         }
@@ -84,7 +85,7 @@ class PrimitiveConditionITTest : LiveInstrumentIntegrationTest() {
     }
 
     @Test
-    fun `instance local variable`() = runBlocking {
+    fun `instance local variable`() = runBlocking(vertx.dispatcher()) {
         setupLineLabels {
             primitiveInstanceVariable()
         }
@@ -114,7 +115,7 @@ class PrimitiveConditionITTest : LiveInstrumentIntegrationTest() {
     }
 
     @Test
-    fun `primitive local variable`() = runBlocking {
+    fun `primitive local variable`() = runBlocking(vertx.dispatcher()) {
         setupLineLabels {
             primitiveLocalVariable()
         }

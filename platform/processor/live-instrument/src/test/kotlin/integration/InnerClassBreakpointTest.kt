@@ -19,6 +19,7 @@ package integration
 
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
+import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
@@ -39,7 +40,7 @@ class InnerClassBreakpointTest : LiveInstrumentIntegrationTest() {
     }
 
     @Test
-    fun `inner class`() = runBlocking {
+    fun `inner class`() = runBlocking(vertx.dispatcher()) {
         setupLineLabels {
             InnerClass().doHit()
         }

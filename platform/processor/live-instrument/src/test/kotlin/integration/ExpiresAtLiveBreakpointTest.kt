@@ -18,6 +18,7 @@
 package integration
 
 import io.vertx.kotlin.coroutines.await
+import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -30,7 +31,7 @@ import java.util.concurrent.TimeUnit
 class ExpiresAtLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
     @Test
-    fun `expires at breakpoint`() = runBlocking {
+    fun `expires at breakpoint`() = runBlocking(vertx.dispatcher()) {
         //add live breakpoint
         instrumentService.addLiveInstruments(
             listOf(

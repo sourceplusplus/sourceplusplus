@@ -19,6 +19,7 @@ package integration
 
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
+import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
@@ -38,7 +39,7 @@ class ThrottleLiveBreakpointTest : LiveInstrumentIntegrationTest() {
     }
 
     @Test
-    fun `one per second`() = runBlocking {
+    fun `one per second`() = runBlocking(vertx.dispatcher()) {
         setupLineLabels {
             throttleTest()
         }
@@ -82,7 +83,7 @@ class ThrottleLiveBreakpointTest : LiveInstrumentIntegrationTest() {
     }
 
     @Test
-    fun `two per second`() = runBlocking {
+    fun `two per second`() = runBlocking(vertx.dispatcher()) {
         setupLineLabels {
             throttleTest()
         }
@@ -127,7 +128,7 @@ class ThrottleLiveBreakpointTest : LiveInstrumentIntegrationTest() {
     }
 
     @Test
-    fun `no throttle`() = runBlocking {
+    fun `no throttle`() = runBlocking(vertx.dispatcher()) {
         setupLineLabels {
             throttleTest()
         }

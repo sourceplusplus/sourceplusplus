@@ -19,6 +19,7 @@ package integration
 
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
+import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -41,7 +42,7 @@ class FormatLiveLogTest : LiveInstrumentIntegrationTest() {
     }
 
     @Test
-    fun `format primitives`() = runBlocking {
+    fun `format primitives`() = runBlocking(vertx.dispatcher()) {
         setupLineLabels {
             formatLiveLog()
         }

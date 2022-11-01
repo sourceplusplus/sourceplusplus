@@ -21,6 +21,7 @@ import integration.LiveInstrumentIntegrationTest
 import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
+import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
@@ -50,12 +51,12 @@ class LiveMeterRateTest : LiveInstrumentIntegrationTest() {
     }
 
     @BeforeEach
-    fun reset(): Unit = runBlocking {
+    fun reset(): Unit = runBlocking(vertx.dispatcher()) {
         viewService.clearLiveViews().await()
     }
 
     @Test
-    fun `60 calls per minute rate`(): Unit = runBlocking {
+    fun `60 calls per minute rate`(): Unit = runBlocking(vertx.dispatcher()) {
         setupLineLabels {
             triggerRate()
         }
@@ -118,7 +119,7 @@ class LiveMeterRateTest : LiveInstrumentIntegrationTest() {
         instrumentService.addLiveInstrument(liveMeter).await()
 
         vertx.executeBlocking<Void> {
-            runBlocking {
+            runBlocking(vertx.dispatcher()) {
                 //trigger live meter 100 times once per second
                 repeat((0 until 100).count()) {
                     triggerRate()
