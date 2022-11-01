@@ -6,6 +6,8 @@ spp-platform:
   http:
     port: ${SPP_HTTP_PORT:-12800}
     ssl_enabled: ${SPP_HTTP_SSL_ENABLED:-false}
+    ssl_cert: ${SPP_HTTP_SSL_CERT:-}
+    ssl_key: ${SPP_HTTP_SSL_KEY:-}
     redirect_to_https: ${SPP_HTTP_REDIRECT_TO_HTTPS:-false}
   grpc:
     port: ${SPP_GRPC_PORT:-11800}
