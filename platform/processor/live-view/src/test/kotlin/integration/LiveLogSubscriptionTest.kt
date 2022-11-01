@@ -20,6 +20,7 @@ package integration
 import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
+import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -46,12 +47,12 @@ class LiveLogSubscriptionTest : LiveInstrumentIntegrationTest() {
     }
 
     @BeforeEach
-    fun reset(): Unit = runBlocking {
+    fun reset(): Unit = runBlocking(vertx.dispatcher()) {
         viewService.clearLiveViews().await()
     }
 
     @Test
-    fun `test live log subscription`(): Unit = runBlocking {
+    fun `test live log subscription`(): Unit = runBlocking(vertx.dispatcher()) {
         setupLineLabels {
             triggerLog()
         }
@@ -80,6 +81,8 @@ class LiveLogSubscriptionTest : LiveInstrumentIntegrationTest() {
                 )
             )
         ).await().subscriptionId!!
+        log.info("Using subscription id: {}", subscriptionId)
+
         val consumer = vertx.eventBus().consumer<JsonObject>(
             SourceServices.Subscribe.toLiveViewSubscriberAddress("system")
         )
