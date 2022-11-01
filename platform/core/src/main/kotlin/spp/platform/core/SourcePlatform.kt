@@ -293,7 +293,13 @@ class SourcePlatform : CoroutineVerticle() {
 
         val httpOptions = HttpServerOptions().setSsl(httpSslEnabled)
         if (httpSslEnabled) {
-            val jksOptions = CertsToJksOptionsConverter(certFile.absolutePath, keyFile.absolutePath).createJksOptions()
+            val sslCertFile = File(
+                httpConfig.getString("ssl_cert").orEmpty().ifEmpty { "config/spp-platform.crt" }
+            )
+            val sslKeyFile = File(
+                httpConfig.getString("ssl_key").orEmpty().ifEmpty { "config/spp-platform.key" }
+            )
+            val jksOptions = CertsToJksOptionsConverter(sslCertFile.absolutePath, sslKeyFile.absolutePath).createJksOptions()
             httpOptions.setKeyStoreOptions(jksOptions)
         }
         httpPorts.forEach { httpPort ->
