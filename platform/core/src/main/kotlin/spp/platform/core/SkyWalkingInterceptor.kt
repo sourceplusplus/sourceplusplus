@@ -163,7 +163,9 @@ class SkyWalkingInterceptor(private val router: Router) : CoroutineVerticle() {
                     selfId = "system"
                 }
             }
-            forwardSkyWalkingRequest(req.bodyAsString, req.request(), selfId)
+
+            val tenantId = req.user().principal().getString("tenant_id")
+            forwardSkyWalkingRequest(req.bodyAsString, req.request(), selfId, tenantId)
         }
     }
 
@@ -300,9 +302,10 @@ class SkyWalkingInterceptor(private val router: Router) : CoroutineVerticle() {
         }
     }
 
-    private fun forwardSkyWalkingRequest(body: String, req: HttpServerRequest, developerId: String) {
+    private fun forwardSkyWalkingRequest(body: String, req: HttpServerRequest, developerId: String, tenantId: String?) {
         val forward = JsonObject()
         forward.put("developer_id", developerId)
+        forward.put("tenant_id", tenantId)
         forward.put("body", body)
         val headers = JsonObject()
         req.headers().names().forEach {
