@@ -124,24 +124,31 @@ class ProbeGenerator(private val router: Router) : CoroutineVerticle() {
             }
         }
 
+        val httpConfig = config.getJsonObject("http")
+        val sslCertFile = File(httpConfig.getString("ssl_cert").orEmpty().ifEmpty { "config/spp-platform.crt" })
+        val certificate = if (sslCertFile.exists()) {
+            val crtParser = PEMParser(StringReader(sslCertFile.readText()))
+            val crtHolder = crtParser.readObject() as X509CertificateHolder
+            JcaX509CertificateConverter().getCertificate(crtHolder)
+        } else {
+            null
+        }
+
         vertx.eventBus().registerDefaultCodec(Request::class.java, LocalMessageCodec())
         vertx.eventBus().localConsumer<Request>(LOCAL_GEN_PROBE_YML_ADDR) { msg ->
-            val crtFile = File("config/spp-platform.crt")
-            val certificate = if (crtFile.exists()) {
-                val crtParser = PEMParser(StringReader(crtFile.readText()))
-                val crtHolder = crtParser.readObject() as X509CertificateHolder
-                JcaX509CertificateConverter().getCertificate(crtHolder)
-            } else {
-                null
-            }
-
             val platformHost = msg.body().route.request().host().substringBefore(":")
             val serviceName = msg.body().route.request().getParam("service_name")?.toString() ?: "Your_ApplicationName"
             val config = SourceProbeConfig(platformHost, serviceName, probeVersion = "latest")
             val yamlStr = yamlMapper.writeValueAsString(
                 objectMapper.readTree(
                     JsonObject.mapFrom(
-                        getMinimumProbeConfig(config, certificate, msg.body().clientAccess, msg.body().tenantId)
+                        getMinimumProbeConfig(
+                            config,
+                            certificate,
+                            msg.body().clientAccess,
+                            msg.body().tenantId,
+                            httpConfig
+                        )
                     ).toString()
                 )
             )
@@ -151,11 +158,16 @@ class ProbeGenerator(private val router: Router) : CoroutineVerticle() {
                 .end(yamlStr)
         }
         vertx.eventBus().localConsumer<Request>(LOCAL_GEN_JVM_PROBE_ADDR) { msg ->
-            doJVMProbeGeneration(msg.body().route, msg.body().clientAccess, msg.body().tenantId)
+            doJVMProbeGeneration(msg.body().route, msg.body().clientAccess, msg.body().tenantId, httpConfig)
         }
     }
 
-    private fun doJVMProbeGeneration(route: RoutingContext, clientAccess: ClientAccess?, tenantId: String?) {
+    private fun doJVMProbeGeneration(
+        route: RoutingContext,
+        clientAccess: ClientAccess?,
+        tenantId: String?,
+        httpConfig: JsonObject
+    ) {
         log.debug { "Generating signed JVM probe" }
         val platformHost = route.request().host().substringBefore(":")
         val serviceName = route.request().getParam("service_name")?.toString() ?: "Your_ApplicationName"
@@ -201,9 +213,9 @@ class ProbeGenerator(private val router: Router) : CoroutineVerticle() {
             Triple(ZipInputStream(destFile.inputStream()), OutputWriterStream(route.response()), null)
         }
 
-        val crtFile = File("config/spp-platform.crt")
-        if (crtFile.exists()) {
-            val crtParser = PEMParser(StringReader(crtFile.readText()))
+        val sslCertFile = File(httpConfig.getString("ssl_cert").orEmpty().ifEmpty { "config/spp-platform.crt" })
+        if (sslCertFile.exists()) {
+            val crtParser = PEMParser(StringReader(sslCertFile.readText()))
             val crtHolder = crtParser.readObject() as X509CertificateHolder
             val certificate = JcaX509CertificateConverter().getCertificate(crtHolder)
             generateProbe(
@@ -213,7 +225,8 @@ class ProbeGenerator(private val router: Router) : CoroutineVerticle() {
                 config,
                 certificate,
                 clientAccess,
-                tenantId
+                tenantId,
+                httpConfig
             )
         } else {
             generateProbe(
@@ -223,7 +236,8 @@ class ProbeGenerator(private val router: Router) : CoroutineVerticle() {
                 config,
                 null,
                 clientAccess,
-                tenantId
+                tenantId,
+                httpConfig
             )
         }
         log.info("Signed probe downloaded")
@@ -237,7 +251,8 @@ class ProbeGenerator(private val router: Router) : CoroutineVerticle() {
         probeConfig: SourceProbeConfig,
         certificate: X509Certificate?,
         clientAccess: ClientAccess?,
-        tenantId: String?
+        tenantId: String?,
+        httpConfig: JsonObject
     ) {
         val buffer = ByteArray(8192)
         val responseOut = ZipOutputStream(responseStream)
@@ -269,7 +284,9 @@ class ProbeGenerator(private val router: Router) : CoroutineVerticle() {
         //write minimum probe config as spp-probe.yml inside probe jar
         val yamlStr = yamlMapper.writeValueAsString(
             objectMapper.readTree(
-                JsonObject.mapFrom(getMinimumProbeConfig(probeConfig, certificate, clientAccess, tenantId)).toString()
+                JsonObject.mapFrom(
+                    getMinimumProbeConfig(probeConfig, certificate, clientAccess, tenantId, httpConfig)
+                ).toString()
             )
         )
         responseOut.putNextEntry(ZipEntry("spp-probe.yml"))
@@ -288,13 +305,14 @@ class ProbeGenerator(private val router: Router) : CoroutineVerticle() {
         probeConfig: SourceProbeConfig,
         certificate: X509Certificate?,
         clientAccess: ClientAccess?,
-        tenantId: String?
+        tenantId: String?,
+        httpConfig: JsonObject
     ): MutableMap<String, MutableMap<Any, Any>> {
         //determine minimum probe config
         val minProbeConfig = mutableMapOf<String, MutableMap<Any, Any>>(
             "spp" to mutableMapOf(
                 "platform_host" to probeConfig.platformHost,
-                "platform_port" to probeConfig.platformPort
+                "platform_port" to probeConfig.platformPort,
             ),
             "skywalking" to mutableMapOf(
                 "agent" to mutableMapOf(
@@ -302,6 +320,11 @@ class ProbeGenerator(private val router: Router) : CoroutineVerticle() {
                 )
             )
         )
+        val sslEnabled = httpConfig.getString("ssl_enabled").toBooleanStrict()
+        if (sslEnabled) {
+            minProbeConfig["spp"]!!["ssl_enabled"] = true
+        }
+
         if (certificate != null) {
             val crt = StringWriter()
             val writer = JcaPEMWriter(crt)
