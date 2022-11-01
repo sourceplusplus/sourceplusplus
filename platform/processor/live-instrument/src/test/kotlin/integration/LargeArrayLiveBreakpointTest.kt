@@ -21,7 +21,6 @@ import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
-import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
@@ -41,7 +40,7 @@ class LargeArrayLiveBreakpointTest : LiveInstrumentIntegrationTest() {
     }
 
     @Test
-    fun `large array`() = runBlocking(vertx.dispatcher()) {
+    fun `large array`() = runBlocking {
         setupLineLabels {
             largeArray()
         }

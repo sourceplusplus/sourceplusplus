@@ -20,7 +20,6 @@ package integration
 import io.vertx.core.Promise
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
-import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Assertions.fail
@@ -42,7 +41,7 @@ class MultiLiveBreakpointTest : LiveInstrumentIntegrationTest() {
     }
 
     @Test
-    fun `same line twice`() = runBlocking(vertx.dispatcher()) {
+    fun `same line twice`() = runBlocking {
         setupLineLabels {
             multiLineTest()
         }
@@ -96,7 +95,7 @@ class MultiLiveBreakpointTest : LiveInstrumentIntegrationTest() {
     }
 
     @Test
-    fun `side by side`() = runBlocking(vertx.dispatcher()) {
+    fun `side by side`() = runBlocking {
         setupLineLabels {
             multiLineTest()
         }

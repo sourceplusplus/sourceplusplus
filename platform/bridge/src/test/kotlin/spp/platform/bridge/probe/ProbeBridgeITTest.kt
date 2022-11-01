@@ -26,7 +26,6 @@ import io.vertx.core.json.JsonObject
 import io.vertx.junit5.Timeout
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
-import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterEach
@@ -50,14 +49,14 @@ class ProbeBridgeITTest : PlatformIntegrationTest() {
     private var clientAccess: ClientAccess? = null
 
     @BeforeEach
-    fun addClientAccess(): Unit = runBlocking(vertx.dispatcher()) {
+    fun addClientAccess(): Unit = runBlocking {
         if (clientAccess == null) {
             clientAccess = managementService.addClientAccess().await()
         }
     }
 
     @AfterEach
-    fun removeClientAccess(): Unit = runBlocking(vertx.dispatcher()) {
+    fun removeClientAccess(): Unit = runBlocking {
         if (clientAccess != null) {
             managementService.removeClientAccess(clientAccess!!.id).await()
             clientAccess = null
@@ -66,7 +65,7 @@ class ProbeBridgeITTest : PlatformIntegrationTest() {
 
     @Test
     @Timeout(10)
-    fun testProbeCounter(): Unit = runBlocking(vertx.dispatcher()) {
+    fun testProbeCounter(): Unit = runBlocking {
         val testContext = VertxTestContext()
 
         //get probe count
@@ -138,7 +137,7 @@ class ProbeBridgeITTest : PlatformIntegrationTest() {
     }
 
     @Test
-    fun testInvalidAccess_connectedMessage(): Unit = runBlocking(vertx.dispatcher()) {
+    fun testInvalidAccess_connectedMessage(): Unit = runBlocking {
         val testContext = VertxTestContext()
 
         //connect new probe
@@ -188,7 +187,7 @@ class ProbeBridgeITTest : PlatformIntegrationTest() {
     }
 
     @Test
-    fun testInvalidAccess_registerRemote(): Unit = runBlocking(vertx.dispatcher()) {
+    fun testInvalidAccess_registerRemote(): Unit = runBlocking {
         val testContext = VertxTestContext()
 
         //connect new probe
@@ -231,7 +230,7 @@ class ProbeBridgeITTest : PlatformIntegrationTest() {
     }
 
     @Test
-    fun testUpdateActiveProbeMetadata(): Unit = runBlocking(vertx.dispatcher()) {
+    fun testUpdateActiveProbeMetadata(): Unit = runBlocking {
         val testContext = VertxTestContext()
 
         //connect new probe

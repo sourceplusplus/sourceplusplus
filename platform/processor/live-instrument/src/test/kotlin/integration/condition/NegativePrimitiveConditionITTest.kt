@@ -20,7 +20,6 @@ package integration.condition
 import integration.LiveInstrumentIntegrationTest
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
-import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
@@ -56,7 +55,7 @@ class NegativePrimitiveConditionITTest : LiveInstrumentIntegrationTest() {
     }
 
     @Test
-    fun `primitive static variable`() = runBlocking(vertx.dispatcher()) {
+    fun `primitive static variable`() = runBlocking {
         setupLineLabels {
             primitiveStaticVariable()
         }
@@ -89,7 +88,7 @@ class NegativePrimitiveConditionITTest : LiveInstrumentIntegrationTest() {
     }
 
     @Test
-    fun `instance local variable`() = runBlocking(vertx.dispatcher()) {
+    fun `instance local variable`() = runBlocking {
         setupLineLabels {
             primitiveInstanceVariable()
         }
@@ -122,7 +121,7 @@ class NegativePrimitiveConditionITTest : LiveInstrumentIntegrationTest() {
     }
 
     @Test
-    fun `primitive local variable`() = runBlocking(vertx.dispatcher()) {
+    fun `primitive local variable`() = runBlocking {
         setupLineLabels {
             primitiveLocalVariable()
         }

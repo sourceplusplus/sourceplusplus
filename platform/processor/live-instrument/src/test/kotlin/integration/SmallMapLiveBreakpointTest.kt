@@ -20,7 +20,6 @@ package integration
 import io.vertx.core.json.JsonArray
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
-import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Disabled
@@ -62,7 +61,7 @@ class SmallMapLiveBreakpointTest : LiveInstrumentIntegrationTest() {
     }
 
     @Test
-    fun `small map with null value`() = runBlocking(vertx.dispatcher()) {
+    fun `small map with null value`() = runBlocking {
         setupLineLabels {
             smallMapNullValue()
         }
@@ -117,7 +116,7 @@ class SmallMapLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
     @Test
     @Disabled("Non-string keys are not supported") //todo: fix this
-    fun `small map with int key`() = runBlocking(vertx.dispatcher()) {
+    fun `small map with int key`() = runBlocking {
         setupLineLabels {
             smallMapIntKey()
         }
@@ -170,7 +169,7 @@ class SmallMapLiveBreakpointTest : LiveInstrumentIntegrationTest() {
     }
 
     @Test
-    fun `small map with string key`() = runBlocking(vertx.dispatcher()) {
+    fun `small map with string key`() = runBlocking {
         setupLineLabels {
             smallMapStringKey()
         }

@@ -21,7 +21,6 @@ import integration.LiveInstrumentIntegrationTest
 import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
-import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import org.junit.jupiter.api.Assertions.*
@@ -54,7 +53,7 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
     }
 
     @Test
-    fun testGauge(): Unit = runBlocking(vertx.dispatcher()) {
+    fun testGauge(): Unit = runBlocking {
         setupLineLabels {
             triggerGauge()
         }

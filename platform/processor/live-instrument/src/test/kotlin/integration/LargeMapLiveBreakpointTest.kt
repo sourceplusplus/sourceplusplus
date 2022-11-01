@@ -20,7 +20,6 @@ package integration
 import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
-import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
@@ -41,7 +40,7 @@ class LargeMapLiveBreakpointTest : LiveInstrumentIntegrationTest() {
     }
 
     @Test
-    fun `large map`() = runBlocking(vertx.dispatcher()) {
+    fun `large map`() = runBlocking {
         setupLineLabels {
             largeMap()
         }

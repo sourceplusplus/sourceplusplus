@@ -18,7 +18,6 @@
 package integration
 
 import io.vertx.kotlin.coroutines.await
-import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
@@ -43,7 +42,7 @@ class HitLimitLiveBreakpointTest : LiveInstrumentIntegrationTest() {
     }
 
     @Test
-    fun `11 hit limit`() = runBlocking(vertx.dispatcher()) {
+    fun `11 hit limit`() = runBlocking {
         setupLineLabels {
             hitLimit()
         }

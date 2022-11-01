@@ -51,12 +51,12 @@ class LiveMeterRateTest : LiveInstrumentIntegrationTest() {
     }
 
     @BeforeEach
-    fun reset(): Unit = runBlocking(vertx.dispatcher()) {
+    fun reset(): Unit = runBlocking {
         viewService.clearLiveViews().await()
     }
 
     @Test
-    fun `60 calls per minute rate`(): Unit = runBlocking(vertx.dispatcher()) {
+    fun `60 calls per minute rate`(): Unit = runBlocking {
         setupLineLabels {
             triggerRate()
         }

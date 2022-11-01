@@ -19,7 +19,6 @@ package integration
 
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
-import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -53,7 +52,7 @@ class LiveVariablePresentationTest : LiveInstrumentIntegrationTest() {
     }
 
     @Test
-    fun `live variable presentation`() = runBlocking(vertx.dispatcher()) {
+    fun `live variable presentation`() = runBlocking {
         setupLineLabels { liveVariablePresentation() }
 
         val testContext = VertxTestContext()

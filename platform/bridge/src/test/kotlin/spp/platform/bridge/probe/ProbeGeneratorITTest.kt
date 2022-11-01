@@ -24,7 +24,6 @@ import io.vertx.core.json.JsonObject
 import io.vertx.ext.web.client.WebClient
 import io.vertx.ext.web.client.WebClientOptions
 import io.vertx.kotlin.coroutines.await
-import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -32,7 +31,7 @@ import org.junit.jupiter.api.Test
 class ProbeGeneratorITTest : PlatformIntegrationTest() {
 
     @Test
-    fun verifyGeneratedProbeConfig(): Unit = runBlocking(vertx.dispatcher()) {
+    fun verifyGeneratedProbeConfig(): Unit = runBlocking {
         val client = WebClient.create(vertx, WebClientOptions())
         val response = client.get(
             12800, platformHost, "/download/spp-probe.yml?access_token=change-me"

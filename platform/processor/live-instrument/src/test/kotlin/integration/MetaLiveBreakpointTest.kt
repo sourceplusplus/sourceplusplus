@@ -18,7 +18,6 @@
 package integration
 
 import io.vertx.kotlin.coroutines.await
-import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
@@ -30,7 +29,7 @@ import spp.protocol.instrument.LiveSourceLocation
 class MetaLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
     @Test
-    fun `live breakpoint meta`() = runBlocking(vertx.dispatcher()) {
+    fun `live breakpoint meta`() = runBlocking {
         val liveInstrument = instrumentService.addLiveInstrument(
             LiveBreakpoint(
                 location = LiveSourceLocation(
