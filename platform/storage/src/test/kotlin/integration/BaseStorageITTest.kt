@@ -21,7 +21,6 @@ import io.vertx.core.Vertx
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxExtension
-import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
@@ -64,14 +63,14 @@ abstract class BaseStorageITTest<T : CoreStorage> {
     abstract suspend fun createInstance(vertx: Vertx): T
 
     @BeforeEach
-    fun setupInit(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+    fun setupInit(vertx: Vertx): Unit = runBlocking {
         storageInstance = createInstance(vertx)
         SourceStorage.setup(storageInstance)
         SourceStorage.reset()
     }
 
     @Test
-    fun reset(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+    fun reset(): Unit = runBlocking {
         SourceStorage.addRole(DeveloperRole.fromString("resetRole"))
         assertTrue(SourceStorage.getRoles().contains(DeveloperRole.fromString("resetRole")))
         SourceStorage.addDeveloper("resetDeveloper")
@@ -83,10 +82,12 @@ abstract class BaseStorageITTest<T : CoreStorage> {
             "resetDataRedaction"
         )
         assertNotNull(SourceStorage.getDataRedactions().find { it.id == "resetDataRedaction" })
-        SourceStorage.addLiveInstrument(LiveBreakpoint(
-            location = LiveSourceLocation("resetLiveInstrument", 0),
-            id = "resetLiveInstrument"
-        ))
+        SourceStorage.addLiveInstrument(
+            LiveBreakpoint(
+                location = LiveSourceLocation("resetLiveInstrument", 0),
+                id = "resetLiveInstrument"
+            )
+        )
         assertNotNull(SourceStorage.getLiveInstruments().find { it.id == "resetLiveInstrument" })
 
         SourceStorage.reset()
@@ -98,7 +99,7 @@ abstract class BaseStorageITTest<T : CoreStorage> {
     }
 
     @Test
-    fun getDevelopers(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+    fun getDevelopers(): Unit = runBlocking {
         assertEquals(1, storageInstance.getDevelopers().size)
         storageInstance.addDeveloper("dev_1", "token")
         assertEquals(2, storageInstance.getDevelopers().size)
@@ -107,7 +108,7 @@ abstract class BaseStorageITTest<T : CoreStorage> {
     }
 
     @Test
-    fun getDeveloperByAccessToken(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+    fun getDeveloperByAccessToken(): Unit = runBlocking {
         assertEquals(1, storageInstance.getDevelopers().size)
         storageInstance.addDeveloper("dev_2", "token")
         assertEquals(2, storageInstance.getDevelopers().size)
@@ -117,7 +118,7 @@ abstract class BaseStorageITTest<T : CoreStorage> {
     }
 
     @Test
-    fun hasDeveloper(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+    fun hasDeveloper(): Unit = runBlocking {
         assertEquals(listOf("system"), storageInstance.getDevelopers().map { it.id })
         storageInstance.addDeveloper("dev_6", "token_6")
 
@@ -126,7 +127,7 @@ abstract class BaseStorageITTest<T : CoreStorage> {
     }
 
     @Test
-    fun addDeveloper(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+    fun addDeveloper(): Unit = runBlocking {
         assertEquals(listOf("system"), storageInstance.getDevelopers().map { it.id })
         val id = "dev_5"
         val token = "token_5"
@@ -140,7 +141,7 @@ abstract class BaseStorageITTest<T : CoreStorage> {
     }
 
     @Test
-    fun removeDeveloper(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+    fun removeDeveloper(): Unit = runBlocking {
         assertEquals(1, storageInstance.getDevelopers().size)
         val id = "dev_3"
         val token = "token_3"
@@ -157,7 +158,7 @@ abstract class BaseStorageITTest<T : CoreStorage> {
     }
 
     @Test
-    fun setAccessToken(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+    fun setAccessToken(): Unit = runBlocking {
         assertEquals(listOf("system"), storageInstance.getDevelopers().map { it.id })
         val id = "dev_4"
         val token = "token_4"
@@ -173,7 +174,7 @@ abstract class BaseStorageITTest<T : CoreStorage> {
     }
 
     @Test
-    fun hasRole(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+    fun hasRole(): Unit = runBlocking {
         val developerRole = DeveloperRole.fromString("test_role")
         assertFalse(storageInstance.hasRole(developerRole))
 
@@ -182,7 +183,7 @@ abstract class BaseStorageITTest<T : CoreStorage> {
     }
 
     @Test
-    fun removeRole(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+    fun removeRole(): Unit = runBlocking {
         val developerRole = DeveloperRole.fromString("test_role_2")
         assertFalse(storageInstance.hasRole(developerRole))
 
@@ -194,7 +195,7 @@ abstract class BaseStorageITTest<T : CoreStorage> {
     }
 
     @Test
-    fun addRole(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+    fun addRole(): Unit = runBlocking {
         val developerRole = DeveloperRole.fromString("test_role_3")
         assertFalse(storageInstance.hasRole(developerRole))
 
@@ -203,7 +204,7 @@ abstract class BaseStorageITTest<T : CoreStorage> {
     }
 
     @Test
-    fun getRoles(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+    fun getRoles(): Unit = runBlocking {
         val developerRole = DeveloperRole.fromString("test_role_4")
         assertFalse(storageInstance.getRoles().contains(developerRole))
         storageInstance.addRole(developerRole)
@@ -211,7 +212,7 @@ abstract class BaseStorageITTest<T : CoreStorage> {
     }
 
     @Test
-    fun addGetDeveloperRoles(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+    fun addGetDeveloperRoles(): Unit = runBlocking {
         val id = "dev_5"
         storageInstance.addDeveloper(id, "token_5")
         val developerRole = DeveloperRole.fromString("dev_role")
@@ -227,7 +228,7 @@ abstract class BaseStorageITTest<T : CoreStorage> {
     }
 
     @Test
-    fun removeRoleFromDeveloper(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+    fun removeRoleFromDeveloper(): Unit = runBlocking {
         val id = "dev6"
         storageInstance.addDeveloper(id, "token6")
         val developerRole = DeveloperRole.fromString("devRole")
@@ -241,7 +242,7 @@ abstract class BaseStorageITTest<T : CoreStorage> {
     }
 
     @Test
-    fun addGetRolePermissions(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+    fun addGetRolePermissions(): Unit = runBlocking {
         val developerRole = DeveloperRole.fromString("devRole11")
         storageInstance.addRole(developerRole)
         storageInstance.addPermissionToRole(developerRole, RolePermission.ADD_ROLE_PERMISSION)
@@ -253,7 +254,7 @@ abstract class BaseStorageITTest<T : CoreStorage> {
     }
 
     @Test
-    fun removePermissionFromRole(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+    fun removePermissionFromRole(): Unit = runBlocking {
         val developerRole = DeveloperRole.fromString("devRole12")
         storageInstance.addRole(developerRole)
         storageInstance.addPermissionToRole(developerRole, RolePermission.ADD_DEVELOPER_ROLE)
@@ -268,7 +269,7 @@ abstract class BaseStorageITTest<T : CoreStorage> {
     }
 
     @Test
-    fun getRoleAccessPermissions(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+    fun getRoleAccessPermissions(): Unit = runBlocking {
         val developerRole = DeveloperRole.fromString("test_role_6")
         storageInstance.addRole(developerRole)
 
@@ -296,7 +297,7 @@ abstract class BaseStorageITTest<T : CoreStorage> {
     }
 
     @Test
-    fun getAccessPermissions(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+    fun getAccessPermissions(): Unit = runBlocking {
         storageInstance.addAccessPermission("accessId3", listOf("pattern3"), AccessType.WHITE_LIST)
         storageInstance.addAccessPermission("accessId4", listOf("pattern4"), AccessType.WHITE_LIST)
         storageInstance.addAccessPermission("accessId5", listOf("pattern5"), AccessType.BLACK_LIST)
@@ -305,7 +306,7 @@ abstract class BaseStorageITTest<T : CoreStorage> {
     }
 
     @Test
-    fun hasAccessPermission(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+    fun hasAccessPermission(): Unit = runBlocking {
         val id = "accessId6"
         assertFalse(storageInstance.hasAccessPermission(id))
         storageInstance.addAccessPermission(id, listOf("pattern6"), AccessType.WHITE_LIST)
@@ -313,7 +314,7 @@ abstract class BaseStorageITTest<T : CoreStorage> {
     }
 
     @Test
-    fun getAccessPermission(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+    fun getAccessPermission(): Unit = runBlocking {
         val id = "accessId7"
         storageInstance.addAccessPermission(id, listOf("pattern7"), AccessType.WHITE_LIST)
         val accessPermission = storageInstance.getAccessPermission(id)
@@ -323,7 +324,7 @@ abstract class BaseStorageITTest<T : CoreStorage> {
     }
 
     @Test
-    fun addRemovePermission(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+    fun addRemovePermission(): Unit = runBlocking {
         val id = "accessId8"
         assertFalse(storageInstance.hasAccessPermission(id))
         storageInstance.addAccessPermission(id, listOf("pattern8"), AccessType.WHITE_LIST)
@@ -333,7 +334,7 @@ abstract class BaseStorageITTest<T : CoreStorage> {
     }
 
     @Test
-    fun addRemoveAccessPermissionToRole(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+    fun addRemoveAccessPermissionToRole(): Unit = runBlocking {
         val developerRole = DeveloperRole.fromString("test_role_7")
         storageInstance.addRole(developerRole)
 
@@ -350,7 +351,7 @@ abstract class BaseStorageITTest<T : CoreStorage> {
     }
 
     @Test
-    fun addDataRedaction(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+    fun addDataRedaction(): Unit = runBlocking {
         val id = "redaction1"
         storageInstance.addDataRedaction(id, RedactionType.IDENTIFIER_MATCH, "lookup1", "value1")
         val dataRedaction = storageInstance.getDataRedaction(id)
@@ -361,7 +362,7 @@ abstract class BaseStorageITTest<T : CoreStorage> {
     }
 
     @Test
-    fun hasDataRedaction(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+    fun hasDataRedaction(): Unit = runBlocking {
         val id = "redaction2"
         assertFalse(storageInstance.hasDataRedaction(id))
         storageInstance.addDataRedaction(id, RedactionType.IDENTIFIER_MATCH, "lookup2", "value2")
@@ -369,7 +370,7 @@ abstract class BaseStorageITTest<T : CoreStorage> {
     }
 
     @Test
-    fun getDataRedactions(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+    fun getDataRedactions(): Unit = runBlocking {
         val id3 = "redaction3"
         val id4 = "redaction4"
         val id5 = "redaction5"
@@ -381,7 +382,7 @@ abstract class BaseStorageITTest<T : CoreStorage> {
     }
 
     @Test
-    fun updateDataRedaction(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+    fun updateDataRedaction(): Unit = runBlocking {
         assertEquals(0, storageInstance.getDataRedactions().size)
         val id = "redaction6"
         storageInstance.addDataRedaction(id, RedactionType.IDENTIFIER_MATCH, "lookup1", "value1")
@@ -400,7 +401,7 @@ abstract class BaseStorageITTest<T : CoreStorage> {
     }
 
     @Test
-    fun removeDataRedaction(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+    fun removeDataRedaction(): Unit = runBlocking {
         val id = "redaction7"
         storageInstance.addDataRedaction(id, RedactionType.IDENTIFIER_MATCH, "lookup7", "value7")
         assertTrue(storageInstance.hasDataRedaction(id))
@@ -409,7 +410,7 @@ abstract class BaseStorageITTest<T : CoreStorage> {
     }
 
     @Test
-    fun removeDataRedactionFromRole(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+    fun removeDataRedactionFromRole(): Unit = runBlocking {
         storageInstance.addDataRedaction("redact8", RedactionType.IDENTIFIER_MATCH, "lookup8", "value8")
         val developerRole = DeveloperRole.fromString("devRole8")
         storageInstance.addRole(developerRole)
@@ -424,7 +425,7 @@ abstract class BaseStorageITTest<T : CoreStorage> {
     }
 
     @Test
-    fun getRoleDataRedactions(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+    fun getRoleDataRedactions(): Unit = runBlocking {
         storageInstance.addDataRedaction("redact9", RedactionType.IDENTIFIER_MATCH, "lookup9", "value9")
         storageInstance.addDataRedaction("redact10", RedactionType.VALUE_REGEX, "lookup10", "value10")
         val developerRole = DeveloperRole.fromString("devRole9")
@@ -438,7 +439,7 @@ abstract class BaseStorageITTest<T : CoreStorage> {
     }
 
     @Test
-    fun updateDataRedactionInRole(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+    fun updateDataRedactionInRole(): Unit = runBlocking {
         storageInstance.addDataRedaction("test", RedactionType.IDENTIFIER_MATCH, "lookup", "value1")
         val developerRole = DeveloperRole.fromString("test_role")
         storageInstance.addRole(developerRole)
@@ -454,7 +455,7 @@ abstract class BaseStorageITTest<T : CoreStorage> {
     }
 
     @Test
-    fun addGetClientAccess(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+    fun addGetClientAccess(): Unit = runBlocking {
         val id = "clientId1"
         val secret = "clientSecret1"
         assertNull(storageInstance.getClientAccess(id))
@@ -468,7 +469,7 @@ abstract class BaseStorageITTest<T : CoreStorage> {
     }
 
     @Test
-    fun removeClientAccess(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+    fun removeClientAccess(): Unit = runBlocking {
         val id = "clientId2"
         storageInstance.addClientAccess(id)
         val clientAccess = storageInstance.getClientAccess(id)
@@ -481,7 +482,7 @@ abstract class BaseStorageITTest<T : CoreStorage> {
     }
 
     @Test
-    fun refreshClientAccess(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+    fun refreshClientAccess(): Unit = runBlocking {
         val id = "clientId3"
         val secret = "clientSecret3"
         storageInstance.addClientAccess(id, secret)
@@ -494,7 +495,7 @@ abstract class BaseStorageITTest<T : CoreStorage> {
     }
 
     @Test
-    fun addLiveInstrument(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+    fun addLiveInstrument(): Unit = runBlocking {
         val id = "breakpoint1"
         assertEquals(0, storageInstance.getLiveInstruments().size)
         val instrument = LiveBreakpoint(
@@ -507,7 +508,7 @@ abstract class BaseStorageITTest<T : CoreStorage> {
     }
 
     @Test
-    fun getLiveInstrument(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+    fun getLiveInstrument(): Unit = runBlocking {
         val id = "breakpoint2"
         val instrument = LiveBreakpoint(
             location = LiveSourceLocation("file2", 2),
@@ -519,7 +520,7 @@ abstract class BaseStorageITTest<T : CoreStorage> {
     }
 
     @Test
-    fun removeLiveInstrument(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+    fun removeLiveInstrument(): Unit = runBlocking {
         val id = "breakpoint3"
         val instrument = LiveBreakpoint(
             location = LiveSourceLocation("file3", 3),
@@ -534,7 +535,7 @@ abstract class BaseStorageITTest<T : CoreStorage> {
     }
 
     @Test
-    fun updateLiveInstrument(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+    fun updateLiveInstrument(): Unit = runBlocking {
         val id = "breakpoint4"
         val instrument = LiveBreakpoint(
             location = LiveSourceLocation("file4", 1),
@@ -553,7 +554,7 @@ abstract class BaseStorageITTest<T : CoreStorage> {
     }
 
     @Test
-    fun getLiveInstruments(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+    fun getLiveInstruments(): Unit = runBlocking {
         val breakpointId = "breakpoint5"
         val breakpoint = LiveBreakpoint(
             location = LiveSourceLocation("file5", 1),
@@ -593,7 +594,7 @@ abstract class BaseStorageITTest<T : CoreStorage> {
     }
 
     @Test
-    fun getPendingLiveInstruments(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+    fun getPendingLiveInstruments(): Unit = runBlocking {
         val pendingBreakpointId = "breakpoint9"
         val pendingBreakpoint = LiveBreakpoint(
             location = LiveSourceLocation("file9", 1),

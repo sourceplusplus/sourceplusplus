@@ -25,7 +25,6 @@ import io.vertx.core.http.WebSocketFrame
 import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
-import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
@@ -43,7 +42,7 @@ class MarkerBridgeITTest : PlatformIntegrationTest() {
     }
 
     @Test
-    fun testMarkerCounter(): Unit = runBlocking(vertx.dispatcher()) {
+    fun testMarkerCounter(): Unit = runBlocking {
         val testContext = VertxTestContext()
 
         //get marker count
@@ -116,7 +115,7 @@ class MarkerBridgeITTest : PlatformIntegrationTest() {
     }
 
     @Test
-    fun testInvalidAccess_connectedMessage(): Unit = runBlocking(vertx.dispatcher()) {
+    fun testInvalidAccess_connectedMessage(): Unit = runBlocking {
         val testContext = VertxTestContext()
 
         //connect new marker
@@ -161,7 +160,7 @@ class MarkerBridgeITTest : PlatformIntegrationTest() {
     }
 
     @Test
-    fun testInvalidAccess_registerSubscriber(): Unit = runBlocking(vertx.dispatcher()) {
+    fun testInvalidAccess_registerSubscriber(): Unit = runBlocking {
         val testContext = VertxTestContext()
 
         //connect new marker

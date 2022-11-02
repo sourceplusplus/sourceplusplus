@@ -110,6 +110,7 @@ class AtomicValueLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         //add live breakpoint
         instrumentService.addLiveInstrument(
             LiveBreakpoint(
+                id = "atomic-value-test",
                 location = LiveSourceLocation(
                     AtomicValueLiveBreakpointTest::class.qualifiedName!!,
                     getLineNumber("done"),

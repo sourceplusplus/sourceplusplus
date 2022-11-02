@@ -80,6 +80,8 @@ class LiveLogSubscriptionTest : LiveInstrumentIntegrationTest() {
                 )
             )
         ).await().subscriptionId!!
+        log.info("Using subscription id: {}", subscriptionId)
+
         val consumer = vertx.eventBus().consumer<JsonObject>(
             SourceServices.Subscribe.toLiveViewSubscriberAddress("system")
         )
