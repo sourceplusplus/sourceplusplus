@@ -71,8 +71,8 @@ class SkyWalkingInterceptor(private val router: Router) : CoroutineVerticle() {
             startGrpcProxy()
         }
 
-        val swHost = config.getJsonObject("skywalking-oap").getString("host")
-        val swRestPort = config.getJsonObject("skywalking-oap").getString("rest_port").toInt()
+        val swHost = config.getJsonObject("skywalking-core").getString("host")
+        val swRestPort = config.getJsonObject("skywalking-core").getString("rest_port").toInt()
         val httpClient = vertx.createHttpClient()
         vertx.eventBus().consumer<JsonObject>("skywalking-forwarder") { req ->
             val request = req.body()
@@ -195,8 +195,8 @@ class SkyWalkingInterceptor(private val router: Router) : CoroutineVerticle() {
         server.requestHandler(grpcServer).listen(sppGrpcPort)
         log.info("SkyWalking gRPC proxy started. Listening on port: {}", sppGrpcPort)
 
-        val swHost = config.getJsonObject("skywalking-oap").getString("host")
-        val swGrpcPort = config.getJsonObject("skywalking-oap").getString("grpc_port").toInt()
+        val swHost = config.getJsonObject("skywalking-core").getString("host")
+        val swGrpcPort = config.getJsonObject("skywalking-core").getString("grpc_port").toInt()
         val http2Client = HttpClientOptions()
             .setUseAlpn(true) //required by H2
             .setVerifyHost(false)
