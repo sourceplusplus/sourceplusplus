@@ -14,7 +14,7 @@ services:
       context: .
       dockerfile: Dockerfile-spp-platform
     environment:
-      - JAVA_OPTS=-agentlib:jdwp=transport=dt_socket,server=n,address=161.35.133.237:5106,suspend=y,onthrow=<FQ exception class name>,onuncaught=<y/n>
+      - JAVA_OPTS=-agentlib:jdwp=transport=dt_socket,server=n,address=161.35.133.237:5106,suspend=y
       - SPP_JWT_ENABLED=true
       - SPP_CLIENT_ACCESS_ENABLED=true
       - SPP_CLIENT_ACCESS_ID=test-id
