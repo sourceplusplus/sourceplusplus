@@ -15,6 +15,7 @@ services:
       - "12800:12800"
       - "443:443"
       - "80:80"
+    network_mode: "host"
     build:
       context: .
       dockerfile: Dockerfile-spp-platform
