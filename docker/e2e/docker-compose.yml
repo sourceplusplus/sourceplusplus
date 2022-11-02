@@ -9,12 +9,6 @@ services:
   spp-platform:
     container_name: spp-platform
     hostname: spp-platform
-    ports:
-      - "5106:5106"
-      - "11800:11800"
-      - "12800:12800"
-      - "443:443"
-      - "80:80"
     network_mode: "host"
     build:
       context: .
