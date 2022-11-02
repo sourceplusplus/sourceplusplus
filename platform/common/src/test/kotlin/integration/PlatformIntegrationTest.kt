@@ -29,6 +29,7 @@ import io.vertx.spi.cluster.redis.RedisClusterManager
 import io.vertx.spi.cluster.redis.config.LockConfig
 import io.vertx.spi.cluster.redis.config.RedisConfig
 import kotlinx.coroutines.runBlocking
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.extension.ExtendWith
 import org.slf4j.LoggerFactory
@@ -76,10 +77,6 @@ open class PlatformIntegrationTest {
         @BeforeAll
         @JvmStatic
         fun setup() {
-            if (vertx != null) {
-                return
-            }
-
             val clusterStorageAddress = "redis://localhost:6379"
             val clusterManager = RedisClusterManager(
                 RedisConfig()
@@ -91,6 +88,17 @@ open class PlatformIntegrationTest {
                 log.info("Starting vertx")
                 vertx = Vertx.clusteredVertx(VertxOptions().setClusterManager(clusterManager)).await()
                 log.info("Started vertx")
+            }
+        }
+
+        @AfterAll
+        @JvmStatic
+        fun destroy() {
+            runBlocking {
+                log.info("Closing vertx")
+                vertx!!.close().await()
+                vertx = null
+                log.info("Closed vertx")
             }
         }
     }
