@@ -122,6 +122,11 @@ open class RedisStorage(val vertx: Vertx) : CoreStorage {
         redis.srem(listOf(namespace("developers:access_tokens"), accessToken)).await()
         redis.del(listOf(namespace("developers:ids:$id:access_token"))).await()
         redis.del(listOf(namespace("developers:$id:roles"))).await()
+
+        val roles = redis.smembers(namespace("developers:$id:roles")).await()
+        if (roles !is MultiType) {
+            log.error("getDeveloperRoles: roles is not MultiType: " + roles, Exception())
+        }
     }
 
     private suspend fun getAccessToken(id: String): String {
@@ -285,6 +290,11 @@ open class RedisStorage(val vertx: Vertx) : CoreStorage {
 
     override suspend fun removeRoleFromDeveloper(id: String, role: DeveloperRole) {
         redis.srem(listOf(namespace("developers:$id:roles"), role.roleName)).await()
+
+        val roles = redis.smembers(namespace("developers:$id:roles")).await()
+        if (roles !is MultiType) {
+            log.error("getDeveloperRoles: roles is not MultiType: " + roles, Exception())
+        }
     }
 
     override suspend fun addPermissionToRole(role: DeveloperRole, permission: RolePermission) {
