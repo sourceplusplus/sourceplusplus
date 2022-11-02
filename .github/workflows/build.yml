@@ -95,7 +95,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: skywalking-api.log
-          path: ./build/skywalking-api.log
+          path: /tmp/spp-probe/logs/skywalking-api.log
 
       - name: Backup redis data
         if: ${{ always() }}
