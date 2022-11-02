@@ -110,11 +110,9 @@ class LiveLogSubscriptionTest : LiveInstrumentIntegrationTest() {
         instrumentService.addLiveInstrument(liveLog).await()
 
         vertx.executeBlocking<Void> {
-            runBlocking(vertx.dispatcher()) {
-                for (i in 0 until 5) {
-                    triggerLog()
-                    delay(2000)
-                }
+            for (i in 0 until 5) {
+                triggerLog()
+                Thread.sleep(2000)
             }
             it.complete()
         }

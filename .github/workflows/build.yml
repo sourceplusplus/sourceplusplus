@@ -97,6 +97,12 @@ jobs:
           name: skywalking-api.log
           path: /tmp/spp-probe/logs/skywalking-api.log
 
+      - run: ls -la /tmp/spp-probe
+        if: ${{ always() }}
+
+      - run: ls -la /tmp/spp-probe/logs
+        if: ${{ always() }}
+
       - name: Backup redis data
         if: ${{ always() }}
         run: |
