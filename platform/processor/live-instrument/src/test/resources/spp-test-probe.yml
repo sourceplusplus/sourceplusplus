@@ -7,7 +7,7 @@ spp:
   delete_probe_directory_on_boot: false
 skywalking:
   logging:
-    level: "INFO"
+    level: "DEBUG"
   agent:
     service_name: "spp-test-probe"
   meter:
