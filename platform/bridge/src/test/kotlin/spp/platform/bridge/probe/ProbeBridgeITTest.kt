@@ -23,7 +23,6 @@ import io.vertx.core.http.HttpClientOptions
 import io.vertx.core.http.WebSocketConnectOptions
 import io.vertx.core.http.WebSocketFrame
 import io.vertx.core.json.JsonObject
-import io.vertx.junit5.Timeout
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
 import kotlinx.coroutines.delay
