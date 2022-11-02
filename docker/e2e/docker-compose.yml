@@ -9,7 +9,12 @@ services:
   spp-platform:
     container_name: spp-platform
     hostname: spp-platform
-    network_mode: "host"
+    ports:
+      - "5106:5106"
+      - "11800:11800"
+      - "12800:12800"
+      - "443:443"
+      - "80:80"
     build:
       context: .
       dockerfile: Dockerfile-spp-platform
