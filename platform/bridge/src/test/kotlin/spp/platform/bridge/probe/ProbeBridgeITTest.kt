@@ -64,7 +64,6 @@ class ProbeBridgeITTest : PlatformIntegrationTest() {
     }
 
     @Test
-    @Timeout(10)
     fun testProbeCounter(): Unit = runBlocking {
         val testContext = VertxTestContext()
 
