@@ -20,6 +20,7 @@ package integration
 import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -67,6 +68,7 @@ class LiveLogSubscriptionTest : LiveInstrumentIntegrationTest() {
                 getLineNumber("done"),
                 "spp-test-probe"
             ),
+            id = "live-log-subscription-test",
             hitLimit = 5,
             applyImmediately = true
         )
@@ -102,13 +104,13 @@ class LiveLogSubscriptionTest : LiveInstrumentIntegrationTest() {
                     testContext.completeNow()
                 }
             }
-        }
+        }.completionHandler().await()
 
         instrumentService.addLiveInstrument(liveLog).await()
 
         for (i in 0 until 5) {
             triggerLog()
-            Thread.sleep(2000)
+            delay(2000)
         }
 
         errorOnTimeout(testContext, 30)
