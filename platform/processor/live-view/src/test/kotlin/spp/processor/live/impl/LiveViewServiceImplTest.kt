@@ -27,79 +27,8 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito
 import spp.protocol.view.rule.LiveViewRule
-import spp.protocol.view.rule.LiveViewRuleset
 
 class LiveViewServiceImplTest {
-
-    @Test
-    fun createRuleset() {
-        val viewService = LiveViewServiceImpl()
-        viewService.skywalkingVersion = "9+"
-        viewService.meterSystem = Mockito.mock(MeterSystem::class.java)
-
-        val convertList = mutableListOf<MetricConvert>()
-        viewService.meterProcessService = Mockito.mock(MeterProcessService::class.java).apply {
-            Mockito.`when`(converts()).thenReturn(convertList)
-        }
-
-        viewService.saveRuleset(
-            LiveViewRuleset(
-                expSuffix = "service(['service'], Layer.GENERAL)",
-                metricPrefix = "meter",
-                metricsRules = listOf(
-                    LiveViewRule(
-                        name = "user_login_count",
-                        exp = "user_login.sum(['service']).downsampling(SUM)"
-                    )
-                )
-            )
-        )
-
-        assertEquals(1, convertList.size)
-        val analyzers = Reflect.on(convertList.first()).get<List<Analyzer>>("analyzers")
-        assertEquals(1, analyzers.size)
-        val analyzer = analyzers.first()
-        assertEquals("meter_user_login_count", Reflect.on(analyzer).get("metricName"))
-        val samples = Reflect.on(analyzer).get<List<String>>("samples")
-        assertEquals(1, samples.size)
-        assertEquals("user_login", samples.first())
-        val expression = Reflect.on(analyzer).get<Expression>("expression")
-        assertEquals(
-            "(user_login.sum(['service']).downsampling(SUM)).service(['service'], Layer.GENERAL)",
-            Reflect.on(expression).get("literal")
-        )
-    }
-
-    @Test
-    fun deleteRuleset() {
-        val viewService = LiveViewServiceImpl()
-        viewService.skywalkingVersion = "9+"
-        viewService.meterSystem = Mockito.mock(MeterSystem::class.java)
-
-        val convertList = mutableListOf<MetricConvert>()
-        viewService.meterProcessService = Mockito.mock(MeterProcessService::class.java).apply {
-            Mockito.`when`(converts()).thenReturn(convertList)
-        }
-
-        //add ruleset
-        val ruleset = viewService.saveRuleset(
-            LiveViewRuleset(
-                expSuffix = "service(['service'], Layer.GENERAL)",
-                metricPrefix = "meter",
-                metricsRules = listOf(
-                    LiveViewRule(
-                        name = "user_login_count",
-                        exp = "user_login.sum(['service']).downsampling(SUM)"
-                    )
-                )
-            )
-        ).toCompletionStage().toCompletableFuture().get()
-        assertEquals(1, convertList.size)
-
-        //delete ruleset
-        viewService.deleteRuleset(ruleset.id!!)
-        assertEquals(0, convertList.size)
-    }
 
     @Test
     fun createRule() {
@@ -118,6 +47,90 @@ class LiveViewServiceImplTest {
                 exp = "test_count1.tagEqual(\"k1\", \"v1\").service([\"service\"], Layer.GENERAL)"
             )
         )
+
+        assertEquals(1, convertList.size)
+        val analyzers = Reflect.on(convertList.first()).get<List<Analyzer>>("analyzers")
+        assertEquals(1, analyzers.size)
+        val analyzer = analyzers.first()
+        assertEquals("spp_build_test1", Reflect.on(analyzer).get("metricName"))
+        val samples = Reflect.on(analyzer).get<List<String>>("samples")
+        assertEquals(1, samples.size)
+        assertEquals("test_count1", samples.first())
+        val expression = Reflect.on(analyzer).get<Expression>("expression")
+        assertEquals(
+            "test_count1.tagEqual(\"k1\", \"v1\").service([\"service\"], Layer.GENERAL)",
+            Reflect.on(expression).get("literal")
+        )
+    }
+
+    @Test
+    fun `two unique roles`() {
+        val viewService = LiveViewServiceImpl()
+        viewService.skywalkingVersion = "9+"
+        viewService.meterSystem = Mockito.mock(MeterSystem::class.java)
+
+        val convertList = mutableListOf<MetricConvert>()
+        viewService.meterProcessService = Mockito.mock(MeterProcessService::class.java).apply {
+            Mockito.`when`(converts()).thenReturn(convertList)
+        }
+
+        viewService.saveRule(
+            LiveViewRule(
+                name = "build_test1",
+                exp = "test_count1.tagEqual(\"k1\", \"v1\").service([\"service\"], Layer.GENERAL)"
+            )
+        )
+        viewService.saveRule(
+            LiveViewRule(
+                name = "build_test2",
+                exp = "test_count2.tagEqual(\"k1\", \"v1\").service([\"service\"], Layer.GENERAL)"
+            )
+        )
+
+        assertEquals(1, convertList.size)
+        val analyzers = Reflect.on(convertList.first()).get<List<Analyzer>>("analyzers")
+        assertEquals(2, analyzers.size)
+
+        val analyzer1 = analyzers.first()
+        assertEquals("spp_build_test1", Reflect.on(analyzer1).get("metricName"))
+        val samples1 = Reflect.on(analyzer1).get<List<String>>("samples")
+        assertEquals(1, samples1.size)
+        assertEquals("test_count1", samples1.first())
+        val expression1 = Reflect.on(analyzer1).get<Expression>("expression")
+        assertEquals(
+            "test_count1.tagEqual(\"k1\", \"v1\").service([\"service\"], Layer.GENERAL)",
+            Reflect.on(expression1).get("literal")
+        )
+
+        val analyzer2 = analyzers.last()
+        assertEquals("spp_build_test2", Reflect.on(analyzer2).get("metricName"))
+        val samples2 = Reflect.on(analyzer2).get<List<String>>("samples")
+        assertEquals(1, samples2.size)
+        assertEquals("test_count2", samples2.first())
+        val expression2 = Reflect.on(analyzer2).get<Expression>("expression")
+        assertEquals(
+            "test_count2.tagEqual(\"k1\", \"v1\").service([\"service\"], Layer.GENERAL)",
+            Reflect.on(expression2).get("literal")
+        )
+    }
+
+    @Test
+    fun `try to save duplicate rule`() {
+        val viewService = LiveViewServiceImpl()
+        viewService.skywalkingVersion = "9+"
+        viewService.meterSystem = Mockito.mock(MeterSystem::class.java)
+
+        val convertList = mutableListOf<MetricConvert>()
+        viewService.meterProcessService = Mockito.mock(MeterProcessService::class.java).apply {
+            Mockito.`when`(converts()).thenReturn(convertList)
+        }
+
+        val rule = LiveViewRule(
+            name = "build_test1",
+            exp = "test_count1.tagEqual(\"k1\", \"v1\").service([\"service\"], Layer.GENERAL)"
+        )
+        viewService.saveRule(rule)
+        viewService.saveRule(rule)
 
         assertEquals(1, convertList.size)
         val analyzers = Reflect.on(convertList.first()).get<List<Analyzer>>("analyzers")

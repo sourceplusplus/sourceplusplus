@@ -47,7 +47,6 @@ import spp.processor.ViewProcessor
 import spp.processor.live.impl.view.LiveLogView
 import spp.processor.live.impl.view.LiveMeterView
 import spp.processor.live.impl.view.LiveTraceView
-import spp.processor.live.impl.view.model.LiveViewMetricConvert
 import spp.processor.live.impl.view.util.EntitySubscribersCache
 import spp.processor.live.impl.view.util.MetricTypeSubscriptionCache
 import spp.processor.live.impl.view.util.ViewSubscriber
@@ -57,7 +56,6 @@ import spp.protocol.service.SourceServices.Subscribe.toLiveViewSubscriberAddress
 import spp.protocol.view.LiveView
 import spp.protocol.view.LiveViewEvent
 import spp.protocol.view.rule.LiveViewRule
-import spp.protocol.view.rule.LiveViewRuleset
 import java.util.*
 
 class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
@@ -111,38 +109,42 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
         }
     }
 
-    override fun saveRuleset(ruleset: LiveViewRuleset): Future<LiveViewRuleset> {
-        val meterConfig = MeterConfig()
-        meterConfig.metricPrefix = ruleset.metricPrefix
-        meterConfig.metricsRules = ruleset.metricsRules.map { rule ->
-            MeterConfig.Rule().apply {
-                name = rule.name
-                exp = ruleset.expSuffix.let {
-                    if (it.isBlank()) rule.exp else "(${rule.exp})" + ".$it"
+    override fun saveRule(rule: LiveViewRule): Future<LiveViewRule> {
+        //check for existing rule
+        var sppAnalyzers: MutableList<Analyzer>? = null
+        val exitingRule = meterProcessService.converts().any { ruleset ->
+            val analyzers = Reflect.on(ruleset).get<MutableList<Analyzer>>("analyzers")
+            analyzers.any {
+                val metricName = Reflect.on(it).get<String>("metricName")
+                if (metricName.startsWith("spp_")) {
+                    sppAnalyzers = analyzers
                 }
+                metricName == "spp_" + rule.name
             }
         }
-
-        //todo: search for dupe
-        val rulesetId = UUID.randomUUID().toString()
-        meterProcessService.converts().add(LiveViewMetricConvert(rulesetId, meterConfig, meterSystem))
-
-        return Future.succeededFuture(ruleset.copy(id = rulesetId))
-    }
-
-    override fun deleteRuleset(rulesetId: String): Future<LiveViewRuleset?> {
-        val meterConfig = meterProcessService.converts().find { it is LiveViewMetricConvert && it.id == rulesetId }
-        if (meterConfig == null) {
-            return Future.succeededFuture(null)
+        if (exitingRule) {
+            return Future.failedFuture("Rule with name ${rule.name} already exists")
         }
-        meterProcessService.converts().remove(meterConfig)
-        return Future.succeededFuture(null) //todo: convert to deleted ruleset
-    }
 
-    override fun saveRule(rule: LiveViewRule): Future<LiveViewRule> {
-        return saveRuleset(LiveViewRuleset("", "spp", listOf(rule))).map {
-            it.metricsRules.first()
+        val meterConfig = MeterConfig()
+        meterConfig.metricPrefix = "spp"
+        meterConfig.metricsRules = listOf(
+            MeterConfig.Rule().apply {
+                name = rule.name
+                exp = rule.exp
+            }
+        )
+        if (sppAnalyzers == null) {
+            //create spp ruleset
+            meterProcessService.converts().add(MetricConvert(meterConfig, meterSystem))
+        } else {
+            //add rule to existing spp ruleset
+            val newConvert = MetricConvert(meterConfig, meterSystem)
+            val newAnalyzer = Reflect.on(newConvert).get<List<Analyzer>>("analyzers").first()
+            sppAnalyzers!!.add(newAnalyzer)
         }
+
+        return Future.succeededFuture(rule)
     }
 
     override fun deleteRule(ruleName: String): Future<LiveViewRule?> {
