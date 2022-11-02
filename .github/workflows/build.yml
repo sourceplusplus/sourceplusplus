@@ -35,6 +35,9 @@ jobs:
         with:
           submodules: 'recursive'
 
+      - name: Output JDK version
+        run: java -version
+
       - name: Export Properties
         id: properties
         shell: bash
