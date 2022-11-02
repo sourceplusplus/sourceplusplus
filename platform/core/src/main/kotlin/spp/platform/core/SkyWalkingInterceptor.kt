@@ -71,8 +71,8 @@ class SkyWalkingInterceptor(private val router: Router) : CoroutineVerticle() {
             startGrpcProxy()
         }
 
-        val swHost = config.getJsonObject("skywalking-oap").getString("host")
-        val swRestPort = config.getJsonObject("skywalking-oap").getString("rest_port").toInt()
+        val swHost = config.getJsonObject("skywalking-core").getString("host")
+        val swRestPort = config.getJsonObject("skywalking-core").getString("rest_port").toInt()
         val httpClient = vertx.createHttpClient()
         vertx.eventBus().consumer<JsonObject>("skywalking-forwarder") { req ->
             val request = req.body()
@@ -170,18 +170,18 @@ class SkyWalkingInterceptor(private val router: Router) : CoroutineVerticle() {
     }
 
     private fun startGrpcProxy() {
-        val grpcConfig = config.getJsonObject("spp-platform").getJsonObject("grpc")
-        val sslEnabled = grpcConfig.getString("ssl_enabled").toBooleanStrict()
+        val platformGrpcConfig = config.getJsonObject("spp-platform").getJsonObject("grpc")
+        val platformGrpcSslEnabled = platformGrpcConfig.getString("ssl_enabled").toBooleanStrict()
         val options = HttpServerOptions()
-            .setSsl(sslEnabled)
+            .setSsl(platformGrpcSslEnabled)
             .setUseAlpn(true)
             .apply {
-                if (sslEnabled) {
+                if (platformGrpcSslEnabled) {
                     val certFile = File(
-                        grpcConfig.getString("ssl_cert").orEmpty().ifEmpty { "config/spp-platform.crt" }
+                        platformGrpcConfig.getString("ssl_cert").orEmpty().ifEmpty { "config/spp-platform.crt" }
                     )
                     val keyFile = File(
-                        grpcConfig.getString("ssl_key").orEmpty().ifEmpty { "config/spp-platform.key" }
+                        platformGrpcConfig.getString("ssl_key").orEmpty().ifEmpty { "config/spp-platform.key" }
                     )
                     val jksOptions = CertsToJksOptionsConverter(
                         certFile.absolutePath, keyFile.absolutePath
@@ -191,28 +191,30 @@ class SkyWalkingInterceptor(private val router: Router) : CoroutineVerticle() {
             }
         val grpcServer = GrpcServer.server(vertx)
         val server = vertx.createHttpServer(options)
-        val sppGrpcPort = grpcConfig.getString("port").toInt()
+        val sppGrpcPort = platformGrpcConfig.getString("port").toInt()
         server.requestHandler(grpcServer).listen(sppGrpcPort)
         log.info("SkyWalking gRPC proxy started. Listening on port: {}", sppGrpcPort)
 
-        val swHost = config.getJsonObject("skywalking-oap").getString("host")
-        val swGrpcPort = config.getJsonObject("skywalking-oap").getString("grpc_port").toInt()
+        val swHost = config.getJsonObject("skywalking-core").getString("host")
+        val swGrpcConfig = config.getJsonObject("skywalking-core").getJsonObject("grpc")
+        val swGrpcSslEnabled = swGrpcConfig.getString("ssl_enabled").toBooleanStrict()
+        val swGrpcPort = swGrpcConfig.getString("port").toInt()
         val http2Client = HttpClientOptions()
             .setUseAlpn(true) //required by H2
             .setVerifyHost(false)
             .setTrustAll(true)
             .setDefaultHost(swHost)
             .setDefaultPort(swGrpcPort)
-            .setSsl(sslEnabled)
+            .setSsl(swGrpcSslEnabled)
             .setHttp2ClearTextUpgrade(false)
         val grpcClient = GrpcClient.client(vertx, http2Client)
-        val skywalkingGrpcServer = SocketAddress.inetSocketAddress(swGrpcPort, swHost)
+        val swGrpcServerAddress = SocketAddress.inetSocketAddress(swGrpcPort, swHost)
 
         grpcServer.callHandler { req ->
             req.pause()
             val authHeader = req.headers().get("authentication")
             if (authHeader != null && probeAuthCache.getIfPresent(authHeader) != null) {
-                proxyGrpcRequest(req, grpcClient, skywalkingGrpcServer)
+                proxyGrpcRequest(req, grpcClient, swGrpcServerAddress)
             } else {
                 val authEnabled = config.getJsonObject("client-access")?.getString("enabled")?.toBooleanStrictOrNull()
                 if (authEnabled == true) {
@@ -238,11 +240,11 @@ class SkyWalkingInterceptor(private val router: Router) : CoroutineVerticle() {
                             return@launch
                         } else {
                             probeAuthCache.put(authHeader, true)
-                            proxyGrpcRequest(req, grpcClient, skywalkingGrpcServer)
+                            proxyGrpcRequest(req, grpcClient, swGrpcServerAddress)
                         }
                     }
                 } else {
-                    proxyGrpcRequest(req, grpcClient, skywalkingGrpcServer)
+                    proxyGrpcRequest(req, grpcClient, swGrpcServerAddress)
                 }
             }
         }

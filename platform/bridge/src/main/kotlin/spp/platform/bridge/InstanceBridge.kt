@@ -25,7 +25,7 @@ import io.vertx.core.json.JsonObject
 import io.vertx.ext.auth.jwt.JWTAuth
 import io.vertx.ext.bridge.BaseBridgeEvent
 import io.vertx.kotlin.coroutines.CoroutineVerticle
-import org.slf4j.LoggerFactory
+import mu.KotlinLogging
 import spp.platform.common.ClientAuth
 import spp.platform.common.ClusterConnection
 import spp.platform.common.DeveloperAuth
@@ -35,7 +35,7 @@ import spp.protocol.platform.auth.ClientAccess
 abstract class InstanceBridge(private val jwtAuth: JWTAuth?) : CoroutineVerticle() {
 
     companion object {
-        private val log = LoggerFactory.getLogger(InstanceBridge::class.java)
+        private val log = KotlinLogging.logger {}
     }
 
     fun validateMarkerAuth(event: BaseBridgeEvent) {
@@ -89,6 +89,7 @@ abstract class InstanceBridge(private val jwtAuth: JWTAuth?) : CoroutineVerticle
             }
             Vertx.currentContext().removeLocal("client")
 
+            log.trace { "Validating client credentials. Client id: $clientId - Client secret: $clientSecret" }
             SourceStorage.isValidClientAccess(clientId, clientSecret).onSuccess {
                 val clientAuth = ClientAuth(ClientAccess(clientId, clientSecret), tenantId)
                 Vertx.currentContext().putLocal("client", clientAuth)
@@ -109,7 +110,7 @@ abstract class InstanceBridge(private val jwtAuth: JWTAuth?) : CoroutineVerticle
             return
         }
 
-        log.trace("Validating auth token: $authToken")
+        log.trace { "Validating auth token: $authToken" }
         jwtAuth.authenticate(JsonObject().put("token", authToken)) {
             if (it.succeeded()) {
                 Vertx.currentContext().putLocal("user", it.result())
