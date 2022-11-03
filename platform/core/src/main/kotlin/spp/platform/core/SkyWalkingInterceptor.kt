@@ -164,7 +164,7 @@ class SkyWalkingInterceptor(private val router: Router) : CoroutineVerticle() {
                 }
             }
 
-            val tenantId = req.user().principal().getString("tenant_id")
+            val tenantId = req.user()?.principal()?.getString("tenant_id")
             forwardSkyWalkingRequest(req.bodyAsString, req.request(), selfId, tenantId)
         }
     }
