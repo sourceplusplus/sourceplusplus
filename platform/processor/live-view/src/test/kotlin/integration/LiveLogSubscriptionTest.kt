@@ -108,14 +108,9 @@ class LiveLogSubscriptionTest : LiveInstrumentIntegrationTest() {
 
         instrumentService.addLiveInstrument(liveLog).await()
 
-        vertx.executeBlocking<Void> {
-            runBlocking {
-                for (i in 0 until 5) {
-                    triggerLog()
-                    delay(2000)
-                }
-            }
-            it.complete()
+        for (i in 0 until 5) {
+            triggerLog()
+            delay(2000)
         }
 
         errorOnTimeout(testContext, 30)
