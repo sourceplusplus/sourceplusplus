@@ -136,10 +136,19 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
         )
         if (sppAnalyzers == null) {
             //create spp ruleset
-            meterProcessService.converts().add(MetricConvert(meterConfig, meterSystem))
+            try {
+                meterProcessService.converts().add(MetricConvert(meterConfig, meterSystem))
+            } catch (e: Exception) {
+                return Future.failedFuture(e)
+            }
         } else {
             //add rule to existing spp ruleset
-            val newConvert = MetricConvert(meterConfig, meterSystem)
+            val newConvert = try {
+                MetricConvert(meterConfig, meterSystem)
+            } catch (e: Exception) {
+                return Future.failedFuture(e)
+            }
+
             val newAnalyzer = Reflect.on(newConvert).get<List<Analyzer>>("analyzers").first()
             sppAnalyzers!!.add(newAnalyzer)
         }
