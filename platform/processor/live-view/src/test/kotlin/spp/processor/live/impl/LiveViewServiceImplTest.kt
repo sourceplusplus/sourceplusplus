@@ -64,7 +64,7 @@ class LiveViewServiceImplTest {
     }
 
     @Test
-    fun `two unique roles`() {
+    fun `two unique rules`() {
         val viewService = LiveViewServiceImpl()
         viewService.skywalkingVersion = "9+"
         viewService.meterSystem = Mockito.mock(MeterSystem::class.java)
