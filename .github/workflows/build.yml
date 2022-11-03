@@ -2,12 +2,7 @@ name: Build platform
 
 on:
   pull_request:
-#     paths-ignore:
-#       - '**.md'
-#       - '**.svg'
   push:
-    branches:
-      - master
     paths-ignore:
       - '**.md'
       - '**.svg'
