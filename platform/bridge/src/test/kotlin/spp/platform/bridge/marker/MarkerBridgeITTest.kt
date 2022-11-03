@@ -62,6 +62,18 @@ class MarkerBridgeITTest : PlatformIntegrationTest() {
         val ws = client.webSocket(wsOptions).await()
         log.info("Connected to marker eventbus")
 
+        //setup connection response handler
+        val connectPromise = Promise.promise<Void>()
+        ws.handler { buff ->
+            val str: String = buff.toString()
+            val received = JsonObject(str)
+            val rec: Any = received.getValue("body")
+            testContext.verify {
+                assertEquals(true, rec)
+            }
+            connectPromise.complete()
+        }
+
         //send connected message
         val replyAddress = UUID.randomUUID().toString()
         val msg = JsonObject()
@@ -74,18 +86,7 @@ class MarkerBridgeITTest : PlatformIntegrationTest() {
         ws.writeFrame(WebSocketFrame.textFrame(msg.encode(), true))
         log.info("Sent connected message")
 
-        val connectPromise = Promise.promise<Void>()
-        ws.handler { buff ->
-            val str: String = buff.toString()
-            val received = JsonObject(str)
-            val rec: Any = received.getValue("body")
-            testContext.verify {
-                assertEquals(true, rec)
-            }
-            connectPromise.complete()
-        }
-
-        log.info("Waiting for connection acknowledgment")
+        //wait for response
         connectPromise.future().await()
 
         delay(2000) //ensure marker is connected
@@ -128,6 +129,17 @@ class MarkerBridgeITTest : PlatformIntegrationTest() {
             .setURI("http://localhost:12800/marker/eventbus/websocket")
         val ws = client.webSocket(wsOptions).await()
 
+        //setup connection response handler
+        val connectPromise = Promise.promise<Void>()
+        ws.handler {
+            val received = JsonObject(it.toString())
+            testContext.verify {
+                assertEquals("err", received.getString("type"))
+                assertEquals("rejected", received.getString("body"))
+            }
+            connectPromise.complete()
+        }
+
         //send connected message
         val replyAddress = UUID.randomUUID().toString()
         val msg = JsonObject()
@@ -138,16 +150,9 @@ class MarkerBridgeITTest : PlatformIntegrationTest() {
         val pc = InstanceConnection("test-marker-id", System.currentTimeMillis())
         msg.put("body", JsonObject.mapFrom(pc))
         ws.writeFrame(WebSocketFrame.textFrame(msg.encode(), true))
+        log.info("Sent connected message")
 
-        val connectPromise = Promise.promise<Void>()
-        ws.handler {
-            val received = JsonObject(it.toString())
-            testContext.verify {
-                assertEquals("err", received.getString("type"))
-                assertEquals("rejected", received.getString("body"))
-            }
-            connectPromise.complete()
-        }
+        //wait for response
         connectPromise.future().await()
 
         //disconnect marker
@@ -173,14 +178,7 @@ class MarkerBridgeITTest : PlatformIntegrationTest() {
             .setURI("http://localhost:12800/marker/eventbus/websocket")
         val ws = client.webSocket(wsOptions).await()
 
-        //attempt register live instrument subscriber
-        val msg = JsonObject()
-            .put("type", "register")
-            .put("address", SourceServices.Subscribe.LIVE_INSTRUMENT_SUBSCRIBER + ":test-marker-id")
-        val pc = InstanceConnection("test-marker-id", System.currentTimeMillis())
-        msg.put("body", JsonObject.mapFrom(pc))
-        ws.writeFrame(WebSocketFrame.textFrame(msg.encode(), true))
-
+        //setup connection response handler
         val connectPromise = Promise.promise<Void>()
         ws.handler {
             val received = JsonObject(it.toString())
@@ -190,6 +188,17 @@ class MarkerBridgeITTest : PlatformIntegrationTest() {
             }
             connectPromise.complete()
         }
+
+        //attempt register live instrument subscriber
+        val msg = JsonObject()
+            .put("type", "register")
+            .put("address", SourceServices.Subscribe.LIVE_INSTRUMENT_SUBSCRIBER + ":test-marker-id")
+        val pc = InstanceConnection("test-marker-id", System.currentTimeMillis())
+        msg.put("body", JsonObject.mapFrom(pc))
+        ws.writeFrame(WebSocketFrame.textFrame(msg.encode(), true))
+        log.info("Sent connected message")
+
+        //wait for response
         connectPromise.future().await()
 
         //disconnect marker
