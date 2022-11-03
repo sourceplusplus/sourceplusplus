@@ -127,8 +127,8 @@ class LiveMeterRateTest : LiveInstrumentIntegrationTest() {
                         delay(1000)
                     }
                 }
-                it.complete()
             }
+            it.complete()
         }
 
         errorOnTimeout(testContext, 150)
