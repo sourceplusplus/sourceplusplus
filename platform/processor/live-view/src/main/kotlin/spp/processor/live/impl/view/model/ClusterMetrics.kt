@@ -57,8 +57,16 @@ class ClusterMetrics(var metrics: Metrics) : ClusterSerializable {
             is IntValueHolder -> (metrics as IntValueHolder).value
             is DoubleValueHolder -> (metrics as DoubleValueHolder).value
             is LongValueHolder -> (metrics as LongValueHolder).value
-            is LabeledValueHolder -> (metrics as LabeledValueHolder).value
             is MultiIntValuesHolder -> (metrics as MultiIntValuesHolder).values
+
+            is LabeledValueHolder -> (metrics as LabeledValueHolder).value.let {
+                val map = mutableMapOf<String, Any>()
+                it.keys().forEach { key ->
+                    map[key] = it[key]
+                }
+                map
+            }
+
             else -> throw IllegalArgumentException("Unknown metrics type: ${metrics.javaClass.name}")
         }
     }
