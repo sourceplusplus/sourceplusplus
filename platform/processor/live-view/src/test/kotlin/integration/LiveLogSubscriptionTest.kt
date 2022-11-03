@@ -103,9 +103,12 @@ class LiveLogSubscriptionTest : LiveInstrumentIntegrationTest() {
         }.completionHandler().await()
 
         instrumentService.addLiveInstrument(liveLog).await()
+        log.info("Applied live log")
 
         for (i in 0 until 5) {
             triggerLog()
+            log.info("Triggered log")
+
             delay(2000)
         }
 
