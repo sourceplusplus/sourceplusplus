@@ -8,6 +8,7 @@ spp:
 skywalking:
   logging:
     level: "DEBUG"
+    file_name: "test-live-instrument.log"
   agent:
     service_name: "spp-test-probe"
   meter:
