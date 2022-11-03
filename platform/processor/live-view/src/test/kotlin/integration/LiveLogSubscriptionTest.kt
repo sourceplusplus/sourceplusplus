@@ -20,7 +20,6 @@ package integration
 import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
-import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
@@ -110,9 +109,11 @@ class LiveLogSubscriptionTest : LiveInstrumentIntegrationTest() {
         instrumentService.addLiveInstrument(liveLog).await()
 
         vertx.executeBlocking<Void> {
-            for (i in 0 until 5) {
-                triggerLog()
-                Thread.sleep(2000)
+            runBlocking {
+                for (i in 0 until 5) {
+                    triggerLog()
+                    delay(2000)
+                }
             }
             it.complete()
         }
