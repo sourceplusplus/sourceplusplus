@@ -26,7 +26,7 @@ import org.junit.jupiter.api.Test
 import spp.protocol.view.LiveView
 import spp.protocol.view.LiveViewConfig
 
-class LiveViewServiceImplTest : PlatformIntegrationTest() {
+class LiveViewServiceImplIT : PlatformIntegrationTest() {
 
     @BeforeEach
     fun reset(): Unit = runBlocking {

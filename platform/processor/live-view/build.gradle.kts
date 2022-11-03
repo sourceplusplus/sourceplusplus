@@ -17,7 +17,11 @@ dependencies {
     testImplementation("org.apache.logging.log4j:log4j-core:2.19.0")
     //todo: properly add test dependency
     testImplementation(project(":platform:common").dependencyProject.extensions.getByType(SourceSetContainer::class).test.get().output)
-    testImplementation("org.apache.skywalking:server-core:$skywalkingVersion") { isTransitive = false }
+    testImplementation("org.apache.skywalking:meter-analyzer:$skywalkingVersion") {
+        //exclude network dependencies since agent shadows them
+        exclude("org.apache.skywalking", "apm-network")
+    }
+    testImplementation("org.mockito:mockito-core:4.+")
 }
 
 tasks {

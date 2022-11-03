@@ -3,6 +3,8 @@ name: Build platform
 on:
   pull_request:
   push:
+    branches:
+      - master
     paths-ignore:
       - '**.md'
       - '**.svg'
@@ -85,12 +87,19 @@ jobs:
           name: docker-logs
           path: ./platform/build/containers-logs
 
-      - name: Upload skywalking-api.log artifact
+      - name: Upload test-live-instrument.log artifact
         if: ${{ always() }}
         uses: actions/upload-artifact@v3
         with:
-          name: skywalking-api.log
-          path: /tmp/spp-probe/logs/skywalking-api.log
+          name: test-live-instrument.log
+          path: /tmp/spp-probe/logs/test-live-instrument.log
+
+      - name: Upload test-live-view.log artifact
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-live-view.log
+          path: /tmp/spp-probe/logs/test-live-view.log
 
       - name: Backup redis data
         if: ${{ always() }}

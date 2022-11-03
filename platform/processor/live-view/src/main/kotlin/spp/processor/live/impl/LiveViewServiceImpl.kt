@@ -26,10 +26,20 @@ import mu.KotlinLogging
 import org.apache.skywalking.oap.log.analyzer.module.LogAnalyzerModule
 import org.apache.skywalking.oap.log.analyzer.provider.log.ILogAnalyzerService
 import org.apache.skywalking.oap.log.analyzer.provider.log.LogAnalyzerServiceImpl
+import org.apache.skywalking.oap.meter.analyzer.Analyzer
+import org.apache.skywalking.oap.meter.analyzer.MetricConvert
+import org.apache.skywalking.oap.meter.analyzer.dsl.Expression
 import org.apache.skywalking.oap.server.analyzer.module.AnalyzerModule
+import org.apache.skywalking.oap.server.analyzer.provider.meter.config.MeterConfig
+import org.apache.skywalking.oap.server.analyzer.provider.meter.process.IMeterProcessService
+import org.apache.skywalking.oap.server.analyzer.provider.meter.process.MeterProcessService
 import org.apache.skywalking.oap.server.analyzer.provider.trace.parser.ISegmentParserService
 import org.apache.skywalking.oap.server.analyzer.provider.trace.parser.SegmentParserListenerManager
 import org.apache.skywalking.oap.server.analyzer.provider.trace.parser.SegmentParserServiceImpl
+import org.apache.skywalking.oap.server.core.CoreModule
+import org.apache.skywalking.oap.server.core.analysis.meter.MeterSystem
+import org.apache.skywalking.oap.server.core.version.Version
+import org.joor.Reflect
 import spp.platform.common.DeveloperAuth
 import spp.platform.common.FeedbackProcessor
 import spp.platform.common.util.args
@@ -45,6 +55,7 @@ import spp.protocol.service.LiveViewService
 import spp.protocol.service.SourceServices.Subscribe.toLiveViewSubscriberAddress
 import spp.protocol.view.LiveView
 import spp.protocol.view.LiveViewEvent
+import spp.protocol.view.rule.LiveViewRule
 import java.util.*
 
 class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
@@ -53,14 +64,25 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
         private val log = KotlinLogging.logger {}
     }
 
+    internal lateinit var meterSystem: MeterSystem
+    internal lateinit var meterProcessService: MeterProcessService
+
     //todo: use ExpiringSharedData
     private val subscriptionCache = MetricTypeSubscriptionCache()
     val meterView = LiveMeterView(subscriptionCache)
     val traceView = LiveTraceView(subscriptionCache)
     val logView = LiveLogView(subscriptionCache)
+    internal lateinit var skywalkingVersion: String
 
     override suspend fun start() {
         log.info("Starting LiveViewServiceImpl")
+        skywalkingVersion = Version.CURRENT.buildVersion
+        FeedbackProcessor.module!!.find(CoreModule.NAME).provider().apply {
+            meterSystem = getService(MeterSystem::class.java)
+        }
+        FeedbackProcessor.module!!.find(AnalyzerModule.NAME).provider().apply {
+            meterProcessService = getService(IMeterProcessService::class.java) as MeterProcessService
+        }
 
         //live traces view
         val segmentParserService = FeedbackProcessor.module!!.find(AnalyzerModule.NAME)
@@ -85,6 +107,62 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
                 }
             }
         }
+    }
+
+    override fun saveRule(rule: LiveViewRule): Future<LiveViewRule> {
+        //check for existing rule
+        var sppAnalyzers: MutableList<Analyzer>? = null
+        val exitingRule = meterProcessService.converts().any { ruleset ->
+            val analyzers = Reflect.on(ruleset).get<MutableList<Analyzer>>("analyzers")
+            analyzers.any {
+                val metricName = Reflect.on(it).get<String>("metricName")
+                if (metricName.startsWith("spp_")) {
+                    sppAnalyzers = analyzers
+                }
+                metricName == "spp_" + rule.name
+            }
+        }
+        if (exitingRule) {
+            return Future.failedFuture("Rule with name ${rule.name} already exists")
+        }
+
+        val meterConfig = MeterConfig()
+        meterConfig.metricPrefix = "spp"
+        meterConfig.metricsRules = listOf(
+            MeterConfig.Rule().apply {
+                name = rule.name
+                exp = rule.exp
+            }
+        )
+        if (sppAnalyzers == null) {
+            //create spp ruleset
+            meterProcessService.converts().add(MetricConvert(meterConfig, meterSystem))
+        } else {
+            //add rule to existing spp ruleset
+            val newConvert = MetricConvert(meterConfig, meterSystem)
+            val newAnalyzer = Reflect.on(newConvert).get<List<Analyzer>>("analyzers").first()
+            sppAnalyzers!!.add(newAnalyzer)
+        }
+
+        return Future.succeededFuture(rule)
+    }
+
+    override fun deleteRule(ruleName: String): Future<LiveViewRule?> {
+        var removedRule: LiveViewRule? = null
+        (meterProcessService.converts() as MutableList<MetricConvert>).removeIf {
+            val analyzers = Reflect.on(it).get<MutableList<Analyzer>>("analyzers")
+            analyzers.removeIf {
+                val metricName = Reflect.on(it).get<String>("metricName")
+                val remove = metricName == ruleName || metricName == "spp_$ruleName"
+                if (remove) {
+                    val expression = Reflect.on(it).get<Expression>("expression")
+                    removedRule = LiveViewRule(metricName, Reflect.on(expression).get("literal"))
+                }
+                remove
+            }
+            analyzers.isEmpty()
+        }
+        return Future.succeededFuture(removedRule)
     }
 
     override fun addLiveView(subscription: LiveView): Future<LiveView> {
