@@ -80,6 +80,18 @@ class ProbeBridgeITTest : PlatformIntegrationTest() {
             .setURI("http://localhost:12800/probe/eventbus/websocket")
         val ws = client.webSocket(wsOptions).await()
 
+        //setup connection response handler
+        val connectPromise = Promise.promise<Void>()
+        ws.handler { buff ->
+            val str: String = buff.toString()
+            val received = JsonObject(str)
+            val rec: Any = received.getValue("body")
+            testContext.verify {
+                assertEquals(true, rec)
+            }
+            connectPromise.complete()
+        }
+
         //send connected message
         val replyAddress = UUID.randomUUID().toString()
         val msg = JsonObject()
@@ -94,17 +106,9 @@ class ProbeBridgeITTest : PlatformIntegrationTest() {
         val pc = InstanceConnection("test-probe-id", System.currentTimeMillis())
         msg.put("body", JsonObject.mapFrom(pc))
         ws.writeFrame(WebSocketFrame.textFrame(msg.encode(), true))
+        log.info("Sent connected message")
 
-        val connectPromise = Promise.promise<Void>()
-        ws.handler { buff ->
-            val str: String = buff.toString()
-            val received = JsonObject(str)
-            val rec: Any = received.getValue("body")
-            testContext.verify {
-                assertEquals(true, rec)
-            }
-            connectPromise.complete()
-        }
+        //wait for response
         connectPromise.future().await()
 
         delay(2000) //ensure probe is connected
@@ -148,6 +152,17 @@ class ProbeBridgeITTest : PlatformIntegrationTest() {
             .setURI("http://localhost:12800/probe/eventbus/websocket")
         val ws = client.webSocket(wsOptions).await()
 
+        //setup connection response handler
+        val connectPromise = Promise.promise<Void>()
+        ws.handler {
+            val received = JsonObject(it.toString())
+            testContext.verify {
+                assertEquals("err", received.getString("type"))
+                assertEquals("rejected", received.getString("body"))
+            }
+            connectPromise.complete()
+        }
+
         //send connected message
         val replyAddress = UUID.randomUUID().toString()
         val msg = JsonObject()
@@ -162,16 +177,9 @@ class ProbeBridgeITTest : PlatformIntegrationTest() {
         val pc = InstanceConnection("test-probe-id", System.currentTimeMillis())
         msg.put("body", JsonObject.mapFrom(pc))
         ws.writeFrame(WebSocketFrame.textFrame(msg.encode(), true))
+        log.info("Sent connected message")
 
-        val connectPromise = Promise.promise<Void>()
-        ws.handler {
-            val received = JsonObject(it.toString())
-            testContext.verify {
-                assertEquals("err", received.getString("type"))
-                assertEquals("rejected", received.getString("body"))
-            }
-            connectPromise.complete()
-        }
+        //wait for response
         connectPromise.future().await()
 
         //disconnect probe
@@ -198,14 +206,7 @@ class ProbeBridgeITTest : PlatformIntegrationTest() {
             .setURI("http://localhost:12800/probe/eventbus/websocket")
         val ws = client.webSocket(wsOptions).await()
 
-        //skip connected message and try to register remote
-        val msg = JsonObject()
-            .put("type", "register")
-            .put("address", ProbeAddress.LIVE_INSTRUMENT_REMOTE)
-        val pc = InstanceConnection("test-probe-id", System.currentTimeMillis())
-        msg.put("body", JsonObject.mapFrom(pc))
-        ws.writeFrame(WebSocketFrame.textFrame(msg.encode(), true))
-
+        //setup connection response handler
         val connectPromise = Promise.promise<Void>()
         ws.handler {
             val received = JsonObject(it.toString())
@@ -215,6 +216,17 @@ class ProbeBridgeITTest : PlatformIntegrationTest() {
             }
             connectPromise.complete()
         }
+
+        //skip connected message and try to register remote
+        val msg = JsonObject()
+            .put("type", "register")
+            .put("address", ProbeAddress.LIVE_INSTRUMENT_REMOTE)
+        val pc = InstanceConnection("test-probe-id", System.currentTimeMillis())
+        msg.put("body", JsonObject.mapFrom(pc))
+        ws.writeFrame(WebSocketFrame.textFrame(msg.encode(), true))
+        log.info("Sent connected message")
+
+        //wait for response
         connectPromise.future().await()
 
         //disconnect probe
@@ -241,6 +253,18 @@ class ProbeBridgeITTest : PlatformIntegrationTest() {
             .setURI("http://localhost:12800/probe/eventbus/websocket")
         val ws = client.webSocket(wsOptions).await()
 
+        //setup connection response handler
+        val connectPromise = Promise.promise<Void>()
+        ws.handler { buff ->
+            val str: String = buff.toString()
+            val received = JsonObject(str)
+            val rec: Any = received.getValue("body")
+            testContext.verify {
+                assertEquals(true, rec)
+            }
+            connectPromise.complete()
+        }
+
         //send connected message
         val replyAddress = UUID.randomUUID().toString()
         val msg = JsonObject()
@@ -255,17 +279,9 @@ class ProbeBridgeITTest : PlatformIntegrationTest() {
         val pc = InstanceConnection("testUpdateActiveProbeMetadata", System.currentTimeMillis())
         msg.put("body", JsonObject.mapFrom(pc))
         ws.writeFrame(WebSocketFrame.textFrame(msg.encode(), true))
+        log.info("Sent connected message")
 
-        val connectPromise = Promise.promise<Void>()
-        ws.handler { buff ->
-            val str: String = buff.toString()
-            val received = JsonObject(str)
-            val rec: Any = received.getValue("body")
-            testContext.verify {
-                assertEquals(true, rec)
-            }
-            connectPromise.complete()
-        }
+        //wait for response
         connectPromise.future().await()
 
         delay(2000) //ensure probe is connected

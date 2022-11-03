@@ -26,6 +26,7 @@ import io.vertx.core.shareddata.Lock
 import io.vertx.kotlin.coroutines.await
 import io.vertx.redis.client.Redis
 import io.vertx.redis.client.RedisAPI
+import io.vertx.redis.client.impl.types.MultiType
 import mu.KotlinLogging
 import spp.protocol.instrument.LiveInstrument
 import spp.protocol.platform.auth.*
@@ -121,6 +122,11 @@ open class RedisStorage(val vertx: Vertx) : CoreStorage {
         redis.srem(listOf(namespace("developers:access_tokens"), accessToken)).await()
         redis.del(listOf(namespace("developers:ids:$id:access_token"))).await()
         redis.del(listOf(namespace("developers:$id:roles"))).await()
+
+        val roles = redis.smembers(namespace("developers:$id:roles")).await()
+        if (roles !is MultiType) {
+            log.error("getDeveloperRoles: roles is not MultiType: " + roles, Exception())
+        }
     }
 
     private suspend fun getAccessToken(id: String): String {
@@ -150,13 +156,21 @@ open class RedisStorage(val vertx: Vertx) : CoreStorage {
     }
 
     override suspend fun getDeveloperRoles(developerId: String): List<DeveloperRole> {
-        val roles = redis.smembers(namespace("developers:$developerId:roles")).await()
+        var roles = redis.smembers(namespace("developers:$developerId:roles")).await()
+        if (roles !is MultiType) {
+            log.error("getDeveloperRoles: roles is not MultiType: " + roles, Exception())
+            roles = redis.smembers(namespace("developers:$developerId:roles")).await()
+        }
         log.trace("getDeveloperRoles: developerId=$developerId, roles=$roles; Type: " + roles::class.qualifiedName)
         return roles.map { DeveloperRole.fromString(it.toString(UTF_8)) }
     }
 
     override suspend fun getRoleAccessPermissions(role: DeveloperRole): Set<AccessPermission> {
-        val accessPermissions = redis.smembers(namespace("roles:${role.roleName}:access_permissions")).await()
+        var accessPermissions = redis.smembers(namespace("roles:${role.roleName}:access_permissions")).await()
+        if (accessPermissions !is MultiType) {
+            log.error("getRoleAccessPermissions: accessPermissions is not MultiType: " + accessPermissions, Exception())
+            accessPermissions = redis.smembers(namespace("roles:${role.roleName}:access_permissions")).await()
+        }
         log.trace { "getRoleAccessPermissions: role=$role, accessPermissions=$accessPermissions; Type: " + accessPermissions::class.qualifiedName }
         return accessPermissions.map { getAccessPermission(it.toString(UTF_8)) }.toSet()
     }
@@ -203,6 +217,11 @@ open class RedisStorage(val vertx: Vertx) : CoreStorage {
 
     override suspend fun addAccessPermissionToRole(id: String, role: DeveloperRole) {
         redis.sadd(listOf(namespace("roles:${role.roleName}:access_permissions"), id)).await()
+
+        val accessPermissions = redis.smembers(namespace("roles:${role.roleName}:access_permissions")).await()
+        if (accessPermissions !is MultiType) {
+            log.error("getRoleAccessPermissions: accessPermissions is not MultiType: " + accessPermissions, Exception())
+        }
     }
 
     override suspend fun removeAccessPermissionFromRole(id: String, role: DeveloperRole) {
@@ -262,15 +281,30 @@ open class RedisStorage(val vertx: Vertx) : CoreStorage {
     override suspend fun addRoleToDeveloper(id: String, role: DeveloperRole) {
         log.trace { "addRoleToDeveloper: id=$id, role=$role" }
         redis.sadd(listOf(namespace("developers:$id:roles"), role.roleName)).await()
+
+        val roles = redis.smembers(namespace("developers:$id:roles")).await()
+        if (roles !is MultiType) {
+            log.error("getDeveloperRoles: roles is not MultiType: " + roles, Exception())
+        }
     }
 
     override suspend fun removeRoleFromDeveloper(id: String, role: DeveloperRole) {
         redis.srem(listOf(namespace("developers:$id:roles"), role.roleName)).await()
+
+        val roles = redis.smembers(namespace("developers:$id:roles")).await()
+        if (roles !is MultiType) {
+            log.error("getDeveloperRoles: roles is not MultiType: " + roles, Exception())
+        }
     }
 
     override suspend fun addPermissionToRole(role: DeveloperRole, permission: RolePermission) {
         redis.sadd(listOf(namespace("roles"), role.roleName)).await()
         redis.sadd(listOf(namespace("roles:${role.roleName}:permissions"), permission.name)).await()
+
+        val permissions = redis.smembers(namespace("roles:${role.roleName}:permissions")).await()
+        if (permissions !is MultiType) {
+            log.error("getRolePermissions: permissions is not MultiType", Exception())
+        }
     }
 
     override suspend fun removePermissionFromRole(role: DeveloperRole, permission: RolePermission) {
@@ -278,7 +312,11 @@ open class RedisStorage(val vertx: Vertx) : CoreStorage {
     }
 
     override suspend fun getRolePermissions(role: DeveloperRole): Set<RolePermission> {
-        val permissions = redis.smembers(namespace("roles:${role.roleName}:permissions")).await()
+        var permissions = redis.smembers(namespace("roles:${role.roleName}:permissions")).await()
+        if (permissions !is MultiType) {
+            log.error("getRolePermissions: permissions is not MultiType", Exception())
+            permissions = redis.smembers(namespace("roles:${role.roleName}:permissions")).await()
+        }
         log.trace { "getRolePermissions: role=$role, permissions=$permissions; Type: " + permissions::class.qualifiedName }
         return permissions.map { RolePermission.valueOf(it.toString(UTF_8)) }.toSet()
     }
