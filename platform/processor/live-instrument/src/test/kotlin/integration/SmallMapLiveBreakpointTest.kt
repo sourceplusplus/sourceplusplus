@@ -99,6 +99,7 @@ class SmallMapLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         //add live breakpoint
         instrumentService.addLiveInstrument(
             LiveBreakpoint(
+                id = "small-map-null-value",
                 location = LiveSourceLocation(
                     SmallMapLiveBreakpointTest::class.qualifiedName!!,
                     getLineNumber("done"),
@@ -153,6 +154,7 @@ class SmallMapLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         //add live breakpoint
         instrumentService.addLiveInstrument(
             LiveBreakpoint(
+                id = "small-map-int-key",
                 location = LiveSourceLocation(
                     SmallMapLiveBreakpointTest::class.qualifiedName!!,
                     getLineNumber("done"),
@@ -207,6 +209,7 @@ class SmallMapLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         //add live breakpoint
         instrumentService.addLiveInstrument(
             LiveBreakpoint(
+                id = "small-map-string-key",
                 location = LiveSourceLocation(
                     SmallMapLiveBreakpointTest::class.qualifiedName!!,
                     getLineNumber("done"),
