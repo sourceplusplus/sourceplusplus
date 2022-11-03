@@ -118,15 +118,10 @@ class LiveMeterRateTest : LiveInstrumentIntegrationTest() {
 
         instrumentService.addLiveInstrument(liveMeter).await()
 
-        vertx.executeBlocking<Void> {
-            runBlocking(vertx.dispatcher()) {
-                //trigger live meter 100 times once per second
-                repeat((0 until 100).count()) {
-                    triggerRate()
-                    delay(1000)
-                }
-            }
-            it.complete()
+        //trigger live meter 100 times once per second
+        repeat((0 until 100).count()) {
+            triggerRate()
+            delay(1000)
         }
 
         errorOnTimeout(testContext, 150)
