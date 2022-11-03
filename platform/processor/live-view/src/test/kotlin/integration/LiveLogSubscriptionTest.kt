@@ -34,7 +34,6 @@ import spp.protocol.service.SourceServices
 import spp.protocol.view.LiveView
 import spp.protocol.view.LiveViewConfig
 import spp.protocol.view.LiveViewEvent
-import java.util.*
 
 class LiveLogSubscriptionTest : LiveInstrumentIntegrationTest() {
 
@@ -56,9 +55,6 @@ class LiveLogSubscriptionTest : LiveInstrumentIntegrationTest() {
         setupLineLabels {
             triggerLog()
         }
-
-        val logId = UUID.randomUUID().toString()
-        log.info("Using log id: {}", logId)
 
         val liveLog = LiveLog(
             "test log",
