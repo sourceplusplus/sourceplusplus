@@ -50,6 +50,7 @@ open class RedisStorage(val vertx: Vertx) : CoreStorage {
     }
 
     override suspend fun counter(name: String): Counter {
+        log.trace { "Getting counter: $name" }
         return vertx.sharedData().getCounter(namespace(name)).await()
     }
 
@@ -112,6 +113,11 @@ open class RedisStorage(val vertx: Vertx) : CoreStorage {
         redis.set(listOf(namespace("developers:access_tokens:$token"), id)).await()
         redis.sadd(listOf(namespace("developers:access_tokens"), token)).await()
         redis.set(listOf(namespace("developers:ids:$id:access_token"), token)).await()
+
+        val roles = redis.smembers(namespace("developers:$id:roles")).await()
+        if (roles !is MultiType) {
+            log.error("addDeveloper: roles is not MultiType: " + roles, Exception())
+        }
         return Developer(id, token)
     }
 
