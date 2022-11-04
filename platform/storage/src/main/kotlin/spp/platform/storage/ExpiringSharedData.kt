@@ -44,7 +44,12 @@ class ExpiringSharedData<K, V> private constructor(
 
     internal suspend fun getLock(key: K, timeout: Long): Lock {
         val lockName = "expiring_shared_data:$mapId:lock:$key"
-        val lock = storage.lock(lockName, timeout)
+        val lock = try {
+            storage.lock(lockName, timeout)
+        } catch (e: Exception) {
+            log.warn(e) { "Failed to acquire lock for key $key" }
+            throw e
+        }
 
         if (storage is RedisStorage) {
             //add ttl to lock
