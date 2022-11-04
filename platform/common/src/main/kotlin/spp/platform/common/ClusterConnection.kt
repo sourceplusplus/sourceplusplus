@@ -23,6 +23,8 @@ import com.google.common.base.CaseFormat
 import io.vertx.core.Vertx
 import io.vertx.core.VertxOptions
 import io.vertx.core.json.JsonObject
+import io.vertx.ext.dropwizard.DropwizardMetricsOptions
+import io.vertx.ext.dropwizard.impl.VertxMetricsFactoryImpl
 import io.vertx.ext.web.Router
 import io.vertx.kotlin.coroutines.await
 import io.vertx.servicediscovery.ServiceDiscovery
@@ -80,8 +82,13 @@ object ClusterConnection {
                 log.debug { "Build date: " + BUILD.getString("build_date") }
                 log.trace { "Using configuration: " + config.encode() }
 
+                val options = VertxOptions().setMetricsOptions(
+                    DropwizardMetricsOptions()
+                        .setFactory(VertxMetricsFactoryImpl())
+                        .setEnabled(true)
+                )
+
                 var clusterMode = false
-                val options = VertxOptions()
                 if (config.getJsonObject("storage").getString("selector") == "memory") {
                     log.info("Using in-memory storage")
                 } else {

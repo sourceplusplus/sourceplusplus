@@ -27,6 +27,7 @@ import io.vertx.ext.auth.JWTOptions
 import io.vertx.ext.auth.PubSecKeyOptions
 import io.vertx.ext.auth.jwt.JWTAuth
 import io.vertx.ext.auth.jwt.JWTAuthOptions
+import io.vertx.ext.dropwizard.MetricsService
 import io.vertx.ext.healthchecks.HealthCheckHandler
 import io.vertx.ext.healthchecks.HealthChecks
 import io.vertx.ext.healthchecks.Status.KO
@@ -231,6 +232,7 @@ class SourcePlatform : CoroutineVerticle() {
             router.post("/graphql/spp").handler(jwtAuthHandler)
             router.get("/health").handler(jwtAuthHandler)
             router.get("/stats").handler(jwtAuthHandler)
+            router.get("/metrics").handler(jwtAuthHandler)
             router.get("/clients").handler(jwtAuthHandler)
         } else {
             log.warn("JWT authentication disabled")
@@ -247,6 +249,13 @@ class SourcePlatform : CoroutineVerticle() {
         router["/health"].handler(HealthCheckHandler.createWithHealthChecks(healthChecks))
         router["/stats"].handler(this::getStats)
         router["/clients"].handler(this::getClients)
+
+        //Internal metrics
+        val metricsService = MetricsService.create(vertx)
+        router["/metrics"].handler {
+            val vertxMetrics = metricsService.getMetricsSnapshot(vertx)
+            it.end(vertxMetrics.encodePrettily())
+        }
 
         vertx.eventBus().consumer<JsonObject>(ServiceDiscoveryOptions.DEFAULT_ANNOUNCE_ADDRESS) {
             val record = Record(it.body())
