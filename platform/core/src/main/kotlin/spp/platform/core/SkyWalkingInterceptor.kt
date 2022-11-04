@@ -48,6 +48,7 @@ import spp.protocol.platform.PlatformAddress.PROCESSOR_CONNECTED
 import spp.protocol.platform.auth.DataRedaction
 import spp.protocol.platform.auth.RedactionType
 import java.io.File
+import java.nio.channels.ClosedChannelException
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.regex.Pattern
@@ -301,6 +302,15 @@ class SkyWalkingInterceptor(private val router: Router) : CoroutineVerticle() {
                     }
                 } else {
                     proxyRequest.end()
+                }
+            }
+            req.exceptionHandler {
+                if (it is ClosedChannelException) {
+                    //expected exception when the client closes the connection
+                    req.response().status(GrpcStatus.CANCELLED).end()
+                } else {
+                    log.error(it) { "Failed to write to proxy request" }
+                    req.response().status(GrpcStatus.UNKNOWN).end()
                 }
             }
             req.resume()
