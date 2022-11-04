@@ -326,7 +326,9 @@ class SourcePlatform : CoroutineVerticle() {
             val sslKeyFile = File(
                 httpConfig.getString("ssl_key").orEmpty().ifEmpty { "config/spp-platform.key" }
             )
-            val jksOptions = CertsToJksOptionsConverter(sslCertFile.absolutePath, sslKeyFile.absolutePath).createJksOptions()
+            val jksOptions = CertsToJksOptionsConverter(
+                sslCertFile.absolutePath, sslKeyFile.absolutePath
+            ).createJksOptions()
             httpOptions.setKeyStoreOptions(jksOptions)
         }
         httpPorts.forEach { httpPort ->
