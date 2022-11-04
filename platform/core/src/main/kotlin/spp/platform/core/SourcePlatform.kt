@@ -253,8 +253,26 @@ class SourcePlatform : CoroutineVerticle() {
         //Internal metrics
         val metricsService = MetricsService.create(vertx)
         router["/metrics"].handler {
-            val vertxMetrics = metricsService.getMetricsSnapshot(vertx)
-            it.end(vertxMetrics.encodePrettily())
+
+            if (it.queryParam("include_unused").contains("true")) {
+                val vertxMetrics = metricsService.getMetricsSnapshot(vertx)
+                it.end(vertxMetrics.encodePrettily())
+            } else {
+                val rtnMetrics = JsonObject()
+                val vertxMetrics = metricsService.getMetricsSnapshot(vertx)
+                vertxMetrics.fieldNames().forEach {
+                    val metric = vertxMetrics.getJsonObject(it)
+                    val allZeros = metric.fieldNames().all {
+                        if (metric.getValue(it) is Number && (metric.getValue(it) as Number).toDouble() == 0.0) {
+                            true
+                        } else metric.getValue(it) !is Number
+                    }
+                    if (!allZeros) {
+                        rtnMetrics.put(it, metric)
+                    }
+                }
+                it.end(rtnMetrics.encodePrettily())
+            }
         }
 
         vertx.eventBus().consumer<JsonObject>(ServiceDiscoveryOptions.DEFAULT_ANNOUNCE_ADDRESS) {
