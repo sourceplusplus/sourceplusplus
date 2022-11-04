@@ -193,7 +193,9 @@ class SkyWalkingInterceptor(private val router: Router) : CoroutineVerticle() {
         val server = vertx.createHttpServer(options)
         val sppGrpcPort = platformGrpcConfig.getString("port").toInt()
         server.requestHandler(grpcServer).listen(sppGrpcPort)
-        log.info("SkyWalking gRPC proxy started. Listening on port: {}", sppGrpcPort)
+        log.info {
+            "SkyWalking gRPC proxy started. Listening on port: {} (SSL: {})".args(sppGrpcPort, platformGrpcSslEnabled)
+        }
 
         val swHost = config.getJsonObject("skywalking-core").getString("host")
         val swGrpcConfig = config.getJsonObject("skywalking-core").getJsonObject("grpc")
@@ -209,6 +211,7 @@ class SkyWalkingInterceptor(private val router: Router) : CoroutineVerticle() {
             .setHttp2ClearTextUpgrade(false)
         val grpcClient = GrpcClient.client(vertx, http2Client)
         val swGrpcServerAddress = SocketAddress.inetSocketAddress(swGrpcPort, swHost)
+        log.info { "SkyWalking gRPC proxy connecting to: {} (SSL: {})".args(swGrpcServerAddress, swGrpcSslEnabled) }
 
         grpcServer.callHandler { req ->
             req.pause()
