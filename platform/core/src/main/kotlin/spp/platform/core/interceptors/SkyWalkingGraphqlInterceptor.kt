@@ -15,63 +15,35 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package spp.platform.core
+package spp.platform.core.interceptors
 
-import com.google.common.cache.CacheBuilder
 import com.google.common.net.HttpHeaders
 import graphql.language.Field
 import graphql.language.OperationDefinition
 import graphql.language.SelectionSet
 import graphql.parser.Parser
 import io.vertx.core.Vertx
-import io.vertx.core.buffer.Buffer
 import io.vertx.core.http.*
 import io.vertx.core.json.JsonObject
-import io.vertx.core.net.SocketAddress
 import io.vertx.ext.web.Router
 import io.vertx.ext.web.handler.BodyHandler
-import io.vertx.grpc.client.GrpcClient
-import io.vertx.grpc.common.GrpcStatus
-import io.vertx.grpc.common.ServiceName
-import io.vertx.grpc.server.GrpcServer
-import io.vertx.grpc.server.GrpcServerRequest
 import io.vertx.kotlin.coroutines.CoroutineVerticle
 import io.vertx.kotlin.coroutines.await
-import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.launch
 import mu.KotlinLogging
-import org.joor.Reflect
-import spp.platform.common.util.CertsToJksOptionsConverter
 import spp.platform.common.util.args
 import spp.platform.storage.SourceStorage
-import spp.protocol.platform.PlatformAddress.PROCESSOR_CONNECTED
 import spp.protocol.platform.auth.DataRedaction
 import spp.protocol.platform.auth.RedactionType
-import java.io.File
-import java.nio.channels.ClosedChannelException
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicBoolean
 import java.util.regex.Pattern
 
-class SkyWalkingInterceptor(private val router: Router) : CoroutineVerticle() {
+class SkyWalkingGraphqlInterceptor(private val router: Router) : CoroutineVerticle() {
 
     companion object {
         private val log = KotlinLogging.logger {}
     }
 
-    //using memory cache to avoid hitting storage for every request
-    private val probeAuthCache = CacheBuilder.newBuilder()
-        .expireAfterAccess(1, TimeUnit.MINUTES)
-        .build<String, Boolean>()
-
     override suspend fun start() {
-        //start grpc proxy once SkyWalking is available
-        val processorConnectedConsumer = vertx.eventBus().consumer<JsonObject>(PROCESSOR_CONNECTED)
-        processorConnectedConsumer.handler {
-            processorConnectedConsumer.unregister()
-            startGrpcProxy()
-        }
-
         val swHost = config.getJsonObject("skywalking-core").getString("host")
         val swRestPort = config.getJsonObject("skywalking-core").getString("rest_port").toInt()
         val httpClient = vertx.createHttpClient()
@@ -167,157 +139,6 @@ class SkyWalkingInterceptor(private val router: Router) : CoroutineVerticle() {
 
             val tenantId = req.user()?.principal()?.getString("tenant_id")
             forwardSkyWalkingRequest(req.bodyAsString, req.request(), selfId, tenantId)
-        }
-    }
-
-    private fun startGrpcProxy() {
-        val platformGrpcConfig = config.getJsonObject("spp-platform").getJsonObject("grpc")
-        val platformGrpcSslEnabled = platformGrpcConfig.getString("ssl_enabled").toBooleanStrict()
-        val options = HttpServerOptions()
-            .setSsl(platformGrpcSslEnabled)
-            .setUseAlpn(true)
-            .apply {
-                if (platformGrpcSslEnabled) {
-                    val certFile = File(
-                        platformGrpcConfig.getString("ssl_cert").orEmpty().ifEmpty { "config/spp-platform.crt" }
-                    )
-                    val keyFile = File(
-                        platformGrpcConfig.getString("ssl_key").orEmpty().ifEmpty { "config/spp-platform.key" }
-                    )
-                    val jksOptions = CertsToJksOptionsConverter(
-                        certFile.absolutePath, keyFile.absolutePath
-                    ).createJksOptions()
-                    setKeyStoreOptions(jksOptions)
-                }
-            }
-        val grpcServer = GrpcServer.server(vertx)
-        val server = vertx.createHttpServer(options)
-        val sppGrpcPort = platformGrpcConfig.getString("port").toInt()
-        server.requestHandler(grpcServer).listen(sppGrpcPort)
-        log.info {
-            "SkyWalking gRPC proxy started. Listening on port: {} (SSL: {})".args(sppGrpcPort, platformGrpcSslEnabled)
-        }
-
-        val swHost = config.getJsonObject("skywalking-core").getString("host")
-        val swGrpcConfig = config.getJsonObject("skywalking-core").getJsonObject("grpc")
-        val swGrpcSslEnabled = swGrpcConfig.getString("ssl_enabled").toBooleanStrict()
-        val swGrpcPort = swGrpcConfig.getString("port").toInt()
-        val http2Client = HttpClientOptions()
-            .setUseAlpn(true) //required by H2
-            .setVerifyHost(false)
-            .setTrustAll(true)
-            .setDefaultHost(swHost)
-            .setDefaultPort(swGrpcPort)
-            .setSsl(swGrpcSslEnabled)
-            .setHttp2ClearTextUpgrade(false)
-        val grpcClient = GrpcClient.client(vertx, http2Client)
-        val swGrpcServerAddress = SocketAddress.inetSocketAddress(swGrpcPort, swHost)
-        log.info { "SkyWalking gRPC proxy connecting to: {} (SSL: {})".args(swGrpcServerAddress, swGrpcSslEnabled) }
-
-        grpcServer.callHandler { req ->
-            req.pause()
-            val authHeader = req.headers().get("authentication")
-            if (authHeader != null && probeAuthCache.getIfPresent(authHeader) != null) {
-                proxyGrpcRequest(req, grpcClient, swGrpcServerAddress)
-            } else {
-                val authEnabled = config.getJsonObject("client-access")?.getString("enabled")?.toBooleanStrictOrNull()
-                if (authEnabled == true) {
-                    val authParts = authHeader?.split(":") ?: emptyList()
-                    val clientId = authParts.getOrNull(0)
-                    val clientSecret = authParts.getOrNull(1)
-                    if (clientId == null || clientSecret == null) {
-                        req.response().status(GrpcStatus.PERMISSION_DENIED).end()
-                        return@callHandler
-                    }
-
-                    val tenantId = authParts.getOrNull(2)
-                    if (tenantId != null) {
-                        Vertx.currentContext().putLocal("tenant_id", tenantId)
-                    } else {
-                        Vertx.currentContext().removeLocal("tenant_id")
-                    }
-
-                    launch(vertx.dispatcher()) {
-                        val clientAccess = SourceStorage.getClientAccess(clientId)
-                        if (clientAccess == null || clientAccess.secret != clientSecret) {
-                            req.response().status(GrpcStatus.PERMISSION_DENIED).end()
-                            return@launch
-                        } else {
-                            probeAuthCache.put(authHeader, true)
-                            proxyGrpcRequest(req, grpcClient, swGrpcServerAddress)
-                        }
-                    }
-                } else {
-                    proxyGrpcRequest(req, grpcClient, swGrpcServerAddress)
-                }
-            }
-        }
-    }
-
-    private fun proxyGrpcRequest(
-        req: GrpcServerRequest<Buffer, Buffer>,
-        grpcClient: GrpcClient,
-        skywalkingGrpcServer: SocketAddress
-    ) {
-        grpcClient.request(skywalkingGrpcServer).onSuccess { proxyRequest ->
-            req.headers().get("authentication")?.let { proxyRequest.headers().add("authentication", it) }
-
-            proxyRequest.response().onSuccess { proxyResponse ->
-                proxyResponse.messageHandler { msg ->
-                    req.response().writeMessage(msg)
-                }
-                proxyResponse.errorHandler { error ->
-                    req.response().status(error.status)
-                }
-                proxyResponse.endHandler { req.response().end() }
-            }.onFailure {
-                log.error(it) { "Failed to get proxy response" }
-                req.response().status(GrpcStatus.UNKNOWN).end()
-            }
-
-            val wroteData = AtomicBoolean()
-            proxyRequest.fullMethodName(req.fullMethodName())
-            req.messageHandler { msg ->
-                wroteData.set(true)
-
-                proxyRequest.writeMessage(msg)
-            }
-            req.endHandler {
-                if (!wroteData.get()) {
-                    //stream calls need at least the headers to be sent
-                    //if no messages are passed through the proxy, the headers will never be sent
-                    //here we ensure at least the headers are sent
-                    //todo: find a better way to handle this
-                    val httpRequest = Reflect.on(proxyRequest).get<HttpClientRequest>("httpRequest")
-                    val serviceName: ServiceName = Reflect.on(proxyRequest).get("serviceName")
-                    val methodName: String = Reflect.on(proxyRequest).get("methodName")
-                    val uri = serviceName.pathOf(methodName)
-                    req.headers().forEach { t, u ->
-                        httpRequest.headers().add(t, u)
-                    }
-                    httpRequest.uri = uri
-                    httpRequest.end(Buffer.buffer()).onFailure {
-                        log.error(it) { "Failed to write to proxy request" }
-                        req.response().status(GrpcStatus.UNKNOWN).end()
-                    }
-                } else {
-                    proxyRequest.end()
-                }
-            }
-            req.exceptionHandler {
-                if (it is ClosedChannelException) {
-                    //expected exception when the client closes the connection
-                    req.response().status(GrpcStatus.CANCELLED).end()
-                } else {
-                    log.error(it) { "Failed to write to proxy request" }
-                    req.response().status(GrpcStatus.UNKNOWN).end()
-                }
-            }
-            req.resume()
-        }.onFailure {
-            log.error(it) { "Failed to send proxy request" }
-            req.response().status(GrpcStatus.UNKNOWN).end()
-            req.resume()
         }
     }
 

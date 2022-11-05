@@ -69,7 +69,7 @@ subprojects {
 
         implementation("org.jooq:joor:$joorVersion")
         implementation("io.vertx:vertx-grpc-server:$vertxVersion") { exclude(group = "io.grpc") }
-        implementation("io.vertx:vertx-grpc-client:$vertxVersion") { exclude(group = "io.grpc") }
+        implementation("io.vertx:vertx-grpc-client:$vertxVersion") { exclude(group = "io.grpc") } //todo: shouldn't need grpc deps
         implementation("io.vertx:vertx-grpc-common:$vertxVersion") { exclude(group = "io.grpc") }
         implementation("com.google.protobuf:protobuf-java:3.21.7")
         implementation("io.vertx:vertx-service-discovery:$vertxVersion")
@@ -106,6 +106,7 @@ subprojects {
         compileOnly("org.apache.skywalking:storage-jdbc-hikaricp-plugin:$skywalkingVersion") { isTransitive = false }
         compileOnly("org.apache.skywalking:storage-elasticsearch-plugin:$skywalkingVersion") { isTransitive = false }
         compileOnly("org.apache.skywalking:library-elasticsearch-client:$skywalkingVersion") { isTransitive = false }
+        compileOnly("io.grpc:grpc-api:1.46.0")
 
         detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.21.0")
 

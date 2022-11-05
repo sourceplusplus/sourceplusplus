@@ -45,6 +45,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import mu.KotlinLogging
+import org.apache.skywalking.oap.server.core.server.GRPCHandlerRegister
+import org.apache.skywalking.oap.server.library.module.ModuleManager
+import org.apache.skywalking.oap.server.receiver.sharing.server.SharingServerModule
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.bouncycastle.openssl.PEMKeyPair
 import org.bouncycastle.openssl.PEMParser
@@ -56,6 +59,8 @@ import spp.platform.common.ClusterConnection.router
 import spp.platform.common.util.CertsToJksOptionsConverter
 import spp.platform.common.util.SelfSignedCertGenerator
 import spp.platform.common.util.args
+import spp.platform.core.interceptors.SkyWalkingGrpcInterceptor
+import spp.platform.core.interceptors.SkyWalkingGraphqlInterceptor
 import spp.platform.core.service.ServiceProvider
 import spp.platform.storage.SourceStorage
 import spp.protocol.service.LiveManagementService
@@ -73,7 +78,7 @@ import java.util.*
 import javax.crypto.Cipher
 import kotlin.system.exitProcess
 
-class SourcePlatform : CoroutineVerticle() {
+class SourcePlatform(private val manager: ModuleManager) : CoroutineVerticle() {
 
     companion object {
         private val log = KotlinLogging.logger {}
@@ -127,14 +132,12 @@ class SourcePlatform : CoroutineVerticle() {
 
         val httpConfig = config.getJsonObject("spp-platform").getJsonObject("http")
         val httpSslEnabled = httpConfig.getString("ssl_enabled").toBooleanStrict()
-        val grpcConfig = config.getJsonObject("spp-platform").getJsonObject("grpc")
-        val grpcSslEnabled = grpcConfig.getString("ssl_enabled").toBooleanStrict()
         val jwtConfig = config.getJsonObject("spp-platform").getJsonObject("jwt")
         val jwtEnabled = jwtConfig.getString("enabled").toBooleanStrict()
 
         val keyFile = File("config/spp-platform.key")
         val certFile = File("config/spp-platform.crt")
-        if (!httpSslEnabled && !grpcSslEnabled && !jwtEnabled) {
+        if (!httpSslEnabled && !jwtEnabled) {
             log.warn("Skipped generating security certificates")
         } else if (!keyFile.exists() || !certFile.exists()) {
             generateSecurityCertificates(keyFile, certFile)
@@ -305,10 +308,11 @@ class SourcePlatform : CoroutineVerticle() {
             ServiceProvider(jwt), DeploymentOptions().setConfig(config.put("SPP_INSTANCE_ID", SPP_INSTANCE_ID))
         ).await()
 
-        //Start SkyWalking proxy
-        vertx.deployVerticle(
-            SkyWalkingInterceptor(router), DeploymentOptions().setConfig(config)
-        ).await()
+        //Add SkyWalking interceptors
+        val grpcHandlerRegister = manager.find(SharingServerModule.NAME)
+            .provider().getService(GRPCHandlerRegister::class.java)
+        grpcHandlerRegister.addFilter(SkyWalkingGrpcInterceptor(vertx, config))
+        vertx.deployVerticle(SkyWalkingGraphqlInterceptor(router), DeploymentOptions().setConfig(config)).await()
 
         if (httpSslEnabled) {
             log.debug { "Starting HTTPS server(s)" }

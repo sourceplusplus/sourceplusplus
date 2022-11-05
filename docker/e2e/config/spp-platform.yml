@@ -9,11 +9,6 @@ spp-platform:
     ssl_cert: ${SPP_HTTP_SSL_CERT:-}
     ssl_key: ${SPP_HTTP_SSL_KEY:-}
     redirect_to_https: ${SPP_HTTP_REDIRECT_TO_HTTPS:-false}
-  grpc:
-    port: ${SPP_GRPC_PORT:-11800}
-    ssl_enabled: ${SPP_GRPC_SSL_ENABLED:-false}
-    ssl_cert: ${SPP_GRPC_SSL_CERT:-}
-    ssl_key: ${SPP_GRPC_SSL_KEY:-}
   logging:
     level: ${SPP_LOGGING_LEVEL:-info}
   pii-redaction:
@@ -70,7 +65,7 @@ skywalking-core:
   host: ${SW_CORE_HOST:-localhost}
   rest_port: ${SW_CORE_REST_PORT:-12801}
   grpc:
-    port: ${SW_CORE_GRPC_PORT:-11801}
+    port: ${SW_CORE_GRPC_PORT:-11800}
     ssl_enabled: ${SW_CORE_GRPC_SSL_ENABLED:-false}
     ssl_key_path: ${SW_CORE_GRPC_SSL_KEY_PATH:-}
     ssl_cert_chain_path: ${SW_CORE_GRPC_SSL_CERT_CHAIN_PATH:-}

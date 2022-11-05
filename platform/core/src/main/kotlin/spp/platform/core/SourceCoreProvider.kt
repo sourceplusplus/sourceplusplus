@@ -42,7 +42,10 @@ class SourceCoreProvider : ModuleProvider() {
         val vertx = ClusterConnection.getVertx()
         vertx.eventBus().registerDefaultCodec(ArrayList::class.java, LocalMessageCodec())
         runBlocking {
-            vertx.deployVerticle(SourcePlatform(), DeploymentOptions().setConfig(ClusterConnection.config)).await()
+            vertx.deployVerticle(
+                SourcePlatform(manager),
+                DeploymentOptions().setConfig(ClusterConnection.config)
+            ).await()
         }
     }
 
