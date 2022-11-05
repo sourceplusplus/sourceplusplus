@@ -113,7 +113,7 @@ class LiveMeterRule(liveMeter: LiveMeter) : MeterConfig.Rule() {
 
     companion object {
         fun toMeterConfig(liveMeter: LiveMeter): MeterConfig? {
-            if (!liveMeter.metricValue.valueType.isAlwaysNumeric()) {
+            if (liveMeter.metricValue?.valueType?.isAlwaysNumeric() != true) {
                 //non-numeric gauges are currently handled via live logs.
                 // SW may support this via meters in the future
                 return null
