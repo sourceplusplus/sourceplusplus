@@ -72,7 +72,7 @@ class SourceDashboard : CoroutineVerticle() {
             val loginHtml = Resources.toString(Resources.getResource("login.html"), Charsets.UTF_8)
             it.response().putHeader("Content-Type", "text/html").end(loginHtml)
         }
-        router.get("/*").handler(sessionHandler).handler { ctx ->
+        router.get("/*").last().handler(sessionHandler).handler { ctx ->
             if (ctx.session().get<String>("developer_id") == null) {
                 ctx.redirect("/login")
                 return@handler
