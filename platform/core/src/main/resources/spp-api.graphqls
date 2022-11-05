@@ -141,7 +141,8 @@ enum ThrottleStep {
 enum MeterType {
     COUNT,
     GAUGE,
-    HISTOGRAM
+    HISTOGRAM,
+    METHOD_TIMER
 }
 
 enum MetricValueType {
@@ -195,7 +196,6 @@ interface LiveInstrument {
 type LiveMeter implements LiveInstrument {
     meterType: MeterType!
     metricValue: MetricValue!
-    meterDescription: String
     id: String!
     location: LiveSourceLocation!
     condition: String
@@ -213,7 +213,6 @@ input LiveMeterInput {
     meterType: MeterType!
     metricValue: MetricValueInput!
     id: String
-    meterDescription: String
     location: LiveSourceLocationInput!
     condition: String
     expiresAt: Long

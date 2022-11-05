@@ -1045,7 +1045,7 @@ class SourceServiceITTest : PlatformIntegrationTest() {
         JsonObject().put(
             "input",
             mapOf(
-                "location" to mapOf("source" to "doing", "line" to 19), "meterDescription" to "description-of-meter",
+                "location" to mapOf("source" to "doing", "line" to 19),
                 "meterType" to MeterType.COUNT, "metricValue" to MetricValue(MetricValueType.NUMBER, "3")
             )
         )
