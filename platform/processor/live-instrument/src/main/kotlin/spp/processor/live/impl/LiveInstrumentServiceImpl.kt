@@ -403,7 +403,7 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
             removeLiveInstrument(
                 instrumentRemoval.developerAuth,
                 Instant.ofEpochMilli(it.body().getLong("occurredAt")),
-                instrumentRemoval.instrument,
+                instrumentRemoval,
                 it.body().getString("cause")
             )
         }
@@ -566,19 +566,18 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
     private fun removeLiveInstrument(
         devAuth: DeveloperAuth,
         occurredAt: Instant,
-        liveInstrument: LiveInstrument,
+        devInstrument: DeveloperInstrument,
         cause: String?
     ) {
-        log.debug { "Removing live instrument: {}".args(liveInstrument.id) }
-        val devInstrument = DeveloperInstrument(devAuth, liveInstrument)
+        log.debug { "Removing live instrument: {}".args(devInstrument.instrument.id) }
         developerInstrumentCache.put(devInstrument.instrument.id!!, devInstrument)
         liveInstruments.remove(devInstrument)
 
-        val debuggerCommand = LiveInstrumentCommand(CommandType.REMOVE_LIVE_INSTRUMENT, setOf(liveInstrument))
+        val debuggerCommand = LiveInstrumentCommand(CommandType.REMOVE_LIVE_INSTRUMENT, setOf(devInstrument.instrument))
         dispatchCommand(devAuth, LIVE_INSTRUMENT_REMOTE, debuggerCommand)
 
         val jvmCause = if (cause == null) null else LiveStackTrace.fromString(cause)
-        val waitingHandler = waitingApply.remove(liveInstrument.id)
+        val waitingHandler = waitingApply.remove(devInstrument.instrument.id)
         if (waitingHandler != null) {
             if (cause?.startsWith("EventBusException") == true) {
                 val ebException = ServiceExceptionConverter.fromEventBusException(cause, true)
@@ -587,13 +586,13 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
                 waitingHandler.handle(Future.failedFuture("Live instrument was removed"))
             }
         } else {
-            val eventType = when (liveInstrument.type) {
+            val eventType = when (devInstrument.instrument.type) {
                 LiveInstrumentType.BREAKPOINT -> LiveInstrumentEventType.BREAKPOINT_REMOVED
                 LiveInstrumentType.LOG -> LiveInstrumentEventType.LOG_REMOVED
                 LiveInstrumentType.METER -> LiveInstrumentEventType.METER_REMOVED
                 LiveInstrumentType.SPAN -> LiveInstrumentEventType.SPAN_REMOVED
             }
-            val eventData = Json.encode(LiveInstrumentRemoved(liveInstrument, occurredAt, jvmCause))
+            val eventData = Json.encode(LiveInstrumentRemoved(devInstrument.instrument, occurredAt, jvmCause))
             vertx.eventBus().publish(
                 toLiveInstrumentSubscriberAddress(devAuth.selfId),
                 JsonObject.mapFrom(LiveInstrumentEvent(eventType, eventData))
@@ -638,7 +637,7 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
         }
 
         //publish remove command to all probes
-        removeLiveInstrument(devAuth, Instant.now(), instrumentRemoval.instrument, null)
+        removeLiveInstrument(devAuth, Instant.now(), instrumentRemoval, null)
         return Future.succeededFuture(instrumentRemoval.instrument)
     }
 
