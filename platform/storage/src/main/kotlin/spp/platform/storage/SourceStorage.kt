@@ -405,16 +405,21 @@ object SourceStorage {
 
     /**
      * Get the [LiveInstrument] with the given id.
+     *
+     * @param id The id of the [LiveInstrument] to get.
+     * @param includeArchive Whether to include archived instruments.
      */
-    suspend fun getLiveInstrument(id: String): LiveInstrument? {
-        return storage.getLiveInstrument(id)
+    suspend fun getLiveInstrument(id: String, includeArchive: Boolean = false): LiveInstrument? {
+        return storage.getLiveInstrument(id, includeArchive)
     }
 
     /**
      * Retrieve all [LiveInstrument]s.
+     *
+     * @param includeArchive Whether to include archived instruments.
      */
-    suspend fun getLiveInstruments(): List<LiveInstrument> {
-        return storage.getLiveInstruments()
+    suspend fun getLiveInstruments(includeArchive: Boolean = false): List<LiveInstrument> {
+        return storage.getLiveInstruments(includeArchive)
     }
 
     /**

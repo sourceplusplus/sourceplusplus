@@ -340,21 +340,48 @@ open class RedisStorage(val vertx: Vertx) : CoreStorage {
 
     override suspend fun removeLiveInstrument(id: String): Boolean {
         redis.srem(listOf(namespace("live_instruments"), id)).await()
-        return redis.del(listOf(namespace("live_instruments:$id"))).await().toBoolean()
+        val rawInstrument = redis.getdel(namespace("live_instruments:$id")).await()
+        if (rawInstrument != null) {
+            //add to archive
+            redis.set(listOf(namespace("live_instruments_archive:$id"), rawInstrument.toString())).await()
+        }
+        return rawInstrument != null
     }
 
-    override suspend fun getLiveInstrument(id: String): LiveInstrument? {
-        val instrument = redis.get(namespace("live_instruments:$id")).await()
-        return if (instrument != null) {
-            LiveInstrument.fromJson(JsonObject(instrument.toString(UTF_8)))
+    override suspend fun getLiveInstrument(id: String, includeArchive: Boolean): LiveInstrument? {
+        val rawInstrument = redis.get(namespace("live_instruments:$id")).await()
+        val liveInstrument = if (rawInstrument != null) {
+            LiveInstrument.fromJson(JsonObject(rawInstrument.toString(UTF_8)))
         } else {
             null
         }
+        if (liveInstrument != null) {
+            return liveInstrument
+        }
+
+        if (includeArchive) {
+            val rawArchiveInstrument = redis.get(namespace("live_instruments_archive:$id")).await()
+            return if (rawArchiveInstrument != null) {
+                LiveInstrument.fromJson(JsonObject(rawArchiveInstrument.toString(UTF_8)))
+            } else {
+                null
+            }
+        }
+        return null
     }
 
-    override suspend fun getLiveInstruments(): List<LiveInstrument> {
-        val instruments = redis.smembers(namespace("live_instruments")).await()
-        return instruments.mapNotNull { getLiveInstrument(it.toString(UTF_8)) }
+    override suspend fun getLiveInstruments(includeArchive: Boolean): List<LiveInstrument> {
+        val rawInstruments = redis.smembers(namespace("live_instruments")).await()
+        val liveInstruments = rawInstruments.mapNotNull { getLiveInstrument(it.toString(UTF_8)) }
+
+        if (includeArchive) {
+            val rawArchiveInstruments = redis.keys(namespace("live_instruments_archive:*")).await()
+            val archiveInstruments = rawArchiveInstruments.mapNotNull {
+                getLiveInstrument(it.toString(UTF_8).substringAfter("live_instruments_archive:"), true)
+            }
+            return liveInstruments + archiveInstruments
+        }
+        return liveInstruments
     }
 
     override suspend fun getPendingLiveInstruments(): List<LiveInstrument> {

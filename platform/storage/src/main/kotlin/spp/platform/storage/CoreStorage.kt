@@ -93,13 +93,17 @@ interface CoreStorage {
 
     /**
      * Get the [LiveInstrument] with the given id.
+     *
+     * @param id The id of the [LiveInstrument] to get.
+     * @param includeArchive Whether to include archived instruments.
      */
-    suspend fun getLiveInstrument(id: String): LiveInstrument?
+    suspend fun getLiveInstrument(id: String, includeArchive: Boolean = false): LiveInstrument?
 
     /**
      * Retrieve all [LiveInstrument]s.
+     * @param includeArchive Whether to include archived instruments.
      */
-    suspend fun getLiveInstruments(): List<LiveInstrument>
+    suspend fun getLiveInstruments(includeArchive: Boolean = false): List<LiveInstrument>
 
     /**
      * Retrieve all [LiveInstrument]s where [LiveInstrument.pending] is true.

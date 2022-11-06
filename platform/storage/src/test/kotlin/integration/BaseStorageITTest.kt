@@ -83,10 +83,12 @@ abstract class BaseStorageITTest<T : CoreStorage> {
             "resetDataRedaction"
         )
         assertNotNull(SourceStorage.getDataRedactions().find { it.id == "resetDataRedaction" })
-        SourceStorage.addLiveInstrument(LiveBreakpoint(
-            location = LiveSourceLocation("resetLiveInstrument", 0),
-            id = "resetLiveInstrument"
-        ))
+        SourceStorage.addLiveInstrument(
+            LiveBreakpoint(
+                location = LiveSourceLocation("resetLiveInstrument", 0),
+                id = "resetLiveInstrument"
+            )
+        )
         assertNotNull(SourceStorage.getLiveInstruments().find { it.id == "resetLiveInstrument" })
 
         SourceStorage.reset()
@@ -614,5 +616,24 @@ abstract class BaseStorageITTest<T : CoreStorage> {
         val pendingInstruments = storageInstance.getPendingLiveInstruments()
         assertEquals(1, pendingInstruments.size)
         assertEquals(pendingBreakpoint.toJson(), pendingInstruments.first().toJson())
+    }
+
+    @Test
+    fun `removed instruments get archived`(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+        val id = "breakpoint11"
+        val instrument = LiveBreakpoint(
+            location = LiveSourceLocation("file11", 1),
+            id = id
+        )
+
+        storageInstance.addLiveInstrument(instrument)
+        assertEquals(1, storageInstance.getLiveInstruments().size)
+        assertEquals(instrument.toJson(), storageInstance.getLiveInstrument(id)!!.toJson())
+
+        storageInstance.removeLiveInstrument(id)
+        assertEquals(0, storageInstance.getLiveInstruments().size)
+        assertNull(storageInstance.getLiveInstrument(id))
+        assertEquals(1, storageInstance.getLiveInstruments(true).size)
+        assertEquals(instrument.toJson(), storageInstance.getLiveInstrument(id, true)!!.toJson())
     }
 }
