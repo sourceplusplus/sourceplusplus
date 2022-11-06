@@ -29,9 +29,9 @@ import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import mu.KotlinLogging
-import org.apache.commons.lang3.RandomStringUtils
 import spp.platform.common.ClusterConnection.config
 import spp.platform.common.ClusterConnection.getVertx
+import spp.platform.common.util.SecureUUID
 import spp.platform.common.util.args
 import spp.protocol.instrument.LiveInstrument
 import spp.protocol.platform.auth.*
@@ -215,7 +215,7 @@ object SourceStorage {
     }
 
     suspend fun addDeveloper(id: String, token: String?): Developer {
-        return storage.addDeveloper(id, token ?: RandomStringUtils.randomAlphanumeric(50))
+        return storage.addDeveloper(id, token ?: SecureUUID.get())
     }
 
     suspend fun removeDeveloper(id: String) {

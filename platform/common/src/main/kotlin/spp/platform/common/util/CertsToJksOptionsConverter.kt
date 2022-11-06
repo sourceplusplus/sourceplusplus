@@ -46,7 +46,7 @@ class CertsToJksOptionsConverter(private val certificatePath: String, private va
         }
     }
 
-    private val keyStorePassword = UUID.randomUUID().toString()
+    private val keyStorePassword = SecureUUID.get()
 
     fun createJksOptions(): JksOptions {
         return keyStore.toJksOptions(keyStorePassword)

@@ -21,10 +21,10 @@ import io.vertx.core.json.JsonObject
 import io.vertx.core.shareddata.AsyncMap
 import io.vertx.core.shareddata.Counter
 import io.vertx.core.shareddata.Lock
+import spp.platform.common.util.SecureUUID
 import spp.protocol.instrument.LiveInstrument
 import spp.protocol.platform.auth.*
 import spp.protocol.platform.developer.Developer
-import java.util.*
 
 interface CoreStorage {
 
@@ -116,11 +116,10 @@ interface CoreStorage {
     }
 
     fun generateClientId(): String {
-        return "spp_ci_" + UUID.randomUUID().toString().replace("-", "")
+        return "spp_ci_" + SecureUUID.get()
     }
 
     fun generateClientSecret(): String {
-        return "spp_cs_" + UUID.randomUUID().toString().replace("-", "") +
-                UUID.randomUUID().toString().replace("-", "")
+        return "spp_cs_" + SecureUUID.get()
     }
 }
