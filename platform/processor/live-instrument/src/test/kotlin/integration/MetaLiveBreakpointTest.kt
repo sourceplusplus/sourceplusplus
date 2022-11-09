@@ -25,7 +25,6 @@ import org.junit.jupiter.api.Test
 import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.LiveSourceLocation
 
-@Suppress("unused")
 class MetaLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
     @Test
@@ -44,12 +43,60 @@ class MetaLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         assertNotNull(liveInstrument)
         assertEquals(mapOf("key" to "value"), liveInstrument.meta.filter { it.key == "key" })
 
-        //verify meta
+        //verify internal meta is not exposed
+        assertEquals(emptyMap<String, String>(), liveInstrument.meta.filter { it.key.startsWith("spp.") })
+
+        //get stored instrument meta
         val storedMeta = instrumentService.getLiveInstrumentById(liveInstrument.id!!).await()
         assertNotNull(storedMeta)
         assertEquals(mapOf("key" to "value"), storedMeta!!.meta.filter { it.key == "key" })
 
-        //clean up
-        assertNotNull(instrumentService.removeLiveInstrument(liveInstrument.id!!).await())
+        //verify internal meta is not exposed
+        assertEquals(emptyMap<String, String>(), storedMeta.meta.filter { it.key.startsWith("spp.") })
+
+        //remove instrument
+        val removedInstrument = instrumentService.removeLiveInstrument(liveInstrument.id!!).await()
+        assertNotNull(removedInstrument)
+        assertEquals(mapOf("key" to "value"), removedInstrument!!.meta.filter { it.key == "key" })
+
+        //verify internal meta is not exposed
+        assertEquals(emptyMap<String, String>(), removedInstrument.meta.filter { it.key.startsWith("spp.") })
+    }
+
+    @Test
+    fun `verify add live instruments meta`() = runBlocking {
+        val location = LiveSourceLocation(
+            "non-existent-class-1",
+            0,
+        )
+        val liveInstruments = instrumentService.addLiveInstruments(
+            listOf(LiveBreakpoint(location = location))
+        ).await()
+        assertEquals(1, liveInstruments.size)
+
+        //verify internal meta is not exposed
+        assertEquals(emptyMap<String, String>(), liveInstruments.first().meta.filter { it.key.startsWith("spp.") })
+
+        //remove instrument
+        val removedInstruments = instrumentService.getLiveInstrumentsByIds(liveInstruments.mapNotNull { it.id }).await()
+        assertEquals(1, removedInstruments.size)
+        assertEquals(emptyMap<String, String>(), removedInstruments.first().meta.filter { it.key.startsWith("spp.") })
+    }
+
+    @Test
+    fun `verify remove live instruments by location meta`() = runBlocking {
+        val location = LiveSourceLocation(
+            "non-existent-class-2",
+            0,
+        )
+        val liveInstrument = instrumentService.addLiveInstrument(
+            LiveBreakpoint(location = location)
+        ).await()
+        assertNotNull(liveInstrument)
+
+        //remove instrument
+        val removedInstruments = instrumentService.removeLiveInstruments(location).await()
+        assertEquals(1, removedInstruments.size)
+        assertEquals(emptyMap<String, String>(), removedInstruments.first().meta.filter { it.key.startsWith("spp.") })
     }
 }
