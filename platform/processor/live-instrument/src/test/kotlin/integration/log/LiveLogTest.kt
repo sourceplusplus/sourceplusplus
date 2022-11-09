@@ -202,8 +202,6 @@ class LiveLogTest : LiveInstrumentIntegrationTest() {
 
         assertEquals(1, removedInstruments.size)
         assertEquals(originalId, removedInstruments[0].id!!)
-
-        instrumentService.clearLiveInstruments().await()
     }
 
     @Test
