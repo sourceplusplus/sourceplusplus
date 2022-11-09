@@ -92,7 +92,7 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
                 log.debug { "Live instrument remote registered. Sending active live instruments" }
                 launch(vertx.dispatcher()) {
                     SourceStorage.getLiveInstruments().forEach {
-                        _addLiveInstrument(it, false)
+                        addLiveInstrument(it, false)
                     }
                 }
             }
@@ -144,9 +144,9 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
 
                     if (pendingBp.applyImmediately) {
                         addApplyImmediatelyHandler(pendingBp.id!!, promise)
-                        _addLiveInstrument(pendingBp)
+                        addLiveInstrument(pendingBp, true)
                     } else {
-                        _addLiveInstrument(pendingBp).onComplete {
+                        addLiveInstrument(pendingBp, true).onComplete {
                             if (it.succeeded()) {
                                 promise.complete(it.result())
                             } else {
@@ -175,9 +175,9 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
 
                     if (pendingLog.applyImmediately) {
                         addApplyImmediatelyHandler(pendingLog.id!!, promise)
-                        _addLiveInstrument(pendingLog)
+                        addLiveInstrument(pendingLog, true)
                     } else {
-                        _addLiveInstrument(pendingLog).onComplete {
+                        addLiveInstrument(pendingLog, true).onComplete {
                             if (it.succeeded()) {
                                 promise.complete(it.result())
                             } else {
@@ -210,9 +210,9 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
 
                     if (pendingMeter.applyImmediately) {
                         addApplyImmediatelyHandler(pendingMeter.id!!, promise)
-                        _addLiveInstrument(pendingMeter)
+                        addLiveInstrument(pendingMeter, true)
                     } else {
-                        _addLiveInstrument(pendingMeter).onComplete {
+                        addLiveInstrument(pendingMeter, true).onComplete {
                             if (it.succeeded()) {
                                 promise.complete(it.result())
                             } else {
@@ -240,9 +240,9 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
 
                     if (pendingSpan.applyImmediately) {
                         addApplyImmediatelyHandler(pendingSpan.id!!, promise)
-                        _addLiveInstrument(pendingSpan)
+                        addLiveInstrument(pendingSpan, true)
                     } else {
-                        _addLiveInstrument(pendingSpan).onComplete {
+                        addLiveInstrument(pendingSpan, true).onComplete {
                             if (it.succeeded()) {
                                 promise.complete(it.result())
                             } else {
@@ -432,60 +432,60 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
     }
 
     private suspend fun handleLiveInstrumentApplied(it: Message<JsonObject>) {
-        val liveInstrument = ProtocolMarshaller.deserializeLiveInstrument(it.body())
-        SourceStorage.getLiveInstruments().forEach {
-            if (it.id == liveInstrument.id) {
-                log.info("Live instrument applied. Id: {}", it.id)
-                val eventType: LiveInstrumentEventType
-                val appliedInstrument: LiveInstrument
-                when (liveInstrument.type) {
-                    LiveInstrumentType.BREAKPOINT -> {
-                        eventType = LiveInstrumentEventType.BREAKPOINT_APPLIED
-                        appliedInstrument = (it as LiveBreakpoint).copy(
-                            applied = true,
-                            pending = false
-                        )
-                    }
+        var instrument = ProtocolMarshaller.deserializeLiveInstrument(it.body())
+        log.info("Live instrument applied. Id: {}", instrument.id)
 
-                    LiveInstrumentType.LOG -> {
-                        eventType = LiveInstrumentEventType.LOG_APPLIED
-                        appliedInstrument = (it as LiveLog).copy(
-                            applied = true,
-                            pending = false
-                        )
-                    }
-
-                    LiveInstrumentType.METER -> {
-                        eventType = LiveInstrumentEventType.METER_APPLIED
-                        appliedInstrument = (it as LiveMeter).copy(
-                            applied = true,
-                            pending = false
-                        )
-                    }
-
-                    LiveInstrumentType.SPAN -> {
-                        eventType = LiveInstrumentEventType.SPAN_APPLIED
-                        appliedInstrument = (it as LiveSpan).copy(
-                            applied = true,
-                            pending = false
-                        )
-                    }
-
-                    else -> throw IllegalArgumentException("Unknown live instrument type")
-                }
-                (appliedInstrument.meta as MutableMap<String, Any>)["applied_at"] = "${System.currentTimeMillis()}"
-
-                waitingApply.remove(appliedInstrument.id)?.handle(Future.succeededFuture(appliedInstrument))
-
-                val selfId = it.meta["spp.developer_id"] as String
-                vertx.eventBus().publish(
-                    toLiveInstrumentSubscriberAddress(selfId),
-                    JsonObject.mapFrom(LiveInstrumentEvent(eventType, Json.encode(removeInternalMeta(appliedInstrument))))
+        val eventType = when (instrument.type) {
+            LiveInstrumentType.BREAKPOINT -> {
+                instrument = (instrument as LiveBreakpoint).copy(
+                    applied = true,
+                    pending = false
                 )
-                log.trace { "Published live instrument applied" }
-                return@forEach
+                LiveInstrumentEventType.BREAKPOINT_APPLIED
             }
+
+            LiveInstrumentType.LOG -> {
+                instrument = (instrument as LiveLog).copy(
+                    applied = true,
+                    pending = false
+                )
+                LiveInstrumentEventType.LOG_APPLIED
+            }
+
+            LiveInstrumentType.METER -> {
+                instrument = (instrument as LiveMeter).copy(
+                    applied = true,
+                    pending = false
+                )
+                LiveInstrumentEventType.METER_APPLIED
+            }
+
+            LiveInstrumentType.SPAN -> {
+                instrument = (instrument as LiveSpan).copy(
+                    applied = true,
+                    pending = false
+                )
+                LiveInstrumentEventType.SPAN_APPLIED
+            }
+
+            else -> throw IllegalArgumentException("Unknown live instrument type")
         }
+        (instrument.meta as MutableMap<String, Any>)["applied_at"] = "${System.currentTimeMillis()}"
+        SourceStorage.updateLiveInstrument(instrument.id!!, instrument)
+
+        waitingApply.remove(instrument.id)?.handle(Future.succeededFuture(instrument))
+
+        val selfId = instrument.meta["spp.developer_id"] as String
+        vertx.eventBus().publish(
+            toLiveInstrumentSubscriberAddress(selfId),
+            JsonObject.mapFrom(
+                LiveInstrumentEvent(
+                    eventType,
+                    Json.encode(removeInternalMeta(instrument))
+                )
+            )
+        )
+        log.trace { "Published live instrument applied" }
     }
 
     private fun addApplyImmediatelyHandler(instrumentId: String, handler: Handler<AsyncResult<LiveInstrument>>) {
@@ -498,22 +498,19 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
         }
     }
 
-    private fun _addLiveInstrument(
-        liveInstrument: LiveInstrument,
-        alertSubscribers: Boolean = true
-    ): Future<LiveInstrument> {
-        log.debug { "Adding live instrument: {}".args(liveInstrument) }
+    private fun addLiveInstrument(instrument: LiveInstrument, alertSubscribers: Boolean): Future<LiveInstrument> {
+        log.debug { "Adding live instrument: {}".args(instrument) }
         val promise = Promise.promise<LiveInstrument>()
         launch(vertx.dispatcher()) {
-            val debuggerCommand = LiveInstrumentCommand(CommandType.ADD_LIVE_INSTRUMENT, setOf(liveInstrument))
+            val debuggerCommand = LiveInstrumentCommand(CommandType.ADD_LIVE_INSTRUMENT, setOf(instrument))
 
-            val selfId = liveInstrument.meta["spp.developer_id"] as String
-            val accessToken = liveInstrument.meta["spp.access_token"] as String?
-            SourceStorage.addLiveInstrument(liveInstrument)
+            val selfId = instrument.meta["spp.developer_id"] as String
+            val accessToken = instrument.meta["spp.access_token"] as String?
+            SourceStorage.addLiveInstrument(instrument)
             dispatchCommand(accessToken, LIVE_INSTRUMENT_REMOTE, debuggerCommand)
 
             if (alertSubscribers) {
-                val eventType = when (liveInstrument.type) {
+                val eventType = when (instrument.type) {
                     LiveInstrumentType.BREAKPOINT -> LiveInstrumentEventType.BREAKPOINT_ADDED
                     LiveInstrumentType.LOG -> LiveInstrumentEventType.LOG_ADDED
                     LiveInstrumentType.METER -> LiveInstrumentEventType.METER_ADDED
@@ -521,15 +518,15 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
                 }
                 vertx.eventBus().publish(
                     toLiveInstrumentSubscriberAddress(selfId),
-                    JsonObject.mapFrom(LiveInstrumentEvent(eventType, Json.encode(removeInternalMeta(liveInstrument))))
+                    JsonObject.mapFrom(LiveInstrumentEvent(eventType, Json.encode(removeInternalMeta(instrument))))
                 )
             }
-            promise.complete(removeInternalMeta(liveInstrument))
+            promise.complete(removeInternalMeta(instrument))
         }
         return promise.future()
     }
 
-    private fun dispatchCommand(accessToken: String?, address: String, debuggerCommand: LiveInstrumentCommand) {
+    private fun dispatchCommand(accessToken: String?, address: String, command: LiveInstrumentCommand) {
         val probes = SourceBridgeService.service(vertx, accessToken)
         probes.onSuccess {
             if (it == null) {
@@ -538,13 +535,13 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
             }
 
             it.getActiveProbes().onComplete {
-                log.trace { "Dispatching command {} to connected probe(s)".args(debuggerCommand.commandType) }
+                log.trace { "Dispatching command {} to connected probe(s)".args(command.commandType) }
                 val alertProbes = it.result().list.map { InstanceConnection(JsonObject.mapFrom(it)) }
                 alertProbes.forEach { probe ->
                     val probeCommand = LiveInstrumentCommand(
-                        debuggerCommand.commandType,
-                        debuggerCommand.instruments.filter { it.location.isSameLocation(probe) }.toSet(),
-                        debuggerCommand.locations.filter { it.isSameLocation(probe) }.toSet()
+                        command.commandType,
+                        command.instruments.filter { it.location.isSameLocation(probe) }.toSet(),
+                        command.locations.filter { it.isSameLocation(probe) }.toSet()
                     )
                     if (probeCommand.instruments.isNotEmpty() || probeCommand.locations.isNotEmpty()) {
                         log.debug { "Dispatching command ${probeCommand.commandType} to probe ${probe.instanceId}" }
@@ -562,21 +559,17 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
         }
     }
 
-    private suspend fun removeLiveInstrument(
-        occurredAt: Instant,
-        devInstrument: LiveInstrument,
-        cause: String?
-    ) {
-        log.debug { "Removing live instrument: {}".args(devInstrument.id) }
-        SourceStorage.removeLiveInstrument(devInstrument.id!!)
+    private suspend fun removeLiveInstrument(occurredAt: Instant, instrument: LiveInstrument, cause: String?) {
+        log.debug { "Removing live instrument: {}".args(instrument.id) }
+        SourceStorage.removeLiveInstrument(instrument.id!!)
 
-        val selfId = devInstrument.meta["spp.developer_id"] as String
-        val accessToken = devInstrument.meta["spp.access_token"] as String?
-        val debuggerCommand = LiveInstrumentCommand(CommandType.REMOVE_LIVE_INSTRUMENT, setOf(devInstrument))
+        val selfId = instrument.meta["spp.developer_id"] as String
+        val accessToken = instrument.meta["spp.access_token"] as String?
+        val debuggerCommand = LiveInstrumentCommand(CommandType.REMOVE_LIVE_INSTRUMENT, setOf(instrument))
         dispatchCommand(accessToken, LIVE_INSTRUMENT_REMOTE, debuggerCommand)
 
         val jvmCause = if (cause == null) null else LiveStackTrace.fromString(cause)
-        val waitingHandler = waitingApply.remove(devInstrument.id)
+        val waitingHandler = waitingApply.remove(instrument.id)
         if (waitingHandler != null) {
             if (cause?.startsWith("EventBusException") == true) {
                 val ebException = ServiceExceptionConverter.fromEventBusException(cause, true)
@@ -585,13 +578,13 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
                 waitingHandler.handle(Future.failedFuture("Live instrument was removed"))
             }
         } else {
-            val eventType = when (devInstrument.type) {
+            val eventType = when (instrument.type) {
                 LiveInstrumentType.BREAKPOINT -> LiveInstrumentEventType.BREAKPOINT_REMOVED
                 LiveInstrumentType.LOG -> LiveInstrumentEventType.LOG_REMOVED
                 LiveInstrumentType.METER -> LiveInstrumentEventType.METER_REMOVED
                 LiveInstrumentType.SPAN -> LiveInstrumentEventType.SPAN_REMOVED
             }
-            val eventData = Json.encode(LiveInstrumentRemoved(devInstrument, occurredAt, jvmCause))
+            val eventData = Json.encode(LiveInstrumentRemoved(instrument, occurredAt, jvmCause))
             vertx.eventBus().publish(
                 toLiveInstrumentSubscriberAddress(selfId),
                 JsonObject.mapFrom(LiveInstrumentEvent(eventType, eventData))

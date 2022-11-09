@@ -99,4 +99,27 @@ class MetaLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         assertEquals(1, removedInstruments.size)
         assertEquals(emptyMap<String, String>(), removedInstruments.first().meta.filter { it.key.startsWith("spp.") })
     }
+
+    @Test
+    fun `verify applied at meta update`() = runBlocking {
+        addLineLabel("done") { Throwable().stackTrace[0].lineNumber }
+
+        val location = LiveSourceLocation(
+            MetaLiveBreakpointTest::class.qualifiedName!!,
+            getLineNumber("done"),
+            "spp-test-probe"
+        )
+        val liveInstrument = instrumentService.addLiveInstrument(
+            LiveBreakpoint(
+                location = location,
+                applyImmediately = true
+            )
+        ).await()
+        assertNotNull(liveInstrument)
+
+        //verify applied_at meta is set
+        val getInstrument = instrumentService.getLiveInstrumentById(liveInstrument.id!!).await()
+        assertNotNull(getInstrument)
+        assertEquals(liveInstrument.meta["applied_at"], getInstrument!!.meta["applied_at"])
+    }
 }
