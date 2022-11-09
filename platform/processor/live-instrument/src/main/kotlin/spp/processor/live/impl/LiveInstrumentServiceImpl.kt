@@ -313,10 +313,15 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
 
         val promise = Promise.promise<LiveInstrument?>()
         launch(vertx.dispatcher()) {
-            removeLiveInstrument(devAuth, id).onSuccess {
-                promise.complete(removeInternalMeta(it))
-            }.onFailure {
-                promise.fail(it)
+            val instrumentRemoval = SourceStorage.getLiveInstrument(id)
+            if (instrumentRemoval == null) {
+                promise.complete(null)
+            } else {
+                removeLiveInstrument(instrumentRemoval).onSuccess {
+                    promise.complete(removeInternalMeta(it))
+                }.onFailure {
+                    promise.fail(it)
+                }
             }
         }
         return promise.future()
@@ -390,8 +395,8 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
         val promise = Promise.promise<Boolean>()
         launch(vertx.dispatcher()) {
             val allLiveInstruments = getLiveInstruments(type).await()
-            allLiveInstruments.forEach {
-                removeLiveInstrument(devAuth, it.id!!)
+            allLiveInstruments.mapNotNull { SourceStorage.getLiveInstrument(it.id!!) }.forEach {
+                removeLiveInstrument(it)
             }
             promise.complete(true)
         }
@@ -408,8 +413,8 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
             val devInstruments = SourceStorage.getLiveInstruments().filter {
                 it.meta["spp.developer_id"] == devAuth.selfId && (type == null || it.type == type)
             }
-            devInstruments.forEach {
-                removeLiveInstrument(devAuth, it.id!!)
+            devInstruments.mapNotNull { SourceStorage.getLiveInstrument(it.id!!) }.forEach {
+                removeLiveInstrument(it)
             }
             promise.complete(true)
         }
@@ -488,12 +493,7 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
         val selfId = instrument.meta["spp.developer_id"] as String
         vertx.eventBus().publish(
             toLiveInstrumentSubscriberAddress(selfId),
-            JsonObject.mapFrom(
-                LiveInstrumentEvent(
-                    eventType,
-                    Json.encode(removeInternalMeta(instrument))
-                )
-            )
+            JsonObject.mapFrom(LiveInstrumentEvent(eventType, Json.encode(removeInternalMeta(instrument))))
         )
         log.trace { "Published live instrument applied" }
     }
@@ -624,19 +624,6 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
         }
     }
 
-    private suspend fun removeLiveInstrument(
-        developerAuth: DeveloperAuth,
-        instrumentId: String
-    ): Future<LiveInstrument?> {
-        log.trace { "Removing live instrument: {}".args(instrumentId) }
-        val instrumentRemoval = SourceStorage.getLiveInstrument(instrumentId)
-        return if (instrumentRemoval != null) {
-            removeLiveInstrument(instrumentRemoval)
-        } else {
-            Future.succeededFuture()
-        }
-    }
-
     private suspend fun removeLiveInstrument(instrument: LiveInstrument): Future<LiveInstrument?> {
         //if live meter, also remove from SkyWalking meter process service
         if (instrument is LiveMeter) {
@@ -683,7 +670,9 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
 
             val removedArray = JsonArray()
             result.forEach {
-                removedArray.add(JsonObject.mapFrom(LiveInstrumentRemoved(removeInternalMeta(it)!!, Instant.now(), null)))
+                removedArray.add(
+                    JsonObject.mapFrom(LiveInstrumentRemoved(removeInternalMeta(it)!!, Instant.now(), null))
+                )
             }
             val eventData = Json.encode(removedArray)
             vertx.eventBus().publish(
