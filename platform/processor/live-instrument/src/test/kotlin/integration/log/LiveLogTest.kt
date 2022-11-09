@@ -139,7 +139,6 @@ class LiveLogTest : LiveInstrumentIntegrationTest() {
         val testContext = VertxTestContext()
         val instrumentId = "live-log-test-remove-by-id"
 
-        //todo: don't care about added event. can remove directly after add but need #537
         vertx.addLiveInstrumentListener("system", object : LiveInstrumentListener {
             override fun onLogAddedEvent(event: LiveLog) {
                 testContext.verify {
