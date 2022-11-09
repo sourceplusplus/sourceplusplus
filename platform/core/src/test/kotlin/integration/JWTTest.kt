@@ -125,7 +125,7 @@ class JWTTest : PlatformIntegrationTest() {
         assertFalse(addDeveloperRoleResp.containsKey("errors"))
 
         val instrumentService = LiveInstrumentService.createProxy(vertx, TEST_JWT_TOKEN)
-        instrumentService.getLiveInstruments(null).onComplete {
+        instrumentService.getLiveInstruments().onComplete {
             if (it.failed()) {
                 val cause = ServiceExceptionConverter.fromEventBusException(it.cause().message!!)
                 if (cause is PermissionAccessDenied) {

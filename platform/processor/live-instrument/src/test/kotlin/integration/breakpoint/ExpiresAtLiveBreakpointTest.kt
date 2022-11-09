@@ -45,7 +45,7 @@ class ExpiresAtLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         ).await()
 
         //verify live breakpoint
-        val breakpoint = instrumentService.getLiveInstruments(null).await()
+        val breakpoint = instrumentService.getLiveInstruments().await()
         assertEquals(1, breakpoint.size)
         assertEquals("non-existent-class", breakpoint[0].location.source)
 
@@ -53,7 +53,7 @@ class ExpiresAtLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         delay(TimeUnit.SECONDS.toMillis(15))
 
         //verify no live breakpoint
-        val noBreakpoint = instrumentService.getLiveInstruments(null).await()
+        val noBreakpoint = instrumentService.getLiveInstruments().await()
         assertEquals(0, noBreakpoint.size)
     }
 }

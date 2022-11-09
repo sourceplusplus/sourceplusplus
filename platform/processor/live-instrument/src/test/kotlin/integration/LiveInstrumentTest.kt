@@ -70,67 +70,35 @@ class LiveInstrumentTest : LiveInstrumentIntegrationTest() {
     }
 
     @Test
-    fun getLiveInstrumentById() {
-        val testContext = VertxTestContext()
-        instrumentService.addLiveInstrument(
+    fun getLiveInstrumentById(): Unit = runBlocking {
+        val instrument = instrumentService.addLiveInstrument(
             LiveBreakpoint(location = LiveSourceLocation("integration.LiveInstrumentTest", 1))
-        ).onComplete {
-            if (it.succeeded()) {
-                val originalId = it.result().id!!
-                instrumentService.getLiveInstrumentById(originalId).onComplete {
-                    if (it.succeeded()) {
-                        testContext.verify {
-                            assertEquals(originalId, it.result()!!.id!!)
-                        }
-                        testContext.completeNow()
-                    } else {
-                        testContext.failNow(it.cause())
-                    }
-                }
-            } else {
-                testContext.failNow(it.cause())
-            }
-        }
+        ).await()
 
-        if (testContext.awaitCompletion(10, TimeUnit.SECONDS)) {
-            if (testContext.failed()) {
-                throw testContext.causeOfFailure()
-            }
-        } else {
-            throw RuntimeException("Test timed out")
-        }
+        val originalId = instrument.id!!
+        val getInstrument = instrumentService.getLiveInstrumentById(originalId).await()
+        assertEquals(originalId, getInstrument!!.id!!)
+
+        instrumentService.clearLiveInstruments().await()
     }
 
     @Test
-    fun getLiveInstrumentByIds() {
-        val testContext = VertxTestContext()
-        instrumentService.addLiveInstruments(
+    fun getLiveInstrumentByIds(): Unit = runBlocking {
+        val instrument = instrumentService.addLiveInstruments(
             listOf(
                 LiveBreakpoint(location = LiveSourceLocation("integration.LiveInstrumentTest", 1)),
                 LiveBreakpoint(location = LiveSourceLocation("integration.LiveInstrumentTest", 2))
             )
-        ).onComplete {
-            if (it.succeeded()) {
-                val originalIds = it.result().map { it.id!! }
-                instrumentService.getLiveInstrumentsByIds(originalIds).onComplete {
-                    if (it.succeeded()) {
-                        testContext.verify {
-                            assertEquals(2, it.result()!!.size)
-                            assertEquals(2, originalIds.size)
-                            assertTrue(it.result()[0].id!! in originalIds)
-                            assertTrue(it.result()[1].id!! in originalIds)
-                        }
-                        testContext.completeNow()
-                    } else {
-                        testContext.failNow(it.cause())
-                    }
-                }
-            } else {
-                testContext.failNow(it.cause())
-            }
-        }
+        ).await()
 
-        errorOnTimeout(testContext)
+        val originalIds = instrument.map { it.id!! }
+        val getInstrument = instrumentService.getLiveInstrumentsByIds(originalIds).await()
+        assertEquals(2, getInstrument.size)
+        assertEquals(2, originalIds.size)
+        assertTrue(getInstrument[0].id!! in originalIds)
+        assertTrue(getInstrument[1].id!! in originalIds)
+
+        instrumentService.clearLiveInstruments().await()
     }
 
     @RepeatedTest(2)

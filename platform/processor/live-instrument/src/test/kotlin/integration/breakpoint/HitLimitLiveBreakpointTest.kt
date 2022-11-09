@@ -74,7 +74,7 @@ class HitLimitLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         }
 
         //verify still exists
-        val liveInstruments = instrumentService.getLiveInstruments(null).await()
+        val liveInstruments = instrumentService.getLiveInstruments().await()
         assertEquals(1, liveInstruments.size)
         assert(liveInstruments.first().hitLimit == 11)
         //todo: verify hit count
@@ -84,7 +84,7 @@ class HitLimitLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         delay(5000)
 
         //verify removed
-        val liveInstrument = instrumentService.getLiveInstruments(null).await().firstOrNull()
+        val liveInstrument = instrumentService.getLiveInstruments().await().firstOrNull()
         assertNull(liveInstrument)
     }
 }
