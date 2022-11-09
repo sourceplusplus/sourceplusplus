@@ -141,6 +141,7 @@ class LiveLogTest : LiveInstrumentIntegrationTest() {
 
         vertx.addLiveInstrumentListener("system", object : LiveInstrumentListener {
             override fun onLogAddedEvent(event: LiveLog) {
+                log.info("Got added event: {}", event)
                 testContext.verify {
                     assertEquals(instrumentId, event.id)
                 }
@@ -157,6 +158,7 @@ class LiveLogTest : LiveInstrumentIntegrationTest() {
             }
 
             override fun onInstrumentRemovedEvent(event: LiveInstrumentRemoved) {
+                log.info("Got removed event: {}", event)
                 testContext.verify {
                     assertEquals(instrumentId, event.liveInstrument.id!!)
                 }
@@ -164,7 +166,7 @@ class LiveLogTest : LiveInstrumentIntegrationTest() {
             }
         }).await()
 
-        val getInstrument = instrumentService.addLiveInstrument(
+        val instrument = instrumentService.addLiveInstrument(
             LiveLog(
                 id = instrumentId,
                 location = LiveSourceLocation(
@@ -176,7 +178,8 @@ class LiveLogTest : LiveInstrumentIntegrationTest() {
                 logFormat = "removeById"
             )
         ).await()
-        assertEquals(instrumentId, getInstrument.id!!)
+        assertEquals(instrumentId, instrument.id!!)
+        log.info("Added instrument: {}", instrument)
 
         errorOnTimeout(testContext)
     }
