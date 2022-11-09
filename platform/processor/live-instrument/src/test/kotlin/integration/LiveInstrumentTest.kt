@@ -19,13 +19,13 @@ package integration
 
 import io.vertx.core.json.Json
 import io.vertx.core.json.JsonObject
-import io.vertx.junit5.VertxExtension
 import io.vertx.junit5.VertxTestContext
+import io.vertx.kotlin.coroutines.await
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
 import org.slf4j.LoggerFactory
 import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.LiveLog
@@ -36,11 +36,15 @@ import spp.protocol.instrument.event.LiveInstrumentEventType
 import spp.protocol.service.SourceServices.Subscribe.toLiveInstrumentSubscriberAddress
 import java.util.concurrent.TimeUnit
 
-@Disabled
-@ExtendWith(VertxExtension::class)
-class LiveInstrumentTest : PlatformIntegrationTest() {
+class LiveInstrumentTest : LiveInstrumentIntegrationTest() {
 
     private val log = LoggerFactory.getLogger(LiveInstrumentTest::class.java)
+
+    private fun doTest() {
+        startEntrySpan("doTest")
+        addLineLabel("done") { Throwable().stackTrace[0].lineNumber }
+        stopSpan()
+    }
 
     @Test
     fun getLiveInstrumentById_missing() {
@@ -126,17 +130,15 @@ class LiveInstrumentTest : PlatformIntegrationTest() {
             }
         }
 
-        if (testContext.awaitCompletion(10, TimeUnit.SECONDS)) {
-            if (testContext.failed()) {
-                throw testContext.causeOfFailure()
-            }
-        } else {
-            throw RuntimeException("Test timed out")
-        }
+        errorOnTimeout(testContext)
     }
 
     @RepeatedTest(2)
-    fun addLiveLogAndLiveBreakpoint() {
+    fun addLiveLogAndLiveBreakpoint() = runBlocking {
+        setupLineLabels {
+            doTest()
+        }
+
         val testContext = VertxTestContext()
         val consumer = vertx.eventBus().consumer<JsonObject>(toLiveInstrumentSubscriberAddress("system"))
         consumer.handler {
@@ -167,44 +169,43 @@ class LiveInstrumentTest : PlatformIntegrationTest() {
                     }
                 }
             }
-        }
+        }.completionHandler().await()
 
         instrumentService.addLiveInstrument(
             LiveLog(
                 "test {}",
                 listOf("b"),
-                LiveSourceLocation("spp.example.webapp.controller.LiveInstrumentController", 25),
-                hitLimit = Int.MAX_VALUE,
+                location = LiveSourceLocation(
+                    LiveInstrumentTest::class.qualifiedName!!,
+                    getLineNumber("done"),
+                    "spp-test-probe"
+                ),
                 applyImmediately = true
             )
-        ).onComplete {
-            if (it.succeeded()) {
-                instrumentService.addLiveInstrument(
-                    LiveBreakpoint(
-                        location = LiveSourceLocation("spp.example.webapp.controller.LiveInstrumentController", 16),
-                        applyImmediately = true
-                    )
-                ).onComplete {
-                    if (it.failed()) {
-                        testContext.failNow(it.cause())
-                    }
-                }
-            } else {
-                testContext.failNow(it.cause())
-            }
-        }
+        ).await()
+        instrumentService.addLiveInstrument(
+            LiveBreakpoint(
+                location = LiveSourceLocation(
+                    LiveInstrumentTest::class.qualifiedName!!,
+                    getLineNumber("done"),
+                    "spp-test-probe"
+                ),
+                applyImmediately = true
+            )
+        ).await()
 
-        if (testContext.awaitCompletion(10, TimeUnit.SECONDS)) {
-            if (testContext.failed()) {
-                throw testContext.causeOfFailure()
-            }
-        } else {
-            throw RuntimeException("Test timed out")
-        }
+        delay(2000)
+        doTest()
+
+        errorOnTimeout(testContext)
     }
 
     @RepeatedTest(2)
-    fun addLiveLogAndLiveBreakpoint_noLogHit() {
+    fun addLiveLogAndLiveBreakpoint_noLogHit() = runBlocking {
+        setupLineLabels {
+            doTest()
+        }
+
         val testContext = VertxTestContext()
         val consumer = vertx.eventBus().consumer<JsonObject>(toLiveInstrumentSubscriberAddress("system"))
         consumer.handler {
@@ -220,7 +221,7 @@ class LiveInstrumentTest : PlatformIntegrationTest() {
                         assertEquals(1, topFrame.variables.size)
                     }
 
-                    instrumentService.clearLiveInstruments(null).onComplete {
+                    instrumentService.clearLiveInstruments().onComplete {
                         if (it.succeeded()) {
                             consumer.unregister {
                                 if (it.succeeded()) {
@@ -235,175 +236,35 @@ class LiveInstrumentTest : PlatformIntegrationTest() {
                     }
                 }
             }
-        }
+        }.completionHandler().await()
 
         instrumentService.addLiveInstrument(
             LiveLog(
                 "test {}",
                 listOf("b"),
-                LiveSourceLocation("spp.example.webapp.controller.LiveInstrumentController", 25),
+                location = LiveSourceLocation(
+                    LiveInstrumentTest::class.qualifiedName!!,
+                    getLineNumber("done"),
+                    "spp-test-probe"
+                ),
                 "1==2",
                 applyImmediately = true
             )
-        ).onComplete {
-            if (it.succeeded()) {
-                instrumentService.addLiveInstrument(
-                    LiveBreakpoint(
-                        location = LiveSourceLocation("spp.example.webapp.controller.LiveInstrumentController", 16),
-                        applyImmediately = true
-                    )
-                ).onComplete {
-                    if (it.failed()) {
-                        testContext.failNow(it.cause())
-                    }
-                }
-            } else {
-                testContext.failNow(it.cause())
-            }
-        }
-
-        if (testContext.awaitCompletion(10, TimeUnit.SECONDS)) {
-            if (testContext.failed()) {
-                throw testContext.causeOfFailure()
-            }
-        } else {
-            throw RuntimeException("Test timed out")
-        }
-    }
-
-    @RepeatedTest(2)
-    fun addLiveLogAndLiveBreakpoint_singledThreaded() {
-        val testContext = VertxTestContext()
-        val consumer = vertx.eventBus().consumer<JsonObject>(toLiveInstrumentSubscriberAddress("system"))
-        consumer.handler {
-            log.info("Got subscription event: {}", it.body())
-            val liveEvent = Json.decodeValue(it.body().toString(), LiveInstrumentEvent::class.java)
-            when (liveEvent.eventType) {
-                LiveInstrumentEventType.BREAKPOINT_HIT -> {
-                    log.info("Got hit")
-                    val bpHit = LiveBreakpointHit(JsonObject(liveEvent.data))
-                    testContext.verify {
-                        assertTrue(bpHit.stackTrace.elements.isNotEmpty())
-                        val topFrame = bpHit.stackTrace.elements.first()
-                        assertEquals(1, topFrame.variables.size)
-                    }
-
-                    instrumentService.clearLiveInstruments(null).onComplete {
-                        if (it.succeeded()) {
-                            consumer.unregister {
-                                if (it.succeeded()) {
-                                    testContext.completeNow()
-                                } else {
-                                    testContext.failNow(it.cause())
-                                }
-                            }
-                        } else {
-                            testContext.failNow(it.cause())
-                        }
-                    }
-                }
-            }
-        }
-
+        ).await()
         instrumentService.addLiveInstrument(
-            LiveLog(
-                "test {}",
-                listOf("b"),
-                LiveSourceLocation("spp.example.webapp.edge.SingleThread", 37),
-                hitLimit = Int.MAX_VALUE,
+            LiveBreakpoint(
+                location = LiveSourceLocation(
+                    LiveInstrumentTest::class.qualifiedName!!,
+                    getLineNumber("done"),
+                    "spp-test-probe"
+                ),
                 applyImmediately = true
             )
-        ).onComplete {
-            if (it.succeeded()) {
-                instrumentService.addLiveInstrument(
-                    LiveBreakpoint(
-                        location = LiveSourceLocation("spp.example.webapp.edge.SingleThread", 28),
-                        applyImmediately = true
-                    )
-                ).onComplete {
-                    if (it.failed()) {
-                        testContext.failNow(it.cause())
-                    }
-                }
-            } else {
-                testContext.failNow(it.cause())
-            }
-        }
+        ).await()
 
-        if (testContext.awaitCompletion(10, TimeUnit.SECONDS)) {
-            if (testContext.failed()) {
-                throw testContext.causeOfFailure()
-            }
-        } else {
-            throw RuntimeException("Test timed out")
-        }
-    }
+        delay(2000)
+        doTest()
 
-    @RepeatedTest(2)
-    fun addLiveLogAndLiveBreakpoint_singledThreaded_noLogHit() {
-        val testContext = VertxTestContext()
-        val consumer = vertx.eventBus().consumer<JsonObject>(toLiveInstrumentSubscriberAddress("system"))
-        consumer.handler {
-            log.info("Got subscription event: {}", it.body())
-            val liveEvent = Json.decodeValue(it.body().toString(), LiveInstrumentEvent::class.java)
-            when (liveEvent.eventType) {
-                LiveInstrumentEventType.BREAKPOINT_HIT -> {
-                    log.info("Got hit")
-                    val bpHit = LiveBreakpointHit(JsonObject(liveEvent.data))
-                    testContext.verify {
-                        assertTrue(bpHit.stackTrace.elements.isNotEmpty())
-                        val topFrame = bpHit.stackTrace.elements.first()
-                        assertEquals(1, topFrame.variables.size)
-                    }
-
-                    instrumentService.clearLiveInstruments(null).onComplete {
-                        if (it.succeeded()) {
-                            consumer.unregister {
-                                if (it.succeeded()) {
-                                    testContext.completeNow()
-                                } else {
-                                    testContext.failNow(it.cause())
-                                }
-                            }
-                        } else {
-                            testContext.failNow(it.cause())
-                        }
-                    }
-                }
-            }
-        }
-
-        instrumentService.addLiveInstrument(
-            LiveLog(
-                "test {}",
-                listOf("b"),
-                LiveSourceLocation("spp.example.webapp.edge.SingleThread", 37),
-                "1==2",
-                applyImmediately = true
-            )
-        ).onComplete {
-            if (it.succeeded()) {
-                instrumentService.addLiveInstrument(
-                    LiveBreakpoint(
-                        location = LiveSourceLocation("spp.example.webapp.edge.SingleThread", 28),
-                        applyImmediately = true
-                    )
-                ).onComplete {
-                    if (it.failed()) {
-                        testContext.failNow(it.cause())
-                    }
-                }
-            } else {
-                testContext.failNow(it.cause())
-            }
-        }
-
-        if (testContext.awaitCompletion(10, TimeUnit.SECONDS)) {
-            if (testContext.failed()) {
-                throw testContext.causeOfFailure()
-            }
-        } else {
-            throw RuntimeException("Test timed out")
-        }
+        errorOnTimeout(testContext)
     }
 }

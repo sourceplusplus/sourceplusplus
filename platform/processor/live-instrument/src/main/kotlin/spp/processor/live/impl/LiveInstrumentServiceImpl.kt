@@ -25,6 +25,7 @@ import io.vertx.core.json.JsonObject
 import io.vertx.kotlin.coroutines.CoroutineVerticle
 import io.vertx.kotlin.coroutines.await
 import io.vertx.kotlin.coroutines.dispatcher
+import io.vertx.serviceproxy.ServiceException
 import kotlinx.coroutines.launch
 import mu.KotlinLogging
 import org.apache.skywalking.oap.meter.analyzer.Analyzer
@@ -58,7 +59,6 @@ import spp.protocol.service.LiveInstrumentService
 import spp.protocol.service.SourceServices.Subscribe.toLiveInstrumentSubscriberAddress
 import java.time.Instant
 import java.util.*
-import java.util.concurrent.ConcurrentHashMap
 
 class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
 
@@ -69,8 +69,6 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
 
     private lateinit var meterSystem: MeterSystem
     private lateinit var meterProcessService: MeterProcessService
-
-    private val waitingApply = ConcurrentHashMap<String, Handler<AsyncResult<LiveInstrument>>>()
 
     override suspend fun start() {
         log.info("Starting LiveInstrumentProcessorImpl")
@@ -143,8 +141,11 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
                     )
 
                     if (pendingBp.applyImmediately) {
-                        addApplyImmediatelyHandler(pendingBp.id!!, promise)
-                        addLiveInstrument(pendingBp, true)
+                        addApplyImmediatelyHandler(pendingBp.id!!, promise).onSuccess {
+                            addLiveInstrument(pendingBp, true)
+                        }.onFailure {
+                            promise.fail(it)
+                        }
                     } else {
                         addLiveInstrument(pendingBp, true).onComplete {
                             if (it.succeeded()) {
@@ -174,8 +175,11 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
                     )
 
                     if (pendingLog.applyImmediately) {
-                        addApplyImmediatelyHandler(pendingLog.id!!, promise)
-                        addLiveInstrument(pendingLog, true)
+                        addApplyImmediatelyHandler(pendingLog.id!!, promise).onSuccess {
+                            addLiveInstrument(pendingLog, true)
+                        }.onFailure {
+                            promise.fail(it)
+                        }
                     } else {
                         addLiveInstrument(pendingLog, true).onComplete {
                             if (it.succeeded()) {
@@ -209,8 +213,11 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
                     }
 
                     if (pendingMeter.applyImmediately) {
-                        addApplyImmediatelyHandler(pendingMeter.id!!, promise)
-                        addLiveInstrument(pendingMeter, true)
+                        addApplyImmediatelyHandler(pendingMeter.id!!, promise).onSuccess {
+                            addLiveInstrument(pendingMeter, true)
+                        }.onFailure {
+                            promise.fail(it)
+                        }
                     } else {
                         addLiveInstrument(pendingMeter, true).onComplete {
                             if (it.succeeded()) {
@@ -239,8 +246,11 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
                     )
 
                     if (pendingSpan.applyImmediately) {
-                        addApplyImmediatelyHandler(pendingSpan.id!!, promise)
-                        addLiveInstrument(pendingSpan, true)
+                        addApplyImmediatelyHandler(pendingSpan.id!!, promise).onSuccess {
+                            addLiveInstrument(pendingSpan, true)
+                        }.onFailure {
+                            promise.fail(it)
+                        }
                     } else {
                         addLiveInstrument(pendingSpan, true).onComplete {
                             if (it.succeeded()) {
@@ -473,7 +483,7 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
         (instrument.meta as MutableMap<String, Any>)["applied_at"] = "${System.currentTimeMillis()}"
         SourceStorage.updateLiveInstrument(instrument.id!!, instrument)
 
-        waitingApply.remove(instrument.id)?.handle(Future.succeededFuture(instrument))
+        vertx.eventBus().send("apply-immediately.${instrument.id}", instrument)
 
         val selfId = instrument.meta["spp.developer_id"] as String
         vertx.eventBus().publish(
@@ -488,18 +498,39 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
         log.trace { "Published live instrument applied" }
     }
 
-    private fun addApplyImmediatelyHandler(instrumentId: String, handler: Handler<AsyncResult<LiveInstrument>>) {
-        waitingApply[instrumentId] = Handler<AsyncResult<LiveInstrument>> {
-            if (it.succeeded()) {
-                handler.handle(Future.succeededFuture(removeInternalMeta(it.result())))
+    private fun addApplyImmediatelyHandler(
+        instrumentId: String,
+        handler: Handler<AsyncResult<LiveInstrument>>
+    ): Future<Void> {
+        val promise = Promise.promise<Void>()
+        val consumer = vertx.eventBus().consumer<Any>("apply-immediately.$instrumentId")
+        consumer.handler {
+            if (it.body() is LiveInstrument) {
+                val instrument = it.body() as LiveInstrument
+                handler.handle(Future.succeededFuture(removeInternalMeta(instrument)))
+            } else if (it.body() is ServiceException) {
+                val exception = it.body() as ServiceException
+                handler.handle(Future.failedFuture(exception))
             } else {
-                handler.handle(Future.failedFuture(it.cause()))
+                handler.handle(Future.failedFuture("Live instrument was removed"))
+            }
+            consumer.unregister()
+            it.reply(true)
+        }.exceptionHandler {
+            handler.handle(Future.failedFuture(it))
+            consumer.unregister()
+        }.completionHandler {
+            if (it.succeeded()) {
+                promise.complete()
+            } else {
+                promise.fail(it.cause())
             }
         }
+        return promise.future()
     }
 
     private fun addLiveInstrument(instrument: LiveInstrument, alertSubscribers: Boolean): Future<LiveInstrument> {
-        log.debug { "Adding live instrument: {}".args(instrument) }
+        log.trace { "Adding live instrument: {}".args(instrument) }
         val promise = Promise.promise<LiveInstrument>()
         launch(vertx.dispatcher()) {
             val debuggerCommand = LiveInstrumentCommand(CommandType.ADD_LIVE_INSTRUMENT, setOf(instrument))
@@ -569,22 +600,17 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
         dispatchCommand(accessToken, LIVE_INSTRUMENT_REMOTE, debuggerCommand)
 
         val jvmCause = if (cause == null) null else LiveStackTrace.fromString(cause)
-        val waitingHandler = waitingApply.remove(instrument.id)
-        if (waitingHandler != null) {
-            if (cause?.startsWith("EventBusException") == true) {
-                val ebException = ServiceExceptionConverter.fromEventBusException(cause, true)
-                waitingHandler.handle(Future.failedFuture(ebException))
-            } else {
-                waitingHandler.handle(Future.failedFuture("Live instrument was removed"))
-            }
-        } else {
+        val ebException = if (cause?.startsWith("EventBusException") == true) {
+            ServiceExceptionConverter.fromEventBusException(cause, true)
+        } else null
+        vertx.eventBus().request<Void>("apply-immediately.${instrument.id}", ebException).onFailure {
             val eventType = when (instrument.type) {
                 LiveInstrumentType.BREAKPOINT -> LiveInstrumentEventType.BREAKPOINT_REMOVED
                 LiveInstrumentType.LOG -> LiveInstrumentEventType.LOG_REMOVED
                 LiveInstrumentType.METER -> LiveInstrumentEventType.METER_REMOVED
                 LiveInstrumentType.SPAN -> LiveInstrumentEventType.SPAN_REMOVED
             }
-            val eventData = Json.encode(LiveInstrumentRemoved(instrument, occurredAt, jvmCause))
+            val eventData = Json.encode(LiveInstrumentRemoved(removeInternalMeta(instrument)!!, occurredAt, jvmCause))
             vertx.eventBus().publish(
                 toLiveInstrumentSubscriberAddress(selfId),
                 JsonObject.mapFrom(LiveInstrumentEvent(eventType, eventData))
@@ -657,7 +683,7 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
 
             val removedArray = JsonArray()
             result.forEach {
-                removedArray.add(JsonObject.mapFrom(LiveInstrumentRemoved(it, Instant.now(), null)))
+                removedArray.add(JsonObject.mapFrom(LiveInstrumentRemoved(removeInternalMeta(it)!!, Instant.now(), null)))
             }
             val eventData = Json.encode(removedArray)
             vertx.eventBus().publish(

@@ -15,20 +15,19 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package integration
+package integration.log
 
+import integration.LiveInstrumentIntegrationTest
 import io.vertx.core.json.Json
 import io.vertx.core.json.JsonObject
-import io.vertx.junit5.VertxExtension
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
 import org.slf4j.LoggerFactory
 import spp.protocol.instrument.LiveLog
 import spp.protocol.instrument.LiveSourceLocation
@@ -40,16 +39,23 @@ import spp.protocol.service.SourceServices.Subscribe.toLiveInstrumentSubscriberA
 import spp.protocol.service.error.LiveInstrumentException
 import spp.protocol.service.listen.LiveInstrumentListener
 import spp.protocol.service.listen.addLiveInstrumentListener
-import java.util.concurrent.TimeUnit
 
-@Disabled
-@ExtendWith(VertxExtension::class)
-class LiveLogTest : PlatformIntegrationTest() {
+class LiveLogTest : LiveInstrumentIntegrationTest() {
 
     private val log = LoggerFactory.getLogger(LiveLogTest::class.java)
 
+    private fun doTest() {
+        startEntrySpan("doTest")
+        addLineLabel("done") { Throwable().stackTrace[0].lineNumber }
+        stopSpan()
+    }
+
     @Test
-    fun addHitRemove() {
+    fun addHitRemove() = runBlocking {
+        setupLineLabels {
+            doTest()
+        }
+
         val testContext = VertxTestContext()
         var gotAdded = false
         var gotApplied = false
@@ -98,7 +104,7 @@ class LiveLogTest : PlatformIntegrationTest() {
                 else -> testContext.failNow("Got event: " + it.body())
             }
 
-            if (gotAdded && gotHit && gotRemoved) {
+            if (gotAdded && gotApplied && gotHit && gotRemoved) {
                 consumer.unregister {
                     if (it.succeeded()) {
                         testContext.completeNow()
@@ -107,46 +113,33 @@ class LiveLogTest : PlatformIntegrationTest() {
                     }
                 }
             }
-        }.completionHandler {
-            if (it.failed()) {
-                testContext.failNow(it.cause())
-                return@completionHandler
-            }
+        }.completionHandler().await()
 
-            instrumentService.addLiveInstrument(
-                LiveLog(
-                    id = instrumentId,
-                    location = LiveSourceLocation("spp.example.webapp.model.User", 42),
-                    logFormat = "addHitRemove"
-                )
-            ).onComplete {
-                if (!it.succeeded()) {
-                    testContext.failNow(it.cause())
-                }
-            }
-        }
+        instrumentService.addLiveInstrument(
+            LiveLog(
+                id = instrumentId,
+                location = LiveSourceLocation(
+                    LiveLogTest::class.qualifiedName!!,
+                    getLineNumber("done"),
+                    "spp-test-probe"
+                ),
+                logFormat = "addHitRemove",
+                applyImmediately = true
+            )
+        ).await()
 
-        if (testContext.awaitCompletion(60, TimeUnit.SECONDS)) {
-            if (testContext.failed()) {
-                consumer.unregister()
-                log.info("Got added: $gotAdded")
-                log.info("Got applied: $gotApplied")
-                log.info("Got hit: $gotHit")
-                log.info("Got removed: $gotRemoved")
-                throw testContext.causeOfFailure()
-            }
-        } else {
-            consumer.unregister()
-            log.info("Got added: $gotAdded")
-            log.info("Got applied: $gotApplied")
-            log.info("Got hit: $gotHit")
-            log.info("Got removed: $gotRemoved")
-            throw RuntimeException("Test timed out")
-        }
+        delay(2000)
+        doTest()
+
+        errorOnTimeout(testContext)
     }
 
     @Test
     fun removeById(): Unit = runBlocking {
+        setupLineLabels {
+            doTest()
+        }
+
         val testContext = VertxTestContext()
         val instrumentId = "live-log-test-remove-by-id"
 
@@ -173,7 +166,11 @@ class LiveLogTest : PlatformIntegrationTest() {
         instrumentService.addLiveInstrument(
             LiveLog(
                 id = instrumentId,
-                location = LiveSourceLocation("spp.example.webapp.model.User", 42),
+                location = LiveSourceLocation(
+                    LiveLogTest::class.qualifiedName!!,
+                    getLineNumber("done"),
+                    "spp-test-probe"
+                ),
                 condition = "1==2",
                 logFormat = "removeById"
             )
@@ -193,11 +190,19 @@ class LiveLogTest : PlatformIntegrationTest() {
 
     @Test
     fun removeByLocation() {
+        setupLineLabels {
+            doTest()
+        }
+
         val testContext = VertxTestContext()
         instrumentService.addLiveInstrument(
             LiveLog(
                 id = "live-log-test-remove-by-location",
-                location = LiveSourceLocation("spp.example.webapp.model.User", 42),
+                location = LiveSourceLocation(
+                    LiveLogTest::class.qualifiedName!!,
+                    getLineNumber("done"),
+                    "spp-test-probe"
+                ),
                 condition = "1==2",
                 logFormat = "removeByLocation"
             )
@@ -205,7 +210,11 @@ class LiveLogTest : PlatformIntegrationTest() {
             if (it.succeeded()) {
                 val originalId = it.result().id!!
                 instrumentService.removeLiveInstruments(
-                    LiveSourceLocation("spp.example.webapp.model.User", 42)
+                    location = LiveSourceLocation(
+                        LiveLogTest::class.qualifiedName!!,
+                        getLineNumber("done"),
+                        "spp-test-probe"
+                    )
                 ).onComplete {
                     if (it.succeeded()) {
                         testContext.verify {
@@ -227,18 +236,30 @@ class LiveLogTest : PlatformIntegrationTest() {
 
     @Test
     fun removeMultipleByLocation() {
+        setupLineLabels {
+            doTest()
+        }
+
         val testContext = VertxTestContext()
         instrumentService.addLiveInstruments(
             listOf(
                 LiveLog(
                     id = "live-log-test-remove-multiple-by-location-1",
-                    location = LiveSourceLocation("spp.example.webapp.model.User", 42),
+                    location = LiveSourceLocation(
+                        LiveLogTest::class.qualifiedName!!,
+                        getLineNumber("done"),
+                        "spp-test-probe"
+                    ),
                     condition = "1==2",
                     logFormat = "removeMultipleByLocation"
                 ),
                 LiveLog(
                     id = "live-log-test-remove-multiple-by-location-2",
-                    location = LiveSourceLocation("spp.example.webapp.model.User", 42),
+                    location = LiveSourceLocation(
+                        LiveLogTest::class.qualifiedName!!,
+                        getLineNumber("done"),
+                        "spp-test-probe"
+                    ),
                     condition = "1==3",
                     logFormat = "removeMultipleByLocation"
                 )
@@ -247,7 +268,11 @@ class LiveLogTest : PlatformIntegrationTest() {
             if (it.succeeded()) {
                 testContext.verify { assertEquals(2, it.result().size) }
                 instrumentService.removeLiveInstruments(
-                    LiveSourceLocation("spp.example.webapp.model.User", 42)
+                    location = LiveSourceLocation(
+                        LiveLogTest::class.qualifiedName!!,
+                        getLineNumber("done"),
+                        "spp-test-probe"
+                    )
                 ).onComplete {
                     if (it.succeeded()) {
                         testContext.verify {
@@ -268,11 +293,19 @@ class LiveLogTest : PlatformIntegrationTest() {
 
     @Test
     fun addLogWithInvalidCondition() {
+        setupLineLabels {
+            doTest()
+        }
+
         val testContext = VertxTestContext()
         instrumentService.addLiveInstrument(
             LiveLog(
                 id = "live-log-test-invalid-condition",
-                location = LiveSourceLocation("spp.example.webapp.model.User", 42),
+                location = LiveSourceLocation(
+                    LiveLogTest::class.qualifiedName!!,
+                    getLineNumber("done"),
+                    "spp-test-probe"
+                ),
                 condition = "1===2",
                 logFormat = "addLogWithInvalidCondition",
                 applyImmediately = true
