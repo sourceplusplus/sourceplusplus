@@ -21,6 +21,9 @@ import io.vertx.core.json.Json
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import io.vertx.kotlin.core.json.get
+import io.vertx.kotlin.coroutines.dispatcher
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import mu.KotlinLogging
 import net.bytebuddy.jar.asm.Type
 import org.apache.skywalking.apm.network.language.agent.v3.SegmentObject
@@ -31,7 +34,7 @@ import org.apache.skywalking.oap.server.core.query.TraceQueryService
 import org.apache.skywalking.oap.server.library.module.ModuleManager
 import spp.platform.common.ClusterConnection
 import spp.platform.common.util.args
-import spp.processor.InstrumentProcessor.liveInstrumentService
+import spp.platform.storage.SourceStorage
 import spp.processor.live.impl.instrument.breakpoint.LiveVariablePresentation
 import spp.protocol.artifact.exception.LiveStackTrace
 import spp.protocol.artifact.exception.LiveStackTraceElement
@@ -43,7 +46,6 @@ import spp.protocol.instrument.variable.LiveVariable
 import spp.protocol.instrument.variable.LiveVariableScope
 import spp.protocol.service.SourceServices.Subscribe.toLiveInstrumentSubscriberAddress
 import java.time.Instant
-import java.util.concurrent.atomic.AtomicInteger
 
 class LiveBreakpointAnalyzer(
     private val traceQueryService: TraceQueryService
@@ -129,19 +131,21 @@ class LiveBreakpointAnalyzer(
             }
         }
 
-        breakpointIds.forEach {
-            val bpHitObj = mapOf(
-                "breakpoint_id" to it,
-                "trace_id" to segment.traceId,
-                "stack_trace" to stackTraces[it]!!,
-                "variables" to variables.getOrDefault(it, emptyList()),
-                "occurred_at" to span.startTime,
-                "service_instance" to segment.serviceInstance,
-                "service" to segment.service,
-                "location_source" to locationSources[it]!!,
-                "location_line" to locationLines[it]!!
-            )
-            handleBreakpointHit(transformRawBreakpointHit(JsonObject.mapFrom(bpHitObj)))
+        GlobalScope.launch(ClusterConnection.getVertx().dispatcher()) {
+            breakpointIds.forEach {
+                val bpHitObj = mapOf(
+                    "breakpoint_id" to it,
+                    "trace_id" to segment.traceId,
+                    "stack_trace" to stackTraces[it]!!,
+                    "variables" to variables.getOrDefault(it, emptyList()),
+                    "occurred_at" to span.startTime,
+                    "service_instance" to segment.serviceInstance,
+                    "service" to segment.service,
+                    "location_source" to locationSources[it]!!,
+                    "location_line" to locationLines[it]!!
+                )
+                handleBreakpointHit(transformRawBreakpointHit(JsonObject.mapFrom(bpHitObj)))
+            }
         }
     }
 
@@ -283,29 +287,25 @@ class LiveBreakpointAnalyzer(
         }
     }
 
-    private fun handleBreakpointHit(hit: LiveBreakpointHit) {
+    private suspend fun handleBreakpointHit(hit: LiveBreakpointHit) {
         log.trace { "Live breakpoint hit: {}".args(hit) }
-        val value = traceQueryService.queryTrace(hit.traceId)
-        if (value.spans.isNotEmpty()) {
-            println(value)
-        } else {
-            println("No trace found for trace id: ${hit.traceId}")
-        }
-        val liveInstrument = liveInstrumentService._getDeveloperInstrumentById(hit.breakpointId)
+        val liveInstrument = SourceStorage.getLiveInstrument(hit.breakpointId, true)
         if (liveInstrument != null) {
-            val instrumentMeta = liveInstrument.instrument.meta as MutableMap<String, Any>
-            if ((instrumentMeta["hit_count"] as AtomicInteger?)?.incrementAndGet() == 1) {
+            val instrumentMeta = liveInstrument.meta as MutableMap<String, Any>
+            instrumentMeta["hit_count"] = (instrumentMeta["hit_count"] as Int?)?.plus(1) ?: 1
+            if (instrumentMeta["hit_count"] == 1) {
                 instrumentMeta["first_hit_at"] = System.currentTimeMillis().toString()
             }
             instrumentMeta["last_hit_at"] = System.currentTimeMillis().toString()
-        }
 
-        val devInstrument = liveInstrument ?: liveInstrumentService.getCachedDeveloperInstrument(hit.breakpointId)
-        ClusterConnection.getVertx().eventBus().publish(
-            toLiveInstrumentSubscriberAddress(devInstrument.developerAuth.selfId),
-            JsonObject.mapFrom(LiveInstrumentEvent(LiveInstrumentEventType.BREAKPOINT_HIT, Json.encode(hit)))
-        )
-        log.trace { "Published live breakpoint hit" }
+            ClusterConnection.getVertx().eventBus().publish(
+                toLiveInstrumentSubscriberAddress(liveInstrument.meta["spp.developer_id"] as String),
+                JsonObject.mapFrom(LiveInstrumentEvent(LiveInstrumentEventType.BREAKPOINT_HIT, Json.encode(hit)))
+            )
+            log.trace { "Published live breakpoint hit" }
+        } else {
+            log.warn { "No live instrument found for breakpoint id: ${hit.breakpointId}" }
+        }
     }
 
     override fun create(p0: ModuleManager, p1: AnalyzerModuleConfig) = LiveBreakpointAnalyzer(traceQueryService)

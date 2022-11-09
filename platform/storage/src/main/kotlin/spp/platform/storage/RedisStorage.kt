@@ -375,13 +375,17 @@ open class RedisStorage(val vertx: Vertx) : CoreStorage {
         val liveInstruments = rawInstruments.mapNotNull { getLiveInstrument(it.toString(UTF_8)) }
 
         if (includeArchive) {
-            val rawArchiveInstruments = redis.keys(namespace("live_instruments_archive:*")).await()
-            val archiveInstruments = rawArchiveInstruments.mapNotNull {
-                getLiveInstrument(it.toString(UTF_8).substringAfter("live_instruments_archive:"), true)
-            }
-            return liveInstruments + archiveInstruments
+            return liveInstruments + getArchivedLiveInstruments()
         }
         return liveInstruments
+    }
+
+    override suspend fun getArchivedLiveInstruments(): List<LiveInstrument> {
+        val rawArchiveInstruments = redis.keys(namespace("live_instruments_archive:*")).await()
+        val archiveInstruments = rawArchiveInstruments.mapNotNull {
+            getLiveInstrument(it.toString(UTF_8).substringAfter("live_instruments_archive:"), true)
+        }
+        return archiveInstruments
     }
 
     override suspend fun getClientAccessors(): List<ClientAccess> {
