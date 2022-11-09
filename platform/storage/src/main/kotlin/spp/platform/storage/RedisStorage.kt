@@ -389,7 +389,11 @@ open class RedisStorage(val vertx: Vertx) : CoreStorage {
     }
 
     override suspend fun getClientAccessors(): List<ClientAccess> {
-        val clientAccessors = redis.smembers(namespace("client_access")).await()
+        var clientAccessors = redis.smembers(namespace("client_access")).await()
+        if (clientAccessors !is MultiType) {
+            log.error("getClientAccessors: clientAccessors is not MultiType", Exception())
+            clientAccessors = redis.smembers(namespace("client_access")).await()
+        }
         return clientAccessors.map { ClientAccess(JsonObject(it.toString(UTF_8))) }
     }
 
