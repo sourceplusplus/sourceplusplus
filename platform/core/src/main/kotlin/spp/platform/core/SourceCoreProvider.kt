@@ -25,6 +25,11 @@ import org.apache.skywalking.oap.server.library.module.ModuleConfig
 import org.apache.skywalking.oap.server.library.module.ModuleDefine
 import org.apache.skywalking.oap.server.library.module.ModuleProvider
 import spp.platform.common.ClusterConnection
+import spp.protocol.instrument.LiveBreakpoint
+import spp.protocol.instrument.LiveLog
+import spp.protocol.instrument.LiveMeter
+import spp.protocol.instrument.LiveSpan
+import spp.protocol.marshall.LiveInstrumentCodec
 import spp.protocol.marshall.LocalMessageCodec
 
 class SourceCoreModule : ModuleDefine("spp-platform-core") {
@@ -40,7 +45,14 @@ class SourceCoreProvider : ModuleProvider() {
     override fun start() {
         RedisClusterManager::class.simpleName //todo: won't need when they make public artifact
         val vertx = ClusterConnection.getVertx()
+        vertx.eventBus().registerDefaultCodec(LiveBreakpoint::class.java, LiveInstrumentCodec())
+        vertx.eventBus().registerDefaultCodec(LiveLog::class.java, LiveInstrumentCodec())
+        vertx.eventBus().registerDefaultCodec(LiveMeter::class.java, LiveInstrumentCodec())
+        vertx.eventBus().registerDefaultCodec(LiveSpan::class.java, LiveInstrumentCodec())
+
+        //todo: likely won't work in cluster mode
         vertx.eventBus().registerDefaultCodec(ArrayList::class.java, LocalMessageCodec())
+
         runBlocking {
             vertx.deployVerticle(
                 SourcePlatform(manager),

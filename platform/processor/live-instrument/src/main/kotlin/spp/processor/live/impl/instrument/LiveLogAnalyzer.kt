@@ -21,13 +21,16 @@ import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
 import com.google.protobuf.Message
 import io.vertx.core.json.JsonObject
+import io.vertx.kotlin.coroutines.dispatcher
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import mu.KotlinLogging
 import org.apache.skywalking.apm.network.logging.v3.LogData
 import org.apache.skywalking.oap.log.analyzer.provider.log.listener.LogAnalysisListener
 import org.apache.skywalking.oap.log.analyzer.provider.log.listener.LogAnalysisListenerFactory
 import spp.platform.common.ClusterConnection
 import spp.platform.common.util.args
-import spp.processor.InstrumentProcessor.liveInstrumentService
+import spp.platform.storage.SourceStorage
 import spp.protocol.artifact.log.Log
 import spp.protocol.artifact.log.LogOrderType
 import spp.protocol.artifact.log.LogResult
@@ -37,7 +40,6 @@ import spp.protocol.instrument.event.LiveLogHit
 import spp.protocol.service.SourceServices.Subscribe.toLiveInstrumentSubscriberAddress
 import java.time.Instant
 import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicInteger
 import kotlin.collections.set
 
 class LiveLogAnalyzer : LogAnalysisListener, LogAnalysisListenerFactory {
@@ -81,53 +83,57 @@ class LiveLogAnalyzer : LogAnalysisListener, LogAnalysisListenerFactory {
         if (System.currentTimeMillis() - logLastPublished < logPublishRateLimit) {
             return this
         }
+        logPublishCache.put(logId!!, System.currentTimeMillis())
 
-        handleLogHit(
-            LiveLogHit(
-                logId!!,
-                Instant.ofEpochMilli(logData.timestamp),
-                logData.serviceInstance,
-                logData.service,
-                LogResult(
-                    orderType = LogOrderType.NEWEST_LOGS,
-                    timestamp = Instant.ofEpochMilli(logData.timestamp),
-                    logs = listOf(
-                        Log(
-                            timestamp = Instant.ofEpochMilli(logData.timestamp),
-                            content = logData.body.text.text,
-                            level = "Live",
-                            logger = logger,
-                            thread = thread,
-                            arguments = arguments
-                        )
-                    ),
-                    total = -1
+        GlobalScope.launch(ClusterConnection.getVertx().dispatcher()) {
+            handleLogHit(
+                LiveLogHit(
+                    logId!!,
+                    Instant.ofEpochMilli(logData.timestamp),
+                    logData.serviceInstance,
+                    logData.service,
+                    LogResult(
+                        orderType = LogOrderType.NEWEST_LOGS,
+                        timestamp = Instant.ofEpochMilli(logData.timestamp),
+                        logs = listOf(
+                            Log(
+                                timestamp = Instant.ofEpochMilli(logData.timestamp),
+                                content = logData.body.text.text,
+                                level = "Live",
+                                logger = logger,
+                                thread = thread,
+                                arguments = arguments
+                            )
+                        ),
+                        total = -1
+                    )
                 )
             )
-        )
-        logPublishCache.put(logId!!, System.currentTimeMillis())
+        }
         return this
     }
 
-    private fun handleLogHit(hit: LiveLogHit) {
+    private suspend fun handleLogHit(hit: LiveLogHit) {
         log.trace { "Live log hit: {}".args(hit) }
-        val liveInstrument = liveInstrumentService._getDeveloperInstrumentById(hit.logId)
+        val liveInstrument = SourceStorage.getLiveInstrument(hit.logId, true)
         if (liveInstrument != null) {
-            val instrumentMeta = liveInstrument.instrument.meta as MutableMap<String, Any>
-            if ((instrumentMeta["hit_count"] as AtomicInteger?)?.incrementAndGet() == 1) {
+            val instrumentMeta = liveInstrument.meta as MutableMap<String, Any>
+            instrumentMeta["hit_count"] = (instrumentMeta["hit_count"] as Int?)?.plus(1) ?: 1
+            if (instrumentMeta["hit_count"] == 1) {
                 instrumentMeta["first_hit_at"] = System.currentTimeMillis().toString()
             }
             instrumentMeta["last_hit_at"] = System.currentTimeMillis().toString()
-        }
 
-        val devInstrument = liveInstrument ?: liveInstrumentService.getCachedDeveloperInstrument(hit.logId)
-        ClusterConnection.getVertx().eventBus().publish(
-            toLiveInstrumentSubscriberAddress(devInstrument.developerAuth.selfId),
-            JsonObject.mapFrom(
-                LiveInstrumentEvent(LiveInstrumentEventType.LOG_HIT, JsonObject.mapFrom(hit).toString())
+            ClusterConnection.getVertx().eventBus().publish(
+                toLiveInstrumentSubscriberAddress(liveInstrument.meta["spp.developer_id"] as String),
+                JsonObject.mapFrom(
+                    LiveInstrumentEvent(LiveInstrumentEventType.LOG_HIT, JsonObject.mapFrom(hit).toString())
+                )
             )
-        )
-        log.trace { "Published live log hit" }
+            log.trace { "Published live log hit" }
+        } else {
+            log.warn { "Live log hit for unknown log id: {}".args(hit.logId) }
+        }
     }
 
     override fun create() = LiveLogAnalyzer()

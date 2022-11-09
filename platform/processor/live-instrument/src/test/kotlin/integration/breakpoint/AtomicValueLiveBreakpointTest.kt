@@ -15,8 +15,9 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package integration
+package integration.breakpoint
 
+import integration.LiveInstrumentIntegrationTest
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxTestContext
@@ -30,7 +31,7 @@ import spp.protocol.instrument.variable.LiveVariable
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
 
-@Suppress("unused", "UNUSED_VARIABLE")
+@Suppress("UNUSED_VARIABLE")
 class AtomicValueLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
     private fun atomicValue() {

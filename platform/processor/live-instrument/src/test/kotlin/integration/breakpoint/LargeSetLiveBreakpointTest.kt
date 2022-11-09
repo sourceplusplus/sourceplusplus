@@ -15,8 +15,9 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package integration
+package integration.breakpoint
 
+import integration.LiveInstrumentIntegrationTest
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxTestContext
@@ -26,23 +27,23 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.LiveSourceLocation
-import java.util.*
 
-@Suppress("unused")
-class LargeArrayLiveBreakpointTest : LiveInstrumentIntegrationTest() {
+class LargeSetLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
-    private fun largeArray() {
-        startEntrySpan("largeArray")
-        val largeArray = arrayOfNulls<Byte>(100_000)
-        Arrays.fill(largeArray, 1.toByte())
+    private fun largeSet() {
+        startEntrySpan("largeSet")
+        val largeSet = HashSet<Int>()
+        for (i in 0 until 100_000) {
+            largeSet.add(i)
+        }
         addLineLabel("done") { Throwable().stackTrace[0].lineNumber }
         stopSpan()
     }
 
     @Test
-    fun `large array`() = runBlocking {
+    fun `large set`() = runBlocking {
         setupLineLabels {
-            largeArray()
+            largeSet()
         }
 
         val testContext = VertxTestContext()
@@ -52,21 +53,21 @@ class LargeArrayLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                 val topFrame = bpHit.stackTrace.elements.first()
                 assertEquals(2, topFrame.variables.size)
 
-                //largeArray
-                val largeArrayVariable = topFrame.variables.first { it.name == "largeArray" }
-                assertNotNull(largeArrayVariable)
+                //largeSet
+                val largeSetVariable = topFrame.variables.first { it.name == "largeSet" }
+                assertNotNull(largeSetVariable)
                 assertEquals(
-                    "java.lang.Byte[]",
-                    largeArrayVariable.liveClazz
+                    "java.util.HashSet",
+                    largeSetVariable.liveClazz
                 )
 
-                val arrayValues = largeArrayVariable.value as JsonArray
-                assertEquals(101, arrayValues.size())
-                for (i in 0..99) {
-                    val value = arrayValues.getJsonObject(i)
-                    assertEquals(1, value.getInteger("value"))
+                val setValues = largeSetVariable.value as JsonArray
+                assertEquals(101, setValues.size())
+                for (index in 0..99) {
+                    val value = setValues.getJsonObject(index)
+                    assertEquals(index, value.getInteger("value"))
                 }
-                val lastValue = (arrayValues.last() as JsonObject).getJsonObject("value")
+                val lastValue = (setValues.last() as JsonObject).getJsonObject("value")
                 assertEquals("MAX_LENGTH_EXCEEDED", lastValue.getString("@skip"))
                 assertEquals(100_000, lastValue.getInteger("@skip[size]"))
                 assertEquals(100, lastValue.getInteger("@skip[max]"))
@@ -79,9 +80,8 @@ class LargeArrayLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         //add live breakpoint
         instrumentService.addLiveInstrument(
             LiveBreakpoint(
-                id = "large-array-bp",
                 location = LiveSourceLocation(
-                    LargeArrayLiveBreakpointTest::class.qualifiedName!!,
+                    LargeSetLiveBreakpointTest::class.qualifiedName!!,
                     getLineNumber("done"),
                     "spp-test-probe"
                 ),
@@ -90,7 +90,7 @@ class LargeArrayLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         ).await()
 
         //trigger live breakpoint
-        largeArray()
+        largeSet()
 
         errorOnTimeout(testContext)
     }

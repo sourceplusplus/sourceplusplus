@@ -15,25 +15,23 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package integration.condition
+package integration
 
-import integration.LiveInstrumentIntegrationTest
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
 import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
 import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.LiveSourceLocation
 
 @Suppress("UNUSED_VARIABLE", "unused")
-class NegativePrimitiveConditionITTest : LiveInstrumentIntegrationTest() {
+class PrimitiveConditionITTest : LiveInstrumentIntegrationTest() {
 
     companion object {
-        const val fieldI = 101
+        const val fieldI = 100
     }
 
-    val instanceI = 101
+    val instanceI = 100
 
     private fun primitiveStaticVariable() {
         startEntrySpan("primitiveStaticVariable")
@@ -49,7 +47,7 @@ class NegativePrimitiveConditionITTest : LiveInstrumentIntegrationTest() {
 
     private fun primitiveLocalVariable() {
         startEntrySpan("primitiveLocalVariable")
-        val localI = 101
+        val localI = 100
         addLineLabel("done") { Throwable().stackTrace[0].lineNumber }
         stopSpan()
     }
@@ -66,10 +64,10 @@ class NegativePrimitiveConditionITTest : LiveInstrumentIntegrationTest() {
         }
 
         //add live breakpoint
-        val liveInstrument = instrumentService.addLiveInstrument(
+        instrumentService.addLiveInstrument(
             LiveBreakpoint(
                 location = LiveSourceLocation(
-                    NegativePrimitiveConditionITTest::class.qualifiedName!!,
+                    PrimitiveConditionITTest::class.qualifiedName!!,
                     getLineNumber("done"),
                     "spp-test-probe"
                 ),
@@ -81,10 +79,7 @@ class NegativePrimitiveConditionITTest : LiveInstrumentIntegrationTest() {
         //trigger live breakpoint
         primitiveStaticVariable()
 
-        successOnTimeout(testContext)
-
-        //clean up
-        assertNotNull(instrumentService.removeLiveInstrument(liveInstrument.id!!).await())
+        errorOnTimeout(testContext)
     }
 
     @Test
@@ -99,10 +94,10 @@ class NegativePrimitiveConditionITTest : LiveInstrumentIntegrationTest() {
         }
 
         //add live breakpoint
-        val liveInstrument = instrumentService.addLiveInstrument(
+        instrumentService.addLiveInstrument(
             LiveBreakpoint(
                 location = LiveSourceLocation(
-                    NegativePrimitiveConditionITTest::class.qualifiedName!!,
+                    PrimitiveConditionITTest::class.qualifiedName!!,
                     getLineNumber("done"),
                     "spp-test-probe"
                 ),
@@ -114,10 +109,7 @@ class NegativePrimitiveConditionITTest : LiveInstrumentIntegrationTest() {
         //trigger live breakpoint
         primitiveInstanceVariable()
 
-        successOnTimeout(testContext)
-
-        //clean up
-        assertNotNull(instrumentService.removeLiveInstrument(liveInstrument.id!!).await())
+        errorOnTimeout(testContext)
     }
 
     @Test
@@ -132,10 +124,10 @@ class NegativePrimitiveConditionITTest : LiveInstrumentIntegrationTest() {
         }
 
         //add live breakpoint
-        val liveInstrument = instrumentService.addLiveInstrument(
+        instrumentService.addLiveInstrument(
             LiveBreakpoint(
                 location = LiveSourceLocation(
-                    NegativePrimitiveConditionITTest::class.qualifiedName!!,
+                    PrimitiveConditionITTest::class.qualifiedName!!,
                     getLineNumber("done"),
                     "spp-test-probe"
                 ),
@@ -147,9 +139,6 @@ class NegativePrimitiveConditionITTest : LiveInstrumentIntegrationTest() {
         //trigger live breakpoint
         primitiveLocalVariable()
 
-        successOnTimeout(testContext)
-
-        //clean up
-        assertNotNull(instrumentService.removeLiveInstrument(liveInstrument.id!!).await())
+        errorOnTimeout(testContext)
     }
 }

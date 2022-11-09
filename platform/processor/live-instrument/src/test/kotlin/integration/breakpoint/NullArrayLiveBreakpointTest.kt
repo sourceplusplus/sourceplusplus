@@ -15,8 +15,9 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package integration
+package integration.breakpoint
 
+import integration.LiveInstrumentIntegrationTest
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxTestContext
@@ -27,30 +28,20 @@ import org.junit.jupiter.api.Test
 import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.LiveSourceLocation
 
-@Suppress("unused")
-class CyclicObjectLiveBreakpointTest : LiveInstrumentIntegrationTest() {
+@Suppress("UNUSED_VARIABLE")
+class NullArrayLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
-    class TopObject {
-        var bottom: BottomObject? = null
-    }
-
-    class BottomObject {
-        var top: TopObject? = null
-    }
-
-    private fun cyclicObject() {
-        startEntrySpan("cyclicObject")
-        val cyclicObject = TopObject()
-        cyclicObject.bottom = BottomObject()
-        cyclicObject.bottom!!.top = cyclicObject
+    private fun nullArray() {
+        startEntrySpan("nullArray")
+        val nullArray = arrayOfNulls<Any?>(10)
         addLineLabel("done") { Throwable().stackTrace[0].lineNumber }
         stopSpan()
     }
 
     @Test
-    fun `cyclic object`() = runBlocking {
+    fun `null array`() = runBlocking {
         setupLineLabels {
-            cyclicObject()
+            nullArray()
         }
 
         val testContext = VertxTestContext()
@@ -60,31 +51,18 @@ class CyclicObjectLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                 val topFrame = bpHit.stackTrace.elements.first()
                 assertEquals(2, topFrame.variables.size)
 
-                //cyclicObject
-                val cyclicObject = topFrame.variables.first { it.name == "cyclicObject" }
+                //nullArray
+                val nullArrayVariable = topFrame.variables.first { it.name == "nullArray" }
+                assertNotNull(nullArrayVariable)
                 assertEquals(
-                    "integration.CyclicObjectLiveBreakpointTest\$TopObject",
-                    cyclicObject.liveClazz
+                    "java.lang.Object[]",
+                    nullArrayVariable.liveClazz
                 )
-                val cyclicObjectId = cyclicObject.liveIdentity
-                assertNotNull(cyclicObjectId)
-
-                val bottomObject = (cyclicObject.value as JsonArray).first() as JsonObject
-                assertEquals(
-                    "integration.CyclicObjectLiveBreakpointTest\$BottomObject",
-                    bottomObject.getString("liveClazz")
+                assertArrayEquals(
+                    arrayOfNulls<Any?>(10),
+                    (nullArrayVariable.value as JsonArray)
+                        .map { JsonObject.mapFrom(it) }.map { it.getString("value") }.toTypedArray()
                 )
-
-                val topObject = (bottomObject.getJsonArray("value")).first() as JsonObject
-                assertNotNull(topObject)
-                assertEquals(
-                    "integration.CyclicObjectLiveBreakpointTest\$TopObject",
-                    topObject.getString("liveClazz")
-                )
-
-                val topObjectId = topObject.getString("liveIdentity")
-                assertNotNull(topObjectId)
-                assertEquals(cyclicObjectId, topObjectId)
             }
 
             //test passed
@@ -95,7 +73,7 @@ class CyclicObjectLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         instrumentService.addLiveInstrument(
             LiveBreakpoint(
                 location = LiveSourceLocation(
-                    CyclicObjectLiveBreakpointTest::class.qualifiedName!!,
+                    NullArrayLiveBreakpointTest::class.qualifiedName!!,
                     getLineNumber("done"),
                     "spp-test-probe"
                 ),
@@ -104,7 +82,7 @@ class CyclicObjectLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         ).await()
 
         //trigger live breakpoint
-        cyclicObject()
+        nullArray()
 
         errorOnTimeout(testContext)
     }

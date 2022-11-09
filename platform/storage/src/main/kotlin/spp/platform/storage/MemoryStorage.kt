@@ -372,9 +372,7 @@ open class MemoryStorage(val vertx: Vertx) : CoreStorage {
         }
 
         if (includeArchive) {
-            val archivedStorage = vertx.sharedData().getAsyncMap<String, Any>(namespace("archivedInstruments")).await()
-            val archivedArr = archivedStorage.get("archivedInstruments").await() as JsonArray? ?: JsonArray()
-            val archivedInstrument = archivedArr.list.find { (it as LiveInstrument).id == id } as LiveInstrument?
+            val archivedInstrument = getArchivedLiveInstruments().find { it.id == id }
             if (archivedInstrument != null) {
                 return archivedInstrument
             }
@@ -388,12 +386,15 @@ open class MemoryStorage(val vertx: Vertx) : CoreStorage {
         val liveInstruments = instrumentsArr.list.map { it as LiveInstrument }
 
         if (includeArchive) {
-            val archivedStorage = vertx.sharedData().getAsyncMap<String, Any>(namespace("archivedInstruments")).await()
-            val archivedArr = archivedStorage.get("archivedInstruments").await() as JsonArray? ?: JsonArray()
-            val archivedInstruments = archivedArr.list.map { it as LiveInstrument }
-            return liveInstruments + archivedInstruments
+            return liveInstruments + getArchivedLiveInstruments()
         }
         return liveInstruments
+    }
+
+    override suspend fun getArchivedLiveInstruments(): List<LiveInstrument> {
+        val archivedStorage = vertx.sharedData().getAsyncMap<String, Any>(namespace("archivedInstruments")).await()
+        val archivedArr = archivedStorage.get("archivedInstruments").await() as JsonArray? ?: JsonArray()
+        return archivedArr.list.map { it as LiveInstrument }
     }
 
     override suspend fun getClientAccessors(): List<ClientAccess> {

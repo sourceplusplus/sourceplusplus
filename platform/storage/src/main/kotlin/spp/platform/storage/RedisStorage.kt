@@ -375,17 +375,25 @@ open class RedisStorage(val vertx: Vertx) : CoreStorage {
         val liveInstruments = rawInstruments.mapNotNull { getLiveInstrument(it.toString(UTF_8)) }
 
         if (includeArchive) {
-            val rawArchiveInstruments = redis.keys(namespace("live_instruments_archive:*")).await()
-            val archiveInstruments = rawArchiveInstruments.mapNotNull {
-                getLiveInstrument(it.toString(UTF_8).substringAfter("live_instruments_archive:"), true)
-            }
-            return liveInstruments + archiveInstruments
+            return liveInstruments + getArchivedLiveInstruments()
         }
         return liveInstruments
     }
 
+    override suspend fun getArchivedLiveInstruments(): List<LiveInstrument> {
+        val rawArchiveInstruments = redis.keys(namespace("live_instruments_archive:*")).await()
+        val archiveInstruments = rawArchiveInstruments.mapNotNull {
+            getLiveInstrument(it.toString(UTF_8).substringAfter("live_instruments_archive:"), true)
+        }
+        return archiveInstruments
+    }
+
     override suspend fun getClientAccessors(): List<ClientAccess> {
-        val clientAccessors = redis.smembers(namespace("client_access")).await()
+        var clientAccessors = redis.smembers(namespace("client_access")).await()
+        if (clientAccessors !is MultiType) {
+            log.error("getClientAccessors: clientAccessors is not MultiType", Exception())
+            clientAccessors = redis.smembers(namespace("client_access")).await()
+        }
         return clientAccessors.map { ClientAccess(JsonObject(it.toString(UTF_8))) }
     }
 

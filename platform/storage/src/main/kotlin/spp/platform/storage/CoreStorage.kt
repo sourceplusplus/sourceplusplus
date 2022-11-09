@@ -105,6 +105,11 @@ interface CoreStorage {
      */
     suspend fun getLiveInstruments(includeArchive: Boolean = false): List<LiveInstrument>
 
+    /**
+     * Retrieve all archived [LiveInstrument]s.
+     */
+    suspend fun getArchivedLiveInstruments(): List<LiveInstrument>
+
     suspend fun namespace(location: String): String = location
 
     fun generateClientAccess(id: String? = null, secret: String? = null): ClientAccess {

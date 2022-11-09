@@ -15,8 +15,10 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package integration
+package integration.breakpoint
 
+import integration.LiveInstrumentIntegrationTest
+import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
@@ -25,24 +27,22 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.LiveSourceLocation
+import java.util.*
 
-@Suppress("unused")
-class LargeMapLiveBreakpointTest : LiveInstrumentIntegrationTest() {
+class LargeArrayLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
-    private fun largeMap() {
-        startEntrySpan("largeMap")
-        val largeMap = LinkedHashMap<String, String>()
-        for (i in 0 until 100_000) {
-            largeMap[i.toString()] = i.toString()
-        }
+    private fun largeArray() {
+        startEntrySpan("largeArray")
+        val largeArray = arrayOfNulls<Byte>(100_000)
+        Arrays.fill(largeArray, 1.toByte())
         addLineLabel("done") { Throwable().stackTrace[0].lineNumber }
         stopSpan()
     }
 
     @Test
-    fun `large map`() = runBlocking {
+    fun `large array`() = runBlocking {
         setupLineLabels {
-            largeMap()
+            largeArray()
         }
 
         val testContext = VertxTestContext()
@@ -52,23 +52,24 @@ class LargeMapLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                 val topFrame = bpHit.stackTrace.elements.first()
                 assertEquals(2, topFrame.variables.size)
 
-                //largeMap
-                val largeMapVariable = topFrame.variables.first { it.name == "largeMap" }
-                assertNotNull(largeMapVariable)
+                //largeArray
+                val largeArrayVariable = topFrame.variables.first { it.name == "largeArray" }
+                assertNotNull(largeArrayVariable)
                 assertEquals(
-                    "java.util.LinkedHashMap",
-                    largeMapVariable.liveClazz
+                    "java.lang.Byte[]",
+                    largeArrayVariable.liveClazz
                 )
 
-                val mapValues = largeMapVariable.value as JsonObject
-                assertEquals(105, mapValues.size())
-                for (index in 0..99) {
-                    assertEquals(index.toString(), mapValues.getString(index.toString()))
+                val arrayValues = largeArrayVariable.value as JsonArray
+                assertEquals(101, arrayValues.size())
+                for (i in 0..99) {
+                    val value = arrayValues.getJsonObject(i)
+                    assertEquals(1, value.getInteger("value"))
                 }
-                assertEquals("MAX_LENGTH_EXCEEDED", mapValues.getString("@skip"))
-                assertEquals(100_000, mapValues.getInteger("@skip[size]"))
-                assertEquals(100, mapValues.getInteger("@skip[max]"))
-                assertNotNull(mapValues.getString("@id"))
+                val lastValue = (arrayValues.last() as JsonObject).getJsonObject("value")
+                assertEquals("MAX_LENGTH_EXCEEDED", lastValue.getString("@skip"))
+                assertEquals(100_000, lastValue.getInteger("@skip[size]"))
+                assertEquals(100, lastValue.getInteger("@skip[max]"))
             }
 
             //test passed
@@ -78,8 +79,9 @@ class LargeMapLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         //add live breakpoint
         instrumentService.addLiveInstrument(
             LiveBreakpoint(
+                id = "large-array-bp",
                 location = LiveSourceLocation(
-                    LargeMapLiveBreakpointTest::class.qualifiedName!!,
+                    LargeArrayLiveBreakpointTest::class.qualifiedName!!,
                     getLineNumber("done"),
                     "spp-test-probe"
                 ),
@@ -88,7 +90,7 @@ class LargeMapLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         ).await()
 
         //trigger live breakpoint
-        largeMap()
+        largeArray()
 
         errorOnTimeout(testContext)
     }

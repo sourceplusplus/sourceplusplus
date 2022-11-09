@@ -15,32 +15,34 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package integration
+package integration.breakpoint
 
+import integration.LiveInstrumentIntegrationTest
+import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
 import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.LiveSourceLocation
+import java.util.*
 
-@Suppress("unused", "UNUSED_VARIABLE")
-class LargeObjectLiveBreakpointTest : LiveInstrumentIntegrationTest() {
+class LargePrimitiveArrayLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
-    private fun largeObject() {
-        startEntrySpan("deepObject")
-        val twoMbArr = ByteArray(1024 * 1024 * 2)
+    private fun largePrimitiveArray() {
+        startEntrySpan("largePrimitiveArray")
+        val largePrimitiveArray = ByteArray(100_000)
+        Arrays.fill(largePrimitiveArray, 1.toByte())
         addLineLabel("done") { Throwable().stackTrace[0].lineNumber }
         stopSpan()
     }
 
     @Test
-    fun `max size exceeded`() = runBlocking {
+    fun `large primitive array`() = runBlocking {
         setupLineLabels {
-            largeObject()
+            largePrimitiveArray()
         }
 
         val testContext = VertxTestContext()
@@ -50,25 +52,24 @@ class LargeObjectLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                 val topFrame = bpHit.stackTrace.elements.first()
                 assertEquals(2, topFrame.variables.size)
 
-                //max size exceeded
-                val twoMbArrVariable = topFrame.variables.first { it.name == "twoMbArr" }
-                val twoMbArrVariableData = twoMbArrVariable.value as JsonObject
+                //largePrimitiveArray
+                val largePrimitiveArrayVariable = topFrame.variables.first { it.name == "largePrimitiveArray" }
+                assertNotNull(largePrimitiveArrayVariable)
                 assertEquals(
-                    "MAX_SIZE_EXCEEDED",
-                    twoMbArrVariableData.getString("@skip")
+                    "byte[]",
+                    largePrimitiveArrayVariable.liveClazz
                 )
-                assertEquals(
-                    "[B",
-                    twoMbArrVariableData.getString("@class")
-                )
-                assertEquals(
-                    (1024 * 1024 * 2) + 16, //2mb + 16 bytes for byte[] size
-                    twoMbArrVariableData.getString("@skip[size]").toInt()
-                )
-                assertEquals(
-                    1024 * 1024, //1mb
-                    twoMbArrVariableData.getString("@skip[max]").toInt()
-                )
+
+                val arrayValues = largePrimitiveArrayVariable.value as JsonArray
+                assertEquals(101, arrayValues.size())
+                for (i in 0..99) {
+                    val value = arrayValues.getJsonObject(i)
+                    assertEquals(1, value.getInteger("value"))
+                }
+                val lastValue = (arrayValues.last() as JsonObject).getJsonObject("value")
+                assertEquals("MAX_LENGTH_EXCEEDED", lastValue.getString("@skip"))
+                assertEquals(100_000, lastValue.getInteger("@skip[size]"))
+                assertEquals(100, lastValue.getInteger("@skip[max]"))
             }
 
             //test passed
@@ -79,7 +80,7 @@ class LargeObjectLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         instrumentService.addLiveInstrument(
             LiveBreakpoint(
                 location = LiveSourceLocation(
-                    LargeObjectLiveBreakpointTest::class.qualifiedName!!,
+                    LargePrimitiveArrayLiveBreakpointTest::class.qualifiedName!!,
                     getLineNumber("done"),
                     "spp-test-probe"
                 ),
@@ -88,7 +89,7 @@ class LargeObjectLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         ).await()
 
         //trigger live breakpoint
-        largeObject()
+        largePrimitiveArray()
 
         errorOnTimeout(testContext)
     }

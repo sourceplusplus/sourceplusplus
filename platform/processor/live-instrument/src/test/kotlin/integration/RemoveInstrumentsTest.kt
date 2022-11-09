@@ -29,7 +29,6 @@ import spp.protocol.service.listen.LiveInstrumentListener
 import spp.protocol.service.listen.addLiveInstrumentListener
 import java.util.concurrent.atomic.AtomicInteger
 
-@Suppress("unused")
 class RemoveInstrumentsTest : LiveInstrumentIntegrationTest() {
 
     @Test

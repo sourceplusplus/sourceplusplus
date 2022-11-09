@@ -15,8 +15,9 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package integration
+package integration.breakpoint
 
+import integration.LiveInstrumentIntegrationTest
 import io.vertx.kotlin.coroutines.await
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -32,7 +33,6 @@ import spp.protocol.instrument.throttle.ThrottleStep
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
-@Suppress("unused")
 class HitLimitLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
     private fun hitLimit() {
@@ -74,7 +74,7 @@ class HitLimitLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         }
 
         //verify still exists
-        val liveInstruments = instrumentService.getLiveInstruments(null).await()
+        val liveInstruments = instrumentService.getLiveInstruments().await()
         assertEquals(1, liveInstruments.size)
         assert(liveInstruments.first().hitLimit == 11)
         //todo: verify hit count
@@ -84,7 +84,7 @@ class HitLimitLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         delay(5000)
 
         //verify removed
-        val liveInstrument = instrumentService.getLiveInstruments(null).await().firstOrNull()
+        val liveInstrument = instrumentService.getLiveInstruments().await().firstOrNull()
         assertNull(liveInstrument)
     }
 }

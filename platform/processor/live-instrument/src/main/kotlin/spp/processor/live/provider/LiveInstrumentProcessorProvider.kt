@@ -81,6 +81,7 @@ class LiveInstrumentProcessorProvider : ModuleProvider() {
             AnalyzerModule.NAME,
             StorageModule.NAME,
             LogAnalyzerModule.NAME,
+            "spp-platform-storage"
         )
     }
 }

@@ -15,17 +15,16 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package integration
+package integration.breakpoint
 
-import io.vertx.junit5.VertxExtension
+import integration.LiveInstrumentIntegrationTest
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
 import org.slf4j.LoggerFactory
 import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.LiveInstrument
@@ -40,14 +39,31 @@ import spp.protocol.service.listen.addLiveInstrumentListener
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 
-@Disabled
-@ExtendWith(VertxExtension::class)
-class LiveBreakpointTest : PlatformIntegrationTest() {
+class LiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
     private val log = LoggerFactory.getLogger(LiveBreakpointTest::class.java)
 
+    private fun doTest() {
+        startEntrySpan("doTest")
+        val i = 1
+        val c = 'h'
+        val s = "hi"
+        val f = 1.0f
+        val max = Long.MAX_VALUE
+        val b: Byte = -2
+        val sh = Short.MIN_VALUE
+        val d = 00.23
+        val bool = true
+        addLineLabel("done") { Throwable().stackTrace[0].lineNumber }
+        stopSpan()
+    }
+
     @Test
     fun verifyLiveVariables(): Unit = runBlocking {
+        setupLineLabels {
+            doTest()
+        }
+
         val testContext = VertxTestContext()
         var gotAdded = false
         var gotApplied = false
@@ -141,11 +157,17 @@ class LiveBreakpointTest : PlatformIntegrationTest() {
         instrumentService.addLiveInstrument(
             LiveBreakpoint(
                 id = instrumentId,
-                location = LiveSourceLocation("spp.example.webapp.controller.LiveInstrumentController", 25),
+                location = LiveSourceLocation(
+                    LiveBreakpointTest::class.qualifiedName!!,
+                    getLineNumber("done"),
+                    "spp-test-probe"
+                ),
+                applyImmediately = true
             )
-        ).onFailure {
-            testContext.failNow(it)
-        }
+        ).await()
+
+        delay(2000)
+        doTest()
 
         if (testContext.awaitCompletion(60, TimeUnit.SECONDS)) {
             instrumentListener.unregister()
@@ -169,6 +191,10 @@ class LiveBreakpointTest : PlatformIntegrationTest() {
 
     @Test
     fun addHitRemove(): Unit = runBlocking {
+        setupLineLabels {
+            doTest()
+        }
+
         val testContext = VertxTestContext()
         var gotAdded = false
         var gotApplied = false
@@ -223,12 +249,18 @@ class LiveBreakpointTest : PlatformIntegrationTest() {
         instrumentService.addLiveInstrument(
             LiveBreakpoint(
                 id = instrumentId,
-                location = LiveSourceLocation("spp.example.webapp.model.User", 42),
-                condition = "2==2"
+                location = LiveSourceLocation(
+                    LiveBreakpointTest::class.qualifiedName!!,
+                    getLineNumber("done"),
+                    "spp-test-probe"
+                ),
+                condition = "2==2",
+                applyImmediately = true
             )
-        ).onFailure {
-            testContext.failNow(it)
-        }
+        ).await()
+
+        delay(2000)
+        doTest()
 
         if (testContext.awaitCompletion(60, TimeUnit.SECONDS)) {
             instrumentListener.unregister()

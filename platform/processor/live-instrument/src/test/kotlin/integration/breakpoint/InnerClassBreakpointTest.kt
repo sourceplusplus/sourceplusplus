@@ -15,10 +15,9 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package integration
+package integration.breakpoint
 
-import io.vertx.core.json.JsonArray
-import io.vertx.core.json.JsonObject
+import integration.LiveInstrumentIntegrationTest
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
 import kotlinx.coroutines.runBlocking
@@ -26,23 +25,24 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.LiveSourceLocation
-import java.util.*
+import spp.protocol.instrument.variable.LiveVariableScope
 
-@Suppress("unused")
-class LargePrimitiveArrayLiveBreakpointTest : LiveInstrumentIntegrationTest() {
+@Suppress("UNUSED_VARIABLE")
+class InnerClassBreakpointTest : LiveInstrumentIntegrationTest() {
 
-    private fun largePrimitiveArray() {
-        startEntrySpan("largePrimitiveArray")
-        val largePrimitiveArray = ByteArray(100_000)
-        Arrays.fill(largePrimitiveArray, 1.toByte())
-        addLineLabel("done") { Throwable().stackTrace[0].lineNumber }
-        stopSpan()
+    inner class InnerClass {
+        fun doHit() {
+            startEntrySpan("largeList")
+            val myVar = 10
+            addLineLabel("done") { Throwable().stackTrace[0].lineNumber }
+            stopSpan()
+        }
     }
 
     @Test
-    fun `large primitive array`() = runBlocking {
+    fun `inner class`() = runBlocking {
         setupLineLabels {
-            largePrimitiveArray()
+            InnerClass().doHit()
         }
 
         val testContext = VertxTestContext()
@@ -50,26 +50,14 @@ class LargePrimitiveArrayLiveBreakpointTest : LiveInstrumentIntegrationTest() {
             testContext.verify {
                 assertTrue(bpHit.stackTrace.elements.isNotEmpty())
                 val topFrame = bpHit.stackTrace.elements.first()
-                assertEquals(2, topFrame.variables.size)
+                assertEquals(3, topFrame.variables.size)
 
-                //largePrimitiveArray
-                val largePrimitiveArrayVariable = topFrame.variables.first { it.name == "largePrimitiveArray" }
-                assertNotNull(largePrimitiveArrayVariable)
-                assertEquals(
-                    "byte[]",
-                    largePrimitiveArrayVariable.liveClazz
-                )
-
-                val arrayValues = largePrimitiveArrayVariable.value as JsonArray
-                assertEquals(101, arrayValues.size())
-                for (i in 0..99) {
-                    val value = arrayValues.getJsonObject(i)
-                    assertEquals(1, value.getInteger("value"))
-                }
-                val lastValue = (arrayValues.last() as JsonObject).getJsonObject("value")
-                assertEquals("MAX_LENGTH_EXCEEDED", lastValue.getString("@skip"))
-                assertEquals(100_000, lastValue.getInteger("@skip[size]"))
-                assertEquals(100, lastValue.getInteger("@skip[max]"))
+                val myVar = topFrame.variables.first { it.name == "myVar" }
+                assertEquals("myVar", myVar.name)
+                assertEquals(10, myVar.value)
+                assertEquals("java.lang.Integer", myVar.liveClazz)
+                assertEquals(LiveVariableScope.LOCAL_VARIABLE, myVar.scope)
+                assertNotNull(myVar.liveIdentity)
             }
 
             //test passed
@@ -80,7 +68,7 @@ class LargePrimitiveArrayLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         instrumentService.addLiveInstrument(
             LiveBreakpoint(
                 location = LiveSourceLocation(
-                    LargePrimitiveArrayLiveBreakpointTest::class.qualifiedName!!,
+                    InnerClass::class.java.name,
                     getLineNumber("done"),
                     "spp-test-probe"
                 ),
@@ -89,7 +77,7 @@ class LargePrimitiveArrayLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         ).await()
 
         //trigger live breakpoint
-        largePrimitiveArray()
+        InnerClass().doHit()
 
         errorOnTimeout(testContext)
     }

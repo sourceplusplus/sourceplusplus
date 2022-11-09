@@ -15,8 +15,9 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package integration
+package integration.breakpoint
 
+import integration.LiveInstrumentIntegrationTest
 import io.vertx.kotlin.coroutines.await
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
@@ -26,7 +27,6 @@ import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.LiveSourceLocation
 import java.util.concurrent.TimeUnit
 
-@Suppress("unused")
 class ExpiresAtLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
     @Test
@@ -45,15 +45,15 @@ class ExpiresAtLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         ).await()
 
         //verify live breakpoint
-        val breakpoint = instrumentService.getLiveInstruments(null).await()
-        assertEquals(1, breakpoint.size)
+        val breakpoint = instrumentService.getLiveInstruments().await()
+        assertEquals(1, breakpoint.size) { breakpoint.joinToString { it.toString() } }
         assertEquals("non-existent-class", breakpoint[0].location.source)
 
         //wait 15 seconds
         delay(TimeUnit.SECONDS.toMillis(15))
 
         //verify no live breakpoint
-        val noBreakpoint = instrumentService.getLiveInstruments(null).await()
+        val noBreakpoint = instrumentService.getLiveInstruments().await()
         assertEquals(0, noBreakpoint.size)
     }
 }

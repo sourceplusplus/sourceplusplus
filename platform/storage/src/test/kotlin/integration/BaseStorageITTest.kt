@@ -34,6 +34,7 @@ import spp.protocol.instrument.meter.MeterType
 import spp.protocol.instrument.meter.MetricValue
 import spp.protocol.instrument.meter.MetricValueType
 import spp.protocol.platform.auth.*
+import java.util.*
 
 @ExtendWith(VertxExtension::class)
 abstract class BaseStorageITTest<T : CoreStorage> {
@@ -596,7 +597,7 @@ abstract class BaseStorageITTest<T : CoreStorage> {
 
     @Test
     fun `removed instruments get archived`(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
-        val id = "breakpoint11"
+        val id = "removed-instruments-get-archived-" + UUID.randomUUID().toString()
         val instrument = LiveBreakpoint(
             location = LiveSourceLocation("file11", 1),
             id = id
@@ -606,10 +607,11 @@ abstract class BaseStorageITTest<T : CoreStorage> {
         assertEquals(1, storageInstance.getLiveInstruments().size)
         assertEquals(instrument.toJson(), storageInstance.getLiveInstrument(id)!!.toJson())
 
+        val archiveSize = storageInstance.getArchivedLiveInstruments().size
         storageInstance.removeLiveInstrument(id)
         assertEquals(0, storageInstance.getLiveInstruments().size)
         assertNull(storageInstance.getLiveInstrument(id))
-        assertEquals(1, storageInstance.getLiveInstruments(true).size)
+        assertEquals(archiveSize + 1, storageInstance.getArchivedLiveInstruments().size)
         assertEquals(instrument.toJson(), storageInstance.getLiveInstrument(id, true)!!.toJson())
     }
 }

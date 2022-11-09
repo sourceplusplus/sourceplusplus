@@ -15,8 +15,9 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package integration
+package integration.log
 
+import integration.LiveInstrumentIntegrationTest
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
 import kotlinx.coroutines.runBlocking
@@ -25,7 +26,7 @@ import org.junit.jupiter.api.Test
 import spp.protocol.instrument.LiveLog
 import spp.protocol.instrument.LiveSourceLocation
 
-@Suppress("UNUSED_VARIABLE", "unused")
+@Suppress("UNUSED_VARIABLE")
 class FormatLiveLogTest : LiveInstrumentIntegrationTest() {
 
     private fun formatLiveLog() {

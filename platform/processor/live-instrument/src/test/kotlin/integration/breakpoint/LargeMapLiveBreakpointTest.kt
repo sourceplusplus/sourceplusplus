@@ -15,9 +15,9 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package integration
+package integration.breakpoint
 
-import io.vertx.core.json.JsonArray
+import integration.LiveInstrumentIntegrationTest
 import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
@@ -27,20 +27,22 @@ import org.junit.jupiter.api.Test
 import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.LiveSourceLocation
 
-@Suppress("unused", "UNUSED_VARIABLE")
-class NullArrayLiveBreakpointTest : LiveInstrumentIntegrationTest() {
+class LargeMapLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
-    private fun nullArray() {
-        startEntrySpan("nullArray")
-        val nullArray = arrayOfNulls<Any?>(10)
+    private fun largeMap() {
+        startEntrySpan("largeMap")
+        val largeMap = LinkedHashMap<String, String>()
+        for (i in 0 until 100_000) {
+            largeMap[i.toString()] = i.toString()
+        }
         addLineLabel("done") { Throwable().stackTrace[0].lineNumber }
         stopSpan()
     }
 
     @Test
-    fun `null array`() = runBlocking {
+    fun `large map`() = runBlocking {
         setupLineLabels {
-            nullArray()
+            largeMap()
         }
 
         val testContext = VertxTestContext()
@@ -50,18 +52,23 @@ class NullArrayLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                 val topFrame = bpHit.stackTrace.elements.first()
                 assertEquals(2, topFrame.variables.size)
 
-                //nullArray
-                val nullArrayVariable = topFrame.variables.first { it.name == "nullArray" }
-                assertNotNull(nullArrayVariable)
+                //largeMap
+                val largeMapVariable = topFrame.variables.first { it.name == "largeMap" }
+                assertNotNull(largeMapVariable)
                 assertEquals(
-                    "java.lang.Object[]",
-                    nullArrayVariable.liveClazz
+                    "java.util.LinkedHashMap",
+                    largeMapVariable.liveClazz
                 )
-                assertArrayEquals(
-                    arrayOfNulls<Any?>(10),
-                    (nullArrayVariable.value as JsonArray)
-                        .map { JsonObject.mapFrom(it) }.map { it.getString("value") }.toTypedArray()
-                )
+
+                val mapValues = largeMapVariable.value as JsonObject
+                assertEquals(105, mapValues.size())
+                for (index in 0..99) {
+                    assertEquals(index.toString(), mapValues.getString(index.toString()))
+                }
+                assertEquals("MAX_LENGTH_EXCEEDED", mapValues.getString("@skip"))
+                assertEquals(100_000, mapValues.getInteger("@skip[size]"))
+                assertEquals(100, mapValues.getInteger("@skip[max]"))
+                assertNotNull(mapValues.getString("@id"))
             }
 
             //test passed
@@ -72,7 +79,7 @@ class NullArrayLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         instrumentService.addLiveInstrument(
             LiveBreakpoint(
                 location = LiveSourceLocation(
-                    NullArrayLiveBreakpointTest::class.qualifiedName!!,
+                    LargeMapLiveBreakpointTest::class.qualifiedName!!,
                     getLineNumber("done"),
                     "spp-test-probe"
                 ),
@@ -81,7 +88,7 @@ class NullArrayLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         ).await()
 
         //trigger live breakpoint
-        nullArray()
+        largeMap()
 
         errorOnTimeout(testContext)
     }
