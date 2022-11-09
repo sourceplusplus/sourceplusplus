@@ -26,7 +26,6 @@ import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.LiveSourceLocation
 import java.util.concurrent.TimeUnit
 
-@Suppress("unused")
 class ExpiresAtLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
     @Test

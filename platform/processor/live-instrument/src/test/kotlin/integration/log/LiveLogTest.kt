@@ -189,13 +189,13 @@ class LiveLogTest : LiveInstrumentIntegrationTest() {
     }
 
     @Test
-    fun removeByLocation() {
+    fun removeByLocation() = runBlocking {
         setupLineLabels {
             doTest()
         }
 
         val testContext = VertxTestContext()
-        instrumentService.addLiveInstrument(
+        val instrument = instrumentService.addLiveInstrument(
             LiveLog(
                 id = "live-log-test-remove-by-location",
                 location = LiveSourceLocation(
@@ -206,29 +206,20 @@ class LiveLogTest : LiveInstrumentIntegrationTest() {
                 condition = "1==2",
                 logFormat = "removeByLocation"
             )
-        ).onComplete {
-            if (it.succeeded()) {
-                val originalId = it.result().id!!
-                instrumentService.removeLiveInstruments(
-                    location = LiveSourceLocation(
-                        LiveLogTest::class.qualifiedName!!,
-                        getLineNumber("done"),
-                        "spp-test-probe"
-                    )
-                ).onComplete {
-                    if (it.succeeded()) {
-                        testContext.verify {
-                            assertEquals(1, it.result().size)
-                            assertEquals(originalId, it.result()!![0].id!!)
-                            testContext.completeNow()
-                        }
-                    } else {
-                        testContext.failNow(it.cause())
-                    }
-                }
-            } else {
-                testContext.failNow(it.cause())
-            }
+        ).await()
+
+        val originalId = instrument.id!!
+        val removedInstruments = instrumentService.removeLiveInstruments(
+            location = LiveSourceLocation(
+                LiveLogTest::class.qualifiedName!!,
+                getLineNumber("done"),
+                "spp-test-probe"
+            )
+        ).await()
+        testContext.verify {
+            assertEquals(1, removedInstruments.size)
+            assertEquals(originalId, removedInstruments[0].id!!)
+            testContext.completeNow()
         }
 
         errorOnTimeout(testContext)

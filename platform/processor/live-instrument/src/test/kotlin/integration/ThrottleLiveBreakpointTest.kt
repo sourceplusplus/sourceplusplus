@@ -28,7 +28,6 @@ import spp.protocol.instrument.throttle.InstrumentThrottle
 import spp.protocol.instrument.throttle.ThrottleStep
 import java.util.concurrent.atomic.AtomicInteger
 
-@Suppress("unused")
 class ThrottleLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
     private fun throttleTest() {

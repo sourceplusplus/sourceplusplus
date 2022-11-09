@@ -32,7 +32,6 @@ import spp.protocol.instrument.throttle.ThrottleStep
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
-@Suppress("unused")
 class HitLimitLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
     private fun hitLimit() {

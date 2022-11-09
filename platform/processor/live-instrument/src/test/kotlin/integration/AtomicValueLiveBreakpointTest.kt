@@ -30,7 +30,7 @@ import spp.protocol.instrument.variable.LiveVariable
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
 
-@Suppress("unused", "UNUSED_VARIABLE")
+@Suppress("UNUSED_VARIABLE")
 class AtomicValueLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
     private fun atomicValue() {

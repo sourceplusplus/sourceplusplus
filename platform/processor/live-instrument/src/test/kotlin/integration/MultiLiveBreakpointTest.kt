@@ -30,7 +30,6 @@ import spp.protocol.instrument.LiveSourceLocation
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
-@Suppress("unused")
 class MultiLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
     private fun multiLineTest() {

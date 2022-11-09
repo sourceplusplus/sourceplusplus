@@ -26,7 +26,7 @@ import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.LiveSourceLocation
 import spp.protocol.instrument.variable.LiveVariableScope
 
-@Suppress("unused", "UNUSED_VARIABLE")
+@Suppress("UNUSED_VARIABLE")
 class InnerClassBreakpointTest : LiveInstrumentIntegrationTest() {
 
     inner class InnerClass {

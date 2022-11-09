@@ -28,7 +28,6 @@ import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.LiveSourceLocation
 import java.util.*
 
-@Suppress("unused")
 class LargePrimitiveArrayLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
     private fun largePrimitiveArray() {

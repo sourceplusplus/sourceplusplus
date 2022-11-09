@@ -25,7 +25,7 @@ import org.junit.jupiter.api.Test
 import spp.protocol.instrument.LiveLog
 import spp.protocol.instrument.LiveSourceLocation
 
-@Suppress("UNUSED_VARIABLE", "unused")
+@Suppress("UNUSED_VARIABLE")
 class FormatLiveLogTest : LiveInstrumentIntegrationTest() {
 
     private fun formatLiveLog() {

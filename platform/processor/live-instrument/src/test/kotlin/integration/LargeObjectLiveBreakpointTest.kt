@@ -27,7 +27,7 @@ import org.junit.jupiter.api.Test
 import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.LiveSourceLocation
 
-@Suppress("unused", "UNUSED_VARIABLE")
+@Suppress("UNUSED_VARIABLE")
 class LargeObjectLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
     private fun largeObject() {

@@ -28,7 +28,7 @@ import spp.protocol.instrument.LiveSourceLocation
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
-@Suppress("unused", "UNUSED_VARIABLE")
+@Suppress("UNUSED_VARIABLE")
 class RemoveByLocationLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
     private fun removeMultipleByLine() {

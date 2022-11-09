@@ -27,7 +27,6 @@ import org.junit.jupiter.api.Test
 import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.LiveSourceLocation
 
-@Suppress("unused")
 class SmallMapLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
     private fun smallMapNullValue() {
