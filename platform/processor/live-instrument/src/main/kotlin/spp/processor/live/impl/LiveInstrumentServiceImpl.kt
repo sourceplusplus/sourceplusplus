@@ -604,7 +604,7 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
             ServiceExceptionConverter.fromEventBusException(cause, true)
         } else null
         vertx.eventBus().request<Void>("apply-immediately.${instrument.id}", ebException).onFailure {
-            log.error("Failed to send apply-immediately event", it)
+            log.error("Failed to send apply-immediately event. ${instrument}", it)
             val eventType = when (instrument.type) {
                 LiveInstrumentType.BREAKPOINT -> LiveInstrumentEventType.BREAKPOINT_REMOVED
                 LiveInstrumentType.LOG -> LiveInstrumentEventType.LOG_REMOVED

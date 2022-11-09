@@ -189,11 +189,7 @@ class LiveLogTest : LiveInstrumentIntegrationTest() {
         val instrument = instrumentService.addLiveInstrument(
             LiveLog(
                 id = "live-log-test-remove-by-location",
-                location = LiveSourceLocation(
-                    LiveLogTest::class.qualifiedName!!,
-                    5,
-                    "spp-test-probe"
-                ),
+                location = LiveSourceLocation("bad.Clazz", 133),
                 condition = "1==2",
                 logFormat = "removeByLocation"
             )
@@ -201,11 +197,7 @@ class LiveLogTest : LiveInstrumentIntegrationTest() {
 
         val originalId = instrument.id!!
         val removedInstruments = instrumentService.removeLiveInstruments(
-            location = LiveSourceLocation(
-                LiveLogTest::class.qualifiedName!!,
-                5,
-                "spp-test-probe"
-            )
+            location = LiveSourceLocation("bad.Clazz", 133),
         ).await()
 
         assertEquals(1, removedInstruments.size)
