@@ -15,68 +15,74 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package integration
+package integration.breakpoint
 
+import integration.LiveInstrumentIntegrationTest
+import io.vertx.core.json.JsonArray
+import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
 import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
-import spp.protocol.instrument.LiveLog
+import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.LiveSourceLocation
 
 @Suppress("UNUSED_VARIABLE")
-class FormatLiveLogTest : LiveInstrumentIntegrationTest() {
+class NullArrayLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
-    private fun formatLiveLog() {
-        startEntrySpan("formatLiveLog")
-        val i = 0
-        val c = 'h'
-        val s = "hello"
-        val b = true
-        val f = 1.0f
-        val n = null
+    private fun nullArray() {
+        startEntrySpan("nullArray")
+        val nullArray = arrayOfNulls<Any?>(10)
         addLineLabel("done") { Throwable().stackTrace[0].lineNumber }
         stopSpan()
     }
 
     @Test
-    fun `format primitives`() = runBlocking {
+    fun `null array`() = runBlocking {
         setupLineLabels {
-            formatLiveLog()
+            nullArray()
         }
-
-        val format = "{} {} {} {} {} {}"
-        val args = listOf("i", "c", "s", "b", "f", "n")
 
         val testContext = VertxTestContext()
-        onLogHit {
+        onBreakpointHit { bpHit ->
             testContext.verify {
-                assertEquals(1, it.logResult.logs.size)
-                val log = it.logResult.logs[0]
-                assertEquals(format, log.content)
-                assertEquals("0 h hello true 1.0 null", log.toFormattedMessage())
-            }
-            testContext.completeNow()
-        }
+                assertTrue(bpHit.stackTrace.elements.isNotEmpty())
+                val topFrame = bpHit.stackTrace.elements.first()
+                assertEquals(2, topFrame.variables.size)
 
-        //add live log
+                //nullArray
+                val nullArrayVariable = topFrame.variables.first { it.name == "nullArray" }
+                assertNotNull(nullArrayVariable)
+                assertEquals(
+                    "java.lang.Object[]",
+                    nullArrayVariable.liveClazz
+                )
+                assertArrayEquals(
+                    arrayOfNulls<Any?>(10),
+                    (nullArrayVariable.value as JsonArray)
+                        .map { JsonObject.mapFrom(it) }.map { it.getString("value") }.toTypedArray()
+                )
+            }
+
+            //test passed
+            testContext.completeNow()
+        }.completionHandler().await()
+
+        //add live breakpoint
         instrumentService.addLiveInstrument(
-            LiveLog(
-                format,
-                args,
+            LiveBreakpoint(
                 location = LiveSourceLocation(
-                    FormatLiveLogTest::class.qualifiedName!!,
+                    NullArrayLiveBreakpointTest::class.qualifiedName!!,
                     getLineNumber("done"),
                     "spp-test-probe"
                 ),
-                hitLimit = 1,
                 applyImmediately = true
             )
         ).await()
 
-        //trigger live log
-        formatLiveLog()
+        //trigger live breakpoint
+        nullArray()
 
         errorOnTimeout(testContext)
     }

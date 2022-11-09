@@ -15,8 +15,9 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package integration
+package integration.breakpoint
 
+import integration.LiveInstrumentIntegrationTest
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxTestContext
@@ -27,22 +28,29 @@ import org.junit.jupiter.api.Test
 import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.LiveSourceLocation
 
-class LargeSetLiveBreakpointTest : LiveInstrumentIntegrationTest() {
+class CyclicObjectLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
-    private fun largeSet() {
-        startEntrySpan("largeSet")
-        val largeSet = HashSet<Int>()
-        for (i in 0 until 100_000) {
-            largeSet.add(i)
-        }
+    class TopObject {
+        var bottom: BottomObject? = null
+    }
+
+    class BottomObject {
+        var top: TopObject? = null
+    }
+
+    private fun cyclicObject() {
+        startEntrySpan("cyclicObject")
+        val cyclicObject = TopObject()
+        cyclicObject.bottom = BottomObject()
+        cyclicObject.bottom!!.top = cyclicObject
         addLineLabel("done") { Throwable().stackTrace[0].lineNumber }
         stopSpan()
     }
 
     @Test
-    fun `large set`() = runBlocking {
+    fun `cyclic object`() = runBlocking {
         setupLineLabels {
-            largeSet()
+            cyclicObject()
         }
 
         val testContext = VertxTestContext()
@@ -52,24 +60,31 @@ class LargeSetLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                 val topFrame = bpHit.stackTrace.elements.first()
                 assertEquals(2, topFrame.variables.size)
 
-                //largeSet
-                val largeSetVariable = topFrame.variables.first { it.name == "largeSet" }
-                assertNotNull(largeSetVariable)
+                //cyclicObject
+                val cyclicObject = topFrame.variables.first { it.name == "cyclicObject" }
                 assertEquals(
-                    "java.util.HashSet",
-                    largeSetVariable.liveClazz
+                    "integration.breakpoint.CyclicObjectLiveBreakpointTest\$TopObject",
+                    cyclicObject.liveClazz
+                )
+                val cyclicObjectId = cyclicObject.liveIdentity
+                assertNotNull(cyclicObjectId)
+
+                val bottomObject = (cyclicObject.value as JsonArray).first() as JsonObject
+                assertEquals(
+                    "integration.breakpoint.CyclicObjectLiveBreakpointTest\$BottomObject",
+                    bottomObject.getString("liveClazz")
                 )
 
-                val setValues = largeSetVariable.value as JsonArray
-                assertEquals(101, setValues.size())
-                for (index in 0..99) {
-                    val value = setValues.getJsonObject(index)
-                    assertEquals(index, value.getInteger("value"))
-                }
-                val lastValue = (setValues.last() as JsonObject).getJsonObject("value")
-                assertEquals("MAX_LENGTH_EXCEEDED", lastValue.getString("@skip"))
-                assertEquals(100_000, lastValue.getInteger("@skip[size]"))
-                assertEquals(100, lastValue.getInteger("@skip[max]"))
+                val topObject = (bottomObject.getJsonArray("value")).first() as JsonObject
+                assertNotNull(topObject)
+                assertEquals(
+                    "integration.breakpoint.CyclicObjectLiveBreakpointTest\$TopObject",
+                    topObject.getString("liveClazz")
+                )
+
+                val topObjectId = topObject.getString("liveIdentity")
+                assertNotNull(topObjectId)
+                assertEquals(cyclicObjectId, topObjectId)
             }
 
             //test passed
@@ -80,7 +95,7 @@ class LargeSetLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         instrumentService.addLiveInstrument(
             LiveBreakpoint(
                 location = LiveSourceLocation(
-                    LargeSetLiveBreakpointTest::class.qualifiedName!!,
+                    CyclicObjectLiveBreakpointTest::class.qualifiedName!!,
                     getLineNumber("done"),
                     "spp-test-probe"
                 ),
@@ -89,7 +104,7 @@ class LargeSetLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         ).await()
 
         //trigger live breakpoint
-        largeSet()
+        cyclicObject()
 
         errorOnTimeout(testContext)
     }

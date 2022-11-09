@@ -15,8 +15,9 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package integration
+package integration.breakpoint
 
+import integration.LiveInstrumentIntegrationTest
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxTestContext
@@ -28,20 +29,20 @@ import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.LiveSourceLocation
 import java.util.*
 
-class LargePrimitiveArrayLiveBreakpointTest : LiveInstrumentIntegrationTest() {
+class LargeArrayLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
-    private fun largePrimitiveArray() {
-        startEntrySpan("largePrimitiveArray")
-        val largePrimitiveArray = ByteArray(100_000)
-        Arrays.fill(largePrimitiveArray, 1.toByte())
+    private fun largeArray() {
+        startEntrySpan("largeArray")
+        val largeArray = arrayOfNulls<Byte>(100_000)
+        Arrays.fill(largeArray, 1.toByte())
         addLineLabel("done") { Throwable().stackTrace[0].lineNumber }
         stopSpan()
     }
 
     @Test
-    fun `large primitive array`() = runBlocking {
+    fun `large array`() = runBlocking {
         setupLineLabels {
-            largePrimitiveArray()
+            largeArray()
         }
 
         val testContext = VertxTestContext()
@@ -51,15 +52,15 @@ class LargePrimitiveArrayLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                 val topFrame = bpHit.stackTrace.elements.first()
                 assertEquals(2, topFrame.variables.size)
 
-                //largePrimitiveArray
-                val largePrimitiveArrayVariable = topFrame.variables.first { it.name == "largePrimitiveArray" }
-                assertNotNull(largePrimitiveArrayVariable)
+                //largeArray
+                val largeArrayVariable = topFrame.variables.first { it.name == "largeArray" }
+                assertNotNull(largeArrayVariable)
                 assertEquals(
-                    "byte[]",
-                    largePrimitiveArrayVariable.liveClazz
+                    "java.lang.Byte[]",
+                    largeArrayVariable.liveClazz
                 )
 
-                val arrayValues = largePrimitiveArrayVariable.value as JsonArray
+                val arrayValues = largeArrayVariable.value as JsonArray
                 assertEquals(101, arrayValues.size())
                 for (i in 0..99) {
                     val value = arrayValues.getJsonObject(i)
@@ -78,8 +79,9 @@ class LargePrimitiveArrayLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         //add live breakpoint
         instrumentService.addLiveInstrument(
             LiveBreakpoint(
+                id = "large-array-bp",
                 location = LiveSourceLocation(
-                    LargePrimitiveArrayLiveBreakpointTest::class.qualifiedName!!,
+                    LargeArrayLiveBreakpointTest::class.qualifiedName!!,
                     getLineNumber("done"),
                     "spp-test-probe"
                 ),
@@ -88,7 +90,7 @@ class LargePrimitiveArrayLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         ).await()
 
         //trigger live breakpoint
-        largePrimitiveArray()
+        largeArray()
 
         errorOnTimeout(testContext)
     }

@@ -15,10 +15,9 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package integration
+package integration.breakpoint
 
-import io.vertx.core.json.JsonArray
-import io.vertx.core.json.JsonObject
+import integration.LiveInstrumentIntegrationTest
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
 import kotlinx.coroutines.runBlocking
@@ -26,23 +25,24 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.LiveSourceLocation
+import spp.protocol.instrument.variable.LiveVariableScope
 
-class LargeListLiveBreakpointTest : LiveInstrumentIntegrationTest() {
+@Suppress("UNUSED_VARIABLE")
+class InnerClassBreakpointTest : LiveInstrumentIntegrationTest() {
 
-    private fun largeList() {
-        startEntrySpan("largeList")
-        val largeList = ArrayList<Int>()
-        for (i in 0 until 100_000) {
-            largeList.add(1)
+    inner class InnerClass {
+        fun doHit() {
+            startEntrySpan("largeList")
+            val myVar = 10
+            addLineLabel("done") { Throwable().stackTrace[0].lineNumber }
+            stopSpan()
         }
-        addLineLabel("done") { Throwable().stackTrace[0].lineNumber }
-        stopSpan()
     }
 
     @Test
-    fun `large list`() = runBlocking {
+    fun `inner class`() = runBlocking {
         setupLineLabels {
-            largeList()
+            InnerClass().doHit()
         }
 
         val testContext = VertxTestContext()
@@ -50,27 +50,14 @@ class LargeListLiveBreakpointTest : LiveInstrumentIntegrationTest() {
             testContext.verify {
                 assertTrue(bpHit.stackTrace.elements.isNotEmpty())
                 val topFrame = bpHit.stackTrace.elements.first()
-                assertEquals(2, topFrame.variables.size)
+                assertEquals(3, topFrame.variables.size)
 
-                //largeList
-                val largeListVariable = topFrame.variables.first { it.name == "largeList" }
-                assertNotNull(largeListVariable)
-                assertEquals(
-                    "java.util.ArrayList",
-                    largeListVariable.liveClazz
-                )
-
-                val listValues = largeListVariable.value as JsonArray
-                assertEquals(101, listValues.size())
-
-                for (i in 0..99) {
-                    val value = listValues.getJsonObject(i)
-                    assertEquals(1, value.getInteger("value"))
-                }
-                val lastValue = (listValues.last() as JsonObject).getJsonObject("value")
-                assertEquals("MAX_LENGTH_EXCEEDED", lastValue.getString("@skip"))
-                assertEquals(100_000, lastValue.getInteger("@skip[size]"))
-                assertEquals(100, lastValue.getInteger("@skip[max]"))
+                val myVar = topFrame.variables.first { it.name == "myVar" }
+                assertEquals("myVar", myVar.name)
+                assertEquals(10, myVar.value)
+                assertEquals("java.lang.Integer", myVar.liveClazz)
+                assertEquals(LiveVariableScope.LOCAL_VARIABLE, myVar.scope)
+                assertNotNull(myVar.liveIdentity)
             }
 
             //test passed
@@ -81,7 +68,7 @@ class LargeListLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         instrumentService.addLiveInstrument(
             LiveBreakpoint(
                 location = LiveSourceLocation(
-                    LargeListLiveBreakpointTest::class.qualifiedName!!,
+                    InnerClass::class.java.name,
                     getLineNumber("done"),
                     "spp-test-probe"
                 ),
@@ -90,7 +77,7 @@ class LargeListLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         ).await()
 
         //trigger live breakpoint
-        largeList()
+        InnerClass().doHit()
 
         errorOnTimeout(testContext)
     }

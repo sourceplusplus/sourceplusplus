@@ -15,8 +15,9 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package integration
+package integration.breakpoint
 
+import integration.LiveInstrumentIntegrationTest
 import io.vertx.core.json.JsonArray
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await

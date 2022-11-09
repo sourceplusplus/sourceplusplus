@@ -15,8 +15,9 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package integration
+package integration.breakpoint
 
+import integration.LiveInstrumentIntegrationTest
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxTestContext
@@ -74,35 +75,35 @@ class DeepObjectLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                 //layer1
                 val layer1Object = topFrame.variables.first { it.name == "deepObject" }
                 assertEquals(
-                    "integration.DeepObjectLiveBreakpointTest\$Layer1",
+                    "integration.breakpoint.DeepObjectLiveBreakpointTest\$Layer1",
                     layer1Object.liveClazz
                 )
 
                 //layer2
                 val layer2Object = (layer1Object.value as JsonArray).first() as JsonObject
                 assertEquals(
-                    "integration.DeepObjectLiveBreakpointTest\$Layer1\$Layer2",
+                    "integration.breakpoint.DeepObjectLiveBreakpointTest\$Layer1\$Layer2",
                     layer2Object.getString("liveClazz")
                 )
 
                 //layer3
                 val layer3Object = layer2Object.getJsonArray("value").first() as JsonObject
                 assertEquals(
-                    "integration.DeepObjectLiveBreakpointTest\$Layer1\$Layer2\$Layer3",
+                    "integration.breakpoint.DeepObjectLiveBreakpointTest\$Layer1\$Layer2\$Layer3",
                     layer3Object.getString("liveClazz")
                 )
 
                 //layer4
                 val layer4Object = (layer3Object.getJsonArray("value")).first() as JsonObject
                 assertEquals(
-                    "integration.DeepObjectLiveBreakpointTest\$Layer1\$Layer2\$Layer3\$Layer4",
+                    "integration.breakpoint.DeepObjectLiveBreakpointTest\$Layer1\$Layer2\$Layer3\$Layer4",
                     layer4Object.getString("liveClazz")
                 )
 
                 //layer5
                 val layer5Object = layer4Object.getJsonArray("value").first() as JsonObject
                 assertEquals(
-                    "integration.DeepObjectLiveBreakpointTest\$Layer1\$Layer2\$Layer3\$Layer4\$Layer5",
+                    "integration.breakpoint.DeepObjectLiveBreakpointTest\$Layer1\$Layer2\$Layer3\$Layer4\$Layer5",
                     layer5Object.getString("liveClazz")
                 )
 
