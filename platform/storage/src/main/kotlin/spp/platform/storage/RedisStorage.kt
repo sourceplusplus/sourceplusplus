@@ -384,10 +384,6 @@ open class RedisStorage(val vertx: Vertx) : CoreStorage {
         return liveInstruments
     }
 
-    override suspend fun getPendingLiveInstruments(): List<LiveInstrument> {
-        return getLiveInstruments().filter { it.pending }
-    }
-
     override suspend fun getClientAccessors(): List<ClientAccess> {
         val clientAccessors = redis.smembers(namespace("client_access")).await()
         return clientAccessors.map { ClientAccess(JsonObject(it.toString(UTF_8))) }

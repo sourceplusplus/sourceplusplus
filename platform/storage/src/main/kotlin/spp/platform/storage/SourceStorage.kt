@@ -421,11 +421,4 @@ object SourceStorage {
     suspend fun getLiveInstruments(includeArchive: Boolean = false): List<LiveInstrument> {
         return storage.getLiveInstruments(includeArchive)
     }
-
-    /**
-     * Retrieve all [LiveInstrument]s where [LiveInstrument.pending] is true.
-     */
-    suspend fun getPendingLiveInstruments(): List<LiveInstrument> {
-        return storage.getPendingLiveInstruments()
-    }
 }

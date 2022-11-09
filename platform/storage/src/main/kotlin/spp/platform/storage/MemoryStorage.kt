@@ -396,10 +396,6 @@ open class MemoryStorage(val vertx: Vertx) : CoreStorage {
         return liveInstruments
     }
 
-    override suspend fun getPendingLiveInstruments(): List<LiveInstrument> {
-        return getLiveInstruments().filter { it.pending }
-    }
-
     override suspend fun getClientAccessors(): List<ClientAccess> {
         val clientAccessStorage = vertx.sharedData().getAsyncMap<String, Any>(namespace("client_access")).await()
         return (clientAccessStorage.get("client_accessors").await() as JsonArray? ?: JsonArray())

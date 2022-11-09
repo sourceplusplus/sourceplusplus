@@ -595,30 +595,6 @@ abstract class BaseStorageITTest<T : CoreStorage> {
     }
 
     @Test
-    fun getPendingLiveInstruments(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
-        val pendingBreakpointId = "breakpoint9"
-        val pendingBreakpoint = LiveBreakpoint(
-            location = LiveSourceLocation("file9", 1),
-            id = pendingBreakpointId,
-            pending = true
-        )
-        val otherBreakpointId = "breakpoint10"
-        val otherBreakpoint = LiveBreakpoint(
-            location = LiveSourceLocation("file10", 1),
-            id = otherBreakpointId
-        )
-
-        storageInstance.addLiveInstrument(pendingBreakpoint)
-        storageInstance.addLiveInstrument(otherBreakpoint)
-
-        assertEquals(2, storageInstance.getLiveInstruments().size)
-
-        val pendingInstruments = storageInstance.getPendingLiveInstruments()
-        assertEquals(1, pendingInstruments.size)
-        assertEquals(pendingBreakpoint.toJson(), pendingInstruments.first().toJson())
-    }
-
-    @Test
     fun `removed instruments get archived`(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
         val id = "breakpoint11"
         val instrument = LiveBreakpoint(
