@@ -136,10 +136,6 @@ class LiveLogTest : LiveInstrumentIntegrationTest() {
 
     @Test
     fun removeById(): Unit = runBlocking {
-        setupLineLabels {
-            doTest()
-        }
-
         val testContext = VertxTestContext()
         val instrumentId = "live-log-test-remove-by-id"
 
@@ -163,44 +159,31 @@ class LiveLogTest : LiveInstrumentIntegrationTest() {
             }
         }).await()
 
-        instrumentService.addLiveInstrument(
+        val getInstrument = instrumentService.addLiveInstrument(
             LiveLog(
                 id = instrumentId,
                 location = LiveSourceLocation(
                     LiveLogTest::class.qualifiedName!!,
-                    getLineNumber("done"),
+                    4,
                     "spp-test-probe"
                 ),
                 condition = "1==2",
                 logFormat = "removeById"
             )
-        ).onComplete {
-            if (it.succeeded()) {
-                val originalId = it.result().id!!
-                testContext.verify {
-                    assertEquals(instrumentId, originalId)
-                }
-            } else {
-                testContext.failNow(it.cause())
-            }
-        }
+        ).await()
+        assertEquals(instrumentId, getInstrument.id!!)
 
         errorOnTimeout(testContext)
     }
 
     @Test
-    fun removeByLocation() = runBlocking {
-        setupLineLabels {
-            doTest()
-        }
-
-        val testContext = VertxTestContext()
+    fun removeByLocation(): Unit = runBlocking {
         val instrument = instrumentService.addLiveInstrument(
             LiveLog(
                 id = "live-log-test-remove-by-location",
                 location = LiveSourceLocation(
                     LiveLogTest::class.qualifiedName!!,
-                    getLineNumber("done"),
+                    5,
                     "spp-test-probe"
                 ),
                 condition = "1==2",
@@ -212,17 +195,15 @@ class LiveLogTest : LiveInstrumentIntegrationTest() {
         val removedInstruments = instrumentService.removeLiveInstruments(
             location = LiveSourceLocation(
                 LiveLogTest::class.qualifiedName!!,
-                getLineNumber("done"),
+                5,
                 "spp-test-probe"
             )
         ).await()
-        testContext.verify {
-            assertEquals(1, removedInstruments.size)
-            assertEquals(originalId, removedInstruments[0].id!!)
-            testContext.completeNow()
-        }
 
-        errorOnTimeout(testContext)
+        assertEquals(1, removedInstruments.size)
+        assertEquals(originalId, removedInstruments[0].id!!)
+
+        instrumentService.clearLiveInstruments().await()
     }
 
     @Test
