@@ -151,11 +151,17 @@ class LiveLogTest : LiveInstrumentIntegrationTest() {
                         testContext.verify {
                             assertEquals(instrumentId, it.result()!!.id!!)
                         }
-                        testContext.completeNow()
                     } else {
                         testContext.failNow(it.cause())
                     }
                 }
+            }
+
+            override fun onInstrumentRemovedEvent(event: LiveInstrumentRemoved) {
+                testContext.verify {
+                    assertEquals(instrumentId, event.liveInstrument.id!!)
+                }
+                testContext.completeNow()
             }
         }).await()
 
