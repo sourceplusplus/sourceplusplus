@@ -614,4 +614,51 @@ abstract class BaseStorageITTest<T : CoreStorage> {
         assertEquals(archiveSize + 1, storageInstance.getArchivedLiveInstruments().size)
         assertEquals(instrument.toJson(), storageInstance.getLiveInstrument(id, true)!!.toJson())
     }
+
+    @Test
+    fun `updates to non-existent instruments fail`(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+        val id = "updates-to-non-existent-instruments-fail-" + UUID.randomUUID().toString()
+        val instrument = LiveBreakpoint(
+            location = LiveSourceLocation("file12", 1),
+            id = id
+        )
+
+        try {
+            storageInstance.updateLiveInstrument(id, instrument)
+            fail("Expected exception")
+        } catch (e: Exception) {
+            assertTrue(e is IllegalArgumentException)
+        }
+    }
+
+    @Test
+    fun `updates to archived instruments`(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+        val id = "updates-to-archived-instruments-" + UUID.randomUUID().toString()
+        val instrument = LiveBreakpoint(
+            location = LiveSourceLocation("file13", 1),
+            id = id
+        )
+
+        storageInstance.addLiveInstrument(instrument)
+        assertEquals(1, storageInstance.getLiveInstruments().size)
+        assertEquals(instrument.toJson(), storageInstance.getLiveInstrument(id)!!.toJson())
+
+        val archiveSize = storageInstance.getArchivedLiveInstruments().size
+        storageInstance.removeLiveInstrument(id)
+        assertEquals(0, storageInstance.getLiveInstruments().size)
+        assertNull(storageInstance.getLiveInstrument(id))
+        assertEquals(archiveSize + 1, storageInstance.getArchivedLiveInstruments().size)
+        assertEquals(instrument.toJson(), storageInstance.getLiveInstrument(id, true)!!.toJson())
+
+        val updatedInstrument = LiveBreakpoint(
+            location = LiveSourceLocation("file13", 1),
+            id = id,
+            applied = true
+        )
+        storageInstance.updateLiveInstrument(id, updatedInstrument)
+
+        assertNull(storageInstance.getLiveInstrument(id))
+        assertEquals(0, storageInstance.getLiveInstruments().size)
+        assertEquals(updatedInstrument.toJson(), storageInstance.getLiveInstrument(id, true)!!.toJson())
+    }
 }
