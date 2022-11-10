@@ -49,11 +49,12 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
     }
 
     private fun triggerGauge() {
+        val str = "hello"
         addLineLabel("done") { Throwable().stackTrace[0].lineNumber }
     }
 
     @Test
-    fun testGauge(): Unit = runBlocking {
+    fun `test number supplier gauge`(): Unit = runBlocking {
         setupLineLabels {
             triggerGauge()
         }
@@ -78,7 +79,8 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
                 "spp-test-probe"
             ),
             id = meterId,
-            applyImmediately = true
+            applyImmediately = true,
+            hitLimit = 1
         )
 
         val subscriptionId = viewService.addLiveView(
@@ -116,6 +118,74 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
 
                 assertTrue(suppliedTime >= System.currentTimeMillis() - 1000)
                 assertTrue(suppliedTime <= System.currentTimeMillis())
+            }
+            testContext.completeNow()
+        }.completionHandler().await()
+
+        instrumentService.addLiveInstrument(liveMeter).await()
+
+        triggerGauge()
+
+        errorOnTimeout(testContext)
+
+        //clean up
+        consumer.unregister()
+        assertNotNull(instrumentService.removeLiveInstrument(meterId).await())
+        assertNotNull(viewService.removeLiveView(subscriptionId).await())
+    }
+
+    @Test
+    fun `test value expression gauge`(): Unit = runBlocking {
+        setupLineLabels {
+            triggerGauge()
+        }
+
+        val meterId = "value-expression-gauge"
+        log.info("Using meter id: {}", meterId)
+
+        val liveMeter = LiveMeter(
+            MeterType.GAUGE,
+            MetricValue(MetricValueType.VALUE_EXPRESSION, "localVariables[str]"),
+            location = LiveSourceLocation(
+                LiveMeterGaugeTest::class.qualifiedName!!,
+                getLineNumber("done"),
+                "spp-test-probe"
+            ),
+            id = meterId,
+            applyImmediately = true,
+            hitLimit = 1
+        )
+
+        val subscriptionId = viewService.addLiveView(
+            LiveView(
+                entityIds = mutableSetOf(liveMeter.toMetricId()),
+                artifactQualifiedName = ArtifactQualifiedName(
+                    LiveMeterGaugeTest::class.qualifiedName!!,
+                    type = ArtifactType.EXPRESSION
+                ),
+                artifactLocation = LiveSourceLocation(
+                    LiveMeterGaugeTest::class.qualifiedName!!,
+                    getLineNumber("done")
+                ),
+                viewConfig = LiveViewConfig(
+                    "test",
+                    listOf(liveMeter.toMetricId())
+                )
+            )
+        ).await().subscriptionId!!
+        val consumer = vertx.eventBus().consumer<JsonObject>(
+            toLiveViewSubscriberAddress("system")
+        )
+
+        val testContext = VertxTestContext()
+        consumer.handler {
+            val liveViewEvent = LiveViewEvent(it.body())
+            val rawMetrics = JsonObject(liveViewEvent.metricsData)
+            testContext.verify {
+                val meta = rawMetrics.getJsonObject("meta")
+                assertEquals(liveMeter.toMetricId(), meta.getString("metricsName"))
+
+                assertEquals("hello", rawMetrics.getString("value"))
             }
             testContext.completeNow()
         }.completionHandler().await()

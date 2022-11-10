@@ -19,12 +19,17 @@ package spp.processor.live.impl.view
 
 import com.google.protobuf.Message
 import io.vertx.core.json.JsonObject
+import io.vertx.kotlin.coroutines.dispatcher
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import mu.KotlinLogging
 import org.apache.skywalking.apm.network.logging.v3.LogData
 import org.apache.skywalking.oap.log.analyzer.provider.log.listener.LogAnalysisListener
 import org.apache.skywalking.oap.log.analyzer.provider.log.listener.LogAnalysisListenerFactory
 import org.apache.skywalking.oap.server.core.analysis.IDManager
 import spp.platform.common.ClusterConnection
+import spp.processor.ViewProcessor
+import spp.processor.live.impl.view.model.LiveGaugeValueMetrics
 import spp.processor.live.impl.view.util.MetricTypeSubscriptionCache
 import spp.protocol.artifact.log.Log
 import java.time.Instant
@@ -46,6 +51,25 @@ class LiveLogView(private val subscriptionCache: MetricTypeSubscriptionCache) : 
         override fun build() = Unit
 
         override fun parse(logData: LogData.Builder, p1: Message?): LogAnalysisListener {
+            var meterId: String? = null
+            var metricId: String? = null
+            logData.tags.dataList.forEach {
+                when (it.key) {
+                    "meter_id" -> meterId = it.value
+                    "metric_id" -> metricId = it.value
+                }
+            }
+            if (meterId != null && metricId != null) {
+                //live meter sent through live log
+                val metricValue = logData.body.text.text
+                val timeBucket = formatter.format(Instant.ofEpochMilli(logData.timestamp)).toLong()
+                val copiedMetrics = LiveGaugeValueMetrics(metricId!!, timeBucket, metricValue)
+                GlobalScope.launch(ClusterConnection.getVertx().dispatcher()) {
+                    ViewProcessor.liveViewService.meterView.export(copiedMetrics, true)
+                }
+                return this
+            }
+
             val subbedArtifacts = subscriptionCache["endpoint_logs"]
             if (subbedArtifacts != null) {
                 val logPattern = logData.body.text.text

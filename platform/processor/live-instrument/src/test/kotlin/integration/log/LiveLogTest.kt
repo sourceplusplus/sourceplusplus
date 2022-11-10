@@ -51,7 +51,7 @@ class LiveLogTest : LiveInstrumentIntegrationTest() {
     }
 
     @Test
-    fun addHitRemove() = runBlocking {
+    fun addHitRemove(): Unit = runBlocking {
         setupLineLabels {
             doTest()
         }
@@ -132,6 +132,8 @@ class LiveLogTest : LiveInstrumentIntegrationTest() {
         doTest()
 
         errorOnTimeout(testContext)
+
+        consumer.unregister().await()
     }
 
     @Test
@@ -139,7 +141,7 @@ class LiveLogTest : LiveInstrumentIntegrationTest() {
         val testContext = VertxTestContext()
         val instrumentId = "live-log-test-remove-by-id"
 
-        vertx.addLiveInstrumentListener("system", object : LiveInstrumentListener {
+        val consumer = vertx.addLiveInstrumentListener("system", object : LiveInstrumentListener {
             override fun onLogAddedEvent(event: LiveLog) {
                 log.info("Got added event: {}", event)
                 testContext.verify {
@@ -182,6 +184,8 @@ class LiveLogTest : LiveInstrumentIntegrationTest() {
         log.info("Added instrument: {}", instrument)
 
         errorOnTimeout(testContext)
+
+        consumer.unregister().await()
     }
 
     @Test
@@ -306,7 +310,7 @@ class LiveLogTest : LiveInstrumentIntegrationTest() {
         val instrumentId = "live-log-test-invalid-class"
 
         //todo: don't care about added event. can remove directly after add but need #537
-        vertx.addLiveInstrumentListener("system", object : LiveInstrumentListener {
+        val consumer = vertx.addLiveInstrumentListener("system", object : LiveInstrumentListener {
             override fun onLogAddedEvent(event: LiveLog) {
                 testContext.verify {
                     assertEquals(instrumentId, event.id)
@@ -336,5 +340,7 @@ class LiveLogTest : LiveInstrumentIntegrationTest() {
         }
 
         errorOnTimeout(testContext)
+
+        consumer.unregister().await()
     }
 }

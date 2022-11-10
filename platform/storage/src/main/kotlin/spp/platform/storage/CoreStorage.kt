@@ -106,6 +106,13 @@ interface CoreStorage {
     suspend fun getLiveInstruments(includeArchive: Boolean = false): List<LiveInstrument>
 
     /**
+     * Get the archived [LiveInstrument] with the given id.
+     *
+     * @param id The id of the archived [LiveInstrument] to get.
+     */
+    suspend fun getArchiveLiveInstrument(id: String): LiveInstrument?
+
+    /**
      * Retrieve all archived [LiveInstrument]s.
      */
     suspend fun getArchivedLiveInstruments(): List<LiveInstrument>

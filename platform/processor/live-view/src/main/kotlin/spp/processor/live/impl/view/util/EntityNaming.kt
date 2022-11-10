@@ -25,8 +25,12 @@ import org.joor.Reflect
 
 object EntityNaming {
 
-    //taken from skywalking
+    //adopted from skywalking
     fun getEntityName(meta: MetricsMetaInfo): String? {
+        if (meta.metricsName?.startsWith("spp_") == true) {
+            return meta.metricsName
+        }
+
         val scope = meta.scope
         return if (DefaultScopeDefine.inServiceCatalog(scope)) {
             val serviceId = meta.id

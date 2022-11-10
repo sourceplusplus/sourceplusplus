@@ -334,8 +334,17 @@ open class RedisStorage(val vertx: Vertx) : CoreStorage {
     }
 
     override suspend fun updateLiveInstrument(id: String, instrument: LiveInstrument): LiveInstrument {
-        redis.set(listOf(namespace("live_instruments:$id"), Json.encode(instrument))).await()
-        return instrument
+        return if (getLiveInstrument(id) == null) {
+            if (getArchiveLiveInstrument(id) == null) {
+                throw IllegalArgumentException("Live instrument with id $id does not exist")
+            }
+
+            redis.set(listOf(namespace("live_instruments_archive:$id"), Json.encode(instrument))).await()
+            instrument
+        } else {
+            redis.set(listOf(namespace("live_instruments:$id"), Json.encode(instrument))).await()
+            instrument
+        }
     }
 
     override suspend fun removeLiveInstrument(id: String): Boolean {
@@ -360,12 +369,7 @@ open class RedisStorage(val vertx: Vertx) : CoreStorage {
         }
 
         if (includeArchive) {
-            val rawArchiveInstrument = redis.get(namespace("live_instruments_archive:$id")).await()
-            return if (rawArchiveInstrument != null) {
-                LiveInstrument.fromJson(JsonObject(rawArchiveInstrument.toString(UTF_8)))
-            } else {
-                null
-            }
+            return getArchiveLiveInstrument(id)
         }
         return null
     }
@@ -378,6 +382,15 @@ open class RedisStorage(val vertx: Vertx) : CoreStorage {
             return liveInstruments + getArchivedLiveInstruments()
         }
         return liveInstruments
+    }
+
+    override suspend fun getArchiveLiveInstrument(id: String): LiveInstrument? {
+        val rawArchiveInstrument = redis.get(namespace("live_instruments_archive:$id")).await()
+        return if (rawArchiveInstrument != null) {
+            LiveInstrument.fromJson(JsonObject(rawArchiveInstrument.toString(UTF_8)))
+        } else {
+            null
+        }
     }
 
     override suspend fun getArchivedLiveInstruments(): List<LiveInstrument> {

@@ -334,15 +334,31 @@ open class MemoryStorage(val vertx: Vertx) : CoreStorage {
     }
 
     override suspend fun updateLiveInstrument(id: String, instrument: LiveInstrument): LiveInstrument {
-        val instrumentsStorage = vertx.sharedData().getAsyncMap<String, Any>(namespace("liveInstruments")).await()
-        val instrumentsArr = instrumentsStorage.get("liveInstruments").await() as JsonArray? ?: JsonArray()
-        val liveInstrument = instrumentsArr.list.map { it as LiveInstrument }.find { it.id == id }
-        if (liveInstrument != null) {
-            instrumentsArr.list.remove(liveInstrument)
-            instrumentsArr.add(instrument)
-            instrumentsStorage.put("liveInstruments", instrumentsArr).await()
+        return if (getLiveInstrument(id) == null) {
+            if (getArchiveLiveInstrument(id) == null) {
+                throw IllegalArgumentException("Live instrument with id $id does not exist")
+            }
+
+            val archivedStorage = vertx.sharedData().getAsyncMap<String, Any>(namespace("archivedInstruments")).await()
+            val archivedArr = archivedStorage.get("archivedInstruments").await() as JsonArray? ?: JsonArray()
+            val liveInstrument = archivedArr.list.map { it as LiveInstrument }.find { it.id == id }
+            if (liveInstrument != null) {
+                archivedArr.list.remove(liveInstrument)
+                archivedArr.add(instrument)
+                archivedStorage.put("liveInstruments", archivedArr).await()
+            }
+            instrument
+        } else {
+            val instrumentsStorage = vertx.sharedData().getAsyncMap<String, Any>(namespace("liveInstruments")).await()
+            val instrumentsArr = instrumentsStorage.get("liveInstruments").await() as JsonArray? ?: JsonArray()
+            val liveInstrument = instrumentsArr.list.map { it as LiveInstrument }.find { it.id == id }
+            if (liveInstrument != null) {
+                instrumentsArr.list.remove(liveInstrument)
+                instrumentsArr.add(instrument)
+                instrumentsStorage.put("liveInstruments", instrumentsArr).await()
+            }
+            instrument
         }
-        return instrument
     }
 
     override suspend fun removeLiveInstrument(id: String): Boolean {
@@ -372,10 +388,7 @@ open class MemoryStorage(val vertx: Vertx) : CoreStorage {
         }
 
         if (includeArchive) {
-            val archivedInstrument = getArchivedLiveInstruments().find { it.id == id }
-            if (archivedInstrument != null) {
-                return archivedInstrument
-            }
+            return getArchiveLiveInstrument(id)
         }
         return null
     }
@@ -389,6 +402,12 @@ open class MemoryStorage(val vertx: Vertx) : CoreStorage {
             return liveInstruments + getArchivedLiveInstruments()
         }
         return liveInstruments
+    }
+
+    override suspend fun getArchiveLiveInstrument(id: String): LiveInstrument? {
+        val archivedStorage = vertx.sharedData().getAsyncMap<String, Any>(namespace("archivedInstruments")).await()
+        val archivedArr = archivedStorage.get("archivedInstruments").await() as JsonArray? ?: JsonArray()
+        return archivedArr.list.map { it as LiveInstrument }.find { it.id == id }
     }
 
     override suspend fun getArchivedLiveInstruments(): List<LiveInstrument> {
