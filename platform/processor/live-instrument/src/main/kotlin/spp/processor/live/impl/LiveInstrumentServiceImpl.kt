@@ -433,9 +433,7 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
             throw IllegalArgumentException("Unknown instrument removed message: $it")
         }
 
-        val instrumentRemoval = SourceStorage.getLiveInstruments().find {
-            it.id == instrumentData.getString("id")
-        }
+        val instrumentRemoval = SourceStorage.getLiveInstrument(instrumentData.getString("id"))
         if (instrumentRemoval != null) {
             //publish remove command to all probes & markers
             removeLiveInstrument(

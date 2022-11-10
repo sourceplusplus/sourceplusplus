@@ -101,7 +101,8 @@ object SourceStorage {
             }
         }
 
-        //set default redactions
+        //set user redactions
+        log.info("Installing hard-coded settings")
         val piiRedaction = config.getJsonObject("spp-platform").getJsonObject("pii-redaction")
         if (piiRedaction.getString("enabled").toBoolean()) {
             piiRedaction.getJsonArray("redactions").list.map {
@@ -118,7 +119,7 @@ object SourceStorage {
             emptyList()
         }.forEach { addDataRedaction(it.id, it.type, it.lookup, it.replacement) }
 
-        //set default client accessors
+        //set user client accessors
         val clientAccessors = config.getJsonObject("client-access")
         if (clientAccessors?.getString("enabled").toBoolean()) {
             clientAccessors?.getJsonArray("accessors")?.list?.map {
@@ -133,6 +134,51 @@ object SourceStorage {
         } else {
             emptyList()
         }.forEach { addClientAccess(it.id, it.secret) }
+
+        //set user roles/developers/developer roles
+        val roles = config.getJsonArray("roles")
+        roles?.list?.map {
+            JsonObject.mapFrom(it).let {
+                Pair(
+                    DeveloperRole.fromString(it.getString("id")),
+                    it.getJsonArray("permissions").list.mapNotNull { RolePermission.fromString(it.toString()) }
+                )
+            }
+        }.orEmpty().forEach { (role, permissions) ->
+            addRole(role)
+            log.debug { "Added user role: $role" }
+
+            permissions.forEach {
+                addPermissionToRole(role, it)
+                log.debug { "Added user permission: $it to role: $role" }
+            }
+        }
+
+        val developers = config.getJsonArray("developers")
+        developers?.list?.map {
+            JsonObject.mapFrom(it).let {
+                Pair(
+                    it.getString("id"),
+                    it.getString("access_token")
+                )
+            }
+        }.orEmpty().forEach { (id, accessToken) ->
+            addDeveloper(id, accessToken)
+            log.debug { "Added user developer: $id" }
+        }
+
+        val developerRoles = config.getJsonArray("developer_roles")
+        developerRoles?.list?.map {
+            JsonObject.mapFrom(it).let {
+                Pair(
+                    it.getString("id"),
+                    DeveloperRole.fromString(it.getString("role"))
+                )
+            }
+        }.orEmpty().forEach { (developerId, role) ->
+            addRoleToDeveloper(developerId, role)
+            log.debug { "Added user role: $role to developer: $developerId" }
+        }
     }
 
     suspend fun reset(): Boolean {
