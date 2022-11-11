@@ -23,13 +23,25 @@ import io.vertx.core.Vertx
 import io.vertx.core.json.JsonObject
 import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.runBlocking
+import mu.KotlinLogging
 import spp.platform.storage.SourceStorage
 import java.util.concurrent.TimeUnit
 
 class SkyWalkingGrpcInterceptor(private val vertx: Vertx, private val config: JsonObject) : ServerInterceptor {
 
     companion object {
+        private val log = KotlinLogging.logger {}
+
         private val AUTH_HEAD_HEADER_NAME = Metadata.Key.of("Authentication", Metadata.ASCII_STRING_MARSHALLER)
+
+        @JvmStatic
+        val CLIENT_ID = Context.key<String>("spp-platform.client-id")!!
+
+        @JvmStatic
+        val CLIENT_ACCESS = Context.key<String>("spp-platform.client-access")!!
+
+        @JvmStatic
+        val TENANT_ID = Context.key<String>("spp-platform.tenant-id")!!
     }
 
     //using memory cache to avoid hitting storage for every request
@@ -44,20 +56,30 @@ class SkyWalkingGrpcInterceptor(private val vertx: Vertx, private val config: Js
     ): ServerCall.Listener<ReqT> {
         val authHeader = headers?.get(AUTH_HEAD_HEADER_NAME)
         if (authHeader != null && probeAuthCache.getIfPresent(authHeader) != null) {
-            return next.startCall(call, headers)
+            val authParts = authHeader.split(":")
+            val clientId = authParts.getOrNull(0)
+            val clientSecret = authParts.getOrNull(1)
+            val tenantId = authParts.getOrNull(2)
+
+            val context = Context.current()
+                .withValue(CLIENT_ID, clientId)
+                .withValue(CLIENT_ACCESS, clientSecret)
+                .withValue(TENANT_ID, tenantId)
+            return Contexts.interceptCall(context, call, headers, next)
         } else {
             val authEnabled = config.getJsonObject("client-access")?.getString("enabled")?.toBooleanStrictOrNull()
             if (authEnabled == true) {
                 val authParts = authHeader?.split(":") ?: emptyList()
                 val clientId = authParts.getOrNull(0)
                 val clientSecret = authParts.getOrNull(1)
+                val tenantId = authParts.getOrNull(2)
                 if (authHeader == null || clientId == null || clientSecret == null) {
+                    log.warn { "Invalid auth header: $authHeader" }
                     call.close(Status.PERMISSION_DENIED, Metadata())
                     return object : ServerCall.Listener<ReqT>() {}
                 }
 
                 return runBlocking(vertx.dispatcher()) {
-                    val tenantId = authParts.getOrNull(2)
                     if (tenantId != null) {
                         Vertx.currentContext().putLocal("tenant_id", tenantId)
                     } else {
@@ -66,11 +88,17 @@ class SkyWalkingGrpcInterceptor(private val vertx: Vertx, private val config: Js
 
                     val clientAccess = SourceStorage.getClientAccess(clientId)
                     return@runBlocking if (clientAccess == null || clientAccess.secret != clientSecret) {
+                        log.warn { "Invalid auth header: $authHeader" }
                         call.close(Status.PERMISSION_DENIED, Metadata())
                         object : ServerCall.Listener<ReqT>() {}
                     } else {
                         probeAuthCache.put(authHeader, true)
-                        next.startCall(call, headers)
+
+                        val context = Context.current()
+                            .withValue(CLIENT_ID, clientId)
+                            .withValue(CLIENT_ACCESS, clientSecret)
+                            .withValue(TENANT_ID, tenantId)
+                        Contexts.interceptCall(context, call, headers, next)
                     }
                 }
             } else {
