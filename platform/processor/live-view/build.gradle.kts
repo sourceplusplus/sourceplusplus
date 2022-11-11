@@ -1,5 +1,6 @@
 plugins {
     kotlin("jvm")
+    id("maven-publish")
 }
 
 val platformGroup: String by project
@@ -8,6 +9,31 @@ val skywalkingVersion: String by project
 
 group = platformGroup
 version = project.properties["platformVersion"] as String? ?: projectVersion
+
+configure<PublishingExtension> {
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/sourceplusplus/sourceplusplus")
+            credentials {
+                username = System.getenv("GH_PUBLISH_USERNAME")?.toString()
+                password = System.getenv("GH_PUBLISH_TOKEN")?.toString()
+            }
+        }
+    }
+
+    publishing {
+        publications {
+            create<MavenPublication>("maven") {
+                groupId = platformGroup
+                artifactId = "live-view-processor"
+                version = project.version.toString()
+
+                from(components["kotlin"])
+            }
+        }
+    }
+}
 
 dependencies {
     compileOnly(project(":platform:common"))

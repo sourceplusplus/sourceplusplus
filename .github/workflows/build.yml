@@ -137,6 +137,8 @@ jobs:
             plus.sourceplus.platform.platform-core
             plus.sourceplus.platform.platform-dashboard
             plus.sourceplus.platform.platform-storage
+            plus.sourceplus.platform.live-instrument-processor
+            plus.sourceplus.platform.live-view-processor
 
       - name: Publish New Snapshot Packages
         if: github.ref == 'refs/heads/master'
