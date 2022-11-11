@@ -43,6 +43,7 @@ import spp.platform.storage.SourceStorage
 import spp.protocol.platform.PlatformAddress.MARKER_CONNECTED
 import spp.protocol.platform.PlatformAddress.MARKER_DISCONNECTED
 import spp.protocol.platform.status.InstanceConnection
+import spp.protocol.service.SourceServices.LIVE_INSIGHT
 import spp.protocol.service.SourceServices.LIVE_INSTRUMENT
 import spp.protocol.service.SourceServices.LIVE_MANAGEMENT_SERVICE
 import spp.protocol.service.SourceServices.LIVE_VIEW
@@ -149,7 +150,8 @@ class MarkerBridge(
             PermittedOptions().setAddress(MARKER_CONNECTED),
             PermittedOptions().setAddress(LIVE_MANAGEMENT_SERVICE),
             PermittedOptions().setAddress(LIVE_INSTRUMENT),
-            PermittedOptions().setAddress(LIVE_VIEW)
+            PermittedOptions().setAddress(LIVE_VIEW),
+            PermittedOptions().setAddress(LIVE_INSIGHT)
         )
     }
 
