@@ -556,6 +556,7 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
     }
 
     private fun dispatchCommand(accessToken: String?, address: String, command: LiveInstrumentCommand) {
+        log.trace { "Dispatching command: {}. Using access token: {}".args(command, accessToken) }
         val probes = SourceBridgeService.service(vertx, accessToken)
         probes.onSuccess {
             if (it == null) {
@@ -564,8 +565,15 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
             }
 
             it.getActiveProbes().onComplete {
-                log.trace { "Dispatching command {} to connected probe(s)".args(command.commandType) }
                 val alertProbes = it.result().list.map { InstanceConnection(JsonObject.mapFrom(it)) }
+                if (alertProbes.isEmpty()) {
+                    log.warn("No probes connected. Unable to dispatch {} command", command.commandType)
+                    return@onComplete
+                }
+
+                log.trace {
+                    "Dispatching command {} to {} connected probe(s)".args(command.commandType, alertProbes.size)
+                }
                 alertProbes.forEach { probe ->
                     val probeCommand = LiveInstrumentCommand(
                         command.commandType,
@@ -602,7 +610,6 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
             ServiceExceptionConverter.fromEventBusException(cause, true)
         } else null
         vertx.eventBus().request<Void>("apply-immediately.${instrument.id}", ebException).onFailure {
-            log.error("Failed to send apply-immediately event. ${instrument}", it)
             val eventType = when (instrument.type) {
                 LiveInstrumentType.BREAKPOINT -> LiveInstrumentEventType.BREAKPOINT_REMOVED
                 LiveInstrumentType.LOG -> LiveInstrumentEventType.LOG_REMOVED
