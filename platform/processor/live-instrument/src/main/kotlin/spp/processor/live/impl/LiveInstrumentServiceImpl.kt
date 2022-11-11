@@ -36,6 +36,7 @@ import org.apache.skywalking.oap.server.analyzer.provider.meter.process.MeterPro
 import org.apache.skywalking.oap.server.core.CoreModule
 import org.apache.skywalking.oap.server.core.analysis.meter.MeterSystem
 import org.joor.Reflect
+import spp.platform.common.ClientAuth
 import spp.platform.common.DeveloperAuth
 import spp.platform.common.FeedbackProcessor
 import spp.platform.common.service.SourceBridgeService
@@ -89,6 +90,14 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
             if (remote == LIVE_INSTRUMENT_REMOTE) {
                 log.debug { "Live instrument remote registered. Sending active live instruments" }
                 launch(vertx.dispatcher()) {
+                    val clientAuth = it.headers().get("client_auth")?.let { ClientAuth.from(it) }
+                    val tenantId = clientAuth?.tenantId
+                    if (tenantId != null) {
+                        Vertx.currentContext().putLocal("tenant_id", tenantId)
+                    } else {
+                        Vertx.currentContext().removeLocal("tenant_id")
+                    }
+
                     SourceStorage.getLiveInstruments().forEach {
                         addLiveInstrument(it, false)
                     }
