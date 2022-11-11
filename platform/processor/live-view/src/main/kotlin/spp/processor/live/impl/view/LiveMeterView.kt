@@ -28,6 +28,7 @@ import spp.platform.common.ClusterConnection
 import spp.platform.common.util.args
 import spp.processor.ViewProcessor.realtimeMetricCache
 import spp.processor.live.impl.view.util.EntityNaming
+import spp.processor.live.impl.view.util.InternalViewSubscriber
 import spp.processor.live.impl.view.util.MetricTypeSubscriptionCache
 import spp.processor.live.impl.view.util.ViewSubscriber
 import java.util.concurrent.CopyOnWriteArrayList
@@ -38,10 +39,21 @@ class LiveMeterView(private val subscriptionCache: MetricTypeSubscriptionCache) 
         private val log = KotlinLogging.logger {}
     }
 
+    private val internalSubscribers: MutableList<InternalViewSubscriber> = CopyOnWriteArrayList()
+
+    fun subscribe(subscriber: InternalViewSubscriber) {
+        internalSubscribers.add(subscriber)
+    }
+
+    fun unsubscribe(subscriber: InternalViewSubscriber) {
+        internalSubscribers.remove(subscriber)
+    }
+
     suspend fun export(metrics: Metrics, realTime: Boolean) {
         val metadata = (metrics as WithMetadata).meta
         val entityName = EntityNaming.getEntityName(metadata)
         if (entityName.isNullOrEmpty()) return
+        internalSubscribers.forEach { it.export(metrics, realTime) }
 
         var metricName = metadata.metricsName
         if (metricName.startsWith("spp_")) {
