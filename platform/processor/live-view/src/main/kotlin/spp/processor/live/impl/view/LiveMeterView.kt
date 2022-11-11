@@ -27,10 +27,8 @@ import org.joor.Reflect
 import spp.platform.common.ClusterConnection
 import spp.platform.common.util.args
 import spp.processor.ViewProcessor.realtimeMetricCache
-import spp.processor.live.impl.view.util.EntityNaming
-import spp.processor.live.impl.view.util.InternalViewSubscriber
-import spp.processor.live.impl.view.util.MetricTypeSubscriptionCache
-import spp.processor.live.impl.view.util.ViewSubscriber
+import spp.processor.live.impl.view.util.*
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
 
 class LiveMeterView(private val subscriptionCache: MetricTypeSubscriptionCache) {
@@ -40,6 +38,7 @@ class LiveMeterView(private val subscriptionCache: MetricTypeSubscriptionCache) 
     }
 
     private val internalSubscribers: MutableList<InternalViewSubscriber> = CopyOnWriteArrayList()
+    private val realtimeSubscribers: MutableMap<String, InternalRealtimeViewSubscriber> = ConcurrentHashMap()
 
     fun subscribe(subscriber: InternalViewSubscriber) {
         internalSubscribers.add(subscriber)
@@ -47,6 +46,14 @@ class LiveMeterView(private val subscriptionCache: MetricTypeSubscriptionCache) 
 
     fun unsubscribe(subscriber: InternalViewSubscriber) {
         internalSubscribers.remove(subscriber)
+    }
+
+    fun subscribeRealtime(subscriber: InternalRealtimeViewSubscriber, metricType: String) {
+        realtimeSubscribers[metricType] = subscriber
+    }
+
+    fun unsubscribeRealtime(metricType: String) {
+        realtimeSubscribers.remove(metricType)
     }
 
     suspend fun export(metrics: Metrics, realTime: Boolean) {
@@ -82,6 +89,25 @@ class LiveMeterView(private val subscriptionCache: MetricTypeSubscriptionCache) 
             if (subs.isNotEmpty()) {
                 log.debug { "Exporting event $metricName to {} subscribers".args(subs.size) }
                 handleEvent(subs, metrics, realTime)
+            }
+        }
+
+        val internalRealtimeSubscriber = realtimeSubscribers[metricName]
+        if (internalRealtimeSubscriber != null) {
+            val metricId = Reflect.on(metrics).call("id0").get<String>()
+            val fullMetricId = metrics.javaClass.simpleName + "_" + metricId
+
+            val jsonMetric = JsonObject.mapFrom(metrics)
+            jsonMetric.put("realtime", realTime)
+            jsonMetric.put("metric_type", metrics.javaClass.simpleName)
+            jsonMetric.put("full_metric_id", fullMetricId)
+            if (realTime) {
+                val metricsName = jsonMetric.getJsonObject("meta").getString("metricsName")
+                if (!metricsName.startsWith("spp_")) {
+                    jsonMetric.getJsonObject("meta").put("metricsName", "${metricsName}_realtime")
+                }
+                setRealtimeValue(jsonMetric, metrics)
+                internalRealtimeSubscriber.export(jsonMetric)
             }
         }
     }
