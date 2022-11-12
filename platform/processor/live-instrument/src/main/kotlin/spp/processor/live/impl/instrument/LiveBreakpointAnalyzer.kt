@@ -17,6 +17,8 @@
  */
 package spp.processor.live.impl.instrument
 
+import io.grpc.Context
+import io.vertx.core.Vertx
 import io.vertx.core.json.Json
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
@@ -33,6 +35,7 @@ import org.apache.skywalking.oap.server.analyzer.provider.trace.parser.listener.
 import org.apache.skywalking.oap.server.core.query.TraceQueryService
 import org.apache.skywalking.oap.server.library.module.ModuleManager
 import spp.platform.common.ClusterConnection
+import spp.platform.common.util.ContextUtil
 import spp.platform.common.util.args
 import spp.platform.storage.SourceStorage
 import spp.processor.live.impl.instrument.breakpoint.LiveVariablePresentation
@@ -130,8 +133,16 @@ class LiveBreakpointAnalyzer(
                 }
             }
         }
+        if (breakpointIds.isEmpty()) {
+            return
+        }
 
+        val grpcContext = if (Vertx.currentContext() == null) {
+            Context.current()
+        } else null
         GlobalScope.launch(ClusterConnection.getVertx().dispatcher()) {
+            ContextUtil.addToVertx(grpcContext)
+
             breakpointIds.forEach {
                 val bpHitObj = mapOf(
                     "breakpoint_id" to it,
@@ -184,7 +195,7 @@ class LiveBreakpointAnalyzer(
             return LiveVariable(varName, innerVars, scope = scope, liveClazz = liveClass, liveIdentity = liveIdentity)
         }
 
-        fun toLiveVariableArray(varName: String, scope: LiveVariableScope?, varData: JsonArray): LiveVariable {
+        private fun toLiveVariableArray(varName: String, scope: LiveVariableScope?, varData: JsonArray): LiveVariable {
             val innerVars = mutableListOf<LiveVariable>()
             varData.forEachIndexed { index, it ->
                 if (it is JsonObject) {

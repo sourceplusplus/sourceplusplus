@@ -24,6 +24,7 @@ import io.vertx.core.json.JsonObject
 import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
+import spp.platform.common.util.ContextUtil
 import spp.platform.storage.SourceStorage
 import java.util.concurrent.TimeUnit
 
@@ -33,15 +34,6 @@ class SkyWalkingGrpcInterceptor(private val vertx: Vertx, private val config: Js
         private val log = KotlinLogging.logger {}
 
         private val AUTH_HEAD_HEADER_NAME = Metadata.Key.of("Authentication", Metadata.ASCII_STRING_MARSHALLER)
-
-        @JvmStatic
-        val CLIENT_ID = Context.key<String>("spp-platform.client-id")!!
-
-        @JvmStatic
-        val CLIENT_ACCESS = Context.key<String>("spp-platform.client-access")!!
-
-        @JvmStatic
-        val TENANT_ID = Context.key<String>("spp-platform.tenant-id")!!
     }
 
     //using memory cache to avoid hitting storage for every request
@@ -62,9 +54,9 @@ class SkyWalkingGrpcInterceptor(private val vertx: Vertx, private val config: Js
             val tenantId = authParts.getOrNull(2)
 
             val context = Context.current()
-                .withValue(CLIENT_ID, clientId)
-                .withValue(CLIENT_ACCESS, clientSecret)
-                .withValue(TENANT_ID, tenantId)
+                .withValue(ContextUtil.CLIENT_ID, clientId)
+                .withValue(ContextUtil.CLIENT_ACCESS, clientSecret)
+                .withValue(ContextUtil.TENANT_ID, tenantId)
             return Contexts.interceptCall(context, call, headers, next)
         } else {
             val authEnabled = config.getJsonObject("client-access")?.getString("enabled")?.toBooleanStrictOrNull()
@@ -95,9 +87,9 @@ class SkyWalkingGrpcInterceptor(private val vertx: Vertx, private val config: Js
                         probeAuthCache.put(authHeader, true)
 
                         val context = Context.current()
-                            .withValue(CLIENT_ID, clientId)
-                            .withValue(CLIENT_ACCESS, clientSecret)
-                            .withValue(TENANT_ID, tenantId)
+                            .withValue(ContextUtil.CLIENT_ID, clientId)
+                            .withValue(ContextUtil.CLIENT_ACCESS, clientSecret)
+                            .withValue(ContextUtil.TENANT_ID, tenantId)
                         Contexts.interceptCall(context, call, headers, next)
                     }
                 }
