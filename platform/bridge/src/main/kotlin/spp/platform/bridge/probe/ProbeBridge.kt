@@ -182,17 +182,9 @@ class ProbeBridge(
             NetServerOptions()
         ) { handleBridgeEvent(it, subscriberCache) }.listen(0)
         ClusterConnection.multiUseNetServer.addUse(bridge) {
-            log.trace { "Checking message: $it" }
-
             //Python probes may send ping as first message.
             //If first message is ping, assume it's a probe connection.
-            if (it.toString().contains(PROBE_CONNECTED) || it == PING_MESSAGE) {
-                log.trace { "Valid probe connection" }
-                true
-            } else {
-                log.trace { "Invalid probe connection" }
-                false
-            }
+            it.toString().contains(PROBE_CONNECTED) || it == PING_MESSAGE
         }
     }
 
