@@ -78,16 +78,44 @@ class MetaLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         //verify internal meta is not exposed
         assertEquals(emptyMap<String, String>(), liveInstruments.first().meta.filter { it.key.startsWith("spp.") })
 
-        //remove instrument
-        val removedInstruments = instrumentService.getLiveInstrumentsByIds(liveInstruments.mapNotNull { it.id }).await()
-        assertEquals(1, removedInstruments.size)
-        assertEquals(emptyMap<String, String>(), removedInstruments.first().meta.filter { it.key.startsWith("spp.") })
+        //get instrument by ids
+        val getInstruments = instrumentService.getLiveInstrumentsByIds(liveInstruments.mapNotNull { it.id }).await()
+        assertEquals(1, getInstruments.size)
+        assertEquals(emptyMap<String, String>(), getInstruments.first().meta.filter { it.key.startsWith("spp.") })
+
+        //clean up
+        instrumentService.clearLiveInstruments().await()
+    }
+
+    @Test
+    fun `verify get live instruments meta`(): Unit = runBlocking {
+        val location = LiveSourceLocation(
+            "non-existent-class-2",
+            0,
+        )
+        val liveInstruments = instrumentService.addLiveInstruments(
+            listOf(LiveBreakpoint(location = location))
+        ).await()
+        assertNotNull(liveInstruments)
+
+        //get instruments
+        val getInstruments = instrumentService.getLiveInstruments().await()
+        assertEquals(1, getInstruments.size)
+        assertEquals(emptyMap<String, String>(), getInstruments.first().meta.filter { it.key.startsWith("spp.") })
+
+        //get instrument by id
+        val getInstrument = instrumentService.getLiveInstrumentById(liveInstruments.first().id!!).await()
+        assertNotNull(getInstrument)
+        assertEquals(emptyMap<String, String>(), getInstrument!!.meta.filter { it.key.startsWith("spp.") })
+
+        //clean
+        instrumentService.clearLiveInstruments().await()
     }
 
     @Test
     fun `verify remove live instruments by location meta`() = runBlocking {
         val location = LiveSourceLocation(
-            "non-existent-class-2",
+            "non-existent-class-3",
             0,
         )
         val liveInstrument = instrumentService.addLiveInstrument(
@@ -122,5 +150,8 @@ class MetaLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         val getInstrument = instrumentService.getLiveInstrumentById(liveInstrument.id!!).await()
         assertNotNull(getInstrument)
         assertEquals(liveInstrument.meta["applied_at"], getInstrument!!.meta["applied_at"])
+
+        //clean
+        instrumentService.clearLiveInstruments().await()
     }
 }

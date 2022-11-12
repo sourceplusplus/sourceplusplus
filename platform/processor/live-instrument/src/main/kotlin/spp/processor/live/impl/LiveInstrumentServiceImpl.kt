@@ -311,7 +311,11 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
 
         val promise = Promise.promise<List<LiveInstrument>>()
         launch(vertx.dispatcher()) {
-            promise.complete(SourceStorage.getLiveInstruments().filter { type == null || it.type == type })
+            promise.complete(
+                SourceStorage.getLiveInstruments()
+                    .mapNotNull { removeInternalMeta(it) }
+                    .filter { type == null || it.type == type }
+            )
         }
         return promise.future()
     }
@@ -454,7 +458,13 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
     }
 
     private suspend fun handleLiveInstrumentApplied(it: Message<JsonObject>) {
-        var instrument = ProtocolMarshaller.deserializeLiveInstrument(it.body())
+        var instrument = SourceStorage.getLiveInstrument(
+            ProtocolMarshaller.deserializeLiveInstrument(it.body()).id!!, true
+        )
+        if (instrument == null) {
+            log.warn { "Got live instrument applied for unknown instrument: {}".args(it.body()) }
+            return
+        }
         log.info("Live instrument applied. Id: {}", instrument.id)
 
         val eventType = when (instrument.type) {
@@ -540,7 +550,10 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
         log.trace { "Adding live instrument: {}".args(instrument) }
         val promise = Promise.promise<LiveInstrument>()
         launch(vertx.dispatcher()) {
-            val debuggerCommand = LiveInstrumentCommand(CommandType.ADD_LIVE_INSTRUMENT, setOf(instrument))
+            val debuggerCommand = LiveInstrumentCommand(
+                CommandType.ADD_LIVE_INSTRUMENT,
+                setOf(removeInternalMeta(instrument)!!)
+            )
 
             val selfId = instrument.meta["spp.developer_id"] as String
             val accessToken = instrument.meta["spp.access_token"] as String?
@@ -580,7 +593,7 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
                     return@onComplete
                 }
 
-                log.trace {
+                log.debug {
                     "Dispatching command {} to {} connected probe(s)".args(command.commandType, alertProbes.size)
                 }
                 alertProbes.forEach { probe ->
@@ -611,7 +624,10 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
 
         val selfId = instrument.meta["spp.developer_id"] as String
         val accessToken = instrument.meta["spp.access_token"] as String?
-        val debuggerCommand = LiveInstrumentCommand(CommandType.REMOVE_LIVE_INSTRUMENT, setOf(instrument))
+        val debuggerCommand = LiveInstrumentCommand(
+            CommandType.REMOVE_LIVE_INSTRUMENT,
+            setOf(removeInternalMeta(instrument)!!)
+        )
         dispatchCommand(accessToken, LIVE_INSTRUMENT_REMOTE, debuggerCommand)
 
         val jvmCause = if (cause == null) null else LiveStackTrace.fromString(cause)
