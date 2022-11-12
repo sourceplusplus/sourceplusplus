@@ -126,6 +126,20 @@ object ClusterConnection {
                 router = Router.router(vertx)
                 multiUseNetServer = MultiUseNetServer(vertx)
                 ClusterConnection.vertx = vertx
+
+                vertx.eventBus().addInboundInterceptor<Any> {
+                    val headers = it.message().headers()
+                    if (headers != null) {
+                        Vertx.currentContext().removeLocal("client_id")
+                        Vertx.currentContext().removeLocal("client_secret")
+                        Vertx.currentContext().removeLocal("tenant_id")
+
+                        headers.forEach { (key, value) ->
+                            Vertx.currentContext().putLocal(key, value)
+                        }
+                    }
+                    it.next()
+                }
             }
         }
         return vertx
