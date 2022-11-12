@@ -28,7 +28,6 @@ import spp.platform.common.ClusterConnection
 import spp.platform.common.util.args
 import spp.processor.ViewProcessor.realtimeMetricCache
 import spp.processor.live.impl.view.util.*
-import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
 
 class LiveMeterView(private val subscriptionCache: MetricTypeSubscriptionCache) {
@@ -38,7 +37,7 @@ class LiveMeterView(private val subscriptionCache: MetricTypeSubscriptionCache) 
     }
 
     private val internalSubscribers: MutableList<InternalViewSubscriber> = CopyOnWriteArrayList()
-    private val realtimeSubscribers: MutableMap<String, InternalRealtimeViewSubscriber> = ConcurrentHashMap()
+    private val realtimeSubscribers: MutableList<InternalRealtimeViewSubscriber> = CopyOnWriteArrayList()
 
     fun subscribe(subscriber: InternalViewSubscriber) {
         internalSubscribers.add(subscriber)
@@ -48,12 +47,12 @@ class LiveMeterView(private val subscriptionCache: MetricTypeSubscriptionCache) 
         internalSubscribers.remove(subscriber)
     }
 
-    fun subscribeRealtime(subscriber: InternalRealtimeViewSubscriber, metricType: String) {
-        realtimeSubscribers[metricType] = subscriber
+    fun subscribe(subscriber: InternalRealtimeViewSubscriber) {
+        realtimeSubscribers.add(subscriber)
     }
 
-    fun unsubscribeRealtime(metricType: String) {
-        realtimeSubscribers.remove(metricType)
+    fun unsubscribe(subscriber: InternalRealtimeViewSubscriber) {
+        realtimeSubscribers.remove(subscriber)
     }
 
     suspend fun export(metrics: Metrics, realTime: Boolean) {
@@ -92,8 +91,7 @@ class LiveMeterView(private val subscriptionCache: MetricTypeSubscriptionCache) 
             }
         }
 
-        val internalRealtimeSubscriber = realtimeSubscribers[metricName]
-        if (internalRealtimeSubscriber != null) {
+        if (realtimeSubscribers.isNotEmpty()) {
             val metricId = Reflect.on(metrics).call("id0").get<String>()
             val fullMetricId = metrics.javaClass.simpleName + "_" + metricId
 
@@ -107,7 +105,7 @@ class LiveMeterView(private val subscriptionCache: MetricTypeSubscriptionCache) 
                     jsonMetric.getJsonObject("meta").put("metricsName", "${metricsName}_realtime")
                 }
                 setRealtimeValue(jsonMetric, metrics)
-                internalRealtimeSubscriber.export(jsonMetric)
+                realtimeSubscribers.forEach { it.export(jsonMetric) }
             }
         }
     }
