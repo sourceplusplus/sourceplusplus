@@ -99,8 +99,7 @@ class ProbeBridge(
 
             launch(vertx.dispatcher()) {
                 val map = getActiveProbesMap()
-                map.get(probeId).onSuccess {
-                    val updatedInstanceConnection = it
+                map.get(probeId).onSuccess { updatedInstanceConnection ->
                     val remotes = updatedInstanceConnection.getJsonObject("meta").getJsonArray("remotes")
                     if (remotes == null) {
                         updatedInstanceConnection.getJsonObject("meta").put("remotes", JsonArray().add(remote))
