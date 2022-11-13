@@ -23,7 +23,9 @@ import graphql.language.OperationDefinition
 import graphql.language.SelectionSet
 import graphql.parser.Parser
 import io.vertx.core.Vertx
-import io.vertx.core.http.*
+import io.vertx.core.http.HttpMethod
+import io.vertx.core.http.HttpServerRequest
+import io.vertx.core.http.RequestOptions
 import io.vertx.core.json.JsonObject
 import io.vertx.ext.web.Router
 import io.vertx.ext.web.handler.BodyHandler
@@ -117,6 +119,9 @@ class SkyWalkingGraphqlInterceptor(private val router: Router) : CoroutineVertic
                 }
 
                 headers?.fieldNames()?.forEach {
+                    if (it.equals(HttpHeaders.CONTENT_LENGTH, true)) {
+                        return@forEach // skip content-length
+                    }
                     forward.putHeader(it, headers.getValue(it).toString())
                 }
                 forward.putHeader("tenant_id", tenantId)
@@ -138,11 +143,16 @@ class SkyWalkingGraphqlInterceptor(private val router: Router) : CoroutineVertic
             }
 
             val tenantId = req.user()?.principal()?.getString("tenant_id")
-            forwardSkyWalkingRequest(req.bodyAsString, req.request(), selfId, tenantId)
+            forwardSkyWalkingRequest(req.body().asJsonObject(), req.request(), selfId, tenantId)
         }
     }
 
-    private fun forwardSkyWalkingRequest(body: String, req: HttpServerRequest, developerId: String, tenantId: String?) {
+    private fun forwardSkyWalkingRequest(
+        body: JsonObject,
+        req: HttpServerRequest,
+        developerId: String,
+        tenantId: String?
+    ) {
         val forward = JsonObject()
         forward.put("developer_id", developerId)
         forward.put("tenant_id", tenantId)
