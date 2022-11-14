@@ -608,6 +608,8 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
                             address + ":" + probe.instanceId,
                             JsonObject.mapFrom(probeCommand)
                         )
+                    } else {
+                        log.debug { "No instruments/locations to dispatch to probe ${probe.instanceId}" }
                     }
                 }
             }.onFailure {
