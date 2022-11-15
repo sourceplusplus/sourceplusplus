@@ -256,7 +256,6 @@ class SourcePlatform(private val manager: ModuleManager) : CoroutineVerticle() {
         //Internal metrics
         val metricsService = MetricsService.create(vertx)
         router["/metrics"].handler {
-
             if (it.queryParam("include_unused").contains("true")) {
                 val vertxMetrics = metricsService.getMetricsSnapshot(vertx)
                 it.end(vertxMetrics.encodePrettily())
