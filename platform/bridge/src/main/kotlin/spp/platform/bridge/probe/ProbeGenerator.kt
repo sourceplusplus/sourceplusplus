@@ -79,7 +79,7 @@ class ProbeGenerator(private val router: Router) : CoroutineVerticle() {
                 route.response().setStatusCode(401).end("Unauthorized")
                 return@handler
             }
-            val tenantId = route.request().getParam("tenant_id")
+            val tenantId = route.request().let { it.getParam("tenant_id") ?: it.getHeader("spp-tenant-id") }
             if (tenantId != null) {
                 Vertx.currentContext().putLocal("tenant_id", tenantId)
             } else {
@@ -110,7 +110,7 @@ class ProbeGenerator(private val router: Router) : CoroutineVerticle() {
                 route.response().setStatusCode(401).end("Unauthorized")
                 return@handler
             }
-            val tenantId = route.request().getParam("tenant_id")
+            val tenantId = route.request().let { it.getParam("tenant_id") ?: it.getHeader("spp-tenant-id") }
             if (tenantId != null) {
                 Vertx.currentContext().putLocal("tenant_id", tenantId)
             } else {
