@@ -110,6 +110,12 @@ class ProbeGenerator(private val router: Router) : CoroutineVerticle() {
                 route.response().setStatusCode(401).end("Unauthorized")
                 return@handler
             }
+            val tenantId = route.request().getParam("tenant_id")
+            if (tenantId != null) {
+                Vertx.currentContext().putLocal("tenant_id", tenantId)
+            } else {
+                Vertx.currentContext().removeLocal("tenant_id")
+            }
 
             log.info("jvm-probe.jar download request. Verifying access token: {}", token)
             launch(vertx.dispatcher()) {
@@ -117,7 +123,7 @@ class ProbeGenerator(private val router: Router) : CoroutineVerticle() {
                 SourceStorage.getDeveloperByAccessToken(token)?.let {
                     vertx.eventBus().send(
                         LOCAL_GEN_JVM_PROBE_ADDR,
-                        Request(route, clientAccess),
+                        Request(route, clientAccess, tenantId),
                         DeliveryOptions().setLocalOnly(true)
                     )
                 } ?: route.response().setStatusCode(401).end("Unauthorized")
