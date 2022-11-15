@@ -46,7 +46,7 @@ class SourceDashboard : CoroutineVerticle() {
                 return@handler
             }
 
-            val tenantId = postData.get("tenant_id") ?: it.request().getHeader("spp-tenant-id")
+            val tenantId = postData.get("tenant_id")?.ifEmpty { null } ?: it.request().getHeader("spp-tenant-id")
             if (!tenantId.isNullOrEmpty()) {
                 Vertx.currentContext().putLocal("tenant_id", tenantId)
             } else {
