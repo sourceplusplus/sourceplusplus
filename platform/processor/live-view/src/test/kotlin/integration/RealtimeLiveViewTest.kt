@@ -27,6 +27,7 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import spp.protocol.artifact.ArtifactQualifiedName
 import spp.protocol.artifact.ArtifactType
+import spp.protocol.artifact.metrics.MetricType
 import spp.protocol.instrument.LiveSourceLocation
 import spp.protocol.service.SourceServices
 import spp.protocol.view.LiveView
@@ -45,7 +46,7 @@ class RealtimeLiveViewTest : PlatformIntegrationTest() {
 
         val subscriptionId = viewService.addLiveView(
             LiveView(
-                entityIds = mutableSetOf("instance_jvm_cpu_realtime"),
+                entityIds = mutableSetOf(MetricType.INSTANCE_JVM_CPU.asRealtime().metricId),
                 artifactQualifiedName = ArtifactQualifiedName( //todo: optional artifact
                     "unneeded",
                     type = ArtifactType.EXPRESSION
@@ -56,7 +57,7 @@ class RealtimeLiveViewTest : PlatformIntegrationTest() {
                 ),
                 viewConfig = LiveViewConfig(
                     "test",
-                    listOf("instance_jvm_cpu_realtime")
+                    listOf(MetricType.INSTANCE_JVM_CPU.asRealtime().metricId)
                 )
             )
         ).await().subscriptionId!!
