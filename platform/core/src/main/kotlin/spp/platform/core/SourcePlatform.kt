@@ -59,8 +59,8 @@ import spp.platform.common.ClusterConnection.router
 import spp.platform.common.util.CertsToJksOptionsConverter
 import spp.platform.common.util.SelfSignedCertGenerator
 import spp.platform.common.util.args
-import spp.platform.core.interceptors.SkyWalkingGrpcInterceptor
 import spp.platform.core.interceptors.SkyWalkingGraphqlInterceptor
+import spp.platform.core.interceptors.SkyWalkingGrpcInterceptor
 import spp.platform.core.service.ServiceProvider
 import spp.platform.storage.SourceStorage
 import spp.protocol.service.LiveManagementService
@@ -194,7 +194,7 @@ class SourcePlatform(private val manager: ModuleManager) : CoroutineVerticle() {
                 ctx.response().setStatusCode(401).end()
                 return@handler
             }
-            val tenantId = ctx.queryParam("tenant_id").firstOrNull()
+            val tenantId = ctx.queryParam("tenant_id").firstOrNull() ?: ctx.request().headers().get("spp-tenant-id")
             if (!tenantId.isNullOrEmpty()) {
                 Vertx.currentContext().putLocal("tenant_id", tenantId)
             } else {
