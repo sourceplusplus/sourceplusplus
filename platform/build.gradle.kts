@@ -106,7 +106,7 @@ subprojects {
         compileOnly("org.apache.skywalking:storage-jdbc-hikaricp-plugin:$skywalkingVersion") { isTransitive = false }
         compileOnly("org.apache.skywalking:storage-elasticsearch-plugin:$skywalkingVersion") { isTransitive = false }
         compileOnly("org.apache.skywalking:library-elasticsearch-client:$skywalkingVersion") { isTransitive = false }
-        compileOnly("io.grpc:grpc-api:1.46.0")
+        compileOnly("io.grpc:grpc-api:1.51.0")
 
         detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.21.0")
 
