@@ -111,7 +111,7 @@ class SPPMetricsStreamProcessor : MetricsStreamProcessor() {
         private val supportedRealtimeMetrics = MetricType.ALL.map { it.metricId + "_rec" }
 
         override fun send(nextWorkName: String, metrics: StreamData, selector: Selector) {
-            if (supportedRealtimeMetrics.contains(nextWorkName)) {
+            if (nextWorkName.startsWith("spp_") || supportedRealtimeMetrics.contains(nextWorkName)) {
                 val metadata = (metrics as WithMetadata).meta
                 val entityName = EntityNaming.getEntityName(metadata)
                 if (!entityName.isNullOrEmpty()) {
