@@ -21,61 +21,52 @@ import io.vertx.core.Vertx
 import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import org.apache.skywalking.oap.server.core.CoreModule
 import org.apache.skywalking.oap.server.core.analysis.Stream
 import org.apache.skywalking.oap.server.core.analysis.StreamDefinition
 import org.apache.skywalking.oap.server.core.analysis.metrics.Metrics
 import org.apache.skywalking.oap.server.core.analysis.metrics.WithMetadata
 import org.apache.skywalking.oap.server.core.analysis.worker.MetricsPersistentWorker
 import org.apache.skywalking.oap.server.core.analysis.worker.MetricsStreamProcessor
+import org.apache.skywalking.oap.server.core.remote.RemoteSenderService
+import org.apache.skywalking.oap.server.core.remote.data.StreamData
+import org.apache.skywalking.oap.server.core.remote.selector.Selector
 import org.apache.skywalking.oap.server.library.module.ModuleDefineHolder
+import org.apache.skywalking.oap.server.library.module.ModuleManager
 import org.joor.Reflect
 import spp.platform.common.ClusterConnection
 import spp.processor.ViewProcessor
-import spp.processor.ViewProcessor.realtimeMetricCache
 import spp.processor.live.impl.view.model.ClusterMetrics
+import spp.processor.live.impl.view.util.EntityNaming
+import spp.protocol.artifact.metrics.MetricType
 
 class SPPMetricsStreamProcessor : MetricsStreamProcessor() {
 
     private val realProcessor: MetricsStreamProcessor by lazy { MetricsStreamProcessor() }
+    private var sppRemoteSender: SPPRemoteSender? = null
 
     override fun `in`(metrics: Metrics) {
         realProcessor.`in`(metrics)
-
-        if (metrics !is WithMetadata) {
-            return // ignore metrics without metadata
-        }
-
-        val copiedMetrics = metrics::class.java.newInstance()
-        copiedMetrics.deserialize(metrics.serialize().build())
-
-        GlobalScope.launch(ClusterConnection.getVertx().dispatcher()) {
-            if (copiedMetrics.javaClass.simpleName.startsWith("spp_")) {
-                Reflect.on(copiedMetrics).set("metadata", (metrics as WithMetadata).meta)
-            }
-
-            val metricId = Reflect.on(copiedMetrics).call("id0").get<String>()
-            val fullMetricId = copiedMetrics.javaClass.simpleName + "_" + metricId
-
-            Vertx.currentContext().putLocal("current_metrics", copiedMetrics)
-            realtimeMetricCache.compute(fullMetricId) { _, old ->
-                val new = ClusterMetrics(copiedMetrics)
-                if (old != null) {
-                    new.metrics.combine(old.metrics)
-                }
-                new
-            }
-            ViewProcessor.liveViewService.meterView.export(copiedMetrics, true)
-        }
     }
 
-    override fun create(moduleDefineHolder: ModuleDefineHolder?, stream: Stream?, metricsClass: Class<out Metrics>?) {
+    override fun create(moduleDefineHolder: ModuleDefineHolder, stream: Stream, metricsClass: Class<out Metrics>) {
+        if (sppRemoteSender == null) {
+            moduleDefineHolder.find(CoreModule.NAME).provider().apply {
+                sppRemoteSender = SPPRemoteSender(
+                    moduleDefineHolder as ModuleManager,
+                    getService(RemoteSenderService::class.java)
+                )
+                registerServiceImplementation(RemoteSenderService::class.java, sppRemoteSender)
+            }
+        }
+
         realProcessor.create(moduleDefineHolder, stream, metricsClass)
     }
 
     override fun create(
-        moduleDefineHolder: ModuleDefineHolder?,
-        stream: StreamDefinition?,
-        metricsClass: Class<out Metrics>?
+        moduleDefineHolder: ModuleDefineHolder,
+        stream: StreamDefinition,
+        metricsClass: Class<out Metrics>
     ) {
         realProcessor.create(moduleDefineHolder, stream, metricsClass)
     }
@@ -106,5 +97,49 @@ class SPPMetricsStreamProcessor : MetricsStreamProcessor() {
 
     override fun setMetricsDataTTL(metricsDataTTL: Int) {
         realProcessor.setMetricsDataTTL(metricsDataTTL)
+    }
+
+    /**
+     * todo: moved from l1 worker (MetricsStreamProcessor) to l2 worker (RemoteSenderService, but still inefficient.
+     *  Added supportedRealtimeMetrics to avoid metric locking issues, but should be able to support all metrics.
+     */
+    class SPPRemoteSender(
+        moduleManager: ModuleManager,
+        private val delegate: RemoteSenderService
+    ) : RemoteSenderService(moduleManager) {
+
+        private val supportedRealtimeMetrics = MetricType.ALL.map { it.metricId + "_rec" }
+
+        override fun send(nextWorkName: String, metrics: StreamData, selector: Selector) {
+            if (supportedRealtimeMetrics.contains(nextWorkName)) {
+                val metadata = (metrics as WithMetadata).meta
+                val entityName = EntityNaming.getEntityName(metadata)
+                if (!entityName.isNullOrEmpty()) {
+                    val copiedMetrics: Metrics = metrics::class.java.newInstance() as Metrics
+                    copiedMetrics.deserialize(metrics.serialize().build())
+
+                    GlobalScope.launch(ClusterConnection.getVertx().dispatcher()) {
+                        if (copiedMetrics.javaClass.simpleName.startsWith("spp_")) {
+                            Reflect.on(copiedMetrics).set("metadata", (metrics as WithMetadata).meta)
+                        }
+
+                        val metricId = Reflect.on(copiedMetrics).call("id0").get<String>()
+                        val fullMetricId = copiedMetrics.javaClass.simpleName + "_" + metricId
+
+                        Vertx.currentContext().putLocal("current_metrics", copiedMetrics)
+                        ViewProcessor.realtimeMetricCache.compute(fullMetricId) { _, old ->
+                            val new = ClusterMetrics(copiedMetrics)
+                            if (old != null) {
+                                new.metrics.combine(old.metrics)
+                            }
+                            new
+                        }
+                        ViewProcessor.liveViewService.meterView.export(copiedMetrics, true)
+                    }
+                }
+            }
+
+            delegate.send(nextWorkName, metrics, selector)
+        }
     }
 }
