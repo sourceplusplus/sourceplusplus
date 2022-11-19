@@ -38,6 +38,7 @@ import spp.protocol.service.SourceServices.Subscribe.toLiveViewSubscriberAddress
 import spp.protocol.view.LiveView
 import spp.protocol.view.LiveViewConfig
 import spp.protocol.view.LiveViewEvent
+import spp.protocol.view.rule.LiveViewRule
 
 class LiveMeterRateTest : LiveInstrumentIntegrationTest() {
 
@@ -75,6 +76,20 @@ class LiveMeterRateTest : LiveInstrumentIntegrationTest() {
             meta = mapOf("metric.mode" to "RATE"),
             applyImmediately = true
         )
+
+        viewService.saveRuleIfAbsent(
+            LiveViewRule(
+                name = liveMeter.toMetricIdWithoutPrefix(),
+                exp =  buildString {
+                    append("(")
+                    append(liveMeter.toMetricIdWithoutPrefix())
+                    append(".sum(['service', 'instance'])")
+                    append(".downsampling(SUM)")
+                    append(")")
+                    append(".instance(['service'], ['instance'], Layer.GENERAL)")
+                }
+            )
+        ).await()
 
         val subscriptionId = viewService.addLiveView(
             LiveView(

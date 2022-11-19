@@ -29,7 +29,6 @@ import io.vertx.serviceproxy.ServiceException
 import kotlinx.coroutines.launch
 import mu.KotlinLogging
 import org.apache.skywalking.oap.meter.analyzer.Analyzer
-import org.apache.skywalking.oap.meter.analyzer.MetricConvert
 import org.apache.skywalking.oap.server.analyzer.module.AnalyzerModule
 import org.apache.skywalking.oap.server.analyzer.provider.meter.process.IMeterProcessService
 import org.apache.skywalking.oap.server.analyzer.provider.meter.process.MeterProcessService
@@ -42,7 +41,6 @@ import spp.platform.common.FeedbackProcessor
 import spp.platform.common.service.SourceBridgeService
 import spp.platform.common.util.args
 import spp.platform.storage.SourceStorage
-import spp.processor.live.impl.instrument.meter.LiveMeterRule
 import spp.protocol.artifact.exception.LiveStackTrace
 import spp.protocol.instrument.*
 import spp.protocol.instrument.command.CommandType
@@ -63,11 +61,7 @@ import java.util.*
 
 class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
 
-    companion object {
-        private val log = KotlinLogging.logger {}
-        const val METRIC_PREFIX = "spp"
-    }
-
+    private val log = KotlinLogging.logger {}
     private lateinit var meterSystem: MeterSystem
     private lateinit var meterProcessService: MeterProcessService
 
@@ -215,11 +209,6 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
                             devAuth.accessToken?.let { put("spp.access_token", it) }
                         }
                     )
-
-                    //save live meter to SkyWalking meter process service
-                    LiveMeterRule.toMeterConfig(pendingMeter)?.let {
-                        meterProcessService.converts().add(MetricConvert(it, meterSystem))
-                    }
 
                     if (pendingMeter.applyImmediately) {
                         addApplyImmediatelyHandler(pendingMeter.id!!, promise).onSuccess {

@@ -36,6 +36,7 @@ import spp.protocol.service.SourceServices.Subscribe.toLiveViewSubscriberAddress
 import spp.protocol.view.LiveView
 import spp.protocol.view.LiveViewConfig
 import spp.protocol.view.LiveViewEvent
+import spp.protocol.view.rule.LiveViewRule
 import java.io.ByteArrayOutputStream
 import java.io.ObjectOutputStream
 import java.io.Serializable
@@ -44,9 +45,7 @@ import java.util.function.Supplier
 
 class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
 
-    companion object {
-        private val log = KotlinLogging.logger {}
-    }
+    private val log = KotlinLogging.logger {}
 
     private fun triggerGauge() {
         val str = "hello"
@@ -82,6 +81,19 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
             applyImmediately = true,
             hitLimit = 1
         )
+
+        viewService.saveRuleIfAbsent(
+            LiveViewRule(
+                name = liveMeter.toMetricIdWithoutPrefix(),
+                exp = buildString {
+                    append("(")
+                    append(liveMeter.toMetricIdWithoutPrefix())
+                    append(".downsampling(LATEST)")
+                    append(")")
+                    append(".instance(['service'], ['instance'], Layer.GENERAL)")
+                }
+            )
+        ).await()
 
         val subscriptionId = viewService.addLiveView(
             LiveView(
@@ -155,6 +167,19 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
             applyImmediately = true,
             hitLimit = 1
         )
+
+        viewService.saveRuleIfAbsent(
+            LiveViewRule(
+                name = liveMeter.toMetricIdWithoutPrefix(),
+                exp = buildString {
+                    append("(")
+                    append(liveMeter.toMetricIdWithoutPrefix())
+                    append(".downsampling(LATEST)")
+                    append(")")
+                    append(".instance(['service'], ['instance'], Layer.GENERAL)")
+                }
+            )
+        ).await()
 
         val subscriptionId = viewService.addLiveView(
             LiveView(
