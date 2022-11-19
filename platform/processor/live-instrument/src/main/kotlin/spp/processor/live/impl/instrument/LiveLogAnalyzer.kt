@@ -34,6 +34,7 @@ import spp.platform.storage.SourceStorage
 import spp.protocol.artifact.log.Log
 import spp.protocol.artifact.log.LogOrderType
 import spp.protocol.artifact.log.LogResult
+import spp.protocol.instrument.LiveSourceLocation
 import spp.protocol.instrument.event.LiveInstrumentEvent
 import spp.protocol.instrument.event.LiveInstrumentEventType
 import spp.protocol.instrument.event.LiveLogHit
@@ -85,6 +86,18 @@ class LiveLogAnalyzer : LogAnalysisListener, LogAnalysisListenerFactory {
         }
         logPublishCache.put(logId!!, System.currentTimeMillis())
 
+        //get log location (if available)
+        val logSource = logData.tags.dataList.find { it.key == "source" }?.value
+        val logLineNumber = logData.tags.dataList.find { it.key == "line" }?.value?.toInt()
+        val logLocation = if (logSource != null) {
+            LiveSourceLocation(
+                logSource,
+                logLineNumber ?: -1,
+                service = logData.service,
+                serviceInstance = logData.serviceInstance
+            )
+        } else null
+
         GlobalScope.launch(ClusterConnection.getVertx().dispatcher()) {
             handleLogHit(
                 LiveLogHit(
@@ -102,7 +115,8 @@ class LiveLogAnalyzer : LogAnalysisListener, LogAnalysisListenerFactory {
                                 level = "Live",
                                 logger = logger,
                                 thread = thread,
-                                arguments = arguments
+                                arguments = arguments,
+                                location = logLocation
                             )
                         ),
                         total = -1
