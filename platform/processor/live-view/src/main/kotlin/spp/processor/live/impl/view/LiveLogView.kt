@@ -32,6 +32,7 @@ import spp.processor.ViewProcessor
 import spp.processor.live.impl.view.model.LiveGaugeValueMetrics
 import spp.processor.live.impl.view.util.MetricTypeSubscriptionCache
 import spp.protocol.artifact.log.Log
+import spp.protocol.instrument.LiveSourceLocation
 import java.time.Instant
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatterBuilder
@@ -87,6 +88,19 @@ class LiveLogView(private val subscriptionCache: MetricTypeSubscriptionCache) : 
                 subs.forEach { sub ->
                     log.debug { "Sending log pattern $logPattern to subscriber $sub" }
 
+                    //get log location (if available)
+                    val logSource = logData.tags.dataList.find { it.key == "source" }?.value
+                    val logLineNumber = logData.tags.dataList.find { it.key == "line" }?.value?.toInt()
+                    val logLocation = if (logSource != null) {
+                        LiveSourceLocation(
+                            logSource,
+                            logLineNumber ?: -1,
+                            service = logData.service,
+                            serviceInstance = logData.serviceInstance
+                        )
+                    } else null
+
+                    //publish log record
                     val logRecord = Log(
                         Instant.ofEpochMilli(logData.timestamp),
                         logPattern,
@@ -94,7 +108,8 @@ class LiveLogView(private val subscriptionCache: MetricTypeSubscriptionCache) : 
                         logData.tags.dataList.find { it.key == "logger" }?.value,
                         logData.tags.dataList.find { it.key == "thread" }?.value,
                         null,
-                        logData.tags.dataList.filter { it.key.startsWith("argument.") }.map { it.value }
+                        logData.tags.dataList.filter { it.key.startsWith("argument.") }.map { it.value },
+                        logLocation
                     )
                     val event = JsonObject()
                         .put("type", "LOGS")
