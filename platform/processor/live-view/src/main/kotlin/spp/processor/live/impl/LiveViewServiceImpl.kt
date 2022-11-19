@@ -53,6 +53,7 @@ import spp.processor.live.impl.view.util.ViewSubscriber
 import spp.protocol.platform.PlatformAddress.MARKER_DISCONNECTED
 import spp.protocol.service.LiveViewService
 import spp.protocol.service.SourceServices.Subscribe.toLiveViewSubscriberAddress
+import spp.protocol.service.error.RuleAlreadyExistsException
 import spp.protocol.view.LiveView
 import spp.protocol.view.LiveViewEvent
 import spp.protocol.view.rule.LiveViewRule
@@ -123,7 +124,7 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
             }
         }
         if (exitingRule) {
-            return Future.failedFuture("Rule with name ${rule.name} already exists")
+            return Future.failedFuture(RuleAlreadyExistsException("Rule with name ${rule.name} already exists"))
         }
 
         val meterConfig = MeterConfig()
