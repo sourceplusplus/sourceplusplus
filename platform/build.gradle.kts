@@ -108,7 +108,7 @@ subprojects {
         compileOnly("org.apache.skywalking:library-elasticsearch-client:$skywalkingVersion") { isTransitive = false }
         compileOnly("io.grpc:grpc-api:1.46.0")
 
-        detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.21.0")
+        detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.22.0")
 
         testImplementation("org.slf4j:slf4j-simple:$slf4jVersion")
         testImplementation("org.junit.jupiter:junit-jupiter-engine:$jupiterVersion")
