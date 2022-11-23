@@ -80,7 +80,7 @@ class LiveMeterRateTest : LiveInstrumentIntegrationTest() {
         viewService.saveRuleIfAbsent(
             LiveViewRule(
                 name = liveMeter.toMetricIdWithoutPrefix(),
-                exp =  buildString {
+                exp = buildString {
                     append("(")
                     append(liveMeter.toMetricIdWithoutPrefix())
                     append(".sum(['service', 'instance'])")
