@@ -45,10 +45,7 @@ import kotlin.collections.set
 
 class LiveLogAnalyzer : LogAnalysisListener, LogAnalysisListenerFactory {
 
-    companion object {
-        private val log = KotlinLogging.logger {}
-    }
-
+    private val log = KotlinLogging.logger {}
     private var logPublishRateLimit = 1000
     private val logPublishCache = CacheBuilder.newBuilder()
         .expireAfterAccess(1, TimeUnit.MINUTES)
