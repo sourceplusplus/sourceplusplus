@@ -75,35 +75,35 @@ class DeepObjectLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                 //layer1
                 val layer1Object = topFrame.variables.first { it.name == "deepObject" }
                 assertEquals(
-                    "integration.breakpoint.DeepObjectLiveBreakpointTest\$Layer1",
+                    Layer1::class.java.name,
                     layer1Object.liveClazz
                 )
 
                 //layer2
                 val layer2Object = (layer1Object.value as JsonArray).first() as JsonObject
                 assertEquals(
-                    "integration.breakpoint.DeepObjectLiveBreakpointTest\$Layer1\$Layer2",
+                    Layer1.Layer2::class.java.name,
                     layer2Object.getString("liveClazz")
                 )
 
                 //layer3
                 val layer3Object = layer2Object.getJsonArray("value").first() as JsonObject
                 assertEquals(
-                    "integration.breakpoint.DeepObjectLiveBreakpointTest\$Layer1\$Layer2\$Layer3",
+                    Layer1.Layer2.Layer3::class.java.name,
                     layer3Object.getString("liveClazz")
                 )
 
                 //layer4
                 val layer4Object = (layer3Object.getJsonArray("value")).first() as JsonObject
                 assertEquals(
-                    "integration.breakpoint.DeepObjectLiveBreakpointTest\$Layer1\$Layer2\$Layer3\$Layer4",
+                    Layer1.Layer2.Layer3.Layer4::class.java.name,
                     layer4Object.getString("liveClazz")
                 )
 
                 //layer5
                 val layer5Object = layer4Object.getJsonArray("value").first() as JsonObject
                 assertEquals(
-                    "integration.breakpoint.DeepObjectLiveBreakpointTest\$Layer1\$Layer2\$Layer3\$Layer4\$Layer5",
+                    Layer1.Layer2.Layer3.Layer4.Layer5::class.java.name,
                     layer5Object.getString("liveClazz")
                 )
 

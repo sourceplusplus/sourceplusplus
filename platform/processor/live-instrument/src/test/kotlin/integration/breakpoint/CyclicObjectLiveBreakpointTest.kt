@@ -63,7 +63,7 @@ class CyclicObjectLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                 //cyclicObject
                 val cyclicObject = topFrame.variables.first { it.name == "cyclicObject" }
                 assertEquals(
-                    "integration.breakpoint.CyclicObjectLiveBreakpointTest\$TopObject",
+                    TopObject::class.java.name,
                     cyclicObject.liveClazz
                 )
                 val cyclicObjectId = cyclicObject.liveIdentity
@@ -71,14 +71,14 @@ class CyclicObjectLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
                 val bottomObject = (cyclicObject.value as JsonArray).first() as JsonObject
                 assertEquals(
-                    "integration.breakpoint.CyclicObjectLiveBreakpointTest\$BottomObject",
+                    BottomObject::class.java.name,
                     bottomObject.getString("liveClazz")
                 )
 
                 val topObject = (bottomObject.getJsonArray("value")).first() as JsonObject
                 assertNotNull(topObject)
                 assertEquals(
-                    "integration.breakpoint.CyclicObjectLiveBreakpointTest\$TopObject",
+                    TopObject::class.java.name,
                     topObject.getString("liveClazz")
                 )
 
