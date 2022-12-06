@@ -27,6 +27,7 @@ import org.apache.skywalking.apm.network.logging.v3.LogData
 import org.apache.skywalking.oap.log.analyzer.provider.log.listener.LogAnalysisListener
 import org.apache.skywalking.oap.log.analyzer.provider.log.listener.LogAnalysisListenerFactory
 import org.apache.skywalking.oap.server.core.analysis.IDManager
+import org.apache.skywalking.oap.server.core.analysis.Layer
 import spp.platform.common.ClusterConnection
 import spp.processor.ViewProcessor
 import spp.processor.live.impl.view.model.LiveGaugeValueMetrics
@@ -129,5 +130,5 @@ class LiveLogView(private val subscriptionCache: MetricTypeSubscriptionCache) : 
         return serviceIdOrName == serviceName || serviceIdOrName == IDManager.ServiceID.buildId(serviceName, true)
     }
 
-    override fun create() = sppLogAnalyzer
+    override fun create(layer: Layer?) = sppLogAnalyzer
 }

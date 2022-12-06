@@ -28,6 +28,7 @@ import mu.KotlinLogging
 import org.apache.skywalking.apm.network.logging.v3.LogData
 import org.apache.skywalking.oap.log.analyzer.provider.log.listener.LogAnalysisListener
 import org.apache.skywalking.oap.log.analyzer.provider.log.listener.LogAnalysisListenerFactory
+import org.apache.skywalking.oap.server.core.analysis.Layer
 import spp.platform.common.ClusterConnection
 import spp.platform.common.util.args
 import spp.platform.storage.SourceStorage
@@ -147,5 +148,5 @@ class LiveLogAnalyzer : LogAnalysisListener, LogAnalysisListenerFactory {
         }
     }
 
-    override fun create() = LiveLogAnalyzer()
+    override fun create(layer: Layer?) = LiveLogAnalyzer()
 }

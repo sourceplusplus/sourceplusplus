@@ -83,14 +83,6 @@ class SPPMetricsStreamProcessor : MetricsStreamProcessor() {
         return realProcessor.getL1FlushPeriod()
     }
 
-    override fun setEnableDatabaseSession(enableDatabaseSession: Boolean) {
-        realProcessor.setEnableDatabaseSession(enableDatabaseSession)
-    }
-
-    override fun isEnableDatabaseSession(): Boolean {
-        return realProcessor.isEnableDatabaseSession()
-    }
-
     override fun setStorageSessionTimeout(storageSessionTimeout: Long) {
         realProcessor.setStorageSessionTimeout(storageSessionTimeout)
     }

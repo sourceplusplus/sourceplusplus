@@ -112,7 +112,6 @@ tasks.getByName<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("sha
     relocate("com.codahale", "spp.platform.dependencies.com.codahale")
     relocate("io.netty", "spp.platform.dependencies.io.netty")
 
-    configurations.add(project.configurations.compileClasspath.get())
     configurations.add(project.configurations.runtimeClasspath.get())
     configurations.add(project.configurations.shadow.get())
 }
