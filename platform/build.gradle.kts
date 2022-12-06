@@ -78,7 +78,7 @@ subprojects {
         implementation("io.vertx:vertx-web-graphql:$vertxVersion") {
             exclude(group = "com.graphql-java")
         }
-        compileOnly("com.graphql-java:graphql-java:19.2") //tied to SkyWalking OAP version
+        compileOnly("com.graphql-java:graphql-java:19.3") //tied to SkyWalking OAP version
         implementation("io.vertx:vertx-auth-jwt:$vertxVersion")
         implementation("io.vertx:vertx-redis-client:$vertxVersion")
         implementation("io.vertx:vertx-tcp-eventbus-bridge:$vertxVersion")
