@@ -762,7 +762,7 @@ class SourceServiceITTest : PlatformIntegrationTest() {
                 .bodyAsJsonObject()
         assertNull(getServicesResp.getJsonArray("errors"))
         val services = getServicesResp.getJsonObject("data").getJsonArray("getServices")
-        assertFalse(services.isEmpty)
+        assertTrue(services.isEmpty)
     }
 
     @Test

@@ -50,18 +50,23 @@ class LiveViewProcessorProvider : ModuleProvider() {
 
     override fun name(): String = "default"
     override fun module(): Class<out ModuleDefine> = LiveViewModule::class.java
-    override fun createConfigBeanIfAbsent(): ModuleConfig? = null
+    override fun newConfigCreator(): ConfigCreator<out ModuleConfig>? = null
     override fun prepare() {
         //todo: should be able to hook into metrics in a smarter way
         val sppMetricsStreamProcessor = SPPMetricsStreamProcessor()
         Reflect.onClass(MetricsStreamProcessor::class.java).set("PROCESSOR", sppMetricsStreamProcessor)
 
-        registerServiceImplementation(MetricValuesExportService::class.java, MetricValuesExportService {
-            if (it.type == ExportEvent.EventType.TOTAL && it.metrics is WithMetadata) {
-                GlobalScope.launch(ClusterConnection.getVertx().dispatcher()) {
-                    liveViewService.meterView.export(it.metrics, false)
+        registerServiceImplementation(MetricValuesExportService::class.java, object : MetricValuesExportService {
+            override fun export(event: ExportEvent) {
+                if (event.type == ExportEvent.EventType.TOTAL && event.metrics is WithMetadata) {
+                    GlobalScope.launch(ClusterConnection.getVertx().dispatcher()) {
+                        liveViewService.meterView.export(event.metrics, false)
+                    }
                 }
             }
+
+            override fun start() = Unit
+            override fun isEnabled() = true
         })
     }
 

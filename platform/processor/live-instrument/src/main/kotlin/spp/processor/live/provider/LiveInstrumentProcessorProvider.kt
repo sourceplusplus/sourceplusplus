@@ -49,7 +49,7 @@ class LiveInstrumentProcessorProvider : ModuleProvider() {
 
     override fun name(): String = "default"
     override fun module(): Class<out ModuleDefine> = LiveInstrumentModule::class.java
-    override fun createConfigBeanIfAbsent(): ModuleConfig? = null
+    override fun newConfigCreator(): ConfigCreator<out ModuleConfig>? = null
     override fun prepare() = Unit
 
     override fun start() {

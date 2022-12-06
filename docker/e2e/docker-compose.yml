@@ -30,7 +30,7 @@ services:
       - SPP_STORAGE_CLUSTER_ENABLED=true
       - SW_OAL_ENGINE_DEBUG=Y
       - SW_ENABLE_UPDATE_UI_TEMPLATE=true
-      - SW_TELEMETRY=prometheus
-      - SW_TELEMETRY_PROMETHEUS_HOST=spp-platform
-      - SW_PROMETHEUS_FETCHER=default
-      - SW_PROMETHEUS_FETCHER_ENABLED_RULES=self
+#      - SW_TELEMETRY=prometheus
+#      - SW_TELEMETRY_PROMETHEUS_HOST=spp-platform
+#      - SW_PROMETHEUS_FETCHER=default
+#      - SW_PROMETHEUS_FETCHER_ENABLED_RULES=self

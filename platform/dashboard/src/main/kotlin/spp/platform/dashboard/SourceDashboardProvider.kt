@@ -35,7 +35,7 @@ class SourceDashboardProvider : ModuleProvider() {
 
     override fun name(): String = "default"
     override fun module(): Class<out ModuleDefine> = SourceDashboardModule::class.java
-    override fun createConfigBeanIfAbsent(): ModuleConfig? = null
+    override fun newConfigCreator(): ConfigCreator<out ModuleConfig>? = null
     override fun prepare() = Unit
 
     override fun start() {
