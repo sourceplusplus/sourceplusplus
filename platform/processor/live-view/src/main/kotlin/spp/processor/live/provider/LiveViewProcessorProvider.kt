@@ -23,10 +23,14 @@ import kotlinx.coroutines.launch
 import org.apache.skywalking.oap.log.analyzer.module.LogAnalyzerModule
 import org.apache.skywalking.oap.server.analyzer.module.AnalyzerModule
 import org.apache.skywalking.oap.server.core.CoreModule
+import org.apache.skywalking.oap.server.core.analysis.manual.log.LogRecord
+import org.apache.skywalking.oap.server.core.analysis.manual.segment.SegmentRecord
 import org.apache.skywalking.oap.server.core.analysis.metrics.WithMetadata
 import org.apache.skywalking.oap.server.core.analysis.worker.MetricsStreamProcessor
 import org.apache.skywalking.oap.server.core.exporter.ExportEvent
+import org.apache.skywalking.oap.server.core.exporter.LogExportService
 import org.apache.skywalking.oap.server.core.exporter.MetricValuesExportService
+import org.apache.skywalking.oap.server.core.exporter.TraceExportService
 import org.apache.skywalking.oap.server.core.storage.StorageModule
 import org.apache.skywalking.oap.server.library.module.ModuleConfig
 import org.apache.skywalking.oap.server.library.module.ModuleDefine
@@ -39,7 +43,11 @@ import spp.processor.ViewProcessor.liveViewService
 import spp.processor.live.impl.SPPMetricsStreamProcessor
 
 class LiveViewModule : ModuleDefine("exporter") {
-    override fun services(): Array<Class<*>> = arrayOf(MetricValuesExportService::class.java)
+    override fun services(): Array<Class<*>> = arrayOf(
+        MetricValuesExportService::class.java,
+        TraceExportService::class.java,
+        LogExportService::class.java
+    )
 }
 
 class LiveViewProcessorProvider : ModuleProvider() {
@@ -67,6 +75,18 @@ class LiveViewProcessorProvider : ModuleProvider() {
 
             override fun start() = Unit
             override fun isEnabled() = true
+        })
+
+        //we don't use trace/log exports but need to register services anyway
+        registerServiceImplementation(TraceExportService::class.java, object : TraceExportService {
+            override fun export(segmentRecord: SegmentRecord) = Unit
+            override fun start() = Unit
+            override fun isEnabled() = false
+        })
+        registerServiceImplementation(LogExportService::class.java, object : LogExportService {
+            override fun export(logRecord: LogRecord) = Unit
+            override fun start() = Unit
+            override fun isEnabled() = false
         })
     }
 
