@@ -71,7 +71,6 @@ subprojects {
         implementation("io.vertx:vertx-grpc-server:$vertxVersion") { exclude(group = "io.grpc") }
         implementation("io.vertx:vertx-grpc-client:$vertxVersion") { exclude(group = "io.grpc") } //todo: shouldn't need grpc deps
         implementation("io.vertx:vertx-grpc-common:$vertxVersion") { exclude(group = "io.grpc") }
-        implementation("com.google.protobuf:protobuf-java:3.21.7")
         implementation("io.vertx:vertx-service-discovery:$vertxVersion")
         implementation("io.vertx:vertx-service-proxy:$vertxVersion")
         implementation("io.vertx:vertx-health-check:$vertxVersion")
@@ -79,6 +78,7 @@ subprojects {
             exclude(group = "com.graphql-java")
         }
         compileOnly("com.graphql-java:graphql-java:19.2") //tied to SkyWalking OAP version
+        compileOnly("com.google.protobuf:protobuf-java:3.21.8") //tied to SkyWalking OAP version
         implementation("io.vertx:vertx-auth-jwt:$vertxVersion")
         implementation("io.vertx:vertx-redis-client:$vertxVersion")
         implementation("io.vertx:vertx-tcp-eventbus-bridge:$vertxVersion")
