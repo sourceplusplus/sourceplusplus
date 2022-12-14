@@ -79,6 +79,7 @@ subprojects {
         }
         compileOnly("com.graphql-java:graphql-java:19.2") //tied to SkyWalking OAP version
         compileOnly("com.google.protobuf:protobuf-java:3.21.8") //tied to SkyWalking OAP version
+        compileOnly("io.grpc:grpc-api:1.46.0") //tied to SkyWalking OAP version
         implementation("io.vertx:vertx-auth-jwt:$vertxVersion")
         implementation("io.vertx:vertx-redis-client:$vertxVersion")
         implementation("io.vertx:vertx-tcp-eventbus-bridge:$vertxVersion")
@@ -106,7 +107,6 @@ subprojects {
         compileOnly("org.apache.skywalking:storage-jdbc-hikaricp-plugin:$skywalkingVersion") { isTransitive = false }
         compileOnly("org.apache.skywalking:storage-elasticsearch-plugin:$skywalkingVersion") { isTransitive = false }
         compileOnly("org.apache.skywalking:library-elasticsearch-client:$skywalkingVersion") { isTransitive = false }
-        compileOnly("io.grpc:grpc-api:1.51.1")
 
         detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.22.0")
 
