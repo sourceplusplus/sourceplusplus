@@ -222,7 +222,7 @@ jobs:
         uses: docker/setup-qemu-action@v1
 
       - name: Set up Docker Buildx
-        uses: docker buildx create --use --platform linux/arm64,linux/amd64 --driver-opt=network=host
+        run: docker buildx create --use --platform linux/arm64,linux/amd64 --driver-opt=network=host
 
       - name: Build spp-platform tagged Docker image
         run: cd ./docker/spp-platform && docker buildx build . --platform linux/arm64,linux/amd64 --file Dockerfile --tag sourceplusplus/spp-platform:${{ needs.jvm-build.outputs.release_version }}
