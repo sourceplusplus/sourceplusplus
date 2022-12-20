@@ -54,7 +54,7 @@ jobs:
       - name: Set up Docker Buildx
         run: docker buildx create --use --platform linux/arm64,linux/amd64 --driver-opt=network=host
 
-      - name: Build & push spp-platform latest Docker image
+      - name: Build & push spp-platform tagged Docker image
         run: cd ./docker/spp-platform && docker buildx build . --platform linux/arm64,linux/amd64 --file Dockerfile --tag sourceplusplus/spp-platform:${{ env.SPP_PLATFORM_VERSION }} --push
 
       - name: Update spp-platform Docker Hub description
