@@ -2,7 +2,7 @@ name: Release distributions
 
 on:
   release:
-    types: [published]
+    types: [ published ]
   workflow_dispatch:
 
 jobs:
@@ -48,11 +48,14 @@ jobs:
       - name: Copy ui-initialized-templates to spp-platform Docker image
         run: cp -r ./docker/e2e/config/ui-initialized-templates ./docker/spp-platform
 
-      - name: Build spp-platform tagged Docker image
-        run: cd ./docker/spp-platform && docker build . --file Dockerfile --tag sourceplusplus/spp-platform:${{ env.SPP_PLATFORM_VERSION }}
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
 
-      - name: Push spp-platform tagged Docker image
-        run: docker push sourceplusplus/spp-platform:${{ env.SPP_PLATFORM_VERSION }}
+      - name: Set up Docker Buildx
+        run: docker buildx create --use --platform linux/arm64,linux/amd64 --driver-opt=network=host
+
+      - name: Build & push spp-platform latest Docker image
+        run: cd ./docker/spp-platform && docker buildx build . --platform linux/arm64,linux/amd64 --file Dockerfile --tag sourceplusplus/spp-platform:${{ env.SPP_PLATFORM_VERSION }} --push
 
       - name: Update spp-platform Docker Hub description
         uses: peter-evans/dockerhub-description@v3
