@@ -225,10 +225,10 @@ jobs:
         run: docker buildx create --use --platform linux/arm64,linux/amd64 --driver-opt=network=host
 
       - name: Build spp-platform tagged Docker image
-        run: cd ./docker/spp-platform && docker buildx build . --platform linux/arm64,linux/amd64 --file Dockerfile --tag sourceplusplus/spp-platform:${{ needs.jvm-build.outputs.release_version }}
+        run: cd ./docker/spp-platform && docker buildx build . --platform linux/arm64,linux/amd64 --file Dockerfile --tag sourceplusplus/spp-platform:${{ needs.jvm-build.outputs.release_version }} --push
 
-      - name: Retag spp-platform tagged Docker image to latest
-        run: docker tag sourceplusplus/spp-platform:${{ needs.jvm-build.outputs.release_version }} sourceplusplus/spp-platform:latest
+#      - name: Retag spp-platform tagged Docker image to latest
+#        run: docker tag sourceplusplus/spp-platform:${{ needs.jvm-build.outputs.release_version }} sourceplusplus/spp-platform:latest
 
       - name: Push spp-platform latest Docker image
         run: docker push sourceplusplus/spp-platform:latest
