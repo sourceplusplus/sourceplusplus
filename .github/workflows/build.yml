@@ -222,17 +222,10 @@ jobs:
         uses: docker/setup-qemu-action@v1
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-
-      - name: Build and push docker
-        uses: docker/build-push-action@v2
-        with:
-          platforms: linux/amd64,linux/arm64
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+        uses: docker buildx create --use --platform linux/arm64,linux/amd64 --driver-opt=network=host
 
       - name: Build spp-platform tagged Docker image
-        run: cd ./docker/spp-platform && docker buildx build . --platform linux/arm64 --file Dockerfile --tag sourceplusplus/spp-platform:${{ needs.jvm-build.outputs.release_version }}
+        run: cd ./docker/spp-platform && docker buildx build . --platform linux/arm64,linux/amd64 --file Dockerfile --tag sourceplusplus/spp-platform:${{ needs.jvm-build.outputs.release_version }}
 
       - name: Retag spp-platform tagged Docker image to latest
         run: docker tag sourceplusplus/spp-platform:${{ needs.jvm-build.outputs.release_version }} sourceplusplus/spp-platform:latest
