@@ -152,7 +152,7 @@ jobs:
 
   releaseDraft:
     name: Release Draft
-    needs: [jvm-build]
+    needs: [ jvm-build ]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master'
     steps:
@@ -194,7 +194,7 @@ jobs:
           asset_content_type: application/gzip
 
   docker-push:
-    needs: [jvm-build]
+    needs: [ jvm-build ]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master'
 
@@ -224,14 +224,8 @@ jobs:
       - name: Set up Docker Buildx
         run: docker buildx create --use --platform linux/arm64,linux/amd64 --driver-opt=network=host
 
-      - name: Build spp-platform tagged Docker image
-        run: cd ./docker/spp-platform && docker buildx build . --platform linux/arm64,linux/amd64 --file Dockerfile --tag sourceplusplus/spp-platform:${{ needs.jvm-build.outputs.release_version }} --push
-
-#      - name: Retag spp-platform tagged Docker image to latest
-#        run: docker tag sourceplusplus/spp-platform:${{ needs.jvm-build.outputs.release_version }} sourceplusplus/spp-platform:latest
-
-      - name: Push spp-platform latest Docker image
-        run: docker push sourceplusplus/spp-platform:latest
+      - name: Build & push spp-platform latest Docker image
+        run: cd ./docker/spp-platform && docker buildx build . --platform linux/arm64,linux/amd64 --file Dockerfile --tag sourceplusplus/spp-platform:latest --push
 
       - name: Trigger demo.sourceplus.plus deploy
         uses: peter-evans/repository-dispatch@v2
@@ -241,7 +235,7 @@ jobs:
 
   # Delete build artifacts
   cleanup:
-    needs: [jvm-build, releaseDraft, docker-push]
+    needs: [ jvm-build, releaseDraft, docker-push ]
     runs-on: ubuntu-latest
 
     steps:
