@@ -89,7 +89,7 @@ subprojects {
         implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
         implementation("commons-io:commons-io:$commonsIoVersion")
         implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
-        implementation("io.dropwizard.metrics:metrics-core:4.2.14")
+        implementation("io.dropwizard.metrics:metrics-core:4.2.15")
         implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.0")
         implementation("org.apache.commons:commons-text:1.10.0")
         compileOnly("org.apache.skywalking:apm-network:$skywalkingVersion") { isTransitive = false }
