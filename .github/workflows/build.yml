@@ -219,7 +219,7 @@ jobs:
         run: cp -r ./docker/e2e/config/ui-initialized-templates ./docker/spp-platform
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
+        uses: docker/setup-qemu-action@v2
 
       - name: Set up Docker Buildx
         run: docker buildx create --use --platform linux/arm64,linux/amd64 --driver-opt=network=host
