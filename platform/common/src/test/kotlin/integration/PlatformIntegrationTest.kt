@@ -147,7 +147,7 @@ open class PlatformIntegrationTest {
 
     class LoggedLiveInstrumentService(private val delegate: LiveInstrumentService) : LiveInstrumentService by delegate {
         override fun removeLiveInstrument(id: String): Future<LiveInstrument?> {
-            log.info("Removing live instrument $id", Throwable())
+            log.debug("Removing live instrument $id", Throwable())
             return delegate.removeLiveInstrument(id)
         }
     }
