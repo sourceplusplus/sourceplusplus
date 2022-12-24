@@ -86,7 +86,7 @@ class LiveMeterView(private val subscriptionCache: MetricTypeSubscriptionCache) 
             }.toSet()
 
             if (subs.isNotEmpty()) {
-                log.debug { "Exporting event $metricName to {} subscribers".args(subs.size) }
+                log.trace { "Exporting event $metricName to {} subscribers".args(subs.size) }
                 handleEvent(subs, metrics, realTime)
             }
         }
