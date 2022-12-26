@@ -23,8 +23,6 @@ subprojects {
         resolutionStrategy.dependencySubstitution {
             substitute(module("plus.sourceplus:protocol"))
                 .using(project(":protocol"))
-            substitute(module("plus.sourceplus.interface:interface-booster-ui"))
-                .using(project(":interfaces:booster-ui"))
         }
     }
 
@@ -47,7 +45,6 @@ tasks {
             file("platform/core/build/libs/spp-platform-core-${project.version}.jar"),
             file("platform/bridge/build/libs/spp-platform-bridge-${project.version}.jar"),
             file("platform/storage/build/libs/spp-platform-storage-${project.version}.jar"),
-            file("platform/dashboard/build/libs/spp-live-dashboard-${project.version}.jar"),
             file("platform/processor/live-instrument/build/libs/spp-live-instrument-${project.version}.jar"),
             file("platform/processor/live-view/build/libs/spp-live-view-${project.version}.jar")
         )

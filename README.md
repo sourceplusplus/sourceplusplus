@@ -89,7 +89,6 @@ The Source++ documentation is available [here](https://docs.sourceplus.plus).
     ├── bridge                # Bridge clients to platform
     ├── common                # Common platform code
     ├── core                  # Core platform code
-    ├── dashboard             # Live Dashboard
     ├── processor             # Observability data processors
         ├── live-instrument   # Live Instrument processor
         └── live-view         # Live View processor

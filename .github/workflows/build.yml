@@ -62,7 +62,7 @@ jobs:
 
       - name: Start platform (non-release)
         if: github.ref != 'refs/heads/master'
-        run: ./gradlew -p platform assembleUp -x :interfaces:booster-ui:buildSkyWalkingUI -PplatformVersion=$BUILD_VERSION -PprobeVersion=$BUILD_VERSION
+        run: ./gradlew -p platform assembleUp -PplatformVersion=$BUILD_VERSION -PprobeVersion=$BUILD_VERSION
 
       - name: Docker IPs
         run: docker inspect --format='{{.Name}} - {{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $(docker ps -aq)
@@ -78,7 +78,7 @@ jobs:
           until $(curl --header "Authorization: Bearer ${{ env.SPP_JWT_TOKEN }}" --output /dev/null --silent --fail http://localhost:12800/health); do printf '.'; sleep 5; done
 
       - name: Check platform
-        run: ./gradlew -p platform check -x :interfaces:booster-ui:buildSkyWalkingUI -Dtest.profile=integration -PplatformVersion=$BUILD_VERSION -PprobeVersion=$BUILD_VERSION
+        run: ./gradlew -p platform check -Dtest.profile=integration -PplatformVersion=$BUILD_VERSION -PprobeVersion=$BUILD_VERSION
 
       - run: ./gradlew :platform:composeLogs
         if: ${{ always() }}
@@ -119,7 +119,7 @@ jobs:
 
       - name: Make distribution
         if: github.ref == 'refs/heads/master'
-        run: ./gradlew makeDist -x :interfaces:booster-ui:buildSkyWalkingUI -Dbuild.profile=release -PplatformVersion=$BUILD_VERSION
+        run: ./gradlew makeDist -Dbuild.profile=release -PplatformVersion=$BUILD_VERSION
 
       - name: Upload spp-platform
         if: github.ref == 'refs/heads/master'
@@ -138,14 +138,13 @@ jobs:
             plus.sourceplus.platform.platform-bridge
             plus.sourceplus.platform.platform-common
             plus.sourceplus.platform.platform-core
-            plus.sourceplus.platform.platform-dashboard
             plus.sourceplus.platform.platform-storage
             plus.sourceplus.platform.live-instrument-processor
             plus.sourceplus.platform.live-view-processor
 
       - name: Publish New Snapshot Packages
         if: github.ref == 'refs/heads/master'
-        run: ./gradlew -p platform publish -x :interfaces:booster-ui:buildSkyWalkingUI -Dbuild.profile=release
+        run: ./gradlew -p platform publish -Dbuild.profile=release
         env:
           GH_PUBLISH_USERNAME: $GITHUB_ACTOR
           GH_PUBLISH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
