@@ -57,7 +57,7 @@ class ClusterMetrics(var metrics: Metrics) : ClusterSerializable {
             is IntValueHolder -> (metrics as IntValueHolder).value
             is DoubleValueHolder -> (metrics as DoubleValueHolder).value
             is LongValueHolder -> (metrics as LongValueHolder).value
-            is MultiIntValuesHolder -> (metrics as MultiIntValuesHolder).values
+            is MultiIntValuesHolder -> (metrics as MultiIntValuesHolder).values.toList()
 
             is LabeledValueHolder -> (metrics as LabeledValueHolder).value.let {
                 val map = mutableMapOf<String, Any>()
