@@ -60,6 +60,8 @@ import spp.protocol.platform.auth.RolePermission.*
 import spp.protocol.platform.developer.Developer
 import spp.protocol.platform.developer.SelfInfo
 import spp.protocol.platform.general.Service
+import spp.protocol.platform.general.ServiceEndpoint
+import spp.protocol.platform.general.ServiceInstance
 import spp.protocol.service.LiveInstrumentService
 import spp.protocol.service.LiveManagementService
 import spp.protocol.service.LiveViewService
@@ -216,6 +218,12 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
                 ).dataFetcher(
                     "getServices",
                     this::getServices
+                ).dataFetcher(
+                    "getInstances",
+                    this::getInstances
+                ).dataFetcher(
+                    "getEndpoints",
+                    this::getEndpoints
                 ).dataFetcher(
                     "getLiveViews",
                     this::getLiveViews
@@ -633,6 +641,62 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
         ) {
             if (it.succeeded()) {
                 it.result().getServices().onComplete {
+                    if (it.succeeded()) {
+                        completableFuture.complete(it.result())
+                    } else {
+                        completableFuture.completeExceptionally(it.cause())
+                    }
+                }
+            } else {
+                completableFuture.completeExceptionally(it.cause())
+            }
+        }
+        return completableFuture
+    }
+
+    private fun getInstances(env: DataFetchingEnvironment): CompletableFuture<List<ServiceInstance>> {
+        val completableFuture = CompletableFuture<List<ServiceInstance>>()
+        var accessToken: String? = null
+        if (jwtEnabled) {
+            val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
+            accessToken = user.principal().getString("access_token")
+        }
+
+        val id = env.getArgument<String>("serviceId")
+        EventBusService.getProxy(
+            discovery, LiveManagementService::class.java,
+            JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("auth-token", accessToken)) } }
+        ) {
+            if (it.succeeded()) {
+                it.result().getInstances(id).onComplete {
+                    if (it.succeeded()) {
+                        completableFuture.complete(it.result())
+                    } else {
+                        completableFuture.completeExceptionally(it.cause())
+                    }
+                }
+            } else {
+                completableFuture.completeExceptionally(it.cause())
+            }
+        }
+        return completableFuture
+    }
+
+    private fun getEndpoints(env: DataFetchingEnvironment): CompletableFuture<List<ServiceEndpoint>> {
+        val completableFuture = CompletableFuture<List<ServiceEndpoint>>()
+        var accessToken: String? = null
+        if (jwtEnabled) {
+            val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
+            accessToken = user.principal().getString("access_token")
+        }
+
+        val id = env.getArgument<String>("serviceId")
+        EventBusService.getProxy(
+            discovery, LiveManagementService::class.java,
+            JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("auth-token", accessToken)) } }
+        ) {
+            if (it.succeeded()) {
+                it.result().getEndpoints(id).onComplete {
                     if (it.succeeded()) {
                         completableFuture.complete(it.result())
                     } else {

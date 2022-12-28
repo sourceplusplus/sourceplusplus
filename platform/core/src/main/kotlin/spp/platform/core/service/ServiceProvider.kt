@@ -29,13 +29,17 @@ import io.vertx.servicediscovery.ServiceDiscovery
 import io.vertx.servicediscovery.ServiceDiscoveryOptions
 import io.vertx.servicediscovery.types.EventBusService
 import io.vertx.serviceproxy.ServiceBinder
+import org.apache.skywalking.oap.server.library.module.ModuleManager
 import org.slf4j.LoggerFactory
 import spp.platform.common.DeveloperAuth
 import spp.protocol.service.LiveManagementService
 import spp.protocol.service.SourceServices.LIVE_MANAGEMENT_SERVICE
 import kotlin.system.exitProcess
 
-class ServiceProvider(private val jwtAuth: JWTAuth?) : CoroutineVerticle() {
+class ServiceProvider(
+    private val jwtAuth: JWTAuth?,
+    private val moduleManager: ModuleManager
+) : CoroutineVerticle() {
 
     companion object {
         private val log = LoggerFactory.getLogger(ServiceProvider::class.java)
@@ -64,7 +68,7 @@ class ServiceProvider(private val jwtAuth: JWTAuth?) : CoroutineVerticle() {
             liveManagementService = publishService(
                 LIVE_MANAGEMENT_SERVICE,
                 LiveManagementService::class.java,
-                LiveManagementServiceImpl(vertx, jwtAuth)
+                LiveManagementServiceImpl(vertx, jwtAuth, moduleManager)
             )
         } catch (throwable: Throwable) {
             log.error("Failed to start SkyWalking provider", throwable)

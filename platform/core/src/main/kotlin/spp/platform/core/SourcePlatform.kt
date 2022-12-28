@@ -304,7 +304,8 @@ class SourcePlatform(private val manager: ModuleManager) : CoroutineVerticle() {
 
         //Start services
         vertx.deployVerticle(
-            ServiceProvider(jwt), DeploymentOptions().setConfig(config.put("SPP_INSTANCE_ID", SPP_INSTANCE_ID))
+            ServiceProvider(jwt, manager),
+            DeploymentOptions().setConfig(config.put("SPP_INSTANCE_ID", SPP_INSTANCE_ID))
         ).await()
 
         //Add SkyWalking interceptors

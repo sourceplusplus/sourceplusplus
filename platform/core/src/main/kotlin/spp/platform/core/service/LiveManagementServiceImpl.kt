@@ -20,7 +20,6 @@ package spp.platform.core.service
 import io.vertx.core.Future
 import io.vertx.core.Promise
 import io.vertx.core.Vertx
-import io.vertx.core.http.HttpMethod
 import io.vertx.core.json.JsonObject
 import io.vertx.ext.auth.JWTOptions
 import io.vertx.ext.auth.jwt.JWTAuth
@@ -29,6 +28,11 @@ import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import mu.KotlinLogging
+import org.apache.skywalking.oap.server.core.CoreModule
+import org.apache.skywalking.oap.server.core.query.MetadataQueryService
+import org.apache.skywalking.oap.server.core.query.enumeration.Step
+import org.apache.skywalking.oap.server.core.query.input.Duration
+import org.apache.skywalking.oap.server.library.module.ModuleManager
 import spp.platform.common.DeveloperAuth
 import spp.platform.common.service.SourceBridgeService
 import spp.platform.storage.SourceStorage
@@ -39,6 +43,8 @@ import spp.protocol.platform.auth.RolePermission
 import spp.protocol.platform.developer.Developer
 import spp.protocol.platform.developer.SelfInfo
 import spp.protocol.platform.general.Service
+import spp.protocol.platform.general.ServiceEndpoint
+import spp.protocol.platform.general.ServiceInstance
 import spp.protocol.platform.status.InstanceConnection
 import spp.protocol.service.LiveManagementService
 import spp.protocol.service.LiveViewService
@@ -48,13 +54,21 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 
-class LiveManagementServiceImpl(private val vertx: Vertx, private val jwt: JWTAuth?) : LiveManagementService {
+class LiveManagementServiceImpl(
+    private val vertx: Vertx,
+    private val jwt: JWTAuth?,
+    moduleManager: ModuleManager,
+) : LiveManagementService {
 
     companion object {
         private val log = KotlinLogging.logger {}
         private val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HHmm")
             .withZone(ZoneId.systemDefault())
     }
+
+    private val metadataQueryService = moduleManager.find(CoreModule.NAME)
+        .provider()
+        .getService(MetadataQueryService::class.java)
 
     override fun getClients(): Future<JsonObject> {
         log.trace { "Getting clients" }
@@ -166,51 +180,70 @@ class LiveManagementServiceImpl(private val vertx: Vertx, private val jwt: JWTAu
         return promise.future()
     }
 
-    override fun getServices(): Future<List<Service>> {
+    override fun getServices(layer: String?): Future<List<Service>> {
         log.trace { "Getting services" }
         val promise = Promise.promise<List<Service>>()
-        val forward = JsonObject()
-        forward.put("developer_id", Vertx.currentContext().getLocal<DeveloperAuth>("developer").selfId)
-        forward.put("tenant_id", Vertx.currentContext().getLocal<String>("tenant_id"))
-        forward.put("method", HttpMethod.POST.name())
-        forward.put(
-            "body", JsonObject()
-                .put(
-                    "query", "query (\$durationStart: String!, \$durationEnd: String!, \$durationStep: Step!) {\n" +
-                            "  getAllServices(duration: {start: \$durationStart, end: \$durationEnd, step: \$durationStep}) {\n" +
-                            "    key: id\n" +
-                            "    label: name\n" +
-                            "  }\n" +
-                            "}"
-                )
-                .put(
-                    "variables", JsonObject()
-                        .put("durationStart", formatter.format(Instant.now().minus(365, ChronoUnit.DAYS)))
-                        .put("durationEnd", formatter.format(Instant.now()))
-                        .put("durationStep", "MINUTE")
-                )
-        )
-
-        vertx.eventBus().request<JsonObject>("skywalking-forwarder", forward) {
-            if (it.succeeded()) {
-                val response = it.result().body()
-                val body = JsonObject(response.getString("body"))
-                val data = body.getJsonObject("data")
-                val services = data.getJsonArray("getAllServices")
-                val result = mutableListOf<Service>()
-                for (i in 0 until services.size()) {
-                    val service = services.getJsonObject(i)
-                    result.add(
-                        Service(
-                            id = service.getString("key"),
-                            name = service.getString("label")
-                        )
+        GlobalScope.launch(vertx.dispatcher()) {
+            val result = mutableListOf<Service>()
+            val services = metadataQueryService.listServices(layer, null)
+            services.forEach {
+                result.add(
+                    Service(
+                        id = it.id,
+                        name = it.name,
+                        group = it.group,
+                        shortName = it.shortName,
+                        layers = it.layers.toList(),
+                        normal = it.isNormal
                     )
-                }
-                promise.complete(result)
-            } else {
-                promise.fail(it.cause())
+                )
             }
+            promise.complete(result)
+        }
+        return promise.future()
+    }
+
+    override fun getInstances(serviceId: String): Future<List<ServiceInstance>> {
+        log.trace { "Getting instances for service $serviceId" }
+        val promise = Promise.promise<List<ServiceInstance>>()
+        GlobalScope.launch(vertx.dispatcher()) {
+            val result = mutableListOf<ServiceInstance>()
+            val duration = Duration().apply {
+                start = "1111-01-01 1111"
+                end = "2222-02-02 2222"
+                step = Step.MINUTE
+            }
+            val instances = metadataQueryService.listInstances(duration, serviceId)
+            instances.forEach {
+                result.add(
+                    ServiceInstance(
+                        id = it.id,
+                        name = it.name,
+                        language = it.language.name,
+                        instanceUUID = it.instanceUUID,
+                        attributes = it.attributes.associate { attr -> attr.name to attr.value }
+                    )
+                )
+            }
+            promise.complete(result)
+        }
+        return promise.future()
+    }
+
+    override fun getEndpoints(serviceId: String): Future<List<ServiceEndpoint>> {
+        log.trace { "Getting endpoints for service $serviceId" }
+        val promise = Promise.promise<List<ServiceEndpoint>>()
+        GlobalScope.launch(vertx.dispatcher()) {
+            val result = mutableListOf<ServiceEndpoint>()
+            metadataQueryService.findEndpoint("", serviceId, 1000).forEach {
+                result.add(
+                    ServiceEndpoint(
+                        id = it.id,
+                        name = it.name
+                    )
+                )
+            }
+            promise.complete(result)
         }
         return promise.future()
     }
