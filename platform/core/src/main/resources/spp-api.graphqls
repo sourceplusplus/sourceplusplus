@@ -395,7 +395,22 @@ type DataRedaction {
 type Service {
     id: String!
     name: String!
-    group: String
+    group: String!
+    shortName: String!
+    layers: [String!]!
+    normal: Boolean!
+}
+
+type ServiceInstance {
+    id: String!
+    name: String!
+    language: String!
+    instanceUUID: String!
+}
+
+type ServiceEndpoint {
+    id: String!
+    name: String!
 }
 
 type Query {
@@ -423,6 +438,8 @@ type Query {
 
     getSelf: Self!
     getServices: [Service!]!
+    getInstances(serviceId: String!): [ServiceInstance!]!
+    getEndpoints(serviceId: String!): [ServiceEndpoint!]!
 
     getLiveViews: [LiveView!]!
 
