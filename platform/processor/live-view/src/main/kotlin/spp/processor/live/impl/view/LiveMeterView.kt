@@ -200,8 +200,7 @@ class LiveMeterView(private val subscriptionCache: MetricTypeSubscriptionCache) 
         val realtimeValue = rtMetrics.calculateAndGetValue()
         if (metrics is PercentMetrics) {
             jsonEvent.put("percentage", realtimeValue)
-        } else {
-            jsonEvent.put("value", realtimeValue)
         }
+        jsonEvent.put("value", realtimeValue)
     }
 }
