@@ -2,7 +2,7 @@ import java.io.FileOutputStream
 import java.net.URL
 
 plugins {
-    id("com.dorongold.task-tree") version "2.1.0"
+    id("com.dorongold.task-tree") version "2.1.1"
     id("org.jetbrains.kotlin.plugin.noarg") apply false
     id("com.asarkar.gradle.build-time-tracker") version "4.3.0"
 }
