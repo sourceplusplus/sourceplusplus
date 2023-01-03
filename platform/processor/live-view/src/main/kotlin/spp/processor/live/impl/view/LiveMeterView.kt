@@ -124,6 +124,7 @@ class LiveMeterView(private val subscriptionCache: MetricTypeSubscriptionCache) 
                 jsonMetric.getJsonObject("meta").put("metricsName", "${metricsName}_realtime")
             }
             setRealtimeValue(jsonMetric, metrics)
+            jsonMetric.put("currentTime", System.currentTimeMillis())
         }
 
         subs.forEach { handleSubscriberEvent(it, metrics, jsonMetric) }
