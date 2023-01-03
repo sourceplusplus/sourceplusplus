@@ -47,6 +47,7 @@ import spp.platform.common.DeveloperAuth
 import spp.platform.storage.SourceStorage
 import spp.protocol.artifact.ArtifactQualifiedName
 import spp.protocol.artifact.ArtifactType
+import spp.protocol.artifact.metrics.MetricStep
 import spp.protocol.instrument.*
 import spp.protocol.instrument.LiveInstrumentType.*
 import spp.protocol.instrument.meter.MeterType
@@ -66,8 +67,10 @@ import spp.protocol.service.LiveInstrumentService
 import spp.protocol.service.LiveManagementService
 import spp.protocol.service.LiveViewService
 import spp.protocol.service.error.InstrumentAccessDenied
+import spp.protocol.view.HistoricalView
 import spp.protocol.view.LiveView
 import spp.protocol.view.LiveViewConfig
+import java.time.Instant
 import java.util.*
 import java.util.concurrent.CompletableFuture
 import kotlin.properties.Delegates
@@ -227,6 +230,9 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
                 ).dataFetcher(
                     "getLiveViews",
                     this::getLiveViews
+                ).dataFetcher(
+                    "getHistoricalMetrics",
+                    this::getHistoricalMetrics
                 ).dataFetcher(
                     "getClientAccessors",
                     this::getClientAccessors
@@ -1844,6 +1850,54 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
                     it.result().clearLiveViews().onComplete {
                         if (it.succeeded()) {
                             completableFuture.complete(true)
+                        } else {
+                            completableFuture.completeExceptionally(it.cause())
+                        }
+                    }
+                } else {
+                    completableFuture.completeExceptionally(it.cause())
+                }
+            }
+        }
+        return completableFuture
+    }
+
+    private fun getHistoricalMetrics(env: DataFetchingEnvironment): CompletableFuture<HistoricalView> {
+        val completableFuture = CompletableFuture<HistoricalView>()
+        var accessToken: String? = null
+        launch(vertx.dispatcher()) {
+            if (jwtEnabled) {
+                val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
+                val devId = user.principal().getString("developer_id")
+                if (SourceStorage.requiresPermission(devId, GET_LIVE_VIEW_SUBSCRIPTIONS, completableFuture)) {
+                    return@launch
+                }
+                accessToken = user.principal().getString("access_token")
+            }
+
+            val vars = JsonObject.mapFrom(env.variables)
+            val entityIds = vars.getJsonArray("entityIds", JsonArray()).list.map { it as String }
+            val metricIds = vars.getJsonArray("metricIds", JsonArray()).list.map { it as String }
+            if (entityIds.isEmpty()) {
+                completableFuture.completeExceptionally(IllegalArgumentException("entityIds must not be empty"))
+                return@launch
+            } else if (metricIds.isEmpty()) {
+                completableFuture.completeExceptionally(IllegalArgumentException("metricIds must not be empty"))
+                return@launch
+            }
+
+            val step = MetricStep.valueOf(vars.getString("step"))
+            val start = Instant.from(step.formatter.parse(vars.getString("start")))
+            val stop = vars.getString("stop")?.let { Instant.from(step.formatter.parse(it)) }
+
+            EventBusService.getProxy(
+                discovery, LiveViewService::class.java,
+                JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("auth-token", accessToken)) } }
+            ) {
+                if (it.succeeded()) {
+                    it.result().getHistoricalMetrics(entityIds, metricIds, step, start, stop).onComplete {
+                        if (it.succeeded()) {
+                            completableFuture.complete(it.result())
                         } else {
                             completableFuture.completeExceptionally(it.cause())
                         }
