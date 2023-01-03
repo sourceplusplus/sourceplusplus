@@ -1,6 +1,6 @@
 /*
  * Source++, the continuous feedback platform for developers.
- * Copyright (C) 2022 CodeBrig, Inc.
+ * Copyright (C) 2022-2023 CodeBrig, Inc.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -124,6 +124,7 @@ class LiveMeterView(private val subscriptionCache: MetricTypeSubscriptionCache) 
                 jsonMetric.getJsonObject("meta").put("metricsName", "${metricsName}_realtime")
             }
             setRealtimeValue(jsonMetric, metrics)
+            jsonMetric.put("currentTime", System.currentTimeMillis())
         }
 
         subs.forEach { handleSubscriberEvent(it, metrics, jsonMetric) }

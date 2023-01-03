@@ -52,6 +52,12 @@ type LiveView {
     viewConfig: LiveViewConfig
 }
 
+type HistoricalView {
+    entityIds: [String!]
+    metricIds: [String!]
+    data: String!
+}
+
 input LiveViewInput {
     entityIds: [String!]!
     #artifactQualifiedName: ArtifactQualifiedNameInput!
@@ -442,6 +448,13 @@ type Query {
     getEndpoints(serviceId: String!): [ServiceEndpoint!]!
 
     getLiveViews: [LiveView!]!
+    getHistoricalMetrics(
+        entityIds: [String!]!,
+        metricIds: [String!]!,
+        step: MetricStep!,
+        start: String!,
+        stop: String
+    ): HistoricalView!
 
     getClientAccessors: [ClientAccess!]!
 }
@@ -493,4 +506,11 @@ enum LiveInstrumentType {
     LOG,
     METER,
     SPAN
+}
+
+enum MetricStep {
+    SECOND,
+    MINUTE,
+    HOUR,
+    DAY
 }

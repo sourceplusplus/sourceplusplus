@@ -1,6 +1,6 @@
 /*
  * Source++, the continuous feedback platform for developers.
- * Copyright (C) 2022 CodeBrig, Inc.
+ * Copyright (C) 2022-2023 CodeBrig, Inc.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -22,6 +22,7 @@ import io.vertx.core.Promise
 import io.vertx.core.Vertx
 import io.vertx.core.json.JsonObject
 import io.vertx.kotlin.coroutines.CoroutineVerticle
+import io.vertx.serviceproxy.ServiceException
 import mu.KotlinLogging
 import org.apache.skywalking.oap.log.analyzer.module.LogAnalyzerModule
 import org.apache.skywalking.oap.log.analyzer.provider.log.ILogAnalyzerService
@@ -38,6 +39,12 @@ import org.apache.skywalking.oap.server.analyzer.provider.trace.parser.SegmentPa
 import org.apache.skywalking.oap.server.analyzer.provider.trace.parser.SegmentParserServiceImpl
 import org.apache.skywalking.oap.server.core.CoreModule
 import org.apache.skywalking.oap.server.core.analysis.meter.MeterSystem
+import org.apache.skywalking.oap.server.core.query.MetricsQueryService
+import org.apache.skywalking.oap.server.core.query.enumeration.Step
+import org.apache.skywalking.oap.server.core.query.input.Duration
+import org.apache.skywalking.oap.server.core.query.input.Entity
+import org.apache.skywalking.oap.server.core.query.input.MetricsCondition
+import org.apache.skywalking.oap.server.core.query.type.KVInt
 import org.apache.skywalking.oap.server.core.version.Version
 import org.joor.Reflect
 import spp.platform.common.DeveloperAuth
@@ -50,13 +57,17 @@ import spp.processor.live.impl.view.LiveTraceView
 import spp.processor.live.impl.view.util.EntitySubscribersCache
 import spp.processor.live.impl.view.util.MetricTypeSubscriptionCache
 import spp.processor.live.impl.view.util.ViewSubscriber
+import spp.protocol.artifact.metrics.MetricStep
+import spp.protocol.artifact.metrics.MetricType
 import spp.protocol.platform.PlatformAddress.MARKER_DISCONNECTED
 import spp.protocol.service.LiveViewService
 import spp.protocol.service.SourceServices.Subscribe.toLiveViewSubscriberAddress
 import spp.protocol.service.error.RuleAlreadyExistsException
+import spp.protocol.view.HistoricalView
 import spp.protocol.view.LiveView
 import spp.protocol.view.LiveViewEvent
 import spp.protocol.view.rule.LiveViewRule
+import java.time.Instant
 import java.util.*
 
 class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
@@ -67,6 +78,7 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
 
     internal lateinit var meterSystem: MeterSystem
     internal lateinit var meterProcessService: MeterProcessService
+    internal lateinit var metricsQuery: MetricsQueryService
 
     //todo: use ExpiringSharedData
     private val subscriptionCache = MetricTypeSubscriptionCache()
@@ -83,6 +95,9 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
         }
         FeedbackProcessor.module!!.find(AnalyzerModule.NAME).provider().apply {
             meterProcessService = getService(IMeterProcessService::class.java) as MeterProcessService
+        }
+        FeedbackProcessor.module!!.find(CoreModule.NAME).provider().apply {
+            metricsQuery = getService(MetricsQueryService::class.java) as MetricsQueryService
         }
 
         //live traces view
@@ -272,10 +287,7 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
         return promise.future()
     }
 
-    override fun updateLiveView(
-        id: String,
-        subscription: LiveView
-    ): Future<LiveView> {
+    override fun updateLiveView(id: String, subscription: LiveView): Future<LiveView> {
         log.debug { "Updating live view: {}".args(id) }
         val promise = Promise.promise<LiveView>()
 
@@ -404,5 +416,51 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
             }
         }
         return Future.succeededFuture(subStats)
+    }
+
+    override fun getHistoricalMetrics(
+        entityIds: List<String>,
+        metricIds: List<String>,
+        step: MetricStep,
+        start: Instant,
+        stop: Instant?
+    ): Future<HistoricalView> {
+        return vertx.executeBlocking({
+            try {
+                val historicalView = HistoricalView(entityIds, metricIds)
+                val entityId = entityIds.first()
+                val duration = Duration().apply {
+                    this.start = step.formatter.format(start)
+                    this.end = step.formatter.format(stop ?: Instant.now())
+                    this.step = Step.valueOf(step.name)
+                }
+
+                metricIds.forEach { metricId ->
+                    val metricType = MetricType(metricId).asHistorical()
+                    val values = getHistoricalMetrics(metricType, entityId, duration)
+                    values.forEachIndexed { i, metric ->
+                        val stepMetrics = JsonObject()
+                            .put("metricId", metricId)
+                            .put("value", metric.value)
+                        historicalView.data.add(stepMetrics)
+                    }
+                }
+
+                it.complete(historicalView)
+            } catch (ex: Exception) {
+                ex.printStackTrace()
+                it.fail(ServiceException(500, ex.message))
+            }
+        }, false)
+    }
+
+    private fun getHistoricalMetrics(metricType: MetricType, entityId: String, duration: Duration): List<KVInt> {
+        val condition = MetricsCondition()
+        condition.name = metricType.metricId
+        condition.entity = object : Entity() {
+            override fun buildId(): String = entityId
+            override fun isValid(): Boolean = true
+        }
+        return Reflect.on(metricsQuery.readMetricsValues(condition, duration).values).get("values")
     }
 }
