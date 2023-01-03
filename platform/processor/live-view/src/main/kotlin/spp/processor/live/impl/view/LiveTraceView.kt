@@ -29,6 +29,7 @@ import org.apache.skywalking.oap.server.library.module.ModuleManager
 import org.slf4j.LoggerFactory
 import spp.platform.common.ClusterConnection
 import spp.processor.live.impl.view.util.MetricTypeSubscriptionCache
+import spp.processor.live.impl.view.util.ViewSubscriber
 import spp.protocol.artifact.trace.Trace
 import spp.protocol.artifact.trace.TraceSpan
 import spp.protocol.artifact.trace.TraceSpanLogEntry
@@ -55,72 +56,84 @@ class LiveTraceView(
     override fun containsPoint(point: AnalysisListener.Point): Boolean = point == AnalysisListener.Point.Entry
     override fun parseEntry(span: SpanObject, segment: SegmentObject) {
         val entityId = span.operationName
-        val subbedArtifacts = subscriptionCache["endpoint_traces"]
+        var subbedArtifacts = subscriptionCache["endpoint_traces"]
         if (subbedArtifacts != null) {
             val subs = subbedArtifacts[entityId]
             if (!subs.isNullOrEmpty()) {
-                val entrySpan = TraceSpan(
-                    segment.traceId,
-                    segment.traceSegmentId,
-                    span.spanId,
-                    span.parentSpanId,
-                    span.refsList.map {
-                        TraceSpanRef(
-                            it.traceId,
-                            it.parentTraceSegmentId,
-                            it.parentSpanId,
-                            it.refType.name
-                        )
-                    },
-                    segment.service,
-                    segment.serviceInstance,
-                    Instant.ofEpochMilli(span.startTime),
-                    Instant.ofEpochMilli(span.endTime),
-                    entityId,
-                    subs.first().subscription.artifactQualifiedName,
-                    span.spanType.name,
-                    span.peer,
-                    span.componentId.toString(),
-                    span.isError,
-                    false,
-                    false,
-                    span.spanLayer.name,
-                    span.tagsList.associate { it.key to it.value },
-                    span.logsList.flatMap { log -> log.dataList.map { Pair(log.time, it.value) } }
-                        .map { TraceSpanLogEntry(Instant.ofEpochMilli(it.first), it.second) }
-                )
-                val trace = Trace(
-                    segment.traceId,
-                    listOf(span.operationName),
-                    (span.endTime - span.startTime).toInt(),
-                    Instant.ofEpochMilli(span.startTime),
-                    span.isError,
-                    listOf(segment.traceId),
-                    false,
-                    segment.traceSegmentId,
-                    span.tagsList.associate { it.key to it.value }
-                        .toMutableMap().apply { put("entrySpan", Json.encode(entrySpan)) }
-                )
-
-                //add trace meta
-                val url = entrySpan.tags["url"]
-                val httpMethod = entrySpan.tags["http.method"]
-                if (url != null && httpMethod != null) {
-                    val resolvedEndpointName = "$httpMethod:${URI(url).path}"
-                    trace.meta["resolvedEndpointName"] = resolvedEndpointName
-                }
-
-                subs.forEach { sub ->
-                    val event = JsonObject()
-                        .put("type", "TRACES")
-                        .put("multiMetrics", false)
-                        .put("artifactQualifiedName", JsonObject.mapFrom(sub.subscription.artifactQualifiedName))
-                        .put("entityId", entityId)
-                        .put("timeBucket", formatter.format(trace.start))
-                        .put("trace", JsonObject.mapFrom(trace))
-                    ClusterConnection.getVertx().eventBus().send(sub.consumer.address(), event)
-                }
+                sendToSubs(segment, span, entityId, subs)
             }
+        }
+
+        subbedArtifacts = subscriptionCache["service_traces"]
+        if (subbedArtifacts != null) {
+            val subs = subbedArtifacts[segment.service]
+            if (!subs.isNullOrEmpty()) {
+                sendToSubs(segment, span, entityId, subs)
+            }
+        }
+    }
+
+    private fun sendToSubs(segment: SegmentObject, span: SpanObject, entityId: String, subs: Set<ViewSubscriber>) {
+        val entrySpan = TraceSpan(
+            segment.traceId,
+            segment.traceSegmentId,
+            span.spanId,
+            span.parentSpanId,
+            span.refsList.map {
+                TraceSpanRef(
+                    it.traceId,
+                    it.parentTraceSegmentId,
+                    it.parentSpanId,
+                    it.refType.name
+                )
+            },
+            segment.service,
+            segment.serviceInstance,
+            Instant.ofEpochMilli(span.startTime),
+            Instant.ofEpochMilli(span.endTime),
+            entityId,
+            subs.first().subscription.artifactQualifiedName,
+            span.spanType.name,
+            span.peer,
+            span.componentId.toString(),
+            span.isError,
+            false,
+            false,
+            span.spanLayer.name,
+            span.tagsList.associate { it.key to it.value },
+            span.logsList.flatMap { log -> log.dataList.map { Pair(log.time, it.value) } }
+                .map { TraceSpanLogEntry(Instant.ofEpochMilli(it.first), it.second) }
+        )
+        val trace = Trace(
+            segment.traceId,
+            listOf(span.operationName),
+            (span.endTime - span.startTime).toInt(),
+            Instant.ofEpochMilli(span.startTime),
+            span.isError,
+            listOf(segment.traceId),
+            false,
+            segment.traceSegmentId,
+            span.tagsList.associate { it.key to it.value }
+                .toMutableMap().apply { put("entrySpan", Json.encode(entrySpan)) }
+        )
+
+        //add trace meta
+        val url = entrySpan.tags["url"]
+        val httpMethod = entrySpan.tags["http.method"]
+        if (url != null && httpMethod != null) {
+            val resolvedEndpointName = "$httpMethod:${URI(url).path}"
+            trace.meta["resolvedEndpointName"] = resolvedEndpointName
+        }
+
+        subs.forEach { sub ->
+            val event = JsonObject()
+                .put("type", "TRACES")
+                .put("multiMetrics", false)
+                .put("artifactQualifiedName", JsonObject.mapFrom(sub.subscription.artifactQualifiedName))
+                .put("entityId", entityId)
+                .put("timeBucket", formatter.format(trace.start))
+                .put("trace", JsonObject.mapFrom(trace))
+            ClusterConnection.getVertx().eventBus().send(sub.consumer.address(), event)
         }
     }
 
