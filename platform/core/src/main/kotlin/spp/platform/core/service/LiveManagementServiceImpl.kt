@@ -33,6 +33,7 @@ import org.apache.skywalking.oap.server.core.query.MetadataQueryService
 import org.apache.skywalking.oap.server.core.query.enumeration.Step
 import org.apache.skywalking.oap.server.core.query.input.Duration
 import org.apache.skywalking.oap.server.library.module.ModuleManager
+import spp.platform.common.ClusterConnection
 import spp.platform.common.DeveloperAuth
 import spp.platform.common.service.SourceBridgeService
 import spp.platform.storage.SourceStorage
@@ -50,8 +51,6 @@ import spp.protocol.service.LiveManagementService
 import spp.protocol.service.LiveViewService
 import spp.protocol.service.SourceServices
 import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 
 class LiveManagementServiceImpl(
@@ -60,15 +59,19 @@ class LiveManagementServiceImpl(
     moduleManager: ModuleManager,
 ) : LiveManagementService {
 
-    companion object {
-        private val log = KotlinLogging.logger {}
-        private val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HHmm")
-            .withZone(ZoneId.systemDefault())
-    }
-
+    private val log = KotlinLogging.logger {}
     private val metadataQueryService = moduleManager.find(CoreModule.NAME)
         .provider()
         .getService(MetadataQueryService::class.java)
+
+    override fun getVersion(): Future<String> {
+        log.trace { "Getting version" }
+        val promise = Promise.promise<String>()
+        GlobalScope.launch(vertx.dispatcher()) {
+            promise.complete(ClusterConnection.BUILD.getString("build_version"))
+        }
+        return promise.future()
+    }
 
     override fun getClients(): Future<JsonObject> {
         log.trace { "Getting clients" }
@@ -205,6 +208,10 @@ class LiveManagementServiceImpl(
 
     override fun getInstances(serviceId: String): Future<List<ServiceInstance>> {
         log.trace { "Getting instances for service $serviceId" }
+        if (serviceId.isEmpty()) {
+            return Future.failedFuture("Service id is empty")
+        }
+
         val promise = Promise.promise<List<ServiceInstance>>()
         GlobalScope.launch(vertx.dispatcher()) {
             val result = mutableListOf<ServiceInstance>()

@@ -27,6 +27,8 @@ import graphql.schema.CoercingParseValueException
 import graphql.schema.DataFetchingEnvironment
 import graphql.schema.GraphQLScalarType
 import graphql.schema.idl.*
+import io.vertx.core.Future
+import io.vertx.core.Promise
 import io.vertx.core.Vertx
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
@@ -162,6 +164,9 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
                 "Query"
             ) { builder: TypeRuntimeWiring.Builder ->
                 builder.dataFetcher(
+                    "version",
+                    this::version
+                ).dataFetcher(
                     "getAccessPermissions",
                     this::getAccessPermissions
                 ).dataFetcher(
@@ -354,6 +359,16 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
                 }
             })
             .build()
+    }
+
+    private fun version(env: DataFetchingEnvironment): CompletableFuture<String> {
+        val completableFuture = CompletableFuture<String>()
+        getLiveManagementService(env).compose { it.getVersion() }.onSuccess {
+            completableFuture.complete(it)
+        }.onFailure {
+            completableFuture.completeExceptionally(it)
+        }
+        return completableFuture
     }
 
     private fun getAccessPermissions(env: DataFetchingEnvironment): CompletableFuture<List<AccessPermission>> {
@@ -608,110 +623,44 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
 
     private fun getSelf(env: DataFetchingEnvironment): CompletableFuture<SelfInfo> {
         val completableFuture = CompletableFuture<SelfInfo>()
-        var accessToken: String? = null
-        if (jwtEnabled) {
-            val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
-            accessToken = user.principal().getString("access_token")
-        }
-
-        EventBusService.getProxy(
-            discovery, LiveManagementService::class.java,
-            JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("auth-token", accessToken)) } }
-        ) {
-            if (it.succeeded()) {
-                it.result().getSelf().onComplete {
-                    if (it.succeeded()) {
-                        completableFuture.complete(it.result())
-                    } else {
-                        completableFuture.completeExceptionally(it.cause())
-                    }
-                }
-            } else {
-                completableFuture.completeExceptionally(it.cause())
-            }
+        getLiveManagementService(env).compose { it.getSelf() }.onSuccess {
+            completableFuture.complete(it)
+        }.onFailure {
+            completableFuture.completeExceptionally(it)
         }
         return completableFuture
     }
 
     private fun getServices(env: DataFetchingEnvironment): CompletableFuture<List<Service>> {
         val completableFuture = CompletableFuture<List<Service>>()
-        var accessToken: String? = null
-        if (jwtEnabled) {
-            val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
-            accessToken = user.principal().getString("access_token")
-        }
-
-        EventBusService.getProxy(
-            discovery, LiveManagementService::class.java,
-            JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("auth-token", accessToken)) } }
-        ) {
-            if (it.succeeded()) {
-                it.result().getServices().onComplete {
-                    if (it.succeeded()) {
-                        completableFuture.complete(it.result())
-                    } else {
-                        completableFuture.completeExceptionally(it.cause())
-                    }
-                }
-            } else {
-                completableFuture.completeExceptionally(it.cause())
-            }
+        getLiveManagementService(env).compose { it.getServices() }.onSuccess {
+            completableFuture.complete(it)
+        }.onFailure {
+            completableFuture.completeExceptionally(it)
         }
         return completableFuture
     }
 
     private fun getInstances(env: DataFetchingEnvironment): CompletableFuture<List<ServiceInstance>> {
-        val completableFuture = CompletableFuture<List<ServiceInstance>>()
-        var accessToken: String? = null
-        if (jwtEnabled) {
-            val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
-            accessToken = user.principal().getString("access_token")
-        }
-
         val id = env.getArgument<String>("serviceId")
-        EventBusService.getProxy(
-            discovery, LiveManagementService::class.java,
-            JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("auth-token", accessToken)) } }
-        ) {
-            if (it.succeeded()) {
-                it.result().getInstances(id).onComplete {
-                    if (it.succeeded()) {
-                        completableFuture.complete(it.result())
-                    } else {
-                        completableFuture.completeExceptionally(it.cause())
-                    }
-                }
-            } else {
-                completableFuture.completeExceptionally(it.cause())
-            }
+
+        val completableFuture = CompletableFuture<List<ServiceInstance>>()
+        getLiveManagementService(env).compose { it.getInstances(id) }.onSuccess {
+            completableFuture.complete(it)
+        }.onFailure {
+            completableFuture.completeExceptionally(it)
         }
         return completableFuture
     }
 
     private fun getEndpoints(env: DataFetchingEnvironment): CompletableFuture<List<ServiceEndpoint>> {
-        val completableFuture = CompletableFuture<List<ServiceEndpoint>>()
-        var accessToken: String? = null
-        if (jwtEnabled) {
-            val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
-            accessToken = user.principal().getString("access_token")
-        }
-
         val id = env.getArgument<String>("serviceId")
-        EventBusService.getProxy(
-            discovery, LiveManagementService::class.java,
-            JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("auth-token", accessToken)) } }
-        ) {
-            if (it.succeeded()) {
-                it.result().getEndpoints(id).onComplete {
-                    if (it.succeeded()) {
-                        completableFuture.complete(it.result())
-                    } else {
-                        completableFuture.completeExceptionally(it.cause())
-                    }
-                }
-            } else {
-                completableFuture.completeExceptionally(it.cause())
-            }
+
+        val completableFuture = CompletableFuture<List<ServiceEndpoint>>()
+        getLiveManagementService(env).compose { it.getEndpoints(id) }.onSuccess {
+            completableFuture.complete(it)
+        }.onFailure {
+            completableFuture.completeExceptionally(it)
         }
         return completableFuture
     }
@@ -2008,5 +1957,26 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
             }
         }
         return rtnMap
+    }
+
+    private fun getLiveManagementService(env: DataFetchingEnvironment): Future<LiveManagementService> {
+        val promise = Promise.promise<LiveManagementService>()
+        var accessToken: String? = null
+        if (jwtEnabled) {
+            val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
+            accessToken = user.principal().getString("access_token")
+        }
+
+        EventBusService.getProxy(
+            discovery, LiveManagementService::class.java,
+            JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("auth-token", accessToken)) } }
+        ) {
+            if (it.succeeded()) {
+                promise.complete(it.result())
+            } else {
+                promise.fail(it.cause())
+            }
+        }
+        return promise.future()
     }
 }

@@ -48,7 +48,7 @@ import java.util.regex.Pattern
  */
 object ClusterConnection {
 
-    private val BUILD = ResourceBundle.getBundle("build")
+    val BUILD: ResourceBundle = ResourceBundle.getBundle("build")
     private val log = KotlinLogging.logger {}
     private lateinit var vertx: Vertx
     private val lock = Any()

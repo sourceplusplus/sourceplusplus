@@ -129,7 +129,7 @@ enum RolePermission {
     ADD_LIVE_VIEW_SUBSCRIPTION,
     REMOVE_LIVE_VIEW_SUBSCRIPTION,
     GET_LIVE_VIEW_SUBSCRIPTIONS,
-#    VIEW_OVERVIEW,
+    #    VIEW_OVERVIEW,
     VIEW_ACTIVITY,
     VIEW_TRACES,
     VIEW_LOGS,
@@ -420,6 +420,7 @@ type ServiceEndpoint {
 }
 
 type Query {
+    version: String!
     getAccessPermissions: [AccessPermission!]!
     getAccessPermission(id: String!): AccessPermission!
     getRoleAccessPermissions(role: String!): [AccessPermission!]!
