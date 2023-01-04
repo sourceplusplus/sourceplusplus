@@ -66,7 +66,7 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
     private lateinit var meterProcessService: MeterProcessService
 
     override suspend fun start() {
-        log.info("Starting LiveInstrumentProcessorImpl")
+        log.debug("Starting LiveInstrumentProcessorImpl")
         FeedbackProcessor.module!!.find(CoreModule.NAME).provider().apply {
             meterSystem = getService(MeterSystem::class.java)
         }

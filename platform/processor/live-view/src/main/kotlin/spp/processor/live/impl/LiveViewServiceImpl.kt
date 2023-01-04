@@ -88,7 +88,7 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
     internal lateinit var skywalkingVersion: String
 
     override suspend fun start() {
-        log.info("Starting LiveViewServiceImpl")
+        log.debug("Starting LiveViewServiceImpl")
         skywalkingVersion = Version.CURRENT.buildVersion
         FeedbackProcessor.module!!.find(CoreModule.NAME).provider().apply {
             meterSystem = getService(MeterSystem::class.java)
