@@ -23,8 +23,6 @@ import io.vertx.core.Promise
 import io.vertx.core.json.JsonObject
 import io.vertx.core.shareddata.AsyncMap
 import io.vertx.core.shareddata.Counter
-import io.vertx.ext.web.handler.SessionHandler
-import io.vertx.ext.web.sstore.SessionStore
 import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -45,8 +43,6 @@ object SourceStorage {
     private val log = KotlinLogging.logger {}
 
     lateinit var storage: CoreStorage
-    lateinit var sessionStore: SessionStore
-    lateinit var sessionHandler: SessionHandler
 
     fun getStorageConfig(): JsonObject {
         val storageSelector = config.getJsonObject("storage").getString("selector")
@@ -55,11 +51,6 @@ object SourceStorage {
             storageSelector.substringAfterLast(".").removeSuffix("Storage")
         )
         return config.getJsonObject("storage").getJsonObject(storageName) ?: JsonObject()
-    }
-
-    fun initSessionStore(sessionStore: SessionStore) {
-        this.sessionStore = sessionStore
-        this.sessionHandler = SessionHandler.create(SourceStorage.sessionStore)
     }
 
     suspend fun setup(storage: CoreStorage) {

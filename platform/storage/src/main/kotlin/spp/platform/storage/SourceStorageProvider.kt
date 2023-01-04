@@ -18,8 +18,6 @@
 package spp.platform.storage
 
 import io.vertx.core.Vertx
-import io.vertx.ext.web.sstore.LocalSessionStore
-import io.vertx.ext.web.sstore.redis.RedisSessionStore
 import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.runBlocking
 import org.apache.skywalking.oap.server.library.module.ModuleConfig
@@ -52,7 +50,6 @@ class SourceStorageProvider : ModuleProvider() {
                     "memory" -> {
                         log.info("Using in-memory storage")
                         SourceStorage.setup(MemoryStorage(vertx))
-                        SourceStorage.initSessionStore(LocalSessionStore.create(vertx))
                     }
 
                     "redis" -> {
@@ -61,7 +58,6 @@ class SourceStorageProvider : ModuleProvider() {
                         redisStorage.init(SourceStorage.getStorageConfig())
 
                         SourceStorage.setup(redisStorage)
-                        SourceStorage.initSessionStore(RedisSessionStore.create(vertx, redisStorage.redisClient))
                     }
 
                     else -> {
@@ -76,7 +72,6 @@ class SourceStorageProvider : ModuleProvider() {
                         customStorage.init(SourceStorage.getStorageConfig())
 
                         SourceStorage.setup(customStorage)
-                        SourceStorage.initSessionStore(LocalSessionStore.create(vertx)) //todo: dynamic sessionStore
                     }
                 }
             }
