@@ -62,7 +62,7 @@ object InstrumentProcessor : FeedbackProcessor() {
     }
 
     override fun onConnected(vertx: Vertx) {
-        log.debug("Deploying instrument processor")
+        log.info("Starting InstrumentProcessor")
         vertx.deployVerticle(InstrumentProcessor) {
             if (it.succeeded()) {
                 processorVerticleId = it.result()
@@ -74,7 +74,6 @@ object InstrumentProcessor : FeedbackProcessor() {
     }
 
     override suspend fun start() {
-        log.info("Starting InstrumentProcessor")
         val module = SimpleModule()
         module.addSerializer(DataTable::class.java, object : JsonSerializer<DataTable>() {
             override fun serialize(value: DataTable, gen: JsonGenerator, provider: SerializerProvider) {
