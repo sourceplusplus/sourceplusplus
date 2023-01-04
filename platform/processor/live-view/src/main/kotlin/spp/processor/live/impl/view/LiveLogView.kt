@@ -32,6 +32,7 @@ import spp.platform.common.ClusterConnection
 import spp.processor.ViewProcessor
 import spp.processor.live.impl.view.model.LiveGaugeValueMetrics
 import spp.processor.live.impl.view.util.MetricTypeSubscriptionCache
+import spp.processor.live.impl.view.util.ViewSubscriber
 import spp.protocol.artifact.log.Log
 import spp.protocol.instrument.LiveSourceLocation
 import java.time.Instant
@@ -72,7 +73,7 @@ class LiveLogView(private val subscriptionCache: MetricTypeSubscriptionCache) : 
                 return this
             }
 
-            val subbedArtifacts = subscriptionCache["endpoint_logs"]
+            var subbedArtifacts = subscriptionCache["endpoint_logs"]
             if (subbedArtifacts != null) {
                 val logPattern = logData.body.text.text
                 var subs = subbedArtifacts[logPattern].orEmpty() + subbedArtifacts["*"].orEmpty()
@@ -86,44 +87,64 @@ class LiveLogView(private val subscriptionCache: MetricTypeSubscriptionCache) : 
                     return@filter true
                 }.toSet()
 
-                subs.forEach { sub ->
-                    log.debug { "Sending log pattern $logPattern to subscriber $sub" }
-
-                    //get log location (if available)
-                    val logSource = logData.tags.dataList.find { it.key == "source" }?.value
-                    val logLineNumber = logData.tags.dataList.find { it.key == "line" }?.value?.toInt()
-                    val logLocation = if (logSource != null) {
-                        LiveSourceLocation(
-                            logSource,
-                            logLineNumber ?: -1,
-                            service = logData.service,
-                            serviceInstance = logData.serviceInstance
-                        )
-                    } else null
-
-                    //publish log record
-                    val logRecord = Log(
-                        Instant.ofEpochMilli(logData.timestamp),
-                        logPattern,
-                        logData.tags.dataList.find { it.key == "level" }!!.value,
-                        logData.tags.dataList.find { it.key == "logger" }?.value,
-                        logData.tags.dataList.find { it.key == "thread" }?.value,
-                        null,
-                        logData.tags.dataList.filter { it.key.startsWith("argument.") }.map { it.value },
-                        logLocation
-                    )
-                    val event = JsonObject()
-                        .put("type", "LOGS")
-                        .put("multiMetrics", false)
-                        .put("artifactQualifiedName", JsonObject.mapFrom(sub.subscription.artifactQualifiedName))
-                        .put("entityId", logPattern)
-                        .put("timeBucket", formatter.format(logRecord.timestamp))
-                        .put("log", JsonObject.mapFrom(logRecord))
-                    ClusterConnection.getVertx().eventBus().send(sub.consumer.address(), event)
-                }
+                subs.forEach { sentToSub(it, logData) }
             }
+
+            subbedArtifacts = subscriptionCache["service_logs"]
+            if (subbedArtifacts != null) {
+                var subs = subbedArtifacts[logData.service].orEmpty() + subbedArtifacts["*"].orEmpty()
+
+                //remove subscribers with additional filters
+                subs = subs.filter {
+                    val service = it.subscription.artifactLocation?.service
+                    if (service != null && !isSameService(service, logData.service)) {
+                        return@filter false
+                    }
+                    return@filter true
+                }.toSet()
+
+                subs.forEach { sentToSub(it, logData) }
+            }
+
             return this
         }
+    }
+
+    private fun sentToSub(sub: ViewSubscriber, logData: LogData.Builder) {
+        val logPattern = logData.body.text.text
+        log.debug { "Sending log pattern $logPattern to subscriber $sub" }
+
+        //get log location (if available)
+        val logSource = logData.tags.dataList.find { it.key == "source" }?.value
+        val logLineNumber = logData.tags.dataList.find { it.key == "line" }?.value?.toInt()
+        val logLocation = if (logSource != null) {
+            LiveSourceLocation(
+                logSource,
+                logLineNumber ?: -1,
+                service = logData.service,
+                serviceInstance = logData.serviceInstance
+            )
+        } else null
+
+        //publish log record
+        val logRecord = Log(
+            Instant.ofEpochMilli(logData.timestamp),
+            logPattern,
+            logData.tags.dataList.find { it.key == "level" }!!.value,
+            logData.tags.dataList.find { it.key == "logger" }?.value,
+            logData.tags.dataList.find { it.key == "thread" }?.value,
+            null,
+            logData.tags.dataList.filter { it.key.startsWith("argument.") }.map { it.value },
+            logLocation
+        )
+        val event = JsonObject()
+            .put("type", "LOGS")
+            .put("multiMetrics", false)
+            .put("artifactQualifiedName", JsonObject.mapFrom(sub.subscription.artifactQualifiedName))
+            .put("entityId", logPattern)
+            .put("timeBucket", formatter.format(logRecord.timestamp))
+            .put("log", JsonObject.mapFrom(logRecord))
+        ClusterConnection.getVertx().eventBus().send(sub.consumer.address(), event)
     }
 
     private fun isSameService(serviceIdOrName: String, serviceName: String): Boolean {
