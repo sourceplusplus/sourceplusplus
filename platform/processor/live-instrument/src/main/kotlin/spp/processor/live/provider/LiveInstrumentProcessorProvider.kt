@@ -53,7 +53,7 @@ class LiveInstrumentProcessorProvider : ModuleProvider() {
     override fun prepare() = Unit
 
     override fun start() {
-        log.info("Starting LiveInstrumentProcessorProvider")
+        log.info("Starting spp-live-instrument")
 
         //gather live breakpoints
         val traceQueryService = manager.find(CoreModule.NAME)
@@ -71,7 +71,7 @@ class LiveInstrumentProcessorProvider : ModuleProvider() {
         logParserService.addListenerFactory(LiveLogAnalyzer())
 
         InstrumentProcessor.bootProcessor(manager)
-        log.info("LiveInstrumentProcessorProvider started")
+        log.info("spp-live-instrument started")
     }
 
     override fun notifyAfterCompleted() = Unit

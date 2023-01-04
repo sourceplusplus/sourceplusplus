@@ -69,7 +69,6 @@ object ViewProcessor : FeedbackProcessor() {
             metricsQueryService = getService(MetricsQueryService::class.java)
         }
 
-        log.debug("ViewProcessor initialized")
         connectToPlatform()
     }
 

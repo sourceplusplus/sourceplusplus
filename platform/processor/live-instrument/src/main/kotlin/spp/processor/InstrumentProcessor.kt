@@ -58,8 +58,6 @@ object InstrumentProcessor : FeedbackProcessor() {
 
     override fun bootProcessor(moduleManager: ModuleManager) {
         module = moduleManager
-
-        log.debug("InstrumentProcessor initialized")
         connectToPlatform()
     }
 
