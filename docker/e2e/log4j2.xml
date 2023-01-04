@@ -28,16 +28,19 @@
             <AppenderRef ref="Console"/>
         </Root>
         <Logger name="spp" level="DEBUG" additivity="false">
-            <Appender-ref ref="Console" />
+            <Appender-ref ref="Console"/>
         </Logger>
         <Logger name="spp.platform.dependencies" level="WARN" additivity="false">
-            <Appender-ref ref="Console" />
+            <Appender-ref ref="Console"/>
         </Logger>
         <Logger name="io.vertx.core.eventbus.impl.clustered" level="INFO" additivity="false">
-            <Appender-ref ref="Console" />
+            <Appender-ref ref="Console"/>
         </Logger>
         <Logger name="io.vertx.spi.cluster.redis" level="INFO" additivity="false">
-            <Appender-ref ref="Console" />
+            <Appender-ref ref="Console"/>
+        </Logger>
+        <Logger name="graphql.kickstart.tools.SchemaClassScanner" level="ERROR" additivity="false">
+            <Appender-ref ref="Console"/>
         </Logger>
     </Loggers>
 </Configuration>
