@@ -73,7 +73,7 @@ object ViewProcessor : FeedbackProcessor() {
     }
 
     override fun onConnected(vertx: Vertx) {
-        log.info("Deploying view processor")
+        log.debug("Deploying view processor")
         vertx.deployVerticle(ViewProcessor) {
             if (it.succeeded()) {
                 processorVerticleId = it.result()

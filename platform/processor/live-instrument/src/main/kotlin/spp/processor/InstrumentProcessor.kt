@@ -62,7 +62,7 @@ object InstrumentProcessor : FeedbackProcessor() {
     }
 
     override fun onConnected(vertx: Vertx) {
-        log.info("Deploying instrument processor")
+        log.debug("Deploying instrument processor")
         vertx.deployVerticle(InstrumentProcessor) {
             if (it.succeeded()) {
                 processorVerticleId = it.result()
