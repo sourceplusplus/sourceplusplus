@@ -22,10 +22,6 @@
 	path = interfaces/jetbrains
 	url = https://github.com/sourceplusplus/interface-jetbrains
 	branch = master
-[submodule "interfaces/booster-ui"]
-	path = interfaces/booster-ui
-	url = https://github.com/sourceplusplus/interface-booster-ui
-	branch = master
 [submodule "documentation"]
 	path = documentation
 	url = https://github.com/sourceplusplus/documentation

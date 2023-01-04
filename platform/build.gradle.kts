@@ -204,7 +204,6 @@ tasks.register<Copy>("updateDockerFiles") {
         File(projectDir, "bridge/build/libs/spp-platform-bridge-${project.version}.jar"),
         File(projectDir, "core/build/libs/spp-platform-core-${project.version}.jar"),
         File(projectDir, "storage/build/libs/spp-platform-storage-${project.version}.jar"),
-        File(projectDir, "dashboard/build/libs/spp-live-dashboard-${project.version}.jar"),
         File(projectDir, "processor/live-instrument/build/libs/spp-live-instrument-${project.version}.jar"),
         File(projectDir, "processor/live-view/build/libs/spp-live-view-${project.version}.jar"),
         File(projectDir, "../probes/jvm/boot/build/libs/spp-probe-${project.version}.jar")
@@ -235,7 +234,6 @@ tasks.getByName("assemble") {
         ":platform:core:shadowJar",
         ":platform:bridge:jar",
         ":platform:storage:jar",
-        ":platform:dashboard:jar",
         ":platform:processor:live-instrument:jar",
         ":platform:processor:live-view:jar",
         ":probes:jvm:boot:jar"
