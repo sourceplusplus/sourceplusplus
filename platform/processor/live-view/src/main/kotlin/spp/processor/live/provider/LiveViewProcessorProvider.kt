@@ -91,8 +91,9 @@ class LiveViewProcessorProvider : ModuleProvider() {
     }
 
     override fun start() {
-        log.info("Starting LiveViewProcessorProvider")
+        log.info("Starting spp-live-view")
         ViewProcessor.bootProcessor(manager)
+        log.info("spp-live-view started")
     }
 
     override fun notifyAfterCompleted() = Unit

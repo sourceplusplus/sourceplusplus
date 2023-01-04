@@ -69,12 +69,11 @@ object ViewProcessor : FeedbackProcessor() {
             metricsQueryService = getService(MetricsQueryService::class.java)
         }
 
-        log.info("ViewProcessor initialized")
         connectToPlatform()
     }
 
     override fun onConnected(vertx: Vertx) {
-        log.info("Deploying view processor")
+        log.info("Starting ViewProcessor")
         vertx.deployVerticle(ViewProcessor) {
             if (it.succeeded()) {
                 processorVerticleId = it.result()
@@ -86,7 +85,6 @@ object ViewProcessor : FeedbackProcessor() {
     }
 
     override suspend fun start() {
-        log.info("Starting ViewProcessor")
         val module = SimpleModule()
         module.addSerializer(DataTable::class.java, object : JsonSerializer<DataTable>() {
             override fun serialize(value: DataTable, gen: JsonGenerator, provider: SerializerProvider) {

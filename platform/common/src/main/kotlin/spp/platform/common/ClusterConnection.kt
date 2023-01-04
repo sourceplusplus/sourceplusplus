@@ -89,9 +89,7 @@ object ClusterConnection {
                 )
 
                 var clusterMode = false
-                if (config.getJsonObject("storage").getString("selector") == "memory") {
-                    log.info("Using in-memory storage")
-                } else {
+                if (config.getJsonObject("storage").getString("selector") != "memory") {
                     val storageSelector = config.getJsonObject("storage").getString("selector")
                     val storageName = CaseFormat.LOWER_CAMEL.to(
                         CaseFormat.LOWER_HYPHEN,
@@ -100,12 +98,11 @@ object ClusterConnection {
                     val storageConfig = config.getJsonObject("storage").getJsonObject(storageName)
                     clusterMode = storageConfig.getJsonObject("cluster")
                         ?.getString("enabled")?.toBooleanStrict() ?: false
-                    log.info("Using $storageSelector storage (cluster mode: $clusterMode)")
 
                     val host = storageConfig.getString("host")
                     val port = storageConfig.getString("port").toInt()
                     val storageAddress = "redis://$host:$port"
-                    log.debug { "Storage address: {}".args(storageAddress) }
+                    log.debug { "Storage address: {} (cluster mode: {})".args(storageAddress, clusterMode) }
 
                     if (clusterMode) {
                         options.clusterManager = RedisClusterManager(

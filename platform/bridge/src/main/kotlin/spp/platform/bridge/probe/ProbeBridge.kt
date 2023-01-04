@@ -87,7 +87,7 @@ class ProbeBridge(
         vertx.eventBus().consumer<JsonObject>(ProcessorAddress.REMOTE_REGISTERED) {
             val remote = it.body().getString("address").substringBefore(":")
             val probeId = it.headers().get("probe_id")
-            log.debug { "Probe {} registering remote: {}".args(probeId, remote) }
+            log.trace { "Probe {} registering remote: {}".args(probeId, remote) }
 
             val clientAuth: ClientAuth? = it.headers().get("client_auth")?.let {
                 ClientAuth.from(it)

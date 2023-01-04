@@ -130,6 +130,7 @@ class SourceBridgeProvider : ModuleProvider() {
                     }
                 }
             }
+            log.info("spp-platform-bridge started")
         } catch (e: Exception) {
             log.error("Failed to start spp-platform-bridge", e)
             exitProcess(-1)
