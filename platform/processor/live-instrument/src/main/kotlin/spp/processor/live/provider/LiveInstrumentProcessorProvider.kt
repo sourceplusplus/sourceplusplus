@@ -75,13 +75,11 @@ class LiveInstrumentProcessorProvider : ModuleProvider() {
     }
 
     override fun notifyAfterCompleted() = Unit
-    override fun requiredModules(): Array<String> {
-        return arrayOf(
-            CoreModule.NAME,
-            AnalyzerModule.NAME,
-            StorageModule.NAME,
-            LogAnalyzerModule.NAME,
-            "spp-platform-storage"
-        )
-    }
+    override fun requiredModules(): Array<String> = arrayOf(
+        CoreModule.NAME,
+        AnalyzerModule.NAME,
+        StorageModule.NAME,
+        LogAnalyzerModule.NAME,
+        "spp-platform-storage"
+    )
 }
