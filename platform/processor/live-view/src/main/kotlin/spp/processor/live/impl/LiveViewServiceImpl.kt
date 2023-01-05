@@ -195,7 +195,7 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
         val devAuth = Vertx.currentContext().getLocal<DeveloperAuth>("developer")
         val address = "view." + UUID.randomUUID().toString()
         val sub = subscription.copy(subscriptionId = address)
-        log.info("Adding live view: {}", sub)
+        log.debug("Adding live view: {}", sub)
 
         val consumer = vertx.eventBus().consumer<JsonObject>(address)
         consumer.handler {
@@ -267,7 +267,6 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
         if (unsubbedUser != null) {
             unsubbedUser!!.consumer.unregister {
                 if (it.succeeded()) {
-                    log.info("Removed live view: {}", id)
                     promise.complete(
                         LiveView(
                             unsubbedUser!!.subscription.subscriptionId,
