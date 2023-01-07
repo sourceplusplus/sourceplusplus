@@ -130,18 +130,23 @@ object SourceStorage {
         val roles = config.getJsonArray("roles")
         roles?.list?.map {
             JsonObject.mapFrom(it).let {
-                Pair(
+                Triple(
                     DeveloperRole.fromString(it.getString("id")),
-                    it.getJsonArray("permissions").list.mapNotNull { RolePermission.fromString(it.toString()) }
+                    it.getJsonArray("permissions").list.mapNotNull { RolePermission.fromString(it.toString()) },
+                    it.getJsonArray("redactions").list.mapNotNull { it.toString() },
                 )
             }
-        }.orEmpty().forEach { (role, permissions) ->
+        }.orEmpty().forEach { (role, permissions, redactions) ->
             addRole(role)
             log.debug { "Added user role: $role" }
 
             permissions.forEach {
                 addPermissionToRole(role, it)
                 log.debug { "Added user permission: $it to role: $role" }
+            }
+            redactions.forEach {
+                addDataRedactionToRole(it, role)
+                log.debug { "Added data redaction: $it to role: $role" }
             }
         }
 
