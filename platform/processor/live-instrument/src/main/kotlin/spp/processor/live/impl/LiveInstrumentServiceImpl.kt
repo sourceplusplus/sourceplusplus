@@ -280,7 +280,7 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
 
         val results = mutableListOf<Future<*>>()
         instruments.forEach {
-            results.add(addLiveInstrument(devAuth, it))
+            results.add(addLiveInstrument(devAuth, it)) //todo: send as batch
         }
 
         val promise = Promise.promise<List<LiveInstrument>>()
