@@ -44,11 +44,14 @@ import spp.protocol.artifact.exception.LiveStackTraceElement
 import spp.protocol.artifact.exception.sourceAsLineNumber
 import spp.protocol.instrument.event.LiveBreakpointHit
 import spp.protocol.instrument.event.LiveInstrumentEvent
-import spp.protocol.instrument.event.LiveInstrumentEventType
+import spp.protocol.instrument.event.LiveInstrumentEventType.BREAKPOINT_HIT
 import spp.protocol.instrument.variable.LiveVariable
 import spp.protocol.instrument.variable.LiveVariableScope
+import spp.protocol.platform.auth.DataRedaction
+import spp.protocol.platform.auth.RedactionType
 import spp.protocol.service.SourceServices.Subscribe.toLiveInstrumentSubscriberAddress
 import java.time.Instant
+import java.util.regex.Pattern
 
 class LiveBreakpointAnalyzer(
     private val traceQueryService: TraceQueryService
@@ -309,14 +312,60 @@ class LiveBreakpointAnalyzer(
             }
             instrumentMeta["last_hit_at"] = System.currentTimeMillis().toString()
 
+            val developerId = liveInstrument.meta["spp.developer_id"] as String
+            doDataRedactions(SourceStorage.getDeveloperDataRedactions(developerId), hit)
+
             ClusterConnection.getVertx().eventBus().publish(
-                toLiveInstrumentSubscriberAddress(liveInstrument.meta["spp.developer_id"] as String),
-                JsonObject.mapFrom(LiveInstrumentEvent(LiveInstrumentEventType.BREAKPOINT_HIT, Json.encode(hit)))
+                toLiveInstrumentSubscriberAddress(developerId),
+                JsonObject.mapFrom(LiveInstrumentEvent(BREAKPOINT_HIT, Json.encode(hit)))
             )
             log.trace { "Published live breakpoint hit" }
         } else {
             log.warn { "No live instrument found for breakpoint id: ${hit.breakpointId}" }
         }
+    }
+
+    private fun doDataRedactions(redactions: List<DataRedaction>, hit: LiveBreakpointHit) {
+        if (redactions.isEmpty()) return
+
+        hit.stackTrace.elements.forEach {
+            val rawVars = it.variables.toList()
+            it.variables.clear()
+            it.variables.addAll(redactions.fold(rawVars) { vars, redaction -> redactLiveVariables(redaction, vars) })
+        }
+    }
+
+    private fun redactLiveVariables(redaction: DataRedaction, vars: List<LiveVariable>): List<LiveVariable> {
+        if (vars.isEmpty()) return vars
+
+        val redactedVars = mutableListOf<LiveVariable>()
+        vars.forEach {
+            when (redaction.type) {
+                RedactionType.VALUE_REGEX -> {
+                    if (it.value is String) {
+                        val value = it.value as String
+                        val redactedValue = Pattern.compile(redaction.lookup).matcher(value)
+                            .replaceAll(redaction.replacement)
+                        if (value != redactedValue) {
+                            redactedVars.add(it.copy(value = redactedValue))
+                        } else {
+                            redactedVars.add(it)
+                        }
+                    } else {
+                        redactedVars.add(it)
+                    }
+                }
+
+                RedactionType.IDENTIFIER_MATCH -> {
+                    if (it.name == redaction.lookup) {
+                        redactedVars.add(it.copy(value = redaction.replacement))
+                    } else {
+                        redactedVars.add(it)
+                    }
+                }
+            }
+        }
+        return redactedVars
     }
 
     override fun create(p0: ModuleManager, p1: AnalyzerModuleConfig) = LiveBreakpointAnalyzer(traceQueryService)
