@@ -46,6 +46,10 @@ spp-platform:
         type: "VALUE_REGEX"
         lookup: '\b\d{5}[- ]?\d{4}\b'
         replacement: "<Zip Code>"
+      - id: "password_variable_redaction"
+        type: "IDENTIFIER_MATCH"
+        lookup: 'password'
+        replacement: "<Password>"
 
 client-access:
   enabled: ${SPP_CLIENT_ACCESS_ENABLED:-false}
