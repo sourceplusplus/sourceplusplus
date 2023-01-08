@@ -17,8 +17,7 @@
  */
 package spp.platform.core.service
 
-import io.vertx.core.Promise
-import io.vertx.core.Vertx
+import io.vertx.core.*
 import io.vertx.core.eventbus.Message
 import io.vertx.core.json.JsonObject
 import io.vertx.ext.auth.jwt.JWTAuth
@@ -29,11 +28,15 @@ import io.vertx.servicediscovery.ServiceDiscovery
 import io.vertx.servicediscovery.ServiceDiscoveryOptions
 import io.vertx.servicediscovery.types.EventBusService
 import io.vertx.serviceproxy.ServiceBinder
+import io.vertx.serviceproxy.ServiceInterceptor
 import org.apache.skywalking.oap.server.library.module.ModuleManager
 import org.slf4j.LoggerFactory
 import spp.platform.common.DeveloperAuth
+import spp.protocol.platform.auth.RolePermission
+import spp.protocol.platform.developer.SelfInfo
 import spp.protocol.service.LiveManagementService
 import spp.protocol.service.SourceServices.LIVE_MANAGEMENT_SERVICE
+import spp.protocol.service.error.PermissionAccessDenied
 import kotlin.system.exitProcess
 
 class ServiceProvider(
@@ -48,6 +51,7 @@ class ServiceProvider(
     private var discovery: ServiceDiscovery? = null
     private var liveService: Record? = null
     private var liveManagementService: Record? = null
+    private var service: LiveManagementService? = null
 
     override suspend fun start() {
         try {
@@ -65,10 +69,11 @@ class ServiceProvider(
                 ServiceDiscovery.create(vertx, ServiceDiscoveryOptions())
             }
 
+            service = LiveManagementServiceImpl(vertx, jwtAuth, moduleManager)
             liveManagementService = publishService(
                 LIVE_MANAGEMENT_SERVICE,
                 LiveManagementService::class.java,
-                LiveManagementServiceImpl(vertx, jwtAuth, moduleManager)
+                service!!
             )
         } catch (throwable: Throwable) {
             log.error("Failed to start SkyWalking provider", throwable)
@@ -98,6 +103,7 @@ class ServiceProvider(
                 }
                 return@addInterceptor promise.future()
             }
+            .addInterceptor(permissionCheckInterceptor())
             .register(clazz, service)
         val record = EventBusService.createRecord(
             address, address, clazz,
@@ -105,6 +111,62 @@ class ServiceProvider(
         )
         discovery!!.publish(record).await()
         return record
+    }
+
+
+    private fun permissionCheckInterceptor(): ServiceInterceptor {
+        return ServiceInterceptor { _, _, msg ->
+            val promise = Promise.promise<Message<JsonObject>>()
+
+            service!!.getSelf().onSuccess { selfInfo ->
+                validateRolePermission(selfInfo, msg) {
+                    if (it.succeeded()) {
+                        promise.complete(msg)
+                    } else {
+                        promise.fail(it.cause())
+                    }
+                }
+            }.onFailure {
+                promise.fail(it)
+            }
+            promise.future()
+        }
+    }
+
+    private fun validateRolePermission(
+        selfInfo: SelfInfo,
+        msg: Message<JsonObject>,
+        handler: Handler<AsyncResult<Message<JsonObject>>>
+    ) {
+        fun failsPermissionCheck(
+            permission: RolePermission
+        ): Boolean {
+            if (!selfInfo.permissions.contains(permission)) {
+                log.warn("User ${selfInfo.developer.id} missing permission: $permission")
+                handler.handle(Future.failedFuture(PermissionAccessDenied.asEventBusException(permission)))
+                return true
+            }
+            return false
+        }
+
+        val action = msg.headers().get("action")
+        if (action == "getAccessPermission" || action == "getRoleAccessPermissions" || action == "getDeveloperAccessPermissions") {
+            if (failsPermissionCheck(RolePermission.GET_ACCESS_PERMISSIONS)) return
+        } else if (action == "getDataRedaction" || action == "getRoleDataRedactions" || action == "getDeveloperDataRedactions") {
+            if (failsPermissionCheck(RolePermission.GET_DATA_REDACTIONS)) return
+        } else if (action == "addDataRedaction" || action == "removeDataRedaction" || action == "addRoleDataRedaction" || action == "removeRoleDataRedaction") {
+            if (failsPermissionCheck(RolePermission.UPDATE_DATA_REDACTION)) return
+        } else if (action == "addRoleAccessPermission" || action == "removeRoleAccessPermission") {
+            if (failsPermissionCheck(RolePermission.ADD_ACCESS_PERMISSION)) return
+        } else if (action == "refreshClientAccess") {
+            if (failsPermissionCheck(RolePermission.UPDATE_CLIENT_ACCESS)) return
+        } else if (RolePermission.fromString(action) != null) {
+            val necessaryPermission = RolePermission.fromString(action)!!
+            if (failsPermissionCheck(necessaryPermission)) return
+        } else {
+            TODO()
+        }
+        handler.handle(Future.succeededFuture(msg))
     }
 
     override suspend fun stop() {

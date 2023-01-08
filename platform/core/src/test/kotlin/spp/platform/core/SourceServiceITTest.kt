@@ -574,7 +574,7 @@ class SourceServiceITTest : PlatformIntegrationTest() {
 
     @Test
     fun `ensure all role permissions are known`() = runBlocking {
-        val knownRolePermissions = managementService.getRolePermissions(ROLE_MANAGER.roleName).await()
+        val knownRolePermissions = managementService.getRolePermissions(ROLE_MANAGER).await()
         RolePermission.values().forEach {
             assert(knownRolePermissions.contains(it)) {
                 "Role permission $it is not known"
@@ -583,7 +583,7 @@ class SourceServiceITTest : PlatformIntegrationTest() {
 
         val getRolePermissionsResp = request.sendJsonObject(
             JsonObject().put("query", getGraphql("permission/get-role-permissions"))
-                .put("variables", JsonObject().put("role", ROLE_MANAGER.roleName))
+                .put("variables", JsonObject().put("role", ROLE_MANAGER))
         ).await().bodyAsJsonObject()
         assertNull(getRolePermissionsResp.getJsonArray("errors"))
         val getRolePermissions = getRolePermissionsResp.getJsonObject("data").getJsonArray("getRolePermissions")

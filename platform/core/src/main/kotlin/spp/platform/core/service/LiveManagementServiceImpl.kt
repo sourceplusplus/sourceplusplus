@@ -28,6 +28,7 @@ import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import mu.KotlinLogging
+import org.apache.commons.lang3.RandomStringUtils
 import org.apache.skywalking.oap.server.core.CoreModule
 import org.apache.skywalking.oap.server.core.query.MetadataQueryService
 import org.apache.skywalking.oap.server.core.query.enumeration.Step
@@ -38,20 +39,20 @@ import spp.platform.common.DeveloperAuth
 import spp.platform.common.service.SourceBridgeService
 import spp.platform.storage.SourceStorage
 import spp.protocol.platform.ProbeAddress
-import spp.protocol.platform.auth.ClientAccess
-import spp.protocol.platform.auth.DeveloperRole
-import spp.protocol.platform.auth.RolePermission
+import spp.protocol.platform.auth.*
 import spp.protocol.platform.developer.Developer
 import spp.protocol.platform.developer.SelfInfo
 import spp.protocol.platform.general.Service
 import spp.protocol.platform.general.ServiceEndpoint
 import spp.protocol.platform.general.ServiceInstance
 import spp.protocol.platform.status.InstanceConnection
+import spp.protocol.service.LiveInstrumentService
 import spp.protocol.service.LiveManagementService
 import spp.protocol.service.LiveViewService
 import spp.protocol.service.SourceServices
 import java.time.Instant
 import java.time.temporal.ChronoUnit
+import java.util.*
 
 class LiveManagementServiceImpl(
     private val vertx: Vertx,
@@ -69,6 +70,253 @@ class LiveManagementServiceImpl(
         val promise = Promise.promise<String>()
         GlobalScope.launch(vertx.dispatcher()) {
             promise.complete(ClusterConnection.BUILD.getString("build_version"))
+        }
+        return promise.future()
+    }
+
+    override fun getAccessPermissions(): Future<List<AccessPermission>> {
+        log.trace { "Getting access permissions" }
+        val promise = Promise.promise<List<AccessPermission>>()
+        GlobalScope.launch(vertx.dispatcher()) {
+            promise.complete(SourceStorage.getAccessPermissions().toList())
+        }
+        return promise.future()
+    }
+
+    override fun getAccessPermission(id: String): Future<AccessPermission> {
+        log.trace { "Getting access permission $id" }
+        val promise = Promise.promise<AccessPermission>()
+        GlobalScope.launch(vertx.dispatcher()) {
+            if (!SourceStorage.hasAccessPermission(id)) {
+                promise.fail(IllegalStateException("Non-existing access permission: $id"))
+            } else {
+                promise.complete(SourceStorage.getAccessPermission(id))
+            }
+        }
+        return promise.future()
+    }
+
+    override fun addAccessPermission(
+        locationPatterns: List<String>,
+        type: AccessType
+    ): Future<AccessPermission> {
+        val id = UUID.randomUUID().toString()
+        log.trace { "Adding access permission $id" }
+        val promise = Promise.promise<AccessPermission>()
+        GlobalScope.launch(vertx.dispatcher()) {
+            if (SourceStorage.hasAccessPermission(id)) {
+                promise.fail(IllegalStateException("Existing access permission: $id"))
+            } else {
+                val accessPermission = AccessPermission(id, locationPatterns, type)
+                SourceStorage.addAccessPermission(id, locationPatterns, type)
+                promise.complete(accessPermission)
+            }
+        }
+        return promise.future()
+    }
+
+    override fun removeAccessPermission(id: String): Future<Void> {
+        log.trace { "Removing access permission $id" }
+        val promise = Promise.promise<Void>()
+        GlobalScope.launch(vertx.dispatcher()) {
+            if (!SourceStorage.hasAccessPermission(id)) {
+                promise.fail(IllegalStateException("Non-existing access permission: $id"))
+            } else {
+                SourceStorage.removeAccessPermission(id)
+                promise.complete()
+            }
+        }
+        return promise.future()
+    }
+
+    override fun getRoleAccessPermissions(role: DeveloperRole): Future<List<AccessPermission>> {
+        log.trace { "Getting access permissions for role $role" }
+        val promise = Promise.promise<List<AccessPermission>>()
+        GlobalScope.launch(vertx.dispatcher()) {
+            if (!SourceStorage.hasRole(role)) {
+                promise.fail(IllegalStateException("Non-existing role: $role"))
+            } else {
+                promise.complete(SourceStorage.getRoleAccessPermissions(role).toList())
+            }
+        }
+        return promise.future()
+    }
+
+    override fun addRoleAccessPermission(role: DeveloperRole, id: String): Future<Void> {
+        log.trace { "Adding access permission $id to role $role" }
+        val promise = Promise.promise<Void>()
+        GlobalScope.launch(vertx.dispatcher()) {
+            if (!SourceStorage.hasRole(role)) {
+                promise.fail(IllegalStateException("Non-existing role: $role"))
+            } else if (!SourceStorage.hasAccessPermission(id)) {
+                promise.fail(IllegalStateException("Non-existing access permission: $id"))
+            } else {
+                SourceStorage.addAccessPermissionToRole(id, role)
+                promise.complete()
+            }
+        }
+        return promise.future()
+    }
+
+    override fun removeRoleAccessPermission(role: DeveloperRole, id: String): Future<Void> {
+        log.trace { "Removing access permission $id from role $role" }
+        val promise = Promise.promise<Void>()
+        GlobalScope.launch(vertx.dispatcher()) {
+            if (!SourceStorage.hasRole(role)) {
+                promise.fail(IllegalStateException("Non-existing role: $role"))
+            } else if (!SourceStorage.hasAccessPermission(id)) {
+                promise.fail(IllegalStateException("Non-existing access permission: $id"))
+            } else {
+                SourceStorage.removeAccessPermissionFromRole(id, role)
+                promise.complete()
+            }
+        }
+        return promise.future()
+    }
+
+    override fun getDataRedactions(): Future<List<DataRedaction>> {
+        log.trace { "Getting data redactions" }
+        val promise = Promise.promise<List<DataRedaction>>()
+        GlobalScope.launch(vertx.dispatcher()) {
+            promise.complete(SourceStorage.getDataRedactions().toList())
+        }
+        return promise.future()
+    }
+
+    override fun getDataRedaction(id: String): Future<DataRedaction> {
+        log.trace { "Getting data redaction $id" }
+        val promise = Promise.promise<DataRedaction>()
+        GlobalScope.launch(vertx.dispatcher()) {
+            if (!SourceStorage.hasDataRedaction(id)) {
+                promise.fail(IllegalStateException("Non-existing data redaction: $id"))
+            } else {
+                promise.complete(SourceStorage.getDataRedaction(id))
+            }
+        }
+        return promise.future()
+    }
+
+    override fun addDataRedaction(
+        id: String,
+        type: RedactionType,
+        lookup: String,
+        replacement: String
+    ): Future<DataRedaction> {
+        log.trace { "Adding data redaction $id" }
+        val promise = Promise.promise<DataRedaction>()
+        GlobalScope.launch(vertx.dispatcher()) {
+            if (SourceStorage.hasDataRedaction(id)) {
+                promise.fail(IllegalStateException("Data redaction already exists: $id"))
+            } else {
+                val redaction = DataRedaction(id, type, lookup, replacement)
+                SourceStorage.addDataRedaction(id, type, lookup, replacement)
+                promise.complete(redaction)
+            }
+        }
+        return promise.future()
+    }
+
+    override fun updateDataRedaction(
+        id: String,
+        type: RedactionType,
+        lookup: String,
+        replacement: String
+    ): Future<DataRedaction> {
+        log.trace { "Updating data redaction $id" }
+        val promise = Promise.promise<DataRedaction>()
+        GlobalScope.launch(vertx.dispatcher()) {
+            if (!SourceStorage.hasDataRedaction(id)) {
+                promise.fail(IllegalStateException("Non-existing data redaction: $id"))
+            } else {
+                val redaction = DataRedaction(id, type, lookup, replacement)
+                SourceStorage.updateDataRedaction(id, type, lookup, replacement)
+                promise.complete(redaction)
+            }
+        }
+        return promise.future()
+    }
+
+    override fun removeDataRedaction(id: String): Future<Void> {
+        log.trace { "Removing data redaction $id" }
+        val promise = Promise.promise<Void>()
+        GlobalScope.launch(vertx.dispatcher()) {
+            if (!SourceStorage.hasDataRedaction(id)) {
+                promise.fail(IllegalStateException("Non-existing data redaction: $id"))
+            } else {
+                SourceStorage.removeDataRedaction(id)
+                promise.complete()
+            }
+        }
+        return promise.future()
+    }
+
+    override fun getRoleDataRedactions(role: DeveloperRole): Future<List<DataRedaction>> {
+        log.trace { "Getting data redactions for role $role" }
+        val promise = Promise.promise<List<DataRedaction>>()
+        GlobalScope.launch(vertx.dispatcher()) {
+            if (!SourceStorage.hasRole(role)) {
+                promise.fail(IllegalStateException("Non-existing role: $role"))
+            } else {
+                promise.complete(SourceStorage.getRoleDataRedactions(role).toList())
+            }
+        }
+        return promise.future()
+    }
+
+    override fun addRoleDataRedaction(role: DeveloperRole, id: String): Future<Void> {
+        log.trace { "Adding data redaction $id to role $role" }
+        val promise = Promise.promise<Void>()
+        GlobalScope.launch(vertx.dispatcher()) {
+            if (!SourceStorage.hasRole(role)) {
+                promise.fail(IllegalStateException("Non-existing role: $role"))
+            } else if (!SourceStorage.hasDataRedaction(id)) {
+                promise.fail(IllegalStateException("Non-existing data redaction: $id"))
+            } else {
+                SourceStorage.addDataRedactionToRole(id, role)
+                promise.complete()
+            }
+        }
+        return promise.future()
+    }
+
+    override fun removeRoleDataRedaction(role: DeveloperRole, id: String): Future<Void> {
+        log.trace { "Removing data redaction $id from role $role" }
+        val promise = Promise.promise<Void>()
+        GlobalScope.launch(vertx.dispatcher()) {
+            if (!SourceStorage.hasRole(role)) {
+                promise.fail(IllegalStateException("Non-existing role: $role"))
+            } else if (!SourceStorage.hasDataRedaction(id)) {
+                promise.fail(IllegalStateException("Non-existing data redaction: $id"))
+            } else {
+                SourceStorage.removeDataRedactionFromRole(id, role)
+                promise.complete()
+            }
+        }
+        return promise.future()
+    }
+
+    override fun getDeveloperDataRedactions(developerId: String): Future<List<DataRedaction>> {
+        log.trace { "Getting data redactions for developer $developerId" }
+        val promise = Promise.promise<List<DataRedaction>>()
+        GlobalScope.launch(vertx.dispatcher()) {
+            if (!SourceStorage.hasDeveloper(developerId)) {
+                promise.fail(IllegalStateException("Non-existing developer: $developerId"))
+            } else {
+                promise.complete(SourceStorage.getDeveloperDataRedactions(developerId).toList())
+            }
+        }
+        return promise.future()
+    }
+
+    override fun getDeveloperAccessPermissions(developerId: String): Future<List<AccessPermission>> {
+        log.trace { "Getting access permissions for developer $developerId" }
+        val promise = Promise.promise<List<AccessPermission>>()
+        GlobalScope.launch(vertx.dispatcher()) {
+            if (!SourceStorage.hasDeveloper(developerId)) {
+                promise.fail(IllegalStateException("Non-existing developer: $developerId"))
+            } else {
+                promise.complete(SourceStorage.getDeveloperAccessPermissions(developerId).toList())
+            }
         }
         return promise.future()
     }
@@ -274,12 +522,12 @@ class LiveManagementServiceImpl(
         return promise.future()
     }
 
-    override fun getRolePermissions(role: String): Future<List<RolePermission>> {
+    override fun getRolePermissions(role: DeveloperRole): Future<List<RolePermission>> {
         log.trace { "Getting role permissions" }
         val promise = Promise.promise<List<RolePermission>>()
         GlobalScope.launch(vertx.dispatcher()) {
             try {
-                val permissions = SourceStorage.getRolePermissions(DeveloperRole.fromString(role))
+                val permissions = SourceStorage.getRolePermissions(role)
                 promise.complete(permissions.toList())
             } catch (e: Exception) {
                 log.error("Failed to get role permissions", e)
@@ -334,7 +582,7 @@ class LiveManagementServiceImpl(
         return promise.future()
     }
 
-    override fun getAuthToken(token: String): Future<String> {
+    override fun getAuthToken(accessToken: String): Future<String> {
         log.trace { "Getting auth token" }
         if (jwt == null) {
             return Future.failedFuture("JWT is not enabled")
@@ -342,7 +590,7 @@ class LiveManagementServiceImpl(
 
         val promise = Promise.promise<String>()
         GlobalScope.launch(vertx.dispatcher()) {
-            val dev = SourceStorage.getDeveloperByAccessToken(token)
+            val dev = SourceStorage.getDeveloperByAccessToken(accessToken)
             if (dev != null) {
                 val jwtToken = jwt.generateToken(
                     JsonObject().apply {
@@ -358,18 +606,71 @@ class LiveManagementServiceImpl(
                 )
                 promise.complete(jwtToken)
             } else {
-                log.warn("Invalid token request. Token: {}", token)
+                log.warn("Invalid token request. Token: {}", accessToken)
                 promise.fail("Invalid token request")
             }
         }
         return promise.future()
     }
 
-    override fun addDeveloper(id: String): Future<Developer> {
-        log.trace { "Adding developer with id: $id" }
+    override fun getDevelopers(): Future<List<Developer>> {
+        log.trace { "Getting developers" }
+        val promise = Promise.promise<List<Developer>>()
+        GlobalScope.launch(vertx.dispatcher()) {
+            promise.complete(SourceStorage.getDevelopers())
+        }
+        return promise.future()
+    }
+
+    override fun addDeveloper(developerId: String): Future<Developer> {
+        log.trace { "Adding developer with id: $developerId" }
         val promise = Promise.promise<Developer>()
         GlobalScope.launch(vertx.dispatcher()) {
-            promise.complete(SourceStorage.addDeveloper(id))
+            if (SourceStorage.hasDeveloper(developerId)) {
+                promise.fail(IllegalStateException("Existing developer: $developerId"))
+            } else {
+                promise.complete(SourceStorage.addDeveloper(developerId))
+            }
+        }
+        return promise.future()
+    }
+
+    override fun removeDeveloper(developerId: String): Future<Void> {
+        log.trace { "Removing developer with id: $developerId" }
+        val promise = Promise.promise<Void>()
+        GlobalScope.launch(vertx.dispatcher()) {
+            if (developerId == "system") {
+                promise.fail(IllegalArgumentException("Unable to remove system developer"))
+            } else if (!SourceStorage.hasDeveloper(developerId)) {
+                promise.fail(IllegalStateException("Non-existing developer: $developerId"))
+            } else {
+                SourceStorage.removeDeveloper(developerId)
+                promise.complete()
+            }
+        }
+        return promise.future()
+    }
+
+    override fun refreshDeveloperToken(developerId: String): Future<Developer> {
+        log.trace { "Refreshing developer token with id: $developerId" }
+        val promise = Promise.promise<Developer>()
+        GlobalScope.launch(vertx.dispatcher()) {
+            if (!SourceStorage.hasDeveloper(developerId)) {
+                promise.fail(IllegalStateException("Non-existing developer: $developerId"))
+            } else {
+                val newToken = RandomStringUtils.randomAlphanumeric(50)
+                SourceStorage.setAccessToken(developerId, newToken)
+                promise.complete(Developer(developerId, newToken))
+            }
+        }
+        return promise.future()
+    }
+
+    override fun getRoles(): Future<List<DeveloperRole>> {
+        log.trace { "Getting roles" }
+        val promise = Promise.promise<List<DeveloperRole>>()
+        GlobalScope.launch(vertx.dispatcher()) {
+            promise.complete(SourceStorage.getRoles().toList())
         }
         return promise.future()
     }
@@ -378,7 +679,39 @@ class LiveManagementServiceImpl(
         log.trace { "Adding role with name: $role" }
         val promise = Promise.promise<Boolean>()
         GlobalScope.launch(vertx.dispatcher()) {
-            promise.complete(SourceStorage.addRole(role))
+            if (SourceStorage.hasRole(role)) {
+                promise.fail(IllegalStateException("Existing role: $role"))
+            } else {
+                promise.complete(SourceStorage.addRole(role))
+            }
+        }
+        return promise.future()
+    }
+
+    override fun removeRole(role: DeveloperRole): Future<Boolean> {
+        log.trace { "Removing role with name: $role" }
+        val promise = Promise.promise<Boolean>()
+        GlobalScope.launch(vertx.dispatcher()) {
+            if (!SourceStorage.hasRole(role)) {
+                promise.fail(IllegalStateException("Non-existing role: $role"))
+            } else if (role.nativeRole) {
+                promise.fail(IllegalArgumentException("Unable to remove native role"))
+            } else {
+                promise.complete(SourceStorage.removeRole(role))
+            }
+        }
+        return promise.future()
+    }
+
+    override fun getDeveloperRoles(developerId: String): Future<List<DeveloperRole>> {
+        log.trace { "Getting developer roles" }
+        val promise = Promise.promise<List<DeveloperRole>>()
+        GlobalScope.launch(vertx.dispatcher()) {
+            if (!SourceStorage.hasDeveloper(developerId)) {
+                promise.fail(IllegalStateException("Non-existing developer: $developerId"))
+            } else {
+                promise.complete(SourceStorage.getDeveloperRoles(developerId).toList())
+            }
         }
         return promise.future()
     }
@@ -387,8 +720,30 @@ class LiveManagementServiceImpl(
         log.trace { "Adding role with id: ${role.roleName} to developer with id: $developerId" }
         val promise = Promise.promise<Void>()
         GlobalScope.launch(vertx.dispatcher()) {
-            SourceStorage.addRoleToDeveloper(developerId, role)
-            promise.complete()
+            if (!SourceStorage.hasDeveloper(developerId)) {
+                promise.fail(IllegalStateException("Non-existing developer: $developerId"))
+            } else if (!SourceStorage.hasRole(role)) {
+                promise.fail(IllegalStateException("Non-existing role: ${role.roleName}"))
+            } else {
+                SourceStorage.addRoleToDeveloper(developerId, role)
+                promise.complete()
+            }
+        }
+        return promise.future()
+    }
+
+    override fun removeDeveloperRole(developerId: String, role: DeveloperRole): Future<Void> {
+        log.trace { "Removing role with id: ${role.roleName} from developer with id: $developerId" }
+        val promise = Promise.promise<Void>()
+        GlobalScope.launch(vertx.dispatcher()) {
+            if (!SourceStorage.hasDeveloper(developerId)) {
+                promise.fail(IllegalStateException("Non-existing developer: $developerId"))
+            } else if (!SourceStorage.hasRole(role)) {
+                promise.fail(IllegalStateException("Non-existing role: ${role.roleName}"))
+            } else {
+                SourceStorage.removeRoleFromDeveloper(developerId, role)
+                promise.complete()
+            }
         }
         return promise.future()
     }
@@ -397,8 +752,43 @@ class LiveManagementServiceImpl(
         log.trace { "Adding permission with id: ${permission.name} to role with id: ${role.roleName}" }
         val promise = Promise.promise<Void>()
         GlobalScope.launch(vertx.dispatcher()) {
-            SourceStorage.addPermissionToRole(role, permission)
-            promise.complete()
+            if (!SourceStorage.hasRole(role)) {
+                promise.fail(IllegalStateException("Non-existing role: $role"))
+            } else if (role.nativeRole) {
+                promise.fail(IllegalArgumentException("Unable to update native role"))
+            } else {
+                SourceStorage.addPermissionToRole(role, permission)
+                promise.complete()
+            }
+        }
+        return promise.future()
+    }
+
+    override fun removeRolePermission(role: DeveloperRole, permission: RolePermission): Future<Void> {
+        log.trace { "Removing permission with id: ${permission.name} from role with id: ${role.roleName}" }
+        val promise = Promise.promise<Void>()
+        GlobalScope.launch(vertx.dispatcher()) {
+            if (!SourceStorage.hasRole(role)) {
+                promise.fail(IllegalStateException("Non-existing role: $role"))
+            } else if (role.nativeRole) {
+                promise.fail(IllegalArgumentException("Unable to update native role"))
+            } else {
+                SourceStorage.removePermissionFromRole(role, permission)
+                promise.complete()
+            }
+        }
+        return promise.future()
+    }
+
+    override fun getDeveloperPermissions(developerId: String): Future<List<RolePermission>> {
+        log.trace { "Getting developer permissions" }
+        val promise = Promise.promise<List<RolePermission>>()
+        GlobalScope.launch(vertx.dispatcher()) {
+            if (SourceStorage.hasDeveloper(developerId)) {
+                promise.complete(SourceStorage.getDeveloperPermissions(developerId).toList())
+            } else {
+                promise.fail(IllegalStateException("Developer not found: $developerId"))
+            }
         }
         return promise.future()
     }
@@ -427,6 +817,19 @@ class LiveManagementServiceImpl(
             } else {
                 promise.fail("Bridge service is not available")
             }
+        }
+        return promise.future()
+    }
+
+    override fun reset(): Future<Void> {
+        log.trace { "Resetting" }
+        val promise = Promise.promise<Void>()
+        val devAuth = Vertx.currentContext().getLocal<DeveloperAuth>("developer")
+        GlobalScope.launch(vertx.dispatcher()) {
+            SourceStorage.reset()
+            LiveInstrumentService.createProxy(vertx, devAuth.accessToken).clearAllLiveInstruments()
+                .onSuccess { promise.complete() }
+                .onFailure { promise.fail(it) }
         }
         return promise.future()
     }

@@ -21,13 +21,15 @@ import com.fasterxml.jackson.core.JsonGenerator
 import com.fasterxml.jackson.databind.JsonSerializer
 import com.fasterxml.jackson.databind.SerializerProvider
 import com.fasterxml.jackson.databind.module.SimpleModule
-import io.vertx.core.Vertx
+import io.vertx.core.*
+import io.vertx.core.eventbus.Message
 import io.vertx.core.json.JsonObject
 import io.vertx.core.json.jackson.DatabindCodec
 import io.vertx.kotlin.coroutines.await
 import io.vertx.servicediscovery.Record
 import io.vertx.servicediscovery.types.EventBusService
 import io.vertx.serviceproxy.ServiceBinder
+import io.vertx.serviceproxy.ServiceInterceptor
 import org.apache.skywalking.oap.server.core.CoreModule
 import org.apache.skywalking.oap.server.core.analysis.metrics.DataTable
 import org.apache.skywalking.oap.server.core.query.MetricsQueryService
@@ -41,8 +43,12 @@ import spp.platform.storage.ExpiringSharedData
 import spp.platform.storage.SourceStorage
 import spp.processor.live.impl.LiveViewServiceImpl
 import spp.processor.live.impl.view.model.ClusterMetrics
+import spp.protocol.platform.auth.RolePermission
+import spp.protocol.platform.developer.SelfInfo
+import spp.protocol.service.LiveManagementService
 import spp.protocol.service.LiveViewService
 import spp.protocol.service.SourceServices
+import spp.protocol.service.error.PermissionAccessDenied
 import java.util.concurrent.TimeUnit
 import kotlin.system.exitProcess
 
@@ -104,6 +110,7 @@ object ViewProcessor : FeedbackProcessor() {
         ServiceBinder(vertx).setIncludeDebugInfo(true)
             .setAddress(SourceServices.LIVE_VIEW)
             .addInterceptor(developerAuthInterceptor())
+            .addInterceptor(permissionCheckInterceptor())
             .register(LiveViewService::class.java, liveViewService)
         liveViewRecord = EventBusService.createRecord(
             SourceServices.LIVE_VIEW,
@@ -118,6 +125,61 @@ object ViewProcessor : FeedbackProcessor() {
                 log.error("Failed to publish live view service", it.cause())
                 exitProcess(-1)
             }
+        }
+    }
+
+    private fun permissionCheckInterceptor(): ServiceInterceptor {
+        return ServiceInterceptor { _, _, msg ->
+            val promise = Promise.promise<Message<JsonObject>>()
+            val liveManagementService = LiveManagementService.createProxy(vertx, msg.headers().get("auth-token"))
+            liveManagementService.getSelf().onSuccess { selfInfo ->
+                validateRolePermission(selfInfo, msg) {
+                    if (it.succeeded()) {
+                        promise.complete(msg)
+                    } else {
+                        promise.fail(it.cause())
+                    }
+                }
+            }.onFailure {
+                promise.fail(it)
+            }
+            promise.future()
+        }
+    }
+
+    private fun validateRolePermission(
+        selfInfo: SelfInfo,
+        msg: Message<JsonObject>,
+        handler: Handler<AsyncResult<Message<JsonObject>>>
+    ) {
+        fun failsPermissionCheck(
+            permission: RolePermission
+        ): Boolean {
+            if (!selfInfo.permissions.contains(permission)) {
+                log.warn("User ${selfInfo.developer.id} missing permission: $permission")
+                handler.handle(Future.failedFuture(PermissionAccessDenied.asEventBusException(permission)))
+                return true
+            }
+            return false
+        }
+
+        val action = msg.headers().get("action")
+        if (action == "addLiveView") {
+            if (failsPermissionCheck(RolePermission.ADD_LIVE_VIEW_SUBSCRIPTION)) return
+        } else if (action == "getLiveViews" || action == "getHistoricalMetrics") {
+            if (failsPermissionCheck(RolePermission.GET_LIVE_VIEW_SUBSCRIPTIONS)) return
+        } else if (action == "clearLiveViews") {
+            if (failsPermissionCheck(RolePermission.REMOVE_LIVE_VIEW_SUBSCRIPTION)) return
+        } else if (RolePermission.fromString(action) != null) {
+            val necessaryPermission = RolePermission.fromString(action)!!
+            if (selfInfo.permissions.contains(necessaryPermission)) {
+                handler.handle(Future.succeededFuture(msg))
+            } else {
+                log.warn("User ${selfInfo.developer.id} missing permission: $necessaryPermission")
+                handler.handle(Future.failedFuture(PermissionAccessDenied.asEventBusException(necessaryPermission)))
+            }
+        } else {
+            TODO()
         }
     }
 
