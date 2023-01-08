@@ -1431,6 +1431,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
             } else "system"
 
             val input = JsonObject.mapFrom(env.getArgument("input"))
+            val id = input.getString("id")
             val variableControl = input.getJsonObject("variableControl")
             val location = input.getJsonObject("location")
             val locationSource = location.getString("source")
@@ -1460,6 +1461,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
                 if (it.succeeded()) {
                     it.result().addLiveInstrument(
                         LiveBreakpoint(
+                            id = id,
                             variableControl = variableControl?.let { LiveVariableControl(it) },
                             location = LiveSourceLocation(locationSource, locationLine),
                             condition = condition,

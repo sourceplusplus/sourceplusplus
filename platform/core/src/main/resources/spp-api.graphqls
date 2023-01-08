@@ -272,6 +272,7 @@ type LiveBreakpoint implements LiveInstrument {
 }
 
 input LiveBreakpointInput {
+    id: String
     variableControl: LiveVariableControlInput
     location: LiveSourceLocationInput!
     condition: String
