@@ -583,7 +583,7 @@ class SourceServiceITTest : PlatformIntegrationTest() {
 
         val getRolePermissionsResp = request.sendJsonObject(
             JsonObject().put("query", getGraphql("permission/get-role-permissions"))
-                .put("variables", JsonObject().put("role", ROLE_MANAGER))
+                .put("variables", JsonObject().put("role", ROLE_MANAGER.roleName))
         ).await().bodyAsJsonObject()
         assertNull(getRolePermissionsResp.getJsonArray("errors"))
         val getRolePermissions = getRolePermissionsResp.getJsonObject("data").getJsonArray("getRolePermissions")
