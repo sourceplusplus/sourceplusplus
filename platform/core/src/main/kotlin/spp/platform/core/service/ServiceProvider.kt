@@ -48,9 +48,9 @@ class ServiceProvider(
         private val log = LoggerFactory.getLogger(ServiceProvider::class.java)
     }
 
-    private var discovery: ServiceDiscovery? = null
-    private var liveManagementService: Record? = null
-    private var service: LiveManagementService? = null
+    private lateinit var discovery: ServiceDiscovery
+    private lateinit var managementServiceRecord: Record
+    private lateinit var managementService: LiveManagementService
 
     override suspend fun start() {
         try {
@@ -68,11 +68,11 @@ class ServiceProvider(
                 ServiceDiscovery.create(vertx, ServiceDiscoveryOptions())
             }
 
-            service = LiveManagementServiceImpl(vertx, jwtAuth, moduleManager)
-            liveManagementService = publishService(
+            managementService = LiveManagementServiceImpl(vertx, jwtAuth, moduleManager)
+            managementServiceRecord = publishService(
                 LIVE_MANAGEMENT_SERVICE,
                 LiveManagementService::class.java,
-                service!!
+                managementService
             )
         } catch (throwable: Throwable) {
             log.error("Failed to start SkyWalking provider", throwable)
@@ -108,7 +108,7 @@ class ServiceProvider(
             address, address, clazz,
             JsonObject().put("INSTANCE_ID", config.getString("SPP_INSTANCE_ID"))
         )
-        discovery!!.publish(record).await()
+        discovery.publish(record).await()
         return record
     }
 
@@ -116,7 +116,7 @@ class ServiceProvider(
     private fun permissionCheckInterceptor(): ServiceInterceptor {
         return ServiceInterceptor { _, _, msg ->
             val promise = Promise.promise<Message<JsonObject>>()
-            service!!.getSelf().onSuccess { selfInfo ->
+            managementService.getSelf().onSuccess { selfInfo ->
                 validateRolePermission(selfInfo, msg) {
                     if (it.succeeded()) {
                         promise.complete(msg)
@@ -166,13 +166,13 @@ class ServiceProvider(
     }
 
     override suspend fun stop() {
-        discovery!!.unpublish(liveManagementService!!.registration).onComplete {
+        discovery.unpublish(managementServiceRecord.registration).onComplete {
             if (it.succeeded()) {
                 log.info("Live management service unpublished")
             } else {
                 log.error("Failed to unpublish live management service", it.cause())
             }
         }.await()
-        discovery!!.close()
+        discovery.close()
     }
 }
