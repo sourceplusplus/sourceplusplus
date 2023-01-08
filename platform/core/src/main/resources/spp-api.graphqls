@@ -216,9 +216,9 @@ type LiveMeter implements LiveInstrument {
 }
 
 input LiveMeterInput {
+    id: String
     meterType: MeterType!
     metricValue: MetricValueInput!
-    id: String
     location: LiveSourceLocationInput!
     condition: String
     expiresAt: Long
@@ -245,6 +245,7 @@ type LiveLog implements LiveInstrument {
 }
 
 input LiveLogInput {
+    id: String
     logFormat: String!
     logArguments: [String!]
     location: LiveSourceLocationInput!
@@ -347,6 +348,7 @@ type LiveSpan implements LiveInstrument {
 }
 
 input LiveSpanInput {
+    id: String
     operationName: String!
     location: LiveSpanLocationInput!
     #condition: String #todo: impl
