@@ -162,8 +162,6 @@ class ServiceProvider(
         } else if (RolePermission.fromString(action) != null) {
             val necessaryPermission = RolePermission.fromString(action)!!
             if (failsPermissionCheck(necessaryPermission)) return
-        } else {
-            TODO()
         }
         handler.handle(Future.succeededFuture(msg))
     }

@@ -178,9 +178,9 @@ object ViewProcessor : FeedbackProcessor() {
                 log.warn("User ${selfInfo.developer.id} missing permission: $necessaryPermission")
                 handler.handle(Future.failedFuture(PermissionAccessDenied.asEventBusException(necessaryPermission)))
             }
-        } else {
-            TODO()
+            return
         }
+        handler.handle(Future.succeededFuture(msg))
     }
 
     override suspend fun stop() {
