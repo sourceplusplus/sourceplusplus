@@ -114,8 +114,8 @@ object InstrumentProcessor : FeedbackProcessor() {
     private fun permissionAndAccessCheckInterceptor(): ServiceInterceptor {
         return ServiceInterceptor { _, _, msg ->
             val promise = Promise.promise<Message<JsonObject>>()
-            val liveManagementService = LiveManagementService.createProxy(vertx, msg.headers().get("auth-token"))
-            liveManagementService.getSelf().onSuccess { selfInfo ->
+            val managementService = LiveManagementService.createProxy(vertx, msg.headers().get("auth-token"))
+            managementService.getSelf().onSuccess { selfInfo ->
                 validateRolePermission(selfInfo, msg) {
                     if (it.succeeded()) {
                         if (msg.headers().get("action").startsWith("addLiveInstrument")) {
