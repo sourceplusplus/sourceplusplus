@@ -30,6 +30,7 @@ import org.junit.jupiter.api.extension.ExtendWith
 import spp.platform.storage.CoreStorage
 import spp.platform.storage.SourceStorage
 import spp.protocol.instrument.*
+import spp.protocol.instrument.location.LiveSourceLocation
 import spp.protocol.instrument.meter.MeterType
 import spp.protocol.instrument.meter.MetricValue
 import spp.protocol.instrument.meter.MetricValueType

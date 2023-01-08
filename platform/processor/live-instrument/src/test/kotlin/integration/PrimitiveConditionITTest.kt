@@ -22,7 +22,7 @@ import io.vertx.kotlin.coroutines.await
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import spp.protocol.instrument.LiveBreakpoint
-import spp.protocol.instrument.LiveSourceLocation
+import spp.protocol.instrument.location.LiveSourceLocation
 
 @Suppress("UNUSED_VARIABLE", "unused")
 class PrimitiveConditionITTest : LiveInstrumentIntegrationTest() {
