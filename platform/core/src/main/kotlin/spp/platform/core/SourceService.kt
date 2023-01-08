@@ -38,9 +38,7 @@ import io.vertx.ext.web.handler.BodyHandler
 import io.vertx.ext.web.handler.graphql.GraphQLHandler
 import io.vertx.kotlin.coroutines.CoroutineVerticle
 import io.vertx.kotlin.coroutines.await
-import io.vertx.kotlin.coroutines.dispatcher
 import io.vertx.servicediscovery.types.EventBusService
-import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
 import spp.platform.common.ClusterConnection.discovery
 import spp.platform.common.DeveloperAuth
@@ -65,8 +63,6 @@ import spp.protocol.platform.general.ServiceInstance
 import spp.protocol.service.LiveInstrumentService
 import spp.protocol.service.LiveManagementService
 import spp.protocol.service.LiveViewService
-import spp.protocol.utils.applyToCompletableFuture
-import spp.protocol.utils.toCompletableFuture
 import spp.protocol.view.HistoricalView
 import spp.protocol.view.LiveView
 import spp.protocol.view.LiveViewConfig
@@ -359,110 +355,112 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
     }
 
     private fun version(env: DataFetchingEnvironment): CompletableFuture<String> =
-        getLiveManagementService(env).compose { it.getVersion() }.toCompletableFuture()
+        getLiveManagementService(env).compose { it.getVersion() }.toCompletionStage().toCompletableFuture()
 
     private fun getAccessPermissions(env: DataFetchingEnvironment): CompletableFuture<List<AccessPermission>> =
-        getLiveManagementService(env).compose { it.getAccessPermissions() }.toCompletableFuture()
+        getLiveManagementService(env).compose { it.getAccessPermissions() }.toCompletionStage().toCompletableFuture()
 
     private fun getAccessPermission(env: DataFetchingEnvironment): CompletableFuture<AccessPermission> =
         getLiveManagementService(env).compose { it.getAccessPermission(env.getArgument("id")) }
-            .toCompletableFuture()
+            .toCompletionStage().toCompletableFuture()
 
     private fun getRoleAccessPermissions(env: DataFetchingEnvironment): CompletableFuture<List<AccessPermission>> =
         getLiveManagementService(env)
             .compose { it.getRoleAccessPermissions(DeveloperRole.fromString(env.getArgument("role"))) }
-            .toCompletableFuture()
+            .toCompletionStage().toCompletableFuture()
 
     private fun getDeveloperAccessPermissions(env: DataFetchingEnvironment): CompletableFuture<List<AccessPermission>> =
         getLiveManagementService(env)
             .compose { it.getDeveloperAccessPermissions(env.getArgument("developerId")) }
-            .toCompletableFuture()
+            .toCompletionStage().toCompletableFuture()
 
     private fun getDataRedactions(env: DataFetchingEnvironment): CompletableFuture<List<DataRedaction>> =
-        getLiveManagementService(env).compose { it.getDataRedactions() }.toCompletableFuture()
+        getLiveManagementService(env).compose { it.getDataRedactions() }.toCompletionStage().toCompletableFuture()
 
     private fun getDataRedaction(env: DataFetchingEnvironment): CompletableFuture<DataRedaction> =
         getLiveManagementService(env).compose { it.getDataRedaction(env.getArgument("id")) }
-            .toCompletableFuture()
+            .toCompletionStage().toCompletableFuture()
 
     private fun getRoleDataRedactions(env: DataFetchingEnvironment): CompletableFuture<List<DataRedaction>> =
         getLiveManagementService(env)
             .compose { it.getRoleDataRedactions(DeveloperRole.fromString(env.getArgument("role"))) }
-            .toCompletableFuture()
+            .toCompletionStage().toCompletableFuture()
 
     private fun getDeveloperDataRedactions(env: DataFetchingEnvironment): CompletableFuture<List<DataRedaction>> =
         getLiveManagementService(env)
             .compose { it.getDeveloperDataRedactions(env.getArgument("developerId")) }
-            .toCompletableFuture()
+            .toCompletionStage().toCompletableFuture()
 
     private fun getRoles(env: DataFetchingEnvironment): CompletableFuture<List<DeveloperRole>> =
-        getLiveManagementService(env).compose { it.getRoles() }.toCompletableFuture()
+        getLiveManagementService(env).compose { it.getRoles() }.toCompletionStage().toCompletableFuture()
 
     private fun getRolePermissions(env: DataFetchingEnvironment): CompletableFuture<List<RolePermission>> =
         getLiveManagementService(env)
             .compose { it.getRolePermissions(DeveloperRole.fromString(env.getArgument("role"))) }
-            .toCompletableFuture()
+            .toCompletionStage().toCompletableFuture()
 
     private fun getDeveloperRoles(env: DataFetchingEnvironment): CompletableFuture<List<DeveloperRole>> =
         getLiveManagementService(env).compose {
             it.getDeveloperRoles(
                 env.getArgument<String>("id").lowercase().replace(" ", "")
             )
-        }.toCompletableFuture()
+        }.toCompletionStage().toCompletableFuture()
 
     private fun getDeveloperPermissions(env: DataFetchingEnvironment): CompletableFuture<List<RolePermission>> =
         getLiveManagementService(env).compose {
             it.getDeveloperPermissions(
                 env.getArgument<String>("id").lowercase().replace(" ", "")
             )
-        }.toCompletableFuture()
+        }.toCompletionStage().toCompletableFuture()
 
     private fun getDevelopers(env: DataFetchingEnvironment): CompletableFuture<List<Developer>> =
-        getLiveManagementService(env).compose { it.getDevelopers() }.toCompletableFuture()
+        getLiveManagementService(env).compose { it.getDevelopers() }.toCompletionStage().toCompletableFuture()
 
     private fun getSelf(env: DataFetchingEnvironment): CompletableFuture<SelfInfo> =
-        getLiveManagementService(env).compose { it.getSelf() }.toCompletableFuture()
+        getLiveManagementService(env).compose { it.getSelf() }.toCompletionStage().toCompletableFuture()
 
     private fun getServices(env: DataFetchingEnvironment): CompletableFuture<List<Service>> =
-        getLiveManagementService(env).compose { it.getServices() }.toCompletableFuture()
+        getLiveManagementService(env).compose { it.getServices() }.toCompletionStage().toCompletableFuture()
 
     private fun getInstances(env: DataFetchingEnvironment): CompletableFuture<List<ServiceInstance>> =
-        getLiveManagementService(env).compose { it.getInstances(env.getArgument("serviceId")) }.toCompletableFuture()
+        getLiveManagementService(env).compose { it.getInstances(env.getArgument("serviceId")) }.toCompletionStage()
+            .toCompletableFuture()
 
     private fun getEndpoints(env: DataFetchingEnvironment): CompletableFuture<List<ServiceEndpoint>> =
-        getLiveManagementService(env).compose { it.getEndpoints(env.getArgument("serviceId")) }.toCompletableFuture()
+        getLiveManagementService(env).compose { it.getEndpoints(env.getArgument("serviceId")) }.toCompletionStage()
+            .toCompletableFuture()
 
     private fun refreshDeveloperToken(env: DataFetchingEnvironment): CompletableFuture<Developer> =
         getLiveManagementService(env).compose { it.refreshDeveloperToken(env.getArgument("id")) }
-            .toCompletableFuture()
+            .toCompletionStage().toCompletableFuture()
 
     private fun getLiveInstruments(env: DataFetchingEnvironment): CompletableFuture<List<Map<String, Any>>> =
         getLiveInstrumentService(env).compose { it.getLiveInstruments(null) }.map { instruments ->
             instruments.map { fixJsonMaps(it) }
-        }.toCompletableFuture()
+        }.toCompletionStage().toCompletableFuture()
 
     private fun getLiveBreakpoints(env: DataFetchingEnvironment): CompletableFuture<List<Map<String, Any>>> =
         getLiveInstrumentService(env).compose { it.getLiveInstruments(BREAKPOINT) }.map { instruments ->
             instruments.map { fixJsonMaps(it) }
-        }.toCompletableFuture()
+        }.toCompletionStage().toCompletableFuture()
 
     private fun getLiveLogs(env: DataFetchingEnvironment): CompletableFuture<List<Map<String, Any>>> =
         getLiveInstrumentService(env).compose { it.getLiveInstruments(LOG) }.map { instruments ->
             instruments.map { fixJsonMaps(it) }
-        }.toCompletableFuture()
+        }.toCompletionStage().toCompletableFuture()
 
     private fun getLiveMeters(env: DataFetchingEnvironment): CompletableFuture<List<Map<String, Any>>> =
         getLiveInstrumentService(env).compose { it.getLiveInstruments(METER) }.map { instruments ->
             instruments.map { fixJsonMaps(it) }
-        }.toCompletableFuture()
+        }.toCompletionStage().toCompletableFuture()
 
     private fun getLiveSpans(env: DataFetchingEnvironment): CompletableFuture<List<Map<String, Any>>> =
         getLiveInstrumentService(env).compose { it.getLiveInstruments(SPAN) }.map { instruments ->
             instruments.map { fixJsonMaps(it) }
-        }.toCompletableFuture()
+        }.toCompletionStage().toCompletableFuture()
 
     private fun reset(env: DataFetchingEnvironment): CompletableFuture<Boolean> =
-        getLiveManagementService(env).compose { it.reset() }.map { true }.toCompletableFuture()
+        getLiveManagementService(env).compose { it.reset() }.map { true }.toCompletionStage().toCompletableFuture()
 
     private fun addDataRedaction(env: DataFetchingEnvironment): CompletableFuture<DataRedaction> =
         getLiveManagementService(env).compose {
@@ -472,7 +470,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
                 env.getArgument("lookup"),
                 env.getArgument("replacement")
             )
-        }.toCompletableFuture()
+        }.toCompletionStage().toCompletableFuture()
 
     private fun updateDataRedaction(env: DataFetchingEnvironment): CompletableFuture<DataRedaction> =
         getLiveManagementService(env).compose {
@@ -482,11 +480,11 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
                 env.getArgument("lookup"),
                 env.getArgument("replacement")
             )
-        }.toCompletableFuture()
+        }.toCompletionStage().toCompletableFuture()
 
     private fun removeDataRedaction(env: DataFetchingEnvironment): CompletableFuture<Boolean> =
         getLiveManagementService(env).compose { it.removeDataRedaction(env.getArgument("id")) }
-            .map { true }.toCompletableFuture()
+            .map { true }.toCompletionStage().toCompletableFuture()
 
     private fun addRoleDataRedaction(env: DataFetchingEnvironment): CompletableFuture<Boolean> =
         getLiveManagementService(env).compose {
@@ -494,7 +492,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
                 DeveloperRole.fromString(env.getArgument("role")),
                 env.getArgument("dataRedactionId")
             )
-        }.map { true }.toCompletableFuture()
+        }.map { true }.toCompletionStage().toCompletableFuture()
 
     private fun removeRoleDataRedaction(env: DataFetchingEnvironment): CompletableFuture<Boolean> =
         getLiveManagementService(env).compose {
@@ -502,7 +500,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
                 DeveloperRole.fromString(env.getArgument("role")),
                 env.getArgument("dataRedactionId")
             )
-        }.map { true }.toCompletableFuture()
+        }.map { true }.toCompletionStage().toCompletableFuture()
 
     private fun addAccessPermission(env: DataFetchingEnvironment): CompletableFuture<AccessPermission> =
         getLiveManagementService(env).compose {
@@ -510,11 +508,11 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
                 env.getArgument("locationPatterns"),
                 AccessType.valueOf(env.getArgument("type"))
             )
-        }.toCompletableFuture()
+        }.toCompletionStage().toCompletableFuture()
 
     private fun removeAccessPermission(env: DataFetchingEnvironment): CompletableFuture<Boolean> =
         getLiveManagementService(env).compose { it.removeAccessPermission(env.getArgument("id")) }
-            .map { true }.toCompletableFuture()
+            .map { true }.toCompletionStage().toCompletableFuture()
 
     private fun addRoleAccessPermission(env: DataFetchingEnvironment): CompletableFuture<Boolean> =
         getLiveManagementService(env).compose {
@@ -522,7 +520,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
                 DeveloperRole.fromString(env.getArgument("role")),
                 env.getArgument("accessPermissionId")
             )
-        }.map { true }.toCompletableFuture()
+        }.map { true }.toCompletionStage().toCompletableFuture()
 
     private fun removeRoleAccessPermission(env: DataFetchingEnvironment): CompletableFuture<Boolean> =
         getLiveManagementService(env).compose {
@@ -530,15 +528,15 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
                 DeveloperRole.fromString(env.getArgument("role")),
                 env.getArgument("accessPermissionId")
             )
-        }.map { true }.toCompletableFuture()
+        }.map { true }.toCompletionStage().toCompletableFuture()
 
     private fun addRole(env: DataFetchingEnvironment): CompletableFuture<Boolean> =
         getLiveManagementService(env).compose { it.addRole(DeveloperRole.fromString(env.getArgument("role"))) }
-            .toCompletableFuture()
+            .toCompletionStage().toCompletableFuture()
 
     private fun removeRole(env: DataFetchingEnvironment): CompletableFuture<Boolean> =
         getLiveManagementService(env).compose { it.removeRole(DeveloperRole.fromString(env.getArgument("role"))) }
-            .toCompletableFuture()
+            .toCompletionStage().toCompletableFuture()
 
     private fun addRolePermission(env: DataFetchingEnvironment): CompletableFuture<Boolean> =
         getLiveManagementService(env).compose {
@@ -546,7 +544,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
                 DeveloperRole.fromString(env.getArgument("role")),
                 RolePermission.valueOf(env.getArgument("permission"))
             )
-        }.map { true }.toCompletableFuture()
+        }.map { true }.toCompletionStage().toCompletableFuture()
 
     private fun removeRolePermission(env: DataFetchingEnvironment): CompletableFuture<Boolean> =
         getLiveManagementService(env).compose {
@@ -554,7 +552,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
                 DeveloperRole.fromString(env.getArgument("role")),
                 RolePermission.valueOf(env.getArgument("permission"))
             )
-        }.map { true }.toCompletableFuture()
+        }.map { true }.toCompletionStage().toCompletableFuture()
 
     private fun addDeveloperRole(env: DataFetchingEnvironment): CompletableFuture<Boolean> =
         getLiveManagementService(env).compose {
@@ -562,7 +560,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
                 env.getArgument<String>("id").lowercase().replace(" ", ""),
                 DeveloperRole.fromString(env.getArgument("role"))
             )
-        }.map { true }.toCompletableFuture()
+        }.map { true }.toCompletionStage().toCompletableFuture()
 
     private fun removeDeveloperRole(env: DataFetchingEnvironment): CompletableFuture<Boolean> =
         getLiveManagementService(env).compose {
@@ -570,26 +568,26 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
                 env.getArgument<String>("id").lowercase().replace(" ", ""),
                 DeveloperRole.fromString(env.getArgument("role"))
             )
-        }.map { true }.toCompletableFuture()
+        }.map { true }.toCompletionStage().toCompletableFuture()
 
     private fun addDeveloper(env: DataFetchingEnvironment): CompletableFuture<Developer> =
         getLiveManagementService(env).compose {
             it.addDeveloper(
                 env.getArgument<String>("id").lowercase().replace(" ", "")
             )
-        }.toCompletableFuture()
+        }.toCompletionStage().toCompletableFuture()
 
     private fun removeDeveloper(env: DataFetchingEnvironment): CompletableFuture<Boolean> =
         getLiveManagementService(env).compose {
             it.removeDeveloper(
                 env.getArgument<String>("id").lowercase().replace(" ", "")
             )
-        }.map { true }.toCompletableFuture()
+        }.map { true }.toCompletionStage().toCompletableFuture()
 
     private fun removeLiveInstrument(env: DataFetchingEnvironment): CompletableFuture<Map<String, Any>?> =
         getLiveInstrumentService(env).compose { it.removeLiveInstrument(env.getArgument("id")) }
             .map { it?.let { fixJsonMaps(it) } }
-            .toCompletableFuture()
+            .toCompletionStage().toCompletableFuture()
 
     private fun removeLiveInstruments(env: DataFetchingEnvironment): CompletableFuture<List<Map<String, Any>>> {
         val source: String = env.getArgument("source")
@@ -598,176 +596,160 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
         val location = LiveSourceLocation(source, line)
         return getLiveInstrumentService(env).compose { it.removeLiveInstruments(location) }.map { instrument ->
             instrument.map { fixJsonMaps(it) }
-        }.toCompletableFuture()
+        }.toCompletionStage().toCompletableFuture()
     }
 
     private fun clearLiveInstruments(env: DataFetchingEnvironment): CompletableFuture<Boolean> =
         getLiveInstrumentService(env).compose { it.clearLiveInstruments(null) }
-            .toCompletableFuture()
+            .toCompletionStage().toCompletableFuture()
 
     private fun addLiveBreakpoint(env: DataFetchingEnvironment): CompletableFuture<Map<String, Any>> {
-        val completableFuture = CompletableFuture<Map<String, Any>>()
-        launch(vertx.dispatcher()) {
-            val input = JsonObject.mapFrom(env.getArgument("input"))
-            val id: String? = input.getString("id")
-            val variableControl = input.getJsonObject("variableControl")
-            val location = input.getJsonObject("location")
-            val locationSource = location.getString("source")
-            val locationLine = location.getInteger("line")
+        val input = JsonObject.mapFrom(env.getArgument("input"))
+        val id: String? = input.getString("id")
+        val variableControl = input.getJsonObject("variableControl")
+        val location = input.getJsonObject("location")
+        val locationSource = location.getString("source")
+        val locationLine = location.getInteger("line")
 
-            val condition = input.getString("condition")
-            val expiresAt = input.getLong("expiresAt")
-            val hitLimit = input.getInteger("hitLimit")
-            val applyImmediately = input.getBoolean("applyImmediately")
-            val throttleOb = input.getJsonObject("throttle")
-            val throttle = if (throttleOb != null) {
-                InstrumentThrottle(
-                    throttleOb.getInteger("limit"),
-                    ThrottleStep.valueOf(throttleOb.getString("step"))
-                )
-            } else InstrumentThrottle.DEFAULT
-
-            val instrument = LiveBreakpoint(
-                id = id,
-                variableControl = variableControl?.let { LiveVariableControl(it) },
-                location = LiveSourceLocation(locationSource, locationLine),
-                condition = condition,
-                expiresAt = expiresAt,
-                hitLimit = hitLimit ?: 1,
-                applyImmediately = applyImmediately ?: false,
-                throttle = throttle,
-                meta = toJsonMap(input.getJsonArray("meta"))
+        val condition = input.getString("condition")
+        val expiresAt = input.getLong("expiresAt")
+        val hitLimit = input.getInteger("hitLimit")
+        val applyImmediately = input.getBoolean("applyImmediately")
+        val throttleOb = input.getJsonObject("throttle")
+        val throttle = if (throttleOb != null) {
+            InstrumentThrottle(
+                throttleOb.getInteger("limit"),
+                ThrottleStep.valueOf(throttleOb.getString("step"))
             )
-            getLiveInstrumentService(env).compose { it.addLiveInstrument(instrument) }.map { fixJsonMaps(it) }
-                .applyToCompletableFuture(completableFuture)
-        }
-        return completableFuture
+        } else InstrumentThrottle.DEFAULT
+
+        val instrument = LiveBreakpoint(
+            id = id,
+            variableControl = variableControl?.let { LiveVariableControl(it) },
+            location = LiveSourceLocation(locationSource, locationLine),
+            condition = condition,
+            expiresAt = expiresAt,
+            hitLimit = hitLimit ?: 1,
+            applyImmediately = applyImmediately ?: false,
+            throttle = throttle,
+            meta = toJsonMap(input.getJsonArray("meta"))
+        )
+        return getLiveInstrumentService(env).compose { it.addLiveInstrument(instrument) }.map { fixJsonMaps(it) }
+            .toCompletionStage().toCompletableFuture()
     }
 
     private fun addLiveLog(env: DataFetchingEnvironment): CompletableFuture<Map<String, Any>> {
-        val completableFuture = CompletableFuture<Map<String, Any>>()
-        launch(vertx.dispatcher()) {
-            val input = JsonObject.mapFrom(env.getArgument("input"))
-            val id: String? = input.getString("id")
-            val location = input.getJsonObject("location")
-            val locationSource = location.getString("source")
-            val locationLine = location.getInteger("line")
+        val input = JsonObject.mapFrom(env.getArgument("input"))
+        val id: String? = input.getString("id")
+        val location = input.getJsonObject("location")
+        val locationSource = location.getString("source")
+        val locationLine = location.getInteger("line")
 
-            var logArguments = input.getJsonArray("logArguments")?.list?.map { it.toString() }?.toList()
-            if (logArguments == null) {
-                logArguments = emptyList()
-            }
-            val condition = input.getString("condition")
-            val expiresAt = input.getLong("expiresAt")
-            val hitLimit = input.getInteger("hitLimit")
-            val applyImmediately = input.getBoolean("applyImmediately")
-            val throttleOb = input.getJsonObject("throttle")
-            val throttle = if (throttleOb != null) {
-                InstrumentThrottle(
-                    throttleOb.getInteger("limit"),
-                    ThrottleStep.valueOf(throttleOb.getString("step"))
-                )
-            } else InstrumentThrottle.DEFAULT
-
-            val instrument = LiveLog(
-                id = id,
-                logFormat = input.getString("logFormat"), logArguments = logArguments,
-                location = LiveSourceLocation(locationSource, locationLine),
-                condition = condition,
-                expiresAt = expiresAt,
-                hitLimit = hitLimit ?: 1,
-                applyImmediately = applyImmediately ?: false,
-                throttle = throttle,
-                meta = toJsonMap(input.getJsonArray("meta"))
-            )
-            getLiveInstrumentService(env).compose { it.addLiveInstrument(instrument) }.map { fixJsonMaps(it) }
-                .applyToCompletableFuture(completableFuture)
+        var logArguments = input.getJsonArray("logArguments")?.list?.map { it.toString() }?.toList()
+        if (logArguments == null) {
+            logArguments = emptyList()
         }
-        return completableFuture
+        val condition = input.getString("condition")
+        val expiresAt = input.getLong("expiresAt")
+        val hitLimit = input.getInteger("hitLimit")
+        val applyImmediately = input.getBoolean("applyImmediately")
+        val throttleOb = input.getJsonObject("throttle")
+        val throttle = if (throttleOb != null) {
+            InstrumentThrottle(
+                throttleOb.getInteger("limit"),
+                ThrottleStep.valueOf(throttleOb.getString("step"))
+            )
+        } else InstrumentThrottle.DEFAULT
+
+        val instrument = LiveLog(
+            id = id,
+            logFormat = input.getString("logFormat"), logArguments = logArguments,
+            location = LiveSourceLocation(locationSource, locationLine),
+            condition = condition,
+            expiresAt = expiresAt,
+            hitLimit = hitLimit ?: 1,
+            applyImmediately = applyImmediately ?: false,
+            throttle = throttle,
+            meta = toJsonMap(input.getJsonArray("meta"))
+        )
+        return getLiveInstrumentService(env).compose { it.addLiveInstrument(instrument) }.map { fixJsonMaps(it) }
+            .toCompletionStage().toCompletableFuture()
     }
 
     private fun addLiveMeter(env: DataFetchingEnvironment): CompletableFuture<Map<String, Any>> {
-        val completableFuture = CompletableFuture<Map<String, Any>>()
-        launch(vertx.dispatcher()) {
-            val input = JsonObject.mapFrom(env.getArgument("input"))
-            val id: String? = input.getString("id")
-            val location = input.getJsonObject("location")
-            val locationSource = location.getString("source")
-            val locationLine = location.getInteger("line")
+        val input = JsonObject.mapFrom(env.getArgument("input"))
+        val id: String? = input.getString("id")
+        val location = input.getJsonObject("location")
+        val locationSource = location.getString("source")
+        val locationLine = location.getInteger("line")
 
-            val metricValueInput = input.getJsonObject("metricValue")
-            val metricValue = MetricValue(
-                MetricValueType.valueOf(metricValueInput.getString("valueType")),
-                metricValueInput.getString("value")
+        val metricValueInput = input.getJsonObject("metricValue")
+        val metricValue = MetricValue(
+            MetricValueType.valueOf(metricValueInput.getString("valueType")),
+            metricValueInput.getString("value")
+        )
+
+        val condition = input.getString("condition")
+        val expiresAt = input.getLong("expiresAt")
+        val hitLimit = input.getInteger("hitLimit")
+        val applyImmediately = input.getBoolean("applyImmediately")
+        val throttleOb = input.getJsonObject("throttle")
+        val throttle = if (throttleOb != null) {
+            InstrumentThrottle(
+                throttleOb.getInteger("limit"),
+                ThrottleStep.valueOf(throttleOb.getString("step"))
             )
+        } else InstrumentThrottle.DEFAULT
 
-            val condition = input.getString("condition")
-            val expiresAt = input.getLong("expiresAt")
-            val hitLimit = input.getInteger("hitLimit")
-            val applyImmediately = input.getBoolean("applyImmediately")
-            val throttleOb = input.getJsonObject("throttle")
-            val throttle = if (throttleOb != null) {
-                InstrumentThrottle(
-                    throttleOb.getInteger("limit"),
-                    ThrottleStep.valueOf(throttleOb.getString("step"))
-                )
-            } else InstrumentThrottle.DEFAULT
-
-            val instrument = LiveMeter(
-                meterType = MeterType.valueOf(input.getString("meterType")),
-                metricValue = metricValue,
-                id = id,
-                location = LiveSourceLocation(locationSource, locationLine),
-                condition = condition,
-                expiresAt = expiresAt,
-                hitLimit = hitLimit ?: -1,
-                applyImmediately = applyImmediately ?: false,
-                throttle = throttle,
-                meta = toJsonMap(input.getJsonArray("meta"))
-            )
-            getLiveInstrumentService(env).compose { it.addLiveInstrument(instrument) }.map { fixJsonMaps(it) }
-                .applyToCompletableFuture(completableFuture)
-        }
-        return completableFuture
+        val instrument = LiveMeter(
+            meterType = MeterType.valueOf(input.getString("meterType")),
+            metricValue = metricValue,
+            id = id,
+            location = LiveSourceLocation(locationSource, locationLine),
+            condition = condition,
+            expiresAt = expiresAt,
+            hitLimit = hitLimit ?: -1,
+            applyImmediately = applyImmediately ?: false,
+            throttle = throttle,
+            meta = toJsonMap(input.getJsonArray("meta"))
+        )
+        return getLiveInstrumentService(env).compose { it.addLiveInstrument(instrument) }.map { fixJsonMaps(it) }
+            .toCompletionStage().toCompletableFuture()
     }
 
     private fun addLiveSpan(env: DataFetchingEnvironment): CompletableFuture<Map<String, Any>> {
-        val completableFuture = CompletableFuture<Map<String, Any>>()
-        launch(vertx.dispatcher()) {
-            val input = JsonObject.mapFrom(env.getArgument("input"))
-            val id: String? = input.getString("id")
-            val operationName = input.getString("operationName")
-            val location = input.getJsonObject("location")
-            val locationSource = location.getString("source")
-            val locationLine = -1 //location.getInteger("line")
+        val input = JsonObject.mapFrom(env.getArgument("input"))
+        val id: String? = input.getString("id")
+        val operationName = input.getString("operationName")
+        val location = input.getJsonObject("location")
+        val locationSource = location.getString("source")
+        val locationLine = -1 //location.getInteger("line")
 
-            val condition = input.getString("condition")
-            val expiresAt = input.getLong("expiresAt")
-            val hitLimit = input.getInteger("hitLimit")
-            val applyImmediately = input.getBoolean("applyImmediately")
-            val throttleOb = input.getJsonObject("throttle")
-            val throttle = if (throttleOb != null) {
-                InstrumentThrottle(
-                    throttleOb.getInteger("limit"),
-                    ThrottleStep.valueOf(throttleOb.getString("step"))
-                )
-            } else InstrumentThrottle.DEFAULT
-
-            val instrument = LiveSpan(
-                id = id,
-                operationName = operationName,
-                location = LiveSourceLocation(locationSource, locationLine),
-                condition = condition,
-                expiresAt = expiresAt,
-                hitLimit = hitLimit ?: -1,
-                applyImmediately = applyImmediately ?: false,
-                throttle = throttle,
-                meta = toJsonMap(input.getJsonArray("meta"))
+        val condition = input.getString("condition")
+        val expiresAt = input.getLong("expiresAt")
+        val hitLimit = input.getInteger("hitLimit")
+        val applyImmediately = input.getBoolean("applyImmediately")
+        val throttleOb = input.getJsonObject("throttle")
+        val throttle = if (throttleOb != null) {
+            InstrumentThrottle(
+                throttleOb.getInteger("limit"),
+                ThrottleStep.valueOf(throttleOb.getString("step"))
             )
-            getLiveInstrumentService(env).compose { it.addLiveInstrument(instrument) }.map { fixJsonMaps(it) }
-                .applyToCompletableFuture(completableFuture)
-        }
-        return completableFuture
+        } else InstrumentThrottle.DEFAULT
+
+        val instrument = LiveSpan(
+            id = id,
+            operationName = operationName,
+            location = LiveSourceLocation(locationSource, locationLine),
+            condition = condition,
+            expiresAt = expiresAt,
+            hitLimit = hitLimit ?: -1,
+            applyImmediately = applyImmediately ?: false,
+            throttle = throttle,
+            meta = toJsonMap(input.getJsonArray("meta"))
+        )
+        return getLiveInstrumentService(env).compose { it.addLiveInstrument(instrument) }.map { fixJsonMaps(it) }
+            .toCompletionStage().toCompletableFuture()
     }
 
     private fun addLiveView(env: DataFetchingEnvironment): CompletableFuture<LiveView> {
@@ -784,14 +766,15 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
             viewConfig = viewConfig
         )
 
-        return getLiveViewService(env).compose { it.addLiveView(subscription) }.toCompletableFuture()
+        return getLiveViewService(env).compose { it.addLiveView(subscription) }.toCompletionStage()
+            .toCompletableFuture()
     }
 
     private fun getLiveViews(env: DataFetchingEnvironment): CompletableFuture<List<LiveView>> =
-        getLiveViewService(env).compose { it.getLiveViews() }.toCompletableFuture()
+        getLiveViewService(env).compose { it.getLiveViews() }.toCompletionStage().toCompletableFuture()
 
     private fun clearLiveViews(env: DataFetchingEnvironment): CompletableFuture<Boolean> =
-        getLiveViewService(env).compose { it.clearLiveViews() }.map { true }.toCompletableFuture()
+        getLiveViewService(env).compose { it.clearLiveViews() }.map { true }.toCompletionStage().toCompletableFuture()
 
     private fun getHistoricalMetrics(env: DataFetchingEnvironment): CompletableFuture<HistoricalView> {
         val vars = JsonObject.mapFrom(env.variables)
@@ -812,22 +795,22 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
         val stop = vars.getString("stop")?.let { Instant.from(step.formatter.parse(it)) }
 
         return getLiveViewService(env).compose { it.getHistoricalMetrics(entityIds, metricIds, step, start, stop) }
-            .toCompletableFuture()
+            .toCompletionStage().toCompletableFuture()
     }
 
     private fun getClientAccessors(env: DataFetchingEnvironment): CompletableFuture<List<ClientAccess>> =
-        getLiveManagementService(env).compose { it.getClientAccessors() }.toCompletableFuture()
+        getLiveManagementService(env).compose { it.getClientAccessors() }.toCompletionStage().toCompletableFuture()
 
     private fun addClientAccess(env: DataFetchingEnvironment): CompletableFuture<ClientAccess> =
-        getLiveManagementService(env).compose { it.addClientAccess() }.toCompletableFuture()
+        getLiveManagementService(env).compose { it.addClientAccess() }.toCompletionStage().toCompletableFuture()
 
     private fun removeClientAccess(env: DataFetchingEnvironment): CompletableFuture<Boolean> =
         getLiveManagementService(env).compose { it.removeClientAccess(env.getArgument("id")) }
-            .map { true }.toCompletableFuture()
+            .map { true }.toCompletionStage().toCompletableFuture()
 
     private fun refreshClientAccess(env: DataFetchingEnvironment): CompletableFuture<ClientAccess> =
         getLiveManagementService(env).compose { it.refreshClientAccess(env.getArgument("id")) }
-            .toCompletableFuture()
+            .toCompletionStage().toCompletableFuture()
 
     private fun toJsonMap(metaArray: JsonArray?): MutableMap<String, String> {
         val meta = mutableMapOf<String, String>()
