@@ -112,7 +112,6 @@ class ServiceProvider(
         return record
     }
 
-
     private fun permissionCheckInterceptor(): ServiceInterceptor {
         return ServiceInterceptor { _, _, msg ->
             val promise = Promise.promise<Message<JsonObject>>()

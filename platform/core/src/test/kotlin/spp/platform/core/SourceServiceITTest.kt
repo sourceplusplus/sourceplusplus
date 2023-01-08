@@ -911,7 +911,6 @@ class SourceServiceITTest : PlatformIntegrationTest() {
     //todo: does not accept custom id nor secret
     @Test
     fun `ensure adding new client accessor works`() = runBlocking {
-
         val generatedClientAccess = managementService.addClientAccess().await()
         assertNotNull(generatedClientAccess.id)
         assertNotNull(generatedClientAccess.secret)
