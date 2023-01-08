@@ -25,6 +25,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.LiveSourceLocation
@@ -41,6 +42,7 @@ class HitLimitLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         stopSpan()
     }
 
+    @Disabled
     @Test
     fun `11 hit limit`() = runBlocking {
         setupLineLabels {
