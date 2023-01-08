@@ -609,6 +609,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
         val completableFuture = CompletableFuture<Map<String, Any>>()
         launch(vertx.dispatcher()) {
             val input = JsonObject.mapFrom(env.getArgument("input"))
+            val id: String? = input.getString("id")
             val variableControl = input.getJsonObject("variableControl")
             val location = input.getJsonObject("location")
             val locationSource = location.getString("source")
@@ -627,6 +628,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
             } else InstrumentThrottle.DEFAULT
 
             val instrument = LiveBreakpoint(
+                id = id,
                 variableControl = variableControl?.let { LiveVariableControl(it) },
                 location = LiveSourceLocation(locationSource, locationLine),
                 condition = condition,
@@ -646,6 +648,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
         val completableFuture = CompletableFuture<Map<String, Any>>()
         launch(vertx.dispatcher()) {
             val input = JsonObject.mapFrom(env.getArgument("input"))
+            val id: String? = input.getString("id")
             val location = input.getJsonObject("location")
             val locationSource = location.getString("source")
             val locationLine = location.getInteger("line")
@@ -667,6 +670,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
             } else InstrumentThrottle.DEFAULT
 
             val instrument = LiveLog(
+                id = id,
                 logFormat = input.getString("logFormat"), logArguments = logArguments,
                 location = LiveSourceLocation(locationSource, locationLine),
                 condition = condition,
@@ -686,6 +690,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
         val completableFuture = CompletableFuture<Map<String, Any>>()
         launch(vertx.dispatcher()) {
             val input = JsonObject.mapFrom(env.getArgument("input"))
+            val id: String? = input.getString("id")
             val location = input.getJsonObject("location")
             val locationSource = location.getString("source")
             val locationLine = location.getInteger("line")
@@ -696,7 +701,6 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
                 metricValueInput.getString("value")
             )
 
-            val id: String? = input.getString("id")
             val condition = input.getString("condition")
             val expiresAt = input.getLong("expiresAt")
             val hitLimit = input.getInteger("hitLimit")
@@ -731,6 +735,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
         val completableFuture = CompletableFuture<Map<String, Any>>()
         launch(vertx.dispatcher()) {
             val input = JsonObject.mapFrom(env.getArgument("input"))
+            val id: String? = input.getString("id")
             val operationName = input.getString("operationName")
             val location = input.getJsonObject("location")
             val locationSource = location.getString("source")
@@ -749,6 +754,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
             } else InstrumentThrottle.DEFAULT
 
             val instrument = LiveSpan(
+                id = id,
                 operationName = operationName,
                 location = LiveSourceLocation(locationSource, locationLine),
                 condition = condition,

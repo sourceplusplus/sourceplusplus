@@ -49,7 +49,6 @@ class ServiceProvider(
     }
 
     private var discovery: ServiceDiscovery? = null
-    private var liveService: Record? = null
     private var liveManagementService: Record? = null
     private var service: LiveManagementService? = null
 
@@ -170,13 +169,6 @@ class ServiceProvider(
     }
 
     override suspend fun stop() {
-        discovery!!.unpublish(liveService!!.registration).onComplete {
-            if (it.succeeded()) {
-                log.info("Live service unpublished")
-            } else {
-                log.error("Failed to unpublish live service", it.cause())
-            }
-        }.await()
         discovery!!.unpublish(liveManagementService!!.registration).onComplete {
             if (it.succeeded()) {
                 log.info("Live management service unpublished")
