@@ -43,7 +43,7 @@ class LiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
     private val log = LoggerFactory.getLogger(LiveBreakpointTest::class.java)
 
-    @Suppress("UnusedPrivateMember", "UNUSED_VARIABLE")
+    @Suppress("UNUSED_VARIABLE")
     private fun doTest() {
         startEntrySpan("doTest")
         val i = 1
