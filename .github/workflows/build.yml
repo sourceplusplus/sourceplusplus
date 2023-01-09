@@ -86,7 +86,7 @@ jobs:
 
     needs: [ verify-mono, build-platform ]
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-check-platform
       cancel-in-progress: true
