@@ -39,7 +39,7 @@ import spp.protocol.platform.auth.DeveloperRole.Companion.ROLE_MANAGER
 import spp.protocol.platform.auth.RedactionType
 import spp.protocol.platform.auth.RolePermission
 
-class GraphQLAPIITTest : PlatformIntegrationTest() {
+class GraphqlAPIITTest : PlatformIntegrationTest() {
 
     companion object {
         lateinit var request: HttpRequest<Buffer>
