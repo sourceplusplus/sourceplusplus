@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}-build-platform
+      group: ${{ github.workflow }}-${{ github.ref }}-check-platform
       cancel-in-progress: true
 
     outputs:
