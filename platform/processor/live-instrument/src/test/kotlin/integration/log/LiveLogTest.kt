@@ -172,7 +172,7 @@ class LiveLogTest : LiveInstrumentIntegrationTest() {
             LiveLog(
                 id = instrumentId,
                 location = LiveSourceLocation(
-                    LiveLogTest::class.qualifiedName!!,
+                    "FakeClass",
                     4,
                     "spp-test-probe"
                 ),
