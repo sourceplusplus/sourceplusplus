@@ -35,7 +35,7 @@ jobs:
         run: ./gradlew --no-daemon detekt
 
       - name: Verify license headers
-        run: ./gradlew --no-daemon spotlessCheck -x generateServiceApolloSources
+        run: ./gradlew --no-daemon spotlessCheck
 
   build-platform:
     if: ${{ !contains(github.event.pull_request.head.ref, '#docs') && !(startsWith(github.event.head_commit.message, 'Merge pull request') && contains(github.event.head_commit.message, '#docs')) }}
