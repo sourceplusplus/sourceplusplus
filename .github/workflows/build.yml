@@ -14,13 +14,13 @@ env:
   GRADLE_OPTS: -Xmx5g -Xms5g
 
 jobs:
-  check-platform:
+  verify-platform:
     if: ${{ !contains(github.event.pull_request.head.ref, '#docs') && !(startsWith(github.event.head_commit.message, 'Merge pull request') && contains(github.event.head_commit.message, '#docs')) }}
 
     runs-on: ubuntu-latest
     timeout-minutes: 10
     concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}-check-platform
+      group: ${{ github.workflow }}-${{ github.ref }}-verify-platform
       cancel-in-progress: true
 
     outputs:
@@ -81,14 +81,14 @@ jobs:
           name: spp-platform
           path: spp-platform.tar
 
-  verify-platform:
+  check-platform:
     if: ${{ !contains(github.event.pull_request.head.ref, '#docs') && !(startsWith(github.event.head_commit.message, 'Merge pull request') && contains(github.event.head_commit.message, '#docs')) }}
 
-    needs: [ check-platform, build-platform ]
+    needs: [ verify-platform, build-platform ]
     runs-on: ubuntu-latest
     timeout-minutes: 10
     concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}-build-platform
+      group: ${{ github.workflow }}-${{ github.ref }}-check-platform
       cancel-in-progress: true
 
     outputs:
