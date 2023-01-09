@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package spp.platform.core
+package spp.platform.core.api
 
 import graphql.ExceptionWhileDataFetching
 import graphql.GraphQL
@@ -77,9 +77,9 @@ import kotlin.properties.Delegates
  *
  * [LiveManagementService], [LiveInstrumentService], & [LiveViewService]
  */
-class SourceService(private val router: Router) : CoroutineVerticle() {
+class GraphqlAPI(private val router: Router) : CoroutineVerticle() {
 
-    private val log = LoggerFactory.getLogger(SourceService::class.java)
+    private val log = LoggerFactory.getLogger(GraphqlAPI::class.java)
     private var jwtEnabled by Delegates.notNull<Boolean>()
 
     override suspend fun start() {

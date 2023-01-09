@@ -59,6 +59,7 @@ import spp.platform.common.ClusterConnection.router
 import spp.platform.common.util.CertsToJksOptionsConverter
 import spp.platform.common.util.SelfSignedCertGenerator
 import spp.platform.common.util.args
+import spp.platform.core.api.GraphqlAPI
 import spp.platform.core.interceptors.SkyWalkingGraphqlInterceptor
 import spp.platform.core.interceptors.SkyWalkingGrpcInterceptor
 import spp.platform.core.service.ServiceProvider
@@ -241,8 +242,8 @@ class SourcePlatform(private val manager: ModuleManager) : CoroutineVerticle() {
             log.warn("JWT authentication disabled")
         }
 
-        //S++ Graphql
-        vertx.deployVerticle(SourceService(router), DeploymentOptions().setConfig(config.getJsonObject("spp-platform")))
+        //S++ APIs
+        vertx.deployVerticle(GraphqlAPI(router), DeploymentOptions().setConfig(config.getJsonObject("spp-platform")))
 
         //Health checks
         val healthChecks = HealthChecks.create(vertx)

@@ -30,6 +30,7 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import spp.platform.core.api.GraphqlAPI
 import spp.protocol.instrument.meter.MeterType
 import spp.protocol.instrument.meter.MetricValue
 import spp.protocol.instrument.meter.MetricValueType
@@ -38,7 +39,7 @@ import spp.protocol.platform.auth.DeveloperRole.Companion.ROLE_MANAGER
 import spp.protocol.platform.auth.RedactionType
 import spp.protocol.platform.auth.RolePermission
 
-class SourceServiceITTest : PlatformIntegrationTest() {
+class GraphQLAPIITTest : PlatformIntegrationTest() {
 
     companion object {
         lateinit var request: HttpRequest<Buffer>
@@ -54,7 +55,7 @@ class SourceServiceITTest : PlatformIntegrationTest() {
     }
 
     private fun getGraphql(path: String): String {
-        return SourceService::class.java.getResource("/graphql/$path.graphql")?.readText()
+        return GraphqlAPI::class.java.getResource("/graphql/$path.graphql")?.readText()
             ?: error("GraphQL file not found: $path")
     }
 
