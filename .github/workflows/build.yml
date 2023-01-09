@@ -120,6 +120,10 @@ jobs:
           name: spp-platform
           path: .
 
+      - name: Load spp-platform
+        run: |
+          docker load --input spp-platform.tar
+
       - name: Write docker-compose.override.yml
         working-directory: docker/e2e
         run: |
@@ -130,7 +134,6 @@ jobs:
 
       - name: Start spp-platform
         run: |
-          docker load --input spp-platform.tar
           cd docker/e2e && docker-compose up -d
 
       - name: Docker IPs
@@ -192,6 +195,10 @@ jobs:
           name: spp-platform
           path: .
 
+      - name: Load spp-platform
+        run: |
+          docker load --input spp-platform.tar
+
       - name: Write docker-compose.override.yml
         working-directory: docker/e2e
         run: |
@@ -202,7 +209,6 @@ jobs:
 
       - name: Start spp-platform
         run: |
-          docker load --input spp-platform.tar
           cd docker/e2e && docker-compose up -d
 
       - name: Docker IPs
