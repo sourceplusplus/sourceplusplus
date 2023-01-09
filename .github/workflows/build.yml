@@ -120,13 +120,10 @@ jobs:
           name: spp-platform
           path: .
 
-      - name: Start Redis
-        run: docker run -d --name redis -p 6379:6379 redis:7.0.7
-
       - name: Start spp-platform
         run: |
           docker load --input spp-platform.tar
-          docker run -d --name spp-platform -p 12800:12800 $(docker image ls  | grep 'spp-platform' | awk '{print $1}')
+          ./gradlew --no-daemon -p platform composeUp -x composeBuild
 
       - name: Docker IPs
         run: docker inspect --format='{{.Name}} - {{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $(docker ps -aq)
@@ -184,13 +181,10 @@ jobs:
           name: spp-platform
           path: .
 
-      - name: Start Redis
-        run: docker run -d --name redis -p 6379:6379 redis:7.0.7
-
       - name: Start spp-platform
         run: |
           docker load --input spp-platform.tar
-          docker run -d --name spp-platform -p 12800:12800 $(docker image ls  | grep 'spp-platform' | awk '{print $1}')
+          ./gradlew --no-daemon -p platform composeUp -x composeBuild
 
       - name: Docker IPs
         run: docker inspect --format='{{.Name}} - {{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $(docker ps -aq)
