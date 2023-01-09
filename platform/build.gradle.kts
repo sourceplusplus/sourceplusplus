@@ -221,10 +221,12 @@ dockerCompose {
     removeVolumes.set(true)
     waitForTcpPorts.set(false)
 }
-tasks.getByName("composeUp").mustRunAfter("updateDockerFiles")
+tasks.getByName("composeBuild")
+    .dependsOn("updateDockerFiles")
+    .mustRunAfter("updateDockerFiles")
 
 tasks.register("assembleUp") {
-    dependsOn("updateDockerFiles", "composeUp")
+    dependsOn("composeBuild", "composeUp")
 }
 
 tasks.getByName("assemble") {
