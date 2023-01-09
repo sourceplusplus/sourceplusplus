@@ -32,7 +32,6 @@ import io.vertx.core.Promise
 import io.vertx.core.Vertx
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
-import io.vertx.ext.web.Router
 import io.vertx.ext.web.RoutingContext
 import io.vertx.ext.web.handler.BodyHandler
 import io.vertx.ext.web.handler.graphql.GraphQLHandler
@@ -41,6 +40,7 @@ import io.vertx.kotlin.coroutines.await
 import io.vertx.servicediscovery.types.EventBusService
 import org.slf4j.LoggerFactory
 import spp.platform.common.ClusterConnection.discovery
+import spp.platform.common.ClusterConnection.router
 import spp.platform.common.DeveloperAuth
 import spp.protocol.artifact.ArtifactQualifiedName
 import spp.protocol.artifact.ArtifactType
@@ -77,7 +77,7 @@ import kotlin.properties.Delegates
  *
  * [LiveManagementService], [LiveInstrumentService], & [LiveViewService]
  */
-class GraphqlAPI(private val router: Router) : CoroutineVerticle() {
+class GraphqlAPI : CoroutineVerticle() {
 
     private val log = LoggerFactory.getLogger(GraphqlAPI::class.java)
     private var jwtEnabled by Delegates.notNull<Boolean>()

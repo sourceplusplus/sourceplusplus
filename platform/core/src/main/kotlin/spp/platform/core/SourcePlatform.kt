@@ -18,15 +18,12 @@
 package spp.platform.core
 
 import io.vertx.core.DeploymentOptions
-import io.vertx.core.Vertx
 import io.vertx.core.http.HttpServerOptions
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
-import io.vertx.ext.auth.JWTOptions
 import io.vertx.ext.auth.PubSecKeyOptions
 import io.vertx.ext.auth.jwt.JWTAuth
 import io.vertx.ext.auth.jwt.JWTAuthOptions
-import io.vertx.ext.web.RoutingContext
 import io.vertx.ext.web.handler.JWTAuthHandler
 import io.vertx.ext.web.handler.ResponseTimeHandler
 import io.vertx.kotlin.coroutines.CoroutineVerticle
@@ -64,12 +61,13 @@ import java.io.FileWriter
 import java.io.StringReader
 import java.io.StringWriter
 import java.security.Security
-import java.time.Instant
-import java.time.temporal.ChronoUnit
 import java.util.*
 import javax.crypto.Cipher
 import kotlin.system.exitProcess
 
+/**
+ * Deploys the core functionality of the Source++ platform.
+ */
 class SourcePlatform(private val manager: ModuleManager) : CoroutineVerticle() {
 
     companion object {
@@ -138,73 +136,28 @@ class SourcePlatform(private val manager: ModuleManager) : CoroutineVerticle() {
             )
         }
 
-        router.route().handler(ResponseTimeHandler.create())
+        router.route().order(0).handler(ResponseTimeHandler.create())
         router.errorHandler(500) {
             if (it.failed()) log.error("Failed request: " + it.request().path(), it.failure())
-        }
-
-        router["/api/new-token"].handler { ctx: RoutingContext ->
-            if (!jwtEnabled) {
-                log.debug { "Skipped generating JWT token. Reason: JWT authentication disabled" }
-                ctx.response().setStatusCode(202).end()
-                return@handler
-            }
-            val accessTokenParam = ctx.queryParam("access_token")
-            if (accessTokenParam.isEmpty()) {
-                log.warn("Invalid token request. Missing token.")
-                ctx.response().setStatusCode(401).end()
-                return@handler
-            }
-            val tenantId = ctx.queryParam("tenant_id").firstOrNull() ?: ctx.request().headers().get("spp-tenant-id")
-            if (!tenantId.isNullOrEmpty()) {
-                Vertx.currentContext().putLocal("tenant_id", tenantId)
-            } else {
-                Vertx.currentContext().removeLocal("tenant_id")
-            }
-
-            val token = accessTokenParam[0]
-            log.debug { "Verifying access token: {}".args(token) }
-            launch(vertx.dispatcher()) {
-                val dev = SourceStorage.getDeveloperByAccessToken(token)
-                if (dev != null) {
-                    val jwtToken = jwt!!.generateToken(
-                        JsonObject()
-                            .apply {
-                                if (!tenantId.isNullOrEmpty()) {
-                                    put("tenant_id", tenantId)
-                                }
-                            }
-                            .put("developer_id", dev.id)
-                            .put("created_at", Instant.now().toEpochMilli())
-                            //todo: reasonable expires_at
-                            .put("expires_at", Instant.now().plus(365, ChronoUnit.DAYS).toEpochMilli()),
-                        JWTOptions().setAlgorithm("RS256")
-                    )
-                    ctx.end(jwtToken)
-                } else {
-                    log.warn("Invalid token request. Token: {}", token)
-                    ctx.response().setStatusCode(401).end()
-                }
-            }
         }
 
         //Setup JWT
         if (jwtEnabled) {
             val jwtAuthHandler = JWTAuthHandler.create(jwt)
-            router.post("/graphql").handler(jwtAuthHandler)
-            router.post("/graphql/skywalking").handler(jwtAuthHandler)
-            router.post("/graphql/spp").handler(jwtAuthHandler)
-            router.get("/health").handler(jwtAuthHandler)
-            router.get("/stats").handler(jwtAuthHandler)
-            router.get("/metrics").handler(jwtAuthHandler)
-            router.get("/clients").handler(jwtAuthHandler)
+            router.post("/graphql").order(1).handler(jwtAuthHandler)
+            router.post("/graphql/skywalking").order(1).handler(jwtAuthHandler)
+            router.post("/graphql/spp").order(1).handler(jwtAuthHandler)
+            router.get("/health").order(1).handler(jwtAuthHandler)
+            router.get("/stats").order(1).handler(jwtAuthHandler)
+            router.get("/metrics").order(1).handler(jwtAuthHandler)
+            router.get("/clients").order(1).handler(jwtAuthHandler)
         } else {
             log.warn("JWT authentication disabled")
         }
 
         //S++ APIs
-        vertx.deployVerticle(RestAPI(router))
-        vertx.deployVerticle(GraphqlAPI(router), DeploymentOptions().setConfig(config.getJsonObject("spp-platform")))
+        vertx.deployVerticle(RestAPI(jwtEnabled, jwt))
+        vertx.deployVerticle(GraphqlAPI(), DeploymentOptions().setConfig(config.getJsonObject("spp-platform")))
 
         //Service discovery
         vertx.eventBus().consumer<JsonObject>(ServiceDiscoveryOptions.DEFAULT_ANNOUNCE_ADDRESS) {

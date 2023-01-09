@@ -17,43 +17,51 @@
  */
 package spp.platform.core.api
 
+import io.vertx.core.Vertx
 import io.vertx.core.eventbus.ReplyException
 import io.vertx.core.json.JsonObject
+import io.vertx.ext.auth.JWTOptions
+import io.vertx.ext.auth.jwt.JWTAuth
 import io.vertx.ext.dropwizard.MetricsService
 import io.vertx.ext.healthchecks.HealthCheckHandler
 import io.vertx.ext.healthchecks.HealthChecks
 import io.vertx.ext.healthchecks.Status
-import io.vertx.ext.web.Router
 import io.vertx.ext.web.RoutingContext
 import io.vertx.kotlin.coroutines.CoroutineVerticle
 import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.launch
 import mu.KotlinLogging
 import spp.platform.common.ClusterConnection
+import spp.platform.common.ClusterConnection.router
 import spp.platform.common.util.args
+import spp.platform.storage.SourceStorage
 import spp.protocol.service.LiveManagementService
 import spp.protocol.service.SourceServices
+import java.time.Instant
+import java.time.temporal.ChronoUnit
 
 /**
  * Serves the REST API.
  */
-class RestAPI(private val router: Router) : CoroutineVerticle() {
+class RestAPI(private val jwtEnabled: Boolean, private val jwt: JWTAuth?) : CoroutineVerticle() {
 
     private val log = KotlinLogging.logger {}
 
     override suspend fun start() {
+        router.get("/api/new-token").order(0).handler(this::newToken)
+
         //Health checks
         val healthChecks = HealthChecks.create(vertx)
         addServiceCheck(healthChecks, SourceServices.LIVE_MANAGEMENT_SERVICE)
         addServiceCheck(healthChecks, SourceServices.LIVE_INSTRUMENT)
         addServiceCheck(healthChecks, SourceServices.LIVE_VIEW)
-        ClusterConnection.router["/health"].handler(HealthCheckHandler.createWithHealthChecks(healthChecks))
-        ClusterConnection.router["/stats"].handler(this::getStats)
-        ClusterConnection.router["/clients"].handler(this::getClients)
+        router["/health"].handler(HealthCheckHandler.createWithHealthChecks(healthChecks))
+        router["/stats"].handler(this::getStats)
+        router["/clients"].handler(this::getClients)
 
         //Internal metrics
         val metricsService = MetricsService.create(vertx)
-        ClusterConnection.router["/metrics"].handler {
+        router["/metrics"].handler {
             if (it.queryParam("include_unused").contains("true")) {
                 val vertxMetrics = metricsService.getMetricsSnapshot(vertx)
                 it.end(vertxMetrics.encodePrettily())
@@ -72,6 +80,51 @@ class RestAPI(private val router: Router) : CoroutineVerticle() {
                     }
                 }
                 it.end(rtnMetrics.encodePrettily())
+            }
+        }
+    }
+
+    private fun newToken(ctx: RoutingContext) {
+        if (!jwtEnabled) {
+            log.debug { "Skipped generating JWT token. Reason: JWT authentication disabled" }
+            ctx.response().setStatusCode(202).end()
+            return
+        }
+        val accessTokenParam = ctx.queryParam("access_token")
+        if (accessTokenParam.isEmpty()) {
+            log.warn("Invalid token request. Missing token.")
+            ctx.response().setStatusCode(401).end()
+            return
+        }
+        val tenantId = ctx.queryParam("tenant_id").firstOrNull() ?: ctx.request().headers().get("spp-tenant-id")
+        if (!tenantId.isNullOrEmpty()) {
+            Vertx.currentContext().putLocal("tenant_id", tenantId)
+        } else {
+            Vertx.currentContext().removeLocal("tenant_id")
+        }
+
+        val token = accessTokenParam[0]
+        log.debug { "Verifying access token: {}".args(token) }
+        launch(vertx.dispatcher()) {
+            val dev = SourceStorage.getDeveloperByAccessToken(token)
+            if (dev != null) {
+                val jwtToken = jwt!!.generateToken(
+                    JsonObject()
+                        .apply {
+                            if (!tenantId.isNullOrEmpty()) {
+                                put("tenant_id", tenantId)
+                            }
+                        }
+                        .put("developer_id", dev.id)
+                        .put("created_at", Instant.now().toEpochMilli())
+                        //todo: reasonable expires_at
+                        .put("expires_at", Instant.now().plus(365, ChronoUnit.DAYS).toEpochMilli()),
+                    JWTOptions().setAlgorithm("RS256")
+                )
+                ctx.end(jwtToken)
+            } else {
+                log.warn("Invalid token request. Token: {}", token)
+                ctx.response().setStatusCode(401).end()
             }
         }
     }
