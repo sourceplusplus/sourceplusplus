@@ -81,7 +81,7 @@ jobs:
           name: spp-platform
           path: spp-platform.tar
 
-  check-platform:
+  test-platform:
     if: ${{ !contains(github.event.pull_request.head.ref, '#docs') && !(startsWith(github.event.head_commit.message, 'Merge pull request') && contains(github.event.head_commit.message, '#docs')) }}
 
     needs: [ verify-mono, build-platform ]
@@ -120,10 +120,13 @@ jobs:
           name: spp-platform
           path: .
 
+      - name: Start Redis
+        run: docker run -d --name redis -p 6379:6379 redis:7.0.7
+
       - name: Start spp-platform
         run: |
           docker load --input spp-platform.tar
-          docker run -d --name spp-platform -p 12800:12800 -p 6379:6379 $(docker image ls  | grep 'spp-platform' | awk '{print $1}')
+          docker run -d --name spp-platform -p 12800:12800 $(docker image ls  | grep 'spp-platform' | awk '{print $1}')
 
       - name: Docker IPs
         run: docker inspect --format='{{.Name}} - {{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $(docker ps -aq)
@@ -139,10 +142,10 @@ jobs:
         run: |
           until $(curl --header "Authorization: Bearer ${{ env.SPP_JWT_TOKEN }}" --output /dev/null --silent --fail http://localhost:12800/health); do printf '.'; sleep 5; done
 
-      - name: Check platform
-        run: ./gradlew -p platform check -Dtest.profile=integration -PplatformVersion=$BUILD_VERSION -PprobeVersion=$BUILD_VERSION
+      - name: Test platform
+        run: ./gradlew -p platform test -Dtest.profile=integration
 
-  check-probe-jvm:
+  test-probe-jvm:
     if: ${{ !contains(github.event.pull_request.head.ref, '#docs') && !(startsWith(github.event.head_commit.message, 'Merge pull request') && contains(github.event.head_commit.message, '#docs')) }}
 
     needs: [ verify-mono, build-platform ]
@@ -181,6 +184,9 @@ jobs:
           name: spp-platform
           path: .
 
+      - name: Start Redis
+        run: docker run -d --name redis -p 6379:6379 redis:7.0.7
+
       - name: Start spp-platform
         run: |
           docker load --input spp-platform.tar
@@ -200,8 +206,8 @@ jobs:
         run: |
           until $(curl --header "Authorization: Bearer ${{ env.SPP_JWT_TOKEN }}" --output /dev/null --silent --fail http://localhost:12800/health); do printf '.'; sleep 5; done
 
-      - name: Check probe-jvm
-        run: ./gradlew -p probes/jvm assemble check -Dtest.profile=integration
+      - name: Test probe-jvm
+        run: ./gradlew -p probes/jvm test -Dtest.profile=integration
 
   jvm-build:
     if: ${{ !contains(github.event.pull_request.head.ref, '#docs') && !(startsWith(github.event.head_commit.message, 'Merge pull request') && contains(github.event.head_commit.message, '#docs')) }}
