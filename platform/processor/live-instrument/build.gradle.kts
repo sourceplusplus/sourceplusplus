@@ -46,7 +46,8 @@ dependencies {
 
 tasks {
     test {
-        val probeJar = "${rootProject.projectDir}/docker/e2e/spp-probe-$version.jar"
+        dependsOn(":probes:jvm:boot:jar")
+        val probeJar = "${project(":probes:jvm:boot").buildDir}/libs/spp-probe-$version.jar"
 
         //todo: should have way to distinguish tests that just need platform and tests that attach to self
         val isIntegrationProfile = System.getProperty("test.profile") == "integration"

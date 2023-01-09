@@ -52,7 +52,17 @@ dependencies {
 
 tasks {
     test {
-        jvmArgs = listOf("-javaagent:${rootProject.projectDir}/docker/e2e/spp-probe-$version.jar=${project.projectDir}/src/test/resources/spp-test-probe.yml")
+        dependsOn(":probes:jvm:boot:jar")
+        val probeJar = "${project(":probes:jvm:boot").buildDir}/libs/spp-probe-$version.jar"
+
+        //todo: should have way to distinguish tests that just need platform and tests that attach to self
+        val isIntegrationProfile = System.getProperty("test.profile") == "integration"
+        val runningSpecificTests = gradle.startParameter.taskNames.contains("--tests")
+
+        //exclude attaching probe to self unless requested
+        if (isIntegrationProfile || runningSpecificTests) {
+            jvmArgs = listOf("-javaagent:$probeJar=${projectDir}/src/test/resources/spp-test-probe.yml")
+        }
     }
 
     withType<JavaCompile> {
