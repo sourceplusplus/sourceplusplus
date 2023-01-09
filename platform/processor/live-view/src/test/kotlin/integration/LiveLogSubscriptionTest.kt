@@ -29,7 +29,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import spp.protocol.artifact.log.Log
 import spp.protocol.instrument.LiveLog
-import spp.protocol.instrument.LiveSourceLocation
+import spp.protocol.instrument.location.LiveSourceLocation
 import spp.protocol.service.SourceServices
 import spp.protocol.view.LiveView
 import spp.protocol.view.LiveViewConfig

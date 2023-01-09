@@ -23,8 +23,8 @@ import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import spp.protocol.instrument.LiveBreakpoint
-import spp.protocol.instrument.LiveSourceLocation
 import spp.protocol.instrument.event.LiveInstrumentRemoved
+import spp.protocol.instrument.location.LiveSourceLocation
 import spp.protocol.service.listen.LiveInstrumentListener
 import spp.protocol.service.listen.addLiveInstrumentListener
 import java.util.concurrent.atomic.AtomicInteger

@@ -24,7 +24,7 @@ import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import spp.protocol.instrument.LiveBreakpoint
-import spp.protocol.instrument.LiveSourceLocation
+import spp.protocol.instrument.location.LiveSourceLocation
 import java.util.concurrent.TimeUnit
 
 class ExpiresAtLiveBreakpointTest : LiveInstrumentIntegrationTest() {

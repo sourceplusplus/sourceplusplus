@@ -24,7 +24,7 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import spp.protocol.instrument.LiveBreakpoint
-import spp.protocol.instrument.LiveSourceLocation
+import spp.protocol.instrument.location.LiveSourceLocation
 import spp.protocol.platform.auth.DeveloperRole
 import spp.protocol.platform.auth.RolePermission
 import spp.protocol.service.LiveInstrumentService

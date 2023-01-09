@@ -574,7 +574,7 @@ class SourceServiceITTest : PlatformIntegrationTest() {
 
     @Test
     fun `ensure all role permissions are known`() = runBlocking {
-        val knownRolePermissions = managementService.getRolePermissions(ROLE_MANAGER.roleName).await()
+        val knownRolePermissions = managementService.getRolePermissions(ROLE_MANAGER).await()
         RolePermission.values().forEach {
             assert(knownRolePermissions.contains(it)) {
                 "Role permission $it is not known"
@@ -911,7 +911,6 @@ class SourceServiceITTest : PlatformIntegrationTest() {
     //todo: does not accept custom id nor secret
     @Test
     fun `ensure adding new client accessor works`() = runBlocking {
-
         val generatedClientAccess = managementService.addClientAccess().await()
         assertNotNull(generatedClientAccess.id)
         assertNotNull(generatedClientAccess.secret)

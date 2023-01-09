@@ -48,6 +48,7 @@ import spp.protocol.instrument.command.LiveInstrumentCommand
 import spp.protocol.instrument.event.LiveInstrumentEvent
 import spp.protocol.instrument.event.LiveInstrumentEventType
 import spp.protocol.instrument.event.LiveInstrumentRemoved
+import spp.protocol.instrument.location.LiveSourceLocation
 import spp.protocol.marshall.ProtocolMarshaller
 import spp.protocol.marshall.ServiceExceptionConverter
 import spp.protocol.platform.ProbeAddress.LIVE_INSTRUMENT_REMOTE

@@ -28,10 +28,10 @@ import org.junit.jupiter.api.Test
 import org.slf4j.LoggerFactory
 import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.LiveInstrument
-import spp.protocol.instrument.LiveSourceLocation
 import spp.protocol.instrument.event.LiveBreakpointHit
 import spp.protocol.instrument.event.LiveInstrumentEvent
 import spp.protocol.instrument.event.LiveInstrumentRemoved
+import spp.protocol.instrument.location.LiveSourceLocation
 import spp.protocol.marshall.ServiceExceptionConverter
 import spp.protocol.service.error.LiveInstrumentException
 import spp.protocol.service.listen.LiveInstrumentListener

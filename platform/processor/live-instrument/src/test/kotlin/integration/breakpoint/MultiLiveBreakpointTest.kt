@@ -27,7 +27,7 @@ import org.junit.jupiter.api.Assertions.fail
 import org.junit.jupiter.api.Test
 import spp.protocol.artifact.exception.sourceAsLineNumber
 import spp.protocol.instrument.LiveBreakpoint
-import spp.protocol.instrument.LiveSourceLocation
+import spp.protocol.instrument.location.LiveSourceLocation
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
