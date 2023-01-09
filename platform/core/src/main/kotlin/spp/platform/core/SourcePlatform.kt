@@ -318,5 +318,4 @@ class SourcePlatform(private val manager: ModuleManager) : CoroutineVerticle() {
         writer.close()
         log.info("Security certificates generated")
     }
-
 }
