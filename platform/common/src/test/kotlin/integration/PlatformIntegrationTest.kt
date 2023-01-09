@@ -46,6 +46,8 @@ open class PlatformIntegrationTest {
     companion object {
         private val log = LoggerFactory.getLogger(PlatformIntegrationTest::class.java)
 
+        //todo: generate
+        @Deprecated("To be removed")
         const val SYSTEM_JWT_TOKEN =
             "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJkZXZlbG9wZXJfaWQiOiJzeXN0ZW0iLCJjcmVhdGVkX2F0IjoxNjU3MDM5NzAzOTE1L" +
                     "CJleHBpcmVzX2F0IjoxNjg4NTc1NzAzOTE1LCJpYXQiOjE2NTcwMzk3MDN9.hKxtqnajBWbWxL2nYoVyp9HeyDfIi5XjRRkJtI" +
@@ -57,6 +59,8 @@ open class PlatformIntegrationTest {
                     "u5TQSJZX2U6YmpHlRVpDjs8g8EThjta7DSkmCNEPfn0YU_Cx9cSphEQkuZdyu_C8rPGzMDqyziOu1yWZYfFxK5SVMsGjfIOeB4" +
                     "qEDARssQ8-oREcp52Q4MmmT8d0oN4I4Fm_aa9X-R6dDkeWrFGrzcVEL1o"
 
+        //todo: generate
+        @Deprecated("To be removed")
         const val TEST_JWT_TOKEN =
             "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJkZXZlbG9wZXJfaWQiOiJ0ZXN0IiwiY3JlYXRlZF9hdCI6MTY1NzAzOTc1ODM5MiwiZ" +
                     "XhwaXJlc19hdCI6MTY4ODU3NTc1ODM5MiwiaWF0IjoxNjU3MDM5NzU4fQ.h-fkoLkMqphwMVeXIz9weXDYe3NgLrIIWYZcEGLD" +
