@@ -206,6 +206,7 @@ class SourcePlatform(private val manager: ModuleManager) : CoroutineVerticle() {
         vertx.deployVerticle(RestAPI(router))
         vertx.deployVerticle(GraphqlAPI(router), DeploymentOptions().setConfig(config.getJsonObject("spp-platform")))
 
+        //Service discovery
         vertx.eventBus().consumer<JsonObject>(ServiceDiscoveryOptions.DEFAULT_ANNOUNCE_ADDRESS) {
             val record = Record(it.body())
             if (record.status == Status.UP) {
