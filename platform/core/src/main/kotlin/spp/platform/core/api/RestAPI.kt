@@ -148,7 +148,6 @@ class RestAPI(private val router: Router) : CoroutineVerticle() {
         }
     }
 
-
     private fun addServiceCheck(checks: HealthChecks, serviceName: String) {
         val registeredName = "services/${serviceName.substringAfterLast(".")}"
         checks.register(registeredName) { promise ->
