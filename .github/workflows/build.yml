@@ -50,7 +50,7 @@ jobs:
         run: ./gradlew --no-daemon detekt
 
       - name: Verify license headers
-        run: ./gradlew --no-daemon spotlessCheck
+        run: ./gradlew --no-daemon spotlessCheck -x generateServiceApolloSources
 
       - name: Build platform
         run: ./gradlew --no-daemon -p platform composeBuild -Dbuild.profile=release -PplatformVersion=$BUILD_VERSION -PprobeVersion=$BUILD_VERSION
