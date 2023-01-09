@@ -27,7 +27,6 @@ jobs:
       version: ${{ steps.properties.outputs.version }}
       release_version: ${{ steps.properties.outputs.release_version }}
     steps:
-      - uses: docker-practice/actions-setup-docker@master
       - uses: actions/checkout@v3
         with:
           submodules: 'recursive'
@@ -127,7 +126,7 @@ jobs:
           docker image ls -a
 
       - name: Start spp-platform
-        run: ./gradlew -p platform composeUp
+        run: docker run -d --name spp-platform $(docker image ls  | grep 'spp-platform' | awk '{print $1}')
 
       - name: Docker IPs
         run: docker inspect --format='{{.Name}} - {{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $(docker ps -aq)
