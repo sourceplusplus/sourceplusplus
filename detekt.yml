@@ -45,3 +45,5 @@ complexity:
     functionThreshold: 8
   LongMethod:
     excludes: [ '**/test/**' ]
+  TooManyFunctions:
+    thresholdInClasses: 15
