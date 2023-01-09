@@ -120,10 +120,18 @@ jobs:
           name: spp-platform
           path: .
 
+      - name: Write docker-compose.override.yml
+        working-directory: docker/e2e
+        run: |
+          echo "version: '3.3'" > docker-compose.override.yml
+          echo "services:" >> docker-compose.override.yml
+          echo "  spp-platform:" >> docker-compose.override.yml
+          echo "    image: $(docker image ls  | grep 'spp-platform' | awk '{print $1}')" >> docker-compose.override.yml
+
       - name: Start spp-platform
         run: |
           docker load --input spp-platform.tar
-          ./gradlew --no-daemon -p platform composeUp -x composeBuild
+          cd docker/e2e && docker-compose up -d
 
       - name: Docker IPs
         run: docker inspect --format='{{.Name}} - {{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $(docker ps -aq)
@@ -185,6 +193,7 @@ jobs:
           path: .
 
       - name: Write docker-compose.override.yml
+        working-directory: docker/e2e
         run: |
           echo "version: '3.3'" > docker-compose.override.yml
           echo "services:" >> docker-compose.override.yml
