@@ -72,6 +72,11 @@ import java.util.*
 import java.util.concurrent.CompletableFuture
 import kotlin.properties.Delegates
 
+/**
+ * Serves the GraphQL API, providing access to:
+ *
+ * [LiveManagementService], [LiveInstrumentService], & [LiveViewService]
+ */
 class SourceService(private val router: Router) : CoroutineVerticle() {
 
     private val log = LoggerFactory.getLogger(SourceService::class.java)
@@ -436,7 +441,7 @@ class SourceService(private val router: Router) : CoroutineVerticle() {
             .toCompletionStage().toCompletableFuture()
 
     private fun getLiveInstruments(env: DataFetchingEnvironment): CompletableFuture<List<Map<String, Any>>> =
-        getLiveInstrumentService(env).compose { it.getLiveInstruments(null) }.map { instruments ->
+        getLiveInstrumentService(env).compose { it.getLiveInstruments() }.map { instruments ->
             instruments.map { fixJsonMaps(it) }
         }.toCompletionStage().toCompletableFuture()
 
