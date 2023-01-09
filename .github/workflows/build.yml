@@ -69,10 +69,11 @@ jobs:
       - name: Set SPP_PLATFORM_HOST
         run: SPP_PLATFORM_HOST=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $(docker ps -aqf "name=spp-platform")) && echo "SPP_PLATFORM_HOST=$SPP_PLATFORM_HOST" >> $GITHUB_ENV
 
-      - name: Wait for platform
+      - name: Get access token
         timeout-minutes: 5
         run: until $(curl --output /dev/null --silent --fail http://localhost:12800/api/new-token?access_token=change-me); do printf '.'; sleep 5; done && SPP_JWT_TOKEN=$(curl http://localhost:12800/api/new-token?access_token=change-me) && echo "SPP_JWT_TOKEN=$SPP_JWT_TOKEN" >> $GITHUB_ENV
-      - name: Wait for skywalking
+
+      - name: Wait for platform
         timeout-minutes: 5
         run: |
           until $(curl --header "Authorization: Bearer ${{ env.SPP_JWT_TOKEN }}" --output /dev/null --silent --fail http://localhost:12800/health); do printf '.'; sleep 5; done
