@@ -123,7 +123,7 @@ jobs:
       - name: Start spp-platform
         run: |
           docker load --input spp-platform.tar
-          docker run -d --name spp-platform -p 12800:12800 $(docker image ls  | grep 'spp-platform' | awk '{print $1}')
+          docker run -d --name spp-platform -p 12800:12800 -p 6379:6379 $(docker image ls  | grep 'spp-platform' | awk '{print $1}')
 
       - name: Docker IPs
         run: docker inspect --format='{{.Name}} - {{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $(docker ps -aq)
