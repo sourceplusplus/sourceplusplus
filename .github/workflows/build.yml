@@ -14,7 +14,7 @@ env:
   GRADLE_OPTS: -Xmx5g -Xms5g
 
 jobs:
-  verify-platform:
+  verify-mono:
     if: ${{ !contains(github.event.pull_request.head.ref, '#docs') && !(startsWith(github.event.head_commit.message, 'Merge pull request') && contains(github.event.head_commit.message, '#docs')) }}
 
     runs-on: ubuntu-latest
@@ -84,7 +84,7 @@ jobs:
   check-platform:
     if: ${{ !contains(github.event.pull_request.head.ref, '#docs') && !(startsWith(github.event.head_commit.message, 'Merge pull request') && contains(github.event.head_commit.message, '#docs')) }}
 
-    needs: [ verify-platform, build-platform ]
+    needs: [ verify-mono, build-platform ]
     runs-on: ubuntu-latest
     timeout-minutes: 10
     concurrency:
@@ -145,7 +145,7 @@ jobs:
   check-probe-jvm:
     if: ${{ !contains(github.event.pull_request.head.ref, '#docs') && !(startsWith(github.event.head_commit.message, 'Merge pull request') && contains(github.event.head_commit.message, '#docs')) }}
 
-    needs: [ verify-platform, build-platform ]
+    needs: [ verify-mono, build-platform ]
     runs-on: ubuntu-latest
     timeout-minutes: 10
     concurrency:
