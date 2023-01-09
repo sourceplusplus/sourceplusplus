@@ -118,7 +118,7 @@ class MarkerBridge(
                     }
                     it.complete(true)
                 } else {
-                    log.error("Failed to validate marker auth. Reason: ${devAuth.cause().message}")
+                    log.error("Failed to validate connection. Reason: ${devAuth.cause().message}")
                     it.complete(false)
                 }
             }
