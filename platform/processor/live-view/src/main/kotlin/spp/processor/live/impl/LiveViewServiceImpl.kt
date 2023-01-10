@@ -62,6 +62,7 @@ import spp.protocol.artifact.metrics.MetricType
 import spp.protocol.platform.PlatformAddress.MARKER_DISCONNECTED
 import spp.protocol.service.LiveViewService
 import spp.protocol.service.SourceServices.Subscribe.toLiveViewSubscriberAddress
+import spp.protocol.service.SourceServices.Subscribe.toLiveViewSubscription
 import spp.protocol.service.error.RuleAlreadyExistsException
 import spp.protocol.view.HistoricalView
 import spp.protocol.view.LiveView
@@ -222,10 +223,10 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
                 )
             }
 
-            vertx.eventBus().publish(
-                toLiveViewSubscriberAddress(devAuth.selfId),
-                JsonObject.mapFrom(viewEvent)
-            )
+            //publish view event to subscribers
+            val eventJson = JsonObject.mapFrom(viewEvent)
+            vertx.eventBus().publish(toLiveViewSubscription(sub.subscriptionId!!), eventJson)
+            vertx.eventBus().publish(toLiveViewSubscriberAddress(devAuth.selfId), eventJson)
         }.completionHandler {
             if (it.succeeded()) {
                 val subscriber = ViewSubscriber(
