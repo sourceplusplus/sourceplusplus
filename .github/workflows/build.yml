@@ -147,7 +147,7 @@ jobs:
       - uses: docker-practice/actions-setup-docker@master
       - uses: actions/checkout@v3
         with:
-          submodules: 'recursive'
+          submodules: 'true'
 
       - name: Download spp-platform image
         uses: actions/download-artifact@v2
@@ -198,7 +198,7 @@ jobs:
       - uses: docker-practice/actions-setup-docker@master
       - uses: actions/checkout@v3
         with:
-          submodules: 'recursive'
+          submodules: 'true'
 
       - name: Download spp-platform image
         uses: actions/download-artifact@v2
@@ -269,7 +269,7 @@ jobs:
       - uses: docker-practice/actions-setup-docker@master
       - uses: actions/checkout@v3
         with:
-          submodules: 'recursive'
+          submodules: 'true'
 
       - name: Download spp-platform image
         uses: actions/download-artifact@v2
@@ -337,7 +337,7 @@ jobs:
       - uses: docker-practice/actions-setup-docker@master
       - uses: actions/checkout@v3
         with:
-          submodules: 'recursive'
+          submodules: 'true'
 
       - name: Test protocol
         run: ./gradlew -p protocol test
