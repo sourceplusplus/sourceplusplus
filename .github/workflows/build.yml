@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}-verify-platform
+      group: ${{ github.workflow }}-${{ github.ref }}-verify-mono
       cancel-in-progress: true
 
     outputs:
@@ -82,13 +82,11 @@ jobs:
           path: spp-platform.tar
 
   test-platform:
-    if: ${{ !contains(github.event.pull_request.head.ref, '#docs') && !(startsWith(github.event.head_commit.message, 'Merge pull request') && contains(github.event.head_commit.message, '#docs')) }}
-
     needs: [ verify-mono, build-platform ]
     runs-on: ubuntu-latest
     timeout-minutes: 20
     concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}-check-platform
+      group: ${{ github.workflow }}-${{ github.ref }}-test-platform
       cancel-in-progress: true
 
     outputs:
@@ -157,13 +155,11 @@ jobs:
         run: ./gradlew -p platform test -Dtest.profile=integration
 
   test-probe-jvm:
-    if: ${{ !contains(github.event.pull_request.head.ref, '#docs') && !(startsWith(github.event.head_commit.message, 'Merge pull request') && contains(github.event.head_commit.message, '#docs')) }}
-
     needs: [ verify-mono, build-platform ]
     runs-on: ubuntu-latest
     timeout-minutes: 10
     concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}-check-probe-jvm
+      group: ${{ github.workflow }}-${{ github.ref }}-test-probe-jvm
       cancel-in-progress: true
 
     outputs:
@@ -174,20 +170,6 @@ jobs:
       - uses: actions/checkout@v3
         with:
           submodules: 'recursive'
-
-      - name: Export Properties
-        id: properties
-        shell: bash
-        run: |
-          VERSION=$(grep "projectVersion" gradle.properties | cut -d'=' -f2)
-          echo "::set-output name=version::$VERSION"
-          echo "SPP_PLATFORM_VERSION=$VERSION" >> $GITHUB_ENV
-          echo "SPP_RELEASE_VERSION=${VERSION/-SNAPSHOT/}" >> $GITHUB_ENV
-          SPP_RELEASE_VERSION=${VERSION/-SNAPSHOT/}
-          echo "::set-output name=release_version::$SPP_RELEASE_VERSION"
-
-      - name: Set build version
-        run: echo "BUILD_VERSION=$SPP_RELEASE_VERSION" >> $GITHUB_ENV
 
       - name: Download spp-platform image
         uses: actions/download-artifact@v2
@@ -227,6 +209,62 @@ jobs:
 
       - name: Test probe-jvm
         run: ./gradlew -p probes/jvm assemble test -Dtest.profile=integration
+
+  test-interface-cli:
+    needs: [ verify-mono, build-platform ]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-test-interface-cli
+      cancel-in-progress: true
+
+    outputs:
+      version: ${{ steps.properties.outputs.version }}
+      release_version: ${{ steps.properties.outputs.release_version }}
+    steps:
+      - uses: docker-practice/actions-setup-docker@master
+      - uses: actions/checkout@v3
+        with:
+          submodules: 'recursive'
+
+      - name: Download spp-platform image
+        uses: actions/download-artifact@v2
+        with:
+          name: spp-platform
+          path: .
+
+      - name: Load spp-platform
+        run: |
+          docker load --input spp-platform.tar
+
+      - name: Write docker-compose.override.yml
+        working-directory: docker/e2e
+        run: |
+          echo "version: '3.3'" > docker-compose.override.yml
+          echo "services:" >> docker-compose.override.yml
+          echo "  spp-platform:" >> docker-compose.override.yml
+          echo "    image: $(docker image ls  | grep 'spp-platform' | awk '{print $1}')" >> docker-compose.override.yml
+
+      - name: Start spp-platform
+        run: |
+          cd docker/e2e && docker-compose up -d
+
+      - name: Docker IPs
+        run: docker inspect --format='{{.Name}} - {{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $(docker ps -aq)
+      - name: Set SPP_PLATFORM_HOST
+        run: SPP_PLATFORM_HOST=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $(docker ps -aqf "name=spp-platform")) && echo "SPP_PLATFORM_HOST=$SPP_PLATFORM_HOST" >> $GITHUB_ENV
+
+      - name: Get access token
+        timeout-minutes: 5
+        run: until $(curl --output /dev/null --silent --fail http://localhost:12800/api/new-token?access_token=change-me); do printf '.'; sleep 5; done && SPP_JWT_TOKEN=$(curl http://localhost:12800/api/new-token?access_token=change-me) && echo "SPP_JWT_TOKEN=$SPP_JWT_TOKEN" >> $GITHUB_ENV
+
+      - name: Wait for platform
+        timeout-minutes: 5
+        run: |
+          until $(curl --header "Authorization: Bearer ${{ env.SPP_JWT_TOKEN }}" --output /dev/null --silent --fail http://localhost:12800/health); do printf '.'; sleep 5; done
+
+      - name: Test interface-cli
+        run: ./gradlew -p interfaces/cli assemble test -Dtest.profile=integration
 
   jvm-build:
     if: ${{ !contains(github.event.pull_request.head.ref, '#docs') && !(startsWith(github.event.head_commit.message, 'Merge pull request') && contains(github.event.head_commit.message, '#docs')) }}
