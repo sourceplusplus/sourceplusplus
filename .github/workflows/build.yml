@@ -394,11 +394,11 @@ jobs:
 
       - name: Start platform (release)
         if: github.ref == 'refs/heads/master'
-        run: ./gradlew -p platform assembleUp -Dbuild.profile=release -PplatformVersion=$BUILD_VERSION -PprobeVersion=$BUILD_VERSION
+        run: ./gradlew --no-daemon -p platform assembleUp -Dbuild.profile=release -PplatformVersion=$BUILD_VERSION -PprobeVersion=$BUILD_VERSION
 
       - name: Start platform (non-release)
         if: github.ref != 'refs/heads/master'
-        run: ./gradlew -p platform assembleUp -PplatformVersion=$BUILD_VERSION -PprobeVersion=$BUILD_VERSION
+        run: ./gradlew --no-daemon -p platform assembleUp -PplatformVersion=$BUILD_VERSION -PprobeVersion=$BUILD_VERSION
 
       - name: Docker IPs
         run: docker inspect --format='{{.Name}} - {{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $(docker ps -aq)
@@ -415,9 +415,9 @@ jobs:
           until $(curl --header "Authorization: Bearer ${{ env.SPP_JWT_TOKEN }}" --output /dev/null --silent --fail http://localhost:12800/health); do printf '.'; sleep 5; done
 
       - name: Check platform
-        run: ./gradlew -p platform check -Dtest.profile=integration -PplatformVersion=$BUILD_VERSION -PprobeVersion=$BUILD_VERSION
+        run: ./gradlew --no-daemon -p platform check -Dtest.profile=integration -PplatformVersion=$BUILD_VERSION -PprobeVersion=$BUILD_VERSION
 
-      - run: ./gradlew :platform:composeLogs
+      - run: ./gradlew --no-daemon :platform:composeLogs
         if: ${{ always() }}
 
       - name: Upload docker logs artifact
@@ -443,7 +443,7 @@ jobs:
 
       - name: Make distribution
         if: github.ref == 'refs/heads/master'
-        run: ./gradlew makeDist -Dbuild.profile=release -PplatformVersion=$BUILD_VERSION
+        run: ./gradlew --no-daemon makeDist -Dbuild.profile=release -PplatformVersion=$BUILD_VERSION
 
       - name: Upload spp-platform
         if: github.ref == 'refs/heads/master'
@@ -468,7 +468,7 @@ jobs:
 
       - name: Publish New Snapshot Packages
         if: github.ref == 'refs/heads/master'
-        run: ./gradlew -p platform publish -Dbuild.profile=release
+        run: ./gradlew --no-daemon -p platform publish -Dbuild.profile=release
         env:
           GH_PUBLISH_USERNAME: $GITHUB_ACTOR
           GH_PUBLISH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
