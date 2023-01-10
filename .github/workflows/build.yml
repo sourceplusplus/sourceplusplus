@@ -88,7 +88,7 @@ jobs:
         run: echo "BUILD_VERSION=$SPP_RELEASE_VERSION" >> $GITHUB_ENV
 
       - name: Build platform
-        run: ./gradlew --no-daemon --build-cache -p platform composeBuild -Dbuild.profile=release -PplatformVersion=$BUILD_VERSION -PprobeVersion=$BUILD_VERSION
+        run: ./gradlew --no-daemon -p platform composeBuild -Dbuild.profile=release -PplatformVersion=$BUILD_VERSION -PprobeVersion=$BUILD_VERSION
 
       - name: Save platform image
         run: docker save $(docker image ls  | grep 'spp-platform' | awk '{print $1}') > spp-platform.tar
@@ -155,10 +155,10 @@ jobs:
           until $(curl --header "Authorization: Bearer ${{ env.SPP_JWT_TOKEN }}" --output /dev/null --silent --fail http://localhost:12800/health); do printf '.'; sleep 5; done
 
       - name: Build probe
-        run: ./gradlew --no-daemon --build-cache -p probes/jvm jar
+        run: ./gradlew --no-daemon -p probes/jvm jar
 
       - name: Test platform
-        run: ./gradlew --no-daemon --build-cache -p platform test -Dtest.profile=integration
+        run: ./gradlew --no-daemon -p platform test -Dtest.profile=integration
 
   test-probe-jvm:
     needs: [ verify-mono, build-platform ]
@@ -358,7 +358,7 @@ jobs:
           cache: 'gradle'
 
       - name: Test interface-jetbrains
-        run: ./gradlew --no-daemon --build-cache -p interfaces/jetbrains test
+        run: ./gradlew --no-daemon -p interfaces/jetbrains test
 
   test-protocol:
     needs: [ verify-mono ]
