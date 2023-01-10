@@ -17,35 +17,29 @@
  */
 package integration
 
-import io.vertx.core.json.JsonArray
-import io.vertx.core.json.JsonObject
-import io.vertx.ext.web.client.WebClient
-import io.vertx.ext.web.client.WebClientOptions
 import io.vertx.junit5.VertxExtension
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
 import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import org.slf4j.LoggerFactory
 import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.location.LiveSourceLocation
 import spp.protocol.marshall.ServiceExceptionConverter
+import spp.protocol.platform.auth.AccessType.BLACK_LIST
+import spp.protocol.platform.auth.DeveloperRole
+import spp.protocol.platform.auth.RolePermission.ADD_LIVE_BREAKPOINT
 import spp.protocol.service.LiveInstrumentService
 import spp.protocol.service.error.InstrumentAccessDenied
 import spp.protocol.service.error.PermissionAccessDenied
-import java.util.concurrent.TimeUnit
 
 @ExtendWith(VertxExtension::class)
 class JWTTest : PlatformIntegrationTest() {
 
-    private val log = LoggerFactory.getLogger(JWTTest::class.java)
-
     @BeforeEach
     fun reset(): Unit = runBlocking {
-        //managementService.reset() //todo: this
+        managementService.reset().await()
     }
 
     @Test
@@ -70,61 +64,15 @@ class JWTTest : PlatformIntegrationTest() {
             }
         }
 
-        if (testContext.awaitCompletion(60, TimeUnit.SECONDS)) {
-            if (testContext.failed()) {
-                throw testContext.causeOfFailure()
-            }
-        } else {
-            throw RuntimeException("Test timed out")
-        }
+        errorOnTimeout(testContext)
     }
 
     @Test
     fun verifyUnsuccessfulPermission() = runBlocking {
         val testContext = VertxTestContext()
-        val platformHost = System.getenv("SPP_PLATFORM_HOST") ?: "localhost"
-        val client = WebClient.create(vertx, WebClientOptions())
-        val addDevResp = client.post(12800, platformHost, "/graphql/spp")
-            .bearerTokenAuthentication(SYSTEM_JWT_TOKEN)
-            .sendJsonObject(
-                JsonObject().put(
-                    "query",
-                    "mutation (\$id: String!) {\n" +
-                            "  addDeveloper(id: \$id) {\n" +
-                            "    id\n" +
-                            "    accessToken\n" +
-                            "  }\n" +
-                            "}\n"
-                ).put("variables", JsonObject().put("id", "test2"))
-            ).await().bodyAsJsonObject()
-        log.info("Add dev resp: {}", addDevResp)
-        assertFalse(addDevResp.containsKey("errors"))
-        val addRoleResp = client.post(12800, platformHost, "/graphql/spp")
-            .bearerTokenAuthentication(SYSTEM_JWT_TOKEN)
-            .sendJsonObject(
-                JsonObject().put(
-                    "query",
-                    "mutation (\$role: String!) {\n" +
-                            "  addRole(role: \$role)\n" +
-                            "}\n"
-                ).put("variables", JsonObject().put("role", "tester2"))
-            ).await().bodyAsJsonObject()
-        log.info("Add role resp: {}", addRoleResp)
-        assertFalse(addRoleResp.containsKey("errors"))
-        val addDeveloperRoleResp = client.post(12800, platformHost, "/graphql/spp")
-            .bearerTokenAuthentication(SYSTEM_JWT_TOKEN)
-            .sendJsonObject(
-                JsonObject().put(
-                    "query",
-                    "mutation (\$id: String!, \$role: String!) {\n" +
-                            "  addDeveloperRole(id: \$id, role: \$role)\n" +
-                            "}\n"
-                ).put("variables", JsonObject().put("id", "test2").put("role", "tester2"))
-            ).await().bodyAsJsonObject()
-        log.info("Add developer role resp: {}", addDeveloperRoleResp)
-        assertFalse(addDeveloperRoleResp.containsKey("errors"))
-
-        val instrumentService = LiveInstrumentService.createProxy(vertx, TEST_JWT_TOKEN)
+        val test2Dev = managementService.addDeveloper("test2").await()
+        val authToken = managementService.getAuthToken(test2Dev.accessToken!!).await()
+        val instrumentService = LiveInstrumentService.createProxy(vertx, authToken)
         instrumentService.getLiveInstruments().onComplete {
             if (it.failed()) {
                 val cause = ServiceExceptionConverter.fromEventBusException(it.cause().message!!)
@@ -138,111 +86,20 @@ class JWTTest : PlatformIntegrationTest() {
             }
         }
 
-        if (testContext.awaitCompletion(60, TimeUnit.SECONDS)) {
-            if (testContext.failed()) {
-                throw testContext.causeOfFailure()
-            }
-        } else {
-            throw RuntimeException("Test timed out")
-        }
+        errorOnTimeout(testContext)
     }
 
     @Test
     fun verifyUnsuccessfulAccess() = runBlocking {
         val testContext = VertxTestContext()
-        val platformHost = System.getenv("SPP_PLATFORM_HOST") ?: "localhost"
-        val client = WebClient.create(vertx, WebClientOptions())
-        val addDevResp = client.post(12800, platformHost, "/graphql/spp")
-            .bearerTokenAuthentication(SYSTEM_JWT_TOKEN)
-            .sendJsonObject(
-                JsonObject().put(
-                    "query",
-                    "mutation (\$id: String!) {\n" +
-                            "  addDeveloper(id: \$id) {\n" +
-                            "    id\n" +
-                            "    accessToken\n" +
-                            "  }\n" +
-                            "}\n"
-                ).put("variables", JsonObject().put("id", "test"))
-            ).await().bodyAsJsonObject()
-        log.info("Add dev resp: {}", addDevResp)
-        assertFalse(addDevResp.containsKey("errors"))
-        val addRoleResp = client.post(12800, platformHost, "/graphql/spp")
-            .bearerTokenAuthentication(SYSTEM_JWT_TOKEN)
-            .sendJsonObject(
-                JsonObject().put(
-                    "query",
-                    "mutation (\$role: String!) {\n" +
-                            "  addRole(role: \$role)\n" +
-                            "}\n"
-                ).put("variables", JsonObject().put("role", "tester"))
-            ).await().bodyAsJsonObject()
-        log.info("Add role resp: {}", addRoleResp)
-        assertFalse(addRoleResp.containsKey("errors"))
-        val addDeveloperRoleResp = client.post(12800, platformHost, "/graphql/spp")
-            .bearerTokenAuthentication(SYSTEM_JWT_TOKEN)
-            .sendJsonObject(
-                JsonObject().put(
-                    "query",
-                    "mutation (\$id: String!, \$role: String!) {\n" +
-                            "  addDeveloperRole(id: \$id, role: \$role)\n" +
-                            "}\n"
-                ).put("variables", JsonObject().put("id", "test").put("role", "tester"))
-            ).await().bodyAsJsonObject()
-        log.info("Add developer role resp: {}", addDeveloperRoleResp)
-        assertFalse(addDeveloperRoleResp.containsKey("errors"))
-        val addRolePermissionResp = client.post(12800, platformHost, "/graphql/spp")
-            .bearerTokenAuthentication(SYSTEM_JWT_TOKEN)
-            .sendJsonObject(
-                JsonObject().put(
-                    "query",
-                    "mutation (\$role: String!, \$permission: String!) {\n" +
-                            "  addRolePermission(role: \$role, permission: \$permission)\n" +
-                            "}\n\n"
-                ).put("variables", JsonObject().put("role", "tester").put("permission", "ADD_LIVE_BREAKPOINT"))
-            ).await().bodyAsJsonObject()
-        log.info("Add role permission resp: {}", addRolePermissionResp)
-        assertFalse(addRolePermissionResp.containsKey("errors"))
-        val addAccessPermissionResp = client.post(12800, platformHost, "/graphql/spp")
-            .bearerTokenAuthentication(SYSTEM_JWT_TOKEN)
-            .sendJsonObject(
-                JsonObject().put(
-                    "query",
-                    "mutation (\$locationPatterns: [String!], \$type: AccessType!) {\n" +
-                            "  addAccessPermission(locationPatterns: \$locationPatterns, type: \$type) {\n" +
-                            "    id\n" +
-                            "    locationPatterns\n" +
-                            "    type\n" +
-                            "  }\n" +
-                            "}\n"
-                ).put(
-                    "variables", JsonObject()
-                        .put("locationPatterns", JsonArray().add("integration.JWTTest"))
-                        .put("type", "BLACK_LIST")
-                )
-            ).await().bodyAsJsonObject()
-        log.info("Add access permission resp: {}", addAccessPermissionResp)
-        assertFalse(addAccessPermissionResp.containsKey("errors"))
-        val addRoleAccessPermissionResp = client.post(12800, platformHost, "/graphql/spp")
-            .bearerTokenAuthentication(SYSTEM_JWT_TOKEN)
-            .sendJsonObject(
-                JsonObject().put(
-                    "query",
-                    "mutation (\$role: String!, \$accessPermissionId: String!) {\n" +
-                            "  addRoleAccessPermission(role: \$role, accessPermissionId: \$accessPermissionId)\n" +
-                            "}\n"
-                ).put(
-                    "variables", JsonObject().put("role", "tester").put(
-                        "accessPermissionId",
-                        addAccessPermissionResp.getJsonObject("data")
-                            .getJsonObject("addAccessPermission").getString("id")
-                    )
-                )
-            ).await().bodyAsJsonObject()
-        log.info("Add role access permission resp: {}", addRoleAccessPermissionResp)
-        assertFalse(addRoleAccessPermissionResp.containsKey("errors"))
-
-        val instrumentService = LiveInstrumentService.createProxy(vertx, TEST_JWT_TOKEN)
+        val testDev = managementService.addDeveloper("test").await()
+        managementService.addRole(DeveloperRole.fromString("tester")).await()
+        managementService.addDeveloperRole(testDev.id, DeveloperRole.fromString("tester")).await()
+        managementService.addRolePermission(DeveloperRole.fromString("tester"), ADD_LIVE_BREAKPOINT).await()
+        val accessPermission = managementService.addAccessPermission(listOf("integration.JWTTest"), BLACK_LIST).await()
+        managementService.addRoleAccessPermission(DeveloperRole.fromString("tester"), accessPermission.id).await()
+        val authToken = managementService.getAuthToken(testDev.accessToken!!).await()
+        val instrumentService = LiveInstrumentService.createProxy(vertx, authToken)
         instrumentService.addLiveInstrument(
             LiveBreakpoint(
                 location = LiveSourceLocation("integration.JWTTest", 2),
@@ -261,12 +118,6 @@ class JWTTest : PlatformIntegrationTest() {
             }
         }
 
-        if (testContext.awaitCompletion(60, TimeUnit.SECONDS)) {
-            if (testContext.failed()) {
-                throw testContext.causeOfFailure()
-            }
-        } else {
-            throw RuntimeException("Test timed out")
-        }
+        errorOnTimeout(testContext)
     }
 }
