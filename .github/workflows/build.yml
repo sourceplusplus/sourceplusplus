@@ -333,8 +333,6 @@ jobs:
     steps:
       - uses: docker-practice/actions-setup-docker@master
       - uses: actions/checkout@v3
-        with:
-          submodules: 'recursive'
 
       - name: Test protocol
         run: ./gradlew -p protocol test
