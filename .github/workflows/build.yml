@@ -96,6 +96,7 @@ jobs:
           submodules: 'recursive'
 
       - name: Download spp-platform image
+        timeout-minutes: 5
         uses: actions/download-artifact@v3
         with:
           name: spp-platform
@@ -150,6 +151,7 @@ jobs:
           submodules: 'true'
 
       - name: Download spp-platform image
+        timeout-minutes: 5
         uses: actions/download-artifact@v3
         with:
           name: spp-platform
@@ -201,6 +203,7 @@ jobs:
           submodules: 'true'
 
       - name: Download spp-platform image
+        timeout-minutes: 5
         uses: actions/download-artifact@v3
         with:
           name: spp-platform
@@ -247,6 +250,7 @@ jobs:
         run: npm install
 
       - name: Download spp-platform image
+        timeout-minutes: 5
         uses: actions/download-artifact@v3
         with:
           name: spp-platform
@@ -272,6 +276,7 @@ jobs:
           submodules: 'true'
 
       - name: Download spp-platform image
+        timeout-minutes: 5
         uses: actions/download-artifact@v3
         with:
           name: spp-platform
