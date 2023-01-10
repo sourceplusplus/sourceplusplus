@@ -311,7 +311,7 @@ jobs:
   test-interface-jetbrains:
     needs: [ verify-mono ]
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-test-interface-jetbrains
       cancel-in-progress: true
