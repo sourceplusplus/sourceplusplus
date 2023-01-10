@@ -64,11 +64,14 @@ jobs:
         with:
           submodules: 'recursive'
 
-      - uses: actions/setup-java@v3
+      - uses: actions/cache@v3
         with:
-          distribution: 'temurin'
-          java-version: '11'
-          cache: 'gradle'
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: build-platform-${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            build-platform-${{ runner.os }}-gradle-
 
       - name: Export Properties
         id: properties
