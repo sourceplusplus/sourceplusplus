@@ -218,7 +218,6 @@ tasks.register<Copy>("updateDockerFiles") {
 
 dockerCompose {
     dockerComposeWorkingDirectory.set(File("../docker/e2e"))
-    removeVolumes.set(true)
     waitForTcpPorts.set(false)
 }
 tasks.getByName("composeBuild")
