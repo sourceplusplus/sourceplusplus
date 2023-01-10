@@ -209,6 +209,7 @@ jobs:
       - name: Load spp-platform
         run: docker load --input spp-platform.tar
 
+        #todo: shouldn't need SPP_CLIENT_ACCESS_ENABLED=false
       - name: Write docker-compose.override.yml
         working-directory: docker/e2e
         run: |
@@ -216,6 +217,8 @@ jobs:
           echo "services:" >> docker-compose.override.yml
           echo "  spp-platform:" >> docker-compose.override.yml
           echo "    image: $(docker image ls  | grep 'spp-platform' | awk '{print $1}')" >> docker-compose.override.yml
+          echo "    environment:" >> docker-compose.override.yml
+          echo "      - SPP_CLIENT_ACCESS_ENABLED=false" >> docker-compose.override.yml
 
       - name: Start spp-platform
         run: cd docker/e2e && docker-compose up -d
