@@ -247,7 +247,7 @@ jobs:
         run: ./gradlew -p interfaces/cli test -Dtest.profile=integration
 
   test-interface-jetbrains:
-    needs: [ verify-mono, build-platform ]
+    needs: [ verify-mono ]
     runs-on: ubuntu-latest
     timeout-minutes: 15
     concurrency:
@@ -263,42 +263,8 @@ jobs:
         with:
           submodules: 'recursive'
 
-      - name: Download spp-platform image
-        uses: actions/download-artifact@v2
-        with:
-          name: spp-platform
-          path: .
-
-      - name: Load spp-platform
-        run: docker load --input spp-platform.tar
-
-      - name: Write docker-compose.override.yml
-        working-directory: docker/e2e
-        run: |
-          echo "version: '3.3'" > docker-compose.override.yml
-          echo "services:" >> docker-compose.override.yml
-          echo "  spp-platform:" >> docker-compose.override.yml
-          echo "    image: $(docker image ls  | grep 'spp-platform' | awk '{print $1}')" >> docker-compose.override.yml
-
-      - name: Start spp-platform
-        run: cd docker/e2e && docker-compose up -d
-
-      - name: Docker IPs
-        run: docker inspect --format='{{.Name}} - {{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $(docker ps -aq)
-      - name: Set SPP_PLATFORM_HOST
-        run: SPP_PLATFORM_HOST=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $(docker ps -aqf "name=spp-platform")) && echo "SPP_PLATFORM_HOST=$SPP_PLATFORM_HOST" >> $GITHUB_ENV
-
-      - name: Get access token
-        timeout-minutes: 5
-        run: until $(curl --output /dev/null --silent --fail http://localhost:12800/api/new-token?access_token=change-me); do printf '.'; sleep 5; done && SPP_JWT_TOKEN=$(curl http://localhost:12800/api/new-token?access_token=change-me) && echo "SPP_JWT_TOKEN=$SPP_JWT_TOKEN" >> $GITHUB_ENV
-
-      - name: Wait for platform
-        timeout-minutes: 5
-        run: |
-          until $(curl --header "Authorization: Bearer ${{ env.SPP_JWT_TOKEN }}" --output /dev/null --silent --fail http://localhost:12800/health); do printf '.'; sleep 5; done
-
       - name: Test interface-jetbrains
-        run: ./gradlew -p interfaces/jetbrains test -Dtest.profile=integration
+        run: ./gradlew -p interfaces/jetbrains test
 
   test-protocol:
     needs: [ verify-mono, build-platform ]
