@@ -96,7 +96,7 @@ jobs:
           submodules: 'recursive'
 
       - name: Download spp-platform image
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: spp-platform
           path: .
@@ -150,7 +150,7 @@ jobs:
           submodules: 'true'
 
       - name: Download spp-platform image
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: spp-platform
           path: .
@@ -201,7 +201,7 @@ jobs:
           submodules: 'true'
 
       - name: Download spp-platform image
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: spp-platform
           path: .
@@ -247,7 +247,7 @@ jobs:
         run: npm install
 
       - name: Download spp-platform image
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: spp-platform
           path: .
@@ -260,7 +260,7 @@ jobs:
   test-interface-cli:
     needs: [ verify-mono, build-platform ]
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-test-interface-cli
       cancel-in-progress: true
@@ -272,7 +272,7 @@ jobs:
           submodules: 'true'
 
       - name: Download spp-platform image
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: spp-platform
           path: .
