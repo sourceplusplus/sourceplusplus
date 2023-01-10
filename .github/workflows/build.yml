@@ -31,6 +31,15 @@ jobs:
         with:
           submodules: 'recursive'
 
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: verify-mono-${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            verify-mono-${{ runner.os }}-gradle-
+
       - name: Verify code style
         run: ./gradlew --no-daemon detekt
 
