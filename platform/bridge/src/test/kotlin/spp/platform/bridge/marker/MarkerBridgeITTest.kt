@@ -75,12 +75,13 @@ class MarkerBridgeITTest : PlatformIntegrationTest() {
         }
 
         //send connected message
+        val authToken = managementService.getAuthToken("change-me").await()
         val replyAddress = UUID.randomUUID().toString()
         val msg = JsonObject()
             .put("type", "send")
             .put("address", MARKER_CONNECTED)
             .put("replyAddress", replyAddress)
-            .put("headers", JsonObject().put("auth-token", SYSTEM_JWT_TOKEN))
+            .put("headers", JsonObject().put("auth-token", authToken))
         val pc = InstanceConnection("test-marker-id", System.currentTimeMillis())
         msg.put("body", JsonObject.mapFrom(pc))
         ws.writeFrame(WebSocketFrame.textFrame(msg.encode(), true))
