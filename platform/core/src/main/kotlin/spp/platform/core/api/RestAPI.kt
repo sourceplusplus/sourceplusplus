@@ -63,11 +63,11 @@ class RestAPI(private val jwtEnabled: Boolean, private val jwt: JWTAuth?) : Coro
         val metricsService = MetricsService.create(vertx)
         router["/metrics"].handler {
             if (it.queryParam("include_unused").contains("true")) {
-                val vertxMetrics = metricsService.getMetricsSnapshot(vertx)
+                val vertxMetrics = metricsService.getMetricsSnapshot("vertx")
                 it.end(vertxMetrics.encodePrettily())
             } else {
                 val rtnMetrics = JsonObject()
-                val vertxMetrics = metricsService.getMetricsSnapshot(vertx)
+                val vertxMetrics = metricsService.getMetricsSnapshot("vertx")
                 vertxMetrics.fieldNames().forEach {
                     val metric = vertxMetrics.getJsonObject(it)
                     val allZeros = metric.fieldNames().all {

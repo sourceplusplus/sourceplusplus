@@ -50,6 +50,7 @@ import spp.protocol.instrument.variable.LiveVariableScope
 import spp.protocol.platform.auth.DataRedaction
 import spp.protocol.platform.auth.RedactionType
 import spp.protocol.service.SourceServices.Subscribe.toLiveInstrumentSubscriberAddress
+import spp.protocol.service.SourceServices.Subscribe.toLiveInstrumentSubscription
 import java.time.Instant
 import java.util.regex.Pattern
 
@@ -315,6 +316,11 @@ class LiveBreakpointAnalyzer(
             val developerId = liveInstrument.meta["spp.developer_id"] as String
             doDataRedactions(SourceStorage.getDeveloperDataRedactions(developerId), hit)
 
+            ClusterConnection.getVertx().eventBus().publish(
+                toLiveInstrumentSubscription(hit.breakpointId),
+                JsonObject.mapFrom(LiveInstrumentEvent(BREAKPOINT_HIT, Json.encode(hit)))
+            )
+            //todo: remove dev-specific publish
             ClusterConnection.getVertx().eventBus().publish(
                 toLiveInstrumentSubscriberAddress(developerId),
                 JsonObject.mapFrom(LiveInstrumentEvent(BREAKPOINT_HIT, Json.encode(hit)))
