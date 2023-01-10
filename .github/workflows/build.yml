@@ -554,7 +554,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Delete spp-platform
+      - name: Delete spp-platform image
+        uses: geekyeggo/delete-artifact@v2
+        with:
+          name: spp-platform
+
+      - name: Delete spp-platform distribution
         uses: geekyeggo/delete-artifact@v2
         with:
           name: spp-platform-${{ needs.jvm-build.outputs.release_version }}.tar.gz
