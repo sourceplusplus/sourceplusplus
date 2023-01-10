@@ -45,7 +45,7 @@ import spp.protocol.platform.PlatformAddress.MARKER_DISCONNECTED
 import spp.protocol.platform.status.InstanceConnection
 import spp.protocol.service.SourceServices.LIVE_INSIGHT
 import spp.protocol.service.SourceServices.LIVE_INSTRUMENT
-import spp.protocol.service.SourceServices.LIVE_MANAGEMENT_SERVICE
+import spp.protocol.service.SourceServices.LIVE_MANAGEMENT
 import spp.protocol.service.SourceServices.LIVE_VIEW
 import spp.protocol.service.SourceServices.Subscribe
 import java.time.Duration
@@ -141,7 +141,7 @@ class MarkerBridge(
         return listOf(
             PermittedOptions().setAddress("get-records"),
             PermittedOptions().setAddress(MARKER_CONNECTED),
-            PermittedOptions().setAddress(LIVE_MANAGEMENT_SERVICE),
+            PermittedOptions().setAddress(LIVE_MANAGEMENT),
             PermittedOptions().setAddress(LIVE_INSTRUMENT),
             PermittedOptions().setAddress(LIVE_VIEW),
             PermittedOptions().setAddress(LIVE_INSIGHT)

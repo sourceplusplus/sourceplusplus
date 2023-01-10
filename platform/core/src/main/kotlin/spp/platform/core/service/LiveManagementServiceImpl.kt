@@ -390,8 +390,8 @@ class LiveManagementServiceImpl(
                         "core",
                         JsonObject()
                             .put(
-                                SourceServices.LIVE_MANAGEMENT_SERVICE,
-                                SourceStorage.counter(SourceServices.LIVE_MANAGEMENT_SERVICE).get().await()
+                                SourceServices.LIVE_MANAGEMENT,
+                                SourceStorage.counter(SourceServices.LIVE_MANAGEMENT).get().await()
                             )
                             .put(
                                 SourceServices.LIVE_INSTRUMENT,

@@ -52,7 +52,7 @@ class RestAPI(private val jwtEnabled: Boolean, private val jwt: JWTAuth?) : Coro
 
         //Health checks
         val healthChecks = HealthChecks.create(vertx)
-        addServiceCheck(healthChecks, SourceServices.LIVE_MANAGEMENT_SERVICE)
+        addServiceCheck(healthChecks, SourceServices.LIVE_MANAGEMENT)
         addServiceCheck(healthChecks, SourceServices.LIVE_INSTRUMENT)
         addServiceCheck(healthChecks, SourceServices.LIVE_VIEW)
         router["/health"].handler(HealthCheckHandler.createWithHealthChecks(healthChecks))

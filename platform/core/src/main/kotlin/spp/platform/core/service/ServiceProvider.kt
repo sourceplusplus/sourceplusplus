@@ -35,7 +35,7 @@ import spp.platform.common.DeveloperAuth
 import spp.protocol.platform.auth.RolePermission
 import spp.protocol.platform.developer.SelfInfo
 import spp.protocol.service.LiveManagementService
-import spp.protocol.service.SourceServices.LIVE_MANAGEMENT_SERVICE
+import spp.protocol.service.SourceServices.LIVE_MANAGEMENT
 import spp.protocol.service.error.PermissionAccessDenied
 import kotlin.system.exitProcess
 
@@ -70,7 +70,7 @@ class ServiceProvider(
 
             managementService = LiveManagementServiceImpl(vertx, jwtAuth, moduleManager)
             managementServiceRecord = publishService(
-                LIVE_MANAGEMENT_SERVICE,
+                LIVE_MANAGEMENT,
                 LiveManagementService::class.java,
                 managementService
             )
