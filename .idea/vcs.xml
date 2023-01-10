@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="VcsDirectoryMappings">
+    <mapping directory="" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/demos/groovy" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/demos/java" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/demos/kotlin" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/demos/nodejs" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/demos/python" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/docker/e2e/example-web-app" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/documentation" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/interfaces/cli" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/interfaces/jetbrains" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/interfaces/jetbrains/commander" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/probes/jvm" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/probes/nodejs" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/probes/python" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/protocol" vcs="Git" />
+  </component>
+</project>
