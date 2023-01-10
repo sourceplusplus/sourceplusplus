@@ -89,9 +89,6 @@ jobs:
       group: ${{ github.workflow }}-${{ github.ref }}-test-platform
       cancel-in-progress: true
 
-    outputs:
-      version: ${{ steps.properties.outputs.version }}
-      release_version: ${{ steps.properties.outputs.release_version }}
     steps:
       - uses: docker-practice/actions-setup-docker@master
       - uses: actions/checkout@v3
@@ -146,9 +143,6 @@ jobs:
       group: ${{ github.workflow }}-${{ github.ref }}-test-probe-jvm
       cancel-in-progress: true
 
-    outputs:
-      version: ${{ steps.properties.outputs.version }}
-      release_version: ${{ steps.properties.outputs.release_version }}
     steps:
       - uses: docker-practice/actions-setup-docker@master
       - uses: actions/checkout@v3
@@ -200,9 +194,6 @@ jobs:
       group: ${{ github.workflow }}-${{ github.ref }}-test-interface-cli
       cancel-in-progress: true
 
-    outputs:
-      version: ${{ steps.properties.outputs.version }}
-      release_version: ${{ steps.properties.outputs.release_version }}
     steps:
       - uses: docker-practice/actions-setup-docker@master
       - uses: actions/checkout@v3
@@ -254,9 +245,6 @@ jobs:
       group: ${{ github.workflow }}-${{ github.ref }}-test-interface-jetbrains
       cancel-in-progress: true
 
-    outputs:
-      version: ${{ steps.properties.outputs.version }}
-      release_version: ${{ steps.properties.outputs.release_version }}
     steps:
       - uses: docker-practice/actions-setup-docker@master
       - uses: actions/checkout@v3
@@ -274,9 +262,6 @@ jobs:
       group: ${{ github.workflow }}-${{ github.ref }}-protocol
       cancel-in-progress: true
 
-    outputs:
-      version: ${{ steps.properties.outputs.version }}
-      release_version: ${{ steps.properties.outputs.release_version }}
     steps:
       - uses: docker-practice/actions-setup-docker@master
       - uses: actions/checkout@v3
