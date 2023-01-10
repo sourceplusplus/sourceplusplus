@@ -200,6 +200,12 @@ jobs:
         with:
           submodules: 'recursive'
 
+      - name: Download spp-platform image
+        uses: actions/download-artifact@v2
+        with:
+          name: spp-platform
+          path: .
+
       - name: Load spp-platform
         run: docker load --input spp-platform.tar
 
