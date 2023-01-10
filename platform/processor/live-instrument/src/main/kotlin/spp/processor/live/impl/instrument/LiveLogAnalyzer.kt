@@ -36,10 +36,11 @@ import spp.protocol.artifact.log.Log
 import spp.protocol.artifact.log.LogOrderType
 import spp.protocol.artifact.log.LogResult
 import spp.protocol.instrument.event.LiveInstrumentEvent
-import spp.protocol.instrument.event.LiveInstrumentEventType
+import spp.protocol.instrument.event.LiveInstrumentEventType.LOG_HIT
 import spp.protocol.instrument.event.LiveLogHit
 import spp.protocol.instrument.location.LiveSourceLocation
 import spp.protocol.service.SourceServices.Subscribe.toLiveInstrumentSubscriberAddress
+import spp.protocol.service.SourceServices.Subscribe.toLiveInstrumentSubscription
 import java.time.Instant
 import java.util.concurrent.TimeUnit
 import kotlin.collections.set
@@ -136,11 +137,16 @@ class LiveLogAnalyzer : LogAnalysisListener, LogAnalysisListenerFactory {
             }
             instrumentMeta["last_hit_at"] = System.currentTimeMillis().toString()
 
+            val developerId = liveInstrument.meta["spp.developer_id"] as String
+
             ClusterConnection.getVertx().eventBus().publish(
-                toLiveInstrumentSubscriberAddress(liveInstrument.meta["spp.developer_id"] as String),
-                JsonObject.mapFrom(
-                    LiveInstrumentEvent(LiveInstrumentEventType.LOG_HIT, JsonObject.mapFrom(hit).toString())
-                )
+                toLiveInstrumentSubscription(hit.logId),
+                JsonObject.mapFrom(LiveInstrumentEvent(LOG_HIT, JsonObject.mapFrom(hit).toString()))
+            )
+            //todo: remove dev-specific publish
+            ClusterConnection.getVertx().eventBus().publish(
+                toLiveInstrumentSubscriberAddress(developerId),
+                JsonObject.mapFrom(LiveInstrumentEvent(LOG_HIT, JsonObject.mapFrom(hit).toString()))
             )
             log.trace { "Published live log hit" }
         } else {
