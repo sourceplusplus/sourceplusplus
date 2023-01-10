@@ -19,49 +19,36 @@ package integration
 
 import io.vertx.ext.web.client.WebClient
 import io.vertx.ext.web.client.WebClientOptions
-import io.vertx.junit5.VertxExtension
-import io.vertx.junit5.VertxTestContext
+import io.vertx.kotlin.coroutines.await
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Disabled
+import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
-import java.util.concurrent.TimeUnit
+import spp.protocol.service.SourceServices
 
-@Disabled
-@ExtendWith(VertxExtension::class)
 class StatsTest : PlatformIntegrationTest() {
 
     @Test
-    fun verifyStats() {
-        val testContext = VertxTestContext()
+    fun verifyStats(): Unit = runBlocking {
         val client = WebClient.create(vertx, WebClientOptions())
-        client.get(12800, platformHost, "/stats").bearerTokenAuthentication(SYSTEM_JWT_TOKEN).send().onComplete {
-            if (it.succeeded()) {
-                val result = it.result().bodyAsJsonObject().getJsonObject("platform")
-                testContext.verify {
-                    assertEquals(1, result.getInteger("connected-probes"))
-                    val services = result.getJsonObject("services")
-                    services.getJsonObject("core").map.forEach {
-                        assertEquals(1, it.value, "Missing ${it.key}")
-                    }
-                    services.getJsonObject("probe").map.forEach {
-                        assertEquals(1, it.value, "Missing ${it.key}")
-                    }
-                }
+        val authToken = managementService.getAuthToken("change-me").await()
+        val result = client.get(12800, platformHost, "/stats")
+            .bearerTokenAuthentication(authToken).send().await()
+            .bodyAsJsonObject().getJsonObject("platform")
 
-                client.close()
-                testContext.completeNow()
-            } else {
-                testContext.failNow(it.cause())
-            }
+        assertNotNull(result.getInteger("connected-markers"))
+        assertNotNull(result.getInteger("connected-probes"))
+
+        val services = result.getJsonObject("services")
+        val coreServices = services.getJsonObject("core")
+        assertNotNull(coreServices.getInteger(SourceServices.LIVE_MANAGEMENT))
+        assertNotNull(coreServices.getInteger(SourceServices.LIVE_INSTRUMENT))
+        assertNotNull(coreServices.getInteger(SourceServices.LIVE_VIEW))
+        coreServices.map.forEach {
+            assertEquals(1, it.value, "Missing ${it.key}")
         }
 
-        if (testContext.awaitCompletion(30, TimeUnit.SECONDS)) {
-            if (testContext.failed()) {
-                throw RuntimeException(testContext.causeOfFailure())
-            }
-        } else {
-            throw RuntimeException("Test timed out")
-        }
+        //clean up
+        client.close()
     }
 }
