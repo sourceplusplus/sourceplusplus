@@ -50,6 +50,3 @@ include("protocol")
 include("protocol:codegen")
 include("tutorials:jvm")
 include("tutorials:python")
-
-include("example-web-app")
-project(":example-web-app").projectDir = File("docker/e2e/example-web-app")
