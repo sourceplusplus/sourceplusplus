@@ -428,9 +428,10 @@ class GraphqlAPI : CoroutineVerticle() {
     private fun getServices(env: DataFetchingEnvironment): CompletableFuture<List<Service>> =
         getLiveManagementService(env).compose { it.getServices() }.toCompletionStage().toCompletableFuture()
 
-    private fun getInstances(env: DataFetchingEnvironment): CompletableFuture<List<ServiceInstance>> =
-        getLiveManagementService(env).compose { it.getInstances(env.getArgument("serviceId")) }.toCompletionStage()
-            .toCompletableFuture()
+    private fun getInstances(env: DataFetchingEnvironment): CompletableFuture<List<Map<String, Any>>> =
+        getLiveManagementService(env).compose { it.getInstances(env.getArgument("serviceId")) }
+            .map { instances -> instances.map { fixJsonMaps(it) } }
+            .toCompletionStage().toCompletableFuture()
 
     private fun getEndpoints(env: DataFetchingEnvironment): CompletableFuture<List<ServiceEndpoint>> =
         getLiveManagementService(env).compose { it.getEndpoints(env.getArgument("serviceId")) }.toCompletionStage()
@@ -847,6 +848,14 @@ class GraphqlAPI : CoroutineVerticle() {
                 (rtnMap["variableControl"] as MutableMap<String, Any>).put("variableNameConfig", variableNameArray)
             }
         }
+        return rtnMap
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun fixJsonMaps(instance: ServiceInstance): Map<String, Any> {
+        val rtnMap = (JsonObject.mapFrom(instance).map as Map<String, Any>).toMutableMap()
+        val attributes = rtnMap["attributes"] as LinkedHashMap<String, String>
+        rtnMap["attributes"] = attributes.map { mapOf("key" to it.key, "value" to it.value) }.toTypedArray()
         return rtnMap
     }
 

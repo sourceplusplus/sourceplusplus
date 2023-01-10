@@ -180,6 +180,11 @@ input InstrumentThrottleInput {
     step: ThrottleStep!
 }
 
+type KeyValue {
+    key: String!
+    value: String!
+}
+
 type MetaInfo {
     name: String!
     value: String!
@@ -415,6 +420,7 @@ type ServiceInstance {
     name: String!
     language: String!
     instanceUUID: String!
+    attributes: [KeyValue!]!
 }
 
 type ServiceEndpoint {
