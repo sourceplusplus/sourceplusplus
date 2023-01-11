@@ -50,3 +50,26 @@ include("protocol")
 include("protocol:codegen")
 include("tutorials:jvm")
 include("tutorials:python")
+
+plugins {
+    id("org.danilopianini.gradle-pre-commit-git-hooks") version "1.1.1"
+}
+
+gitHooks {
+    commitMsg {
+        conventionalCommits {
+            types("build") //Changes that affect the build system or external dependencies
+            types("ci") //Changes to CI configuration files and scripts
+            types("docs") //Documentation only changes
+            types("feat") //A new feature
+            types("fix") //A bug fix
+            types("refactor") //Rewrite/restructure code without any changes in functionality
+            types("perf") //Refactors that improve performance
+            types("style") //Formatting, missing semi colons, etc; no code change
+            types("test") //Adding missing tests or correcting existing tests
+            types("ide") //Changes that affect IDE setup
+            types("chore") //Miscellaneous changes (automated dependency updates, etc)
+        }
+    }
+    createHooks()
+}
