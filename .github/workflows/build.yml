@@ -113,11 +113,14 @@ jobs:
         with:
           submodules: 'recursive'
 
-      - uses: actions/setup-java@v3
+      - uses: actions/cache@v3
         with:
-          distribution: 'temurin'
-          java-version: '11'
-          cache: 'gradle'
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: test-platform-${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            test-platform-${{ runner.os }}-gradle-
 
       - name: Download spp-platform image
         timeout-minutes: 5
@@ -351,11 +354,14 @@ jobs:
         with:
           submodules: 'recursive'
 
-      - uses: actions/setup-java@v3
+      - uses: actions/cache@v3
         with:
-          distribution: 'temurin'
-          java-version: '11'
-          cache: 'gradle'
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: test-interface-jetbrains-${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            test-interface-jetbrains-${{ runner.os }}-gradle-
 
       - name: Test interface-jetbrains
         run: ./gradlew --no-daemon -p interfaces/jetbrains test
