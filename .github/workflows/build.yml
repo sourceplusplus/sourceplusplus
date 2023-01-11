@@ -492,15 +492,15 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ needs.jvm-build.outputs.release_version }}
-          release_name: v${{ needs.jvm-build.outputs.release_version }}
+          tag_name: ${{ needs.make-distribution.outputs.release_version }}
+          release_name: v${{ needs.make-distribution.outputs.release_version }}
           body: ${{ needs.build.outputs.changelog }}
           draft: true
 
       - name: Download spp-platform artifact
         uses: actions/download-artifact@v3
         with:
-          name: spp-platform-${{ needs.jvm-build.outputs.release_version }}.tar.gz
+          name: spp-platform-${{ needs.make-distribution.outputs.release_version }}.tar.gz
 
       - name: Upload spp-platform asset
         uses: actions/upload-release-asset@v1
@@ -508,8 +508,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.createDraft.outputs.upload_url }}
-          asset_path: ./spp-platform-${{ needs.jvm-build.outputs.release_version }}.tar.gz
-          asset_name: spp-platform-${{ needs.jvm-build.outputs.release_version }}.tar.gz
+          asset_path: ./spp-platform-${{ needs.make-distribution.outputs.release_version }}.tar.gz
+          asset_name: spp-platform-${{ needs.make-distribution.outputs.release_version }}.tar.gz
           asset_content_type: application/gzip
 
   docker-push:
@@ -528,11 +528,11 @@ jobs:
       - name: Download spp-platform artifact
         uses: actions/download-artifact@v3
         with:
-          name: spp-platform-${{ needs.jvm-build.outputs.release_version }}.tar.gz
+          name: spp-platform-${{ needs.make-distribution.outputs.release_version }}.tar.gz
           path: ./docker/spp-platform
 
       - name: Untar spp-platform
-        run: cd ./docker/spp-platform && tar -zxvf spp-platform-${{ needs.jvm-build.outputs.release_version }}.tar.gz --strip-components=1
+        run: cd ./docker/spp-platform && tar -zxvf spp-platform-${{ needs.make-distribution.outputs.release_version }}.tar.gz --strip-components=1
 
       - name: Copy ui-initialized-templates to spp-platform Docker image
         run: cp -r ./docker/e2e/config/ui-initialized-templates ./docker/spp-platform
@@ -566,4 +566,4 @@ jobs:
       - name: Delete spp-platform distribution
         uses: geekyeggo/delete-artifact@v2
         with:
-          name: spp-platform-${{ needs.jvm-build.outputs.release_version }}.tar.gz
+          name: spp-platform-${{ needs.make-distribution.outputs.release_version }}.tar.gz
