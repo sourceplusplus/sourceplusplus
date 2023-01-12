@@ -51,9 +51,11 @@ curl -O 'https://raw.githubusercontent.com/sourceplusplus/sourceplusplus/master/
 
 <!-- - [Get Source++](https://sourceplusplus.com/get/) -->
 - Demos
+  - [Groovy](https://github.com/sourceplusplus/demo-groovy)
   - [Java](https://github.com/sourceplusplus/demo-java)
   - [Kotlin](https://github.com/sourceplusplus/demo-kotlin)
   - [Node.js](https://github.com/sourceplusplus/demo-nodejs)
+  - [Python](https://github.com/sourceplusplus/demo-python)
 - Probes
   - [JVM](https://github.com/sourceplusplus/probe-jvm)
   - [Python](https://github.com/sourceplusplus/probe-python)
