@@ -68,7 +68,9 @@ class ServiceProvider(
                 ServiceDiscovery.create(vertx, ServiceDiscoveryOptions())
             }
 
+            //start service
             managementService = LiveManagementServiceImpl(vertx, jwtAuth, moduleManager)
+            vertx.deployVerticle(managementService as LiveManagementServiceImpl).await()
             managementServiceRecord = publishService(
                 LIVE_MANAGEMENT,
                 LiveManagementService::class.java,

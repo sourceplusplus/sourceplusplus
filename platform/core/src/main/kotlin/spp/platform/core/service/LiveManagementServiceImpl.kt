@@ -23,9 +23,9 @@ import io.vertx.core.Vertx
 import io.vertx.core.json.JsonObject
 import io.vertx.ext.auth.JWTOptions
 import io.vertx.ext.auth.jwt.JWTAuth
+import io.vertx.kotlin.coroutines.CoroutineVerticle
 import io.vertx.kotlin.coroutines.await
 import io.vertx.kotlin.coroutines.dispatcher
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import mu.KotlinLogging
 import org.apache.commons.lang3.RandomStringUtils
@@ -58,7 +58,7 @@ class LiveManagementServiceImpl(
     private val vertx: Vertx,
     private val jwt: JWTAuth?,
     moduleManager: ModuleManager,
-) : LiveManagementService {
+) : CoroutineVerticle(), LiveManagementService {
 
     private val log = KotlinLogging.logger {}
     private val metadataQueryService = moduleManager.find(CoreModule.NAME)
@@ -68,7 +68,7 @@ class LiveManagementServiceImpl(
     override fun getVersion(): Future<String> {
         log.trace { "Getting version" }
         val promise = Promise.promise<String>()
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             promise.complete(ClusterConnection.BUILD.getString("build_version"))
         }
         return promise.future()
@@ -77,7 +77,7 @@ class LiveManagementServiceImpl(
     override fun getAccessPermissions(): Future<List<AccessPermission>> {
         log.trace { "Getting access permissions" }
         val promise = Promise.promise<List<AccessPermission>>()
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             promise.complete(SourceStorage.getAccessPermissions().toList())
         }
         return promise.future()
@@ -86,7 +86,7 @@ class LiveManagementServiceImpl(
     override fun getAccessPermission(id: String): Future<AccessPermission> {
         log.trace { "Getting access permission $id" }
         val promise = Promise.promise<AccessPermission>()
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             if (!SourceStorage.hasAccessPermission(id)) {
                 promise.fail(IllegalStateException("Non-existing access permission: $id"))
             } else {
@@ -103,7 +103,7 @@ class LiveManagementServiceImpl(
         val id = UUID.randomUUID().toString()
         log.trace { "Adding access permission $id" }
         val promise = Promise.promise<AccessPermission>()
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             if (SourceStorage.hasAccessPermission(id)) {
                 promise.fail(IllegalStateException("Existing access permission: $id"))
             } else {
@@ -118,7 +118,7 @@ class LiveManagementServiceImpl(
     override fun removeAccessPermission(id: String): Future<Void> {
         log.trace { "Removing access permission $id" }
         val promise = Promise.promise<Void>()
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             if (!SourceStorage.hasAccessPermission(id)) {
                 promise.fail(IllegalStateException("Non-existing access permission: $id"))
             } else {
@@ -132,7 +132,7 @@ class LiveManagementServiceImpl(
     override fun getRoleAccessPermissions(role: DeveloperRole): Future<List<AccessPermission>> {
         log.trace { "Getting access permissions for role $role" }
         val promise = Promise.promise<List<AccessPermission>>()
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             if (!SourceStorage.hasRole(role)) {
                 promise.fail(IllegalStateException("Non-existing role: $role"))
             } else {
@@ -145,7 +145,7 @@ class LiveManagementServiceImpl(
     override fun addRoleAccessPermission(role: DeveloperRole, id: String): Future<Void> {
         log.trace { "Adding access permission $id to role $role" }
         val promise = Promise.promise<Void>()
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             if (!SourceStorage.hasRole(role)) {
                 promise.fail(IllegalStateException("Non-existing role: $role"))
             } else if (!SourceStorage.hasAccessPermission(id)) {
@@ -161,7 +161,7 @@ class LiveManagementServiceImpl(
     override fun removeRoleAccessPermission(role: DeveloperRole, id: String): Future<Void> {
         log.trace { "Removing access permission $id from role $role" }
         val promise = Promise.promise<Void>()
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             if (!SourceStorage.hasRole(role)) {
                 promise.fail(IllegalStateException("Non-existing role: $role"))
             } else if (!SourceStorage.hasAccessPermission(id)) {
@@ -177,7 +177,7 @@ class LiveManagementServiceImpl(
     override fun getDataRedactions(): Future<List<DataRedaction>> {
         log.trace { "Getting data redactions" }
         val promise = Promise.promise<List<DataRedaction>>()
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             promise.complete(SourceStorage.getDataRedactions().toList())
         }
         return promise.future()
@@ -186,7 +186,7 @@ class LiveManagementServiceImpl(
     override fun getDataRedaction(id: String): Future<DataRedaction> {
         log.trace { "Getting data redaction $id" }
         val promise = Promise.promise<DataRedaction>()
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             if (!SourceStorage.hasDataRedaction(id)) {
                 promise.fail(IllegalStateException("Non-existing data redaction: $id"))
             } else {
@@ -204,7 +204,7 @@ class LiveManagementServiceImpl(
     ): Future<DataRedaction> {
         log.trace { "Adding data redaction $id" }
         val promise = Promise.promise<DataRedaction>()
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             if (SourceStorage.hasDataRedaction(id)) {
                 promise.fail(IllegalStateException("Data redaction already exists: $id"))
             } else {
@@ -224,7 +224,7 @@ class LiveManagementServiceImpl(
     ): Future<DataRedaction> {
         log.trace { "Updating data redaction $id" }
         val promise = Promise.promise<DataRedaction>()
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             if (!SourceStorage.hasDataRedaction(id)) {
                 promise.fail(IllegalStateException("Non-existing data redaction: $id"))
             } else {
@@ -239,7 +239,7 @@ class LiveManagementServiceImpl(
     override fun removeDataRedaction(id: String): Future<Void> {
         log.trace { "Removing data redaction $id" }
         val promise = Promise.promise<Void>()
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             if (!SourceStorage.hasDataRedaction(id)) {
                 promise.fail(IllegalStateException("Non-existing data redaction: $id"))
             } else {
@@ -253,7 +253,7 @@ class LiveManagementServiceImpl(
     override fun getRoleDataRedactions(role: DeveloperRole): Future<List<DataRedaction>> {
         log.trace { "Getting data redactions for role $role" }
         val promise = Promise.promise<List<DataRedaction>>()
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             if (!SourceStorage.hasRole(role)) {
                 promise.fail(IllegalStateException("Non-existing role: $role"))
             } else {
@@ -266,7 +266,7 @@ class LiveManagementServiceImpl(
     override fun addRoleDataRedaction(role: DeveloperRole, id: String): Future<Void> {
         log.trace { "Adding data redaction $id to role $role" }
         val promise = Promise.promise<Void>()
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             if (!SourceStorage.hasRole(role)) {
                 promise.fail(IllegalStateException("Non-existing role: $role"))
             } else if (!SourceStorage.hasDataRedaction(id)) {
@@ -282,7 +282,7 @@ class LiveManagementServiceImpl(
     override fun removeRoleDataRedaction(role: DeveloperRole, id: String): Future<Void> {
         log.trace { "Removing data redaction $id from role $role" }
         val promise = Promise.promise<Void>()
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             if (!SourceStorage.hasRole(role)) {
                 promise.fail(IllegalStateException("Non-existing role: $role"))
             } else if (!SourceStorage.hasDataRedaction(id)) {
@@ -298,7 +298,7 @@ class LiveManagementServiceImpl(
     override fun getDeveloperDataRedactions(developerId: String): Future<List<DataRedaction>> {
         log.trace { "Getting data redactions for developer $developerId" }
         val promise = Promise.promise<List<DataRedaction>>()
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             if (!SourceStorage.hasDeveloper(developerId)) {
                 promise.fail(IllegalStateException("Non-existing developer: $developerId"))
             } else {
@@ -311,7 +311,7 @@ class LiveManagementServiceImpl(
     override fun getDeveloperAccessPermissions(developerId: String): Future<List<AccessPermission>> {
         log.trace { "Getting access permissions for developer $developerId" }
         val promise = Promise.promise<List<AccessPermission>>()
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             if (!SourceStorage.hasDeveloper(developerId)) {
                 promise.fail(IllegalStateException("Non-existing developer: $developerId"))
             } else {
@@ -324,7 +324,7 @@ class LiveManagementServiceImpl(
     override fun getClients(): Future<JsonObject> {
         log.trace { "Getting clients" }
         val promise = Promise.promise<JsonObject>()
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             promise.complete(
                 JsonObject().apply {
                     val devAuth = Vertx.currentContext().getLocal<DeveloperAuth>("developer")
@@ -355,7 +355,7 @@ class LiveManagementServiceImpl(
             }
         }
 
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             val platformStats = getPlatformStats()
             subStats.future().onSuccess {
                 promise.complete(
@@ -418,7 +418,7 @@ class LiveManagementServiceImpl(
         val promise = Promise.promise<SelfInfo>()
         val selfId = Vertx.currentContext().getLocal<DeveloperAuth>("developer").selfId
 
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             promise.complete(
                 SelfInfo(
                     developer = Developer(selfId),
@@ -434,7 +434,7 @@ class LiveManagementServiceImpl(
     override fun getServices(layer: String?): Future<List<Service>> {
         log.trace { "Getting services" }
         val promise = Promise.promise<List<Service>>()
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             val result = mutableListOf<Service>()
             val services = metadataQueryService.listServices(layer, null)
             services.forEach {
@@ -461,7 +461,7 @@ class LiveManagementServiceImpl(
         }
 
         val promise = Promise.promise<List<ServiceInstance>>()
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             val result = mutableListOf<ServiceInstance>()
             val duration = Duration().apply {
                 start = "1111-01-01 1111"
@@ -488,7 +488,7 @@ class LiveManagementServiceImpl(
     override fun getEndpoints(serviceId: String): Future<List<ServiceEndpoint>> {
         log.trace { "Getting endpoints for service $serviceId" }
         val promise = Promise.promise<List<ServiceEndpoint>>()
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             val result = mutableListOf<ServiceEndpoint>()
             metadataQueryService.findEndpoint("", serviceId, 1000).forEach {
                 result.add(
@@ -506,7 +506,7 @@ class LiveManagementServiceImpl(
     override fun getActiveProbes(): Future<List<InstanceConnection>> {
         log.trace { "Getting active probes" }
         val promise = Promise.promise<List<InstanceConnection>>()
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             val devAuth = Vertx.currentContext().getLocal<DeveloperAuth>("developer")
             val bridgeService = SourceBridgeService.service(vertx, devAuth?.accessToken).await()
             if (bridgeService != null) {
@@ -525,7 +525,7 @@ class LiveManagementServiceImpl(
     override fun getRolePermissions(role: DeveloperRole): Future<List<RolePermission>> {
         log.trace { "Getting role permissions" }
         val promise = Promise.promise<List<RolePermission>>()
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             try {
                 val permissions = SourceStorage.getRolePermissions(role)
                 promise.complete(permissions.toList())
@@ -540,7 +540,7 @@ class LiveManagementServiceImpl(
     override fun getClientAccessors(): Future<List<ClientAccess>> {
         log.trace { "Getting client accessors" }
         val promise = Promise.promise<List<ClientAccess>>()
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             promise.complete(SourceStorage.getClientAccessors())
         }
         return promise.future()
@@ -549,7 +549,7 @@ class LiveManagementServiceImpl(
     override fun getClientAccess(id: String): Future<ClientAccess?> {
         log.trace { "Getting client access" }
         val promise = Promise.promise<ClientAccess?>()
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             promise.complete(SourceStorage.getClientAccess(id))
         }
         return promise.future()
@@ -558,7 +558,7 @@ class LiveManagementServiceImpl(
     override fun addClientAccess(): Future<ClientAccess> {
         log.trace { "Adding client access" }
         val promise = Promise.promise<ClientAccess>()
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             promise.complete(SourceStorage.addClientAccess())
         }
         return promise.future()
@@ -567,7 +567,7 @@ class LiveManagementServiceImpl(
     override fun removeClientAccess(id: String): Future<Boolean> {
         log.trace { "Removing client access with id: $id" }
         val promise = Promise.promise<Boolean>()
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             promise.complete(SourceStorage.removeClientAccess(id))
         }
         return promise.future()
@@ -576,7 +576,7 @@ class LiveManagementServiceImpl(
     override fun refreshClientAccess(id: String): Future<ClientAccess> {
         log.trace { "Refreshing client access with id: $id" }
         val promise = Promise.promise<ClientAccess>()
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             promise.complete(SourceStorage.refreshClientAccess(id))
         }
         return promise.future()
@@ -589,7 +589,7 @@ class LiveManagementServiceImpl(
         }
 
         val promise = Promise.promise<String>()
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             val dev = SourceStorage.getDeveloperByAccessToken(accessToken)
             if (dev != null) {
                 val jwtToken = jwt.generateToken(
@@ -616,7 +616,7 @@ class LiveManagementServiceImpl(
     override fun getDevelopers(): Future<List<Developer>> {
         log.trace { "Getting developers" }
         val promise = Promise.promise<List<Developer>>()
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             promise.complete(SourceStorage.getDevelopers())
         }
         return promise.future()
@@ -625,7 +625,7 @@ class LiveManagementServiceImpl(
     override fun addDeveloper(developerId: String): Future<Developer> {
         log.trace { "Adding developer with id: $developerId" }
         val promise = Promise.promise<Developer>()
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             if (SourceStorage.hasDeveloper(developerId)) {
                 promise.fail(IllegalStateException("Existing developer: $developerId"))
             } else {
@@ -638,7 +638,7 @@ class LiveManagementServiceImpl(
     override fun removeDeveloper(developerId: String): Future<Void> {
         log.trace { "Removing developer with id: $developerId" }
         val promise = Promise.promise<Void>()
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             if (developerId == "system") {
                 promise.fail(IllegalArgumentException("Unable to remove system developer"))
             } else if (!SourceStorage.hasDeveloper(developerId)) {
@@ -654,7 +654,7 @@ class LiveManagementServiceImpl(
     override fun refreshDeveloperToken(developerId: String): Future<Developer> {
         log.trace { "Refreshing developer token with id: $developerId" }
         val promise = Promise.promise<Developer>()
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             if (!SourceStorage.hasDeveloper(developerId)) {
                 promise.fail(IllegalStateException("Non-existing developer: $developerId"))
             } else {
@@ -669,7 +669,7 @@ class LiveManagementServiceImpl(
     override fun getRoles(): Future<List<DeveloperRole>> {
         log.trace { "Getting roles" }
         val promise = Promise.promise<List<DeveloperRole>>()
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             promise.complete(SourceStorage.getRoles().toList())
         }
         return promise.future()
@@ -678,7 +678,7 @@ class LiveManagementServiceImpl(
     override fun addRole(role: DeveloperRole): Future<Boolean> {
         log.trace { "Adding role with name: $role" }
         val promise = Promise.promise<Boolean>()
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             if (SourceStorage.hasRole(role)) {
                 promise.fail(IllegalStateException("Existing role: $role"))
             } else {
@@ -691,7 +691,7 @@ class LiveManagementServiceImpl(
     override fun removeRole(role: DeveloperRole): Future<Boolean> {
         log.trace { "Removing role with name: $role" }
         val promise = Promise.promise<Boolean>()
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             if (!SourceStorage.hasRole(role)) {
                 promise.fail(IllegalStateException("Non-existing role: $role"))
             } else if (role.nativeRole) {
@@ -706,7 +706,7 @@ class LiveManagementServiceImpl(
     override fun getDeveloperRoles(developerId: String): Future<List<DeveloperRole>> {
         log.trace { "Getting developer roles" }
         val promise = Promise.promise<List<DeveloperRole>>()
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             if (!SourceStorage.hasDeveloper(developerId)) {
                 promise.fail(IllegalStateException("Non-existing developer: $developerId"))
             } else {
@@ -719,7 +719,7 @@ class LiveManagementServiceImpl(
     override fun addDeveloperRole(developerId: String, role: DeveloperRole): Future<Void> {
         log.trace { "Adding role with id: ${role.roleName} to developer with id: $developerId" }
         val promise = Promise.promise<Void>()
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             if (!SourceStorage.hasDeveloper(developerId)) {
                 promise.fail(IllegalStateException("Non-existing developer: $developerId"))
             } else if (!SourceStorage.hasRole(role)) {
@@ -735,7 +735,7 @@ class LiveManagementServiceImpl(
     override fun removeDeveloperRole(developerId: String, role: DeveloperRole): Future<Void> {
         log.trace { "Removing role with id: ${role.roleName} from developer with id: $developerId" }
         val promise = Promise.promise<Void>()
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             if (!SourceStorage.hasDeveloper(developerId)) {
                 promise.fail(IllegalStateException("Non-existing developer: $developerId"))
             } else if (!SourceStorage.hasRole(role)) {
@@ -751,7 +751,7 @@ class LiveManagementServiceImpl(
     override fun addRolePermission(role: DeveloperRole, permission: RolePermission): Future<Void> {
         log.trace { "Adding permission with id: ${permission.name} to role with id: ${role.roleName}" }
         val promise = Promise.promise<Void>()
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             if (!SourceStorage.hasRole(role)) {
                 promise.fail(IllegalStateException("Non-existing role: $role"))
             } else if (role.nativeRole) {
@@ -767,7 +767,7 @@ class LiveManagementServiceImpl(
     override fun removeRolePermission(role: DeveloperRole, permission: RolePermission): Future<Void> {
         log.trace { "Removing permission with id: ${permission.name} from role with id: ${role.roleName}" }
         val promise = Promise.promise<Void>()
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             if (!SourceStorage.hasRole(role)) {
                 promise.fail(IllegalStateException("Non-existing role: $role"))
             } else if (role.nativeRole) {
@@ -783,7 +783,7 @@ class LiveManagementServiceImpl(
     override fun getDeveloperPermissions(developerId: String): Future<List<RolePermission>> {
         log.trace { "Getting developer permissions" }
         val promise = Promise.promise<List<RolePermission>>()
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             if (SourceStorage.hasDeveloper(developerId)) {
                 promise.complete(SourceStorage.getDeveloperPermissions(developerId).toList())
             } else {
@@ -808,7 +808,7 @@ class LiveManagementServiceImpl(
     override fun updateActiveProbeMetadata(id: String, metadata: JsonObject): Future<InstanceConnection> {
         log.trace { "Updating active probe metadata with id: $id" }
         val promise = Promise.promise<InstanceConnection>()
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             val devAuth = Vertx.currentContext().getLocal<DeveloperAuth>("developer")
             val bridgeService = SourceBridgeService.service(vertx, devAuth?.accessToken).await()
             if (bridgeService != null) {
@@ -825,7 +825,7 @@ class LiveManagementServiceImpl(
         log.trace { "Resetting" }
         val promise = Promise.promise<Void>()
         val devAuth = Vertx.currentContext().getLocal<DeveloperAuth>("developer")
-        GlobalScope.launch(vertx.dispatcher()) {
+        launch(vertx.dispatcher()) {
             SourceStorage.reset()
             LiveInstrumentService.createProxy(vertx, devAuth.accessToken).clearAllLiveInstruments()
                 .onSuccess { promise.complete() }
