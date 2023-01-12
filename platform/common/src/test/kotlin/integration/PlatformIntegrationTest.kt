@@ -22,6 +22,8 @@ import io.vertx.core.Promise
 import io.vertx.core.Vertx
 import io.vertx.core.VertxOptions
 import io.vertx.core.eventbus.MessageConsumer
+import io.vertx.core.http.HttpClientOptions
+import io.vertx.core.http.RequestOptions
 import io.vertx.junit5.VertxExtension
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
@@ -46,21 +48,10 @@ open class PlatformIntegrationTest {
     companion object {
         private val log = LoggerFactory.getLogger(PlatformIntegrationTest::class.java)
 
-        //todo: generate
-        @Deprecated("To be removed")
-        const val SYSTEM_JWT_TOKEN =
-            "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJkZXZlbG9wZXJfaWQiOiJzeXN0ZW0iLCJjcmVhdGVkX2F0IjoxNjU3MDM5NzAzOTE1L" +
-                    "CJleHBpcmVzX2F0IjoxNjg4NTc1NzAzOTE1LCJpYXQiOjE2NTcwMzk3MDN9.hKxtqnajBWbWxL2nYoVyp9HeyDfIi5XjRRkJtI" +
-                    "wms6JOfWCWO9TG2ghW7nhv2N7c0G6JMGrelWCfXesZ33z0epz4XcJ6s05gV8EXkQjQPKzPQ770w2QHH4IenUKWBn44r0LxteAd" +
-                    "KGVmaheqJ9Gr4hDN2PzzQS5i_WM34N-ucbfUwQ79rUyQaEcDvgywnL8kUSNDlhnYb2gyVMYC5_QxNDusxCUJq6Kas1qHzmg02t" +
-                    "7ToWNzHCGxa7LWJkgx27BMhFSubq8fMUtzP6YWQs4gXLfvVzc3i5VxevJf7dFWw1VsfpW31qfdkmZp89BueaaZpJh236HMnhxM" +
-                    "CwsbCWKaIZgQqGzFL9sZzH-Aav8AM9CRJYpnN0eTl6Bsqbhh2AsS-EycV_O-9NDA4Ac8ImeaGw4kqMwZSVeSMRhSgaWiwmXASL" +
-                    "gNM6LgKVKSAgPXIKrSEPmo9_mFPMwY8uxnu-J0uGmTa1hQEtmblAXBuZbyP1CtOk_Hmydif5K-jFnOne5fyj-Ju5q7uVjz60FH" +
-                    "u5TQSJZX2U6YmpHlRVpDjs8g8EThjta7DSkmCNEPfn0YU_Cx9cSphEQkuZdyu_C8rPGzMDqyziOu1yWZYfFxK5SVMsGjfIOeB4" +
-                    "qEDARssQ8-oREcp52Q4MmmT8d0oN4I4Fm_aa9X-R6dDkeWrFGrzcVEL1o"
-
         private var vertx: Vertx? = null
         val platformHost = System.getenv("SPP_PLATFORM_HOST") ?: "localhost"
+        const val platformPort = 12800
+        val systemAuthToken: String? by lazy { fetchAuthToken() }
 
         fun vertx(): Vertx {
             return vertx!!
@@ -93,21 +84,39 @@ open class PlatformIntegrationTest {
                 log.info("Closed vertx")
             }
         }
+
+        private fun fetchAuthToken() = runBlocking {
+            val tokenUri = "/api/new-token?access_token=change-me"
+            val req = vertx!!.createHttpClient(HttpClientOptions())
+                .request(
+                    RequestOptions()
+                        .setHost(platformHost)
+                        .setPort(platformPort)
+                        .setURI(tokenUri)
+                ).await()
+            req.end().await()
+            val resp = req.response().await()
+            if (resp.statusCode() == 200) {
+                resp.body().await().toString()
+            } else {
+                null
+            }
+        }
     }
 
     val vertx: Vertx = vertx()
 
     val managementService: LiveManagementService
         get() {
-            return LiveManagementService.createProxy(vertx, SYSTEM_JWT_TOKEN)
+            return LiveManagementService.createProxy(vertx, systemAuthToken)
         }
     val instrumentService: LiveInstrumentService
         get() {
-            return LoggedLiveInstrumentService(LiveInstrumentService.createProxy(vertx, SYSTEM_JWT_TOKEN))
+            return LoggedLiveInstrumentService(LiveInstrumentService.createProxy(vertx, systemAuthToken))
         }
     val viewService: LiveViewService
         get() {
-            return LiveViewService.createProxy(vertx, SYSTEM_JWT_TOKEN)
+            return LiveViewService.createProxy(vertx, systemAuthToken)
         }
 
     fun errorOnTimeout(testContext: VertxTestContext, waitTime: Long = 15) {
