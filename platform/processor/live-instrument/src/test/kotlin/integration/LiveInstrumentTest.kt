@@ -17,7 +17,6 @@
  */
 package integration
 
-import io.vertx.core.json.Json
 import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
@@ -34,7 +33,6 @@ import spp.protocol.instrument.event.LiveInstrumentEvent
 import spp.protocol.instrument.event.LiveInstrumentEventType
 import spp.protocol.instrument.location.LiveSourceLocation
 import spp.protocol.service.SourceServices.Subscribe.toLiveInstrumentSubscriberAddress
-import java.util.concurrent.TimeUnit
 
 class LiveInstrumentTest : LiveInstrumentIntegrationTest() {
 
@@ -60,7 +58,7 @@ class LiveInstrumentTest : LiveInstrumentIntegrationTest() {
             }
         }
 
-       errorOnTimeout(testContext)
+        errorOnTimeout(testContext)
     }
 
     @Test
