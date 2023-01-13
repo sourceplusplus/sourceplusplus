@@ -22,13 +22,17 @@ import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
 import spp.protocol.instrument.LiveLog
+import spp.protocol.instrument.event.LiveLogHit
 import spp.protocol.instrument.location.LiveSourceLocation
+import spp.protocol.service.listen.LiveInstrumentListener
+import spp.protocol.service.listen.addLiveInstrumentListener
 
-@Suppress("UNUSED_VARIABLE")
 class FormatLiveLogTest : LiveInstrumentIntegrationTest() {
 
+    @Suppress("UNUSED_VARIABLE")
     private fun formatLiveLog() {
         startEntrySpan("formatLiveLog")
         val i = 0
@@ -47,34 +51,39 @@ class FormatLiveLogTest : LiveInstrumentIntegrationTest() {
             formatLiveLog()
         }
 
+        val instrumentId = "log-format-primitives"
         val format = "{} {} {} {} {} {}"
         val args = listOf("i", "c", "s", "b", "f", "n")
 
         val testContext = VertxTestContext()
-        onLogHit {
-            testContext.verify {
-                assertEquals(1, it.logResult.logs.size)
-                val log = it.logResult.logs[0]
-                assertEquals(format, log.content)
-                assertEquals("0 h hello true 1.0 null", log.toFormattedMessage())
+        vertx.addLiveInstrumentListener(instrumentId, object : LiveInstrumentListener {
+            override fun onLogHitEvent(event: LiveLogHit) {
+                testContext.verify {
+                    assertEquals(1, event.logResult.logs.size)
+                    val log = event.logResult.logs[0]
+                    assertEquals(format, log.content)
+                    assertEquals("0 h hello true 1.0 null", log.toFormattedMessage())
+                }
+                testContext.completeNow()
             }
-            testContext.completeNow()
-        }
+        })
 
         //add live log
-        instrumentService.addLiveInstrument(
-            LiveLog(
-                format,
-                args,
-                location = LiveSourceLocation(
-                    FormatLiveLogTest::class.qualifiedName!!,
-                    getLineNumber("done"),
-                    "spp-test-probe"
-                ),
-                hitLimit = 1,
-                applyImmediately = true
-            )
-        ).await()
+        assertNotNull(
+            instrumentService.addLiveInstrument(
+                LiveLog(
+                    format,
+                    args,
+                    location = LiveSourceLocation(
+                        FormatLiveLogTest::class.java.name,
+                        getLineNumber("done"),
+                        "spp-test-probe"
+                    ),
+                    applyImmediately = true,
+                    id = instrumentId
+                )
+            ).await()
+        )
 
         //trigger live log
         formatLiveLog()
