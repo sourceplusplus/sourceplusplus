@@ -66,7 +66,7 @@ class LiveLogTest : LiveInstrumentIntegrationTest() {
         val consumer = vertx.eventBus().consumer<JsonObject>(toLiveInstrumentSubscriberAddress("system"))
         consumer.handler {
             log.info("Got subscription event: {}", it.body())
-            val liveEvent = Json.decodeValue(it.body().toString(), LiveInstrumentEvent::class.java)
+            val liveEvent = LiveInstrumentEvent(it.body())
             when (liveEvent.eventType) {
                 LiveInstrumentEventType.LOG_ADDED -> {
                     log.info("Got added")

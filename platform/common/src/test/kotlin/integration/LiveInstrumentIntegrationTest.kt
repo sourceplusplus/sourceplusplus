@@ -77,9 +77,9 @@ abstract class LiveInstrumentIntegrationTest : PlatformIntegrationTest() {
 
     fun onBreakpointHit(hitLimit: Int = 1, invoke: (LiveBreakpointHit) -> Unit): MessageConsumer<*> {
         val hitCount = AtomicInteger(0)
-        val consumer = vertx.eventBus().consumer<Any>(toLiveInstrumentSubscriberAddress("system"))
+        val consumer = vertx.eventBus().consumer<JsonObject>(toLiveInstrumentSubscriberAddress("system"))
         return consumer.handler {
-            val event = Json.decodeValue(it.body().toString(), LiveInstrumentEvent::class.java)
+            val event = LiveInstrumentEvent(it.body())
             if (event.eventType == LiveInstrumentEventType.BREAKPOINT_HIT) {
                 val bpHit = LiveBreakpointHit(JsonObject(event.data))
                 invoke.invoke(bpHit)
@@ -94,9 +94,9 @@ abstract class LiveInstrumentIntegrationTest : PlatformIntegrationTest() {
     }
 
     fun onLogHit(invoke: (LiveLogHit) -> Unit): MessageConsumer<*> {
-        val consumer = vertx.eventBus().consumer<Any>(toLiveInstrumentSubscriberAddress("system"))
+        val consumer = vertx.eventBus().consumer<JsonObject>(toLiveInstrumentSubscriberAddress("system"))
         return consumer.handler {
-            val event = Json.decodeValue(it.body().toString(), LiveInstrumentEvent::class.java)
+            val event = LiveInstrumentEvent(it.body())
             if (event.eventType == LiveInstrumentEventType.LOG_HIT) {
                 val logHit = LiveLogHit(JsonObject(event.data))
                 invoke.invoke(logHit)
