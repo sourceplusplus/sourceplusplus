@@ -254,7 +254,6 @@ class LiveLogTest : LiveInstrumentIntegrationTest() {
         val testContext = VertxTestContext()
         instrumentService.addLiveInstrument(
             LiveLog(
-                id = testNameAsInstrumentId,
                 location = LiveSourceLocation(
                     LiveLogTest::class.java.name,
                     getLineNumber("done"),
