@@ -18,14 +18,12 @@
 package integration
 
 import io.vertx.core.eventbus.MessageConsumer
-import io.vertx.core.json.Json
 import io.vertx.core.json.JsonObject
 import mu.KotlinLogging
 import org.joor.Reflect
 import spp.protocol.instrument.event.LiveBreakpointHit
 import spp.protocol.instrument.event.LiveInstrumentEvent
 import spp.protocol.instrument.event.LiveInstrumentEventType
-import spp.protocol.instrument.event.LiveLogHit
 import spp.protocol.service.SourceServices.Subscribe.toLiveInstrumentSubscriberAddress
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -87,20 +85,6 @@ abstract class LiveInstrumentIntegrationTest : PlatformIntegrationTest() {
                 if (hitCount.incrementAndGet() == hitLimit) {
                     consumer.unregister()
                 }
-            } else {
-                log.debug { "Ignoring event: $event" }
-            }
-        }
-    }
-
-    fun onLogHit(invoke: (LiveLogHit) -> Unit): MessageConsumer<*> {
-        val consumer = vertx.eventBus().consumer<JsonObject>(toLiveInstrumentSubscriberAddress("system"))
-        return consumer.handler {
-            val event = LiveInstrumentEvent(it.body())
-            if (event.eventType == LiveInstrumentEventType.LOG_HIT) {
-                val logHit = LiveLogHit(JsonObject(event.data))
-                invoke.invoke(logHit)
-                consumer.unregister()
             } else {
                 log.debug { "Ignoring event: $event" }
             }
