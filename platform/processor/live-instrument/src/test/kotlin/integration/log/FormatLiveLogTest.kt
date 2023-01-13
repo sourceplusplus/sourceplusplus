@@ -66,7 +66,7 @@ class FormatLiveLogTest : LiveInstrumentIntegrationTest() {
                 }
                 testContext.completeNow()
             }
-        })
+        }).await()
 
         //add live log
         assertNotNull(
