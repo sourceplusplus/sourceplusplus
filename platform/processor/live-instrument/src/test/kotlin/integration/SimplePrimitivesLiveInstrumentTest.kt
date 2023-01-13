@@ -20,15 +20,15 @@ package integration
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
 import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.location.LiveSourceLocation
+import spp.protocol.service.listen.addBreakpointHitListener
 
-@Suppress("UNUSED_VARIABLE")
 class SimplePrimitivesLiveInstrumentTest : LiveInstrumentIntegrationTest() {
 
+    @Suppress("UNUSED_VARIABLE")
     private fun simplePrimitives() {
         startEntrySpan("simplePrimitives")
         val i = 1
@@ -51,10 +51,10 @@ class SimplePrimitivesLiveInstrumentTest : LiveInstrumentIntegrationTest() {
         }
 
         val testContext = VertxTestContext()
-        onBreakpointHit { bpHit ->
+        vertx.addBreakpointHitListener(testNameAsInstrumentId) { event ->
             testContext.verify {
-                assertTrue(bpHit.stackTrace.elements.isNotEmpty())
-                val topFrame = bpHit.stackTrace.elements.first()
+                assertTrue(event.stackTrace.elements.isNotEmpty())
+                val topFrame = event.stackTrace.elements.first()
                 assertEquals(10, topFrame.variables.size)
 
                 //byte
@@ -126,7 +126,7 @@ class SimplePrimitivesLiveInstrumentTest : LiveInstrumentIntegrationTest() {
 
             //test passed
             testContext.completeNow()
-        }.completionHandler().await()
+        }.await()
 
         //add live breakpoint
         instrumentService.addLiveInstrument(
@@ -136,7 +136,8 @@ class SimplePrimitivesLiveInstrumentTest : LiveInstrumentIntegrationTest() {
                     getLineNumber("done"),
                     "spp-test-probe"
                 ),
-                applyImmediately = true
+                applyImmediately = true,
+                id = testNameAsInstrumentId
             )
         ).await()
 

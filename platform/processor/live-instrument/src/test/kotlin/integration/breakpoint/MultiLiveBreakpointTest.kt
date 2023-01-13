@@ -27,7 +27,9 @@ import org.junit.jupiter.api.Assertions.fail
 import org.junit.jupiter.api.Test
 import spp.protocol.artifact.exception.sourceAsLineNumber
 import spp.protocol.instrument.LiveBreakpoint
+import spp.protocol.instrument.event.LiveBreakpointHit
 import spp.protocol.instrument.location.LiveSourceLocation
+import spp.protocol.service.listen.addBreakpointHitListener
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
@@ -48,7 +50,7 @@ class MultiLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
         val gotAllHitsLatch = CountDownLatch(2)
         val testContext = VertxTestContext()
-        onBreakpointHit(2) { bpHit ->
+        val listener: (LiveBreakpointHit) -> Unit = { bpHit ->
             testContext.verify {
                 assertTrue(bpHit.stackTrace.elements.isNotEmpty())
                 val topFrame = bpHit.stackTrace.elements.first()
@@ -59,7 +61,9 @@ class MultiLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                     fail("Unexpected line number: ${topFrame.sourceAsLineNumber()}")
                 }
             }
-        }.completionHandler().await()
+        }
+        vertx.addBreakpointHitListener("$testNameAsInstrumentId-1", listener).await()
+        vertx.addBreakpointHitListener("$testNameAsInstrumentId-2", listener).await()
 
         //add live breakpoints
         instrumentService.addLiveInstruments(
@@ -70,7 +74,8 @@ class MultiLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                         getLineNumber("line1"),
                         "spp-test-probe"
                     ),
-                    applyImmediately = true
+                    applyImmediately = true,
+                    id = "$testNameAsInstrumentId-1"
                 ),
                 LiveBreakpoint(
                     location = LiveSourceLocation(
@@ -78,7 +83,8 @@ class MultiLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                         getLineNumber("line1"),
                         "spp-test-probe"
                     ),
-                    applyImmediately = true
+                    applyImmediately = true,
+                    id = "$testNameAsInstrumentId-2"
                 )
             )
         ).await()
@@ -103,7 +109,7 @@ class MultiLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         val gotLine1Promise = Promise.promise<Void>()
         val gotLine2Promise = Promise.promise<Void>()
         val testContext = VertxTestContext()
-        onBreakpointHit(2) { bpHit ->
+        val listener: (LiveBreakpointHit) -> Unit = { bpHit ->
             testContext.verify {
                 assertTrue(bpHit.stackTrace.elements.isNotEmpty())
                 val topFrame = bpHit.stackTrace.elements.first()
@@ -124,7 +130,9 @@ class MultiLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                     fail("Unexpected line number: ${topFrame.sourceAsLineNumber()}")
                 }
             }
-        }.completionHandler().await()
+        }
+        vertx.addBreakpointHitListener("$testNameAsInstrumentId-1", listener).await()
+        vertx.addBreakpointHitListener("$testNameAsInstrumentId-2", listener).await()
 
         //add live breakpoints
         instrumentService.addLiveInstruments(
@@ -135,7 +143,8 @@ class MultiLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                         getLineNumber("line1"),
                         "spp-test-probe"
                     ),
-                    applyImmediately = true
+                    applyImmediately = true,
+                    id = "$testNameAsInstrumentId-1"
                 ),
                 LiveBreakpoint(
                     location = LiveSourceLocation(
@@ -143,7 +152,8 @@ class MultiLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                         getLineNumber("line2"),
                         "spp-test-probe"
                     ),
-                    applyImmediately = true
+                    applyImmediately = true,
+                    id = "$testNameAsInstrumentId-2"
                 )
             )
         ).await()

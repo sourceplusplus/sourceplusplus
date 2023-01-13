@@ -58,9 +58,6 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
             triggerGauge()
         }
 
-        val meterId = "test-gauge"
-        log.info("Using meter id: {}", meterId)
-
         val supplier = object : Supplier<Double>, Serializable {
             override fun get(): Double = System.currentTimeMillis().toDouble()
         }
@@ -77,7 +74,7 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
                 getLineNumber("done"),
                 "spp-test-probe"
             ),
-            id = meterId,
+            id = testNameAsInstrumentId,
             applyImmediately = true,
             hitLimit = 1
         )
@@ -142,7 +139,7 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
 
         //clean up
         consumer.unregister()
-        assertNotNull(instrumentService.removeLiveInstrument(meterId).await())
+        assertNotNull(instrumentService.removeLiveInstrument(testNameAsInstrumentId).await())
         assertNotNull(viewService.removeLiveView(subscriptionId).await())
     }
 
@@ -152,9 +149,6 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
             triggerGauge()
         }
 
-        val meterId = "value-expression-gauge"
-        log.info("Using meter id: {}", meterId)
-
         val liveMeter = LiveMeter(
             MeterType.GAUGE,
             MetricValue(MetricValueType.VALUE_EXPRESSION, "localVariables[str]"),
@@ -163,7 +157,7 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
                 getLineNumber("done"),
                 "spp-test-probe"
             ),
-            id = meterId,
+            id = testNameAsInstrumentId,
             applyImmediately = true,
             hitLimit = 1
         )
@@ -223,7 +217,7 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
 
         //clean up
         consumer.unregister()
-        assertNotNull(instrumentService.removeLiveInstrument(meterId).await())
+        assertNotNull(instrumentService.removeLiveInstrument(testNameAsInstrumentId).await())
         assertNotNull(viewService.removeLiveView(subscriptionId).await())
     }
 }

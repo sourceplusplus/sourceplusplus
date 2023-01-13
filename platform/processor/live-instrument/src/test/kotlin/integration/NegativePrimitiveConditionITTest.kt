@@ -24,6 +24,7 @@ import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
 import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.location.LiveSourceLocation
+import spp.protocol.service.listen.addBreakpointHitListener
 
 @Suppress("UNUSED_VARIABLE", "unused")
 class NegativePrimitiveConditionITTest : LiveInstrumentIntegrationTest() {
@@ -60,7 +61,7 @@ class NegativePrimitiveConditionITTest : LiveInstrumentIntegrationTest() {
         }
 
         val testContext = VertxTestContext()
-        onBreakpointHit {
+        vertx.addBreakpointHitListener(testNameAsInstrumentId) {
             testContext.completeNow()
         }
 
@@ -93,7 +94,7 @@ class NegativePrimitiveConditionITTest : LiveInstrumentIntegrationTest() {
         }
 
         val testContext = VertxTestContext()
-        onBreakpointHit {
+        vertx.addBreakpointHitListener(testNameAsInstrumentId) {
             testContext.completeNow()
         }
 
@@ -126,7 +127,7 @@ class NegativePrimitiveConditionITTest : LiveInstrumentIntegrationTest() {
         }
 
         val testContext = VertxTestContext()
-        onBreakpointHit {
+        vertx.addBreakpointHitListener(testNameAsInstrumentId) {
             testContext.completeNow()
         }
 

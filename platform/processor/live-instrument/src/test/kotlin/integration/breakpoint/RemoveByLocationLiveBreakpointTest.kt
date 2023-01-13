@@ -25,13 +25,15 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.LiveInstrumentType
+import spp.protocol.instrument.event.LiveBreakpointHit
 import spp.protocol.instrument.location.LiveSourceLocation
+import spp.protocol.service.listen.addBreakpointHitListener
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
-@Suppress("UNUSED_VARIABLE")
 class RemoveByLocationLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
+    @Suppress("UNUSED_VARIABLE")
     private fun removeMultipleByLine() {
         startEntrySpan("removeMultipleByLine")
         val line1Var = 1
@@ -49,7 +51,7 @@ class RemoveByLocationLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
         val gotAllHitsLatch = CountDownLatch(2)
         val testContext = VertxTestContext()
-        onBreakpointHit(2) { bpHit ->
+        val listener: (LiveBreakpointHit) -> Unit = { bpHit ->
             testContext.verify {
                 assertTrue(bpHit.stackTrace.elements.isNotEmpty())
                 val topFrame = bpHit.stackTrace.elements.first()
@@ -61,28 +63,32 @@ class RemoveByLocationLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                     gotAllHitsLatch.countDown()
                 }
             }
-        }.completionHandler().await()
+        }
+        vertx.addBreakpointHitListener("$testNameAsInstrumentId-1", listener).await()
+        vertx.addBreakpointHitListener("$testNameAsInstrumentId-2", listener).await()
 
         //add live breakpoint
         instrumentService.addLiveInstruments(
             listOf(
                 LiveBreakpoint(
                     location = LiveSourceLocation(
-                        RemoveByLocationLiveBreakpointTest::class.qualifiedName!!,
+                        RemoveByLocationLiveBreakpointTest::class.java.name,
                         getLineNumber("line1"),
-                        //"spp-test-probe"
+                        //"spp-test-probe" //todo: should be able to use with remove by location
                     ),
                     hitLimit = 2,
-                    //applyImmediately = true
+                    //applyImmediately = true,
+                    id = "$testNameAsInstrumentId-1"
                 ),
                 LiveBreakpoint(
                     location = LiveSourceLocation(
-                        RemoveByLocationLiveBreakpointTest::class.qualifiedName!!,
+                        RemoveByLocationLiveBreakpointTest::class.java.name,
                         getLineNumber("line2"),
-                        //"spp-test-probe"
+                        //"spp-test-probe" //todo: should be able to use with remove by location
                     ),
                     hitLimit = 2,
-                    //applyImmediately = true
+                    //applyImmediately = true,
+                    id = "$testNameAsInstrumentId-2"
                 )
             )
         ).await()
@@ -102,8 +108,9 @@ class RemoveByLocationLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         //remove line1 breakpoint by line number
         val removedInstruments = instrumentService.removeLiveInstruments(
             LiveSourceLocation(
-                RemoveByLocationLiveBreakpointTest::class.qualifiedName!!,
+                RemoveByLocationLiveBreakpointTest::class.java.name,
                 getLineNumber("line1"),
+                //"spp-test-probe" //todo: doesn't work even if above uses
             )
         ).await()
         testContext.verify {
@@ -113,7 +120,7 @@ class RemoveByLocationLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
         //ensure line1 is removed and line2 is still there
         val remainingInstruments = instrumentService.getLiveInstrumentsByLocation(
-            LiveSourceLocation(RemoveByLocationLiveBreakpointTest::class.qualifiedName!!)
+            LiveSourceLocation(RemoveByLocationLiveBreakpointTest::class.java.name)
         ).await()
         testContext.verify {
             assertEquals(1, remainingInstruments.size)

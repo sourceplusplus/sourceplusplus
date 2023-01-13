@@ -23,7 +23,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
-import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
 import spp.protocol.instrument.LiveBreakpoint
@@ -59,7 +58,8 @@ class HitLimitLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                 ),
                 hitLimit = 11,
                 throttle = InstrumentThrottle(100, ThrottleStep.SECOND),
-                applyImmediately = true
+                applyImmediately = true,
+                id = testNameAsInstrumentId
             )
         ).await()
 
@@ -74,9 +74,8 @@ class HitLimitLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         }
 
         //verify still exists
-        val liveInstruments = instrumentService.getLiveInstruments().await()
-        assertEquals(1, liveInstruments.size)
-        assert(liveInstruments.first().hitLimit == 11)
+        val liveInstrument = instrumentService.getLiveInstrumentById(testNameAsInstrumentId).await()
+        assert(liveInstrument!!.hitLimit == 11)
         //todo: verify hit count
 
         //trigger once more
@@ -84,7 +83,6 @@ class HitLimitLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         delay(5000)
 
         //verify removed
-        val liveInstrument = instrumentService.getLiveInstruments().await().firstOrNull()
-        assertNull(liveInstrument)
+        assertNull(instrumentService.getLiveInstrumentById(testNameAsInstrumentId).await())
     }
 }

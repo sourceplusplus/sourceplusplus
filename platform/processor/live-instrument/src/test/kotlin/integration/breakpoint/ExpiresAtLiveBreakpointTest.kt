@@ -21,7 +21,8 @@ import integration.LiveInstrumentIntegrationTest
 import io.vertx.kotlin.coroutines.await
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
 import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.location.LiveSourceLocation
@@ -32,28 +33,26 @@ class ExpiresAtLiveBreakpointTest : LiveInstrumentIntegrationTest() {
     @Test
     fun `expires at breakpoint`() = runBlocking {
         //add live breakpoint
-        instrumentService.addLiveInstruments(
-            listOf(
-                LiveBreakpoint(
-                    location = LiveSourceLocation(
-                        "non-existent-class",
-                        0,
-                    ),
-                    expiresAt = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(10)
+        instrumentService.addLiveInstrument(
+            LiveBreakpoint(
+                location = LiveSourceLocation(
+                    "non-existent-class",
+                    0,
                 ),
+                expiresAt = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(10),
+                id = testNameAsInstrumentId
             )
         ).await()
 
         //verify live breakpoint
-        val breakpoint = instrumentService.getLiveInstruments().await()
-        assertEquals(1, breakpoint.size) { breakpoint.joinToString { it.toString() } }
-        assertEquals("non-existent-class", breakpoint[0].location.source)
+        val breakpoint = instrumentService.getLiveInstrumentById(testNameAsInstrumentId).await()
+        assertNotNull(breakpoint)
 
         //wait 15 seconds
         delay(TimeUnit.SECONDS.toMillis(15))
 
         //verify no live breakpoint
-        val noBreakpoint = instrumentService.getLiveInstruments().await()
-        assertEquals(0, noBreakpoint.size)
+        val noBreakpoint = instrumentService.getLiveInstrumentById(testNameAsInstrumentId).await()
+        assertNull(noBreakpoint)
     }
 }

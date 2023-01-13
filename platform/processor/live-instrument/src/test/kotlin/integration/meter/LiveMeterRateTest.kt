@@ -61,9 +61,6 @@ class LiveMeterRateTest : LiveInstrumentIntegrationTest() {
             triggerRate()
         }
 
-        val meterId = "test-60-calls-per-minute-rate"
-        log.info("Using meter id: {}", meterId)
-
         val liveMeter = LiveMeter(
             MeterType.COUNT,
             MetricValue(MetricValueType.NUMBER, "1"),
@@ -72,7 +69,7 @@ class LiveMeterRateTest : LiveInstrumentIntegrationTest() {
                 getLineNumber("done"),
                 "spp-test-probe"
             ),
-            id = meterId,
+            id = testNameAsInstrumentId,
             meta = mapOf("metric.mode" to "RATE"),
             applyImmediately = true
         )
@@ -147,7 +144,7 @@ class LiveMeterRateTest : LiveInstrumentIntegrationTest() {
 
         //clean up
         consumer.unregister()
-        assertNotNull(instrumentService.removeLiveInstrument(meterId).await())
+        assertNotNull(instrumentService.removeLiveInstrument(testNameAsInstrumentId).await())
         assertNotNull(viewService.removeLiveView(subscriptionId).await())
 
         assertTrue(rate >= 50, rate.toString()) //allow for some variance (GH actions are sporadic)

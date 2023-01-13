@@ -18,11 +18,9 @@
 package integration.log
 
 import integration.LiveInstrumentIntegrationTest
-import io.vertx.core.json.Json
 import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -61,7 +59,6 @@ class LiveLogTest : LiveInstrumentIntegrationTest() {
         var gotApplied = false
         var gotHit = false
         var gotRemoved = false
-        val instrumentId = "live-log-test-add-hit-remove"
 
         val consumer = vertx.eventBus().consumer<JsonObject>(toLiveInstrumentSubscriberAddress("system"))
         consumer.handler {
@@ -71,7 +68,7 @@ class LiveLogTest : LiveInstrumentIntegrationTest() {
                 LiveInstrumentEventType.LOG_ADDED -> {
                     log.info("Got added")
                     testContext.verify {
-                        assertEquals(instrumentId, JsonObject(liveEvent.data).getString("id"))
+                        assertEquals(testNameAsInstrumentId, JsonObject(liveEvent.data).getString("id"))
                     }
                     gotAdded = true
                 }
@@ -79,7 +76,7 @@ class LiveLogTest : LiveInstrumentIntegrationTest() {
                 LiveInstrumentEventType.LOG_APPLIED -> {
                     log.info("Got applied")
                     testContext.verify {
-                        assertEquals(instrumentId, JsonObject(liveEvent.data).getString("id"))
+                        assertEquals(testNameAsInstrumentId, JsonObject(liveEvent.data).getString("id"))
                     }
                     gotApplied = true
                 }
@@ -87,7 +84,7 @@ class LiveLogTest : LiveInstrumentIntegrationTest() {
                 LiveInstrumentEventType.LOG_HIT -> {
                     log.info("Got hit")
                     testContext.verify {
-                        assertEquals(instrumentId, JsonObject(liveEvent.data).getString("logId"))
+                        assertEquals(testNameAsInstrumentId, JsonObject(liveEvent.data).getString("logId"))
                     }
                     gotHit = true
                 }
@@ -96,7 +93,7 @@ class LiveLogTest : LiveInstrumentIntegrationTest() {
                     log.info("Got removed")
                     testContext.verify {
                         val remEvent = LiveInstrumentRemoved(JsonObject(liveEvent.data))
-                        assertEquals(instrumentId, remEvent.liveInstrument.id)
+                        assertEquals(testNameAsInstrumentId, remEvent.liveInstrument.id)
                     }
                     gotRemoved = true
                 }
@@ -117,7 +114,7 @@ class LiveLogTest : LiveInstrumentIntegrationTest() {
 
         instrumentService.addLiveInstrument(
             LiveLog(
-                id = instrumentId,
+                id = testNameAsInstrumentId,
                 location = LiveSourceLocation(
                     LiveLogTest::class.qualifiedName!!,
                     getLineNumber("done"),
@@ -128,7 +125,6 @@ class LiveLogTest : LiveInstrumentIntegrationTest() {
             )
         ).await()
 
-        delay(2000)
         doTest()
 
         errorOnTimeout(testContext)
@@ -139,19 +135,18 @@ class LiveLogTest : LiveInstrumentIntegrationTest() {
     @Test
     fun removeById(): Unit = runBlocking {
         val testContext = VertxTestContext()
-        val instrumentId = "live-log-test-remove-by-id"
 
         val consumer = vertx.addLiveInstrumentListener("system", object : LiveInstrumentListener {
             override fun onLogAddedEvent(event: LiveLog) {
                 log.info("Got added event: {}", event)
                 testContext.verify {
-                    assertEquals(instrumentId, event.id)
+                    assertEquals(testNameAsInstrumentId, event.id)
                 }
 
-                instrumentService.removeLiveInstrument(instrumentId).onComplete {
+                instrumentService.removeLiveInstrument(testNameAsInstrumentId).onComplete {
                     if (it.succeeded()) {
                         testContext.verify {
-                            assertEquals(instrumentId, it.result()!!.id!!)
+                            assertEquals(testNameAsInstrumentId, it.result()!!.id!!)
                         }
                     } else {
                         testContext.failNow(it.cause())
@@ -162,7 +157,7 @@ class LiveLogTest : LiveInstrumentIntegrationTest() {
             override fun onInstrumentRemovedEvent(event: LiveInstrumentRemoved) {
                 log.info("Got removed event: {}", event)
                 testContext.verify {
-                    assertEquals(instrumentId, event.liveInstrument.id!!)
+                    assertEquals(testNameAsInstrumentId, event.liveInstrument.id!!)
                 }
                 testContext.completeNow()
             }
@@ -170,7 +165,7 @@ class LiveLogTest : LiveInstrumentIntegrationTest() {
 
         val instrument = instrumentService.addLiveInstrument(
             LiveLog(
-                id = instrumentId,
+                id = testNameAsInstrumentId,
                 location = LiveSourceLocation(
                     "FakeClass",
                     4,
@@ -180,7 +175,7 @@ class LiveLogTest : LiveInstrumentIntegrationTest() {
                 logFormat = "removeById"
             )
         ).await()
-        assertEquals(instrumentId, instrument.id!!)
+        assertEquals(testNameAsInstrumentId, instrument.id!!)
         log.info("Added instrument: {}", instrument)
 
         errorOnTimeout(testContext)
@@ -190,22 +185,21 @@ class LiveLogTest : LiveInstrumentIntegrationTest() {
 
     @Test
     fun removeByLocation(): Unit = runBlocking {
-        val instrument = instrumentService.addLiveInstrument(
+        instrumentService.addLiveInstrument(
             LiveLog(
-                id = "live-log-test-remove-by-location",
+                id = testNameAsInstrumentId,
                 location = LiveSourceLocation("bad.Clazz", 133),
                 condition = "1==2",
                 logFormat = "removeByLocation"
             )
         ).await()
 
-        val originalId = instrument.id!!
         val removedInstruments = instrumentService.removeLiveInstruments(
             location = LiveSourceLocation("bad.Clazz", 133),
         ).await()
 
         assertEquals(1, removedInstruments.size)
-        assertEquals(originalId, removedInstruments[0].id!!)
+        assertEquals(testNameAsInstrumentId, removedInstruments[0].id!!)
     }
 
     @Test
@@ -218,7 +212,7 @@ class LiveLogTest : LiveInstrumentIntegrationTest() {
         instrumentService.addLiveInstruments(
             listOf(
                 LiveLog(
-                    id = "live-log-test-remove-multiple-by-location-1",
+                    id = "$testNameAsInstrumentId-1",
                     location = LiveSourceLocation(
                         LiveLogTest::class.qualifiedName!!,
                         getLineNumber("done"),
@@ -228,9 +222,9 @@ class LiveLogTest : LiveInstrumentIntegrationTest() {
                     logFormat = "removeMultipleByLocation"
                 ),
                 LiveLog(
-                    id = "live-log-test-remove-multiple-by-location-2",
+                    id = "$testNameAsInstrumentId-2",
                     location = LiveSourceLocation(
-                        LiveLogTest::class.qualifiedName!!,
+                        LiveLogTest::class.java.name,
                         getLineNumber("done"),
                         "spp-test-probe"
                     ),
@@ -243,7 +237,7 @@ class LiveLogTest : LiveInstrumentIntegrationTest() {
                 testContext.verify { assertEquals(2, it.result().size) }
                 instrumentService.removeLiveInstruments(
                     location = LiveSourceLocation(
-                        LiveLogTest::class.qualifiedName!!,
+                        LiveLogTest::class.java.name,
                         getLineNumber("done"),
                         "spp-test-probe"
                     )
@@ -274,9 +268,9 @@ class LiveLogTest : LiveInstrumentIntegrationTest() {
         val testContext = VertxTestContext()
         instrumentService.addLiveInstrument(
             LiveLog(
-                id = "live-log-test-invalid-condition",
+                id = testNameAsInstrumentId,
                 location = LiveSourceLocation(
-                    LiveLogTest::class.qualifiedName!!,
+                    LiveLogTest::class.java.name,
                     getLineNumber("done"),
                     "spp-test-probe"
                 ),
@@ -307,13 +301,12 @@ class LiveLogTest : LiveInstrumentIntegrationTest() {
     @RepeatedTest(2) //ensures can try again (in case things have changed on probe side)
     fun applyImmediatelyWithInvalidClass(): Unit = runBlocking {
         val testContext = VertxTestContext()
-        val instrumentId = "live-log-test-invalid-class"
 
         //todo: don't care about added event. can remove directly after add but need #537
         val consumer = vertx.addLiveInstrumentListener("system", object : LiveInstrumentListener {
             override fun onLogAddedEvent(event: LiveLog) {
                 testContext.verify {
-                    assertEquals(instrumentId, event.id)
+                    assertEquals(testNameAsInstrumentId, event.id)
                 }
 
                 testContext.completeNow()
@@ -322,7 +315,7 @@ class LiveLogTest : LiveInstrumentIntegrationTest() {
 
         instrumentService.addLiveInstrument(
             LiveLog(
-                id = instrumentId,
+                id = testNameAsInstrumentId,
                 location = LiveSourceLocation("bad.Clazz", 48),
                 logFormat = "applyImmediatelyWithInvalidClass",
                 applyImmediately = true

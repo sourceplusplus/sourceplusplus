@@ -20,7 +20,6 @@ package integration.breakpoint
 import integration.LiveInstrumentIntegrationTest
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.RepeatedTest
@@ -70,94 +69,95 @@ class LiveBreakpointTest : LiveInstrumentIntegrationTest() {
         var gotApplied = false
         var gotHit = false
         var gotRemoved = false
-        val instrumentId = "live-breakpoint-test-verify-live-variables"
 
-        val instrumentListener = vertx.addLiveInstrumentListener("system", object : LiveInstrumentListener {
-            override fun onInstrumentEvent(event: LiveInstrumentEvent) {
-                log.info("Got instrument event: {}", event)
-            }
-
-            override fun onBreakpointAddedEvent(event: LiveBreakpoint) {
-                log.info("Got added")
-                testContext.verify {
-                    assertEquals(instrumentId, event.id)
+        val instrumentListener = vertx.addLiveInstrumentListener(
+            testNameAsInstrumentId,
+            object : LiveInstrumentListener {
+                override fun onInstrumentEvent(event: LiveInstrumentEvent) {
+                    log.info("Got instrument event: {}", event)
                 }
-                gotAdded = true
-            }
 
-            override fun onInstrumentAppliedEvent(event: LiveInstrument) {
-                log.info("Got applied")
-                testContext.verify {
-                    assertEquals(instrumentId, event.id)
+                override fun onBreakpointAddedEvent(event: LiveBreakpoint) {
+                    log.info("Got added")
+                    testContext.verify {
+                        assertEquals(testNameAsInstrumentId, event.id)
+                    }
+                    gotAdded = true
                 }
-                gotApplied = true
-            }
 
-            override fun onInstrumentRemovedEvent(event: LiveInstrumentRemoved) {
-                log.info("Got removed")
-                testContext.verify {
-                    assertEquals(instrumentId, event.liveInstrument.id)
+                override fun onInstrumentAppliedEvent(event: LiveInstrument) {
+                    log.info("Got applied")
+                    testContext.verify {
+                        assertEquals(testNameAsInstrumentId, event.id)
+                    }
+                    gotApplied = true
                 }
-                gotRemoved = true
-            }
 
-            override fun onBreakpointHitEvent(event: LiveBreakpointHit) {
-                log.info("Got hit")
-                testContext.verify {
-                    assertEquals(instrumentId, event.breakpointId)
-                    assertTrue(event.stackTrace.elements.isNotEmpty())
-                    val topFrame = event.stackTrace.elements.first()
-                    assertEquals(10, topFrame.variables.size)
-
-                    //byte
-                    assertEquals(-2, topFrame.variables.find { it.name == "b" }!!.value)
-                    assertEquals("java.lang.Byte", topFrame.variables.find { it.name == "b" }!!.liveClazz)
-
-                    //char
-                    assertEquals("h", topFrame.variables.find { it.name == "c" }!!.value)
-                    assertEquals("java.lang.Character", topFrame.variables.find { it.name == "c" }!!.liveClazz)
-
-                    //string
-                    assertEquals("hi", topFrame.variables.find { it.name == "s" }!!.value)
-                    assertEquals("java.lang.String", topFrame.variables.find { it.name == "s" }!!.liveClazz)
-
-                    //double
-                    assertEquals(0.23, topFrame.variables.find { it.name == "d" }!!.value)
-                    assertEquals("java.lang.Double", topFrame.variables.find { it.name == "d" }!!.liveClazz)
-
-                    //bool
-                    assertEquals(true, topFrame.variables.find { it.name == "bool" }!!.value)
-                    assertEquals("java.lang.Boolean", topFrame.variables.find { it.name == "bool" }!!.liveClazz)
-
-                    //long
-                    assertEquals(Long.MAX_VALUE, topFrame.variables.find { it.name == "max" }!!.value)
-                    assertEquals("java.lang.Long", topFrame.variables.find { it.name == "max" }!!.liveClazz)
-
-                    //short
-                    assertEquals(Short.MIN_VALUE.toInt(), topFrame.variables.find { it.name == "sh" }!!.value)
-                    assertEquals("java.lang.Short", topFrame.variables.find { it.name == "sh" }!!.liveClazz)
-
-                    //float
-                    assertEquals(1.0, topFrame.variables.find { it.name == "f" }!!.value)
-                    assertEquals("java.lang.Float", topFrame.variables.find { it.name == "f" }!!.liveClazz)
-
-                    //integer
-                    assertEquals(1, topFrame.variables.find { it.name == "i" }!!.value)
-                    assertEquals("java.lang.Integer", topFrame.variables.find { it.name == "i" }!!.liveClazz)
+                override fun onInstrumentRemovedEvent(event: LiveInstrumentRemoved) {
+                    log.info("Got removed")
+                    testContext.verify {
+                        assertEquals(testNameAsInstrumentId, event.liveInstrument.id)
+                    }
+                    gotRemoved = true
                 }
-                gotHit = true
-            }
 
-            override fun afterInstrumentEvent(event: LiveInstrumentEvent) {
-                if (gotAdded && gotHit && gotRemoved) {
-                    testContext.completeNow()
+                override fun onBreakpointHitEvent(event: LiveBreakpointHit) {
+                    log.info("Got hit")
+                    testContext.verify {
+                        assertEquals(testNameAsInstrumentId, event.breakpointId)
+                        assertTrue(event.stackTrace.elements.isNotEmpty())
+                        val topFrame = event.stackTrace.elements.first()
+                        assertEquals(10, topFrame.variables.size)
+
+                        //byte
+                        assertEquals(-2, topFrame.variables.find { it.name == "b" }!!.value)
+                        assertEquals("java.lang.Byte", topFrame.variables.find { it.name == "b" }!!.liveClazz)
+
+                        //char
+                        assertEquals("h", topFrame.variables.find { it.name == "c" }!!.value)
+                        assertEquals("java.lang.Character", topFrame.variables.find { it.name == "c" }!!.liveClazz)
+
+                        //string
+                        assertEquals("hi", topFrame.variables.find { it.name == "s" }!!.value)
+                        assertEquals("java.lang.String", topFrame.variables.find { it.name == "s" }!!.liveClazz)
+
+                        //double
+                        assertEquals(0.23, topFrame.variables.find { it.name == "d" }!!.value)
+                        assertEquals("java.lang.Double", topFrame.variables.find { it.name == "d" }!!.liveClazz)
+
+                        //bool
+                        assertEquals(true, topFrame.variables.find { it.name == "bool" }!!.value)
+                        assertEquals("java.lang.Boolean", topFrame.variables.find { it.name == "bool" }!!.liveClazz)
+
+                        //long
+                        assertEquals(Long.MAX_VALUE, topFrame.variables.find { it.name == "max" }!!.value)
+                        assertEquals("java.lang.Long", topFrame.variables.find { it.name == "max" }!!.liveClazz)
+
+                        //short
+                        assertEquals(Short.MIN_VALUE.toInt(), topFrame.variables.find { it.name == "sh" }!!.value)
+                        assertEquals("java.lang.Short", topFrame.variables.find { it.name == "sh" }!!.liveClazz)
+
+                        //float
+                        assertEquals(1.0, topFrame.variables.find { it.name == "f" }!!.value)
+                        assertEquals("java.lang.Float", topFrame.variables.find { it.name == "f" }!!.liveClazz)
+
+                        //integer
+                        assertEquals(1, topFrame.variables.find { it.name == "i" }!!.value)
+                        assertEquals("java.lang.Integer", topFrame.variables.find { it.name == "i" }!!.liveClazz)
+                    }
+                    gotHit = true
                 }
-            }
-        }).await()
+
+                override fun afterInstrumentEvent(event: LiveInstrumentEvent) {
+                    if (gotAdded && gotHit && gotRemoved) {
+                        testContext.completeNow()
+                    }
+                }
+            }).await()
 
         instrumentService.addLiveInstrument(
             LiveBreakpoint(
-                id = instrumentId,
+                id = testNameAsInstrumentId,
                 location = LiveSourceLocation(
                     LiveBreakpointTest::class.qualifiedName!!,
                     getLineNumber("done"),
@@ -167,7 +167,6 @@ class LiveBreakpointTest : LiveInstrumentIntegrationTest() {
             )
         ).await()
 
-        delay(2000)
         doTest()
 
         if (testContext.awaitCompletion(60, TimeUnit.SECONDS)) {
@@ -201,55 +200,56 @@ class LiveBreakpointTest : LiveInstrumentIntegrationTest() {
         var gotApplied = false
         var gotHit = false
         var gotRemoved = false
-        val instrumentId = "live-breakpoint-test-add-hit-remove"
 
-        val instrumentListener = vertx.addLiveInstrumentListener("system", object : LiveInstrumentListener {
-            override fun onInstrumentEvent(event: LiveInstrumentEvent) {
-                log.info("Got instrument event: {}", event)
-            }
-
-            override fun onBreakpointAddedEvent(event: LiveBreakpoint) {
-                log.info("Got added")
-                testContext.verify {
-                    assertEquals(instrumentId, event.id)
+        val instrumentListener = vertx.addLiveInstrumentListener(
+            testNameAsInstrumentId,
+            object : LiveInstrumentListener {
+                override fun onInstrumentEvent(event: LiveInstrumentEvent) {
+                    log.info("Got instrument event: {}", event)
                 }
-                gotAdded = true
-            }
 
-            override fun onInstrumentAppliedEvent(event: LiveInstrument) {
-                log.info("Got applied")
-                testContext.verify {
-                    assertEquals(instrumentId, event.id)
+                override fun onBreakpointAddedEvent(event: LiveBreakpoint) {
+                    log.info("Got added")
+                    testContext.verify {
+                        assertEquals(testNameAsInstrumentId, event.id)
+                    }
+                    gotAdded = true
                 }
-                gotApplied = true
-            }
 
-            override fun onBreakpointHitEvent(event: LiveBreakpointHit) {
-                log.info("Got hit")
-                testContext.verify {
-                    assertEquals(instrumentId, event.breakpointId)
+                override fun onInstrumentAppliedEvent(event: LiveInstrument) {
+                    log.info("Got applied")
+                    testContext.verify {
+                        assertEquals(testNameAsInstrumentId, event.id)
+                    }
+                    gotApplied = true
                 }
-                gotHit = true
-            }
 
-            override fun onInstrumentRemovedEvent(event: LiveInstrumentRemoved) {
-                log.info("Got removed")
-                testContext.verify {
-                    assertEquals(instrumentId, event.liveInstrument.id)
+                override fun onBreakpointHitEvent(event: LiveBreakpointHit) {
+                    log.info("Got hit")
+                    testContext.verify {
+                        assertEquals(testNameAsInstrumentId, event.breakpointId)
+                    }
+                    gotHit = true
                 }
-                gotRemoved = true
-            }
 
-            override fun afterInstrumentEvent(event: LiveInstrumentEvent) {
-                if (gotAdded && gotHit && gotRemoved) {
-                    testContext.completeNow()
+                override fun onInstrumentRemovedEvent(event: LiveInstrumentRemoved) {
+                    log.info("Got removed")
+                    testContext.verify {
+                        assertEquals(testNameAsInstrumentId, event.liveInstrument.id)
+                    }
+                    gotRemoved = true
                 }
-            }
-        }).await()
+
+                override fun afterInstrumentEvent(event: LiveInstrumentEvent) {
+                    if (gotAdded && gotHit && gotRemoved) {
+                        testContext.completeNow()
+                    }
+                }
+            }).await()
 
         instrumentService.addLiveInstrument(
             LiveBreakpoint(
-                id = instrumentId,
+                id = testNameAsInstrumentId,
                 location = LiveSourceLocation(
                     LiveBreakpointTest::class.qualifiedName!!,
                     getLineNumber("done"),
@@ -260,7 +260,6 @@ class LiveBreakpointTest : LiveInstrumentIntegrationTest() {
             )
         ).await()
 
-        delay(2000)
         doTest()
 
         if (testContext.awaitCompletion(60, TimeUnit.SECONDS)) {
@@ -288,7 +287,7 @@ class LiveBreakpointTest : LiveInstrumentIntegrationTest() {
         val testContext = VertxTestContext()
         instrumentService.addLiveInstrument(
             LiveBreakpoint(
-                id = "live-breakpoint-test-remove-by-id",
+                id = testNameAsInstrumentId,
                 location = LiveSourceLocation("spp.example.webapp.model.User", 42),
                 condition = "1==2"
             )
@@ -318,7 +317,7 @@ class LiveBreakpointTest : LiveInstrumentIntegrationTest() {
         val testContext = VertxTestContext()
         instrumentService.addLiveInstrument(
             LiveBreakpoint(
-                id = "live-breakpoint-test-remove-by-location",
+                id = testNameAsInstrumentId,
                 location = LiveSourceLocation("spp.example.webapp.model.User", 42),
                 condition = "1==2"
             )
@@ -374,12 +373,12 @@ class LiveBreakpointTest : LiveInstrumentIntegrationTest() {
         instrumentService.addLiveInstruments(
             listOf(
                 LiveBreakpoint(
-                    id = "live-breakpoint-test-remove-multiple-by-location-1",
+                    id = "$testNameAsInstrumentId-1",
                     location = LiveSourceLocation("spp.example.webapp.model.User", 42),
                     condition = "1==2"
                 ),
                 LiveBreakpoint(
-                    id = "live-breakpoint-test-remove-multiple-by-location-2",
+                    id = "$testNameAsInstrumentId-2",
                     location = LiveSourceLocation("spp.example.webapp.model.User", 42),
                     condition = "1==3"
                 )
@@ -400,7 +399,7 @@ class LiveBreakpointTest : LiveInstrumentIntegrationTest() {
         val testContext = VertxTestContext()
         instrumentService.addLiveInstrument(
             LiveBreakpoint(
-                id = "live-breakpoint-test-invalid-condition",
+                id = testNameAsInstrumentId,
                 location = LiveSourceLocation("spp.example.webapp.model.User", 42),
                 condition = "1===2",
                 applyImmediately = true
@@ -430,7 +429,7 @@ class LiveBreakpointTest : LiveInstrumentIntegrationTest() {
         val testContext = VertxTestContext()
         instrumentService.addLiveInstrument(
             LiveBreakpoint(
-                id = "live-breakpoint-test-invalid-class",
+                id = testNameAsInstrumentId,
                 location = LiveSourceLocation("bad.Clazz", 48),
                 applyImmediately = true
             )

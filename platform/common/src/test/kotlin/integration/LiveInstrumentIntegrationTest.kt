@@ -17,21 +17,9 @@
  */
 package integration
 
-import io.vertx.core.eventbus.MessageConsumer
-import io.vertx.core.json.JsonObject
-import mu.KotlinLogging
 import org.joor.Reflect
-import spp.protocol.instrument.event.LiveBreakpointHit
-import spp.protocol.instrument.event.LiveInstrumentEvent
-import spp.protocol.instrument.event.LiveInstrumentEventType
-import spp.protocol.service.SourceServices.Subscribe.toLiveInstrumentSubscriberAddress
-import java.util.concurrent.atomic.AtomicInteger
 
 abstract class LiveInstrumentIntegrationTest : PlatformIntegrationTest() {
-
-    companion object {
-        private val log = KotlinLogging.logger {}
-    }
 
     private val lineLabels = mutableMapOf<String, Int>()
     private var setupLineLabels = false
@@ -71,23 +59,5 @@ abstract class LiveInstrumentIntegrationTest : PlatformIntegrationTest() {
         Reflect.onClass(
             "org.apache.skywalking.apm.agent.core.context.ContextManager"
         ).call("createEntrySpan", name, contextCarrier)
-    }
-
-    fun onBreakpointHit(hitLimit: Int = 1, invoke: (LiveBreakpointHit) -> Unit): MessageConsumer<*> {
-        val hitCount = AtomicInteger(0)
-        val consumer = vertx.eventBus().consumer<JsonObject>(toLiveInstrumentSubscriberAddress("system"))
-        return consumer.handler {
-            val event = LiveInstrumentEvent(it.body())
-            if (event.eventType == LiveInstrumentEventType.BREAKPOINT_HIT) {
-                val bpHit = LiveBreakpointHit(JsonObject(event.data))
-                invoke.invoke(bpHit)
-
-                if (hitCount.incrementAndGet() == hitLimit) {
-                    consumer.unregister()
-                }
-            } else {
-                log.debug { "Ignoring event: $event" }
-            }
-        }
     }
 }

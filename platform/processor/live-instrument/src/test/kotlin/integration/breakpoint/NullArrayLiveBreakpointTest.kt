@@ -27,6 +27,7 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.location.LiveSourceLocation
+import spp.protocol.service.listen.addBreakpointHitListener
 
 @Suppress("UNUSED_VARIABLE")
 class NullArrayLiveBreakpointTest : LiveInstrumentIntegrationTest() {
@@ -45,7 +46,7 @@ class NullArrayLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         }
 
         val testContext = VertxTestContext()
-        onBreakpointHit { bpHit ->
+        vertx.addBreakpointHitListener(testNameAsInstrumentId) { bpHit ->
             testContext.verify {
                 assertTrue(bpHit.stackTrace.elements.isNotEmpty())
                 val topFrame = bpHit.stackTrace.elements.first()
@@ -67,7 +68,7 @@ class NullArrayLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
             //test passed
             testContext.completeNow()
-        }.completionHandler().await()
+        }.await()
 
         //add live breakpoint
         instrumentService.addLiveInstrument(
@@ -77,7 +78,8 @@ class NullArrayLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                     getLineNumber("done"),
                     "spp-test-probe"
                 ),
-                applyImmediately = true
+                applyImmediately = true,
+                id = testNameAsInstrumentId
             )
         ).await()
 

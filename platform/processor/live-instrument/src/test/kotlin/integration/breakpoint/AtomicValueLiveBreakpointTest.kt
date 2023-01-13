@@ -28,6 +28,7 @@ import org.junit.jupiter.api.Test
 import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.location.LiveSourceLocation
 import spp.protocol.instrument.variable.LiveVariable
+import spp.protocol.service.listen.addBreakpointHitListener
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
 
@@ -50,7 +51,7 @@ class AtomicValueLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         }
 
         val testContext = VertxTestContext()
-        onBreakpointHit { bpHit ->
+        vertx.addBreakpointHitListener(testNameAsInstrumentId) { bpHit ->
             testContext.verify {
                 assertTrue(bpHit.stackTrace.elements.isNotEmpty())
                 val topFrame = bpHit.stackTrace.elements.first()
@@ -106,12 +107,12 @@ class AtomicValueLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
             //test passed
             testContext.completeNow()
-        }.completionHandler().await()
+        }.await()
 
         //add live breakpoint
         instrumentService.addLiveInstrument(
             LiveBreakpoint(
-                id = "atomic-value-test",
+                id = testNameAsInstrumentId,
                 location = LiveSourceLocation(
                     AtomicValueLiveBreakpointTest::class.qualifiedName!!,
                     getLineNumber("done"),

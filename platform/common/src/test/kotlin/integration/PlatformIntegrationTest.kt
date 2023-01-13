@@ -33,6 +33,8 @@ import io.vertx.spi.cluster.redis.config.RedisConfig
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.TestInfo
 import org.junit.jupiter.api.extension.ExtendWith
 import org.slf4j.LoggerFactory
 import spp.protocol.instrument.LiveInstrument
@@ -44,6 +46,17 @@ import java.util.regex.Pattern
 
 @ExtendWith(VertxExtension::class)
 open class PlatformIntegrationTest {
+
+    var testName: String? = null
+    val testNameAsInstrumentId: String
+        get() {
+            return testName!!.replace(" ", "-").lowercase().substringBefore("(")
+        }
+
+    @BeforeEach
+    open fun setUp(testInfo: TestInfo) {
+        testName = testInfo.displayName
+    }
 
     companion object {
         private val log = LoggerFactory.getLogger(PlatformIntegrationTest::class.java)

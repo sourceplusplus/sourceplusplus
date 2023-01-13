@@ -55,9 +55,6 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
             triggerCount()
         }
 
-        val meterId = "test-count-increment"
-        log.info("Using meter id: {}", meterId)
-
         val liveMeter = LiveMeter(
             MeterType.COUNT,
             MetricValue(MetricValueType.NUMBER, "1"),
@@ -66,7 +63,7 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
                 getLineNumber("done"),
                 "spp-test-probe"
             ),
-            id = meterId,
+            id = testNameAsInstrumentId,
             applyImmediately = true
         )
 
@@ -120,7 +117,7 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
 
         //clean up
         consumer.unregister()
-        assertNotNull(instrumentService.removeLiveInstrument(meterId).await())
+        assertNotNull(instrumentService.removeLiveInstrument(testNameAsInstrumentId).await())
         assertNotNull(viewService.removeLiveView(subscriptionId).await())
 
         assertEquals(100, totalCount)
@@ -132,9 +129,6 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
             triggerCount()
         }
 
-        val meterId = "test-double-count-increment"
-        log.info("Using meter id: {}", meterId)
-
         val liveMeter = LiveMeter(
             MeterType.COUNT,
             MetricValue(MetricValueType.NUMBER, "2"),
@@ -143,7 +137,7 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
                 getLineNumber("done"),
                 "spp-test-probe"
             ),
-            id = meterId,
+            id = testNameAsInstrumentId,
             applyImmediately = true
         )
 
@@ -197,7 +191,7 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
 
         //clean up
         consumer.unregister()
-        assertNotNull(instrumentService.removeLiveInstrument(meterId).await())
+        assertNotNull(instrumentService.removeLiveInstrument(testNameAsInstrumentId).await())
         assertNotNull(viewService.removeLiveView(subscriptionId).await())
 
         assertEquals(200, totalCount)
@@ -209,9 +203,6 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
             triggerCount()
         }
 
-        val meterId1 = "test-one-method-two-counts-1"
-        log.info("Using meter id: {}", meterId1)
-
         val liveMeter1 = LiveMeter(
             MeterType.COUNT,
             MetricValue(MetricValueType.NUMBER, "1"),
@@ -220,7 +211,7 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
                 getLineNumber("done"),
                 //"spp-test-probe" //todo: impl this so applyImmediately can be used
             ),
-            id = meterId1,
+            id = "$testNameAsInstrumentId-1",
             //applyImmediately = true //todo: can't use applyImmediately
         )
 
@@ -242,9 +233,6 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
             )
         ).await().subscriptionId!!
 
-        val meterId2 = "test-one-method-two-counts-2"
-        log.info("Using meter id: {}", meterId2)
-
         val liveMeter2 = LiveMeter(
             MeterType.COUNT,
             MetricValue(MetricValueType.NUMBER, "100"),
@@ -253,7 +241,7 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
                 getLineNumber("done"),
                 //"spp-test-probe" //todo: impl this so applyImmediately can be used
             ),
-            id = meterId2,
+            id = "$testNameAsInstrumentId-2",
             meta = mapOf("metric.mode" to "RATE")
             //applyImmediately = true //todo: can't use applyImmediately
         )
@@ -322,8 +310,8 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
 
         //clean up
         consumer.unregister()
-        assertNotNull(instrumentService.removeLiveInstrument(meterId1).await())
-        assertNotNull(instrumentService.removeLiveInstrument(meterId2).await())
+        assertNotNull(instrumentService.removeLiveInstrument("$testNameAsInstrumentId-1").await())
+        assertNotNull(instrumentService.removeLiveInstrument("$testNameAsInstrumentId-2").await())
         assertNotNull(viewService.removeLiveView(subscriptionId1).await())
         assertNotNull(viewService.removeLiveView(subscriptionId2).await())
 

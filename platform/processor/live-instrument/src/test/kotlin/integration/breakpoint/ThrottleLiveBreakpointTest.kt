@@ -27,6 +27,7 @@ import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.location.LiveSourceLocation
 import spp.protocol.instrument.throttle.InstrumentThrottle
 import spp.protocol.instrument.throttle.ThrottleStep
+import spp.protocol.service.listen.addBreakpointHitListener
 import java.util.concurrent.atomic.AtomicInteger
 
 class ThrottleLiveBreakpointTest : LiveInstrumentIntegrationTest() {
@@ -46,7 +47,7 @@ class ThrottleLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         //verify breakpoint is hit once per second (10 times)
         val bpHitCount = AtomicInteger(0)
         val testContext = VertxTestContext()
-        onBreakpointHit(-1) {
+        vertx.addBreakpointHitListener(testNameAsInstrumentId) {
             testContext.verify {
                 assertTrue(bpHitCount.incrementAndGet() <= 11) //allow for some variance
             }
@@ -61,7 +62,8 @@ class ThrottleLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                     "spp-test-probe"
                 ),
                 hitLimit = -1,
-                applyImmediately = true
+                applyImmediately = true,
+                id = testNameAsInstrumentId
             )
         ).await()
 
@@ -90,7 +92,7 @@ class ThrottleLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         //verify breakpoint is hit twice per second (20 times)
         val bpHitCount = AtomicInteger(0)
         val testContext = VertxTestContext()
-        onBreakpointHit(-1) {
+        vertx.addBreakpointHitListener(testNameAsInstrumentId) {
             testContext.verify {
                 assertTrue(bpHitCount.incrementAndGet() <= 21) //allow for some variance
             }
@@ -106,7 +108,8 @@ class ThrottleLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                 ),
                 hitLimit = -1,
                 throttle = InstrumentThrottle(2, ThrottleStep.SECOND),
-                applyImmediately = true
+                applyImmediately = true,
+                id = testNameAsInstrumentId
             )
         ).await()
 
@@ -134,7 +137,7 @@ class ThrottleLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
         val bpHitCount = AtomicInteger(0)
         val testContext = VertxTestContext()
-        onBreakpointHit(-1) {
+        vertx.addBreakpointHitListener(testNameAsInstrumentId) {
             testContext.verify {
                 assertTrue(bpHitCount.incrementAndGet() <= 100)
             }
@@ -150,7 +153,8 @@ class ThrottleLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                 ),
                 hitLimit = -1,
                 throttle = InstrumentThrottle(1000, ThrottleStep.SECOND), //todo: impl NOP throttle
-                applyImmediately = true
+                applyImmediately = true,
+                id = testNameAsInstrumentId
             )
         ).await()
 

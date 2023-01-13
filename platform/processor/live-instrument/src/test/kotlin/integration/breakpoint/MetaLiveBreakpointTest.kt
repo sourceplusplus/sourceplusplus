@@ -29,16 +29,15 @@ import spp.protocol.instrument.location.LiveSourceLocation
 class MetaLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
     @Test
-    fun `live breakpoint meta`() = runBlocking {
+    fun `live breakpoint meta`(): Unit = runBlocking {
         val liveInstrument = instrumentService.addLiveInstrument(
             LiveBreakpoint(
                 location = LiveSourceLocation(
                     "non-existent-class",
                     0,
                 ),
-                meta = mapOf(
-                    "key" to "value",
-                ),
+                meta = mapOf("key" to "value"),
+                id = testNameAsInstrumentId
             )
         ).await()
         assertNotNull(liveInstrument)
@@ -65,13 +64,15 @@ class MetaLiveBreakpointTest : LiveInstrumentIntegrationTest() {
     }
 
     @Test
-    fun `verify add live instruments meta`() = runBlocking {
-        val location = LiveSourceLocation(
-            "non-existent-class-1",
-            0,
-        )
+    fun `verify add live instruments meta`(): Unit = runBlocking {
+        val location = LiveSourceLocation("non-existent-class-1")
         val liveInstruments = instrumentService.addLiveInstruments(
-            listOf(LiveBreakpoint(location = location))
+            listOf(
+                LiveBreakpoint(
+                    location = location,
+                    id = testNameAsInstrumentId
+                )
+            )
         ).await()
         assertEquals(1, liveInstruments.size)
 
@@ -89,12 +90,14 @@ class MetaLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
     @Test
     fun `verify get live instruments meta`(): Unit = runBlocking {
-        val location = LiveSourceLocation(
-            "non-existent-class-2",
-            0,
-        )
+        val location = LiveSourceLocation("non-existent-class-2")
         val liveInstruments = instrumentService.addLiveInstruments(
-            listOf(LiveBreakpoint(location = location))
+            listOf(
+                LiveBreakpoint(
+                    location = location,
+                    id = testNameAsInstrumentId
+                )
+            )
         ).await()
         assertNotNull(liveInstruments)
 
@@ -114,12 +117,12 @@ class MetaLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
     @Test
     fun `verify remove live instruments by location meta`() = runBlocking {
-        val location = LiveSourceLocation(
-            "non-existent-class-3",
-            0,
-        )
+        val location = LiveSourceLocation("non-existent-class-3")
         val liveInstrument = instrumentService.addLiveInstrument(
-            LiveBreakpoint(location = location)
+            LiveBreakpoint(
+                location = location,
+                id = testNameAsInstrumentId
+            )
         ).await()
         assertNotNull(liveInstrument)
 
@@ -130,7 +133,7 @@ class MetaLiveBreakpointTest : LiveInstrumentIntegrationTest() {
     }
 
     @Test
-    fun `verify applied at meta update`() = runBlocking {
+    fun `verify applied at meta update`(): Unit = runBlocking {
         addLineLabel("done") { Throwable().stackTrace[0].lineNumber }
 
         val location = LiveSourceLocation(
@@ -141,7 +144,8 @@ class MetaLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         val liveInstrument = instrumentService.addLiveInstrument(
             LiveBreakpoint(
                 location = location,
-                applyImmediately = true
+                applyImmediately = true,
+                id = testNameAsInstrumentId
             )
         ).await()
         assertNotNull(liveInstrument)

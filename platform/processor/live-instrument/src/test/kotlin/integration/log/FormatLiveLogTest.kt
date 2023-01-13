@@ -25,10 +25,8 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
 import spp.protocol.instrument.LiveLog
-import spp.protocol.instrument.event.LiveLogHit
 import spp.protocol.instrument.location.LiveSourceLocation
-import spp.protocol.service.listen.LiveInstrumentListener
-import spp.protocol.service.listen.addLiveInstrumentListener
+import spp.protocol.service.listen.addLogHitListener
 
 class FormatLiveLogTest : LiveInstrumentIntegrationTest() {
 
@@ -51,22 +49,19 @@ class FormatLiveLogTest : LiveInstrumentIntegrationTest() {
             formatLiveLog()
         }
 
-        val instrumentId = "log-format-primitives"
         val format = "{} {} {} {} {} {}"
         val args = listOf("i", "c", "s", "b", "f", "n")
 
         val testContext = VertxTestContext()
-        vertx.addLiveInstrumentListener(instrumentId, object : LiveInstrumentListener {
-            override fun onLogHitEvent(event: LiveLogHit) {
-                testContext.verify {
-                    assertEquals(1, event.logResult.logs.size)
-                    val log = event.logResult.logs[0]
-                    assertEquals(format, log.content)
-                    assertEquals("0 h hello true 1.0 null", log.toFormattedMessage())
-                }
-                testContext.completeNow()
+        vertx.addLogHitListener(testNameAsInstrumentId) {
+            testContext.verify {
+                assertEquals(1, it.logResult.logs.size)
+                val log = it.logResult.logs[0]
+                assertEquals(format, log.content)
+                assertEquals("0 h hello true 1.0 null", log.toFormattedMessage())
             }
-        }).await()
+            testContext.completeNow()
+        }.await()
 
         //add live log
         assertNotNull(
@@ -80,7 +75,7 @@ class FormatLiveLogTest : LiveInstrumentIntegrationTest() {
                         "spp-test-probe"
                     ),
                     applyImmediately = true,
-                    id = instrumentId
+                    id = testNameAsInstrumentId
                 )
             ).await()
         )
