@@ -17,17 +17,13 @@
  */
 package integration
 
-import io.vertx.junit5.VertxExtension
 import io.vertx.junit5.VertxTestContext
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
 import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.location.LiveSourceLocation
 
-@ExtendWith(VertxExtension::class)
 class MetaTest : PlatformIntegrationTest() {
 
     @Test
@@ -62,26 +58,26 @@ class MetaTest : PlatformIntegrationTest() {
         errorOnTimeout(testContext)
     }
 
-    @Disabled
     @Test
     fun getInstrumentsWithMeta() {
         val testContext = VertxTestContext()
+        val instrumentId = "instrument-with-meta"
         instrumentService.addLiveInstrument(
             LiveBreakpoint(
                 location = LiveSourceLocation("MetaTest", 42),
-                meta = mutableMapOf("key1" to "value1", "key2" to "value2")
+                meta = mutableMapOf("key1" to "value1", "key2" to "value2"),
+                id = instrumentId
             )
         ).onComplete {
             if (it.succeeded()) {
-                instrumentService.getLiveInstruments().onComplete {
+                instrumentService.getLiveInstrumentById(instrumentId).onComplete {
                     if (it.succeeded()) {
                         testContext.verify {
-                            assertEquals(1, it.result().size)
-                            val instrument = it.result()[0]
+                            val instrument = it.result()!!
                             assertEquals(instrument.meta["key1"], "value1")
                             assertEquals(instrument.meta["key2"], "value2")
                         }
-                        instrumentService.removeLiveInstrument(it.result()[0].id!!).onComplete {
+                        instrumentService.removeLiveInstrument(instrumentId).onComplete {
                             if (it.succeeded()) {
                                 testContext.completeNow()
                             } else {
