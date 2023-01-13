@@ -60,13 +60,7 @@ class LiveInstrumentTest : LiveInstrumentIntegrationTest() {
             }
         }
 
-        if (testContext.awaitCompletion(10, TimeUnit.SECONDS)) {
-            if (testContext.failed()) {
-                throw testContext.causeOfFailure()
-            }
-        } else {
-            throw RuntimeException("Test timed out")
-        }
+       errorOnTimeout(testContext)
     }
 
     @Test
