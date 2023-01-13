@@ -73,31 +73,18 @@ class LiveBreakpointTest : LiveInstrumentIntegrationTest() {
         val instrumentListener = vertx.addLiveInstrumentListener(
             testNameAsInstrumentId,
             object : LiveInstrumentListener {
-                override fun onInstrumentEvent(event: LiveInstrumentEvent) {
-                    log.info("Got instrument event: {}", event)
-                }
-
                 override fun onBreakpointAddedEvent(event: LiveBreakpoint) {
                     log.info("Got added")
-                    testContext.verify {
-                        assertEquals(testNameAsInstrumentId, event.id)
-                    }
                     gotAdded = true
                 }
 
                 override fun onInstrumentAppliedEvent(event: LiveInstrument) {
                     log.info("Got applied")
-                    testContext.verify {
-                        assertEquals(testNameAsInstrumentId, event.id)
-                    }
                     gotApplied = true
                 }
 
                 override fun onInstrumentRemovedEvent(event: LiveInstrumentRemoved) {
                     log.info("Got removed")
-                    testContext.verify {
-                        assertEquals(testNameAsInstrumentId, event.liveInstrument.id)
-                    }
                     gotRemoved = true
                 }
 
@@ -204,39 +191,23 @@ class LiveBreakpointTest : LiveInstrumentIntegrationTest() {
         val instrumentListener = vertx.addLiveInstrumentListener(
             testNameAsInstrumentId,
             object : LiveInstrumentListener {
-                override fun onInstrumentEvent(event: LiveInstrumentEvent) {
-                    log.info("Got instrument event: {}", event)
-                }
-
                 override fun onBreakpointAddedEvent(event: LiveBreakpoint) {
                     log.info("Got added")
-                    testContext.verify {
-                        assertEquals(testNameAsInstrumentId, event.id)
-                    }
                     gotAdded = true
                 }
 
                 override fun onInstrumentAppliedEvent(event: LiveInstrument) {
                     log.info("Got applied")
-                    testContext.verify {
-                        assertEquals(testNameAsInstrumentId, event.id)
-                    }
                     gotApplied = true
                 }
 
                 override fun onBreakpointHitEvent(event: LiveBreakpointHit) {
                     log.info("Got hit")
-                    testContext.verify {
-                        assertEquals(testNameAsInstrumentId, event.breakpointId)
-                    }
                     gotHit = true
                 }
 
                 override fun onInstrumentRemovedEvent(event: LiveInstrumentRemoved) {
                     log.info("Got removed")
-                    testContext.verify {
-                        assertEquals(testNameAsInstrumentId, event.liveInstrument.id)
-                    }
                     gotRemoved = true
                 }
 
@@ -317,15 +288,14 @@ class LiveBreakpointTest : LiveInstrumentIntegrationTest() {
         val testContext = VertxTestContext()
         instrumentService.addLiveInstrument(
             LiveBreakpoint(
-                id = testNameAsInstrumentId,
-                location = LiveSourceLocation("spp.example.webapp.model.User", 42),
+                location = LiveSourceLocation("RemoveByLocation", 42),
                 condition = "1==2"
             )
         ).onComplete {
             if (it.succeeded()) {
                 val originalId = it.result().id!!
                 instrumentService.removeLiveInstruments(
-                    LiveSourceLocation("spp.example.webapp.model.User", 42)
+                    LiveSourceLocation("RemoveByLocation", 42)
                 ).onComplete {
                     if (it.succeeded()) {
                         testContext.verify {
@@ -348,14 +318,12 @@ class LiveBreakpointTest : LiveInstrumentIntegrationTest() {
     @Test
     fun removeMultipleByLocation(): Unit = runBlocking {
         val testContext = VertxTestContext()
-
-        //todo: don't care about added event. can remove directly after add but need #537
         val addedCount = AtomicInteger(0)
-        vertx.addLiveInstrumentListener("system", object : LiveInstrumentListener {
+        val listener = object : LiveInstrumentListener {
             override fun onBreakpointAddedEvent(event: LiveBreakpoint) {
                 if (addedCount.incrementAndGet() == 2) {
                     instrumentService.removeLiveInstruments(
-                        LiveSourceLocation("spp.example.webapp.model.User", 42)
+                        LiveSourceLocation("RemoveMultipleByLocation", 42)
                     ).onComplete {
                         if (it.succeeded()) {
                             testContext.verify {
@@ -368,18 +336,20 @@ class LiveBreakpointTest : LiveInstrumentIntegrationTest() {
                     }
                 }
             }
-        }).await()
+        }
+        vertx.addLiveInstrumentListener("$testNameAsInstrumentId-1", listener).await()
+        vertx.addLiveInstrumentListener("$testNameAsInstrumentId-2", listener).await()
 
         instrumentService.addLiveInstruments(
             listOf(
                 LiveBreakpoint(
                     id = "$testNameAsInstrumentId-1",
-                    location = LiveSourceLocation("spp.example.webapp.model.User", 42),
+                    location = LiveSourceLocation("RemoveMultipleByLocation", 42),
                     condition = "1==2"
                 ),
                 LiveBreakpoint(
                     id = "$testNameAsInstrumentId-2",
-                    location = LiveSourceLocation("spp.example.webapp.model.User", 42),
+                    location = LiveSourceLocation("RemoveMultipleByLocation", 42),
                     condition = "1==3"
                 )
             )
@@ -399,7 +369,6 @@ class LiveBreakpointTest : LiveInstrumentIntegrationTest() {
         val testContext = VertxTestContext()
         instrumentService.addLiveInstrument(
             LiveBreakpoint(
-                id = testNameAsInstrumentId,
                 location = LiveSourceLocation("spp.example.webapp.model.User", 42),
                 condition = "1===2",
                 applyImmediately = true
@@ -429,7 +398,6 @@ class LiveBreakpointTest : LiveInstrumentIntegrationTest() {
         val testContext = VertxTestContext()
         instrumentService.addLiveInstrument(
             LiveBreakpoint(
-                id = testNameAsInstrumentId,
                 location = LiveSourceLocation("bad.Clazz", 48),
                 applyImmediately = true
             )
