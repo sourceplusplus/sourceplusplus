@@ -166,7 +166,7 @@ class LiveInstrumentTest : LiveInstrumentIntegrationTest() {
                 "test {}",
                 listOf("b"),
                 location = LiveSourceLocation(
-                    LiveInstrumentTest::class.qualifiedName!!,
+                    LiveInstrumentTest::class.java.name,
                     getLineNumber("done"),
                     "spp-test-probe"
                 ),
@@ -178,7 +178,7 @@ class LiveInstrumentTest : LiveInstrumentIntegrationTest() {
         instrumentService.addLiveInstrument(
             LiveBreakpoint(
                 location = LiveSourceLocation(
-                    LiveInstrumentTest::class.qualifiedName!!,
+                    LiveInstrumentTest::class.java.name,
                     getLineNumber("done"),
                     "spp-test-probe"
                 ),
