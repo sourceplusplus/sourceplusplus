@@ -18,7 +18,6 @@
 package integration.log
 
 import integration.LiveInstrumentIntegrationTest
-import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
 import kotlinx.coroutines.runBlocking
@@ -27,13 +26,13 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
 import org.slf4j.LoggerFactory
+import spp.protocol.instrument.LiveInstrument
 import spp.protocol.instrument.LiveLog
 import spp.protocol.instrument.event.LiveInstrumentEvent
-import spp.protocol.instrument.event.LiveInstrumentEventType
 import spp.protocol.instrument.event.LiveInstrumentRemoved
+import spp.protocol.instrument.event.LiveLogHit
 import spp.protocol.instrument.location.LiveSourceLocation
 import spp.protocol.marshall.ServiceExceptionConverter
-import spp.protocol.service.SourceServices.Subscribe.toLiveInstrumentSubscriberAddress
 import spp.protocol.service.error.LiveInstrumentException
 import spp.protocol.service.listen.LiveInstrumentListener
 import spp.protocol.service.listen.addLiveInstrumentListener
@@ -49,7 +48,7 @@ class LiveLogTest : LiveInstrumentIntegrationTest() {
     }
 
     @Test
-    fun addHitRemove(): Unit = runBlocking {
+    fun addAppliedHitRemove(): Unit = runBlocking {
         setupLineLabels {
             doTest()
         }
@@ -60,57 +59,33 @@ class LiveLogTest : LiveInstrumentIntegrationTest() {
         var gotHit = false
         var gotRemoved = false
 
-        val consumer = vertx.eventBus().consumer<JsonObject>(toLiveInstrumentSubscriberAddress("system"))
-        consumer.handler {
-            log.info("Got subscription event: {}", it.body())
-            val liveEvent = LiveInstrumentEvent(it.body())
-            when (liveEvent.eventType) {
-                LiveInstrumentEventType.LOG_ADDED -> {
-                    log.info("Got added")
-                    testContext.verify {
-                        assertEquals(testNameAsInstrumentId, JsonObject(liveEvent.data).getString("id"))
-                    }
-                    gotAdded = true
-                }
-
-                LiveInstrumentEventType.LOG_APPLIED -> {
-                    log.info("Got applied")
-                    testContext.verify {
-                        assertEquals(testNameAsInstrumentId, JsonObject(liveEvent.data).getString("id"))
-                    }
-                    gotApplied = true
-                }
-
-                LiveInstrumentEventType.LOG_HIT -> {
-                    log.info("Got hit")
-                    testContext.verify {
-                        assertEquals(testNameAsInstrumentId, JsonObject(liveEvent.data).getString("logId"))
-                    }
-                    gotHit = true
-                }
-
-                LiveInstrumentEventType.LOG_REMOVED -> {
-                    log.info("Got removed")
-                    testContext.verify {
-                        val remEvent = LiveInstrumentRemoved(JsonObject(liveEvent.data))
-                        assertEquals(testNameAsInstrumentId, remEvent.liveInstrument.id)
-                    }
-                    gotRemoved = true
-                }
-
-                else -> testContext.failNow("Got event: " + it.body())
+        vertx.addLiveInstrumentListener(testNameAsInstrumentId, object : LiveInstrumentListener {
+            override fun onLogAddedEvent(event: LiveLog) {
+                log.info("Got added")
+                gotAdded = true
             }
 
-            if (gotAdded && gotApplied && gotHit && gotRemoved) {
-                consumer.unregister {
-                    if (it.succeeded()) {
-                        testContext.completeNow()
-                    } else {
-                        testContext.failNow(it.cause())
-                    }
+            override fun onInstrumentAppliedEvent(event: LiveInstrument) {
+                log.info("Got applied")
+                gotApplied = true
+            }
+
+            override fun onLogHitEvent(event: LiveLogHit) {
+                log.info("Got hit")
+                gotHit = true
+            }
+
+            override fun onInstrumentRemovedEvent(event: LiveInstrumentRemoved) {
+                log.info("Got removed")
+                gotRemoved = true
+            }
+
+            override fun afterInstrumentEvent(event: LiveInstrumentEvent) {
+                if (gotAdded && gotApplied && gotHit && gotRemoved) {
+                    testContext.completeNow()
                 }
             }
-        }.completionHandler().await()
+        }).await()
 
         instrumentService.addLiveInstrument(
             LiveLog(
@@ -128,8 +103,6 @@ class LiveLogTest : LiveInstrumentIntegrationTest() {
         doTest()
 
         errorOnTimeout(testContext)
-
-        consumer.unregister().await()
     }
 
     @Test
