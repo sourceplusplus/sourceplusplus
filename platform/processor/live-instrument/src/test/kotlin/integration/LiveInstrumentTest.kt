@@ -17,26 +17,20 @@
  */
 package integration
 
-import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
-import org.slf4j.LoggerFactory
 import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.LiveLog
-import spp.protocol.instrument.event.LiveBreakpointHit
-import spp.protocol.instrument.event.LiveInstrumentEvent
-import spp.protocol.instrument.event.LiveInstrumentEventType
 import spp.protocol.instrument.location.LiveSourceLocation
-import spp.protocol.service.SourceServices.Subscribe.toLiveInstrumentSubscriberAddress
+import spp.protocol.service.listen.addBreakpointHitListener
+import spp.protocol.service.listen.addLogHitListener
+import java.util.concurrent.atomic.AtomicInteger
 
 class LiveInstrumentTest : LiveInstrumentIntegrationTest() {
-
-    private val log = LoggerFactory.getLogger(LiveInstrumentTest::class.java)
 
     private fun doTest() {
         startEntrySpan("doTest")
@@ -71,7 +65,7 @@ class LiveInstrumentTest : LiveInstrumentIntegrationTest() {
         val getInstrument = instrumentService.getLiveInstrument(originalId).await()
         assertEquals(originalId, getInstrument!!.id!!)
 
-        instrumentService.clearLiveInstruments().await()
+        assertNotNull(instrumentService.removeLiveInstrument(originalId).await())
     }
 
     @Test
@@ -90,113 +84,82 @@ class LiveInstrumentTest : LiveInstrumentIntegrationTest() {
         assertTrue(getInstrument[0].id!! in originalIds)
         assertTrue(getInstrument[1].id!! in originalIds)
 
-        instrumentService.clearLiveInstruments().await()
+        assertNotNull(instrumentService.removeLiveInstrument(originalIds[0]).await())
+        assertNotNull(instrumentService.removeLiveInstrument(originalIds[1]).await())
     }
 
     @RepeatedTest(2)
-    fun addLiveLogAndLiveBreakpoint() = runBlocking {
+    fun addLiveLogAndLiveBreakpoint(): Unit = runBlocking {
         setupLineLabels {
             doTest()
         }
 
+        val hitCount = AtomicInteger()
         val testContext = VertxTestContext()
-        val consumer = vertx.eventBus().consumer<JsonObject>(toLiveInstrumentSubscriberAddress("system"))
-        consumer.handler {
-            log.info("Got subscription event: {}", it.body())
-            val liveEvent = LiveInstrumentEvent(it.body())
-            when (liveEvent.eventType) {
-                LiveInstrumentEventType.BREAKPOINT_HIT -> {
-                    log.info("Got hit")
-                    val bpHit = LiveBreakpointHit(JsonObject(liveEvent.data))
-                    testContext.verify {
-                        assertTrue(bpHit.stackTrace.elements.isNotEmpty())
-                        val topFrame = bpHit.stackTrace.elements.first()
-                        assertEquals(1, topFrame.variables.size)
-                    }
-
-                    instrumentService.clearLiveInstruments(null).onComplete {
-                        if (it.succeeded()) {
-                            consumer.unregister {
-                                if (it.succeeded()) {
-                                    testContext.completeNow()
-                                } else {
-                                    testContext.failNow(it.cause())
-                                }
-                            }
-                        } else {
-                            testContext.failNow(it.cause())
-                        }
-                    }
-                }
+        vertx.addBreakpointHitListener("$testNameAsInstrumentId-breakpoint") { bpHit ->
+            testContext.verify {
+                assertTrue(bpHit.stackTrace.elements.isNotEmpty())
+                val topFrame = bpHit.stackTrace.elements.first()
+                assertEquals(1, topFrame.variables.size)
             }
-        }.completionHandler().await()
+            if (hitCount.incrementAndGet() == 2) {
+                testContext.completeNow()
+            }
+        }.await()
+        vertx.addLogHitListener("$testNameAsInstrumentId-log") {
+            if (hitCount.incrementAndGet() == 2) {
+                testContext.completeNow()
+            }
+        }.await()
 
         instrumentService.addLiveInstrument(
             LiveLog(
                 "test {}",
                 listOf("b"),
                 location = LiveSourceLocation(
-                    LiveInstrumentTest::class.qualifiedName!!,
+                    LiveInstrumentTest::class.java.name,
                     getLineNumber("done"),
                     "spp-test-probe"
                 ),
-                applyImmediately = true
+                applyImmediately = true,
+                id = "$testNameAsInstrumentId-log"
             )
         ).await()
         instrumentService.addLiveInstrument(
             LiveBreakpoint(
                 location = LiveSourceLocation(
-                    LiveInstrumentTest::class.qualifiedName!!,
+                    LiveInstrumentTest::class.java.name,
                     getLineNumber("done"),
                     "spp-test-probe"
                 ),
-                applyImmediately = true
+                applyImmediately = true,
+                id = "$testNameAsInstrumentId-breakpoint"
             )
         ).await()
 
-        delay(2000)
         doTest()
 
         errorOnTimeout(testContext)
+
+        assertNull(instrumentService.removeLiveInstrument("$testNameAsInstrumentId-log").await())
+        assertNull(instrumentService.removeLiveInstrument("$testNameAsInstrumentId-breakpoint").await())
     }
 
     @RepeatedTest(2)
-    fun addLiveLogAndLiveBreakpoint_noLogHit() = runBlocking {
+    fun addLiveLogAndLiveBreakpoint_noLogHit(): Unit = runBlocking {
         setupLineLabels {
             doTest()
         }
 
         val testContext = VertxTestContext()
-        val consumer = vertx.eventBus().consumer<JsonObject>(toLiveInstrumentSubscriberAddress("system"))
-        consumer.handler {
-            log.info("Got subscription event: {}", it.body())
-            val liveEvent = LiveInstrumentEvent(it.body())
-            when (liveEvent.eventType) {
-                LiveInstrumentEventType.BREAKPOINT_HIT -> {
-                    log.info("Got hit")
-                    val bpHit = LiveBreakpointHit(JsonObject(liveEvent.data))
-                    testContext.verify {
-                        assertTrue(bpHit.stackTrace.elements.isNotEmpty())
-                        val topFrame = bpHit.stackTrace.elements.first()
-                        assertEquals(1, topFrame.variables.size)
-                    }
-
-                    instrumentService.clearLiveInstruments().onComplete {
-                        if (it.succeeded()) {
-                            consumer.unregister {
-                                if (it.succeeded()) {
-                                    testContext.completeNow()
-                                } else {
-                                    testContext.failNow(it.cause())
-                                }
-                            }
-                        } else {
-                            testContext.failNow(it.cause())
-                        }
-                    }
-                }
+        vertx.addBreakpointHitListener("$testNameAsInstrumentId-breakpoint") { bpHit ->
+            testContext.verify {
+                assertTrue(bpHit.stackTrace.elements.isNotEmpty())
+                val topFrame = bpHit.stackTrace.elements.first()
+                assertEquals(1, topFrame.variables.size)
             }
-        }.completionHandler().await()
+            testContext.completeNow()
+        }.await()
 
         instrumentService.addLiveInstrument(
             LiveLog(
@@ -208,7 +171,8 @@ class LiveInstrumentTest : LiveInstrumentIntegrationTest() {
                     "spp-test-probe"
                 ),
                 "1==2",
-                applyImmediately = true
+                applyImmediately = true,
+                id = "$testNameAsInstrumentId-log"
             )
         ).await()
         instrumentService.addLiveInstrument(
@@ -218,13 +182,16 @@ class LiveInstrumentTest : LiveInstrumentIntegrationTest() {
                     getLineNumber("done"),
                     "spp-test-probe"
                 ),
-                applyImmediately = true
+                applyImmediately = true,
+                id = "$testNameAsInstrumentId-breakpoint"
             )
         ).await()
 
-        delay(2000)
         doTest()
 
         errorOnTimeout(testContext)
+
+        assertNotNull(instrumentService.removeLiveInstrument("$testNameAsInstrumentId-log").await())
+        assertNull(instrumentService.removeLiveInstrument("$testNameAsInstrumentId-breakpoint").await())
     }
 }
