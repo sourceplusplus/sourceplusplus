@@ -30,7 +30,7 @@ import org.junit.jupiter.api.Test
 import spp.protocol.artifact.log.Log
 import spp.protocol.instrument.LiveLog
 import spp.protocol.instrument.location.LiveSourceLocation
-import spp.protocol.service.SourceServices
+import spp.protocol.service.SourceServices.Subscribe.toLiveViewSubscription
 import spp.protocol.view.LiveView
 import spp.protocol.view.LiveViewConfig
 import spp.protocol.view.LiveViewEvent
@@ -80,12 +80,9 @@ class LiveLogSubscriptionTest : LiveInstrumentIntegrationTest() {
         ).await().subscriptionId!!
         log.info("Using subscription id: {}", subscriptionId)
 
-        val consumer = vertx.eventBus().consumer<JsonObject>(
-            SourceServices.Subscribe.toLiveViewSubscriberAddress("system")
-        )
-
         val testContext = VertxTestContext()
         var totalCount = 0
+        val consumer = vertx.eventBus().consumer<JsonObject>(toLiveViewSubscription(subscriptionId))
         consumer.handler {
             val liveViewEvent = LiveViewEvent(it.body())
             val rawLog = Log(JsonObject(liveViewEvent.metricsData).getJsonObject("log"))

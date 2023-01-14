@@ -32,7 +32,7 @@ import spp.protocol.instrument.location.LiveSourceLocation
 import spp.protocol.instrument.meter.MeterType
 import spp.protocol.instrument.meter.MetricValue
 import spp.protocol.instrument.meter.MetricValueType
-import spp.protocol.service.SourceServices.Subscribe.toLiveViewSubscriberAddress
+import spp.protocol.service.SourceServices.Subscribe.toLiveViewSubscription
 import spp.protocol.view.LiveView
 import spp.protocol.view.LiveViewConfig
 import spp.protocol.view.LiveViewEvent
@@ -47,6 +47,7 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
 
     private val log = KotlinLogging.logger {}
 
+    @Suppress("UNUSED_VARIABLE")
     private fun triggerGauge() {
         val str = "hello"
         addLineLabel("done") { Throwable().stackTrace[0].lineNumber }
@@ -109,11 +110,9 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
                 )
             )
         ).await().subscriptionId!!
-        val consumer = vertx.eventBus().consumer<JsonObject>(
-            toLiveViewSubscriberAddress("system")
-        )
 
         val testContext = VertxTestContext()
+        val consumer = vertx.eventBus().consumer<JsonObject>(toLiveViewSubscription(subscriptionId))
         consumer.handler {
             val liveViewEvent = LiveViewEvent(it.body())
             val rawMetrics = JsonObject(liveViewEvent.metricsData)
@@ -192,11 +191,9 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
                 )
             )
         ).await().subscriptionId!!
-        val consumer = vertx.eventBus().consumer<JsonObject>(
-            toLiveViewSubscriberAddress("system")
-        )
 
         val testContext = VertxTestContext()
+        val consumer = vertx.eventBus().consumer<JsonObject>(toLiveViewSubscription(subscriptionId))
         consumer.handler {
             val liveViewEvent = LiveViewEvent(it.body())
             val rawMetrics = JsonObject(liveViewEvent.metricsData)

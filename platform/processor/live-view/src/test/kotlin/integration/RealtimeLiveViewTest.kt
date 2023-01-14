@@ -29,7 +29,7 @@ import spp.protocol.artifact.ArtifactQualifiedName
 import spp.protocol.artifact.ArtifactType
 import spp.protocol.artifact.metrics.MetricType
 import spp.protocol.instrument.location.LiveSourceLocation
-import spp.protocol.service.SourceServices.Subscribe.toLiveViewSubscriberAddress
+import spp.protocol.service.SourceServices.Subscribe.toLiveViewSubscription
 import spp.protocol.view.LiveView
 import spp.protocol.view.LiveViewConfig
 import spp.protocol.view.LiveViewEvent
@@ -65,7 +65,7 @@ class RealtimeLiveViewTest : PlatformIntegrationTest() {
         val testContext = VertxTestContext()
         var totalCount = 0
         val countSet = mutableSetOf<String>()
-        val consumer = vertx.eventBus().consumer<JsonObject>(toLiveViewSubscriberAddress(subscriptionId))
+        val consumer = vertx.eventBus().consumer<JsonObject>(toLiveViewSubscription(subscriptionId))
         consumer.handler {
             val liveViewEvent = LiveViewEvent(it.body())
             val rawMetrics = JsonObject(liveViewEvent.metricsData)

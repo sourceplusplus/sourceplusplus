@@ -94,14 +94,13 @@ class LiveViewServiceImplIT : PlatformIntegrationTest() {
         val updatedSubscription = subscription.copy(entityIds = mutableSetOf("test-id-2"))
         viewService.updateLiveView(subscriptionId, updatedSubscription).await()
 
-        val subscriptions = viewService.getLiveViews().await()
-        assertEquals(1, subscriptions.size)
-        assertEquals(subscriptionId, subscriptions[0].subscriptionId)
+        val liveView = viewService.getLiveView(subscriptionId).await()
+        assertEquals(subscriptionId, liveView.subscriptionId)
         assertEquals(
             updatedSubscription.copy(
                 subscriptionId = subscriptionId,
                 entityIds = mutableSetOf("test-id-2")
-            ), subscriptions[0]
+            ), liveView
         )
 
         val subscriptionStats = managementService.getStats().await().getJsonObject("subscriptions")
