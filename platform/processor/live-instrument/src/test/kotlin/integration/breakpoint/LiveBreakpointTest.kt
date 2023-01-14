@@ -254,7 +254,7 @@ class LiveBreakpointTest : LiveInstrumentIntegrationTest() {
     }
 
     @Test
-    fun removeById() {
+    fun removeBreakpointById() {
         val testContext = VertxTestContext()
         instrumentService.addLiveInstrument(
             LiveBreakpoint(
