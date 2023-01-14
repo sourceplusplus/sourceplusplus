@@ -35,7 +35,7 @@ class RemoveInstrumentsTest : LiveInstrumentIntegrationTest() {
     fun `remove multiple by location`() = runBlocking {
         val testContext = VertxTestContext()
 
-        instrumentService.addLiveInstruments(
+        val instruments = instrumentService.addLiveInstruments(
             listOf(
                 LiveBreakpoint(
                     location = LiveSourceLocation(
@@ -51,9 +51,10 @@ class RemoveInstrumentsTest : LiveInstrumentIntegrationTest() {
                 )
             )
         ).await()
+        assertEquals(2, instruments.size)
 
         val removedCount = AtomicInteger()
-        vertx.addLiveInstrumentListener("system", object : LiveInstrumentListener {
+        val listener = object : LiveInstrumentListener {
             override fun onInstrumentRemovedEvent(event: LiveInstrumentRemoved) {
                 testContext.verify {
                     assertEquals(
@@ -66,14 +67,18 @@ class RemoveInstrumentsTest : LiveInstrumentIntegrationTest() {
                     }
                 }
             }
-        }).await()
+        }
+        instruments.forEach {
+            vertx.addLiveInstrumentListener(it.id!!, listener).await()
+        }
 
-        instrumentService.removeLiveInstruments(
+        val removeInstruments = instrumentService.removeLiveInstruments(
             LiveSourceLocation(
                 RemoveInstrumentsTest::class.qualifiedName!!,
                 1,
             )
         ).await()
+        assertEquals(2, removeInstruments.size)
 
         errorOnTimeout(testContext)
     }
