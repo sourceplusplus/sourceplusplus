@@ -70,7 +70,7 @@ class MetaTest : PlatformIntegrationTest() {
             )
         ).onComplete {
             if (it.succeeded()) {
-                instrumentService.getLiveInstrumentById(instrumentId).onComplete {
+                instrumentService.getLiveInstrument(instrumentId).onComplete {
                     if (it.succeeded()) {
                         testContext.verify {
                             val instrument = it.result()!!

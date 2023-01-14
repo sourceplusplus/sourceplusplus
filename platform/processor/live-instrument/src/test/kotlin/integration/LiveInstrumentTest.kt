@@ -47,7 +47,7 @@ class LiveInstrumentTest : LiveInstrumentIntegrationTest() {
     @Test
     fun getLiveInstrumentById_missing() {
         val testContext = VertxTestContext()
-        instrumentService.getLiveInstrumentById("whatever").onComplete {
+        instrumentService.getLiveInstrument("whatever").onComplete {
             if (it.succeeded()) {
                 testContext.verify {
                     assertNull(it.result())
@@ -68,7 +68,7 @@ class LiveInstrumentTest : LiveInstrumentIntegrationTest() {
         ).await()
 
         val originalId = instrument.id!!
-        val getInstrument = instrumentService.getLiveInstrumentById(originalId).await()
+        val getInstrument = instrumentService.getLiveInstrument(originalId).await()
         assertEquals(originalId, getInstrument!!.id!!)
 
         instrumentService.clearLiveInstruments().await()
