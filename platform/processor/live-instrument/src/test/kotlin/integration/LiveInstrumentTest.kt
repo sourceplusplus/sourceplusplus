@@ -145,7 +145,7 @@ class LiveInstrumentTest : LiveInstrumentIntegrationTest() {
         assertNull(instrumentService.removeLiveInstrument("$testNameAsInstrumentId-breakpoint").await())
     }
 
-    @RepeatedTest(2)
+    @RepeatedTest(2, name = "addLiveLogAndLiveBreakpoint_noLogHit-{currentRepetition}-of-{totalRepetitions}")
     fun addLiveLogAndLiveBreakpoint_noLogHit(): Unit = runBlocking {
         setupLineLabels {
             doTest()

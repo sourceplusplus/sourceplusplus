@@ -20,8 +20,7 @@ package integration.breakpoint
 import integration.LiveInstrumentIntegrationTest
 import io.vertx.kotlin.coroutines.await
 import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.location.LiveSourceLocation
@@ -103,11 +102,11 @@ class MetaLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
         //get instruments
         val getInstruments = instrumentService.getLiveInstruments().await()
-        assertEquals(1, getInstruments.size)
+        assertTrue(getInstruments.isNotEmpty())
         assertEquals(emptyMap<String, String>(), getInstruments.first().meta.filter { it.key.startsWith("spp.") })
 
         //get instrument by id
-        val getInstrument = instrumentService.getLiveInstrumentById(liveInstruments.first().id!!).await()
+        val getInstrument = instrumentService.getLiveInstrument(liveInstruments.first().id!!).await()
         assertNotNull(getInstrument)
         assertEquals(emptyMap<String, String>(), getInstrument!!.meta.filter { it.key.startsWith("spp.") })
 

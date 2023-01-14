@@ -106,7 +106,7 @@ class LiveLogTest : LiveInstrumentIntegrationTest() {
     }
 
     @Test
-    fun removeById(): Unit = runBlocking {
+    fun removeLogById(): Unit = runBlocking {
         val testContext = VertxTestContext()
         vertx.addLiveInstrumentListener(testNameAsInstrumentId, object : LiveInstrumentListener {
             override fun onLogAddedEvent(event: LiveLog) {
@@ -173,8 +173,8 @@ class LiveLogTest : LiveInstrumentIntegrationTest() {
                 LiveLog(
                     id = "$testNameAsInstrumentId-1",
                     location = LiveSourceLocation(
-                        LiveLogTest::class.qualifiedName!!,
-                        getLineNumber("done"),
+                        LiveLogTest::class.java.name,
+                        100,
                         "spp-test-probe"
                     ),
                     condition = "1==2",
@@ -184,7 +184,7 @@ class LiveLogTest : LiveInstrumentIntegrationTest() {
                     id = "$testNameAsInstrumentId-2",
                     location = LiveSourceLocation(
                         LiveLogTest::class.java.name,
-                        getLineNumber("done"),
+                        100,
                         "spp-test-probe"
                     ),
                     condition = "1==3",
@@ -197,7 +197,7 @@ class LiveLogTest : LiveInstrumentIntegrationTest() {
                 instrumentService.removeLiveInstruments(
                     location = LiveSourceLocation(
                         LiveLogTest::class.java.name,
-                        getLineNumber("done"),
+                        100,
                         "spp-test-probe"
                     )
                 ).onComplete {
