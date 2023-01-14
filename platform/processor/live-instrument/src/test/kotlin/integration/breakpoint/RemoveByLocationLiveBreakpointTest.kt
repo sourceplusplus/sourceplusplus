@@ -24,7 +24,6 @@ import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import spp.protocol.instrument.LiveBreakpoint
-import spp.protocol.instrument.LiveInstrumentType
 import spp.protocol.instrument.event.LiveBreakpointHit
 import spp.protocol.instrument.location.LiveSourceLocation
 import spp.protocol.service.listen.addBreakpointHitListener
@@ -67,7 +66,7 @@ class RemoveByLocationLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         vertx.addBreakpointHitListener("$testNameAsInstrumentId-1", listener).await()
         vertx.addBreakpointHitListener("$testNameAsInstrumentId-2", listener).await()
 
-        //add live breakpoint
+        //add live breakpoints
         instrumentService.addLiveInstruments(
             listOf(
                 LiveBreakpoint(
@@ -134,6 +133,11 @@ class RemoveByLocationLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         }
 
         //clean up
-        assertTrue(instrumentService.clearLiveInstruments(LiveInstrumentType.BREAKPOINT).await())
+        assertEquals(
+            1,
+            instrumentService.removeLiveInstruments(
+                LiveSourceLocation(RemoveByLocationLiveBreakpointTest::class.java.name)
+            ).await().size
+        )
     }
 }

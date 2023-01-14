@@ -85,7 +85,7 @@ class MetaLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         assertEquals(emptyMap<String, String>(), getInstruments.first().meta.filter { it.key.startsWith("spp.") })
 
         //clean up
-        instrumentService.clearLiveInstruments().await()
+        instrumentService.removeLiveInstrument(liveInstruments.first().id!!).await()
     }
 
     @Test
@@ -112,7 +112,7 @@ class MetaLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         assertEquals(emptyMap<String, String>(), getInstrument!!.meta.filter { it.key.startsWith("spp.") })
 
         //clean
-        instrumentService.clearLiveInstruments().await()
+        instrumentService.removeLiveInstrument(liveInstruments.first().id!!).await()
     }
 
     @Test
@@ -156,6 +156,6 @@ class MetaLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         assertEquals(liveInstrument.meta["applied_at"], getInstrument!!.meta["applied_at"])
 
         //clean
-        instrumentService.clearLiveInstruments().await()
+        instrumentService.removeLiveInstrument(liveInstrument.id!!).await()
     }
 }
