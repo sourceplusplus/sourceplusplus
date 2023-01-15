@@ -19,18 +19,15 @@ package integration.breakpoint
 
 import integration.LiveInstrumentIntegrationTest
 import io.vertx.kotlin.coroutines.await
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
 import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.location.LiveSourceLocation
 import spp.protocol.instrument.throttle.InstrumentThrottle
 import spp.protocol.instrument.throttle.ThrottleStep
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
 
 class HitLimitLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
@@ -45,8 +42,6 @@ class HitLimitLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         setupLineLabels {
             hitLimit()
         }
-
-        val hitsDoneLatch = CountDownLatch(1)
 
         //add live breakpoint
         instrumentService.addLiveInstrument(
@@ -67,16 +62,12 @@ class HitLimitLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         for (i in 0 until 10) {
             hitLimit()
         }
-        hitsDoneLatch.countDown()
-
-        withContext(Dispatchers.IO) {
-            hitsDoneLatch.await(10, TimeUnit.SECONDS)
-        }
+        delay(10_000)
 
         //verify still exists
         val liveInstrument = instrumentService.getLiveInstrument(testNameAsInstrumentId).await()
-        assert(liveInstrument!!.hitLimit == 11)
-        //todo: verify hit count
+        assertEquals(11, liveInstrument!!.hitLimit)
+        assertEquals(10, liveInstrument.meta["hit_count"])
 
         //trigger once more
         hitLimit()

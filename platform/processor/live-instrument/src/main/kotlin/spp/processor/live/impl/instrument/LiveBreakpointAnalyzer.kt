@@ -312,6 +312,7 @@ class LiveBreakpointAnalyzer(
                 instrumentMeta["first_hit_at"] = System.currentTimeMillis().toString()
             }
             instrumentMeta["last_hit_at"] = System.currentTimeMillis().toString()
+            SourceStorage.updateLiveInstrument(liveInstrument.id!!, liveInstrument)
 
             val developerId = liveInstrument.meta["spp.developer_id"] as String
             doDataRedactions(SourceStorage.getDeveloperDataRedactions(developerId), hit)

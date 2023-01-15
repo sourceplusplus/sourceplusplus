@@ -136,6 +136,7 @@ class LiveLogAnalyzer : LogAnalysisListener, LogAnalysisListenerFactory {
                 instrumentMeta["first_hit_at"] = System.currentTimeMillis().toString()
             }
             instrumentMeta["last_hit_at"] = System.currentTimeMillis().toString()
+            SourceStorage.updateLiveInstrument(liveInstrument.id!!, liveInstrument)
 
             val developerId = liveInstrument.meta["spp.developer_id"] as String
 
