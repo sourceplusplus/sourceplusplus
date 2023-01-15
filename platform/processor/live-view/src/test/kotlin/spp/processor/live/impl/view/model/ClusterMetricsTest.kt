@@ -35,11 +35,11 @@ class ClusterMetricsTest {
         val metrics = object : AvgLabeledFunction() {
             override fun createNew(): AcceptableValue<DataTable> {
                 return object : AcceptableValue<DataTable> {
-                    override fun accept(entity: MeterEntity?, value: DataTable?): Unit = TODO("Not yet implemented")
-                    override fun createNew(): AcceptableValue<DataTable> = TODO("Not yet implemented")
-                    override fun builder(): Class<out StorageBuilder<StorageData>> = TODO("Not yet implemented")
-                    override fun setTimeBucket(timeBucket: Long): Unit = TODO("Not yet implemented")
-                    override fun getTimeBucket(): Long = TODO("Not yet implemented")
+                    override fun accept(entity: MeterEntity?, value: DataTable?) = throw UnsupportedOperationException()
+                    override fun createNew(): AcceptableValue<DataTable> = throw UnsupportedOperationException()
+                    override fun builder(): Class<StorageBuilder<StorageData>> = throw UnsupportedOperationException()
+                    override fun setTimeBucket(timeBucket: Long): Unit = throw UnsupportedOperationException()
+                    override fun getTimeBucket(): Long = throw UnsupportedOperationException()
                 }
             }
         }
