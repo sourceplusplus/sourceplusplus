@@ -25,10 +25,7 @@ import mu.KotlinLogging
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import spp.protocol.artifact.ArtifactQualifiedName
-import spp.protocol.artifact.ArtifactType
 import spp.protocol.artifact.metrics.MetricType
-import spp.protocol.instrument.location.LiveSourceLocation
 import spp.protocol.service.SourceServices.Subscribe.toLiveViewSubscription
 import spp.protocol.view.LiveView
 import spp.protocol.view.LiveViewConfig
@@ -47,14 +44,6 @@ class RealtimeLiveViewTest : PlatformIntegrationTest() {
         val subscriptionId = viewService.addLiveView(
             LiveView(
                 entityIds = mutableSetOf(MetricType.INSTANCE_JVM_CPU.asRealtime().metricId),
-                artifactQualifiedName = ArtifactQualifiedName( //todo: optional artifact
-                    "unneeded",
-                    type = ArtifactType.EXPRESSION
-                ),
-                artifactLocation = LiveSourceLocation(
-                    "unneeded", //todo: optional location
-                    -1
-                ),
                 viewConfig = LiveViewConfig(
                     "test",
                     listOf(MetricType.INSTANCE_JVM_CPU.asRealtime().metricId)

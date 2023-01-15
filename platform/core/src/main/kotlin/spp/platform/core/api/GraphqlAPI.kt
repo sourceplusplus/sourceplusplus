@@ -42,8 +42,6 @@ import org.slf4j.LoggerFactory
 import spp.platform.common.ClusterConnection.discovery
 import spp.platform.common.ClusterConnection.router
 import spp.platform.common.DeveloperAuth
-import spp.protocol.artifact.ArtifactQualifiedName
-import spp.protocol.artifact.ArtifactType
 import spp.protocol.artifact.metrics.MetricStep
 import spp.protocol.instrument.*
 import spp.protocol.instrument.LiveInstrumentType.*
@@ -768,8 +766,6 @@ class GraphqlAPI : CoroutineVerticle() {
         )
         val subscription = LiveView(
             entityIds = input.getJsonArray("entityIds").list.map { it as String }.toMutableSet(),
-            artifactQualifiedName = ArtifactQualifiedName("todo", type = ArtifactType.CLASS),
-            artifactLocation = LiveSourceLocation("todo", -1),
             viewConfig = viewConfig
         )
 
