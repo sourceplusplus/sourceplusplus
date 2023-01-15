@@ -164,7 +164,7 @@ jobs:
       - name: Test platform
         run: ./gradlew --no-daemon -p platform test -Dtest.profile=integration
 
-      - run: ./gradlew --no-daemon :platform:composeLogs
+      - run: cd docker/e2e && docker-compose logs spp-platform > spp-platform.log
         if: ${{ always() }}
 
       - name: Upload docker logs artifact
@@ -172,7 +172,21 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: test-platform-logs
-          path: ./platform/build/containers-logs
+          path: docker/e2e/spp-platform.log
+
+      - name: Upload test-live-instrument.log artifact
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-live-instrument.log
+          path: /tmp/spp-probe/logs/test-live-instrument.log
+
+      - name: Upload test-live-view.log artifact
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-live-view.log
+          path: /tmp/spp-probe/logs/test-live-view.log
 
   test-probe-jvm:
     needs: [ verify-mono, build-platform ]
