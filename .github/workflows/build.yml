@@ -240,6 +240,7 @@ jobs:
       - name: Test probe-jvm
         run: |
           ./gradlew --no-daemon -Dtest.profile=integration \
+            :probes:jvm:boot:assemble \
             :probes:jvm:boot:test \
             :probes:jvm:common:test \
             :probes:jvm:services:test
