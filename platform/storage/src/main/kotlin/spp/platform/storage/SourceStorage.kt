@@ -132,19 +132,19 @@ object SourceStorage {
             JsonObject.mapFrom(it).let {
                 Triple(
                     DeveloperRole.fromString(it.getString("id")),
-                    it.getJsonArray("permissions").list.mapNotNull { RolePermission.fromString(it.toString()) },
-                    it.getJsonArray("redactions").list.mapNotNull { it.toString() },
+                    it.getJsonArray("permissions")?.list?.mapNotNull { RolePermission.fromString(it.toString()) },
+                    it.getJsonArray("redactions")?.list?.mapNotNull { it.toString() },
                 )
             }
         }.orEmpty().forEach { (role, permissions, redactions) ->
             addRole(role)
             log.debug { "Added user role: $role" }
 
-            permissions.forEach {
+            permissions?.forEach {
                 addPermissionToRole(role, it)
                 log.debug { "Added user permission: $it to role: $role" }
             }
-            redactions.forEach {
+            redactions?.forEach {
                 addDataRedactionToRole(it, role)
                 log.debug { "Added data redaction: $it to role: $role" }
             }
