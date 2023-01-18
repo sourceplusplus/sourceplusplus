@@ -369,6 +369,7 @@ jobs:
       - name: Test interface-cli
         run: |
           ./gradlew --no-daemon -Dtest.profile=integration \
+            :interfaces:cli:assemble \
             :interfaces:cli:test
 
   test-interface-jetbrains:
