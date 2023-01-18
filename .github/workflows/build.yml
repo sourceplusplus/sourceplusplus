@@ -363,7 +363,9 @@ jobs:
           until $(curl --header "Authorization: Bearer ${{ env.SPP_JWT_TOKEN }}" --output /dev/null --silent --fail http://localhost:12800/health); do printf '.'; sleep 5; done
 
       - name: Test interface-cli
-        run: ./gradlew -p interfaces/cli test -Dtest.profile=integration
+        run: |
+          ./gradlew --no-daemon -Dtest.profile=integration \
+            :interfaces:cli:test
 
   test-interface-jetbrains:
     needs: [ verify-mono ]
@@ -389,7 +391,20 @@ jobs:
             test-interface-jetbrains-${{ runner.os }}-gradle-
 
       - name: Test interface-jetbrains
-        run: ./gradlew --no-daemon -p interfaces/jetbrains test
+        run: |
+          ./gradlew --no-daemon -Dtest.profile=integration \
+            :interfaces:jetbrains:commander:test \
+            :interfaces:jetbrains:commander:kotlin-compiler-wrapper:test \
+            :interfaces:jetbrains:common:test \
+            :interfaces:jetbrains:core:test \
+            :interfaces:jetbrains:insight:test \
+            :interfaces:jetbrains:marker:test \
+            :interfaces:jetbrains:marker:js-marker:test \
+            :interfaces:jetbrains:marker:jvm-marker:test \
+            :interfaces:jetbrains:marker:py-marker:test \
+            :interfaces:jetbrains:marker:ult-marker:test \
+            :interfaces:jetbrains:monitor:test \
+            :interfaces:jetbrains:plugin:test 
 
   test-protocol:
     needs: [ verify-mono ]
