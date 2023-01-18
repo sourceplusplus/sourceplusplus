@@ -35,8 +35,6 @@ import spp.platform.storage.SourceStorage
 import spp.protocol.artifact.log.Log
 import spp.protocol.artifact.log.LogOrderType
 import spp.protocol.artifact.log.LogResult
-import spp.protocol.instrument.event.LiveInstrumentEvent
-import spp.protocol.instrument.event.LiveInstrumentEventType.LOG_HIT
 import spp.protocol.instrument.event.LiveLogHit
 import spp.protocol.instrument.location.LiveSourceLocation
 import spp.protocol.service.SourceServices.Subscribe.toLiveInstrumentSubscriberAddress
@@ -142,12 +140,12 @@ class LiveLogAnalyzer : LogAnalysisListener, LogAnalysisListenerFactory {
 
             ClusterConnection.getVertx().eventBus().publish(
                 toLiveInstrumentSubscription(hit.logId),
-                JsonObject.mapFrom(LiveInstrumentEvent(LOG_HIT, JsonObject.mapFrom(hit).toString()))
+                JsonObject.mapFrom(hit)
             )
             //todo: remove dev-specific publish
             ClusterConnection.getVertx().eventBus().publish(
                 toLiveInstrumentSubscriberAddress(developerId),
-                JsonObject.mapFrom(LiveInstrumentEvent(LOG_HIT, JsonObject.mapFrom(hit).toString()))
+                JsonObject.mapFrom(hit)
             )
             log.trace { "Published live log hit" }
         } else {

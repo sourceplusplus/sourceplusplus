@@ -26,11 +26,8 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
 import org.slf4j.LoggerFactory
-import spp.protocol.instrument.LiveInstrument
 import spp.protocol.instrument.LiveLog
-import spp.protocol.instrument.event.LiveInstrumentEvent
-import spp.protocol.instrument.event.LiveInstrumentRemoved
-import spp.protocol.instrument.event.LiveLogHit
+import spp.protocol.instrument.event.*
 import spp.protocol.instrument.location.LiveSourceLocation
 import spp.protocol.marshall.ServiceExceptionConverter
 import spp.protocol.service.error.LiveInstrumentException
@@ -60,22 +57,34 @@ class LiveLogTest : LiveInstrumentIntegrationTest() {
         var gotRemoved = false
 
         vertx.addLiveInstrumentListener(testNameAsInstrumentId, object : LiveInstrumentListener {
-            override fun onLogAddedEvent(event: LiveLog) {
+            override fun onLogAddedEvent(event: LiveInstrumentAdded) {
+                if (gotAdded) {
+                    testContext.failNow("Got added twice")
+                }
                 log.info("Got added")
                 gotAdded = true
             }
 
-            override fun onInstrumentAppliedEvent(event: LiveInstrument) {
+            override fun onInstrumentAppliedEvent(event: LiveInstrumentApplied) {
+                if (gotApplied) {
+                    testContext.failNow("Got applied twice")
+                }
                 log.info("Got applied")
                 gotApplied = true
             }
 
             override fun onLogHitEvent(event: LiveLogHit) {
+                if (gotHit) {
+                    testContext.failNow("Got hit twice")
+                }
                 log.info("Got hit")
                 gotHit = true
             }
 
             override fun onInstrumentRemovedEvent(event: LiveInstrumentRemoved) {
+                if (gotRemoved) {
+                    testContext.failNow("Got removed twice")
+                }
                 log.info("Got removed")
                 gotRemoved = true
             }
@@ -91,7 +100,7 @@ class LiveLogTest : LiveInstrumentIntegrationTest() {
             LiveLog(
                 id = testNameAsInstrumentId,
                 location = LiveSourceLocation(
-                    LiveLogTest::class.qualifiedName!!,
+                    LiveLogTest::class.java.name,
                     getLineNumber("done"),
                     "spp-test-probe"
                 ),
@@ -109,7 +118,7 @@ class LiveLogTest : LiveInstrumentIntegrationTest() {
     fun removeLogById(): Unit = runBlocking {
         val testContext = VertxTestContext()
         vertx.addLiveInstrumentListener(testNameAsInstrumentId, object : LiveInstrumentListener {
-            override fun onLogAddedEvent(event: LiveLog) {
+            override fun onLogAddedEvent(event: LiveInstrumentAdded) {
                 log.info("Got added event: {}", event)
                 instrumentService.removeLiveInstrument(testNameAsInstrumentId).onComplete {
                     if (it.failed()) {
@@ -260,9 +269,9 @@ class LiveLogTest : LiveInstrumentIntegrationTest() {
     fun applyImmediatelyWithInvalidClass(): Unit = runBlocking {
         val testContext = VertxTestContext()
         vertx.addLiveInstrumentListener(testNameAsInstrumentId, object : LiveInstrumentListener {
-            override fun onLogAddedEvent(event: LiveLog) {
+            override fun onLogAddedEvent(event: LiveInstrumentAdded) {
                 testContext.verify {
-                    assertEquals(testNameAsInstrumentId, event.id)
+                    assertEquals(testNameAsInstrumentId, event.liveInstrument.id)
                 }
                 testContext.completeNow()
             }

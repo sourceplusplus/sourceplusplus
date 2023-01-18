@@ -19,8 +19,6 @@ package spp.processor.live.impl
 
 import io.vertx.core.*
 import io.vertx.core.eventbus.Message
-import io.vertx.core.json.Json
-import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import io.vertx.kotlin.coroutines.CoroutineVerticle
 import io.vertx.kotlin.coroutines.await
@@ -45,8 +43,8 @@ import spp.protocol.artifact.exception.LiveStackTrace
 import spp.protocol.instrument.*
 import spp.protocol.instrument.command.CommandType
 import spp.protocol.instrument.command.LiveInstrumentCommand
-import spp.protocol.instrument.event.LiveInstrumentEvent
-import spp.protocol.instrument.event.LiveInstrumentEventType
+import spp.protocol.instrument.event.LiveInstrumentAdded
+import spp.protocol.instrument.event.LiveInstrumentApplied
 import spp.protocol.instrument.event.LiveInstrumentRemoved
 import spp.protocol.instrument.location.LiveSourceLocation
 import spp.protocol.marshall.ProtocolMarshaller
@@ -458,42 +456,40 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
         }
         log.info("Live instrument applied. Id: {}", instrument.id)
 
-        val eventType = when (instrument.type) {
+        instrument = when (instrument.type) {
             LiveInstrumentType.BREAKPOINT -> {
-                instrument = (instrument as LiveBreakpoint).copy(
+                (instrument as LiveBreakpoint).copy(
                     applied = true,
                     pending = false
                 )
-                LiveInstrumentEventType.BREAKPOINT_APPLIED
             }
 
             LiveInstrumentType.LOG -> {
-                instrument = (instrument as LiveLog).copy(
+                (instrument as LiveLog).copy(
                     applied = true,
                     pending = false
                 )
-                LiveInstrumentEventType.LOG_APPLIED
             }
 
             LiveInstrumentType.METER -> {
-                instrument = (instrument as LiveMeter).copy(
+                (instrument as LiveMeter).copy(
                     applied = true,
                     pending = false
                 )
-                LiveInstrumentEventType.METER_APPLIED
             }
 
             LiveInstrumentType.SPAN -> {
-                instrument = (instrument as LiveSpan).copy(
+                (instrument as LiveSpan).copy(
                     applied = true,
                     pending = false
                 )
-                LiveInstrumentEventType.SPAN_APPLIED
             }
 
             else -> throw IllegalArgumentException("Unknown live instrument type")
         }
-        (instrument.meta as MutableMap<String, Any>)["applied_at"] = "${System.currentTimeMillis()}"
+
+        val appliedAt = Instant.now() //todo: get from probe
+        (instrument.meta as MutableMap<String, Any>)["applied_at"] = "${appliedAt.toEpochMilli()}"
         SourceStorage.updateLiveInstrument(instrument.id!!, instrument)
 
         vertx.eventBus().send("apply-immediately.${instrument.id}", instrument)
@@ -502,12 +498,12 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
 
         vertx.eventBus().publish(
             toLiveInstrumentSubscription(instrument.id!!),
-            JsonObject.mapFrom(LiveInstrumentEvent(eventType, Json.encode(removeInternalMeta(instrument))))
+            JsonObject.mapFrom(LiveInstrumentApplied(removeInternalMeta(instrument)!!, appliedAt))
         )
         //todo: remove dev-specific publish
         vertx.eventBus().publish(
             toLiveInstrumentSubscriberAddress(developerId),
-            JsonObject.mapFrom(LiveInstrumentEvent(eventType, Json.encode(removeInternalMeta(instrument))))
+            JsonObject.mapFrom(LiveInstrumentApplied(removeInternalMeta(instrument)!!, appliedAt))
         )
         log.trace { "Published live instrument applied" }
     }
@@ -558,21 +554,14 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
             dispatchCommand(accessToken, LIVE_INSTRUMENT_REMOTE, debuggerCommand)
 
             if (alertSubscribers) {
-                val eventType = when (instrument.type) {
-                    LiveInstrumentType.BREAKPOINT -> LiveInstrumentEventType.BREAKPOINT_ADDED
-                    LiveInstrumentType.LOG -> LiveInstrumentEventType.LOG_ADDED
-                    LiveInstrumentType.METER -> LiveInstrumentEventType.METER_ADDED
-                    LiveInstrumentType.SPAN -> LiveInstrumentEventType.SPAN_ADDED
-                }
-
                 vertx.eventBus().publish(
                     toLiveInstrumentSubscription(instrument.id!!),
-                    JsonObject.mapFrom(LiveInstrumentEvent(eventType, Json.encode(removeInternalMeta(instrument))))
+                    JsonObject.mapFrom(LiveInstrumentAdded(removeInternalMeta(instrument)!!))
                 )
                 //todo: remove dev-specific publish
                 vertx.eventBus().publish(
                     toLiveInstrumentSubscriberAddress(developerId),
-                    JsonObject.mapFrom(LiveInstrumentEvent(eventType, Json.encode(removeInternalMeta(instrument))))
+                    JsonObject.mapFrom(LiveInstrumentAdded(removeInternalMeta(instrument)!!))
                 )
             }
             promise.complete(removeInternalMeta(instrument))
@@ -640,22 +629,16 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
             ServiceExceptionConverter.fromEventBusException(cause, true)
         } else null
         vertx.eventBus().request<Void>("apply-immediately.${instrument.id}", ebException).onFailure {
-            val eventType = when (instrument.type) {
-                LiveInstrumentType.BREAKPOINT -> LiveInstrumentEventType.BREAKPOINT_REMOVED
-                LiveInstrumentType.LOG -> LiveInstrumentEventType.LOG_REMOVED
-                LiveInstrumentType.METER -> LiveInstrumentEventType.METER_REMOVED
-                LiveInstrumentType.SPAN -> LiveInstrumentEventType.SPAN_REMOVED
-            }
-            val eventData = Json.encode(LiveInstrumentRemoved(removeInternalMeta(instrument)!!, occurredAt, jvmCause))
+            val removedEvent = LiveInstrumentRemoved(removeInternalMeta(instrument)!!, occurredAt, jvmCause)
 
             vertx.eventBus().publish(
                 toLiveInstrumentSubscription(instrument.id!!),
-                JsonObject.mapFrom(LiveInstrumentEvent(eventType, eventData))
+                JsonObject.mapFrom(removedEvent)
             )
             //todo: remove dev-specific publish
             vertx.eventBus().publish(
                 toLiveInstrumentSubscriberAddress(developerId),
-                JsonObject.mapFrom(LiveInstrumentEvent(eventType, eventData))
+                JsonObject.mapFrom(removedEvent)
             )
         }
 
@@ -703,31 +686,20 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
             dispatchCommand(devAuth.accessToken, LIVE_INSTRUMENT_REMOTE, debuggerCommand)
             log.debug { "Removed live instrument(s) at: {}".args(location) }
 
-            val eventType = when (instrumentType) {
-                LiveInstrumentType.BREAKPOINT -> LiveInstrumentEventType.BREAKPOINT_REMOVED
-                LiveInstrumentType.LOG -> LiveInstrumentEventType.LOG_REMOVED
-                LiveInstrumentType.METER -> LiveInstrumentEventType.METER_REMOVED
-                LiveInstrumentType.SPAN -> LiveInstrumentEventType.SPAN_REMOVED
-            }
-
-            val removedArray = JsonArray()
             result.forEach {
                 val removedEvent = JsonObject.mapFrom(
                     LiveInstrumentRemoved(removeInternalMeta(it)!!, Instant.now(), null)
                 )
                 vertx.eventBus().publish(
                     toLiveInstrumentSubscription(it.id!!),
-                    JsonObject.mapFrom(LiveInstrumentEvent(eventType, removedEvent.toString()))
+                    JsonObject.mapFrom(removedEvent)
                 )
-                removedArray.add(removedEvent)
+                //todo: remove dev-specific publish
+                vertx.eventBus().publish(
+                    toLiveInstrumentSubscriberAddress(devAuth.selfId),
+                    JsonObject.mapFrom(removedEvent)
+                )
             }
-
-            val eventData = Json.encode(removedArray)
-            //todo: remove dev-specific publish
-            vertx.eventBus().publish(
-                toLiveInstrumentSubscriberAddress(devAuth.selfId),
-                JsonObject.mapFrom(LiveInstrumentEvent(eventType, eventData))
-            )
         }
         return Future.succeededFuture(result.filter { it.type == instrumentType }.map { it })
     }

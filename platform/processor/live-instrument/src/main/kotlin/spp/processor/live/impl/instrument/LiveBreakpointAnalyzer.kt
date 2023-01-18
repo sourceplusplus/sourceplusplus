@@ -19,7 +19,6 @@ package spp.processor.live.impl.instrument
 
 import io.grpc.Context
 import io.vertx.core.Vertx
-import io.vertx.core.json.Json
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import io.vertx.kotlin.core.json.get
@@ -43,8 +42,6 @@ import spp.protocol.artifact.exception.LiveStackTrace
 import spp.protocol.artifact.exception.LiveStackTraceElement
 import spp.protocol.artifact.exception.sourceAsLineNumber
 import spp.protocol.instrument.event.LiveBreakpointHit
-import spp.protocol.instrument.event.LiveInstrumentEvent
-import spp.protocol.instrument.event.LiveInstrumentEventType.BREAKPOINT_HIT
 import spp.protocol.instrument.variable.LiveVariable
 import spp.protocol.instrument.variable.LiveVariableScope
 import spp.protocol.platform.auth.DataRedaction
@@ -319,12 +316,12 @@ class LiveBreakpointAnalyzer(
 
             ClusterConnection.getVertx().eventBus().publish(
                 toLiveInstrumentSubscription(hit.breakpointId),
-                JsonObject.mapFrom(LiveInstrumentEvent(BREAKPOINT_HIT, Json.encode(hit)))
+                JsonObject.mapFrom(hit)
             )
             //todo: remove dev-specific publish
             ClusterConnection.getVertx().eventBus().publish(
                 toLiveInstrumentSubscriberAddress(developerId),
-                JsonObject.mapFrom(LiveInstrumentEvent(BREAKPOINT_HIT, Json.encode(hit)))
+                JsonObject.mapFrom(hit)
             )
             log.trace { "Published live breakpoint hit" }
         } else {

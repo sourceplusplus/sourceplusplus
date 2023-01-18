@@ -26,10 +26,7 @@ import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
 import org.slf4j.LoggerFactory
 import spp.protocol.instrument.LiveBreakpoint
-import spp.protocol.instrument.LiveInstrument
-import spp.protocol.instrument.event.LiveBreakpointHit
-import spp.protocol.instrument.event.LiveInstrumentEvent
-import spp.protocol.instrument.event.LiveInstrumentRemoved
+import spp.protocol.instrument.event.*
 import spp.protocol.instrument.location.LiveSourceLocation
 import spp.protocol.marshall.ServiceExceptionConverter
 import spp.protocol.service.error.LiveInstrumentException
@@ -73,12 +70,12 @@ class LiveBreakpointTest : LiveInstrumentIntegrationTest() {
         val instrumentListener = vertx.addLiveInstrumentListener(
             testNameAsInstrumentId,
             object : LiveInstrumentListener {
-                override fun onBreakpointAddedEvent(event: LiveBreakpoint) {
+                override fun onBreakpointAddedEvent(event: LiveInstrumentAdded) {
                     log.info("Got added")
                     gotAdded = true
                 }
 
-                override fun onInstrumentAppliedEvent(event: LiveInstrument) {
+                override fun onInstrumentAppliedEvent(event: LiveInstrumentApplied) {
                     log.info("Got applied")
                     gotApplied = true
                 }
@@ -191,12 +188,12 @@ class LiveBreakpointTest : LiveInstrumentIntegrationTest() {
         val instrumentListener = vertx.addLiveInstrumentListener(
             testNameAsInstrumentId,
             object : LiveInstrumentListener {
-                override fun onBreakpointAddedEvent(event: LiveBreakpoint) {
+                override fun onBreakpointAddedEvent(event: LiveInstrumentAdded) {
                     log.info("Got added")
                     gotAdded = true
                 }
 
-                override fun onInstrumentAppliedEvent(event: LiveInstrument) {
+                override fun onInstrumentAppliedEvent(event: LiveInstrumentApplied) {
                     log.info("Got applied")
                     gotApplied = true
                 }
@@ -320,7 +317,7 @@ class LiveBreakpointTest : LiveInstrumentIntegrationTest() {
         val testContext = VertxTestContext()
         val addedCount = AtomicInteger(0)
         val listener = object : LiveInstrumentListener {
-            override fun onBreakpointAddedEvent(event: LiveBreakpoint) {
+            override fun onBreakpointAddedEvent(event: LiveInstrumentAdded) {
                 if (addedCount.incrementAndGet() == 2) {
                     instrumentService.removeLiveInstruments(
                         LiveSourceLocation("RemoveMultipleByLocation", 42)
