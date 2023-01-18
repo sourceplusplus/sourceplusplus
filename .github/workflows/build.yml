@@ -238,7 +238,11 @@ jobs:
           until $(curl --header "Authorization: Bearer ${{ env.SPP_JWT_TOKEN }}" --output /dev/null --silent --fail http://localhost:12800/health); do printf '.'; sleep 5; done
 
       - name: Test probe-jvm
-        run: ./gradlew -p probes/jvm assemble test -Dtest.profile=integration
+        run: |
+          ./gradlew --no-daemon -Dtest.profile=integration \
+            :probes:jvm:boot:test \
+            :probes:jvm:common:test \
+            :probes:jvm:services:test
 
   test-probe-nodejs:
     needs: [ verify-mono, build-platform ]
