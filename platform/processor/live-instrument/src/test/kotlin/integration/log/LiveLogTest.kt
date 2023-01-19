@@ -271,7 +271,7 @@ class LiveLogTest : LiveInstrumentIntegrationTest() {
         vertx.addLiveInstrumentListener(testNameAsInstrumentId, object : LiveInstrumentListener {
             override fun onLogAddedEvent(event: LiveInstrumentAdded) {
                 testContext.verify {
-                    assertEquals(testNameAsInstrumentId, event.liveInstrument.id)
+                    assertEquals(testNameAsInstrumentId, event.instrument.id)
                 }
                 testContext.completeNow()
             }

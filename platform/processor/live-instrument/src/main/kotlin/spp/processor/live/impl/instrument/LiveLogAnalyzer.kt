@@ -97,11 +97,8 @@ class LiveLogAnalyzer : LogAnalysisListener, LogAnalysisListenerFactory {
 
         GlobalScope.launch(ClusterConnection.getVertx().dispatcher()) {
             handleLogHit(
-                LiveLogHit(
+                IntermediateLiveLogHit(
                     logId!!,
-                    Instant.ofEpochMilli(logData.timestamp),
-                    logData.serviceInstance,
-                    logData.service,
                     LogResult(
                         orderType = LogOrderType.NEWEST_LOGS,
                         timestamp = Instant.ofEpochMilli(logData.timestamp),
@@ -117,16 +114,19 @@ class LiveLogAnalyzer : LogAnalysisListener, LogAnalysisListenerFactory {
                             )
                         ),
                         total = -1
-                    )
+                    ),
+                    Instant.ofEpochMilli(logData.timestamp),
+                    logData.serviceInstance,
+                    logData.service
                 )
             )
         }
         return this
     }
 
-    private suspend fun handleLogHit(hit: LiveLogHit) {
-        log.trace { "Live log hit: {}".args(hit) }
-        val liveInstrument = SourceStorage.getLiveInstrument(hit.logId, true)
+    private suspend fun handleLogHit(intermediateHit: IntermediateLiveLogHit) {
+        log.trace { "Live log hit: {}".args(intermediateHit) }
+        val liveInstrument = SourceStorage.getLiveInstrument(intermediateHit.logId, true)
         if (liveInstrument != null) {
             val instrumentMeta = liveInstrument.meta as MutableMap<String, Any>
             instrumentMeta["hit_count"] = (instrumentMeta["hit_count"] as Int?)?.plus(1) ?: 1
@@ -138,8 +138,15 @@ class LiveLogAnalyzer : LogAnalysisListener, LogAnalysisListenerFactory {
 
             val developerId = liveInstrument.meta["spp.developer_id"] as String
 
+            val hit = LiveLogHit(
+                liveInstrument,
+                intermediateHit.logResult,
+                intermediateHit.occurredAt,
+                intermediateHit.serviceInstance,
+                intermediateHit.service
+            )
             ClusterConnection.getVertx().eventBus().publish(
-                toLiveInstrumentSubscription(hit.logId),
+                toLiveInstrumentSubscription(hit.instrument.id!!),
                 JsonObject.mapFrom(hit)
             )
             //todo: remove dev-specific publish
@@ -149,9 +156,17 @@ class LiveLogAnalyzer : LogAnalysisListener, LogAnalysisListenerFactory {
             )
             log.trace { "Published live log hit" }
         } else {
-            log.warn { "Live log hit for unknown log id: {}".args(hit.logId) }
+            log.warn { "Live log hit for unknown log id: {}".args(intermediateHit.logId) }
         }
     }
 
     override fun create(layer: Layer?) = LiveLogAnalyzer()
+
+    data class IntermediateLiveLogHit(
+        val logId: String,
+        val logResult: LogResult,
+        val occurredAt: Instant,
+        val serviceInstance: String,
+        val service: String
+    )
 }

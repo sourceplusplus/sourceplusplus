@@ -88,7 +88,7 @@ class LiveBreakpointTest : LiveInstrumentIntegrationTest() {
                 override fun onBreakpointHitEvent(event: LiveBreakpointHit) {
                     log.info("Got hit")
                     testContext.verify {
-                        assertEquals(testNameAsInstrumentId, event.breakpointId)
+                        assertEquals(testNameAsInstrumentId, event.instrument.id)
                         assertTrue(event.stackTrace.elements.isNotEmpty())
                         val topFrame = event.stackTrace.elements.first()
                         assertEquals(10, topFrame.variables.size)

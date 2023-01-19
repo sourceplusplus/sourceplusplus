@@ -59,7 +59,7 @@ class RemoveInstrumentsTest : LiveInstrumentIntegrationTest() {
                 testContext.verify {
                     assertEquals(
                         LiveSourceLocation(RemoveInstrumentsTest::class.qualifiedName!!, 1),
-                        event.liveInstrument.location
+                        event.instrument.location
                     )
 
                     if (removedCount.incrementAndGet() == 2) {

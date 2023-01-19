@@ -208,7 +208,7 @@ class LiveBreakpointAnalyzer(
             return LiveVariable(varName, innerVars, scope = scope)
         }
 
-        fun transformRawBreakpointHit(bpData: JsonObject): LiveBreakpointHit {
+        fun transformRawBreakpointHit(bpData: JsonObject): IntermediateLiveBreakpointHit {
             log.trace { "Transforming raw breakpoint hit: {}".args(bpData) }
             val varDatum = bpData.getJsonArray("variables")
             val variables = mutableListOf<LiveVariable>()
@@ -284,7 +284,7 @@ class LiveBreakpointAnalyzer(
             //add live variables
             stackTrace.first().variables.addAll(variables)
 
-            return LiveBreakpointHit(
+            return IntermediateLiveBreakpointHit(
                 bpData.getString("breakpoint_id"),
                 bpData.getString("trace_id"),
                 Instant.ofEpochMilli(bpData.getLong("occurred_at")),
@@ -299,9 +299,9 @@ class LiveBreakpointAnalyzer(
         }
     }
 
-    private suspend fun handleBreakpointHit(hit: LiveBreakpointHit) {
-        log.trace { "Live breakpoint hit: {}".args(hit) }
-        val liveInstrument = SourceStorage.getLiveInstrument(hit.breakpointId, true)
+    private suspend fun handleBreakpointHit(intermediateHit: IntermediateLiveBreakpointHit) {
+        log.trace { "Live breakpoint hit: {}".args(intermediateHit) }
+        val liveInstrument = SourceStorage.getLiveInstrument(intermediateHit.breakpointId, true)
         if (liveInstrument != null) {
             val instrumentMeta = liveInstrument.meta as MutableMap<String, Any>
             instrumentMeta["hit_count"] = (instrumentMeta["hit_count"] as Int?)?.plus(1) ?: 1
@@ -312,10 +312,18 @@ class LiveBreakpointAnalyzer(
             SourceStorage.updateLiveInstrument(liveInstrument.id!!, liveInstrument)
 
             val developerId = liveInstrument.meta["spp.developer_id"] as String
-            doDataRedactions(SourceStorage.getDeveloperDataRedactions(developerId), hit)
+            doDataRedactions(SourceStorage.getDeveloperDataRedactions(developerId), intermediateHit)
 
+            val hit = LiveBreakpointHit(
+                liveInstrument,
+                intermediateHit.traceId,
+                intermediateHit.stackTrace,
+                intermediateHit.occurredAt,
+                intermediateHit.serviceInstance,
+                intermediateHit.service,
+            )
             ClusterConnection.getVertx().eventBus().publish(
-                toLiveInstrumentSubscription(hit.breakpointId),
+                toLiveInstrumentSubscription(hit.instrument.id!!),
                 JsonObject.mapFrom(hit)
             )
             //todo: remove dev-specific publish
@@ -325,11 +333,11 @@ class LiveBreakpointAnalyzer(
             )
             log.trace { "Published live breakpoint hit" }
         } else {
-            log.warn { "No live instrument found for breakpoint id: ${hit.breakpointId}" }
+            log.warn { "No live instrument found for breakpoint id: ${intermediateHit.breakpointId}" }
         }
     }
 
-    private fun doDataRedactions(redactions: List<DataRedaction>, hit: LiveBreakpointHit) {
+    private fun doDataRedactions(redactions: List<DataRedaction>, hit: IntermediateLiveBreakpointHit) {
         if (redactions.isEmpty()) return
 
         hit.stackTrace.elements.forEach {
@@ -373,4 +381,13 @@ class LiveBreakpointAnalyzer(
     }
 
     override fun create(p0: ModuleManager, p1: AnalyzerModuleConfig) = LiveBreakpointAnalyzer(traceQueryService)
+
+    data class IntermediateLiveBreakpointHit(
+        val breakpointId: String,
+        val traceId: String,
+        val occurredAt: Instant,
+        val serviceInstance: String,
+        val service: String,
+        val stackTrace: LiveStackTrace
+    )
 }
