@@ -39,6 +39,7 @@ import org.slf4j.LoggerFactory
 import spp.platform.common.ClusterConnection.discovery
 import spp.platform.common.FeedbackProcessor
 import spp.processor.live.impl.LiveInstrumentServiceImpl
+import spp.protocol.instrument.*
 import spp.protocol.platform.auth.AccessChecker
 import spp.protocol.platform.auth.RolePermission
 import spp.protocol.platform.auth.RolePermission.*
@@ -237,5 +238,15 @@ object InstrumentProcessor : FeedbackProcessor() {
                 log.error("Failed to unpublish live instrument service", it.cause())
             }
         }.await()
+    }
+
+    fun removeInternalMeta(it: LiveInstrument?): LiveInstrument? {
+        if (it == null) return null
+        return when (it) {
+            is LiveBreakpoint -> it.copy(meta = it.meta.filterKeys { !it.startsWith("spp.") }.toMutableMap())
+            is LiveLog -> it.copy(meta = it.meta.filterKeys { !it.startsWith("spp.") }.toMutableMap())
+            is LiveMeter -> it.copy(meta = it.meta.filterKeys { !it.startsWith("spp.") }.toMutableMap())
+            is LiveSpan -> it.copy(meta = it.meta.filterKeys { !it.startsWith("spp.") }.toMutableMap())
+        }
     }
 }

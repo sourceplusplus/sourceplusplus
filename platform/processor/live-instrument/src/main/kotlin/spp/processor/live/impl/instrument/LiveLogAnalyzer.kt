@@ -20,7 +20,6 @@ package spp.processor.live.impl.instrument
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
 import com.google.protobuf.Message
-import io.vertx.core.json.JsonObject
 import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -32,11 +31,13 @@ import org.apache.skywalking.oap.server.core.analysis.Layer
 import spp.platform.common.ClusterConnection
 import spp.platform.common.util.args
 import spp.platform.storage.SourceStorage
+import spp.processor.InstrumentProcessor.removeInternalMeta
 import spp.protocol.artifact.log.Log
 import spp.protocol.artifact.log.LogOrderType
 import spp.protocol.artifact.log.LogResult
 import spp.protocol.instrument.event.LiveLogHit
 import spp.protocol.instrument.location.LiveSourceLocation
+import spp.protocol.platform.auth.RolePermission
 import spp.protocol.service.SourceServices.Subscribe.toLiveInstrumentSubscriberAddress
 import spp.protocol.service.SourceServices.Subscribe.toLiveInstrumentSubscription
 import java.time.Instant
@@ -136,24 +137,25 @@ class LiveLogAnalyzer : LogAnalysisListener, LogAnalysisListenerFactory {
             instrumentMeta["last_hit_at"] = System.currentTimeMillis().toString()
             SourceStorage.updateLiveInstrument(liveInstrument.id!!, liveInstrument)
 
-            val developerId = liveInstrument.meta["spp.developer_id"] as String
-
             val hit = LiveLogHit(
-                liveInstrument,
+                removeInternalMeta(liveInstrument)!!,
                 intermediateHit.logResult,
                 intermediateHit.occurredAt,
                 intermediateHit.serviceInstance,
                 intermediateHit.service
             )
-            ClusterConnection.getVertx().eventBus().publish(
-                toLiveInstrumentSubscription(hit.instrument.id!!),
-                JsonObject.mapFrom(hit)
-            )
-            //todo: remove dev-specific publish
-            ClusterConnection.getVertx().eventBus().publish(
-                toLiveInstrumentSubscriberAddress(developerId),
-                JsonObject.mapFrom(hit)
-            )
+
+            //emit to instrument subscribers
+            ClusterConnection.getVertx().eventBus()
+                .publish(toLiveInstrumentSubscription(hit.instrument.id!!), hit)
+
+            //emit to developers with necessary permissions
+            SourceStorage.getDevelopers().forEach {
+                if (SourceStorage.hasPermission(it.id, RolePermission.GET_LIVE_INSTRUMENTS)) {
+                    ClusterConnection.getVertx().eventBus()
+                        .publish(toLiveInstrumentSubscriberAddress(it.id), hit)
+                }
+            }
             log.trace { "Published live log hit" }
         } else {
             log.warn { "Live log hit for unknown log id: {}".args(intermediateHit.logId) }

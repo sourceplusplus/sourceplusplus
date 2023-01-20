@@ -37,6 +37,7 @@ import spp.platform.common.ClusterConnection
 import spp.platform.common.util.ContextUtil
 import spp.platform.common.util.args
 import spp.platform.storage.SourceStorage
+import spp.processor.InstrumentProcessor.removeInternalMeta
 import spp.processor.live.impl.instrument.breakpoint.LiveVariablePresentation
 import spp.protocol.artifact.exception.LiveStackTrace
 import spp.protocol.artifact.exception.LiveStackTraceElement
@@ -46,6 +47,7 @@ import spp.protocol.instrument.variable.LiveVariable
 import spp.protocol.instrument.variable.LiveVariableScope
 import spp.protocol.platform.auth.DataRedaction
 import spp.protocol.platform.auth.RedactionType
+import spp.protocol.platform.auth.RolePermission
 import spp.protocol.service.SourceServices.Subscribe.toLiveInstrumentSubscriberAddress
 import spp.protocol.service.SourceServices.Subscribe.toLiveInstrumentSubscription
 import java.time.Instant
@@ -315,22 +317,25 @@ class LiveBreakpointAnalyzer(
             doDataRedactions(SourceStorage.getDeveloperDataRedactions(developerId), intermediateHit)
 
             val hit = LiveBreakpointHit(
-                liveInstrument,
+                removeInternalMeta(liveInstrument)!!,
                 intermediateHit.traceId,
                 intermediateHit.stackTrace,
                 intermediateHit.occurredAt,
                 intermediateHit.serviceInstance,
                 intermediateHit.service,
             )
-            ClusterConnection.getVertx().eventBus().publish(
-                toLiveInstrumentSubscription(hit.instrument.id!!),
-                JsonObject.mapFrom(hit)
-            )
-            //todo: remove dev-specific publish
-            ClusterConnection.getVertx().eventBus().publish(
-                toLiveInstrumentSubscriberAddress(developerId),
-                JsonObject.mapFrom(hit)
-            )
+
+            //emit to instrument subscribers
+            ClusterConnection.getVertx().eventBus()
+                .publish(toLiveInstrumentSubscription(hit.instrument.id!!), hit)
+
+            //emit to developers with necessary permissions
+            SourceStorage.getDevelopers().forEach {
+                if (SourceStorage.hasPermission(it.id, RolePermission.GET_LIVE_INSTRUMENTS)) {
+                    ClusterConnection.getVertx().eventBus()
+                        .publish(toLiveInstrumentSubscriberAddress(it.id), hit)
+                }
+            }
             log.trace { "Published live breakpoint hit" }
         } else {
             log.warn { "No live instrument found for breakpoint id: ${intermediateHit.breakpointId}" }

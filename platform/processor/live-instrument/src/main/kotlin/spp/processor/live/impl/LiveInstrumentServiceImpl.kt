@@ -39,6 +39,7 @@ import spp.platform.common.FeedbackProcessor
 import spp.platform.common.service.SourceBridgeService
 import spp.platform.common.util.args
 import spp.platform.storage.SourceStorage
+import spp.processor.InstrumentProcessor.removeInternalMeta
 import spp.protocol.artifact.exception.LiveStackTrace
 import spp.protocol.instrument.*
 import spp.protocol.instrument.command.CommandType
@@ -52,6 +53,7 @@ import spp.protocol.marshall.ServiceExceptionConverter
 import spp.protocol.platform.ProbeAddress.LIVE_INSTRUMENT_REMOTE
 import spp.protocol.platform.ProcessorAddress
 import spp.protocol.platform.ProcessorAddress.REMOTE_REGISTERED
+import spp.protocol.platform.auth.RolePermission
 import spp.protocol.platform.status.InstanceConnection
 import spp.protocol.service.LiveInstrumentService
 import spp.protocol.service.SourceServices.Subscribe.toLiveInstrumentSubscriberAddress
@@ -494,17 +496,17 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
 
         vertx.eventBus().send("apply-immediately.${instrument.id}", instrument)
 
-        val developerId = instrument.meta["spp.developer_id"] as String
+        val appliedEvent = LiveInstrumentApplied(removeInternalMeta(instrument)!!, appliedAt)
 
-        vertx.eventBus().publish(
-            toLiveInstrumentSubscription(instrument.id!!),
-            JsonObject.mapFrom(LiveInstrumentApplied(removeInternalMeta(instrument)!!, appliedAt))
-        )
-        //todo: remove dev-specific publish
-        vertx.eventBus().publish(
-            toLiveInstrumentSubscriberAddress(developerId),
-            JsonObject.mapFrom(LiveInstrumentApplied(removeInternalMeta(instrument)!!, appliedAt))
-        )
+        //emit to instrument subscribers
+        vertx.eventBus().publish(toLiveInstrumentSubscription(instrument.id!!), appliedEvent)
+
+        //emit to developers with necessary permissions
+        SourceStorage.getDevelopers().forEach {
+            if (SourceStorage.hasPermission(it.id, RolePermission.GET_LIVE_INSTRUMENTS)) {
+                vertx.eventBus().publish(toLiveInstrumentSubscriberAddress(it.id), appliedEvent)
+            }
+        }
         log.trace { "Published live instrument applied" }
     }
 
@@ -548,21 +550,22 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
                 setOf(removeInternalMeta(instrument)!!)
             )
 
-            val developerId = instrument.meta["spp.developer_id"] as String
             val accessToken = instrument.meta["spp.access_token"] as String?
             SourceStorage.addLiveInstrument(instrument)
             dispatchCommand(accessToken, LIVE_INSTRUMENT_REMOTE, debuggerCommand)
 
             if (alertSubscribers) {
-                vertx.eventBus().publish(
-                    toLiveInstrumentSubscription(instrument.id!!),
-                    JsonObject.mapFrom(LiveInstrumentAdded(removeInternalMeta(instrument)!!))
-                )
-                //todo: remove dev-specific publish
-                vertx.eventBus().publish(
-                    toLiveInstrumentSubscriberAddress(developerId),
-                    JsonObject.mapFrom(LiveInstrumentAdded(removeInternalMeta(instrument)!!))
-                )
+                val addedEvent = LiveInstrumentAdded(removeInternalMeta(instrument)!!)
+
+                //emit to instrument subscribers
+                vertx.eventBus().publish(toLiveInstrumentSubscription(instrument.id!!), addedEvent)
+
+                //emit to developers with necessary permissions
+                SourceStorage.getDevelopers().forEach {
+                    if (SourceStorage.hasPermission(it.id, RolePermission.GET_LIVE_INSTRUMENTS)) {
+                        vertx.eventBus().publish(toLiveInstrumentSubscriberAddress(it.id), addedEvent)
+                    }
+                }
             }
             promise.complete(removeInternalMeta(instrument))
         }
@@ -616,7 +619,6 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
         log.debug { "Removing live instrument: {}".args(instrument.id) }
         SourceStorage.removeLiveInstrument(instrument.id!!)
 
-        val developerId = instrument.meta["spp.developer_id"] as String
         val accessToken = instrument.meta["spp.access_token"] as String?
         val debuggerCommand = LiveInstrumentCommand(
             CommandType.REMOVE_LIVE_INSTRUMENT,
@@ -631,15 +633,17 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
         vertx.eventBus().request<Void>("apply-immediately.${instrument.id}", ebException).onFailure {
             val removedEvent = LiveInstrumentRemoved(removeInternalMeta(instrument)!!, occurredAt, jvmCause)
 
-            vertx.eventBus().publish(
-                toLiveInstrumentSubscription(instrument.id!!),
-                JsonObject.mapFrom(removedEvent)
-            )
-            //todo: remove dev-specific publish
-            vertx.eventBus().publish(
-                toLiveInstrumentSubscriberAddress(developerId),
-                JsonObject.mapFrom(removedEvent)
-            )
+            launch(vertx.dispatcher()) {
+                //emit to instrument subscribers
+                vertx.eventBus().publish(toLiveInstrumentSubscription(instrument.id!!), removedEvent)
+
+                //emit to developers with necessary permissions
+                SourceStorage.getDevelopers().forEach {
+                    if (SourceStorage.hasPermission(it.id, RolePermission.GET_LIVE_INSTRUMENTS)) {
+                        vertx.eventBus().publish(toLiveInstrumentSubscriberAddress(it.id), removedEvent)
+                    }
+                }
+            }
         }
 
         if (jvmCause != null) {
@@ -687,30 +691,19 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
             log.debug { "Removed live instrument(s) at: {}".args(location) }
 
             result.forEach {
-                val removedEvent = JsonObject.mapFrom(
-                    LiveInstrumentRemoved(removeInternalMeta(it)!!, Instant.now(), null)
-                )
-                vertx.eventBus().publish(
-                    toLiveInstrumentSubscription(it.id!!),
-                    JsonObject.mapFrom(removedEvent)
-                )
-                //todo: remove dev-specific publish
-                vertx.eventBus().publish(
-                    toLiveInstrumentSubscriberAddress(devAuth.selfId),
-                    JsonObject.mapFrom(removedEvent)
-                )
+                val removedEvent = LiveInstrumentRemoved(removeInternalMeta(it)!!, Instant.now(), null)
+
+                //emit to instrument subscribers
+                vertx.eventBus().publish(toLiveInstrumentSubscription(removedEvent.instrument.id!!), removedEvent)
+
+                //emit to developers with necessary permissions
+                SourceStorage.getDevelopers().forEach {
+                    if (SourceStorage.hasPermission(it.id, RolePermission.GET_LIVE_INSTRUMENTS)) {
+                        vertx.eventBus().publish(toLiveInstrumentSubscriberAddress(it.id), removedEvent)
+                    }
+                }
             }
         }
         return Future.succeededFuture(result.filter { it.type == instrumentType }.map { it })
-    }
-
-    private fun removeInternalMeta(it: LiveInstrument?): LiveInstrument? {
-        if (it == null) return null
-        return when (it) {
-            is LiveBreakpoint -> it.copy(meta = it.meta.filterKeys { !it.startsWith("spp.") }.toMutableMap())
-            is LiveLog -> it.copy(meta = it.meta.filterKeys { !it.startsWith("spp.") }.toMutableMap())
-            is LiveMeter -> it.copy(meta = it.meta.filterKeys { !it.startsWith("spp.") }.toMutableMap())
-            is LiveSpan -> it.copy(meta = it.meta.filterKeys { !it.startsWith("spp.") }.toMutableMap())
-        }
     }
 }
