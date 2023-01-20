@@ -156,8 +156,8 @@ class SourcePlatform(private val manager: ModuleManager) : CoroutineVerticle() {
         }
 
         //S++ APIs
-        vertx.deployVerticle(RestAPI(jwtEnabled, jwt))
-        vertx.deployVerticle(GraphqlAPI(), DeploymentOptions().setConfig(config.getJsonObject("spp-platform")))
+        vertx.deployVerticle(RestAPI(jwtEnabled, jwt)).await()
+        vertx.deployVerticle(GraphqlAPI(), DeploymentOptions().setConfig(config.getJsonObject("spp-platform"))).await()
 
         //Service discovery
         vertx.eventBus().consumer<JsonObject>(ServiceDiscoveryOptions.DEFAULT_ANNOUNCE_ADDRESS) {
