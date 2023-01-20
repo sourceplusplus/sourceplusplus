@@ -109,253 +109,134 @@ class GraphqlAPI : CoroutineVerticle() {
     }
 
     private fun setupGraphQL(): GraphQL {
-        val schema = vertx.fileSystem().readFileBlocking("spp-api.graphqls").toString()
-        val schemaParser = SchemaParser()
-        val typeDefinitionRegistry: TypeDefinitionRegistry = schemaParser.parse(schema)
-        val runtimeWiring = RuntimeWiring.newRuntimeWiring()
-            .scalar(
-                GraphQLScalarType.newScalar().name("Long")
-                    .coercing(object : Coercing<Long, Long> {
-                        override fun serialize(dataFetcherResult: Any): Long {
-                            return dataFetcherResult as Long
-                        }
+        val schemaFile = vertx.fileSystem().readFileBlocking("spp-api.graphqls").toString()
+        val typeDefinitionRegistry = SchemaParser().parse(schemaFile)
+        val runtimeWiring = RuntimeWiring.newRuntimeWiring().scalar(
+            GraphQLScalarType.newScalar().name("Long")
+                .coercing(object : Coercing<Long, Long> {
+                    override fun serialize(dataFetcherResult: Any): Long {
+                        return dataFetcherResult as Long
+                    }
 
-                        override fun parseValue(input: Any): Long {
-                            return when (input) {
-                                is Number -> input.toLong()
-                                is String -> {
-                                    try {
-                                        return input.toLong()
-                                    } catch (e: NumberFormatException) {
-                                        throw CoercingParseValueException("Invalid long value: $input")
-                                    }
+                    override fun parseValue(input: Any): Long {
+                        return when (input) {
+                            is Number -> input.toLong()
+                            is String -> {
+                                try {
+                                    return input.toLong()
+                                } catch (e: NumberFormatException) {
+                                    throw CoercingParseValueException("Invalid long value: $input")
                                 }
-
-                                else -> throw CoercingParseValueException("Expected Number or String")
                             }
-                        }
 
-                        override fun parseLiteral(input: Any): Long {
-                            return input as Long
+                            else -> throw CoercingParseValueException("Expected Number or String")
                         }
-                    }).build()
-            )
-            .type(TypeRuntimeWiring.newTypeWiring("LiveInstrument").typeResolver {
-                if ((it.getObject() as Any) is LiveBreakpoint ||
-                    (it.getObject() as Map<String, Any>)["type"] == "BREAKPOINT"
-                ) {
-                    it.schema.getObjectType("LiveBreakpoint")
-                } else if ((it.getObject() as Any) is LiveLog ||
-                    (it.getObject() as Map<String, Any>)["type"] == "LOG"
-                ) {
-                    it.schema.getObjectType("LiveLog")
-                } else if ((it.getObject() as Any) is LiveMeter ||
-                    (it.getObject() as Map<String, Any>)["type"] == "METER"
-                ) {
-                    it.schema.getObjectType("LiveMeter")
-                } else {
-                    it.schema.getObjectType("LiveSpan")
-                }
-            }.build())
-            .type(
-                "Query"
-            ) { builder: TypeRuntimeWiring.Builder ->
-                builder.dataFetcher(
-                    "version",
-                    this::version
-                ).dataFetcher(
-                    "getAccessPermissions",
-                    this::getAccessPermissions
-                ).dataFetcher(
-                    "getAccessPermission",
-                    this::getAccessPermission
-                ).dataFetcher(
-                    "getRoleAccessPermissions",
-                    this::getRoleAccessPermissions
-                ).dataFetcher(
-                    "getDeveloperAccessPermissions",
-                    this::getDeveloperAccessPermissions
-                ).dataFetcher(
-                    "getDataRedactions",
-                    this::getDataRedactions
-                ).dataFetcher(
-                    "getDataRedaction",
-                    this::getDataRedaction
-                ).dataFetcher(
-                    "getRoleDataRedactions",
-                    this::getRoleDataRedactions
-                ).dataFetcher(
-                    "getDeveloperDataRedactions",
-                    this::getDeveloperDataRedactions
-                ).dataFetcher(
-                    "getRoles",
-                    this::getRoles
-                ).dataFetcher(
-                    "getRolePermissions",
-                    this::getRolePermissions
-                ).dataFetcher(
-                    "getDeveloperRoles",
-                    this::getDeveloperRoles
-                ).dataFetcher(
-                    "getDeveloperPermissions",
-                    this::getDeveloperPermissions
-                ).dataFetcher(
-                    "getDevelopers",
-                    this::getDevelopers
-                ).dataFetcher(
-                    "getLiveInstruments",
-                    this::getLiveInstruments
-                ).dataFetcher(
-                    "getLiveBreakpoints",
-                    this::getLiveBreakpoints
-                ).dataFetcher(
-                    "getLiveLogs",
-                    this::getLiveLogs
-                ).dataFetcher(
-                    "getLiveMeters",
-                    this::getLiveMeters
-                ).dataFetcher(
-                    "getLiveSpans",
-                    this::getLiveSpans
-                ).dataFetcher(
-                    "getSelf",
-                    this::getSelf
-                ).dataFetcher(
-                    "getServices",
-                    this::getServices
-                ).dataFetcher(
-                    "getInstances",
-                    this::getInstances
-                ).dataFetcher(
-                    "getEndpoints",
-                    this::getEndpoints
-                ).dataFetcher(
-                    "getLiveViews",
-                    this::getLiveViews
-                ).dataFetcher(
-                    "getHistoricalMetrics",
-                    this::getHistoricalMetrics
-                ).dataFetcher(
-                    "getClientAccessors",
-                    this::getClientAccessors
+                    }
+
+                    override fun parseLiteral(input: Any): Long {
+                        return input as Long
+                    }
+                }).build()
+        ).type(TypeRuntimeWiring.newTypeWiring("LiveInstrument").typeResolver {
+            if ((it.getObject() as Any) is LiveBreakpoint ||
+                (it.getObject() as Map<String, Any>)["type"] == "BREAKPOINT"
+            ) {
+                it.schema.getObjectType("LiveBreakpoint")
+            } else if ((it.getObject() as Any) is LiveLog ||
+                (it.getObject() as Map<String, Any>)["type"] == "LOG"
+            ) {
+                it.schema.getObjectType("LiveLog")
+            } else if ((it.getObject() as Any) is LiveMeter ||
+                (it.getObject() as Map<String, Any>)["type"] == "METER"
+            ) {
+                it.schema.getObjectType("LiveMeter")
+            } else {
+                it.schema.getObjectType("LiveSpan")
+            }
+        }.build())
+            .type("Query") { withQueryFetchers(it) }
+            .type("Mutation") { withMutationFetchers(it) }
+            .build()
+
+        val schema = SchemaGenerator().makeExecutableSchema(typeDefinitionRegistry, runtimeWiring)
+        return GraphQL.newGraphQL(schema).defaultDataFetcherExceptionHandler(object : DataFetcherExceptionHandler {
+            override fun handleException(
+                handlerParameters: DataFetcherExceptionHandlerParameters
+            ): CompletableFuture<DataFetcherExceptionHandlerResult> {
+                val exception = handlerParameters.exception
+                exception.message?.let { log.warn(it) }
+                val sourceLocation = handlerParameters.sourceLocation
+                val path = handlerParameters.path
+                val error = ExceptionWhileDataFetching(path, exception, sourceLocation)
+                return CompletableFuture.completedFuture(
+                    DataFetcherExceptionHandlerResult.newResult().error(error).build()
                 )
             }
-            .type(
-                "Mutation"
-            ) { builder: TypeRuntimeWiring.Builder ->
-                builder.dataFetcher(
-                    "reset",
-                    this::reset
-                ).dataFetcher(
-                    "addDataRedaction",
-                    this::addDataRedaction
-                ).dataFetcher(
-                    "updateDataRedaction",
-                    this::updateDataRedaction
-                ).dataFetcher(
-                    "removeDataRedaction",
-                    this::removeDataRedaction
-                ).dataFetcher(
-                    "addRoleDataRedaction",
-                    this::addRoleDataRedaction
-                ).dataFetcher(
-                    "removeRoleDataRedaction",
-                    this::removeRoleDataRedaction
-                ).dataFetcher(
-                    "addAccessPermission",
-                    this::addAccessPermission
-                ).dataFetcher(
-                    "removeAccessPermission",
-                    this::removeAccessPermission
-                ).dataFetcher(
-                    "addRoleAccessPermission",
-                    this::addRoleAccessPermission
-                ).dataFetcher(
-                    "removeRoleAccessPermission",
-                    this::removeRoleAccessPermission
-                ).dataFetcher(
-                    "addRole",
-                    this::addRole
-                ).dataFetcher(
-                    "removeRole",
-                    this::removeRole
-                ).dataFetcher(
-                    "addRolePermission",
-                    this::addRolePermission
-                ).dataFetcher(
-                    "removeRolePermission",
-                    this::removeRolePermission
-                ).dataFetcher(
-                    "addDeveloperRole",
-                    this::addDeveloperRole
-                ).dataFetcher(
-                    "removeDeveloperRole",
-                    this::removeDeveloperRole
-                ).dataFetcher(
-                    "addDeveloper",
-                    this::addDeveloper
-                ).dataFetcher(
-                    "removeDeveloper",
-                    this::removeDeveloper
-                ).dataFetcher(
-                    "refreshDeveloperToken",
-                    this::refreshDeveloperToken
-                ).dataFetcher(
-                    "removeLiveInstrument",
-                    this::removeLiveInstrument
-                ).dataFetcher(
-                    "removeLiveInstruments",
-                    this::removeLiveInstruments
-                ).dataFetcher(
-                    "clearLiveInstruments",
-                    this::clearLiveInstruments
-                ).dataFetcher(
-                    "addLiveBreakpoint",
-                    this::addLiveBreakpoint
-                ).dataFetcher(
-                    "addLiveLog",
-                    this::addLiveLog
-                ).dataFetcher(
-                    "addLiveMeter",
-                    this::addLiveMeter
-                ).dataFetcher(
-                    "addLiveSpan",
-                    this::addLiveSpan
-                ).dataFetcher(
-                    "addLiveView",
-                    this::addLiveView
-                ).dataFetcher(
-                    "clearLiveViews",
-                    this::clearLiveViews
-                ).dataFetcher(
-                    "addClientAccess",
-                    this::addClientAccess
-                ).dataFetcher(
-                    "removeClientAccess",
-                    this::removeClientAccess
-                ).dataFetcher(
-                    "refreshClientAccess",
-                    this::refreshClientAccess
-                )
-            }.build()
-        val schemaGenerator = SchemaGenerator()
-        val graphQLSchema = schemaGenerator.makeExecutableSchema(typeDefinitionRegistry, runtimeWiring)
-        return GraphQL.newGraphQL(graphQLSchema)
-            .defaultDataFetcherExceptionHandler(object : DataFetcherExceptionHandler {
-                override fun handleException(
-                    handlerParameters: DataFetcherExceptionHandlerParameters
-                ): CompletableFuture<DataFetcherExceptionHandlerResult> {
-                    val exception = handlerParameters.exception
-                    exception.message?.let { log.warn(it) }
-                    val sourceLocation = handlerParameters.sourceLocation
-                    val path = handlerParameters.path
-                    val error = ExceptionWhileDataFetching(path, exception, sourceLocation)
-                    return CompletableFuture.completedFuture(
-                        DataFetcherExceptionHandlerResult.newResult().error(error).build()
-                    )
-                }
-            })
-            .build()
+        }).build()
+    }
+
+    private fun withQueryFetchers(builder: TypeRuntimeWiring.Builder): TypeRuntimeWiring.Builder {
+        return builder
+            .dataFetcher("version", this::version)
+            .dataFetcher("getAccessPermissions", this::getAccessPermissions)
+            .dataFetcher("getAccessPermission", this::getAccessPermission)
+            .dataFetcher("getRoleAccessPermissions", this::getRoleAccessPermissions)
+            .dataFetcher("getDeveloperAccessPermissions", this::getDeveloperAccessPermissions)
+            .dataFetcher("getDataRedactions", this::getDataRedactions)
+            .dataFetcher("getDataRedaction", this::getDataRedaction)
+            .dataFetcher("getRoleDataRedactions", this::getRoleDataRedactions)
+            .dataFetcher("getDeveloperDataRedactions", this::getDeveloperDataRedactions)
+            .dataFetcher("getRoles", this::getRoles)
+            .dataFetcher("getRolePermissions", this::getRolePermissions)
+            .dataFetcher("getDeveloperRoles", this::getDeveloperRoles)
+            .dataFetcher("getDeveloperPermissions", this::getDeveloperPermissions)
+            .dataFetcher("getDevelopers", this::getDevelopers)
+            .dataFetcher("getLiveInstruments", this::getLiveInstruments)
+            .dataFetcher("getLiveBreakpoints", this::getLiveBreakpoints)
+            .dataFetcher("getLiveLogs", this::getLiveLogs)
+            .dataFetcher("getLiveMeters", this::getLiveMeters)
+            .dataFetcher("getLiveSpans", this::getLiveSpans)
+            .dataFetcher("getSelf", this::getSelf)
+            .dataFetcher("getServices", this::getServices)
+            .dataFetcher("getInstances", this::getInstances)
+            .dataFetcher("getEndpoints", this::getEndpoints)
+            .dataFetcher("getLiveViews", this::getLiveViews)
+            .dataFetcher("getHistoricalMetrics", this::getHistoricalMetrics)
+            .dataFetcher("getClientAccessors", this::getClientAccessors)
+    }
+
+    private fun withMutationFetchers(builder: TypeRuntimeWiring.Builder): TypeRuntimeWiring.Builder {
+        return builder.dataFetcher("reset", this::reset)
+            .dataFetcher("addDataRedaction", this::addDataRedaction)
+            .dataFetcher("updateDataRedaction", this::updateDataRedaction)
+            .dataFetcher("removeDataRedaction", this::removeDataRedaction)
+            .dataFetcher("addRoleDataRedaction", this::addRoleDataRedaction)
+            .dataFetcher("removeRoleDataRedaction", this::removeRoleDataRedaction)
+            .dataFetcher("addAccessPermission", this::addAccessPermission)
+            .dataFetcher("removeAccessPermission", this::removeAccessPermission)
+            .dataFetcher("addRoleAccessPermission", this::addRoleAccessPermission)
+            .dataFetcher("removeRoleAccessPermission", this::removeRoleAccessPermission)
+            .dataFetcher("addRole", this::addRole)
+            .dataFetcher("removeRole", this::removeRole)
+            .dataFetcher("addRolePermission", this::addRolePermission)
+            .dataFetcher("removeRolePermission", this::removeRolePermission)
+            .dataFetcher("addDeveloperRole", this::addDeveloperRole)
+            .dataFetcher("removeDeveloperRole", this::removeDeveloperRole)
+            .dataFetcher("addDeveloper", this::addDeveloper)
+            .dataFetcher("removeDeveloper", this::removeDeveloper)
+            .dataFetcher("refreshDeveloperToken", this::refreshDeveloperToken)
+            .dataFetcher("removeLiveInstrument", this::removeLiveInstrument)
+            .dataFetcher("removeLiveInstruments", this::removeLiveInstruments)
+            .dataFetcher("clearLiveInstruments", this::clearLiveInstruments)
+            .dataFetcher("addLiveBreakpoint", this::addLiveBreakpoint)
+            .dataFetcher("addLiveLog", this::addLiveLog)
+            .dataFetcher("addLiveMeter", this::addLiveMeter)
+            .dataFetcher("addLiveSpan", this::addLiveSpan)
+            .dataFetcher("addLiveView", this::addLiveView)
+            .dataFetcher("clearLiveViews", this::clearLiveViews)
+            .dataFetcher("addClientAccess", this::addClientAccess)
+            .dataFetcher("removeClientAccess", this::removeClientAccess)
+            .dataFetcher("refreshClientAccess", this::refreshClientAccess)
     }
 
     private fun version(env: DataFetchingEnvironment): CompletableFuture<String> =
