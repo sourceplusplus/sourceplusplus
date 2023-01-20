@@ -316,18 +316,20 @@ class LiveBreakpointAnalyzer(
             val developerId = liveInstrument.meta["spp.developer_id"] as String
             doDataRedactions(SourceStorage.getDeveloperDataRedactions(developerId), intermediateHit)
 
-            val hit = LiveBreakpointHit(
-                removeInternalMeta(liveInstrument)!!,
-                intermediateHit.traceId,
-                intermediateHit.stackTrace,
-                intermediateHit.occurredAt,
-                intermediateHit.serviceInstance,
-                intermediateHit.service,
+            val hit = JsonObject.mapFrom(
+                LiveBreakpointHit(
+                    removeInternalMeta(liveInstrument)!!,
+                    intermediateHit.traceId,
+                    intermediateHit.stackTrace,
+                    intermediateHit.occurredAt,
+                    intermediateHit.serviceInstance,
+                    intermediateHit.service,
+                )
             )
 
             //emit to instrument subscribers
             ClusterConnection.getVertx().eventBus()
-                .publish(toLiveInstrumentSubscription(hit.instrument.id!!), hit)
+                .publish(toLiveInstrumentSubscription(liveInstrument.id!!), hit)
 
             //emit to developers with necessary permissions
             SourceStorage.getDevelopers().forEach {

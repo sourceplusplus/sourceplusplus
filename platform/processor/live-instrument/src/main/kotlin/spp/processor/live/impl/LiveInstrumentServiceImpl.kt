@@ -496,7 +496,7 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
 
         vertx.eventBus().send("apply-immediately.${instrument.id}", instrument)
 
-        val appliedEvent = LiveInstrumentApplied(removeInternalMeta(instrument)!!, appliedAt)
+        val appliedEvent = JsonObject.mapFrom(LiveInstrumentApplied(removeInternalMeta(instrument)!!, appliedAt))
 
         //emit to instrument subscribers
         vertx.eventBus().publish(toLiveInstrumentSubscription(instrument.id!!), appliedEvent)
@@ -555,7 +555,7 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
             dispatchCommand(accessToken, LIVE_INSTRUMENT_REMOTE, debuggerCommand)
 
             if (alertSubscribers) {
-                val addedEvent = LiveInstrumentAdded(removeInternalMeta(instrument)!!)
+                val addedEvent = JsonObject.mapFrom(LiveInstrumentAdded(removeInternalMeta(instrument)!!))
 
                 //emit to instrument subscribers
                 vertx.eventBus().publish(toLiveInstrumentSubscription(instrument.id!!), addedEvent)
@@ -631,7 +631,9 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
             ServiceExceptionConverter.fromEventBusException(cause, true)
         } else null
         vertx.eventBus().request<Void>("apply-immediately.${instrument.id}", ebException).onFailure {
-            val removedEvent = LiveInstrumentRemoved(removeInternalMeta(instrument)!!, occurredAt, jvmCause)
+            val removedEvent = JsonObject.mapFrom(
+                LiveInstrumentRemoved(removeInternalMeta(instrument)!!, occurredAt, jvmCause)
+            )
 
             launch(vertx.dispatcher()) {
                 //emit to instrument subscribers
@@ -691,10 +693,10 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
             log.debug { "Removed live instrument(s) at: {}".args(location) }
 
             result.forEach {
-                val removedEvent = LiveInstrumentRemoved(removeInternalMeta(it)!!, Instant.now(), null)
+                val removedEvent = JsonObject.mapFrom(LiveInstrumentRemoved(removeInternalMeta(it)!!, Instant.now()))
 
                 //emit to instrument subscribers
-                vertx.eventBus().publish(toLiveInstrumentSubscription(removedEvent.instrument.id!!), removedEvent)
+                vertx.eventBus().publish(toLiveInstrumentSubscription(it.id!!), removedEvent)
 
                 //emit to developers with necessary permissions
                 SourceStorage.getDevelopers().forEach {
