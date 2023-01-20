@@ -428,6 +428,51 @@ type ServiceEndpoint {
     name: String!
 }
 
+type TraceSpanRef {
+    traceId: String!
+    parentSegmentId: String!
+    parentSpanId: Int!
+    type: String!
+}
+
+type TraceSpanLogEntry {
+    time: Long!
+    data: String!
+}
+
+type TraceSpan {
+    traceId: String!
+    segmentId: String!
+    spanId: Int!
+    parentSpanId: Int
+    refs: [TraceSpanRef!]!
+    serviceCode: String!
+    serviceInstanceName: String
+    startTime: Long!
+    endTime: Long!
+    endpointName: String
+    #artifactQualifiedName
+    type: String!
+    peer: String
+    component: String
+    error: Boolean
+    childError: Boolean
+    #hasChildStack
+    layer: String
+    tags: [KeyValue!]!
+    logs: [TraceSpanLogEntry!]!
+    meta: [KeyValue!]!
+}
+
+type TraceSegment {
+    segmentId: String!
+    traceSpans: [TraceSpan!]!
+}
+
+type TraceStack {
+    traceSpans: [TraceSpan!]!
+}
+
 type Query {
     version: String!
     getAccessPermissions: [AccessPermission!]!
@@ -456,6 +501,7 @@ type Query {
     getServices: [Service!]!
     getInstances(serviceId: String!): [ServiceInstance!]!
     getEndpoints(serviceId: String!): [ServiceEndpoint!]!
+    getClientAccessors: [ClientAccess!]!
 
     getLiveViews: [LiveView!]!
     getHistoricalMetrics(
@@ -466,7 +512,7 @@ type Query {
         stop: String
     ): HistoricalView!
 
-    getClientAccessors: [ClientAccess!]!
+    getTraceStack(traceId: String!): TraceStack
 }
 
 type Mutation {

@@ -40,11 +40,14 @@ import org.apache.skywalking.oap.server.analyzer.provider.trace.parser.SegmentPa
 import org.apache.skywalking.oap.server.core.CoreModule
 import org.apache.skywalking.oap.server.core.analysis.meter.MeterSystem
 import org.apache.skywalking.oap.server.core.query.MetricsQueryService
+import org.apache.skywalking.oap.server.core.query.TraceQueryService
 import org.apache.skywalking.oap.server.core.query.enumeration.Step
 import org.apache.skywalking.oap.server.core.query.input.Duration
 import org.apache.skywalking.oap.server.core.query.input.Entity
 import org.apache.skywalking.oap.server.core.query.input.MetricsCondition
 import org.apache.skywalking.oap.server.core.query.type.KVInt
+import org.apache.skywalking.oap.server.core.query.type.Ref
+import org.apache.skywalking.oap.server.core.query.type.Span
 import org.apache.skywalking.oap.server.core.version.Version
 import org.joor.Reflect
 import spp.platform.common.DeveloperAuth
@@ -59,6 +62,9 @@ import spp.processor.live.impl.view.util.MetricTypeSubscriptionCache
 import spp.processor.live.impl.view.util.ViewSubscriber
 import spp.protocol.artifact.metrics.MetricStep
 import spp.protocol.artifact.metrics.MetricType
+import spp.protocol.artifact.trace.TraceSpan
+import spp.protocol.artifact.trace.TraceSpanRef
+import spp.protocol.artifact.trace.TraceStack
 import spp.protocol.platform.PlatformAddress.MARKER_DISCONNECTED
 import spp.protocol.service.LiveViewService
 import spp.protocol.service.SourceServices.Subscribe.toLiveViewSubscriberAddress
@@ -80,6 +86,7 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
     internal lateinit var meterSystem: MeterSystem
     internal lateinit var meterProcessService: MeterProcessService
     internal lateinit var metricsQuery: MetricsQueryService
+    internal lateinit var traceQuery: TraceQueryService
 
     //todo: use ExpiringSharedData
     private val subscriptionCache = MetricTypeSubscriptionCache()
@@ -99,6 +106,9 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
         }
         FeedbackProcessor.module!!.find(CoreModule.NAME).provider().apply {
             metricsQuery = getService(MetricsQueryService::class.java) as MetricsQueryService
+        }
+        FeedbackProcessor.module!!.find(CoreModule.NAME).provider().apply {
+            traceQuery = getService(TraceQueryService::class.java) as TraceQueryService
         }
 
         //live traces view
@@ -454,6 +464,18 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
         }, false)
     }
 
+    override fun getTraceStack(traceId: String): Future<TraceStack?> {
+        return vertx.executeBlocking {
+            val trace = traceQuery.queryTrace(traceId)
+            if (trace.spans.isEmpty()) {
+                it.complete(null)
+            } else {
+                val traceStack = TraceStack(trace.spans.map { it.toProtocol() })
+                it.complete(traceStack)
+            }
+        }
+    }
+
     private fun getHistoricalMetrics(metricType: MetricType, entityId: String, duration: Duration): List<KVInt> {
         val condition = MetricsCondition()
         condition.name = metricType.metricId
@@ -462,5 +484,36 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
             override fun isValid(): Boolean = true
         }
         return Reflect.on(metricsQuery.readMetricsValues(condition, duration).values).get("values")
+    }
+
+    private fun Span.toProtocol(): TraceSpan {
+        return TraceSpan(
+            traceId = traceId,
+            segmentId = segmentId,
+            spanId = spanId,
+            parentSpanId = parentSpanId,
+            refs = refs.map { it.toProtocol() },
+            serviceCode = serviceCode,
+            //serviceInstanceName = serviceInstanceName, //todo: this
+            startTime = Instant.ofEpochMilli(startTime),
+            endTime = Instant.ofEpochMilli(endTime),
+            endpointName = endpointName,
+            type = type,
+            peer = peer,
+            component = component,
+            error = isError,
+            layer = layer,
+            tags = tags.associate { it.key to it.value!! },
+//            logs = logs.map { it.toProtocol() }
+        )
+    }
+
+    private fun Ref.toProtocol(): TraceSpanRef {
+        return TraceSpanRef(
+            traceId = traceId,
+            parentSegmentId = parentSegmentId,
+            parentSpanId = parentSpanId,
+            type = type.name
+        )
     }
 }

@@ -43,6 +43,8 @@ import spp.platform.common.ClusterConnection.discovery
 import spp.platform.common.ClusterConnection.router
 import spp.platform.common.DeveloperAuth
 import spp.protocol.artifact.metrics.MetricStep
+import spp.protocol.artifact.trace.TraceSpan
+import spp.protocol.artifact.trace.TraceStack
 import spp.protocol.instrument.*
 import spp.protocol.instrument.LiveInstrumentType.*
 import spp.protocol.instrument.location.LiveSourceLocation
@@ -115,6 +117,9 @@ class GraphqlAPI : CoroutineVerticle() {
             GraphQLScalarType.newScalar().name("Long")
                 .coercing(object : Coercing<Long, Long> {
                     override fun serialize(dataFetcherResult: Any): Long {
+                        if (dataFetcherResult is Instant) {
+                            return dataFetcherResult.toEpochMilli()
+                        }
                         return dataFetcherResult as Long
                     }
 
@@ -176,8 +181,7 @@ class GraphqlAPI : CoroutineVerticle() {
     }
 
     private fun withQueryFetchers(builder: TypeRuntimeWiring.Builder): TypeRuntimeWiring.Builder {
-        return builder
-            .dataFetcher("version", this::version)
+        return builder.dataFetcher("version", this::version)
             .dataFetcher("getAccessPermissions", this::getAccessPermissions)
             .dataFetcher("getAccessPermission", this::getAccessPermission)
             .dataFetcher("getRoleAccessPermissions", this::getRoleAccessPermissions)
@@ -203,6 +207,7 @@ class GraphqlAPI : CoroutineVerticle() {
             .dataFetcher("getLiveViews", this::getLiveViews)
             .dataFetcher("getHistoricalMetrics", this::getHistoricalMetrics)
             .dataFetcher("getClientAccessors", this::getClientAccessors)
+            .dataFetcher("getTraceStack", this::getTraceStack)
     }
 
     private fun withMutationFetchers(builder: TypeRuntimeWiring.Builder): TypeRuntimeWiring.Builder {
@@ -696,6 +701,11 @@ class GraphqlAPI : CoroutineVerticle() {
         getLiveManagementService(env).compose { it.refreshClientAccess(env.getArgument("id")) }
             .toCompletionStage().toCompletableFuture()
 
+    private fun getTraceStack(env: DataFetchingEnvironment): CompletableFuture<Map<String, Any>?> =
+        getLiveViewService(env).compose { it.getTraceStack(env.getArgument("traceId")) }
+            .map { fixJsonMaps(it) }
+            .toCompletionStage().toCompletableFuture()
+
     private fun toJsonMap(metaArray: JsonArray?): MutableMap<String, String> {
         val meta = mutableMapOf<String, String>()
         val metaOb = metaArray ?: JsonArray()
@@ -733,6 +743,28 @@ class GraphqlAPI : CoroutineVerticle() {
         val rtnMap = (JsonObject.mapFrom(instance).map as Map<String, Any>).toMutableMap()
         val attributes = rtnMap["attributes"] as LinkedHashMap<String, String>
         rtnMap["attributes"] = attributes.map { mapOf("key" to it.key, "value" to it.value) }.toTypedArray()
+        return rtnMap
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun fixJsonMaps(traceStack: TraceStack?): Map<String, Any>? {
+        if (traceStack == null) {
+            return null
+        }
+
+        val rtnMap = mutableMapOf<String, Any>()
+        rtnMap["traceSpans"] = traceStack.traceSpans.map { fixJsonMaps(it) }
+        return rtnMap
+    }
+
+    private fun fixJsonMaps(traceSpan: TraceSpan): Map<String, Any> {
+        val rtnMap = (JsonObject.mapFrom(traceSpan).map as Map<String, Any>).toMutableMap()
+        rtnMap["startTime"] = traceSpan.startTime.toEpochMilli()
+        rtnMap["endTime"] = traceSpan.endTime.toEpochMilli()
+        val tags = rtnMap["tags"] as LinkedHashMap<String, String>
+        rtnMap["tags"] = tags.map { mapOf("key" to it.key, "value" to it.value) }.toTypedArray()
+        val meta = rtnMap["meta"] as LinkedHashMap<String, String>
+        rtnMap["meta"] = meta.map { mapOf("key" to it.key, "value" to it.value) }.toTypedArray()
         return rtnMap
     }
 
