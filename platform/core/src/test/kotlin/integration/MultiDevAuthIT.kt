@@ -74,9 +74,9 @@ class MultiDevAuthIT : PlatformIntegrationTest() {
 
         //clear dev1's instruments
         dev1InstrumentService.clearLiveInstruments().await()
-        assertNull(dev1InstrumentService.getLiveInstrumentById(dev1Instrument.id!!).await())
-        assertNotNull(dev1InstrumentService.getLiveInstrumentById(dev2Instrument.id!!).await())
-        assertNotNull(dev2InstrumentService.getLiveInstrumentById(dev2Instrument.id!!).await())
+        assertNull(dev1InstrumentService.getLiveInstrument(dev1Instrument.id!!).await())
+        assertNotNull(dev1InstrumentService.getLiveInstrument(dev2Instrument.id!!).await())
+        assertNotNull(dev2InstrumentService.getLiveInstrument(dev2Instrument.id!!).await())
 
         //dev2's instruments should still be there
         assertEquals(1, dev1InstrumentService.getLiveInstruments().await().size)
