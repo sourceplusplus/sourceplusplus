@@ -285,7 +285,7 @@ class LiveBreakpointAnalyzer(
                 stackTrace.elements.add(0, correctedElement)
             }
             //add live variables
-            stackTrace.first().variables.addAll(variables)
+            stackTrace.first().variables.addAll(variables.sortedBy { it.lineNumber })
 
             return IntermediateLiveBreakpointHit(
                 bpData.getString("breakpoint_id"),
