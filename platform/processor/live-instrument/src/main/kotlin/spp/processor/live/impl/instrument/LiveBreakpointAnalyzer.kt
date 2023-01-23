@@ -243,7 +243,7 @@ class LiveBreakpointAnalyzer(
                         scope = scope,
                         liveClazz = outerVal.getString("@class"),
                         liveIdentity = getLiveIdentity(outerVal),
-                        lineNumber = outerVal.getInteger("@line")
+                        lineNumber = outerVal.getInteger("@line", -1)
                     )
                 }
                 if (liveVar.liveIdentity == null && outerVal.containsKey("@id")) {
