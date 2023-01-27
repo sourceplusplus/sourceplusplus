@@ -2,19 +2,14 @@ pluginManagement {
     plugins {
         val kotlinVersion = "1.6.10"
         id("org.jetbrains.kotlin.jvm") version kotlinVersion apply false
-        id("org.jetbrains.kotlin.multiplatform") version kotlinVersion apply false
-        id("org.jetbrains.kotlin.js") version kotlinVersion apply false
-        id("org.jetbrains.kotlin.plugin.serialization") version kotlinVersion apply false
         id("org.jetbrains.kotlin.kapt") version kotlinVersion apply false
         id("org.jetbrains.kotlin.plugin.noarg") version kotlinVersion apply false
         id("com.avast.gradle.docker-compose") version "0.16.11" apply false
         id("io.gitlab.arturbosch.detekt") version "1.22.0" apply false
         id("com.github.johnrengelman.shadow") version "7.1.2" apply false
-        id("com.palantir.graal") version "0.12.0" apply false
         id("com.apollographql.apollo3") version "3.7.4" apply false
         id("org.mikeneck.graalvm-native-image") version "1.4.1" apply false
         id("com.diffplug.spotless") version "6.13.0" apply false
-        id("com.github.node-gradle.node") version "3.5.1" apply false
     }
 }
 
