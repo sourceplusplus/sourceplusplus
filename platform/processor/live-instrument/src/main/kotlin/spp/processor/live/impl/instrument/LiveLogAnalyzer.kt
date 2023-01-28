@@ -31,8 +31,8 @@ import org.apache.skywalking.oap.server.core.analysis.Layer
 import spp.platform.common.ClusterConnection
 import spp.platform.common.util.args
 import spp.platform.storage.SourceStorage
-import spp.processor.InstrumentProcessor
 import spp.processor.InstrumentProcessor.removeInternalMeta
+import spp.processor.InstrumentProcessor.sendEventToSubscribers
 import spp.protocol.artifact.log.Log
 import spp.protocol.artifact.log.LogOrderType
 import spp.protocol.artifact.log.LogResult
@@ -142,7 +142,7 @@ class LiveLogAnalyzer : LogAnalysisListener, LogAnalysisListenerFactory {
                 intermediateHit.serviceInstance,
                 intermediateHit.service
             )
-            InstrumentProcessor.sendEventToSubscribers(liveInstrument, hit)
+            sendEventToSubscribers(liveInstrument, hit)
 
             log.trace { "Published live log hit" }
         } else {
