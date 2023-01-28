@@ -554,11 +554,11 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
                 return@onSuccess
             }
 
-            it.getActiveProbes().onComplete {
-                val alertProbes = it.result().list.map { InstanceConnection(JsonObject.mapFrom(it)) }
+            it.getActiveProbes().onSuccess {
+                val alertProbes = it.list.map { InstanceConnection(JsonObject.mapFrom(it)) }
                 if (alertProbes.isEmpty()) {
                     log.warn("No probes connected. Unable to dispatch {} command", command.commandType)
-                    return@onComplete
+                    return@onSuccess
                 }
 
                 log.debug {
