@@ -19,6 +19,7 @@ package spp.processor.live.impl
 
 import io.vertx.core.*
 import io.vertx.core.eventbus.Message
+import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import io.vertx.kotlin.coroutines.CoroutineVerticle
 import io.vertx.kotlin.coroutines.await
@@ -34,6 +35,7 @@ import org.apache.skywalking.oap.server.core.CoreModule
 import org.apache.skywalking.oap.server.core.analysis.meter.MeterSystem
 import org.joor.Reflect
 import spp.platform.common.ClientAuth
+import spp.platform.common.ClusterConnection
 import spp.platform.common.DeveloperAuth
 import spp.platform.common.FeedbackProcessor
 import spp.platform.common.service.SourceBridgeService
@@ -73,6 +75,16 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
         FeedbackProcessor.module!!.find(AnalyzerModule.NAME).provider().apply {
             meterProcessService = getService(IMeterProcessService::class.java) as MeterProcessService
         }
+
+        //load hard-coded instruments
+        val instruments = ClusterConnection.config.getJsonArray("instruments", JsonArray())
+        Vertx.currentContext().putLocal("developer", DeveloperAuth("system"))
+        instruments.forEach {
+            val instrument = LiveInstrument.fromJson(JsonObject.mapFrom(it))
+            addLiveInstrument(instrument).await()
+        }
+        Vertx.currentContext().removeLocal("developer")
+        log.info { "Loaded ${instruments.size()} hard-coded instruments" }
 
         //send active instruments on probe connection
         vertx.eventBus().consumer<JsonObject>(REMOTE_REGISTERED) {
