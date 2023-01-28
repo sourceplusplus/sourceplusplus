@@ -377,7 +377,8 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
         val promise = Promise.promise<List<LiveInstrument>>()
         launch(vertx.dispatcher()) {
             promise.complete(
-                SourceStorage.getLiveInstruments().filter { it.location.isSameLocation(location) }
+                SourceStorage.getLiveInstruments()
+                    .filter { it.location.isSameLocation(location) }
                     .mapNotNull { removeInternalMeta(it) }
             )
         }
