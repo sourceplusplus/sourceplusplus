@@ -88,7 +88,7 @@ class LiveManagementServiceImpl(
         val promise = Promise.promise<AccessPermission>()
         launch(vertx.dispatcher()) {
             if (!SourceStorage.hasAccessPermission(id)) {
-                promise.fail(IllegalStateException("Non-existing access permission: $id"))
+                promise.fail("Non-existing access permission: $id")
             } else {
                 promise.complete(SourceStorage.getAccessPermission(id))
             }
@@ -105,7 +105,7 @@ class LiveManagementServiceImpl(
         val promise = Promise.promise<AccessPermission>()
         launch(vertx.dispatcher()) {
             if (SourceStorage.hasAccessPermission(id)) {
-                promise.fail(IllegalStateException("Existing access permission: $id"))
+                promise.fail("Existing access permission: $id")
             } else {
                 val accessPermission = AccessPermission(id, locationPatterns, type)
                 SourceStorage.addAccessPermission(id, locationPatterns, type)
@@ -120,7 +120,7 @@ class LiveManagementServiceImpl(
         val promise = Promise.promise<Void>()
         launch(vertx.dispatcher()) {
             if (!SourceStorage.hasAccessPermission(id)) {
-                promise.fail(IllegalStateException("Non-existing access permission: $id"))
+                promise.fail("Non-existing access permission: $id")
             } else {
                 SourceStorage.removeAccessPermission(id)
                 promise.complete()
@@ -134,7 +134,7 @@ class LiveManagementServiceImpl(
         val promise = Promise.promise<List<AccessPermission>>()
         launch(vertx.dispatcher()) {
             if (!SourceStorage.hasRole(role)) {
-                promise.fail(IllegalStateException("Non-existing role: $role"))
+                promise.fail("Non-existing role: $role")
             } else {
                 promise.complete(SourceStorage.getRoleAccessPermissions(role).toList())
             }
@@ -147,9 +147,9 @@ class LiveManagementServiceImpl(
         val promise = Promise.promise<Void>()
         launch(vertx.dispatcher()) {
             if (!SourceStorage.hasRole(role)) {
-                promise.fail(IllegalStateException("Non-existing role: $role"))
+                promise.fail("Non-existing role: $role")
             } else if (!SourceStorage.hasAccessPermission(id)) {
-                promise.fail(IllegalStateException("Non-existing access permission: $id"))
+                promise.fail("Non-existing access permission: $id")
             } else {
                 SourceStorage.addAccessPermissionToRole(id, role)
                 promise.complete()
@@ -163,9 +163,9 @@ class LiveManagementServiceImpl(
         val promise = Promise.promise<Void>()
         launch(vertx.dispatcher()) {
             if (!SourceStorage.hasRole(role)) {
-                promise.fail(IllegalStateException("Non-existing role: $role"))
+                promise.fail("Non-existing role: $role")
             } else if (!SourceStorage.hasAccessPermission(id)) {
-                promise.fail(IllegalStateException("Non-existing access permission: $id"))
+                promise.fail("Non-existing access permission: $id")
             } else {
                 SourceStorage.removeAccessPermissionFromRole(id, role)
                 promise.complete()
@@ -188,7 +188,7 @@ class LiveManagementServiceImpl(
         val promise = Promise.promise<DataRedaction>()
         launch(vertx.dispatcher()) {
             if (!SourceStorage.hasDataRedaction(id)) {
-                promise.fail(IllegalStateException("Non-existing data redaction: $id"))
+                promise.fail("Non-existing data redaction: $id")
             } else {
                 promise.complete(SourceStorage.getDataRedaction(id))
             }
@@ -206,7 +206,7 @@ class LiveManagementServiceImpl(
         val promise = Promise.promise<DataRedaction>()
         launch(vertx.dispatcher()) {
             if (SourceStorage.hasDataRedaction(id)) {
-                promise.fail(IllegalStateException("Data redaction already exists: $id"))
+                promise.fail("Data redaction already exists: $id")
             } else {
                 val redaction = DataRedaction(id, type, lookup, replacement)
                 SourceStorage.addDataRedaction(id, type, lookup, replacement)
@@ -226,7 +226,7 @@ class LiveManagementServiceImpl(
         val promise = Promise.promise<DataRedaction>()
         launch(vertx.dispatcher()) {
             if (!SourceStorage.hasDataRedaction(id)) {
-                promise.fail(IllegalStateException("Non-existing data redaction: $id"))
+                promise.fail("Non-existing data redaction: $id")
             } else {
                 val redaction = DataRedaction(id, type, lookup, replacement)
                 SourceStorage.updateDataRedaction(id, type, lookup, replacement)
@@ -241,7 +241,7 @@ class LiveManagementServiceImpl(
         val promise = Promise.promise<Void>()
         launch(vertx.dispatcher()) {
             if (!SourceStorage.hasDataRedaction(id)) {
-                promise.fail(IllegalStateException("Non-existing data redaction: $id"))
+                promise.fail("Non-existing data redaction: $id")
             } else {
                 SourceStorage.removeDataRedaction(id)
                 promise.complete()
@@ -255,7 +255,7 @@ class LiveManagementServiceImpl(
         val promise = Promise.promise<List<DataRedaction>>()
         launch(vertx.dispatcher()) {
             if (!SourceStorage.hasRole(role)) {
-                promise.fail(IllegalStateException("Non-existing role: $role"))
+                promise.fail("Non-existing role: $role")
             } else {
                 promise.complete(SourceStorage.getRoleDataRedactions(role).toList())
             }
@@ -268,9 +268,9 @@ class LiveManagementServiceImpl(
         val promise = Promise.promise<Void>()
         launch(vertx.dispatcher()) {
             if (!SourceStorage.hasRole(role)) {
-                promise.fail(IllegalStateException("Non-existing role: $role"))
+                promise.fail("Non-existing role: $role")
             } else if (!SourceStorage.hasDataRedaction(id)) {
-                promise.fail(IllegalStateException("Non-existing data redaction: $id"))
+                promise.fail("Non-existing data redaction: $id")
             } else {
                 SourceStorage.addDataRedactionToRole(id, role)
                 promise.complete()
@@ -284,9 +284,9 @@ class LiveManagementServiceImpl(
         val promise = Promise.promise<Void>()
         launch(vertx.dispatcher()) {
             if (!SourceStorage.hasRole(role)) {
-                promise.fail(IllegalStateException("Non-existing role: $role"))
+                promise.fail("Non-existing role: $role")
             } else if (!SourceStorage.hasDataRedaction(id)) {
-                promise.fail(IllegalStateException("Non-existing data redaction: $id"))
+                promise.fail("Non-existing data redaction: $id")
             } else {
                 SourceStorage.removeDataRedactionFromRole(id, role)
                 promise.complete()
@@ -300,7 +300,7 @@ class LiveManagementServiceImpl(
         val promise = Promise.promise<List<DataRedaction>>()
         launch(vertx.dispatcher()) {
             if (!SourceStorage.hasDeveloper(developerId)) {
-                promise.fail(IllegalStateException("Non-existing developer: $developerId"))
+                promise.fail("Non-existing developer: $developerId")
             } else {
                 promise.complete(SourceStorage.getDeveloperDataRedactions(developerId).toList())
             }
@@ -313,7 +313,7 @@ class LiveManagementServiceImpl(
         val promise = Promise.promise<List<AccessPermission>>()
         launch(vertx.dispatcher()) {
             if (!SourceStorage.hasDeveloper(developerId)) {
-                promise.fail(IllegalStateException("Non-existing developer: $developerId"))
+                promise.fail("Non-existing developer: $developerId")
             } else {
                 promise.complete(SourceStorage.getDeveloperAccessPermissions(developerId).toList())
             }
@@ -629,9 +629,9 @@ class LiveManagementServiceImpl(
             if (accessToken != null && accessToken.length < 8) {
                 promise.fail("Access token must be at least 8 characters long")
             } else if (SourceStorage.hasDeveloper(developerId)) {
-                promise.fail(IllegalStateException("Existing developer: $developerId"))
+                promise.fail("Existing developer: $developerId")
             } else if (accessToken != null && SourceStorage.getDeveloperByAccessToken(accessToken) != null) {
-                promise.fail(IllegalStateException("Existing access token: $accessToken"))
+                promise.fail("Existing access token: $accessToken")
             } else {
                 promise.complete(SourceStorage.addDeveloper(developerId, accessToken))
             }
@@ -644,9 +644,9 @@ class LiveManagementServiceImpl(
         val promise = Promise.promise<Void>()
         launch(vertx.dispatcher()) {
             if (developerId == "system") {
-                promise.fail(IllegalArgumentException("Unable to remove system developer"))
+                promise.fail("Unable to remove system developer")
             } else if (!SourceStorage.hasDeveloper(developerId)) {
-                promise.fail(IllegalStateException("Non-existing developer: $developerId"))
+                promise.fail("Non-existing developer: $developerId")
             } else {
                 SourceStorage.removeDeveloper(developerId)
                 promise.complete()
@@ -660,7 +660,7 @@ class LiveManagementServiceImpl(
         val promise = Promise.promise<Developer>()
         launch(vertx.dispatcher()) {
             if (!SourceStorage.hasDeveloper(developerId)) {
-                promise.fail(IllegalStateException("Non-existing developer: $developerId"))
+                promise.fail("Non-existing developer: $developerId")
             } else {
                 val newToken = RandomStringUtils.randomAlphanumeric(50)
                 SourceStorage.setAccessToken(developerId, newToken)
@@ -684,7 +684,7 @@ class LiveManagementServiceImpl(
         val promise = Promise.promise<Boolean>()
         launch(vertx.dispatcher()) {
             if (SourceStorage.hasRole(role)) {
-                promise.fail(IllegalStateException("Existing role: $role"))
+                promise.fail("Existing role: $role")
             } else {
                 promise.complete(SourceStorage.addRole(role))
             }
@@ -697,9 +697,9 @@ class LiveManagementServiceImpl(
         val promise = Promise.promise<Boolean>()
         launch(vertx.dispatcher()) {
             if (!SourceStorage.hasRole(role)) {
-                promise.fail(IllegalStateException("Non-existing role: $role"))
+                promise.fail("Non-existing role: $role")
             } else if (role.nativeRole) {
-                promise.fail(IllegalArgumentException("Unable to remove native role"))
+                promise.fail("Unable to remove native role")
             } else {
                 promise.complete(SourceStorage.removeRole(role))
             }
@@ -712,7 +712,7 @@ class LiveManagementServiceImpl(
         val promise = Promise.promise<List<DeveloperRole>>()
         launch(vertx.dispatcher()) {
             if (!SourceStorage.hasDeveloper(developerId)) {
-                promise.fail(IllegalStateException("Non-existing developer: $developerId"))
+                promise.fail("Non-existing developer: $developerId")
             } else {
                 promise.complete(SourceStorage.getDeveloperRoles(developerId).toList())
             }
@@ -725,9 +725,9 @@ class LiveManagementServiceImpl(
         val promise = Promise.promise<Void>()
         launch(vertx.dispatcher()) {
             if (!SourceStorage.hasDeveloper(developerId)) {
-                promise.fail(IllegalStateException("Non-existing developer: $developerId"))
+                promise.fail("Non-existing developer: $developerId")
             } else if (!SourceStorage.hasRole(role)) {
-                promise.fail(IllegalStateException("Non-existing role: ${role.roleName}"))
+                promise.fail("Non-existing role: ${role.roleName}")
             } else {
                 SourceStorage.addRoleToDeveloper(developerId, role)
                 promise.complete()
@@ -741,9 +741,9 @@ class LiveManagementServiceImpl(
         val promise = Promise.promise<Void>()
         launch(vertx.dispatcher()) {
             if (!SourceStorage.hasDeveloper(developerId)) {
-                promise.fail(IllegalStateException("Non-existing developer: $developerId"))
+                promise.fail("Non-existing developer: $developerId")
             } else if (!SourceStorage.hasRole(role)) {
-                promise.fail(IllegalStateException("Non-existing role: ${role.roleName}"))
+                promise.fail("Non-existing role: ${role.roleName}")
             } else {
                 SourceStorage.removeRoleFromDeveloper(developerId, role)
                 promise.complete()
@@ -757,9 +757,9 @@ class LiveManagementServiceImpl(
         val promise = Promise.promise<Void>()
         launch(vertx.dispatcher()) {
             if (!SourceStorage.hasRole(role)) {
-                promise.fail(IllegalStateException("Non-existing role: $role"))
+                promise.fail("Non-existing role: $role")
             } else if (role.nativeRole) {
-                promise.fail(IllegalArgumentException("Unable to update native role"))
+                promise.fail("Unable to update native role")
             } else {
                 SourceStorage.addPermissionToRole(role, permission)
                 promise.complete()
@@ -773,9 +773,9 @@ class LiveManagementServiceImpl(
         val promise = Promise.promise<Void>()
         launch(vertx.dispatcher()) {
             if (!SourceStorage.hasRole(role)) {
-                promise.fail(IllegalStateException("Non-existing role: $role"))
+                promise.fail("Non-existing role: $role")
             } else if (role.nativeRole) {
-                promise.fail(IllegalArgumentException("Unable to update native role"))
+                promise.fail("Unable to update native role")
             } else {
                 SourceStorage.removePermissionFromRole(role, permission)
                 promise.complete()
@@ -791,7 +791,7 @@ class LiveManagementServiceImpl(
             if (SourceStorage.hasDeveloper(developerId)) {
                 promise.complete(SourceStorage.getDeveloperPermissions(developerId).toList())
             } else {
-                promise.fail(IllegalStateException("Developer not found: $developerId"))
+                promise.fail("Developer not found: $developerId")
             }
         }
         return promise.future()

@@ -263,7 +263,7 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
                 }
 
                 else -> {
-                    promise.fail(IllegalArgumentException("Unknown live instrument type"))
+                    promise.fail("Unknown live instrument type")
                 }
             }
             return promise.future()

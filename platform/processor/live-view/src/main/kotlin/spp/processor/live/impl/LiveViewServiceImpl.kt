@@ -292,7 +292,7 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
                 }
             }
         } else {
-            promise.fail(IllegalStateException("Invalid subscription id"))
+            promise.fail("Invalid subscription id")
         }
         return promise.future()
     }
@@ -338,7 +338,7 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
 
             promise.complete(subscription)
         } else {
-            promise.fail(IllegalStateException("Invalid subscription id"))
+            promise.fail("Invalid subscription id")
         }
 
         return promise.future()
@@ -366,7 +366,7 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
                 )
             )
         } else {
-            promise.fail(IllegalStateException("Invalid subscription id"))
+            promise.fail("Invalid subscription id")
         }
         return promise.future()
     }
