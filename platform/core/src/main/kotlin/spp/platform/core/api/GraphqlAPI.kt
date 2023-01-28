@@ -464,7 +464,8 @@ class GraphqlAPI : CoroutineVerticle() {
     private fun addDeveloper(env: DataFetchingEnvironment): CompletableFuture<Developer> =
         getLiveManagementService(env).compose {
             it.addDeveloper(
-                env.getArgument<String>("id").lowercase().replace(" ", "")
+                env.getArgument<String>("id").lowercase().replace(" ", ""),
+                env.getArgument("accessToken")
             )
         }.toCompletionStage().toCompletableFuture()
 

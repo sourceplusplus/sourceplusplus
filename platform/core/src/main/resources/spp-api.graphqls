@@ -535,7 +535,7 @@ type Mutation {
     addDeveloperRole(id: String!, role: String!): Boolean!
     removeDeveloperRole(id: String!, role: String!): Boolean!
 
-    addDeveloper(id: String!): Developer!
+    addDeveloper(id: String!, accessToken: String): Developer!
     refreshDeveloperToken(id: String!): Developer!
     removeDeveloper(id: String!): Boolean!
     removeLiveInstrument(id: String!): LiveInstrument

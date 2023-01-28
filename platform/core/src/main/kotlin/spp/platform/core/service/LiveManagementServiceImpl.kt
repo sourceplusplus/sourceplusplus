@@ -622,14 +622,18 @@ class LiveManagementServiceImpl(
         return promise.future()
     }
 
-    override fun addDeveloper(developerId: String): Future<Developer> {
+    override fun addDeveloper(developerId: String, accessToken: String?): Future<Developer> {
         log.trace { "Adding developer with id: $developerId" }
         val promise = Promise.promise<Developer>()
         launch(vertx.dispatcher()) {
-            if (SourceStorage.hasDeveloper(developerId)) {
+            if (accessToken != null && accessToken.length < 8) {
+                promise.fail("Access token must be at least 8 characters long")
+            } else if (SourceStorage.hasDeveloper(developerId)) {
                 promise.fail(IllegalStateException("Existing developer: $developerId"))
+            } else if (accessToken != null && SourceStorage.getDeveloperByAccessToken(accessToken) != null) {
+                promise.fail(IllegalStateException("Existing access token: $accessToken"))
             } else {
-                promise.complete(SourceStorage.addDeveloper(developerId))
+                promise.complete(SourceStorage.addDeveloper(developerId, accessToken))
             }
         }
         return promise.future()
