@@ -101,20 +101,15 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
 
         //listen for instruments applied/removed
         vertx.eventBus().consumer<JsonObject>(ProcessorAddress.LIVE_INSTRUMENT_APPLIED) {
-            launch(vertx.dispatcher()) {
-                handleLiveInstrumentApplied(it)
-            }
+            launch(vertx.dispatcher()) { handleLiveInstrumentApplied(it) }
         }
         vertx.eventBus().consumer<JsonObject>(ProcessorAddress.LIVE_INSTRUMENT_REMOVED) {
-            launch(vertx.dispatcher()) {
-                handleInstrumentRemoved(it)
-            }
+            launch(vertx.dispatcher()) { handleInstrumentRemoved(it) }
         }
     }
 
     override fun addLiveInstrument(instrument: LiveInstrument): Future<LiveInstrument> {
-        val devAuth = Vertx.currentContext().getLocal<DeveloperAuth>("developer")
-        return addLiveInstrument(devAuth, instrument)
+        return addLiveInstrument(Vertx.currentContext().getLocal("developer"), instrument)
     }
 
     private fun addLiveInstrument(devAuth: DeveloperAuth, instrument: LiveInstrument): Future<LiveInstrument> {
