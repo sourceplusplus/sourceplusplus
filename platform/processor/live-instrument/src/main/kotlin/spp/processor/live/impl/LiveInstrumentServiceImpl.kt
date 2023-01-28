@@ -598,11 +598,11 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
                         command.locations.filter { it.isSameLocation(probe) }.toSet()
                     )
                     if (probeCommand.instruments.isNotEmpty() || probeCommand.locations.isNotEmpty()) {
-                        log.debug { "Dispatching command ${probeCommand.commandType} to probe ${probe.instanceId}" }
                         vertx.eventBus().publish(
                             address + ":" + probe.instanceId,
                             JsonObject.mapFrom(probeCommand)
                         )
+                        log.debug { "Dispatched command ${probeCommand.commandType} to probe ${probe.instanceId}" }
                     } else {
                         log.debug { "No instruments/locations to dispatch to probe ${probe.instanceId}" }
                     }
