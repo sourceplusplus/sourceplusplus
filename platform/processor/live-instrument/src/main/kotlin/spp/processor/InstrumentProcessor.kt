@@ -38,8 +38,10 @@ import org.apache.skywalking.oap.server.library.module.ModuleManager
 import org.slf4j.LoggerFactory
 import spp.platform.common.ClusterConnection.discovery
 import spp.platform.common.FeedbackProcessor
+import spp.platform.storage.SourceStorage
 import spp.processor.live.impl.LiveInstrumentServiceImpl
 import spp.protocol.instrument.*
+import spp.protocol.instrument.event.LiveInstrumentEvent
 import spp.protocol.platform.auth.AccessChecker
 import spp.protocol.platform.auth.RolePermission
 import spp.protocol.platform.auth.RolePermission.*
@@ -49,7 +51,6 @@ import spp.protocol.service.LiveManagementService
 import spp.protocol.service.SourceServices
 import spp.protocol.service.error.InstrumentAccessDenied
 import spp.protocol.service.error.PermissionAccessDenied
-import spp.protocol.service.error.PermissionAccessDenied.Companion.asEventBusException
 import kotlin.system.exitProcess
 
 object InstrumentProcessor : FeedbackProcessor() {
@@ -164,7 +165,7 @@ object InstrumentProcessor : FeedbackProcessor() {
                 val necessaryPermission = RolePermission.valueOf("ADD_LIVE_$instrumentType")
                 if (!selfInfo.permissions.contains(necessaryPermission)) {
                     log.warn("User ${selfInfo.developer.id} missing permission: $necessaryPermission")
-                    batchPromise.fail(asEventBusException(necessaryPermission))
+                    batchPromise.fail(PermissionAccessDenied.asEventBusException(necessaryPermission))
                 }
             }
             batchPromise.tryComplete(msg)
@@ -247,6 +248,20 @@ object InstrumentProcessor : FeedbackProcessor() {
             is LiveLog -> it.copy(meta = it.meta.filterKeys { !it.startsWith("spp.") }.toMutableMap())
             is LiveMeter -> it.copy(meta = it.meta.filterKeys { !it.startsWith("spp.") }.toMutableMap())
             is LiveSpan -> it.copy(meta = it.meta.filterKeys { !it.startsWith("spp.") }.toMutableMap())
+        }
+    }
+
+    suspend fun sendEventToSubscribers(instrument: LiveInstrument, event: LiveInstrumentEvent) {
+        val eventJson = JsonObject.mapFrom(event)
+
+        //emit to instrument subscribers
+        vertx.eventBus().publish(SourceServices.Subscribe.toLiveInstrumentSubscription(instrument.id!!), eventJson)
+
+        //emit to developers with necessary permissions
+        SourceStorage.getDevelopers().forEach {
+            if (SourceStorage.hasPermission(it.id, GET_LIVE_INSTRUMENTS)) {
+                vertx.eventBus().publish(SourceServices.Subscribe.toLiveInstrumentSubscriberAddress(it.id), eventJson)
+            }
         }
     }
 }
