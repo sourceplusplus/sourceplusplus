@@ -49,6 +49,8 @@ import spp.protocol.platform.developer.SelfInfo
 import spp.protocol.service.LiveInstrumentService
 import spp.protocol.service.LiveManagementService
 import spp.protocol.service.SourceServices
+import spp.protocol.service.SourceServices.Subscribe.toLiveInstrumentSubscriberAddress
+import spp.protocol.service.SourceServices.Subscribe.toLiveInstrumentSubscription
 import spp.protocol.service.error.InstrumentAccessDenied
 import spp.protocol.service.error.PermissionAccessDenied
 import kotlin.system.exitProcess
@@ -255,12 +257,12 @@ object InstrumentProcessor : FeedbackProcessor() {
         val eventJson = JsonObject.mapFrom(event)
 
         //emit to instrument subscribers
-        vertx.eventBus().publish(SourceServices.Subscribe.toLiveInstrumentSubscription(instrument.id!!), eventJson)
+        vertx.eventBus().publish(toLiveInstrumentSubscription(instrument.id!!), eventJson)
 
         //emit to developers with necessary permissions
         SourceStorage.getDevelopers().forEach {
             if (SourceStorage.hasPermission(it.id, GET_LIVE_INSTRUMENTS)) {
-                vertx.eventBus().publish(SourceServices.Subscribe.toLiveInstrumentSubscriberAddress(it.id), eventJson)
+                vertx.eventBus().publish(toLiveInstrumentSubscriberAddress(it.id), eventJson)
             }
         }
     }
