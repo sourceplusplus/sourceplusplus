@@ -52,13 +52,6 @@ class LiveLogAnalyzer : LogAnalysisListener, LogAnalysisListenerFactory {
             override fun load(key: String): Long = -1
         })
 
-//        init {
-//            //todo: map of rate limit per log id
-//            ClusterConnection.getVertx().eventBus().consumer<Int>(ProcessorAddress.SET_LOG_PUBLISH_RATE_LIMIT) {
-//                logPublishRateLimit = it.body()
-//            }
-//        }
-
     override fun build() = Unit
 
     override fun parse(logData: LogData.Builder, p1: Message?): LogAnalysisListener {
