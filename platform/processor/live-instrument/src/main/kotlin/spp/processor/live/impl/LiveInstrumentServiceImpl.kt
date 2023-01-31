@@ -84,7 +84,9 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
             addLiveInstrument(instrument).await()
         }
         Vertx.currentContext().removeLocal("developer")
-        log.info { "Loaded ${instruments.size()} hard-coded instruments" }
+        if (instruments.size() > 0) {
+            log.info { "Loaded ${instruments.size()} hard-coded instruments" }
+        }
 
         //send active instruments on probe connection
         vertx.eventBus().consumer<JsonObject>(REMOTE_REGISTERED) {
