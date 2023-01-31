@@ -107,7 +107,7 @@ class SPPMetricsStreamProcessor : MetricsStreamProcessor() {
                 val metadata = (metrics as WithMetadata).meta
                 val entityName = EntityNaming.getEntityName(metadata)
                 if (!entityName.isNullOrEmpty()) {
-                    val copiedMetrics: Metrics = metrics::class.java.newInstance() as Metrics
+                    val copiedMetrics = metrics::class.java.newInstance() as Metrics
                     copiedMetrics.deserialize(metrics.serialize().build())
 
                     GlobalScope.launch(ClusterConnection.getVertx().dispatcher()) {
