@@ -572,9 +572,6 @@ jobs:
       - name: Untar spp-platform
         run: cd ./docker/spp-platform && tar -zxvf spp-platform-${{ needs.make-distribution.outputs.release_version }}.tar.gz --strip-components=1
 
-      - name: Copy ui-initialized-templates to spp-platform Docker image
-        run: cp -r ./docker/e2e/config/ui-initialized-templates ./docker/spp-platform
-
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
 

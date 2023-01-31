@@ -24,7 +24,6 @@ ADD ./config/spp-platform.crt /skywalking/config/
 ADD ./config/spp-platform.key /skywalking/config/
 ADD ./config/spp-platform.yml /skywalking/config/
 
-ADD ./config/ui-initialized-templates /skywalking/config/ui-initialized-templates
 ADD ./config/self.yaml /skywalking/config/fetcher-prom-rules
 
 ENV SW_CORE_REST_PORT=12801
