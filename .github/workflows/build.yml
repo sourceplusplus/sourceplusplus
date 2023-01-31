@@ -8,6 +8,7 @@ on:
     paths-ignore:
       - '**.md'
       - '**.svg'
+      - '**.gif'
       - '.idea/**'
   workflow_dispatch:
 
