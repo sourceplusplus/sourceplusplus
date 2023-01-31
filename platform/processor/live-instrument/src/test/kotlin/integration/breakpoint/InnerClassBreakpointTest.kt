@@ -33,7 +33,7 @@ class InnerClassBreakpointTest : LiveInstrumentIntegrationTest() {
 
     inner class InnerClass {
         fun doHit() {
-            startEntrySpan("largeList")
+            startEntrySpan("innerClass")
             val myVar = 10
             addLineLabel("done") { Throwable().stackTrace[0].lineNumber }
             stopSpan()
@@ -51,7 +51,7 @@ class InnerClassBreakpointTest : LiveInstrumentIntegrationTest() {
             testContext.verify {
                 assertTrue(bpHit.stackTrace.elements.isNotEmpty())
                 val topFrame = bpHit.stackTrace.elements.first()
-                assertEquals(3, topFrame.variables.size)
+                assertEquals(2, topFrame.variables.size)
 
                 val myVar = topFrame.variables.first { it.name == "myVar" }
                 assertEquals("myVar", myVar.name)
