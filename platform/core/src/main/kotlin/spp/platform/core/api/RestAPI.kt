@@ -133,8 +133,6 @@ class RestAPI(private val jwtEnabled: Boolean, private val jwt: JWTAuth?) : Coro
         var selfId = ctx.user()?.principal()?.getString("developer_id")
         val accessToken: String? = ctx.user()?.principal()?.getString("access_token")
         if (selfId == null) {
-            val jwtConfig = config.getJsonObject("spp-platform").getJsonObject("jwt")
-            val jwtEnabled = jwtConfig.getString("enabled").toBooleanStrict()
             if (jwtEnabled) {
                 ctx.response().setStatusCode(500).end("Missing self id")
                 return
@@ -169,8 +167,6 @@ class RestAPI(private val jwtEnabled: Boolean, private val jwt: JWTAuth?) : Coro
         var selfId = ctx.user()?.principal()?.getString("developer_id")
         val accessToken: String? = ctx.user()?.principal()?.getString("access_token")
         if (selfId == null) {
-            val jwtConfig = config.getJsonObject("spp-platform").getJsonObject("jwt")
-            val jwtEnabled = jwtConfig.getString("enabled").toBooleanStrict()
             if (jwtEnabled) {
                 ctx.response().setStatusCode(500).end("Missing self id")
                 return

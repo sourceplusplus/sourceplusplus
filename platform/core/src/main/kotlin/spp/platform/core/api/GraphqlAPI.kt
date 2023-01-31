@@ -70,21 +70,17 @@ import spp.protocol.view.LiveViewConfig
 import java.time.Instant
 import java.util.*
 import java.util.concurrent.CompletableFuture
-import kotlin.properties.Delegates
 
 /**
  * Serves the GraphQL API, providing access to:
  *
  * [LiveManagementService], [LiveInstrumentService], & [LiveViewService]
  */
-class GraphqlAPI : CoroutineVerticle() {
+class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
 
     private val log = LoggerFactory.getLogger(GraphqlAPI::class.java)
-    private var jwtEnabled by Delegates.notNull<Boolean>()
 
     override suspend fun start() {
-        jwtEnabled = config.getJsonObject("jwt").getString("enabled").toBooleanStrict()
-
         val graphql = vertx.executeBlocking<GraphQL> {
             it.complete(setupGraphQL())
         }.await()
