@@ -84,6 +84,7 @@ class RestAPI(private val jwtEnabled: Boolean, private val jwt: JWTAuth?) : Coro
         }
     }
 
+    //todo: use LiveManagementService.getAuthToken
     private fun newToken(ctx: RoutingContext) {
         if (!jwtEnabled) {
             log.debug { "Skipped generating JWT token. Reason: JWT authentication disabled" }
