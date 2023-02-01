@@ -64,7 +64,7 @@ subprojects {
         implementation("org.apache.logging.log4j:log4j-core:2.19.0")
 
         implementation(files(File(findProject(":platform")!!.projectDir.parentFile, ".ext/vertx-redis-clustermanager-0.0.1-local.jar")))
-        implementation("org.redisson:redisson:3.17.3")
+        implementation("org.redisson:redisson:3.19.2")
 
         implementation("org.jooq:joor:$joorVersion")
         implementation("io.vertx:vertx-grpc-server:$vertxVersion") { exclude(group = "io.grpc") }
