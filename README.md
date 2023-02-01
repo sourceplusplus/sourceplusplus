@@ -4,7 +4,7 @@
 ![GitHub release](https://img.shields.io/github/v/release/sourceplusplus/sourceplusplus?include_prereleases)
 [![Build](https://github.com/sourceplusplus/sourceplusplus/actions/workflows/build.yml/badge.svg)](https://github.com/sourceplusplus/sourceplusplus/actions/workflows/build.yml)
 
-Source++ is the open-source continuous feedback platform for developers. Add breakpoints, logs, metrics, and distributed tracing to live production software in real-time on-demand, right from your IDE or CLI.
+Source++ is the continuous feedback platform for developers. Add breakpoints, logs, metrics, and distributed tracing to live production software in real-time on-demand, right from your IDE.
 
 Powered by [Apache SkyWalking](https://github.com/apache/skywalking), Source++ enhances the software development experience with production debugging and development capabilities. Become a production-aware developer, understand code faster and deeper with developer-native observability technology, safely debug production applications with negligible to minimal overhead, and gain continuous insight into your application as it behaves in its natural environment.
 
