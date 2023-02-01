@@ -8,8 +8,59 @@ Source++ is the open-source continuous feedback platform for developers. Add bre
 
 Powered by [Apache SkyWalking](https://github.com/apache/skywalking), Source++ enhances the software development experience with production debugging and development capabilities. Become a production-aware developer, understand code faster and deeper with developer-native observability technology, safely debug production applications with negligible to minimal overhead, and gain continuous insight into your application as it behaves in its natural environment.
 
+<table>
+    <thead>
+    <tr>
+        <th width="1000px">
+            Live Insight
+        </th>
+        <th width="1000px">
+            Live Instrument
+        </th>
+    </tr>
+    <tr>
+        <th width="1000px">
+            <kbd>
+              <img src=".github/media/promo/live-insight.png"/>
+            </kbd>
+        </th>
+        <th width="1000px">
+            <kbd>
+              <img src=".github/media/promo/live-instrument.png"/>
+            </kbd>
+        </th>
+    </tr>
+    </thead>
+</table>
+<table>
+    <thead>
+    <tr>
+        <th width="1000px">
+            Live View
+        </th>
+        <th width="1000px">
+            Live Command
+        </th>
+    </tr>
+    <tr>
+        <th width="1000px">
+          <kbd>
+            <img src=".github/media/promo/live-view.png"/>
+          </kbd>
+        </th>
+        <th width="1000px">
+            <kbd>
+              <img src=".github/media/promo/live-command.png"/>
+            </kbd>
+        </th>
+    </tr>
+    </thead>
+</table>
+
 ### Features
 
+- Live Insights
+  - **Function Duration**: Increase/Decrease Prediction
 - Live Instruments
   - **Live Breakpoints**: Non-Breaking Breakpoints 
   - **Live Logs**: Just-in-Time Logging
