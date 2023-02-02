@@ -61,6 +61,7 @@ import spp.protocol.platform.developer.SelfInfo
 import spp.protocol.platform.general.Service
 import spp.protocol.platform.general.ServiceEndpoint
 import spp.protocol.platform.general.ServiceInstance
+import spp.protocol.platform.general.TimeInfo
 import spp.protocol.service.LiveInstrumentService
 import spp.protocol.service.LiveManagementService
 import spp.protocol.service.LiveViewService
@@ -178,6 +179,7 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
 
     private fun withQueryFetchers(builder: TypeRuntimeWiring.Builder): TypeRuntimeWiring.Builder {
         return builder.dataFetcher("version", this::version)
+            .dataFetcher("timeInfo", this::timeInfo)
             .dataFetcher("getAccessPermissions", this::getAccessPermissions)
             .dataFetcher("getAccessPermission", this::getAccessPermission)
             .dataFetcher("getRoleAccessPermissions", this::getRoleAccessPermissions)
@@ -242,6 +244,9 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
 
     private fun version(env: DataFetchingEnvironment): CompletableFuture<String> =
         getLiveManagementService(env).compose { it.getVersion() }.toCompletionStage().toCompletableFuture()
+
+    private fun timeInfo(env: DataFetchingEnvironment): CompletableFuture<TimeInfo> =
+        getLiveManagementService(env).compose { it.getTimeInfo() }.toCompletionStage().toCompletableFuture()
 
     private fun getAccessPermissions(env: DataFetchingEnvironment): CompletableFuture<List<AccessPermission>> =
         getLiveManagementService(env).compose { it.getAccessPermissions() }.toCompletionStage().toCompletableFuture()

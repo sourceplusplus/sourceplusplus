@@ -473,8 +473,15 @@ type TraceStack {
     traceSpans: [TraceSpan!]!
 }
 
+type TimeInfo {
+    timezone: String!
+    currentTimestamp: Long!
+}
+
 type Query {
     version: String!
+    timeInfo: TimeInfo!
+
     getAccessPermissions: [AccessPermission!]!
     getAccessPermission(id: String!): AccessPermission!
     getRoleAccessPermissions(role: String!): [AccessPermission!]!

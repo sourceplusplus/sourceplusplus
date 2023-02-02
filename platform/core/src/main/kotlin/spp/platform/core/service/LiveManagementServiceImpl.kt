@@ -45,11 +45,13 @@ import spp.protocol.platform.developer.SelfInfo
 import spp.protocol.platform.general.Service
 import spp.protocol.platform.general.ServiceEndpoint
 import spp.protocol.platform.general.ServiceInstance
+import spp.protocol.platform.general.TimeInfo
 import spp.protocol.platform.status.InstanceConnection
 import spp.protocol.service.LiveInstrumentService
 import spp.protocol.service.LiveManagementService
 import spp.protocol.service.LiveViewService
 import spp.protocol.service.SourceServices
+import java.text.SimpleDateFormat
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.*
@@ -70,6 +72,17 @@ class LiveManagementServiceImpl(
         val promise = Promise.promise<String>()
         launch(vertx.dispatcher()) {
             promise.complete(ClusterConnection.BUILD.getString("build_version"))
+        }
+        return promise.future()
+    }
+
+    override fun getTimeInfo(): Future<TimeInfo> {
+        log.trace { "Getting time info" }
+        val promise = Promise.promise<TimeInfo>()
+        launch(vertx.dispatcher()) {
+            val date = Date()
+            val timeInfo = TimeInfo(SimpleDateFormat("ZZZZZZ").format(date), date.time)
+            promise.complete(timeInfo)
         }
         return promise.future()
     }
