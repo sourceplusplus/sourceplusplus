@@ -76,24 +76,11 @@ Powered by [Apache SkyWalking](https://github.com/apache/skywalking), Source++ e
 ## Quickstart
 
 <details>
-<summary><b><a href="#"><img src="https://user-images.githubusercontent.com/511499/117447182-29758200-af0b-11eb-97bd-58723fee62ab.png" alt="Docker" height="28px" align="top"/></a> <code>docker-compose</code></b> (macOS/Linux/Windows) &nbsp; <b>👈&nbsp; recommended</b> &nbsp; <i>(click to expand)</i></summary>
-<br/>
-<ol>
-<li>Install <a href="https://docs.docker.com/get-docker/">Docker</a> and <a href="https://docs.docker.com/compose/install/">Docker Compose</a> on your system (if not already installed).</li>
-<li>Download the <a href="https://github.com/sourceplusplus/sourceplusplus/blob/master/docker/docker-compose.yml" download><code>docker-compose.yml</code></a> file into a new empty directory (can be anywhere).
-<pre lang="bash"><code style="white-space: pre-line">mkdir ~/spp-platform && cd ~/spp-platform
-curl -O 'https://raw.githubusercontent.com/sourceplusplus/sourceplusplus/master/docker/docker-compose.yml'</code></pre></li>
-<li>Start services.
-<pre lang="bash"><code style="white-space: pre-line">docker-compose up</code></pre></li>
-</ol>
-</details>
-
-<details>
 <summary><b><a href="#"><img src="https://user-images.githubusercontent.com/511499/117447182-29758200-af0b-11eb-97bd-58723fee62ab.png" alt="Docker" height="28px" align="top"/></a> <code>docker</code></b> (macOS/Linux/Windows)</summary>
 <br/>
 <ol>
 <li>Install <a href="https://docs.docker.com/get-docker/">Docker</a> on your system (if not already installed).</li>
-<li>Start Live Platform (Live Dashboard available at https://127.0.0.1:12800)
+<li>Start Live Platform
 <pre lang="bash"><code style="white-space: pre-line">docker run -d --name=spp-platform -p 11800:11800 -p 12800:12800 sourceplusplus/spp-platform</code></pre></li>
 </ol>
 </details>
