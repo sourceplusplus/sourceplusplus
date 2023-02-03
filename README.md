@@ -80,8 +80,9 @@ Powered by [Apache SkyWalking](https://github.com/apache/skywalking), Source++ e
 <br/>
 <ol>
 <li>Install <a href="https://docs.docker.com/get-docker/">Docker</a> on your system (if not already installed).</li>
-<li>Start Live Platform
+<li>Start Source++ Platform
 <pre lang="bash"><code style="white-space: pre-line">docker run -d --name=spp-platform -p 11800:11800 -p 12800:12800 sourceplusplus/spp-platform:0.7.7.1</code></pre></li>
+<li>Install <a href="https://plugins.jetbrains.com/plugin/12033-source-">Source++ Plugin</a></li>
 </ol>
 </details>
 
