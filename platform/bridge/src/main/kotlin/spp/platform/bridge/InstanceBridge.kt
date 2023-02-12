@@ -21,7 +21,7 @@ import io.vertx.core.AsyncResult
 import io.vertx.core.Future
 import io.vertx.core.Handler
 import io.vertx.core.Vertx
-import io.vertx.core.json.JsonObject
+import io.vertx.ext.auth.authentication.TokenCredentials
 import io.vertx.ext.auth.jwt.JWTAuth
 import io.vertx.ext.bridge.BaseBridgeEvent
 import io.vertx.kotlin.coroutines.CoroutineVerticle
@@ -115,7 +115,7 @@ abstract class InstanceBridge(private val jwtAuth: JWTAuth?) : CoroutineVerticle
         }
 
         log.trace { "Validating auth token: $authToken" }
-        jwtAuth.authenticate(JsonObject().put("token", authToken)) {
+        jwtAuth.authenticate(TokenCredentials(authToken)) {
             if (it.succeeded()) {
                 Vertx.currentContext().putLocal("user", it.result())
                 val selfId = it.result().principal().getString("developer_id")
