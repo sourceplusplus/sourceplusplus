@@ -21,35 +21,96 @@ import io.vertx.core.AsyncResult
 import io.vertx.core.Future
 import io.vertx.core.Handler
 import io.vertx.core.Vertx
+import io.vertx.core.buffer.Buffer
+import io.vertx.core.net.NetServerOptions
 import io.vertx.ext.auth.authentication.TokenCredentials
 import io.vertx.ext.auth.jwt.JWTAuth
 import io.vertx.ext.bridge.BaseBridgeEvent
+import io.vertx.ext.bridge.BridgeEventType
+import io.vertx.ext.bridge.BridgeOptions
+import io.vertx.ext.bridge.PermittedOptions
+import io.vertx.ext.eventbus.bridge.tcp.TcpEventBusBridge
+import io.vertx.ext.web.handler.sockjs.SockJSBridgeOptions
+import io.vertx.ext.web.handler.sockjs.SockJSHandler
+import io.vertx.ext.web.handler.sockjs.SockJSHandlerOptions
 import io.vertx.kotlin.coroutines.CoroutineVerticle
 import mu.KotlinLogging
 import spp.platform.common.ClientAuth
 import spp.platform.common.ClusterConnection
+import spp.platform.common.ClusterConnection.router
 import spp.platform.common.DeveloperAuth
+import spp.platform.common.util.args
 import spp.platform.storage.SourceStorage
+import spp.protocol.platform.PlatformAddress
 import spp.protocol.platform.auth.ClientAccess
+import java.util.concurrent.ConcurrentHashMap
 
 abstract class InstanceBridge(private val jwtAuth: JWTAuth?) : CoroutineVerticle() {
 
     companion object {
         private val log = KotlinLogging.logger {}
+        private val PING_MESSAGE = Buffer.buffer("\u0000\u0000\u0000\u0010{\"type\": \"ping\"}".toByteArray())
     }
 
-    fun validateMarkerAuth(event: BaseBridgeEvent) {
-        validateMarkerAuth(event) {
-            if (it.succeeded()) {
-                event.complete(true)
-            } else {
-                log.error(buildString {
-                    append("Failed to validate marker auth")
-                    append(". Address: ").append(event.rawMessage.getString("address"))
-                    append(". Reason: ").append(it.cause().message)
-                })
-                event.complete(false)
+    abstract val inboundPermitted: List<PermittedOptions>
+    abstract val outboundPermitted: List<PermittedOptions>
+    protected val activeConnections = ConcurrentHashMap<String, ActiveConnection>()
+
+    override suspend fun start() {
+        //ping timeout handler
+        vertx.setPeriodic(1000) {
+            val now = System.currentTimeMillis()
+            activeConnections.forEach { (connectionId, conn) ->
+                if (conn.lastPing + 10000 < now) {
+                    log.warn { "Connection {} timed out".args(connectionId) }
+                    activeConnections.remove(connectionId)?.close()
+                }
             }
+        }
+    }
+
+    protected suspend fun setupBridges(type: InstanceType) {
+        //http bridge
+        val sockJSHandler = SockJSHandler.create(vertx, SockJSHandlerOptions().setRegisterWriteHandler(true))
+        val portalBridgeOptions = SockJSBridgeOptions().apply {
+            inboundPermitteds = inboundPermitted //from connection
+            outboundPermitteds = outboundPermitted //to connection
+        }
+        router.route("/${type.name.lowercase()}/eventbus/*")
+            .subRouter(sockJSHandler.bridge(portalBridgeOptions) { handleBridgeEvent(it) })
+
+        //tcp bridge
+        val bridge = TcpEventBusBridge.create(
+            vertx,
+            BridgeOptions().apply {
+                inboundPermitteds = inboundPermitted //from connection
+                outboundPermitteds = outboundPermitted //to connection
+            },
+            NetServerOptions()
+        ) { handleBridgeEvent(it) }.listen(0)
+        ClusterConnection.multiUseNetServer.addUse(bridge) {
+            if (type == InstanceType.PROBE) {
+                //Python probes may send ping as first message.
+                //If first message is ping, assume it's a probe connection.
+                it.toString().contains(PlatformAddress.PROBE_CONNECTED) || it == PING_MESSAGE
+            } else {
+                it.toString().contains(PlatformAddress.MARKER_CONNECTED)
+            }
+        }
+    }
+
+    open fun handleBridgeEvent(event: BaseBridgeEvent) {
+        if (event.type() == BridgeEventType.SOCKET_PING) {
+            val activeConnection = activeConnections[getWriteHandlerID(event)]
+            if (activeConnection == null) {
+                log.error("Unknown connection pinged. Closing connection.")
+                event.complete(false)
+            } else {
+                activeConnection.lastPing = System.currentTimeMillis()
+                event.complete(true)
+            }
+        } else {
+            event.complete(true)
         }
     }
 
@@ -63,7 +124,11 @@ abstract class InstanceBridge(private val jwtAuth: JWTAuth?) : CoroutineVerticle
                     if (it.succeeded()) {
                         handler.handle(Future.succeededFuture(it.result()))
                     } else {
-                        log.warn("Failed to authenticate ${event.type()} event. Reason: ${it.cause().message}")
+                        log.error(buildString {
+                            append("Failed to authenticate ${event.type()} event")
+                            append(". Address: ").append(event.rawMessage.getString("address"))
+                            append(". Reason: ").append(it.cause().message)
+                        })
                         handler.handle(Future.failedFuture((it.cause())))
                     }
                 }
@@ -127,5 +192,25 @@ abstract class InstanceBridge(private val jwtAuth: JWTAuth?) : CoroutineVerticle
                 handler.handle(Future.failedFuture((it.cause())))
             }
         }
+    }
+
+    fun getWriteHandlerID(event: BaseBridgeEvent): String {
+        return when (event) {
+            is io.vertx.ext.eventbus.bridge.tcp.BridgeEvent -> event.socket().writeHandlerID()
+            is io.vertx.ext.web.handler.sockjs.BridgeEvent -> event.socket().writeHandlerID()
+            else -> throw IllegalArgumentException("Unknown bridge event type")
+        }
+    }
+
+    fun setCloseHandler(event: BaseBridgeEvent, handler: Handler<Void>) {
+        when (event) {
+            is io.vertx.ext.eventbus.bridge.tcp.BridgeEvent -> event.socket().closeHandler(handler)
+            is io.vertx.ext.web.handler.sockjs.BridgeEvent -> event.socket().closeHandler(handler)
+            else -> throw IllegalArgumentException("Unknown bridge event type")
+        }
+    }
+
+    protected enum class InstanceType {
+        PROBE, MARKER
     }
 }

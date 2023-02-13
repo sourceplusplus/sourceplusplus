@@ -102,7 +102,7 @@ class SourceBridgeProvider : ModuleProvider() {
                 }
 
                 vertx.deployVerticle(
-                    ProbeBridge(ClusterConnection.router, jwt),
+                    ProbeBridge(jwt),
                     DeploymentOptions().setConfig(config.getJsonObject("spp-platform"))
                 ).await()
                 vertx.deployVerticle(
