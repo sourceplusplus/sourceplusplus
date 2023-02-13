@@ -4,13 +4,19 @@
       <option name="executionName" />
       <option name="externalProjectPath" value="$PROJECT_DIR$" />
       <option name="externalSystemIdString" value="GRADLE" />
-      <option name="scriptParameters" value="-p platform -Dtest.profile=integration" />
+      <option name="scriptParameters" value="-Dtest.profile=integration" />
       <option name="taskDescriptions">
         <list />
       </option>
       <option name="taskNames">
         <list>
-          <option value="check" />
+          <option value=":platform:check" />
+          <option value=":platform:bridge:check" />
+          <option value=":platform:common:check" />
+          <option value=":platform:core:check" />
+          <option value=":platform:processor:live-instrument:check" />
+          <option value=":platform:processor:live-view:check" />
+          <option value=":platform:storage:check" />
         </list>
       </option>
       <option name="vmOptions" />
