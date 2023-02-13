@@ -58,15 +58,15 @@ class LiveGaugeValueMetrics(
         throw UnsupportedOperationException("calculate() should not be called in this class")
     }
 
-    override fun equals(var1: Any?): Boolean {
-        return if (this === var1) {
+    override fun equals(other: Any?): Boolean {
+        return if (this === other) {
             true
-        } else if (var1 == null) {
+        } else if (other == null) {
             false
-        } else if (this.javaClass != var1.javaClass) {
+        } else if (this.javaClass != other.javaClass) {
             false
         } else {
-            val var2 = var1 as LiveGaugeValueMetrics
+            val var2 = other as LiveGaugeValueMetrics
             if (entityId != var2.entityId) {
                 false
             } else {
