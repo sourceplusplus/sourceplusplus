@@ -19,24 +19,17 @@ package spp.platform.bridge.probe
 
 import io.vertx.core.DeploymentOptions
 import io.vertx.core.Vertx
-import io.vertx.core.buffer.Buffer
 import io.vertx.core.eventbus.DeliveryOptions
 import io.vertx.core.eventbus.Message
 import io.vertx.core.json.Json
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
-import io.vertx.core.net.NetServerOptions
 import io.vertx.core.shareddata.AsyncMap
 import io.vertx.ext.auth.jwt.JWTAuth
 import io.vertx.ext.bridge.BaseBridgeEvent
 import io.vertx.ext.bridge.BridgeEventType.*
-import io.vertx.ext.bridge.BridgeOptions
 import io.vertx.ext.bridge.PermittedOptions
-import io.vertx.ext.eventbus.bridge.tcp.TcpEventBusBridge
 import io.vertx.ext.web.Router
-import io.vertx.ext.web.handler.sockjs.SockJSBridgeOptions
-import io.vertx.ext.web.handler.sockjs.SockJSHandler
-import io.vertx.ext.web.handler.sockjs.SockJSHandlerOptions
 import io.vertx.kotlin.coroutines.await
 import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.launch
@@ -45,7 +38,6 @@ import spp.platform.bridge.ActiveConnection
 import spp.platform.bridge.BridgeAddress
 import spp.platform.bridge.InstanceBridge
 import spp.platform.common.ClientAuth
-import spp.platform.common.ClusterConnection
 import spp.platform.common.util.args
 import spp.platform.storage.SourceStorage
 import spp.protocol.platform.PlatformAddress.PROBE_CONNECTED
@@ -68,21 +60,19 @@ class ProbeBridge(
 
     companion object {
         private val log = KotlinLogging.logger {}
-        private val PING_MESSAGE = Buffer.buffer("\u0000\u0000\u0000\u0010{\"type\": \"ping\"}".toByteArray())
 
         suspend fun getActiveProbesMap(): AsyncMap<String, JsonObject> {
             return SourceStorage.map(BridgeAddress.ACTIVE_PROBES)
         }
     }
 
-    private val inboundPermitted = listOf(
+    override val inboundPermitted = listOf(
         PermittedOptions().setAddress(PROBE_CONNECTED),
         PermittedOptions().setAddress(ProcessorAddress.REMOTE_REGISTERED),
         PermittedOptions().setAddress(ProcessorAddress.LIVE_INSTRUMENT_APPLIED),
         PermittedOptions().setAddress(ProcessorAddress.LIVE_INSTRUMENT_REMOVED)
     )
-
-    private val outboundPermitted = listOf(
+    override val outboundPermitted = listOf(
         PermittedOptions().setAddressRegex(ProbeAddress.LIVE_INSTRUMENT_REMOTE + "\\:.+")
     )
 
@@ -99,32 +89,8 @@ class ProbeBridge(
                 .setMaxWorkerExecuteTime(5).setMaxWorkerExecuteTimeUnit(TimeUnit.MINUTES)
                 .setConfig(config)
         ).await()
-    }
 
-    override suspend fun setupBridges() {
-        //http bridge
-        val sockJSHandler = SockJSHandler.create(vertx, SockJSHandlerOptions().setRegisterWriteHandler(true))
-        val portalBridgeOptions = SockJSBridgeOptions().apply {
-            inboundPermitteds = inboundPermitted //from probe
-            outboundPermitteds = outboundPermitted //to probe
-        }
-        router.route("/probe/eventbus/*")
-            .subRouter(sockJSHandler.bridge(portalBridgeOptions) { handleBridgeEvent(it) })
-
-        //tcp bridge
-        val bridge = TcpEventBusBridge.create(
-            vertx,
-            BridgeOptions().apply {
-                inboundPermitteds = inboundPermitted //from probe
-                outboundPermitteds = outboundPermitted //to probe
-            },
-            NetServerOptions()
-        ) { handleBridgeEvent(it) }.listen(0)
-        ClusterConnection.multiUseNetServer.addUse(bridge) {
-            //Python probes may send ping as first message.
-            //If first message is ping, assume it's a probe connection.
-            it.toString().contains(PROBE_CONNECTED) || it == PING_MESSAGE
-        }
+        setupBridges(InstanceType.PROBE)
     }
 
     private fun handleConnection(it: Message<JsonObject>) {

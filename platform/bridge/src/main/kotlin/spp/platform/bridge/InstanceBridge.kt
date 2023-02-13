@@ -21,17 +21,27 @@ import io.vertx.core.AsyncResult
 import io.vertx.core.Future
 import io.vertx.core.Handler
 import io.vertx.core.Vertx
+import io.vertx.core.buffer.Buffer
+import io.vertx.core.net.NetServerOptions
 import io.vertx.ext.auth.authentication.TokenCredentials
 import io.vertx.ext.auth.jwt.JWTAuth
 import io.vertx.ext.bridge.BaseBridgeEvent
 import io.vertx.ext.bridge.BridgeEventType
+import io.vertx.ext.bridge.BridgeOptions
+import io.vertx.ext.bridge.PermittedOptions
+import io.vertx.ext.eventbus.bridge.tcp.TcpEventBusBridge
+import io.vertx.ext.web.handler.sockjs.SockJSBridgeOptions
+import io.vertx.ext.web.handler.sockjs.SockJSHandler
+import io.vertx.ext.web.handler.sockjs.SockJSHandlerOptions
 import io.vertx.kotlin.coroutines.CoroutineVerticle
 import mu.KotlinLogging
 import spp.platform.common.ClientAuth
 import spp.platform.common.ClusterConnection
+import spp.platform.common.ClusterConnection.router
 import spp.platform.common.DeveloperAuth
 import spp.platform.common.util.args
 import spp.platform.storage.SourceStorage
+import spp.protocol.platform.PlatformAddress
 import spp.protocol.platform.auth.ClientAccess
 import java.util.concurrent.ConcurrentHashMap
 
@@ -39,8 +49,11 @@ abstract class InstanceBridge(private val jwtAuth: JWTAuth?) : CoroutineVerticle
 
     companion object {
         private val log = KotlinLogging.logger {}
+        private val PING_MESSAGE = Buffer.buffer("\u0000\u0000\u0000\u0010{\"type\": \"ping\"}".toByteArray())
     }
 
+    abstract val inboundPermitted: List<PermittedOptions>
+    abstract val outboundPermitted: List<PermittedOptions>
     protected val activeConnections = ConcurrentHashMap<String, ActiveConnection>()
 
     override suspend fun start() {
@@ -54,11 +67,37 @@ abstract class InstanceBridge(private val jwtAuth: JWTAuth?) : CoroutineVerticle
                 }
             }
         }
-
-        setupBridges()
     }
 
-    abstract suspend fun setupBridges()
+    protected suspend fun setupBridges(type: InstanceType) {
+        //http bridge
+        val sockJSHandler = SockJSHandler.create(vertx, SockJSHandlerOptions().setRegisterWriteHandler(true))
+        val portalBridgeOptions = SockJSBridgeOptions().apply {
+            inboundPermitteds = inboundPermitted //from connection
+            outboundPermitteds = outboundPermitted //to connection
+        }
+        router.route("/${type.name.lowercase()}/eventbus/*")
+            .subRouter(sockJSHandler.bridge(portalBridgeOptions) { handleBridgeEvent(it) })
+
+        //tcp bridge
+        val bridge = TcpEventBusBridge.create(
+            vertx,
+            BridgeOptions().apply {
+                inboundPermitteds = inboundPermitted //from connection
+                outboundPermitteds = outboundPermitted //to connection
+            },
+            NetServerOptions()
+        ) { handleBridgeEvent(it) }.listen(0)
+        ClusterConnection.multiUseNetServer.addUse(bridge) {
+            if (type == InstanceType.PROBE) {
+                //Python probes may send ping as first message.
+                //If first message is ping, assume it's a probe connection.
+                it.toString().contains(PlatformAddress.PROBE_CONNECTED) || it == PING_MESSAGE
+            } else {
+                it.toString().contains(PlatformAddress.MARKER_CONNECTED)
+            }
+        }
+    }
 
     open fun handleBridgeEvent(event: BaseBridgeEvent) {
         if (event.type() == BridgeEventType.SOCKET_PING) {
@@ -169,5 +208,9 @@ abstract class InstanceBridge(private val jwtAuth: JWTAuth?) : CoroutineVerticle
             is io.vertx.ext.web.handler.sockjs.BridgeEvent -> event.socket().closeHandler(handler)
             else -> throw IllegalArgumentException("Unknown bridge event type")
         }
+    }
+
+    protected enum class InstanceType {
+        PROBE, MARKER
     }
 }

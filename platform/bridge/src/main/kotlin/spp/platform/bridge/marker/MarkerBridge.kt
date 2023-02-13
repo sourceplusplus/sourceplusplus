@@ -21,17 +21,11 @@ import io.vertx.core.Vertx
 import io.vertx.core.eventbus.DeliveryOptions
 import io.vertx.core.eventbus.Message
 import io.vertx.core.json.JsonObject
-import io.vertx.core.net.NetServerOptions
 import io.vertx.core.shareddata.AsyncMap
 import io.vertx.ext.auth.jwt.JWTAuth
 import io.vertx.ext.bridge.BaseBridgeEvent
 import io.vertx.ext.bridge.BridgeEventType.*
-import io.vertx.ext.bridge.BridgeOptions
 import io.vertx.ext.bridge.PermittedOptions
-import io.vertx.ext.eventbus.bridge.tcp.TcpEventBusBridge
-import io.vertx.ext.web.handler.sockjs.SockJSBridgeOptions
-import io.vertx.ext.web.handler.sockjs.SockJSHandler
-import io.vertx.ext.web.handler.sockjs.SockJSHandlerOptions
 import io.vertx.kotlin.coroutines.await
 import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.launch
@@ -39,8 +33,6 @@ import mu.KotlinLogging
 import spp.platform.bridge.ActiveConnection
 import spp.platform.bridge.BridgeAddress
 import spp.platform.bridge.InstanceBridge
-import spp.platform.common.ClusterConnection
-import spp.platform.common.ClusterConnection.router
 import spp.platform.common.DeveloperAuth
 import spp.platform.storage.SourceStorage
 import spp.protocol.platform.PlatformAddress
@@ -71,7 +63,7 @@ class MarkerBridge(
         }
     }
 
-    private val inboundPermitted = listOf(
+    override val inboundPermitted = listOf(
         PermittedOptions().setAddress("get-records"),
         PermittedOptions().setAddress(MARKER_CONNECTED),
         PermittedOptions().setAddress(LIVE_MANAGEMENT),
@@ -79,7 +71,7 @@ class MarkerBridge(
         PermittedOptions().setAddress(LIVE_VIEW),
         PermittedOptions().setAddress(LIVE_INSIGHT)
     )
-    private val outboundPermitted = listOf(
+    override val outboundPermitted = listOf(
         PermittedOptions().setAddressRegex(Subscribe.LIVE_INSTRUMENT_SUBSCRIBER + "\\:.+"),
         PermittedOptions().setAddressRegex(Subscribe.LIVE_VIEW_SUBSCRIBER + "\\:.+")
     )
@@ -87,30 +79,8 @@ class MarkerBridge(
     override suspend fun start() {
         super.start()
         vertx.eventBus().consumer(MARKER_CONNECTED, ::handleConnection)
-    }
 
-    override suspend fun setupBridges() {
-        //http bridge
-        val sockJSHandler = SockJSHandler.create(vertx, SockJSHandlerOptions().setRegisterWriteHandler(true))
-        val portalBridgeOptions = SockJSBridgeOptions().apply {
-            inboundPermitteds = inboundPermitted //from marker
-            outboundPermitteds = outboundPermitted //to marker
-        }
-        router.route("/marker/eventbus/*")
-            .subRouter(sockJSHandler.bridge(portalBridgeOptions) { handleBridgeEvent(it) })
-
-        //tcp bridge
-        val bridge = TcpEventBusBridge.create(
-            vertx,
-            BridgeOptions().apply {
-                inboundPermitteds = inboundPermitted //from marker
-                outboundPermitteds = outboundPermitted //to marker
-            },
-            NetServerOptions()
-        ) { handleBridgeEvent(it) }.listen(0)
-        ClusterConnection.multiUseNetServer.addUse(bridge) {
-            it.toString().contains(MARKER_CONNECTED)
-        }
+        setupBridges(InstanceType.MARKER)
     }
 
     private fun handleConnection(marker: Message<JsonObject>) {
