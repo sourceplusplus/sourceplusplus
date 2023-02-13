@@ -51,9 +51,7 @@ import java.time.Instant
  *
  * todo: rename Marker to Plugin?
  */
-class MarkerBridge(
-    jwtAuth: JWTAuth?
-) : InstanceBridge(jwtAuth) {
+class MarkerBridge(jwtAuth: JWTAuth?) : InstanceBridge(jwtAuth) {
 
     companion object {
         private val log = KotlinLogging.logger {}

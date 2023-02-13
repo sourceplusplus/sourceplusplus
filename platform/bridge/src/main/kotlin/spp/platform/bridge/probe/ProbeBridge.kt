@@ -29,7 +29,6 @@ import io.vertx.ext.auth.jwt.JWTAuth
 import io.vertx.ext.bridge.BaseBridgeEvent
 import io.vertx.ext.bridge.BridgeEventType.*
 import io.vertx.ext.bridge.PermittedOptions
-import io.vertx.ext.web.Router
 import io.vertx.kotlin.coroutines.await
 import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.launch
@@ -38,6 +37,7 @@ import spp.platform.bridge.ActiveConnection
 import spp.platform.bridge.BridgeAddress
 import spp.platform.bridge.InstanceBridge
 import spp.platform.common.ClientAuth
+import spp.platform.common.ClusterConnection.router
 import spp.platform.common.util.args
 import spp.platform.storage.SourceStorage
 import spp.protocol.platform.PlatformAddress.PROBE_CONNECTED
@@ -53,10 +53,7 @@ import java.util.concurrent.TimeUnit
 /**
  * Provides services for and tracking of Live Probes.
  */
-class ProbeBridge(
-    private val router: Router,
-    jwtAuth: JWTAuth?
-) : InstanceBridge(jwtAuth) {
+class ProbeBridge(jwtAuth: JWTAuth?) : InstanceBridge(jwtAuth) {
 
     companion object {
         private val log = KotlinLogging.logger {}
