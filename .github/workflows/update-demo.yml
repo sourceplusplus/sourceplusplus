@@ -27,5 +27,5 @@ jobs:
             docker-compose down
             docker image prune -f --all
             docker-compose build --no-cache
-            docker-compose up -d
+            docker-compose --compatibility up -d
             docker image prune -f
