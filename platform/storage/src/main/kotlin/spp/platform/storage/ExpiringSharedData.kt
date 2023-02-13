@@ -144,9 +144,12 @@ class ExpiringSharedData<K, V> private constructor(
 
         //remove expired keys
         val expiredKeys = promise.future().await()
-        expiredKeys.forEach {
-            backingMap.remove(it).await()
-            expirationMap.remove(it).await()
+        if (expiredKeys.isNotEmpty()) {
+            expiredKeys.forEach {
+                backingMap.remove(it).await()
+                expirationMap.remove(it).await()
+            }
+            log.trace { "Removed ${expiredKeys.size} expired keys" }
         }
     }
 
@@ -161,7 +164,7 @@ class ExpiringSharedData<K, V> private constructor(
             backingMap.get(key).onSuccess {
                 val value = function(key, it)
                 backingMap.put(key, value).onSuccess {
-                    if (expireAfterWriteNanos > 0) {
+                    if (expireAfterWriteNanos > 0 || expireAfterAccessNanos > 0) {
                         expirationMap.put(key, System.nanoTime()).onSuccess {
                             promise.complete()
                         }.onFailure {
