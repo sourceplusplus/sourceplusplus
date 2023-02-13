@@ -39,6 +39,7 @@ import spp.protocol.platform.auth.DeveloperRole.Companion.ROLE_MANAGER
 import spp.protocol.platform.auth.RedactionType
 import spp.protocol.platform.auth.RolePermission
 
+@Suppress("LargeClass", "TooManyFunctions") // public API test
 class GraphqlAPIITTest : PlatformIntegrationTest() {
 
     companion object {
