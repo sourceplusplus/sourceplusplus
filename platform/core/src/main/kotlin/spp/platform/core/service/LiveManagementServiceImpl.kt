@@ -56,6 +56,7 @@ import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.*
 
+@Suppress("LargeClass", "TooManyFunctions") // public API
 class LiveManagementServiceImpl(
     private val vertx: Vertx,
     private val jwt: JWTAuth?,

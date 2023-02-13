@@ -154,7 +154,8 @@ class LiveMeterView(private val subscriptionCache: MetricTypeSubscriptionCache) 
             hasAllEvents = true
         }
 
-        if (hasAllEvents && System.currentTimeMillis() - sub.lastUpdated >= sub.subscription.viewConfig.refreshRateLimit) {
+        val timeSinceRefresh = System.currentTimeMillis() - sub.lastUpdated
+        if (hasAllEvents && timeSinceRefresh >= sub.subscription.viewConfig.refreshRateLimit) {
             sub.lastUpdated = System.currentTimeMillis()
 
             if (waitingEventsForBucket.isNotEmpty()) {

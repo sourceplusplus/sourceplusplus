@@ -77,6 +77,7 @@ import spp.protocol.view.rule.LiveViewRule
 import java.time.Instant
 import java.util.*
 
+@Suppress("TooManyFunctions") // public API
 class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
 
     companion object {

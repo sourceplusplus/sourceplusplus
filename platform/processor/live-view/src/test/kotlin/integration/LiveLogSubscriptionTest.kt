@@ -102,7 +102,7 @@ class LiveLogSubscriptionTest : LiveInstrumentIntegrationTest() {
         instrumentService.addLiveInstrument(liveLog).await()
         log.info("Applied live log")
 
-        for (i in 0 until 5) {
+        repeat(5) {
             triggerLog()
             log.info("Triggered log")
 
