@@ -51,15 +51,15 @@ class EndpointCpmMetrics : CPMMetrics(), WithMetadata {
         return var1
     }
 
-    override fun equals(var1: Any?): Boolean {
-        return if (this === var1) {
+    override fun equals(other: Any?): Boolean {
+        return if (this === other) {
             true
-        } else if (var1 == null) {
+        } else if (other == null) {
             false
-        } else if (this.javaClass != var1.javaClass) {
+        } else if (this.javaClass != other.javaClass) {
             false
         } else {
-            val var2 = var1 as EndpointCpmMetrics
+            val var2 = other as EndpointCpmMetrics
             if (entityId != var2.entityId) {
                 false
             } else {
