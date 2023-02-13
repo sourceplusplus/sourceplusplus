@@ -60,8 +60,8 @@ abstract class InstanceBridge(private val jwtAuth: JWTAuth?) : CoroutineVerticle
         //ping timeout handler
         vertx.setPeriodic(1000) {
             val now = System.currentTimeMillis()
-            activeConnections.forEach { (connectionId, probe) ->
-                if (probe.lastPing + 10000 < now) {
+            activeConnections.forEach { (connectionId, conn) ->
+                if (conn.lastPing + 10000 < now) {
                     log.warn { "Connection {} timed out".args(connectionId) }
                     activeConnections.remove(connectionId)?.close()
                 }
