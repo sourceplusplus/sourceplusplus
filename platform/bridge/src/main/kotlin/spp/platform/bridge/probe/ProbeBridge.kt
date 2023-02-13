@@ -98,21 +98,12 @@ class ProbeBridge(jwtAuth: JWTAuth?) : InstanceBridge(jwtAuth) {
 
         launch(vertx.dispatcher()) {
             val map = getActiveProbesMap()
-            map.put(conn.instanceId, JsonObject.mapFrom(conn.copy(connectionTime = connectionTime))).onSuccess {
-                map.size().onSuccess {
-                    log.info("Probe connected. Latency: {}ms - Probes connected: {}", latency, it)
-                }.onFailure {
-                    log.error("Failed to get active probes", it)
-                }
-            }.onFailure {
-                log.error("Failed to update active probe", it)
-            }
-        }
-        it.reply(true)
+            map.put(conn.instanceId, JsonObject.mapFrom(conn.copy(connectionTime = connectionTime))).await()
+            log.info("Probe connected. Latency: {}ms - Probes connected: {}", latency, map.size().await())
 
-        launch(vertx.dispatcher()) {
             SourceStorage.counter(PROBE_CONNECTED).incrementAndGet().await()
         }
+        it.reply(true)
     }
 
     private fun handleDisconnection(it: Message<JsonObject>) {
