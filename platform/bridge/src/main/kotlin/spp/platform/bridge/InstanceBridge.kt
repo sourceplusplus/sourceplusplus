@@ -57,7 +57,7 @@ abstract class InstanceBridge(private val jwtAuth: JWTAuth?) : CoroutineVerticle
     protected val activeConnections = ConcurrentHashMap<String, ActiveConnection>()
 
     override suspend fun start() {
-        //pong timeout handler
+        //ping timeout handler
         vertx.setPeriodic(1000) {
             val now = System.currentTimeMillis()
             activeConnections.forEach { (connectionId, probe) ->
