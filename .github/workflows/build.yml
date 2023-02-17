@@ -96,7 +96,7 @@ jobs:
         run: docker save $(docker image ls  | grep 'spp-platform' | awk '{print $1}') > spp-platform.tar
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: spp-platform
           path: spp-platform.tar
