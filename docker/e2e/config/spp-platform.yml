@@ -11,6 +11,8 @@ spp-platform:
     redirect_to_https: ${SPP_HTTP_REDIRECT_TO_HTTPS:-false}
   logging:
     level: ${SPP_LOGGING_LEVEL:-info}
+  bridge:
+    ping_timeout: ${SPP_BRIDGE_PING_TIMEOUT:-10}
   pii-redaction:
     enabled: ${SPP_PII_REDACTION_ENABLED:-true}
     redactions:

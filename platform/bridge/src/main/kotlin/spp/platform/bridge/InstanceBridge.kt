@@ -55,15 +55,26 @@ abstract class InstanceBridge(private val jwtAuth: JWTAuth?) : CoroutineVerticle
     abstract val inboundPermitted: List<PermittedOptions>
     abstract val outboundPermitted: List<PermittedOptions>
     protected val activeConnections = ConcurrentHashMap<String, ActiveConnection>()
+    private var kickUnknownPingConnections = false
 
     override suspend fun start() {
-        //ping timeout handler
-        vertx.setPeriodic(1000) {
-            val now = System.currentTimeMillis()
-            activeConnections.forEach { (connectionId, conn) ->
-                if (conn.lastPing + 10000 < now) {
-                    log.warn { "Connection {} timed out".args(connectionId) }
-                    activeConnections.remove(connectionId)?.close()
+        startPingChecker()
+    }
+
+    private fun startPingChecker() {
+        val pingTimeoutInterval = (ClusterConnection.config
+            .getJsonObject("spp-platform")?.getJsonObject("bridge")?.getString("ping_timeout")?.toIntOrNull() ?: -1)
+        if (pingTimeoutInterval > 0) {
+            kickUnknownPingConnections = true
+
+            val timeoutIntervalMs = pingTimeoutInterval * 1000
+            vertx.setPeriodic(1000) {
+                val now = System.currentTimeMillis()
+                activeConnections.forEach { (connectionId, conn) ->
+                    if (conn.lastPing + timeoutIntervalMs < now) {
+                        log.warn { "Connection {} timed out".args(connectionId) }
+                        activeConnections.remove(connectionId)?.close()
+                    }
                 }
             }
         }
@@ -102,11 +113,11 @@ abstract class InstanceBridge(private val jwtAuth: JWTAuth?) : CoroutineVerticle
     open fun handleBridgeEvent(event: BaseBridgeEvent) {
         if (event.type() == BridgeEventType.SOCKET_PING) {
             val activeConnection = activeConnections[getWriteHandlerID(event)]
-            if (activeConnection == null) {
+            if (activeConnection == null && kickUnknownPingConnections) {
                 log.error("Unknown connection pinged. Closing connection.")
                 event.complete(false)
             } else {
-                activeConnection.lastPing = System.currentTimeMillis()
+                activeConnection?.lastPing = System.currentTimeMillis()
                 event.complete(true)
             }
         } else {
