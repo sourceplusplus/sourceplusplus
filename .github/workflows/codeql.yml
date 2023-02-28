@@ -28,6 +28,9 @@ on:
   schedule:
     - cron: '38 11 * * 0'
 
+env:
+  GRADLE_OPTS: -Xmx5g -Xms5g
+
 jobs:
   analyze:
     name: Analyze
