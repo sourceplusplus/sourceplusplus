@@ -21,10 +21,7 @@ import io.vertx.core.Future
 import io.vertx.core.Vertx
 import io.vertx.core.buffer.Buffer
 import io.vertx.core.http.HttpServerOptions
-import io.vertx.core.net.NetClient
-import io.vertx.core.net.NetClientOptions
-import io.vertx.core.net.NetServer
-import io.vertx.core.net.NetServerOptions
+import io.vertx.core.net.*
 import io.vertx.core.net.impl.TCPServerBase
 import io.vertx.ext.eventbus.bridge.tcp.TcpEventBusBridge
 import io.vertx.kotlin.coroutines.await
@@ -41,9 +38,10 @@ class MultiUseNetServer(private val vertx: Vertx) {
     private val useMap = IdentityHashMap<UseDecider, UsableNetClient>()
 
     fun addUse(server: TCPServerBase, decider: UseDecider? = null): MultiUseNetServer {
+        val serverOptions = Reflect.on(server).get<TCPSSLOptions>("options")
         val options = NetClientOptions()
-            .setSsl(server.sslHelper().isSSL)
-            .setKeyCertOptions(Reflect.on(server.sslHelper()).get("keyCertOptions"))
+            .setSsl(serverOptions.isSsl)
+            .setKeyCertOptions(serverOptions.keyCertOptions)
             .setTrustAll(true)
         val netClient = vertx.createNetClient(options)
         useMap[decider ?: CatchAllUseDecider()] = UsableNetClient(netClient, "localhost", server.actualPort())
