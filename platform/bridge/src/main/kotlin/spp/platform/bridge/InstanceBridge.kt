@@ -97,7 +97,7 @@ abstract class InstanceBridge(private val jwtAuth: JWTAuth?) : CoroutineVerticle
                 inboundPermitteds = inboundPermitted //from connection
                 outboundPermitteds = outboundPermitted //to connection
             },
-            NetServerOptions()
+            NetServerOptions().setRegisterWriteHandler(true)
         ) { handleBridgeEvent(it) }.listen(0)
         ClusterConnection.multiUseNetServer.addUse(bridge) {
             if (type == InstanceType.PROBE) {
