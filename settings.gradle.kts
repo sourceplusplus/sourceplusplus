@@ -42,7 +42,6 @@ include("probes:jvm:services")
 include("probes:python")
 include("probes:nodejs")
 include("protocol")
-include("protocol:codegen")
 include("tutorials:jvm")
 include("tutorials:python")
 
