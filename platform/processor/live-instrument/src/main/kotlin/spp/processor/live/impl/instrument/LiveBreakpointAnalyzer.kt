@@ -247,7 +247,7 @@ class LiveBreakpointAnalyzer(
                 if (liveVar.liveIdentity == null && outerVal.containsKey("@id")) {
                     liveVar = liveVar.copy(liveIdentity = outerVal.getString("@id"))
                 }
-                liveVar = liveVar.copy(presentation = LiveVariablePresentation.format(liveVar.liveClazz, liveVar))
+                liveVar = liveVar.copy(presentation = LiveVariablePresentation.format(liveVar))
                 variables.add(liveVar)
 
                 if (liveVar.name == "this") {
