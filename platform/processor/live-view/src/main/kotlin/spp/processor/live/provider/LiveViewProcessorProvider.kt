@@ -26,21 +26,20 @@ import org.apache.skywalking.oap.server.core.CoreModule
 import org.apache.skywalking.oap.server.core.analysis.manual.log.LogRecord
 import org.apache.skywalking.oap.server.core.analysis.manual.segment.SegmentRecord
 import org.apache.skywalking.oap.server.core.analysis.metrics.WithMetadata
-import org.apache.skywalking.oap.server.core.analysis.worker.MetricsStreamProcessor
 import org.apache.skywalking.oap.server.core.exporter.ExportEvent
 import org.apache.skywalking.oap.server.core.exporter.LogExportService
 import org.apache.skywalking.oap.server.core.exporter.MetricValuesExportService
 import org.apache.skywalking.oap.server.core.exporter.TraceExportService
+import org.apache.skywalking.oap.server.core.remote.RemoteSenderService
 import org.apache.skywalking.oap.server.core.storage.StorageModule
 import org.apache.skywalking.oap.server.library.module.ModuleConfig
 import org.apache.skywalking.oap.server.library.module.ModuleDefine
 import org.apache.skywalking.oap.server.library.module.ModuleProvider
-import org.joor.Reflect
 import org.slf4j.LoggerFactory
 import spp.platform.common.ClusterConnection
 import spp.processor.ViewProcessor
 import spp.processor.ViewProcessor.liveViewService
-import spp.processor.live.impl.SPPMetricsStreamProcessor
+import spp.processor.live.impl.SPPRemoteSender
 
 class LiveViewModule : ModuleDefine("exporter") {
     override fun services(): Array<Class<*>> = arrayOf(
@@ -60,10 +59,6 @@ class LiveViewProcessorProvider : ModuleProvider() {
     override fun module(): Class<out ModuleDefine> = LiveViewModule::class.java
     override fun newConfigCreator(): ConfigCreator<out ModuleConfig>? = null
     override fun prepare() {
-        //todo: should be able to hook into metrics in a smarter way
-        val sppMetricsStreamProcessor = SPPMetricsStreamProcessor()
-        Reflect.onClass(MetricsStreamProcessor::class.java).set("PROCESSOR", sppMetricsStreamProcessor)
-
         registerServiceImplementation(MetricValuesExportService::class.java, object : MetricValuesExportService {
             override fun export(event: ExportEvent) {
                 if (event.type == ExportEvent.EventType.TOTAL && event.metrics is WithMetadata) {
@@ -92,6 +87,12 @@ class LiveViewProcessorProvider : ModuleProvider() {
 
     override fun start() {
         log.info("Starting spp-live-view")
+        manager.find(CoreModule.NAME).provider().apply {
+            registerServiceImplementation(
+                RemoteSenderService::class.java,
+                SPPRemoteSender(manager, getService(RemoteSenderService::class.java))
+            )
+        }
         ViewProcessor.bootProcessor(manager)
         log.info("spp-live-view started")
     }

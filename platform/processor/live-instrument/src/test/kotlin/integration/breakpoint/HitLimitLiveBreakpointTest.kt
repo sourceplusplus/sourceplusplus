@@ -59,7 +59,7 @@ class HitLimitLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         ).await()
 
         //trigger live breakpoint 10 times
-        for (i in 0 until 10) {
+        repeat(10) {
             hitLimit()
         }
         delay(10_000)
