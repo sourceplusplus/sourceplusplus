@@ -60,13 +60,13 @@ dependencies {
     compileOnly(project(":platform:storage"))
     compileOnly(project(":platform:processor:live-view"))
 
-    compileOnly("plus.sourceplus.platform:platform-common:0.7.8-SNAPSHOT")
-    compileOnly("plus.sourceplus.platform:platform-storage:0.7.8-SNAPSHOT")
-    compileOnly("plus.sourceplus.platform:live-view-processor:0.7.8-SNAPSHOT")
-    compileOnly("plus.sourceplus.interface:jetbrains-core:0.7.8-SNAPSHOT")
-    compileOnly("plus.sourceplus.interface:jetbrains-common:0.7.8-SNAPSHOT")
-    compileOnly("plus.sourceplus.interface:jetbrains-marker:0.7.8-SNAPSHOT")
-    compileOnly("plus.sourceplus.interface:jetbrains-marker-jvm:0.7.8-SNAPSHOT")
+    implementation("plus.sourceplus.platform:platform-common:0.7.8-SNAPSHOT")
+    implementation("plus.sourceplus.platform:platform-storage:0.7.8-SNAPSHOT")
+    implementation("plus.sourceplus.platform:live-view-processor:0.7.8-SNAPSHOT")
+    implementation("plus.sourceplus.interface:jetbrains-core:0.7.8-SNAPSHOT")
+    implementation("plus.sourceplus.interface:jetbrains-common:0.7.8-SNAPSHOT")
+    implementation("plus.sourceplus.interface:jetbrains-marker:0.7.8-SNAPSHOT")
+    implementation("plus.sourceplus.interface:jetbrains-marker-jvm:0.7.8-SNAPSHOT")
 //    implementation("plus.sourceplus.interface:jetbrains-marker-ult:0.7.8-SNAPSHOT")
 
     val intellijVersion = "231.8109.2-EAP-SNAPSHOT"
