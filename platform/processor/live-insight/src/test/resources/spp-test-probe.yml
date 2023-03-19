@@ -1,0 +1,15 @@
+spp:
+  authentication:
+    client_id: "test-id"
+    client_secret: "test-secret"
+  platform_host: "localhost"
+  platform_port: 12800
+  delete_probe_directory_on_boot: false
+skywalking:
+  logging:
+    level: "DEBUG"
+    file_name: "test-live-insight.log"
+  agent:
+    service_name: "spp-test-probe"
+  meter:
+    report_interval: 10

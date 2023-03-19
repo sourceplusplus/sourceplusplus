@@ -20,6 +20,7 @@ package spp.platform.core.service
 import io.vertx.core.*
 import io.vertx.core.eventbus.Message
 import io.vertx.core.json.JsonObject
+import io.vertx.ext.auth.authentication.TokenCredentials
 import io.vertx.ext.auth.jwt.JWTAuth
 import io.vertx.kotlin.coroutines.CoroutineVerticle
 import io.vertx.kotlin.coroutines.await
@@ -86,8 +87,8 @@ class ServiceProvider(
         ServiceBinder(vertx).setIncludeDebugInfo(true).setAddress(address)
             .addInterceptor { msg ->
                 val promise = Promise.promise<Message<JsonObject>>()
-                if (jwtAuth != null) {
-                    jwtAuth.authenticate(JsonObject().put("token", msg.headers().get("auth-token"))).onComplete {
+                if (jwtAuth != null && msg.headers().get("action") != "getAuthToken") {
+                    jwtAuth.authenticate(TokenCredentials(msg.headers().get("auth-token"))) {
                         if (it.succeeded()) {
                             Vertx.currentContext().putLocal("user", it.result())
                             val selfId = it.result().principal().getString("developer_id")

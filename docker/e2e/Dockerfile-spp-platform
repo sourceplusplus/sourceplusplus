@@ -7,6 +7,7 @@ RUN ln -s /usr/lib/jvm/java-17-openjdk-amd64 /opt/java/openjdk
 
 ADD ./log4j2.xml /skywalking/config/log4j2.xml
 
+ADD ./spp-insight-deps.jar /skywalking/oap-libs/
 ADD ./spp-platform-*.jar /skywalking/oap-libs/
 ADD ./spp-live-*.jar /skywalking/oap-libs/
 
@@ -17,6 +18,9 @@ RUN printf "\nspp-platform-storage:\n  selector: \${SPP_PLATFORM_STORAGE:default
     >> /skywalking/config/application.yml
 
 RUN printf "\nspp-platform-bridge:\n  selector: \${SPP_PLATFORM_BRIDGE:default}\n  default:\n" \
+    >> /skywalking/config/application.yml
+
+RUN printf "\nspp-live-insight:\n  selector: \${SPP_LIVE_INSIGHT:default}\n  default:\n" \
     >> /skywalking/config/application.yml
 
 RUN printf "\nspp-live-instrument:\n  selector: \${SPP_LIVE_INSTRUMENT:default}\n  default:\n" \

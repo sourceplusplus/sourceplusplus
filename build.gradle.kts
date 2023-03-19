@@ -23,6 +23,15 @@ subprojects {
         resolutionStrategy.dependencySubstitution {
             substitute(module("plus.sourceplus:protocol"))
                 .using(project(":protocol"))
+
+            substitute(module("plus.sourceplus.interface:jetbrains-common"))
+                .using(project(":interfaces:jetbrains:common"))
+            substitute(module("plus.sourceplus.interface:jetbrains-core"))
+                .using(project(":interfaces:jetbrains:core"))
+            substitute(module("plus.sourceplus.interface:jetbrains-marker"))
+                .using(project(":interfaces:jetbrains:marker"))
+            substitute(module("plus.sourceplus.interface:jetbrains-marker-jvm"))
+                .using(project(":interfaces:jetbrains:marker:jvm-marker"))
         }
     }
 
