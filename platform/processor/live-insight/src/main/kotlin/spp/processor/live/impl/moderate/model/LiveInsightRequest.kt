@@ -26,7 +26,6 @@ import java.time.Instant
  */
 data class LiveInsightRequest(
     val liveInstrument: LiveInstrument,
-    val workspaceId: String,
     val moderator: InsightModerator,
     val priority: Long,
     val timestamp: Instant

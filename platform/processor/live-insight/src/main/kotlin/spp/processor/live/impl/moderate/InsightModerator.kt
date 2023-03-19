@@ -20,7 +20,14 @@ package spp.processor.live.impl.moderate
 import com.intellij.psi.PsiFile
 import io.vertx.core.json.JsonObject
 import io.vertx.kotlin.coroutines.CoroutineVerticle
+import io.vertx.kotlin.coroutines.dispatcher
+import kotlinx.coroutines.launch
+import mu.KotlinLogging
+import spp.processor.InsightProcessor
+import spp.processor.live.impl.environment.InsightEnvironment
 import spp.processor.live.impl.moderate.model.LiveInsightRequest
+import spp.processor.live.impl.util.BoundedTreeSet
+import spp.processor.live.provider.InsightWorkspaceProvider
 import spp.protocol.artifact.ArtifactQualifiedName
 import spp.protocol.insight.InsightType
 
@@ -30,6 +37,9 @@ import spp.protocol.insight.InsightType
  *  maintaining the priority of insight data.
  */
 abstract class InsightModerator : CoroutineVerticle() {
+
+    private val log = KotlinLogging.logger {}
+    protected val offerQueue = BoundedTreeSet<LiveInsightRequest>(100)
 
     abstract val type: InsightType
 
@@ -48,4 +58,30 @@ abstract class InsightModerator : CoroutineVerticle() {
         artifact: ArtifactQualifiedName,
         insights: JsonObject
     )
+
+    abstract suspend fun searchProject(environment: InsightEnvironment)
+
+    override suspend fun start() {
+        startSearchLoop()
+        startOfferLoop()
+    }
+
+    private fun startSearchLoop() {
+        vertx.setPeriodic(1000) {
+            log.trace("Checking for insights to gather")
+            launch(vertx.dispatcher()) {
+                searchProject(InsightWorkspaceProvider.insightEnvironment)
+            }
+        }
+    }
+
+    private fun startOfferLoop() {
+        vertx.setPeriodic(1000) {
+            log.trace("Checking for insights to offer")
+            val l = offerQueue.toList()
+            l.forEach {
+                InsightProcessor.workspaceQueue.offer(it)
+            }
+        }
+    }
 }

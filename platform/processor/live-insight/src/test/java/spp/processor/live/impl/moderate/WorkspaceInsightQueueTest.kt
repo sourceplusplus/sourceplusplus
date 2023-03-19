@@ -26,6 +26,7 @@ import io.vertx.core.json.JsonObject
 import org.joor.Reflect
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import spp.processor.live.impl.environment.InsightEnvironment
 import spp.processor.live.impl.moderate.model.LiveInsightRequest
 import spp.protocol.artifact.ArtifactQualifiedName
 import spp.protocol.insight.InsightType
@@ -53,7 +54,6 @@ class WorkspaceInsightQueueTest {
                 metricValue = MetricValue(MetricValueType.NUMBER, "1"),
                 location = LiveSourceLocation("testMethod()", -1)
             ),
-            "workspaceId",
             object : InsightModerator() {
                 override val type: InsightType
                     get() = throw IllegalStateException()
@@ -63,6 +63,8 @@ class WorkspaceInsightQueueTest {
                     artifact: ArtifactQualifiedName,
                     insights: JsonObject
                 ) = Unit
+
+                override suspend fun searchProject(environment: InsightEnvironment) = Unit
             },
             5L,
             Instant.now()
@@ -78,7 +80,6 @@ class WorkspaceInsightQueueTest {
                 metricValue = MetricValue(MetricValueType.NUMBER, "1"),
                 location = LiveSourceLocation("testMethod2()", -1)
             ),
-            "workspaceId",
             object : InsightModerator() {
                 override val type: InsightType
                     get() = throw IllegalStateException()
@@ -88,6 +89,8 @@ class WorkspaceInsightQueueTest {
                     artifact: ArtifactQualifiedName,
                     insights: JsonObject
                 ) = Unit
+
+                override suspend fun searchProject(environment: InsightEnvironment) = Unit
             },
             5L,
             Instant.now()

@@ -21,6 +21,7 @@ import com.intellij.psi.PsiFile
 import io.vertx.core.json.JsonObject
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import spp.processor.live.impl.environment.InsightEnvironment
 import spp.processor.live.impl.moderate.InsightModerator
 import spp.processor.live.impl.moderate.model.LiveInsightRequest
 import spp.protocol.artifact.ArtifactQualifiedName
@@ -45,7 +46,6 @@ class BoundedTreeSetTest {
                 metricValue = MetricValue(MetricValueType.NUMBER, "1"),
                 location = LiveSourceLocation("testMethod()", -1)
             ),
-            "workspaceId",
             object : InsightModerator() {
                 override val type: InsightType
                     get() = throw IllegalStateException()
@@ -55,6 +55,8 @@ class BoundedTreeSetTest {
                     artifact: ArtifactQualifiedName,
                     insights: JsonObject
                 ) = Unit
+
+                override suspend fun searchProject(environment: InsightEnvironment) = Unit
             },
             5L,
             Instant.now()

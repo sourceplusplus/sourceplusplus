@@ -23,8 +23,6 @@ import com.intellij.psi.PsiNamedElement
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import io.vertx.kotlin.coroutines.await
-import io.vertx.kotlin.coroutines.dispatcher
-import kotlinx.coroutines.launch
 import mu.KotlinLogging
 import org.apache.skywalking.apm.network.language.agent.v3.SegmentObject
 import org.apache.skywalking.apm.network.language.agent.v3.SpanObject
@@ -46,8 +44,6 @@ import spp.processor.live.impl.insight.LiveMetricProcessor
 import spp.processor.live.impl.moderate.InsightModerator
 import spp.processor.live.impl.moderate.model.LiveInsightRequest
 import spp.processor.live.impl.moderate.model.UniqueMeterName
-import spp.processor.live.impl.util.BoundedTreeSet
-import spp.processor.live.provider.InsightWorkspaceProvider
 import spp.protocol.artifact.ArtifactQualifiedName
 import spp.protocol.insight.InsightType
 import spp.protocol.instrument.LiveMeter
@@ -55,8 +51,6 @@ import spp.protocol.instrument.location.LiveSourceLocation
 import spp.protocol.instrument.meter.MeterType
 import spp.protocol.instrument.meter.MetricValue
 import spp.protocol.instrument.meter.MetricValueType
-import spp.protocol.service.LiveManagementService
-import spp.protocol.service.LiveViewService
 import spp.protocol.view.rule.LiveViewRule
 import java.time.Instant
 import java.util.*
@@ -70,34 +64,8 @@ class FunctionDurationModerator : InsightModerator(),
 
     private val log = KotlinLogging.logger {}
     override val type: InsightType = InsightType.FUNCTION_DURATION
-    private lateinit var viewService: LiveViewService
-    private val offerQueue = BoundedTreeSet<LiveInsightRequest>(100)
 
-    override suspend fun start() {
-        //todo: create `insight-automation` developer account
-        val systemAccessToken = SourceStorage.get<String>("system_access_token")!!
-        val authToken = LiveManagementService.createProxy(vertx).getAuthToken(systemAccessToken).await()
-        viewService = LiveViewService.createProxy(vertx, authToken)
-
-        ViewProcessor.liveViewService.meterView.subscribe { metrics ->
-            val metricsName = metrics.getJsonObject("meta").getString("metricsName") ?: return@subscribe
-            if (!metricsName.startsWith("spp_")) return@subscribe
-
-            val rawMetrics = JsonObject.mapFrom(metrics)
-            val meterId = metricsName.substringAfter("spp_method_timer_").substringBefore("_avg")
-            val insightRequest = workspaceQueue.get(meterId) ?: return@subscribe
-
-            val meter = insightRequest.liveInstrument as LiveMeter
-            val value = rawMetrics.getLong("value")
-            val operationName = meter.location.source
-            SourceStorage.put("${InsightType.FUNCTION_DURATION}:$operationName", value)
-            log.debug("Added function duration $value to $operationName")
-        }
-
-        startSearchLoop()
-        startOfferLoop()
-    }
-
+    override fun create(p0: ModuleManager, p1: AnalyzerModuleConfig) = this
     override fun build() = Unit
     override fun containsPoint(point: AnalysisListener.Point): Boolean =
         point == AnalysisListener.Point.Local || point == AnalysisListener.Point.Entry
@@ -122,17 +90,33 @@ class FunctionDurationModerator : InsightModerator(),
         )
         gauge.value = span.endTime - span.startTime
 
-//        val moderator: MethodDurationModerator = TODO()
         //todo: methods with spans don't need instrument moderation, reset priority to 0, remove from queue if present
     }
 
-    override fun create(p0: ModuleManager, p1: AnalyzerModuleConfig) = this
+    override suspend fun start() {
+        super.start()
+
+        ViewProcessor.liveViewService.meterView.subscribe { metrics ->
+            val metricsName = metrics.getJsonObject("meta").getString("metricsName") ?: return@subscribe
+            if (!metricsName.startsWith("spp_")) return@subscribe
+
+            val rawMetrics = JsonObject.mapFrom(metrics)
+            val meterId = metricsName.substringAfter("spp_method_timer_").substringBefore("_avg")
+            val insightRequest = workspaceQueue.get(meterId) ?: return@subscribe
+
+            val meter = insightRequest.liveInstrument as LiveMeter
+            val value = rawMetrics.getLong("value")
+            val operationName = meter.location.source
+            SourceStorage.put("${InsightType.FUNCTION_DURATION}:$operationName", value)
+            log.debug("Added function duration $value to $operationName")
+        }
+    }
 
     override fun postSetupInsight(request: LiveInsightRequest) {
         val liveMeter = request.liveInstrument as LiveMeter
         val metricIdWithoutPrefix = liveMeter.meterType.name.lowercase() + "_" +
                 liveMeter.id!!.replace("[^a-zA-Z0-9]".toRegex(), "_") //todo: remove
-        viewService.saveRuleIfAbsent(
+        ViewProcessor.liveViewService.saveRuleIfAbsent(
             LiveViewRule(
                 "${metricIdWithoutPrefix}_avg",
                 buildString {
@@ -146,7 +130,7 @@ class FunctionDurationModerator : InsightModerator(),
         ).onFailure {
             log.error("Failed to save rule for ${metricIdWithoutPrefix}_avg", it)
         }
-        viewService.saveRuleIfAbsent(
+        ViewProcessor.liveViewService.saveRuleIfAbsent(
             LiveViewRule(
                 "${metricIdWithoutPrefix}_count",
                 buildString {
@@ -178,26 +162,7 @@ class FunctionDurationModerator : InsightModerator(),
         }
     }
 
-    private fun startSearchLoop() {
-        vertx.setPeriodic(1000) {
-            log.trace("Checking for function duration insights to gather")
-            launch(vertx.dispatcher()) {
-                searchProject(InsightWorkspaceProvider.insightEnvironment)
-            }
-        }
-    }
-
-    private fun startOfferLoop() {
-        vertx.setPeriodic(1000) {
-            log.trace("Checking for function duration insights to offer")
-            val l = offerQueue.toList()
-            l.forEach {
-                workspaceQueue.offer(it)
-            }
-        }
-    }
-
-    private suspend fun searchProject(environment: InsightEnvironment) {
+    override suspend fun searchProject(environment: InsightEnvironment) {
         //iterate over all functions in the project
         environment.getAllFunctions().forEach { psiMethod ->
             val qualifiedName = psiMethod.getFullyQualifiedName()
@@ -231,9 +196,8 @@ class FunctionDurationModerator : InsightModerator(),
                         id = metricIdWithoutPrefix,
                         meterType = MeterType.METHOD_TIMER,
                         metricValue = MetricValue(MetricValueType.NUMBER, "1"),
-                        location = LiveSourceLocation(qualifiedName.identifier, -1)
+                        location = LiveSourceLocation(qualifiedName.identifier)
                     ),
-                    "workspaceId",
                     this,
                     insightPriority,
                     Instant.now()
