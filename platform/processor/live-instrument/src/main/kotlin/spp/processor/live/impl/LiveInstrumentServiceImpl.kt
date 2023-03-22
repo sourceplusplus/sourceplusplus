@@ -90,10 +90,6 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
 
         //send active instruments on probe connection
         vertx.eventBus().consumer<JsonObject>(REMOTE_REGISTERED) {
-            //todo: impl batch instrument add
-            //todo: more efficient to just send batch add to specific probe instead of publish to all per connection
-            //todo: probably need to redo pending boolean. it doesn't make sense here since pending just means
-            // it has been applied to any instrument at all at any point
             val remote = it.body().getString("address").substringBefore(":")
             if (remote == LIVE_INSTRUMENT_REMOTE) {
                 log.debug { "Live instrument remote registered. Sending active live instruments" }
@@ -106,9 +102,15 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
                         Vertx.currentContext().removeLocal("tenant_id")
                     }
 
-                    SourceStorage.getLiveInstruments().forEach {
-                        addLiveInstrument(it, false)
-                    }
+                    val bootInstruments = SourceStorage.getLiveInstruments()
+                    val bootCommand = LiveInstrumentCommand(
+                        CommandType.SET_INITIAL_INSTRUMENTS,
+                        bootInstruments.mapNotNull { removeInternalMeta(it) }.toSet()
+                    )
+
+                    //todo: smarter way to get access token
+                    val accessToken = bootInstruments.firstNotNullOfOrNull { it.meta["spp.access_token"] as? String }
+                    dispatchCommand(accessToken, bootCommand)
                 }
             }
         }
@@ -550,7 +552,7 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
 
             val accessToken = instrument.meta["spp.access_token"] as String?
             SourceStorage.addLiveInstrument(instrument)
-            dispatchCommand(accessToken, LIVE_INSTRUMENT_REMOTE, debuggerCommand)
+            dispatchCommand(accessToken, debuggerCommand)
 
             if (alertSubscribers) {
                 sendEventToSubscribers(instrument, LiveInstrumentAdded(removeInternalMeta(instrument)!!))
@@ -560,7 +562,7 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
         return promise.future()
     }
 
-    private fun dispatchCommand(accessToken: String?, address: String, command: LiveInstrumentCommand) {
+    private fun dispatchCommand(accessToken: String?, command: LiveInstrumentCommand) {
         log.trace { "Dispatching command: {}. Using access token: {}".args(command, accessToken) }
         val probes = SourceBridgeService.service(vertx, accessToken)
         probes.onSuccess {
@@ -585,15 +587,11 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
                         command.instruments.filter { it.location.isSameLocation(probe) }.toSet(),
                         command.locations.filter { it.isSameLocation(probe) }.toSet()
                     )
-                    if (probeCommand.instruments.isNotEmpty() || probeCommand.locations.isNotEmpty()) {
-                        vertx.eventBus().publish(
-                            address + ":" + probe.instanceId,
-                            JsonObject.mapFrom(probeCommand)
-                        )
-                        log.debug { "Dispatched command ${probeCommand.commandType} to probe ${probe.instanceId}" }
-                    } else {
-                        log.debug { "No instruments/locations to dispatch to probe ${probe.instanceId}" }
-                    }
+                    vertx.eventBus().publish(
+                        LIVE_INSTRUMENT_REMOTE + ":" + probe.instanceId,
+                        JsonObject.mapFrom(probeCommand)
+                    )
+                    log.debug { "Dispatched command ${probeCommand.commandType} to probe ${probe.instanceId}" }
                 }
             }.onFailure {
                 log.error("Failed to get active probes", it)
@@ -612,7 +610,7 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
             CommandType.REMOVE_LIVE_INSTRUMENT,
             setOf(removeInternalMeta(instrument)!!)
         )
-        dispatchCommand(accessToken, LIVE_INSTRUMENT_REMOTE, debuggerCommand)
+        dispatchCommand(accessToken, debuggerCommand)
 
         val jvmCause = if (cause == null) null else LiveStackTrace.fromString(cause)
         val ebException = if (cause?.startsWith("EventBusException") == true) {
@@ -666,7 +664,7 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
         if (result.isEmpty()) {
             log.info("Could not find live instrument(s) at: $location")
         } else {
-            dispatchCommand(devAuth.accessToken, LIVE_INSTRUMENT_REMOTE, debuggerCommand)
+            dispatchCommand(devAuth.accessToken, debuggerCommand)
             log.debug { "Removed live instrument(s) at: {}".args(location) }
 
             result.forEach {
