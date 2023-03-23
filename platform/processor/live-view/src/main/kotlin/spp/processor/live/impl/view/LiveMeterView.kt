@@ -62,15 +62,15 @@ class LiveMeterView(private val subscriptionCache: MetricTypeSubscriptionCache) 
         internalSubscribers.forEach { it.export(metrics, realTime) }
 
         var metricName = metadata.metricsName
-        if (metricName.startsWith("spp_")) {
-            log.debug { "Processing Source++ metrics: {} - Data: {}".args(metricName, metrics) }
-        }
-
         if (realTime && !metricName.startsWith("spp_")) {
             metricName = "${metricName}_realtime"
         } else if (metricName.startsWith("spp_") && !realTime) {
             return // ignore, spp_ metrics are exported only in realtime mode
         }
+        if (metricName.startsWith("spp_")) {
+            log.debug { "Processing Source++ metrics: {} - Data: {}".args(metricName, metrics) }
+        }
+
         val subbedArtifacts = subscriptionCache[metricName]
         if (subbedArtifacts != null) {
             var subs = subbedArtifacts[entityName].orEmpty() +

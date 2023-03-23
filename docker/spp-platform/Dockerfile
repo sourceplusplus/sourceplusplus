@@ -1,5 +1,10 @@
 FROM apache/skywalking-oap-server:v9.4.0
 
+#Replace JDK 11 with JDK 17
+RUN rm -rf /opt/java/openjdk
+RUN apt-get update && apt-get install -y openjdk-17-jdk
+RUN ln -s /usr/lib/jvm/java-17-openjdk-amd64 /opt/java/openjdk
+
 ADD ./config/spp-platform.yml /skywalking/config/
 
 RUN rm /skywalking/config/log4j2.xml
