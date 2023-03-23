@@ -1,4 +1,4 @@
-FROM apache/skywalking-oap-server:v9.4.0
+FROM apache/skywalking-oap-server:9.4.0
 
 #Replace JDK 11 with JDK 17
 RUN rm -rf /opt/java/openjdk
