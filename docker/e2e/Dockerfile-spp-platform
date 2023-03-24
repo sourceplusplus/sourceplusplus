@@ -1,4 +1,4 @@
-FROM apache/skywalking-oap-server:9.3.0
+FROM apache/skywalking-oap-server:9.4.0
 
 #Replace JDK 11 with JDK 17
 RUN rm -rf /opt/java/openjdk
@@ -36,6 +36,7 @@ ADD ./config/spp-platform.yml /skywalking/config/
 ADD ./config/self.yaml /skywalking/config/fetcher-prom-rules
 
 ENV SW_CORE_REST_PORT=12801
+ENV SW_RECEIVER_AWS_FIREHOSE_HTTP_PORT=12802
 
 #todo: remove comments once enabling SSL is documented
 #ENV SW_CORE_GRPC_SSL_ENABLED=true

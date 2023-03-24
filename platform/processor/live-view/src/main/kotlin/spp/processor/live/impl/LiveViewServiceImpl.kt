@@ -20,8 +20,10 @@ package spp.processor.live.impl
 import io.vertx.core.Future
 import io.vertx.core.Promise
 import io.vertx.core.Vertx
+import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import io.vertx.kotlin.coroutines.CoroutineVerticle
+import io.vertx.kotlin.coroutines.await
 import io.vertx.serviceproxy.ServiceException
 import mu.KotlinLogging
 import org.apache.skywalking.oap.log.analyzer.module.LogAnalyzerModule
@@ -50,6 +52,7 @@ import org.apache.skywalking.oap.server.core.query.type.Ref
 import org.apache.skywalking.oap.server.core.query.type.Span
 import org.apache.skywalking.oap.server.core.version.Version
 import org.joor.Reflect
+import spp.platform.common.ClusterConnection
 import spp.platform.common.DeveloperAuth
 import spp.platform.common.FeedbackProcessor
 import spp.platform.common.util.args
@@ -110,6 +113,18 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
         }
         FeedbackProcessor.module!!.find(CoreModule.NAME).provider().apply {
             traceQuery = getService(TraceQueryService::class.java) as TraceQueryService
+        }
+
+        //load hard-coded view rules
+        val viewRules = ClusterConnection.config.getJsonArray("view_rules", JsonArray())
+        Vertx.currentContext().putLocal("developer", DeveloperAuth("system"))
+        viewRules.forEach {
+            val viewRule = LiveViewRule(JsonObject.mapFrom(it))
+            saveRuleIfAbsent(viewRule).await()
+        }
+        Vertx.currentContext().removeLocal("developer")
+        if (viewRules.size() > 0) {
+            log.info { "Loaded ${viewRules.size()} hard-coded view rules" }
         }
 
         //live traces view

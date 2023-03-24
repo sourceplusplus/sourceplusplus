@@ -23,6 +23,7 @@ import mu.KotlinLogging
 import org.apache.skywalking.oap.server.core.analysis.metrics.Metrics
 import org.apache.skywalking.oap.server.core.analysis.metrics.PercentMetrics
 import org.apache.skywalking.oap.server.core.analysis.metrics.WithMetadata
+import org.apache.skywalking.oap.server.core.storage.StorageID
 import org.joor.Reflect
 import spp.platform.common.ClusterConnection
 import spp.platform.common.util.args
@@ -92,7 +93,7 @@ class LiveMeterView(private val subscriptionCache: MetricTypeSubscriptionCache) 
         }
 
         if (realtimeSubscribers.isNotEmpty()) {
-            val metricId = Reflect.on(metrics).call("id0").get<String>()
+            val metricId = Reflect.on(metrics).call("id0").get<StorageID>().build()
             val fullMetricId = metrics.javaClass.simpleName + "_" + metricId
 
             val jsonMetric = JsonObject.mapFrom(metrics)
@@ -111,7 +112,7 @@ class LiveMeterView(private val subscriptionCache: MetricTypeSubscriptionCache) 
     }
 
     private suspend fun handleEvent(subs: Set<ViewSubscriber>, metrics: Metrics, realTime: Boolean) {
-        val metricId = Reflect.on(metrics).call("id0").get<String>()
+        val metricId = Reflect.on(metrics).call("id0").get<StorageID>().build()
         val fullMetricId = metrics.javaClass.simpleName + "_" + metricId
 
         val jsonMetric = JsonObject.mapFrom(metrics)

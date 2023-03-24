@@ -1,4 +1,4 @@
-FROM apache/skywalking-oap-server:9.3.0
+FROM apache/skywalking-oap-server:9.4.0
 
 #Replace JDK 11 with JDK 17
 RUN rm -rf /opt/java/openjdk
@@ -29,4 +29,5 @@ RUN printf "\nexporter:\n  selector: \${SPP_LIVE_VIEW:default}\n  default:\n" \
     >> /skywalking/config/application.yml
 
 ENV SW_CORE_REST_PORT=12801
+ENV SW_RECEIVER_AWS_FIREHOSE_HTTP_PORT=12802
 ENV SW_SEARCHABLE_TAG_KEYS="spp.instrument_id,spp.instrument_type,http.method,http.status_code,rpc.status_code,db.type,db.instance,mq.queue,mq.topic,mq.broker"
