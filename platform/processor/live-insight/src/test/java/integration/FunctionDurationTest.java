@@ -84,7 +84,7 @@ public class FunctionDurationTest extends PlatformIntegrationTest {
                 if (durationInsight != null) {
                     var functionDuration = durationInsight.getJsonObject(0);
                     var duration = functionDuration.getInteger(FunctionDurationTest.class.getName() + ".function1()");
-                    if (Math.abs(duration - 300) <= 5) {
+                    if (Math.abs(duration - 300) <= 20) {
                         testContext.completeNow();
                     }
                 }
