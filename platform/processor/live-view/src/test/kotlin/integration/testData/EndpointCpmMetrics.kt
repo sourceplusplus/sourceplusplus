@@ -22,50 +22,21 @@ import org.apache.skywalking.oap.server.core.analysis.metrics.Metrics
 import org.apache.skywalking.oap.server.core.analysis.metrics.MetricsMetaInfo
 import org.apache.skywalking.oap.server.core.analysis.metrics.WithMetadata
 import org.apache.skywalking.oap.server.core.remote.grpc.proto.RemoteData
+import org.apache.skywalking.oap.server.core.storage.StorageID
 import org.apache.skywalking.oap.server.core.storage.annotation.Column
 
 class EndpointCpmMetrics : CPMMetrics(), WithMetadata {
 
-    @Column(columnName = "entity_id", length = 512)
+    @Column(name = "entity_id", length = 512)
     var entityId: String? = null
 
-    @Column(columnName = "service_id", length = 256)
+    @Column(name = "service_id", length = 256)
     var serviceId: String? = null
 
-    override fun id0(): String {
-        val var1 = StringBuilder(timeBucket.toString())
-        var1.append("_").append(entityId)
-        return var1.toString()
-    }
-
-    override fun hashCode(): Int {
-        var var1 = 17
-        var1 = 31 * var1 + entityId.hashCode()
-        var1 = 31 * var1 + timeBucket.toInt()
-        return var1
-    }
-
-    override fun remoteHashCode(): Int {
-        var var1 = 17
-        var1 = 31 * var1 + entityId.hashCode()
-        return var1
-    }
-
-    override fun equals(other: Any?): Boolean {
-        return if (this === other) {
-            true
-        } else if (other == null) {
-            false
-        } else if (this.javaClass != other.javaClass) {
-            false
-        } else {
-            val var2 = other as EndpointCpmMetrics
-            if (entityId != var2.entityId) {
-                false
-            } else {
-                timeBucket == var2.timeBucket
-            }
-        }
+    override fun id0(): StorageID {
+        return StorageID()
+            .append(TIME_BUCKET, timeBucket)
+            .append(ENTITY_ID, entityId)
     }
 
     override fun serialize(): RemoteData.Builder {
@@ -108,5 +79,28 @@ class EndpointCpmMetrics : CPMMetrics(), WithMetadata {
         var1.total = total
         var1.timeBucket = toTimeBucketInDay()
         return var1
+    }
+
+    override fun remoteHashCode(): Int {
+        var result = 17
+        result = 31 * result + entityId.hashCode()
+        return result
+    }
+
+    override fun hashCode(): Int {
+        var result = super.hashCode()
+        result = 31 * result + (entityId?.hashCode() ?: 0)
+        result = 31 * result + (serviceId?.hashCode() ?: 0)
+        return result
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+        if (!super.equals(other)) return false
+        other as EndpointCpmMetrics
+        if (entityId != other.entityId) return false
+        if (serviceId != other.serviceId) return false
+        return true
     }
 }

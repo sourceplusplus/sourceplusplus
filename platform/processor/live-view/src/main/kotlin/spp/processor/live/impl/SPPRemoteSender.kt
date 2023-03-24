@@ -26,6 +26,7 @@ import org.apache.skywalking.oap.server.core.analysis.metrics.WithMetadata
 import org.apache.skywalking.oap.server.core.remote.RemoteSenderService
 import org.apache.skywalking.oap.server.core.remote.data.StreamData
 import org.apache.skywalking.oap.server.core.remote.selector.Selector
+import org.apache.skywalking.oap.server.core.storage.StorageID
 import org.apache.skywalking.oap.server.library.module.ModuleManager
 import org.joor.Reflect
 import spp.platform.common.ClusterConnection
@@ -54,7 +55,7 @@ class SPPRemoteSender(
                         Reflect.on(copiedMetrics).set("metadata", (metrics as WithMetadata).meta)
                     }
 
-                    val metricId = Reflect.on(copiedMetrics).call("id0").get<String>()
+                    val metricId = Reflect.on(copiedMetrics).call("id0").get<StorageID>().build()
                     val fullMetricId = copiedMetrics.javaClass.simpleName + "_" + metricId
 
                     Vertx.currentContext().putLocal("current_metrics", copiedMetrics)
