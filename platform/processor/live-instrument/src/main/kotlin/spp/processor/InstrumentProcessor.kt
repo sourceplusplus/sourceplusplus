@@ -59,7 +59,6 @@ object InstrumentProcessor : FeedbackProcessor() {
 
     private val log = LoggerFactory.getLogger(InstrumentProcessor::class.java)
     private var liveInstrumentRecord: Record? = null
-    val liveInstrumentService = LiveInstrumentServiceImpl()
 
     override fun bootProcessor(moduleManager: ModuleManager) {
         module = moduleManager
@@ -93,6 +92,7 @@ object InstrumentProcessor : FeedbackProcessor() {
         })
         DatabindCodec.mapper().registerModule(module)
 
+        val liveInstrumentService = LiveInstrumentServiceImpl()
         vertx.deployVerticle(liveInstrumentService).await()
 
         ServiceBinder(vertx).setIncludeDebugInfo(true)
