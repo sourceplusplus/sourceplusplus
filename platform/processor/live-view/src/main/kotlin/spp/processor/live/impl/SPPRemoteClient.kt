@@ -23,9 +23,8 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.apache.skywalking.oap.server.core.analysis.metrics.Metrics
 import org.apache.skywalking.oap.server.core.analysis.metrics.WithMetadata
-import org.apache.skywalking.oap.server.core.remote.RemoteSenderService
+import org.apache.skywalking.oap.server.core.remote.client.SelfRemoteClient
 import org.apache.skywalking.oap.server.core.remote.data.StreamData
-import org.apache.skywalking.oap.server.core.remote.selector.Selector
 import org.apache.skywalking.oap.server.core.storage.StorageID
 import org.apache.skywalking.oap.server.library.module.ModuleManager
 import org.joor.Reflect
@@ -35,24 +34,24 @@ import spp.processor.live.impl.view.model.ClusterMetrics
 import spp.processor.live.impl.view.util.EntityNaming
 import spp.protocol.artifact.metrics.MetricType
 
-class SPPRemoteSender(
+class SPPRemoteClient(
     moduleManager: ModuleManager,
-    private val delegate: RemoteSenderService
-) : RemoteSenderService(moduleManager) {
+    private val delegate: SelfRemoteClient
+) : SelfRemoteClient(moduleManager, delegate.address) {
 
     private val supportedRealtimeMetrics = MetricType.ALL.map { it.metricId + "_rec" }
 
-    override fun send(nextWorkName: String, metrics: StreamData, selector: Selector) {
-        if (nextWorkName.startsWith("spp_") || supportedRealtimeMetrics.contains(nextWorkName)) {
-            val metadata = (metrics as WithMetadata).meta
+    override fun push(nextWorkerName: String, streamData: StreamData) {
+        if (nextWorkerName.startsWith("spp_") || supportedRealtimeMetrics.contains(nextWorkerName)) {
+            val metadata = (streamData as WithMetadata).meta
             val entityName = EntityNaming.getEntityName(metadata)
             if (!entityName.isNullOrEmpty()) {
-                val copiedMetrics = metrics::class.java.newInstance() as Metrics
-                copiedMetrics.deserialize(metrics.serialize().build())
+                val copiedMetrics = streamData::class.java.newInstance() as Metrics
+                copiedMetrics.deserialize(streamData.serialize().build())
 
                 GlobalScope.launch(ClusterConnection.getVertx().dispatcher()) {
                     if (copiedMetrics.javaClass.simpleName.startsWith("spp_")) {
-                        Reflect.on(copiedMetrics).set("metadata", (metrics as WithMetadata).meta)
+                        Reflect.on(copiedMetrics).set("metadata", (streamData as WithMetadata).meta)
                     }
 
                     val metricId = Reflect.on(copiedMetrics).call("id0").get<StorageID>().build()
@@ -71,6 +70,6 @@ class SPPRemoteSender(
             }
         }
 
-        delegate.send(nextWorkName, metrics, selector)
+        delegate.push(nextWorkerName, streamData)
     }
 }
