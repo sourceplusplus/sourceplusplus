@@ -47,7 +47,7 @@ dependencies {
         //exclude network dependencies since agent shadows them
         exclude("org.apache.skywalking", "apm-network")
     }
-    testImplementation("org.mockito:mockito-core:4.+")
+    testImplementation("org.mockito:mockito-core:4.11.0")
 }
 
 tasks {
