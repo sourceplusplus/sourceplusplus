@@ -71,7 +71,7 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
             MeterType.GAUGE,
             MetricValue(MetricValueType.NUMBER_SUPPLIER, encodedSupplier),
             location = LiveSourceLocation(
-                LiveMeterGaugeTest::class.qualifiedName!!,
+                LiveMeterGaugeTest::class.java.name,
                 getLineNumber("done"),
                 "spp-test-probe"
             ),
@@ -97,11 +97,11 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
             LiveView(
                 entityIds = mutableSetOf(liveMeter.toMetricId()),
                 artifactQualifiedName = ArtifactQualifiedName(
-                    LiveMeterGaugeTest::class.qualifiedName!!,
+                    LiveMeterGaugeTest::class.java.name,
                     type = ArtifactType.EXPRESSION
                 ),
                 artifactLocation = LiveSourceLocation(
-                    LiveMeterGaugeTest::class.qualifiedName!!,
+                    LiveMeterGaugeTest::class.java.name,
                     getLineNumber("done")
                 ),
                 viewConfig = LiveViewConfig(
@@ -152,7 +152,7 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
             MeterType.GAUGE,
             MetricValue(MetricValueType.VALUE_EXPRESSION, "localVariables[str]"),
             location = LiveSourceLocation(
-                LiveMeterGaugeTest::class.qualifiedName!!,
+                LiveMeterGaugeTest::class.java.name,
                 getLineNumber("done"),
                 "spp-test-probe"
             ),
@@ -178,11 +178,11 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
             LiveView(
                 entityIds = mutableSetOf(liveMeter.toMetricId()),
                 artifactQualifiedName = ArtifactQualifiedName(
-                    LiveMeterGaugeTest::class.qualifiedName!!,
+                    LiveMeterGaugeTest::class.java.name,
                     type = ArtifactType.EXPRESSION
                 ),
                 artifactLocation = LiveSourceLocation(
-                    LiveMeterGaugeTest::class.qualifiedName!!,
+                    LiveMeterGaugeTest::class.java.name,
                     getLineNumber("done")
                 ),
                 viewConfig = LiveViewConfig(
