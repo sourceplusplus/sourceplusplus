@@ -41,6 +41,7 @@ import spp.protocol.instrument.LiveInstrument
 import spp.protocol.service.LiveInstrumentService
 import spp.protocol.service.LiveManagementService
 import spp.protocol.service.LiveViewService
+import java.util.*
 import java.util.concurrent.TimeUnit
 import java.util.regex.Pattern
 
@@ -51,6 +52,10 @@ open class PlatformIntegrationTest {
     val testNameAsInstrumentId: String
         get() {
             return testName!!.replace(" ", "-").lowercase().substringBefore("(")
+        }
+    val testNameAsUniqueInstrumentId: String
+        get() {
+            return testNameAsInstrumentId + "-" + UUID.randomUUID().toString().replace("-", "")
         }
 
     @BeforeEach
