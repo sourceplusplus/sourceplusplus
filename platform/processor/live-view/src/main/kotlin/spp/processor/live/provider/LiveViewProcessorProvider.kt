@@ -119,14 +119,14 @@ class LiveViewProcessorProvider : ModuleProvider() {
             }
         }
 
-        val moduleConfig = Reflect.on(manager.find(CoreModule.NAME).provider())
-            .field("moduleConfig").get<CoreModuleConfig>()
+        val coreModule = manager.find(CoreModule.NAME).provider()
+        val moduleConfig = Reflect.on(coreModule).field("moduleConfig").get<CoreModuleConfig>()
         remoteClientManager = if (moduleConfig.isGRPCSslEnabled) {
             SPPRemoteClientManager(manager, moduleConfig.remoteTimeout, moduleConfig.grpcSslTrustedCAPath)
         } else {
             SPPRemoteClientManager(manager, moduleConfig.remoteTimeout)
         }
-        registerServiceImplementation(RemoteClientManager::class.java, remoteClientManager)
+        coreModule.registerServiceImplementation(RemoteClientManager::class.java, remoteClientManager)
 
         val coordinator = manager
             .find(ClusterModule.NAME)
