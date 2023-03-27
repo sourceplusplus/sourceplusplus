@@ -190,12 +190,11 @@ abstract class InstanceBridge(private val jwtAuth: JWTAuth?) : CoroutineVerticle
             return
         }
 
-        log.trace { "Validating auth token: $accessToken" }
+        log.trace { "Validating access token: $accessToken" }
         jwtAuth.authenticate(TokenCredentials(accessToken)) {
             if (it.succeeded()) {
                 Vertx.currentContext().putLocal("user", it.result())
                 val selfId = it.result().principal().getString("developer_id")
-                val accessToken = it.result().principal().getString("access_token")
                 val developerAuth = DeveloperAuth.from(selfId, accessToken)
                 Vertx.currentContext().putLocal("developer", developerAuth)
                 handler.handle(Future.succeededFuture(developerAuth))

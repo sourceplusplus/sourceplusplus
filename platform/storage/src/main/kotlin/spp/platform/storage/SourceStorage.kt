@@ -64,7 +64,7 @@ object SourceStorage {
 
     private suspend fun installDefaults() {
         val jwtConfig = config.getJsonObject("spp-platform").getJsonObject("jwt")
-        val authorizationCode = jwtConfig.getString("access_token")
+        val authorizationCode = jwtConfig.getString("authorization_code")
         val systemAuthorizationCode = if (authorizationCode.isNullOrEmpty()) {
             DEFAULT_AUTHORIZATION_CODE
         } else {
