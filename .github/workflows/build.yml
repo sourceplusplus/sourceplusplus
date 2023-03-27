@@ -587,12 +587,6 @@ jobs:
       - name: Build & push spp-platform latest Docker image
         run: cd ./docker/spp-platform && docker buildx build . --platform linux/arm64,linux/amd64 --file Dockerfile --tag sourceplusplus/spp-platform:latest --push
 
-      - name: Trigger demo.sourceplus.plus deploy
-        uses: peter-evans/repository-dispatch@v2
-        with:
-          token: ${{ secrets.REPO_DISPATCH_ACCESS_TOKEN }}
-          event-type: deploy-demo
-
   # Delete build artifacts
   cleanup:
     needs: [ release-draft, docker-push ]
