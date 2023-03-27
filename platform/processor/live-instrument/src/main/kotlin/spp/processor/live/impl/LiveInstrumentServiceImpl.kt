@@ -58,7 +58,6 @@ import spp.protocol.platform.ProcessorAddress
 import spp.protocol.platform.ProcessorAddress.REMOTE_REGISTERED
 import spp.protocol.platform.status.InstanceConnection
 import spp.protocol.service.LiveInstrumentService
-import spp.protocol.service.LiveManagementService
 import java.time.Instant
 import java.util.*
 
@@ -89,13 +88,6 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
             log.info { "Loaded ${instruments.size()} hard-coded instruments" }
         }
 
-        val jwtConfig = ClusterConnection.config.getJsonObject("spp-platform").getJsonObject("jwt")
-        val jwtEnabled = jwtConfig.getString("enabled").toBooleanStrict()
-        val accessToken = if (jwtEnabled) {
-            val systemAuthorizationCode = SourceStorage.get<String>("system_authorization_code")!!
-            LiveManagementService.createProxy(vertx).getAccessToken(systemAuthorizationCode).await()
-        } else null
-
         //send active instruments on probe connection
         vertx.eventBus().consumer<JsonObject>(REMOTE_REGISTERED) {
             val remote = it.body().getString("address").substringBefore(":")
@@ -116,7 +108,7 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
                         bootInstruments.mapNotNull { removeInternalMeta(it) }.toSet()
                     )
 
-                    dispatchCommand(accessToken, bootCommand)
+                    dispatchCommand(SourceStorage.getSystemAccessToken(vertx), bootCommand)
                 }
             }
         }

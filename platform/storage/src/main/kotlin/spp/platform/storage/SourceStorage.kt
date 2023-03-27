@@ -20,9 +20,11 @@ package spp.platform.storage
 import com.google.common.base.CaseFormat
 import io.vertx.core.Future
 import io.vertx.core.Promise
+import io.vertx.core.Vertx
 import io.vertx.core.json.JsonObject
 import io.vertx.core.shareddata.AsyncMap
 import io.vertx.core.shareddata.Counter
+import io.vertx.kotlin.coroutines.await
 import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -34,6 +36,7 @@ import spp.platform.common.util.args
 import spp.protocol.instrument.LiveInstrument
 import spp.protocol.platform.auth.*
 import spp.protocol.platform.developer.Developer
+import spp.protocol.service.LiveManagementService
 import spp.protocol.service.error.PermissionAccessDenied
 import java.util.concurrent.CompletableFuture
 
@@ -190,6 +193,15 @@ object SourceStorage {
         getLiveInstruments().forEach { removeLiveInstrument(it.id!!) }
         installDefaults(get("system_authorization_code", DEFAULT_AUTHORIZATION_CODE))
         return true
+    }
+
+    suspend fun getSystemAccessToken(vertx: Vertx): String? {
+        val jwtConfig = config.getJsonObject("spp-platform").getJsonObject("jwt")
+        val jwtEnabled = jwtConfig.getString("enabled").toBooleanStrict()
+        return if (jwtEnabled) {
+            val systemAuthorizationCode = get<String>("system_authorization_code")!!
+            LiveManagementService.createProxy(vertx).getAccessToken(systemAuthorizationCode).await()
+        } else null
     }
 
     suspend fun counter(name: String): Counter {
