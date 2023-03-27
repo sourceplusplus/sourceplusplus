@@ -87,17 +87,11 @@ class ServiceProvider(
         ServiceBinder(vertx).setIncludeDebugInfo(true).setAddress(address)
             .addInterceptor { msg ->
                 val promise = Promise.promise<Message<JsonObject>>()
-                if (jwtAuth != null) {
-                    if (!msg.headers().contains("auth-token")) {
-                        //can only validate authorization codes
-                        if (msg.headers().get("action") == "getAccessToken") {
-                            promise.complete(msg)
-                        } else {
-                            promise.fail("Unauthorized access")
-                        }
-                        return@addInterceptor promise.future()
-                    }
+                if (jwtAuth != null && !msg.headers().contains("auth-token")) {
+                    return@addInterceptor ensureGetAccessTokenAction(msg, promise)
+                }
 
+                if (jwtAuth != null) {
                     jwtAuth.authenticate(TokenCredentials(msg.headers().get("auth-token"))) {
                         if (it.succeeded()) {
                             Vertx.currentContext().putLocal("user", it.result())
@@ -128,14 +122,8 @@ class ServiceProvider(
     private fun permissionCheckInterceptor(): ServiceInterceptor {
         return ServiceInterceptor { _, _, msg ->
             val promise = Promise.promise<Message<JsonObject>>()
-            if (!msg.headers().contains("auth-token")) {
-                //can only validate authorization codes
-                if (msg.headers().get("action") == "getAccessToken") {
-                    promise.complete(msg)
-                } else {
-                    promise.fail("Unauthorized access")
-                }
-                return@ServiceInterceptor promise.future()
+            if (jwtAuth != null && !msg.headers().contains("auth-token")) {
+                return@ServiceInterceptor ensureGetAccessTokenAction(msg, promise)
             }
 
             managementService.getSelf().onSuccess { selfInfo ->
@@ -151,6 +139,18 @@ class ServiceProvider(
             }
             promise.future()
         }
+    }
+
+    private fun ensureGetAccessTokenAction(
+        msg: Message<JsonObject>,
+        promise: Promise<Message<JsonObject>>
+    ): Future<Message<JsonObject>> {
+        if (msg.headers().get("action") == "getAccessToken") {
+            promise.complete(msg)
+        } else {
+            promise.fail("Unauthorized access")
+        }
+        return promise.future()
     }
 
     private fun validateRolePermission(
