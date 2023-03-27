@@ -43,14 +43,14 @@ interface CoreStorage {
     suspend fun refreshClientAccess(id: String): ClientAccess
 
     suspend fun getDevelopers(): List<Developer>
-    suspend fun getDeveloperByAccessToken(token: String): Developer?
+    suspend fun getDeveloperByAuthorizationCode(code: String): Developer?
     suspend fun hasRole(role: DeveloperRole): Boolean
     suspend fun removeRole(role: DeveloperRole): Boolean
     suspend fun addRole(role: DeveloperRole): Boolean
     suspend fun hasDeveloper(id: String): Boolean
-    suspend fun addDeveloper(id: String, token: String): Developer
+    suspend fun addDeveloper(id: String, authorizationCode: String): Developer
     suspend fun removeDeveloper(id: String)
-    suspend fun setAccessToken(id: String, accessToken: String)
+    suspend fun setAuthorizationCode(id: String, code: String)
     suspend fun getDeveloperRoles(developerId: String): List<DeveloperRole>
     suspend fun getRoleAccessPermissions(role: DeveloperRole): Set<AccessPermission>
     suspend fun getAccessPermissions(): Set<AccessPermission>

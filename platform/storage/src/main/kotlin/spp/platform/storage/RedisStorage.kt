@@ -82,8 +82,8 @@ open class RedisStorage(val vertx: Vertx) : CoreStorage {
         return devIds.map { Developer(it.toString(UTF_8)) }
     }
 
-    override suspend fun getDeveloperByAccessToken(token: String): Developer? {
-        val devId = redis.get(namespace("developers:access_tokens:$token")).await()
+    override suspend fun getDeveloperByAuthorizationCode(code: String): Developer? {
+        val devId = redis.get(namespace("developers:authorization_codes:$code")).await()
             ?.toString(UTF_8) ?: return null
         return Developer(devId)
     }
@@ -107,37 +107,37 @@ open class RedisStorage(val vertx: Vertx) : CoreStorage {
         return redis.sismember(namespace("developers:ids"), id).await().toBoolean()
     }
 
-    override suspend fun addDeveloper(id: String, token: String): Developer {
+    override suspend fun addDeveloper(id: String, authorizationCode: String): Developer {
         redis.sadd(listOf(namespace("developers:ids"), id)).await()
-        redis.set(listOf(namespace("developers:access_tokens:$token"), id)).await()
-        redis.sadd(listOf(namespace("developers:access_tokens"), token)).await()
-        redis.set(listOf(namespace("developers:ids:$id:access_token"), token)).await()
-        return Developer(id, token)
+        redis.set(listOf(namespace("developers:authorization_codes:$authorizationCode"), id)).await()
+        redis.sadd(listOf(namespace("developers:authorization_codes"), authorizationCode)).await()
+        redis.set(listOf(namespace("developers:ids:$id:authorization_code"), authorizationCode)).await()
+        return Developer(id, authorizationCode)
     }
 
     override suspend fun removeDeveloper(id: String) {
-        val accessToken = getAccessToken(id)
+        val authorizationCode = getAuthorizationCode(id)
         redis.srem(listOf(namespace("developers:ids"), id)).await()
-        redis.del(listOf(namespace("developers:access_tokens:$accessToken"))).await()
-        redis.srem(listOf(namespace("developers:access_tokens"), accessToken)).await()
-        redis.del(listOf(namespace("developers:ids:$id:access_token"))).await()
+        redis.del(listOf(namespace("developers:authorization_codes:$authorizationCode"))).await()
+        redis.srem(listOf(namespace("developers:authorization_codes"), authorizationCode)).await()
+        redis.del(listOf(namespace("developers:ids:$id:authorization_code"))).await()
         redis.del(listOf(namespace("developers:$id:roles"))).await()
     }
 
-    private suspend fun getAccessToken(id: String): String {
-        return redis.get(namespace("developers:ids:$id:access_token")).await().toString(UTF_8)
+    private suspend fun getAuthorizationCode(id: String): String {
+        return redis.get(namespace("developers:ids:$id:authorization_code")).await().toString(UTF_8)
     }
 
-    override suspend fun setAccessToken(id: String, accessToken: String) {
+    override suspend fun setAuthorizationCode(id: String, code: String) {
         //remove existing token
-        val existingToken = redis.get(namespace("developers:ids:$id:access_token")).await()
+        val existingToken = redis.get(namespace("developers:ids:$id:authorization_code")).await()
         if (existingToken != null) {
             val existingTokenStr = existingToken.toString(UTF_8)
-            if (existingTokenStr.equals(accessToken)) {
+            if (existingTokenStr.equals(code)) {
                 return //no change in access token; ignore
             } else {
-                redis.srem(listOf(namespace("developers:access_tokens"), existingTokenStr)).await()
-                redis.del(listOf(namespace("developers:access_tokens:$existingToken"))).await()
+                redis.srem(listOf(namespace("developers:authorization_codes"), existingTokenStr)).await()
+                redis.del(listOf(namespace("developers:authorization_codes:$existingToken"))).await()
             }
         } else {
             //add developer first
@@ -145,9 +145,9 @@ open class RedisStorage(val vertx: Vertx) : CoreStorage {
         }
 
         //set new token
-        redis.set(listOf(namespace("developers:access_tokens:$accessToken"), id)).await()
-        redis.sadd(listOf(namespace("developers:access_tokens"), accessToken)).await()
-        redis.set(listOf(namespace("developers:ids:$id:access_token"), accessToken)).await()
+        redis.set(listOf(namespace("developers:authorization_codes:$code"), id)).await()
+        redis.sadd(listOf(namespace("developers:authorization_codes"), code)).await()
+        redis.set(listOf(namespace("developers:ids:$id:authorization_code"), code)).await()
     }
 
     override suspend fun getDeveloperRoles(developerId: String): List<DeveloperRole> {

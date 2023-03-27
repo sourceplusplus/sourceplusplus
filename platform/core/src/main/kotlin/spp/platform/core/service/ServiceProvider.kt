@@ -20,6 +20,7 @@ package spp.platform.core.service
 import io.vertx.core.*
 import io.vertx.core.eventbus.Message
 import io.vertx.core.json.JsonObject
+import io.vertx.ext.auth.authentication.TokenCredentials
 import io.vertx.ext.auth.jwt.JWTAuth
 import io.vertx.kotlin.coroutines.CoroutineVerticle
 import io.vertx.kotlin.coroutines.await
@@ -87,7 +88,17 @@ class ServiceProvider(
             .addInterceptor { msg ->
                 val promise = Promise.promise<Message<JsonObject>>()
                 if (jwtAuth != null) {
-                    jwtAuth.authenticate(JsonObject().put("token", msg.headers().get("auth-token"))).onComplete {
+                    if (!msg.headers().contains("auth-token")) {
+                        //can only validate authorization codes
+                        if (msg.headers().get("action") == "getAccessToken") {
+                            promise.complete(msg)
+                        } else {
+                            promise.fail("Unauthorized access")
+                        }
+                        return@addInterceptor promise.future()
+                    }
+
+                    jwtAuth.authenticate(TokenCredentials(msg.headers().get("auth-token"))) {
                         if (it.succeeded()) {
                             Vertx.currentContext().putLocal("user", it.result())
                             val selfId = it.result().principal().getString("developer_id")
@@ -117,6 +128,16 @@ class ServiceProvider(
     private fun permissionCheckInterceptor(): ServiceInterceptor {
         return ServiceInterceptor { _, _, msg ->
             val promise = Promise.promise<Message<JsonObject>>()
+            if (!msg.headers().contains("auth-token")) {
+                //can only validate authorization codes
+                if (msg.headers().get("action") == "getAccessToken") {
+                    promise.complete(msg)
+                } else {
+                    promise.fail("Unauthorized access")
+                }
+                return@ServiceInterceptor promise.future()
+            }
+
             managementService.getSelf().onSuccess { selfInfo ->
                 validateRolePermission(selfInfo, msg) {
                     if (it.succeeded()) {

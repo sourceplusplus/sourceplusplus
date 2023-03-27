@@ -156,7 +156,7 @@ class SourcePlatform(private val manager: ModuleManager) : CoroutineVerticle() {
         }
 
         //S++ APIs
-        vertx.deployVerticle(RestAPI(jwtEnabled, jwt)).await()
+        vertx.deployVerticle(RestAPI(jwtEnabled)).await()
         vertx.deployVerticle(GraphqlAPI(jwtEnabled)).await()
 
         //Service discovery

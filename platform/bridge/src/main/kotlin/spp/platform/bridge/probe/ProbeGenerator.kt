@@ -74,8 +74,8 @@ class ProbeGenerator(private val router: Router) : CoroutineVerticle() {
                 return@handler
             }
 
-            val token = route.request().getParam("access_token")
-            if (token == null) {
+            val authorizationCode = route.request().getParam("authorization_code")
+            if (authorizationCode == null) {
                 route.response().setStatusCode(401).end("Unauthorized")
                 return@handler
             }
@@ -86,10 +86,10 @@ class ProbeGenerator(private val router: Router) : CoroutineVerticle() {
                 Vertx.currentContext().removeLocal("tenant_id")
             }
 
-            log.info("spp-probe.yml download request. Verifying access token: {}", token)
+            log.info("spp-probe.yml download request. Verifying authorization code: {}", authorizationCode)
             launch(vertx.dispatcher()) {
                 val clientAccess = SourceStorage.getClientAccessors().firstOrNull()
-                SourceStorage.getDeveloperByAccessToken(token)?.let {
+                SourceStorage.getDeveloperByAuthorizationCode(authorizationCode)?.let {
                     vertx.eventBus().send(
                         LOCAL_GEN_PROBE_YML_ADDR,
                         Request(route, clientAccess, tenantId),
@@ -105,8 +105,8 @@ class ProbeGenerator(private val router: Router) : CoroutineVerticle() {
                 return@handler
             }
 
-            val token = route.request().getParam("access_token")
-            if (token == null) {
+            val authorizationCode = route.request().getParam("authorization_code")
+            if (authorizationCode == null) {
                 route.response().setStatusCode(401).end("Unauthorized")
                 return@handler
             }
@@ -117,10 +117,10 @@ class ProbeGenerator(private val router: Router) : CoroutineVerticle() {
                 Vertx.currentContext().removeLocal("tenant_id")
             }
 
-            log.info("jvm-probe.jar download request. Verifying access token: {}", token)
+            log.info("jvm-probe.jar download request. Verifying authorization code: {}", authorizationCode)
             launch(vertx.dispatcher()) {
                 val clientAccess = SourceStorage.getClientAccessors().firstOrNull()
-                SourceStorage.getDeveloperByAccessToken(token)?.let {
+                SourceStorage.getDeveloperByAuthorizationCode(authorizationCode)?.let {
                     vertx.eventBus().send(
                         LOCAL_GEN_JVM_PROBE_ADDR,
                         Request(route, clientAccess, tenantId),

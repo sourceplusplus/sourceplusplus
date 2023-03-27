@@ -34,7 +34,7 @@ class ProbeGeneratorITTest : PlatformIntegrationTest() {
     fun verifyGeneratedProbeConfig(): Unit = runBlocking {
         val client = WebClient.create(vertx, WebClientOptions())
         val response = client.get(
-            12800, platformHost, "/download/spp-probe.yml?access_token=change-me"
+            12800, platformHost, "/download/spp-probe.yml?authorization_code=change-me"
         ).send().await()
         val respBody = response.bodyAsString()
         val jsonObject = JsonObject(

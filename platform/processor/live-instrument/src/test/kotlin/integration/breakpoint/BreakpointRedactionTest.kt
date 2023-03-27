@@ -97,8 +97,8 @@ class BreakpointRedactionTest : LiveInstrumentIntegrationTest() {
         managementService.addDeveloperRole(developer.id, role).await()
 
         //add live breakpoint
-        val authToken = managementService.getAuthToken(developer.accessToken!!).await()
-        val instrumentService = LiveInstrumentService.createProxy(vertx, authToken)
+        val accessToken = managementService.getAccessToken(developer.authorizationCode!!).await()
+        val instrumentService = LiveInstrumentService.createProxy(vertx, accessToken)
         instrumentService.addLiveInstrument(
             LiveBreakpoint(
                 id = testNameAsInstrumentId,

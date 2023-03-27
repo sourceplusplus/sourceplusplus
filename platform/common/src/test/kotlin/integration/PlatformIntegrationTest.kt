@@ -69,7 +69,7 @@ open class PlatformIntegrationTest {
         private var vertx: Vertx? = null
         val platformHost = System.getenv("SPP_PLATFORM_HOST") ?: "localhost"
         const val platformPort = 12800
-        val systemAuthToken: String? by lazy { fetchAuthToken() }
+        val systemAccessToken: String? by lazy { fetchAccessToken() }
 
         fun vertx(): Vertx {
             return vertx!!
@@ -103,8 +103,8 @@ open class PlatformIntegrationTest {
             }
         }
 
-        private fun fetchAuthToken() = runBlocking {
-            val tokenUri = "/api/new-token?access_token=change-me"
+        private fun fetchAccessToken() = runBlocking {
+            val tokenUri = "/api/new-token?authorization_code=change-me"
             val req = vertx!!.createHttpClient(HttpClientOptions())
                 .request(
                     RequestOptions()
@@ -126,15 +126,15 @@ open class PlatformIntegrationTest {
 
     val managementService: LiveManagementService
         get() {
-            return LiveManagementService.createProxy(vertx, systemAuthToken)
+            return LiveManagementService.createProxy(vertx, systemAccessToken)
         }
     val instrumentService: LiveInstrumentService
         get() {
-            return LoggedLiveInstrumentService(LiveInstrumentService.createProxy(vertx, systemAuthToken))
+            return LoggedLiveInstrumentService(LiveInstrumentService.createProxy(vertx, systemAccessToken))
         }
     val viewService: LiveViewService
         get() {
-            return LiveViewService.createProxy(vertx, systemAuthToken)
+            return LiveViewService.createProxy(vertx, systemAccessToken)
         }
 
     fun errorOnTimeout(testContext: VertxTestContext, waitTime: Long = 15) {
