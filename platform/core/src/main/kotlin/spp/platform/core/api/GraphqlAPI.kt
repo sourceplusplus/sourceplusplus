@@ -790,7 +790,7 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
 
         EventBusService.getProxy(
             discovery, clazz,
-            JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("access-token", accessToken)) } }
+            JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("auth-token", accessToken)) } }
         ) {
             if (it.succeeded()) {
                 promise.complete(it.result())

@@ -84,7 +84,7 @@ class MarkerBridge(jwtAuth: JWTAuth?) : InstanceBridge(jwtAuth) {
     private fun handleConnection(marker: Message<JsonObject>) {
         if (Vertx.currentContext().getLocal<DeveloperAuth>("developer") == null) {
             //todo: SockJS connections needs to revalidate for some reason
-            val accessToken = marker.headers()?.get("access-token")
+            val accessToken = marker.headers()?.get("auth-token")
             validateAccessToken(accessToken) {
                 if (it.succeeded()) {
                     handleConnection(marker.body())

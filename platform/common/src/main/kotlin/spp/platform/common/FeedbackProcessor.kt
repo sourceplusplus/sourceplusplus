@@ -53,10 +53,10 @@ abstract class FeedbackProcessor : CoroutineVerticle() {
     fun developerAuthInterceptor(): ServiceInterceptor {
         return ServiceInterceptor { _, _, msg ->
             Vertx.currentContext().putLocal("developer", msg.headers().let {
-                if (it.contains("access-token")) {
+                if (it.contains("auth-token")) {
                     DeveloperAuth(
-                        JWT.parse(it.get("access-token")).getJsonObject("payload").getString("developer_id"),
-                        it.get("access-token")
+                        JWT.parse(it.get("auth-token")).getJsonObject("payload").getString("developer_id"),
+                        it.get("auth-token")
                     )
                 } else DeveloperAuth("system", null)
             })

@@ -127,7 +127,7 @@ abstract class InstanceBridge(private val jwtAuth: JWTAuth?) : CoroutineVerticle
 
     fun validateMarkerAuth(event: BaseBridgeEvent, handler: Handler<AsyncResult<DeveloperAuth>>) {
         if (jwtAuth != null) {
-            val accessToken = event.rawMessage.getJsonObject("headers")?.getString("access-token")
+            val accessToken = event.rawMessage.getJsonObject("headers")?.getString("auth-token")
             if (accessToken.isNullOrEmpty()) {
                 handler.handle(Future.failedFuture("Rejected ${event.type()} event with missing access token"))
             } else {

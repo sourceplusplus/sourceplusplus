@@ -88,7 +88,7 @@ class ServiceProvider(
             .addInterceptor { msg ->
                 val promise = Promise.promise<Message<JsonObject>>()
                 if (jwtAuth != null) {
-                    if (!msg.headers().contains("access-token")) {
+                    if (!msg.headers().contains("auth-token")) {
                         //can only validate authorization codes
                         if (msg.headers().get("action") == "getAccessToken") {
                             promise.complete(msg)
@@ -98,7 +98,7 @@ class ServiceProvider(
                         return@addInterceptor promise.future()
                     }
 
-                    jwtAuth.authenticate(TokenCredentials(msg.headers().get("access-token"))) {
+                    jwtAuth.authenticate(TokenCredentials(msg.headers().get("auth-token"))) {
                         if (it.succeeded()) {
                             Vertx.currentContext().putLocal("user", it.result())
                             val selfId = it.result().principal().getString("developer_id")
@@ -128,7 +128,7 @@ class ServiceProvider(
     private fun permissionCheckInterceptor(): ServiceInterceptor {
         return ServiceInterceptor { _, _, msg ->
             val promise = Promise.promise<Message<JsonObject>>()
-            if (!msg.headers().contains("access-token")) {
+            if (!msg.headers().contains("auth-token")) {
                 //can only validate authorization codes
                 if (msg.headers().get("action") == "getAccessToken") {
                     promise.complete(msg)

@@ -51,7 +51,7 @@ interface SourceBridgeService {
                     } else {
                         log.trace { "SourceBridgeService found" }
                         val deliveryOptions = DeliveryOptions().apply {
-                            accessToken?.let { addHeader("access-token", it) }
+                            accessToken?.let { addHeader("auth-token", it) }
                         }
                         promise.complete(SourceBridgeServiceVertxEBProxy(vertx, BRIDGE_SERVICE, deliveryOptions))
                     }
