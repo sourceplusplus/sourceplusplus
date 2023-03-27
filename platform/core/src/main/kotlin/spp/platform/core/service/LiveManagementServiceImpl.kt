@@ -342,7 +342,7 @@ class LiveManagementServiceImpl(
             promise.complete(
                 JsonObject().apply {
                     val devAuth = Vertx.currentContext().getLocal<DeveloperAuth>("developer")
-                    val bridgeService = SourceBridgeService.service(vertx, devAuth?.accessToken).await()
+                    val bridgeService = SourceBridgeService.createProxy(vertx, devAuth?.accessToken).await()
                     if (bridgeService != null) {
                         log.trace { "Getting clients from bridge service" }
                         put("markers", bridgeService.getActiveMarkers().await())
@@ -389,7 +389,7 @@ class LiveManagementServiceImpl(
         return JsonObject()
             .apply {
                 val devAuth = Vertx.currentContext().getLocal<DeveloperAuth>("developer")
-                val bridgeService = SourceBridgeService.service(vertx, devAuth?.accessToken).await()
+                val bridgeService = SourceBridgeService.createProxy(vertx, devAuth?.accessToken).await()
                 if (bridgeService != null) {
                     log.trace { "Getting platform stats from bridge service" }
                     put("connected-markers", bridgeService.getConnectedMarkers().await())
@@ -522,7 +522,7 @@ class LiveManagementServiceImpl(
         val promise = Promise.promise<List<InstanceConnection>>()
         launch(vertx.dispatcher()) {
             val devAuth = Vertx.currentContext().getLocal<DeveloperAuth>("developer")
-            val bridgeService = SourceBridgeService.service(vertx, devAuth?.accessToken).await()
+            val bridgeService = SourceBridgeService.createProxy(vertx, devAuth?.accessToken).await()
             if (bridgeService != null) {
                 promise.complete(
                     bridgeService.getActiveProbes().await().list.map {
@@ -596,15 +596,15 @@ class LiveManagementServiceImpl(
         return promise.future()
     }
 
-    override fun getAuthToken(accessToken: String): Future<String> {
-        log.trace { "Getting auth token" }
+    override fun getAccessToken(authorizationCode: String?): Future<String> {
+        log.trace { "Getting access token" }
         if (jwt == null) {
             return Future.failedFuture("JWT is not enabled")
         }
 
         val promise = Promise.promise<String>()
         launch(vertx.dispatcher()) {
-            val dev = SourceStorage.getDeveloperByAccessToken(accessToken)
+            val dev = authorizationCode?.let { SourceStorage.getDeveloperByAuthorizationCode(it) }
             if (dev != null) {
                 val jwtToken = jwt.generateToken(
                     JsonObject().apply {
@@ -620,7 +620,7 @@ class LiveManagementServiceImpl(
                 )
                 promise.complete(jwtToken)
             } else {
-                log.warn("Invalid token request. Token: {}", accessToken)
+                log.warn("Invalid token request. Authorization code: {}", authorizationCode)
                 promise.fail("Invalid token request")
             }
         }
@@ -636,40 +636,40 @@ class LiveManagementServiceImpl(
         return promise.future()
     }
 
-    override fun addDeveloper(developerId: String, accessToken: String?): Future<Developer> {
-        log.trace { "Adding developer with id: $developerId" }
+    override fun addDeveloper(id: String, authorizationCode: String?): Future<Developer> {
+        log.trace { "Adding developer with id: $id" }
         val promise = Promise.promise<Developer>()
         launch(vertx.dispatcher()) {
-            if (accessToken != null && accessToken.length < 8) {
-                promise.fail("Access token must be at least 8 characters long")
-            } else if (SourceStorage.hasDeveloper(developerId)) {
-                promise.fail("Existing developer: $developerId")
-            } else if (accessToken != null && SourceStorage.getDeveloperByAccessToken(accessToken) != null) {
-                promise.fail("Existing access token: $accessToken")
+            if (authorizationCode != null && authorizationCode.length < 8) {
+                promise.fail("Authorization code must be at least 8 characters long")
+            } else if (SourceStorage.hasDeveloper(id)) {
+                promise.fail("Existing developer: $id")
+            } else if (authorizationCode != null && SourceStorage.isExistingAuthorizationCode(authorizationCode)) {
+                promise.fail("Existing authorization code: $authorizationCode")
             } else {
-                promise.complete(SourceStorage.addDeveloper(developerId, accessToken))
+                promise.complete(SourceStorage.addDeveloper(id, authorizationCode))
             }
         }
         return promise.future()
     }
 
-    override fun removeDeveloper(developerId: String): Future<Void> {
-        log.trace { "Removing developer with id: $developerId" }
+    override fun removeDeveloper(id: String): Future<Void> {
+        log.trace { "Removing developer with id: $id" }
         val promise = Promise.promise<Void>()
         launch(vertx.dispatcher()) {
-            if (developerId == "system") {
+            if (id == "system") {
                 promise.fail("Unable to remove system developer")
-            } else if (!SourceStorage.hasDeveloper(developerId)) {
-                promise.fail("Non-existing developer: $developerId")
+            } else if (!SourceStorage.hasDeveloper(id)) {
+                promise.fail("Non-existing developer: $id")
             } else {
-                SourceStorage.removeDeveloper(developerId)
+                SourceStorage.removeDeveloper(id)
                 promise.complete()
             }
         }
         return promise.future()
     }
 
-    override fun refreshDeveloperToken(developerId: String): Future<Developer> {
+    override fun refreshAuthorizationCode(developerId: String): Future<Developer> {
         log.trace { "Refreshing developer token with id: $developerId" }
         val promise = Promise.promise<Developer>()
         launch(vertx.dispatcher()) {
@@ -828,7 +828,7 @@ class LiveManagementServiceImpl(
         val promise = Promise.promise<InstanceConnection>()
         launch(vertx.dispatcher()) {
             val devAuth = Vertx.currentContext().getLocal<DeveloperAuth>("developer")
-            val bridgeService = SourceBridgeService.service(vertx, devAuth?.accessToken).await()
+            val bridgeService = SourceBridgeService.createProxy(vertx, devAuth?.accessToken).await()
             if (bridgeService != null) {
                 val instance = bridgeService.updateActiveProbeMetadata(id, metadata).await()
                 promise.complete(InstanceConnection(JsonObject.mapFrom(instance)))

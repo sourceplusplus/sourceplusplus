@@ -43,8 +43,8 @@ class VariableControlPermissionTest : PlatformIntegrationTest() {
         managementService.addRolePermission(devRole, RolePermission.ADD_LIVE_BREAKPOINT).await()
         managementService.addRolePermission(devRole, RolePermission.REMOVE_LIVE_INSTRUMENT).await()
 
-        val authToken = managementService.getAuthToken(dev.accessToken!!).await()
-        val instrumentService = LiveInstrumentService.createProxy(vertx, authToken)
+        val accessToken = managementService.getAccessToken(dev.authorizationCode!!).await()
+        val instrumentService = LiveInstrumentService.createProxy(vertx, accessToken)
         val exception = assertThrows(Exception::class.java) {
             runBlocking {
                 instrumentService.addLiveBreakpoint(

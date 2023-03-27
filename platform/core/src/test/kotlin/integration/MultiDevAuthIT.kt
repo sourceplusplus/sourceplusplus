@@ -50,8 +50,8 @@ class MultiDevAuthIT : PlatformIntegrationTest() {
         val dev2 = managementService.addDeveloper("dev2-get-self-instruments-$uuid").await()
         managementService.addDeveloperRole(dev2.id, devRole).await()
 
-        val dev1AuthToken = managementService.getAuthToken(dev1.accessToken!!).await()
-        val dev1InstrumentService = LiveInstrumentService.createProxy(vertx, dev1AuthToken)
+        val dev1AccessToken = managementService.getAccessToken(dev1.authorizationCode!!).await()
+        val dev1InstrumentService = LiveInstrumentService.createProxy(vertx, dev1AccessToken)
         val dev1Instrument = dev1InstrumentService.addLiveBreakpoint(
             LiveBreakpoint(
                 location = LiveSourceLocation("integration.InstrumentAuthTest", 1),
@@ -61,8 +61,8 @@ class MultiDevAuthIT : PlatformIntegrationTest() {
 
         assertEquals(1, dev1InstrumentService.getLiveInstruments().await().size)
 
-        val dev2AuthToken = managementService.getAuthToken(dev2.accessToken!!).await()
-        val dev2InstrumentService = LiveInstrumentService.createProxy(vertx, dev2AuthToken)
+        val dev2AccessToken = managementService.getAccessToken(dev2.authorizationCode!!).await()
+        val dev2InstrumentService = LiveInstrumentService.createProxy(vertx, dev2AccessToken)
         val dev2Instrument = dev2InstrumentService.addLiveBreakpoint(
             LiveBreakpoint(
                 location = LiveSourceLocation("integration.InstrumentAuthTest", 1),

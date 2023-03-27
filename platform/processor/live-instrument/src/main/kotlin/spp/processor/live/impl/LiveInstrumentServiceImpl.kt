@@ -58,6 +58,7 @@ import spp.protocol.platform.ProcessorAddress
 import spp.protocol.platform.ProcessorAddress.REMOTE_REGISTERED
 import spp.protocol.platform.status.InstanceConnection
 import spp.protocol.service.LiveInstrumentService
+import spp.protocol.service.LiveManagementService
 import java.time.Instant
 import java.util.*
 
@@ -88,6 +89,13 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
             log.info { "Loaded ${instruments.size()} hard-coded instruments" }
         }
 
+        val jwtConfig = ClusterConnection.config.getJsonObject("spp-platform").getJsonObject("jwt")
+        val jwtEnabled = jwtConfig.getString("enabled").toBooleanStrict()
+        val accessToken = if (jwtEnabled) {
+            val systemAuthorizationCode = SourceStorage.get<String>("system_authorization_code")!!
+            LiveManagementService.createProxy(vertx).getAccessToken(systemAuthorizationCode).await()
+        } else null
+
         //send active instruments on probe connection
         vertx.eventBus().consumer<JsonObject>(REMOTE_REGISTERED) {
             val remote = it.body().getString("address").substringBefore(":")
@@ -108,8 +116,6 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
                         bootInstruments.mapNotNull { removeInternalMeta(it) }.toSet()
                     )
 
-                    //todo: smarter way to get access token
-                    val accessToken = bootInstruments.firstNotNullOfOrNull { it.meta["spp.access_token"] as? String }
                     dispatchCommand(accessToken, bootCommand)
                 }
             }
@@ -564,7 +570,7 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
 
     private fun dispatchCommand(accessToken: String?, command: LiveInstrumentCommand) {
         log.trace { "Dispatching command: {}. Using access token: {}".args(command, accessToken) }
-        val probes = SourceBridgeService.service(vertx, accessToken)
+        val probes = SourceBridgeService.createProxy(vertx, accessToken)
         probes.onSuccess {
             if (it == null) {
                 log.error("Bridge service not available")

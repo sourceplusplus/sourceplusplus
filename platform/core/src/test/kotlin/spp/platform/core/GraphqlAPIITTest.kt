@@ -50,7 +50,7 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
         fun setupInit() {
             val client = WebClient.create(vertx(), WebClientOptions())
             request = client.post(platformPort, platformHost, "/graphql/spp")
-                .bearerTokenAuthentication(systemAuthToken)
+                .bearerTokenAuthentication(systemAccessToken)
         }
     }
 
@@ -212,26 +212,26 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
 
         val developer: JsonObject = addDeveloperResp.getJsonObject("data").getJsonObject("addDeveloper")
         assertEquals("developer-id", developer.getString("id"))
-        assertNotNull(developer.getString("accessToken"))
+        assertNotNull(developer.getString("authorizationCode"))
     }
 
     @Test
-    fun `ensure refreshDeveloperToken works`() = runBlocking {
+    fun `ensure refreshAuthorizationCode works`() = runBlocking {
         val addDeveloperResp = request.sendJsonObject(addDeveloperRequest).await().bodyAsJsonObject()
         assertNull(addDeveloperResp.getJsonArray("errors"))
 
         val developer: JsonObject = addDeveloperResp.getJsonObject("data").getJsonObject("addDeveloper")
         val developerId = developer.getString("id")
-        val developerAccessToken = developer.getString("accessToken")
+        val authorizationCode = developer.getString("authorizationCode")
         val getDevelopersResp = request.sendJsonObject(
-            JsonObject().put("query", getGraphql("developer/refresh-developer-token"))
+            JsonObject().put("query", getGraphql("developer/refresh-authorization-code"))
                 .put("variables", JsonObject().put("id", developerId))
         ).await().bodyAsJsonObject()
         assertNull(getDevelopersResp.getJsonArray("errors"))
 
-        val developerRefreshed = getDevelopersResp.getJsonObject("data").getJsonObject("refreshDeveloperToken")
+        val developerRefreshed = getDevelopersResp.getJsonObject("data").getJsonObject("refreshAuthorizationCode")
         assertEquals(developerId, developerRefreshed.getString("id"))
-        assertNotEquals(developerAccessToken, developerRefreshed.getString("accessToken"))
+        assertNotEquals(authorizationCode, developerRefreshed.getString("authorizationCode"))
     }
 
     @Test

@@ -104,26 +104,26 @@ abstract class BaseStorageITTest<T : CoreStorage> {
     @Test
     fun getDevelopers(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
         assertEquals(1, storageInstance.getDevelopers().size)
-        storageInstance.addDeveloper("dev_1", "token")
+        storageInstance.addDeveloper("dev_1", "code")
         assertEquals(2, storageInstance.getDevelopers().size)
 
         assertNotNull(storageInstance.getDevelopers().find { it.id == "dev_1" })
     }
 
     @Test
-    fun getDeveloperByAccessToken(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+    fun getDeveloperByAuthorizationCode(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
         assertEquals(1, storageInstance.getDevelopers().size)
-        storageInstance.addDeveloper("dev_2", "token")
+        storageInstance.addDeveloper("dev_2", "code")
         assertEquals(2, storageInstance.getDevelopers().size)
 
-        val developer = storageInstance.getDeveloperByAccessToken("token")
+        val developer = storageInstance.getDeveloperByAuthorizationCode("code")
         assertEquals("dev_2", developer?.id)
     }
 
     @Test
     fun hasDeveloper(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
         assertEquals(listOf("system"), storageInstance.getDevelopers().map { it.id })
-        storageInstance.addDeveloper("dev_6", "token_6")
+        storageInstance.addDeveloper("dev_6", "code_6")
 
         assertTrue(storageInstance.hasDeveloper("dev_6"))
         assertEquals(2, storageInstance.getDevelopers().size)
@@ -133,9 +133,9 @@ abstract class BaseStorageITTest<T : CoreStorage> {
     fun addDeveloper(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
         assertEquals(listOf("system"), storageInstance.getDevelopers().map { it.id })
         val id = "dev_5"
-        val token = "token_5"
-        storageInstance.addDeveloper(id, token)
-        val developer = storageInstance.getDeveloperByAccessToken(token)
+        val code = "code_5"
+        storageInstance.addDeveloper(id, code)
+        val developer = storageInstance.getDeveloperByAuthorizationCode(code)
         assertNotNull(developer)
         assertEquals(id, developer?.id)
 
@@ -147,33 +147,33 @@ abstract class BaseStorageITTest<T : CoreStorage> {
     fun removeDeveloper(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
         assertEquals(1, storageInstance.getDevelopers().size)
         val id = "dev_3"
-        val token = "token_3"
-        storageInstance.addDeveloper(id, token)
+        val code = "code_3"
+        storageInstance.addDeveloper(id, code)
         assertEquals(2, storageInstance.getDevelopers().size)
-        val developer = storageInstance.getDeveloperByAccessToken(token)
+        val developer = storageInstance.getDeveloperByAuthorizationCode(code)
         assertNotNull(developer)
         assertEquals(id, developer?.id)
 
         storageInstance.removeDeveloper(id)
-        val updatedDeveloper = storageInstance.getDeveloperByAccessToken(token)
+        val updatedDeveloper = storageInstance.getDeveloperByAuthorizationCode(code)
         assertNull(updatedDeveloper)
         assertEquals(1, storageInstance.getDevelopers().size)
     }
 
     @Test
-    fun setAccessToken(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+    fun setAuthorizationCode(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
         assertEquals(listOf("system"), storageInstance.getDevelopers().map { it.id })
         val id = "dev_4"
-        val token = "token_4"
-        storageInstance.addDeveloper(id, token)
-        val developer = storageInstance.getDeveloperByAccessToken(token)
+        val code = "code_4"
+        storageInstance.addDeveloper(id, code)
+        val developer = storageInstance.getDeveloperByAuthorizationCode(code)
         assertEquals(id, developer?.id)
 
-        storageInstance.setAccessToken(id, "newToken")
-        assertNull(storageInstance.getDeveloperByAccessToken(token))
+        storageInstance.setAuthorizationCode(id, "newCode")
+        assertNull(storageInstance.getDeveloperByAuthorizationCode(code))
 
-        val developerWithNewToken = storageInstance.getDeveloperByAccessToken("newToken")
-        assertEquals(id, developerWithNewToken?.id)
+        val developerWithNewCode = storageInstance.getDeveloperByAuthorizationCode("newCode")
+        assertEquals(id, developerWithNewCode?.id)
     }
 
     @Test
@@ -217,7 +217,7 @@ abstract class BaseStorageITTest<T : CoreStorage> {
     @Test
     fun addGetDeveloperRoles(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
         val id = "dev_5"
-        storageInstance.addDeveloper(id, "token_5")
+        storageInstance.addDeveloper(id, "code_5")
         val developerRole = DeveloperRole.fromString("dev_role")
         storageInstance.addRole(developerRole)
 
@@ -232,8 +232,8 @@ abstract class BaseStorageITTest<T : CoreStorage> {
 
     @Test
     fun removeRoleFromDeveloper(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
-        val id = "dev6"
-        storageInstance.addDeveloper(id, "token6")
+        val id = "dev_6"
+        storageInstance.addDeveloper(id, "code_6")
         val developerRole = DeveloperRole.fromString("devRole")
         storageInstance.addRole(developerRole)
         storageInstance.addRoleToDeveloper(id, developerRole)

@@ -71,8 +71,8 @@ class JWTTest : PlatformIntegrationTest() {
     fun verifyUnsuccessfulPermission() = runBlocking {
         val testContext = VertxTestContext()
         val test2Dev = managementService.addDeveloper("test2").await()
-        val authToken = managementService.getAuthToken(test2Dev.accessToken!!).await()
-        val instrumentService = LiveInstrumentService.createProxy(vertx, authToken)
+        val accessToken = managementService.getAccessToken(test2Dev.authorizationCode!!).await()
+        val instrumentService = LiveInstrumentService.createProxy(vertx, accessToken)
         instrumentService.getLiveInstruments().onComplete {
             if (it.failed()) {
                 val cause = ServiceExceptionConverter.fromEventBusException(it.cause().message!!)
@@ -98,8 +98,8 @@ class JWTTest : PlatformIntegrationTest() {
         managementService.addRolePermission(DeveloperRole.fromString("tester"), ADD_LIVE_BREAKPOINT).await()
         val accessPermission = managementService.addAccessPermission(listOf("integration.JWTTest"), BLACK_LIST).await()
         managementService.addRoleAccessPermission(DeveloperRole.fromString("tester"), accessPermission.id).await()
-        val authToken = managementService.getAuthToken(testDev.accessToken!!).await()
-        val instrumentService = LiveInstrumentService.createProxy(vertx, authToken)
+        val accessToken = managementService.getAccessToken(testDev.authorizationCode!!).await()
+        val instrumentService = LiveInstrumentService.createProxy(vertx, accessToken)
         instrumentService.addLiveInstrument(
             LiveBreakpoint(
                 location = LiveSourceLocation("integration.JWTTest", 2),

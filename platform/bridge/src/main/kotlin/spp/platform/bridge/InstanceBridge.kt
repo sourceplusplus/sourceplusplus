@@ -127,11 +127,11 @@ abstract class InstanceBridge(private val jwtAuth: JWTAuth?) : CoroutineVerticle
 
     fun validateMarkerAuth(event: BaseBridgeEvent, handler: Handler<AsyncResult<DeveloperAuth>>) {
         if (jwtAuth != null) {
-            val authToken = event.rawMessage.getJsonObject("headers")?.getString("auth-token")
-            if (authToken.isNullOrEmpty()) {
-                handler.handle(Future.failedFuture("Rejected ${event.type()} event with missing auth token"))
+            val accessToken = event.rawMessage.getJsonObject("headers")?.getString("access-token")
+            if (accessToken.isNullOrEmpty()) {
+                handler.handle(Future.failedFuture("Rejected ${event.type()} event with missing access token"))
             } else {
-                validateAuthToken(authToken) {
+                validateAccessToken(accessToken) {
                     if (it.succeeded()) {
                         handler.handle(Future.succeededFuture(it.result()))
                     } else {
@@ -182,7 +182,7 @@ abstract class InstanceBridge(private val jwtAuth: JWTAuth?) : CoroutineVerticle
         }
     }
 
-    fun validateAuthToken(authToken: String?, handler: Handler<AsyncResult<DeveloperAuth>>) {
+    fun validateAccessToken(accessToken: String?, handler: Handler<AsyncResult<DeveloperAuth>>) {
         if (jwtAuth == null) {
             val developerAuth = DeveloperAuth("system")
             Vertx.currentContext().putLocal("developer", developerAuth)
@@ -190,8 +190,8 @@ abstract class InstanceBridge(private val jwtAuth: JWTAuth?) : CoroutineVerticle
             return
         }
 
-        log.trace { "Validating auth token: $authToken" }
-        jwtAuth.authenticate(TokenCredentials(authToken)) {
+        log.trace { "Validating auth token: $accessToken" }
+        jwtAuth.authenticate(TokenCredentials(accessToken)) {
             if (it.succeeded()) {
                 Vertx.currentContext().putLocal("user", it.result())
                 val selfId = it.result().principal().getString("developer_id")

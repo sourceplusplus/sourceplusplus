@@ -131,8 +131,8 @@ object ViewProcessor : FeedbackProcessor() {
     private fun permissionCheckInterceptor(): ServiceInterceptor {
         return ServiceInterceptor { _, _, msg ->
             val promise = Promise.promise<Message<JsonObject>>()
-            val liveManagementService = LiveManagementService.createProxy(vertx, msg.headers().get("auth-token"))
-            liveManagementService.getSelf().onSuccess { selfInfo ->
+            val managementService = LiveManagementService.createProxy(vertx, msg.headers().get("access-token"))
+            managementService.getSelf().onSuccess { selfInfo ->
                 validateRolePermission(selfInfo, msg) {
                     if (it.succeeded()) {
                         promise.complete(msg)

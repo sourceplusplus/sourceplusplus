@@ -40,7 +40,7 @@ interface SourceBridgeService {
 
         @GenIgnore
         @JvmStatic
-        fun service(vertx: Vertx, authToken: String? = null): Future<SourceBridgeService?> {
+        fun createProxy(vertx: Vertx, accessToken: String? = null): Future<SourceBridgeService?> {
             log.trace { "Getting SourceBridgeService" }
             val promise = Promise.promise<SourceBridgeService?>()
             discovery.getRecord(JsonObject().put("name", BRIDGE_SERVICE)).onComplete {
@@ -51,7 +51,7 @@ interface SourceBridgeService {
                     } else {
                         log.trace { "SourceBridgeService found" }
                         val deliveryOptions = DeliveryOptions().apply {
-                            authToken?.let { addHeader("auth-token", it) }
+                            accessToken?.let { addHeader("access-token", it) }
                         }
                         promise.complete(SourceBridgeServiceVertxEBProxy(vertx, BRIDGE_SERVICE, deliveryOptions))
                     }
