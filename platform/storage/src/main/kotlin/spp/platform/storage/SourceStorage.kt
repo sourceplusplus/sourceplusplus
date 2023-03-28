@@ -82,13 +82,11 @@ object SourceStorage {
 
     @Suppress("MemberVisibilityCanBePrivate")
     suspend fun installDefaults(systemAccessToken: String) {
-        put("system_authorization_code", systemAccessToken)
-
         //set default roles, permissions, redactions
         log.info("Installing default roles, permissions, and redactions")
         addRole(DeveloperRole.ROLE_MANAGER)
         addRole(DeveloperRole.ROLE_USER)
-        addDeveloper("system", get("system_authorization_code", DEFAULT_AUTHORIZATION_CODE))
+        addDeveloper("system", systemAccessToken)
         addRoleToDeveloper("system", DeveloperRole.ROLE_MANAGER)
         RolePermission.values().forEach {
             addPermissionToRole(DeveloperRole.ROLE_MANAGER, it)
@@ -191,7 +189,15 @@ object SourceStorage {
         getDevelopers().forEach { removeDeveloper(it.id) }
         getClientAccessors().forEach { removeClientAccess(it.id) }
         getLiveInstruments().forEach { removeLiveInstrument(it.id!!) }
-        installDefaults(get("system_authorization_code", DEFAULT_AUTHORIZATION_CODE))
+
+        val jwtConfig = config.getJsonObject("spp-platform").getJsonObject("jwt")
+        val authorizationCode = jwtConfig.getString("authorization_code")
+        val systemAuthorizationCode = if (authorizationCode.isNullOrEmpty()) {
+            DEFAULT_AUTHORIZATION_CODE
+        } else {
+            authorizationCode
+        }
+        installDefaults(systemAuthorizationCode)
         return true
     }
 
@@ -199,7 +205,7 @@ object SourceStorage {
         val jwtConfig = config.getJsonObject("spp-platform").getJsonObject("jwt")
         val jwtEnabled = jwtConfig.getString("enabled").toBooleanStrict()
         return if (jwtEnabled) {
-            val systemAuthorizationCode = get<String>("system_authorization_code")!!
+            val systemAuthorizationCode = storage.getAuthorizationCode("system")
             LiveManagementService.createProxy(vertx).getAccessToken(systemAuthorizationCode).await()
         } else null
     }

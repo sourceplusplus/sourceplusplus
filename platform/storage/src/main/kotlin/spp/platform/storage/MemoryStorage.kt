@@ -127,8 +127,8 @@ open class MemoryStorage(val vertx: Vertx) : CoreStorage {
         developerStorage.put("authorizationCode", code).await()
     }
 
-    private suspend fun getAuthorizationCode(developerId: String): String {
-        val developerStorage = vertx.sharedData().getAsyncMap<String, Any>(namespace("developer:$developerId")).await()
+    override suspend fun getAuthorizationCode(id: String): String {
+        val developerStorage = vertx.sharedData().getAsyncMap<String, Any>(namespace("developer:$id")).await()
         return developerStorage.get("authorizationCode").await() as String
     }
 

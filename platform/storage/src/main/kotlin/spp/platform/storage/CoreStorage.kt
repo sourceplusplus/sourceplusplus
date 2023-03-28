@@ -51,6 +51,7 @@ interface CoreStorage {
     suspend fun addDeveloper(id: String, authorizationCode: String): Developer
     suspend fun removeDeveloper(id: String)
     suspend fun setAuthorizationCode(id: String, code: String)
+    suspend fun getAuthorizationCode(id: String): String
     suspend fun getDeveloperRoles(developerId: String): List<DeveloperRole>
     suspend fun getRoleAccessPermissions(role: DeveloperRole): Set<AccessPermission>
     suspend fun getAccessPermissions(): Set<AccessPermission>

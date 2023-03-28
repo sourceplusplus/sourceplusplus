@@ -124,7 +124,7 @@ open class RedisStorage(val vertx: Vertx) : CoreStorage {
         redis.del(listOf(namespace("developers:$id:roles"))).await()
     }
 
-    private suspend fun getAuthorizationCode(id: String): String {
+    override suspend fun getAuthorizationCode(id: String): String {
         return redis.get(namespace("developers:ids:$id:authorization_code")).await().toString(UTF_8)
     }
 
