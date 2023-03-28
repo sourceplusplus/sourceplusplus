@@ -596,7 +596,7 @@ class LiveManagementServiceImpl(
         return promise.future()
     }
 
-    override fun getAccessToken(authorizationCode: String?): Future<String> {
+    override fun getAccessToken(authorizationCode: String): Future<String> {
         log.trace { "Getting access token" }
         if (jwt == null) {
             return Future.failedFuture("JWT is not enabled")
