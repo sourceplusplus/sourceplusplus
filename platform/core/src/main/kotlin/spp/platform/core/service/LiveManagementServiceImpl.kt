@@ -604,13 +604,13 @@ class LiveManagementServiceImpl(
 
         val promise = Promise.promise<String>()
         launch(vertx.dispatcher()) {
-            val dev = authorizationCode?.let { SourceStorage.getDeveloperByAuthorizationCode(it) }
+            val dev = SourceStorage.getDeveloperByAuthorizationCode(authorizationCode)
             if (dev != null) {
                 val jwtToken = jwt.generateToken(
                     JsonObject().apply {
-//                        if (!tenantId.isNullOrEmpty()) {
-//                            put("tenant_id", tenantId)
-//                        }
+                        if (Vertx.currentContext().getLocal<String>("tenant_id") != null) {
+                            put("tenant_id", Vertx.currentContext().getLocal<String>("tenant_id"))
+                        }
                     }
                         .put("developer_id", dev.id)
                         .put("created_at", Instant.now().toEpochMilli())
