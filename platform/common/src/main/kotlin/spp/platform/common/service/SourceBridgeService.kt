@@ -24,6 +24,7 @@ import io.vertx.core.Future
 import io.vertx.core.Promise
 import io.vertx.core.Vertx
 import io.vertx.core.eventbus.DeliveryOptions
+import io.vertx.core.impl.ContextInternal
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import mu.KotlinLogging
@@ -52,6 +53,9 @@ interface SourceBridgeService {
                         log.trace { "SourceBridgeService found" }
                         val deliveryOptions = DeliveryOptions().apply {
                             accessToken?.let { addHeader("auth-token", it) }
+                            (Vertx.currentContext() as? ContextInternal)?.localContextData()?.forEach {
+                                addHeader(it.key.toString(), it.value.toString())
+                            }
                         }
                         promise.complete(SourceBridgeServiceVertxEBProxy(vertx, BRIDGE_SERVICE, deliveryOptions))
                     }
