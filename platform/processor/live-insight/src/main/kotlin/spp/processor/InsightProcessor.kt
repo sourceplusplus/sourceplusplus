@@ -34,7 +34,10 @@ import spp.processor.live.impl.LiveInsightServiceImpl
 import spp.processor.live.impl.insight.types.function.duration.FunctionDurationModerator
 import spp.processor.live.impl.moderate.InsightModerator
 import spp.processor.live.impl.moderate.WorkspaceInsightQueue
-import spp.protocol.service.*
+import spp.protocol.service.LiveInsightService
+import spp.protocol.service.LiveInstrumentService
+import spp.protocol.service.LiveViewService
+import spp.protocol.service.SourceServices
 import kotlin.system.exitProcess
 
 object InsightProcessor : FeedbackProcessor() {
@@ -71,11 +74,9 @@ object InsightProcessor : FeedbackProcessor() {
     override suspend fun start() {
         log.info("Starting InsightProcessor")
 
-        //todo: create `insight-automation` developer account
-        val systemAccessToken = SourceStorage.get<String>("system_access_token")!!
-        val authToken = LiveManagementService.createProxy(vertx).getAuthToken(systemAccessToken).await()
-        viewService = LiveViewService.createProxy(vertx, authToken)
-        instrumentService = LiveInstrumentService.createProxy(vertx, authToken)
+        val systemAccessToken = SourceStorage.getSystemAccessToken(vertx)
+        viewService = LiveViewService.createProxy(vertx, systemAccessToken)
+        instrumentService = LiveInstrumentService.createProxy(vertx, systemAccessToken)
 
         //deploy moderators
         val workerOptions = DeploymentOptions().setWorker(true)

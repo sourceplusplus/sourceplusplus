@@ -131,7 +131,7 @@ open class PlatformIntegrationTest {
         }
     val insightService: LiveInsightService
         get() {
-            return LiveInsightService.createProxy(vertx, systemAuthToken)
+            return LiveInsightService.createProxy(vertx, systemAccessToken)
         }
     val instrumentService: LiveInstrumentService
         get() {
