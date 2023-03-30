@@ -65,7 +65,7 @@ class SourceBridgeProvider : ModuleProvider() {
             log.info("Starting spp-platform-bridge")
             val vertx = ClusterConnection.getVertx()
             runBlocking(vertx.dispatcher()) {
-                //Open bridges
+                //open bridges
                 val jwtConfig = config.getJsonObject("spp-platform").getJsonObject("jwt")
                 val jwtEnabled = jwtConfig.getString("enabled").toBooleanStrict()
                 val jwt: JWTAuth?

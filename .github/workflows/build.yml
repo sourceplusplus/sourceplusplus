@@ -152,7 +152,7 @@ jobs:
 
       - name: Get access token
         timeout-minutes: 5
-        run: until $(curl --output /dev/null --silent --fail http://localhost:12800/api/new-token?access_token=change-me); do printf '.'; sleep 5; done && SPP_JWT_TOKEN=$(curl http://localhost:12800/api/new-token?access_token=change-me) && echo "SPP_JWT_TOKEN=$SPP_JWT_TOKEN" >> $GITHUB_ENV
+        run: until $(curl --output /dev/null --silent --fail http://localhost:12800/api/new-token?authorization_code=change-me); do printf '.'; sleep 5; done && SPP_JWT_TOKEN=$(curl http://localhost:12800/api/new-token?authorization_code=change-me) && echo "SPP_JWT_TOKEN=$SPP_JWT_TOKEN" >> $GITHUB_ENV
 
       - name: Wait for platform
         timeout-minutes: 5
@@ -231,7 +231,7 @@ jobs:
 
       - name: Get access token
         timeout-minutes: 5
-        run: until $(curl --output /dev/null --silent --fail http://localhost:12800/api/new-token?access_token=change-me); do printf '.'; sleep 5; done && SPP_JWT_TOKEN=$(curl http://localhost:12800/api/new-token?access_token=change-me) && echo "SPP_JWT_TOKEN=$SPP_JWT_TOKEN" >> $GITHUB_ENV
+        run: until $(curl --output /dev/null --silent --fail http://localhost:12800/api/new-token?authorization_code=change-me); do printf '.'; sleep 5; done && SPP_JWT_TOKEN=$(curl http://localhost:12800/api/new-token?authorization_code=change-me) && echo "SPP_JWT_TOKEN=$SPP_JWT_TOKEN" >> $GITHUB_ENV
 
       - name: Wait for platform
         timeout-minutes: 5
@@ -291,7 +291,7 @@ jobs:
 
       - name: Get access token
         timeout-minutes: 5
-        run: until $(curl --output /dev/null --silent --fail http://localhost:12800/api/new-token?access_token=change-me); do printf '.'; sleep 5; done && SPP_JWT_TOKEN=$(curl http://localhost:12800/api/new-token?access_token=change-me) && echo "SPP_JWT_TOKEN=$SPP_JWT_TOKEN" >> $GITHUB_ENV
+        run: until $(curl --output /dev/null --silent --fail http://localhost:12800/api/new-token?authorization_code=change-me); do printf '.'; sleep 5; done && SPP_JWT_TOKEN=$(curl http://localhost:12800/api/new-token?authorization_code=change-me) && echo "SPP_JWT_TOKEN=$SPP_JWT_TOKEN" >> $GITHUB_ENV
 
       - name: Wait for platform
         timeout-minutes: 5
@@ -361,7 +361,7 @@ jobs:
 
       - name: Get access token
         timeout-minutes: 5
-        run: until $(curl --output /dev/null --silent --fail http://localhost:12800/api/new-token?access_token=change-me); do printf '.'; sleep 5; done && SPP_JWT_TOKEN=$(curl http://localhost:12800/api/new-token?access_token=change-me) && echo "SPP_JWT_TOKEN=$SPP_JWT_TOKEN" >> $GITHUB_ENV
+        run: until $(curl --output /dev/null --silent --fail http://localhost:12800/api/new-token?authorization_code=change-me); do printf '.'; sleep 5; done && SPP_JWT_TOKEN=$(curl http://localhost:12800/api/new-token?authorization_code=change-me) && echo "SPP_JWT_TOKEN=$SPP_JWT_TOKEN" >> $GITHUB_ENV
 
       - name: Wait for platform
         timeout-minutes: 5
@@ -586,12 +586,6 @@ jobs:
 
       - name: Build & push spp-platform latest Docker image
         run: cd ./docker/spp-platform && docker buildx build . --platform linux/arm64,linux/amd64 --file Dockerfile --tag sourceplusplus/spp-platform:latest --push
-
-      - name: Trigger demo.sourceplus.plus deploy
-        uses: peter-evans/repository-dispatch@v2
-        with:
-          token: ${{ secrets.REPO_DISPATCH_ACCESS_TOKEN }}
-          event-type: deploy-demo
 
   # Delete build artifacts
   cleanup:

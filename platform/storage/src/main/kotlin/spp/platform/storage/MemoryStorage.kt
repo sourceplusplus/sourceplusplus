@@ -66,10 +66,10 @@ open class MemoryStorage(val vertx: Vertx) : CoreStorage {
         return currentDevelopers.list.map { Developer(it as String) }
     }
 
-    override suspend fun getDeveloperByAccessToken(token: String): Developer? {
+    override suspend fun getDeveloperByAuthorizationCode(code: String): Developer? {
         return getDevelopers().find {
-            //check access token with time-constant comparison
-            MessageDigest.isEqual(getAccessToken(it.id).toByteArray(), token.toByteArray())
+            //check authorization code with time-constant comparison
+            MessageDigest.isEqual(getAuthorizationCode(it.id).toByteArray(), code.toByteArray())
         }
     }
 
@@ -100,7 +100,7 @@ open class MemoryStorage(val vertx: Vertx) : CoreStorage {
         return (developersStorage.get("ids").await() as JsonArray? ?: JsonArray()).list.contains(id)
     }
 
-    override suspend fun addDeveloper(id: String, token: String): Developer {
+    override suspend fun addDeveloper(id: String, authorizationCode: String): Developer {
         val developersStorage = vertx.sharedData().getAsyncMap<String, Any>(namespace("developers")).await()
         val currentDevelopers = developersStorage.get("ids").await() as JsonArray? ?: JsonArray()
         val existingDeveloper = currentDevelopers.list.find { it == id } as String?
@@ -108,8 +108,8 @@ open class MemoryStorage(val vertx: Vertx) : CoreStorage {
         currentDevelopers.add(id)
         developersStorage.put("ids", currentDevelopers).await()
 
-        setAccessToken(id, token)
-        return Developer(id, token)
+        setAuthorizationCode(id, authorizationCode)
+        return Developer(id, authorizationCode)
     }
 
     override suspend fun removeDeveloper(id: String) {
@@ -122,14 +122,14 @@ open class MemoryStorage(val vertx: Vertx) : CoreStorage {
         developerStorage.clear().await()
     }
 
-    override suspend fun setAccessToken(id: String, accessToken: String) {
+    override suspend fun setAuthorizationCode(id: String, code: String) {
         val developerStorage = vertx.sharedData().getAsyncMap<String, Any>(namespace("developer:$id")).await()
-        developerStorage.put("accessToken", accessToken).await()
+        developerStorage.put("authorizationCode", code).await()
     }
 
-    private suspend fun getAccessToken(developerId: String): String {
-        val developerStorage = vertx.sharedData().getAsyncMap<String, Any>(namespace("developer:$developerId")).await()
-        return developerStorage.get("accessToken").await() as String
+    override suspend fun getAuthorizationCode(id: String): String {
+        val developerStorage = vertx.sharedData().getAsyncMap<String, Any>(namespace("developer:$id")).await()
+        return developerStorage.get("authorizationCode").await() as String
     }
 
     override suspend fun getDeveloperRoles(developerId: String): List<DeveloperRole> {

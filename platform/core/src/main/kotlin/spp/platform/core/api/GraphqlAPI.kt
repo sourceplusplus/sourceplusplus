@@ -228,7 +228,7 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
             .dataFetcher("removeDeveloperRole", this::removeDeveloperRole)
             .dataFetcher("addDeveloper", this::addDeveloper)
             .dataFetcher("removeDeveloper", this::removeDeveloper)
-            .dataFetcher("refreshDeveloperToken", this::refreshDeveloperToken)
+            .dataFetcher("refreshAuthorizationCode", this::refreshAuthorizationCode)
             .dataFetcher("removeLiveInstrument", this::removeLiveInstrument)
             .dataFetcher("removeLiveInstruments", this::removeLiveInstruments)
             .dataFetcher("clearLiveInstruments", this::clearLiveInstruments)
@@ -323,8 +323,8 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
         getLiveManagementService(env).compose { it.getEndpoints(env.getArgument("serviceId")) }.toCompletionStage()
             .toCompletableFuture()
 
-    private fun refreshDeveloperToken(env: DataFetchingEnvironment): CompletableFuture<Developer> =
-        getLiveManagementService(env).compose { it.refreshDeveloperToken(env.getArgument("id")) }
+    private fun refreshAuthorizationCode(env: DataFetchingEnvironment): CompletableFuture<Developer> =
+        getLiveManagementService(env).compose { it.refreshAuthorizationCode(env.getArgument("id")) }
             .toCompletionStage().toCompletableFuture()
 
     private fun getLiveInstruments(env: DataFetchingEnvironment): CompletableFuture<List<Map<String, Any>>> =
@@ -467,7 +467,7 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
         getLiveManagementService(env).compose {
             it.addDeveloper(
                 env.getArgument<String>("id").lowercase().replace(" ", ""),
-                env.getArgument("accessToken")
+                env.getArgument("authorizationCode")
             )
         }.toCompletionStage().toCompletableFuture()
 

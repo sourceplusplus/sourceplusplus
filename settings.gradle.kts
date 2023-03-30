@@ -4,7 +4,7 @@ pluginManagement {
         id("org.jetbrains.kotlin.jvm") version kotlinVersion apply false
         id("org.jetbrains.kotlin.kapt") version kotlinVersion apply false
         id("org.jetbrains.kotlin.plugin.noarg") version kotlinVersion apply false
-        id("com.avast.gradle.docker-compose") version "0.16.11" apply false
+        id("com.avast.gradle.docker-compose") version "0.16.12" apply false
         id("io.gitlab.arturbosch.detekt") version "1.22.0" apply false
         id("com.github.johnrengelman.shadow") version "8.1.1" apply false
         id("com.apollographql.apollo3") version "3.7.5" apply false

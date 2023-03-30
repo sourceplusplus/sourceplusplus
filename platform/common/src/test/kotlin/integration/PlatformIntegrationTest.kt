@@ -42,6 +42,7 @@ import spp.protocol.service.LiveInsightService
 import spp.protocol.service.LiveInstrumentService
 import spp.protocol.service.LiveManagementService
 import spp.protocol.service.LiveViewService
+import java.util.*
 import java.util.concurrent.TimeUnit
 import java.util.regex.Pattern
 
@@ -52,6 +53,10 @@ open class PlatformIntegrationTest {
     val testNameAsInstrumentId: String
         get() {
             return testName!!.replace(" ", "-").lowercase().substringBefore("(")
+        }
+    val testNameAsUniqueInstrumentId: String
+        get() {
+            return testNameAsInstrumentId + "-" + UUID.randomUUID().toString().replace("-", "")
         }
 
     @BeforeEach
@@ -65,7 +70,7 @@ open class PlatformIntegrationTest {
         private var vertx: Vertx? = null
         val platformHost = System.getenv("SPP_PLATFORM_HOST") ?: "localhost"
         const val platformPort = 12800
-        val systemAuthToken: String? by lazy { fetchAuthToken() }
+        val systemAccessToken: String? by lazy { fetchAccessToken() }
 
         fun vertx(): Vertx {
             return vertx!!
@@ -99,8 +104,8 @@ open class PlatformIntegrationTest {
             }
         }
 
-        private fun fetchAuthToken() = runBlocking {
-            val tokenUri = "/api/new-token?access_token=change-me"
+        private fun fetchAccessToken() = runBlocking {
+            val tokenUri = "/api/new-token?authorization_code=change-me"
             val req = vertx!!.createHttpClient(HttpClientOptions())
                 .request(
                     RequestOptions()
@@ -122,7 +127,7 @@ open class PlatformIntegrationTest {
 
     val managementService: LiveManagementService
         get() {
-            return LiveManagementService.createProxy(vertx, systemAuthToken)
+            return LiveManagementService.createProxy(vertx, systemAccessToken)
         }
     val insightService: LiveInsightService
         get() {
@@ -130,11 +135,11 @@ open class PlatformIntegrationTest {
         }
     val instrumentService: LiveInstrumentService
         get() {
-            return LoggedLiveInstrumentService(LiveInstrumentService.createProxy(vertx, systemAuthToken))
+            return LoggedLiveInstrumentService(LiveInstrumentService.createProxy(vertx, systemAccessToken))
         }
     val viewService: LiveViewService
         get() {
-            return LiveViewService.createProxy(vertx, systemAuthToken)
+            return LiveViewService.createProxy(vertx, systemAccessToken)
         }
 
     fun errorOnTimeout(testContext: VertxTestContext, waitTime: Long = 15) {

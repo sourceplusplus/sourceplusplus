@@ -20,9 +20,11 @@ package spp.platform.storage
 import com.google.common.base.CaseFormat
 import io.vertx.core.Future
 import io.vertx.core.Promise
+import io.vertx.core.Vertx
 import io.vertx.core.json.JsonObject
 import io.vertx.core.shareddata.AsyncMap
 import io.vertx.core.shareddata.Counter
+import io.vertx.kotlin.coroutines.await
 import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -34,12 +36,13 @@ import spp.platform.common.util.args
 import spp.protocol.instrument.LiveInstrument
 import spp.protocol.platform.auth.*
 import spp.protocol.platform.developer.Developer
+import spp.protocol.service.LiveManagementService
 import spp.protocol.service.error.PermissionAccessDenied
 import java.util.concurrent.CompletableFuture
 
 object SourceStorage {
 
-    private const val DEFAULT_ACCESS_TOKEN = "change-me"
+    private const val DEFAULT_AUTHORIZATION_CODE = "change-me"
     private val log = KotlinLogging.logger {}
 
     lateinit var storage: CoreStorage
@@ -64,24 +67,26 @@ object SourceStorage {
 
     private suspend fun installDefaults() {
         val jwtConfig = config.getJsonObject("spp-platform").getJsonObject("jwt")
-        val accessToken = jwtConfig.getString("access_token")
-        val systemAccessToken = if (accessToken.isNullOrEmpty()) DEFAULT_ACCESS_TOKEN else accessToken
-        if (systemAccessToken == DEFAULT_ACCESS_TOKEN) {
-            log.warn("Using default system access token. This is not recommended.")
+        val authorizationCode = jwtConfig.getString("authorization_code")
+        val systemAuthorizationCode = if (authorizationCode.isNullOrEmpty()) {
+            DEFAULT_AUTHORIZATION_CODE
+        } else {
+            authorizationCode
+        }
+        if (systemAuthorizationCode == DEFAULT_AUTHORIZATION_CODE) {
+            log.warn("Using default system authorization code. This is not recommended.")
         }
 
-        installDefaults(systemAccessToken)
+        installDefaults(systemAuthorizationCode)
     }
 
     @Suppress("MemberVisibilityCanBePrivate")
     suspend fun installDefaults(systemAccessToken: String) {
-        put("system_access_token", systemAccessToken)
-
         //set default roles, permissions, redactions
         log.info("Installing default roles, permissions, and redactions")
         addRole(DeveloperRole.ROLE_MANAGER)
         addRole(DeveloperRole.ROLE_USER)
-        addDeveloper("system", get("system_access_token", DEFAULT_ACCESS_TOKEN))
+        addDeveloper("system", systemAccessToken)
         addRoleToDeveloper("system", DeveloperRole.ROLE_MANAGER)
         RolePermission.values().forEach {
             addPermissionToRole(DeveloperRole.ROLE_MANAGER, it)
@@ -155,11 +160,11 @@ object SourceStorage {
             JsonObject.mapFrom(it).let {
                 Pair(
                     it.getString("id"),
-                    it.getString("access_token")
+                    it.getString("authorization_code")
                 )
             }
-        }.orEmpty().forEach { (id, accessToken) ->
-            addDeveloper(id, accessToken)
+        }.orEmpty().forEach { (id, authorizationCode) ->
+            addDeveloper(id, authorizationCode)
             log.debug { "Added user developer: $id" }
         }
 
@@ -184,8 +189,25 @@ object SourceStorage {
         getDevelopers().forEach { removeDeveloper(it.id) }
         getClientAccessors().forEach { removeClientAccess(it.id) }
         getLiveInstruments().forEach { removeLiveInstrument(it.id!!) }
-        installDefaults(get("system_access_token", DEFAULT_ACCESS_TOKEN))
+
+        val jwtConfig = config.getJsonObject("spp-platform").getJsonObject("jwt")
+        val authorizationCode = jwtConfig.getString("authorization_code")
+        val systemAuthorizationCode = if (authorizationCode.isNullOrEmpty()) {
+            DEFAULT_AUTHORIZATION_CODE
+        } else {
+            authorizationCode
+        }
+        installDefaults(systemAuthorizationCode)
         return true
+    }
+
+    suspend fun getSystemAccessToken(vertx: Vertx): String? {
+        val jwtConfig = config.getJsonObject("spp-platform").getJsonObject("jwt")
+        val jwtEnabled = jwtConfig.getString("enabled").toBooleanStrict()
+        return if (jwtEnabled) {
+            val systemAuthorizationCode = storage.getAuthorizationCode("system")
+            LiveManagementService.createProxy(vertx).getAccessToken(systemAuthorizationCode).await()
+        } else null
     }
 
     suspend fun counter(name: String): Counter {
@@ -232,8 +254,12 @@ object SourceStorage {
         return storage.getDevelopers()
     }
 
-    suspend fun getDeveloperByAccessToken(token: String): Developer? {
-        return storage.getDeveloperByAccessToken(token)
+    suspend fun isExistingAuthorizationCode(authorizationCode: String): Boolean {
+        return getDeveloperByAuthorizationCode(authorizationCode) != null
+    }
+
+    suspend fun getDeveloperByAuthorizationCode(authorizationCode: String): Developer? {
+        return storage.getDeveloperByAuthorizationCode(authorizationCode)
     }
 
     suspend fun hasRole(role: DeveloperRole): Boolean {
@@ -265,7 +291,7 @@ object SourceStorage {
     }
 
     suspend fun setAccessToken(id: String, accessToken: String) {
-        return storage.setAccessToken(id, accessToken)
+        return storage.setAuthorizationCode(id, accessToken)
     }
 
     suspend fun getDeveloperRoles(developerId: String): List<DeveloperRole> {

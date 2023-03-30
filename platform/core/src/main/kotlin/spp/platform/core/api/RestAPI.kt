@@ -20,8 +20,6 @@ package spp.platform.core.api
 import io.vertx.core.Vertx
 import io.vertx.core.eventbus.ReplyException
 import io.vertx.core.json.JsonObject
-import io.vertx.ext.auth.JWTOptions
-import io.vertx.ext.auth.jwt.JWTAuth
 import io.vertx.ext.dropwizard.MetricsService
 import io.vertx.ext.healthchecks.HealthCheckHandler
 import io.vertx.ext.healthchecks.HealthChecks
@@ -34,16 +32,13 @@ import mu.KotlinLogging
 import spp.platform.common.ClusterConnection
 import spp.platform.common.ClusterConnection.router
 import spp.platform.common.util.args
-import spp.platform.storage.SourceStorage
 import spp.protocol.service.LiveManagementService
 import spp.protocol.service.SourceServices
-import java.time.Instant
-import java.time.temporal.ChronoUnit
 
 /**
  * Serves the REST API.
  */
-class RestAPI(private val jwtEnabled: Boolean, private val jwt: JWTAuth?) : CoroutineVerticle() {
+class RestAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
 
     private val log = KotlinLogging.logger {}
 
@@ -84,14 +79,13 @@ class RestAPI(private val jwtEnabled: Boolean, private val jwt: JWTAuth?) : Coro
         }
     }
 
-    //todo: use LiveManagementService.getAuthToken
     private fun newToken(ctx: RoutingContext) {
         if (!jwtEnabled) {
             log.debug { "Skipped generating JWT token. Reason: JWT authentication disabled" }
             ctx.response().setStatusCode(202).end()
             return
         }
-        val accessTokenParam = ctx.queryParam("access_token")
+        val accessTokenParam = ctx.queryParam("authorization_code")
         if (accessTokenParam.isEmpty()) {
             log.warn("Invalid token request. Missing token.")
             ctx.response().setStatusCode(401).end()
@@ -104,27 +98,13 @@ class RestAPI(private val jwtEnabled: Boolean, private val jwt: JWTAuth?) : Coro
             Vertx.currentContext().removeLocal("tenant_id")
         }
 
-        val token = accessTokenParam[0]
-        log.debug { "Verifying access token: {}".args(token) }
+        val accessToken = accessTokenParam[0]
+        log.debug { "Verifying access token: {}".args(accessToken) }
         launch(vertx.dispatcher()) {
-            val dev = SourceStorage.getDeveloperByAccessToken(token)
-            if (dev != null) {
-                val jwtToken = jwt!!.generateToken(
-                    JsonObject()
-                        .apply {
-                            if (!tenantId.isNullOrEmpty()) {
-                                put("tenant_id", tenantId)
-                            }
-                        }
-                        .put("developer_id", dev.id)
-                        .put("created_at", Instant.now().toEpochMilli())
-                        //todo: reasonable expires_at
-                        .put("expires_at", Instant.now().plus(365, ChronoUnit.DAYS).toEpochMilli()),
-                    JWTOptions().setAlgorithm("RS256")
-                )
-                ctx.end(jwtToken)
-            } else {
-                log.warn("Invalid token request. Token: {}", token)
+            LiveManagementService.createProxy(vertx).getAccessToken(accessToken).onSuccess {
+                ctx.end(it)
+            }.onFailure {
+                log.warn("Invalid token request. Token: {}", accessToken)
                 ctx.response().setStatusCode(401).end()
             }
         }

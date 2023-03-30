@@ -108,9 +108,7 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
                         bootInstruments.mapNotNull { removeInternalMeta(it) }.toSet()
                     )
 
-                    //todo: smarter way to get access token
-                    val accessToken = bootInstruments.firstNotNullOfOrNull { it.meta["spp.access_token"] as? String }
-                    dispatchCommand(accessToken, bootCommand)
+                    dispatchCommand(SourceStorage.getSystemAccessToken(vertx), bootCommand)
                 }
             }
         }
@@ -564,7 +562,7 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
 
     private fun dispatchCommand(accessToken: String?, command: LiveInstrumentCommand) {
         log.trace { "Dispatching command: {}. Using access token: {}".args(command, accessToken) }
-        val probes = SourceBridgeService.service(vertx, accessToken)
+        val probes = SourceBridgeService.createProxy(vertx, accessToken)
         probes.onSuccess {
             if (it == null) {
                 log.error("Bridge service not available")

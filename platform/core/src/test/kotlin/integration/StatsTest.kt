@@ -32,7 +32,7 @@ class StatsTest : PlatformIntegrationTest() {
     fun verifyStats(): Unit = runBlocking {
         val client = WebClient.create(vertx, WebClientOptions())
         val result = client.get(12800, platformHost, "/stats")
-            .bearerTokenAuthentication(systemAuthToken).send().await()
+            .bearerTokenAuthentication(systemAccessToken).send().await()
             .bodyAsJsonObject().getJsonObject("platform")
 
         assertNotNull(result.getInteger("connected-markers"))

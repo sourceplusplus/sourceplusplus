@@ -67,20 +67,21 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
             toByteArray()
         })
 
+        val instrumentId = testNameAsUniqueInstrumentId
         val liveMeter = LiveMeter(
             MeterType.GAUGE,
             MetricValue(MetricValueType.NUMBER_SUPPLIER, encodedSupplier),
             location = LiveSourceLocation(
-                LiveMeterGaugeTest::class.qualifiedName!!,
+                LiveMeterGaugeTest::class.java.name,
                 getLineNumber("done"),
                 "spp-test-probe"
             ),
-            id = testNameAsInstrumentId,
+            id = instrumentId,
             applyImmediately = true,
             hitLimit = 1
         )
 
-        viewService.saveRuleIfAbsent(
+        viewService.saveRule(
             LiveViewRule(
                 name = liveMeter.toMetricIdWithoutPrefix(),
                 exp = buildString {
@@ -97,11 +98,11 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
             LiveView(
                 entityIds = mutableSetOf(liveMeter.toMetricId()),
                 artifactQualifiedName = ArtifactQualifiedName(
-                    LiveMeterGaugeTest::class.qualifiedName!!,
+                    LiveMeterGaugeTest::class.java.name,
                     type = ArtifactType.EXPRESSION
                 ),
                 artifactLocation = LiveSourceLocation(
-                    LiveMeterGaugeTest::class.qualifiedName!!,
+                    LiveMeterGaugeTest::class.java.name,
                     getLineNumber("done")
                 ),
                 viewConfig = LiveViewConfig(
@@ -138,7 +139,7 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
 
         //clean up
         consumer.unregister()
-        assertNotNull(instrumentService.removeLiveInstrument(testNameAsInstrumentId).await())
+        assertNotNull(instrumentService.removeLiveInstrument(instrumentId).await())
         assertNotNull(viewService.removeLiveView(subscriptionId).await())
     }
 
@@ -148,20 +149,21 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
             triggerGauge()
         }
 
+        val instrumentId = testNameAsUniqueInstrumentId
         val liveMeter = LiveMeter(
             MeterType.GAUGE,
             MetricValue(MetricValueType.VALUE_EXPRESSION, "localVariables[str]"),
             location = LiveSourceLocation(
-                LiveMeterGaugeTest::class.qualifiedName!!,
+                LiveMeterGaugeTest::class.java.name,
                 getLineNumber("done"),
                 "spp-test-probe"
             ),
-            id = testNameAsInstrumentId,
+            id = instrumentId,
             applyImmediately = true,
             hitLimit = 1
         )
 
-        viewService.saveRuleIfAbsent(
+        viewService.saveRule(
             LiveViewRule(
                 name = liveMeter.toMetricIdWithoutPrefix(),
                 exp = buildString {
@@ -178,11 +180,11 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
             LiveView(
                 entityIds = mutableSetOf(liveMeter.toMetricId()),
                 artifactQualifiedName = ArtifactQualifiedName(
-                    LiveMeterGaugeTest::class.qualifiedName!!,
+                    LiveMeterGaugeTest::class.java.name,
                     type = ArtifactType.EXPRESSION
                 ),
                 artifactLocation = LiveSourceLocation(
-                    LiveMeterGaugeTest::class.qualifiedName!!,
+                    LiveMeterGaugeTest::class.java.name,
                     getLineNumber("done")
                 ),
                 viewConfig = LiveViewConfig(
@@ -214,7 +216,7 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
 
         //clean up
         consumer.unregister()
-        assertNotNull(instrumentService.removeLiveInstrument(testNameAsInstrumentId).await())
+        assertNotNull(instrumentService.removeLiveInstrument(instrumentId).await())
         assertNotNull(viewService.removeLiveView(subscriptionId).await())
     }
 }
