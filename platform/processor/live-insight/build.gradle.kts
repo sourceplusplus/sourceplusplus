@@ -69,7 +69,7 @@ dependencies {
     implementation("plus.sourceplus.interface:jetbrains-marker-jvm:0.7.8-SNAPSHOT")
 //    implementation("plus.sourceplus.interface:jetbrains-marker-ult:0.7.8-SNAPSHOT")
 
-    val intellijVersion = "231.8109.2-EAP-SNAPSHOT"
+    val intellijVersion = "231.8109.175"
     implementation("com.jetbrains.intellij.platform:core:$intellijVersion")
     implementation("com.jetbrains.intellij.platform:core-impl:$intellijVersion")
     implementation("com.jetbrains.intellij.platform:lang:$intellijVersion")
