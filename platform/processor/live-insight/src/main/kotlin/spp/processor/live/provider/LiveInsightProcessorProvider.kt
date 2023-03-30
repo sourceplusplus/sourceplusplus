@@ -21,6 +21,7 @@ import org.apache.skywalking.oap.server.analyzer.module.AnalyzerModule
 import org.apache.skywalking.oap.server.analyzer.provider.trace.parser.ISegmentParserService
 import org.apache.skywalking.oap.server.analyzer.provider.trace.parser.SegmentParserListenerManager
 import org.apache.skywalking.oap.server.analyzer.provider.trace.parser.SegmentParserServiceImpl
+import org.apache.skywalking.oap.server.analyzer.provider.trace.parser.listener.AnalysisListenerFactory
 import org.apache.skywalking.oap.server.core.CoreModule
 import org.apache.skywalking.oap.server.core.storage.StorageModule
 import org.apache.skywalking.oap.server.library.module.ModuleConfig
@@ -52,8 +53,7 @@ class LiveInsightProcessorProvider : ModuleProvider() {
         val segmentParserService = manager.find(AnalyzerModule.NAME)
             .provider().getService(ISegmentParserService::class.java) as SegmentParserServiceImpl
         val listenerManager = Reflect.on(segmentParserService).get<SegmentParserListenerManager>("listenerManager")
-        val spanListenerFactories = Reflect.on(listenerManager).get<MutableList<Any>>("spanListenerFactories")
-        spanListenerFactories.addAll(InsightProcessor.moderators)
+        listenerManager.spanListenerFactories.addAll(InsightProcessor.moderators.filterIsInstance<AnalysisListenerFactory>())
 
         InsightProcessor.bootProcessor(manager)
         log.info("LiveInsightProcessorProvider started")
