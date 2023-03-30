@@ -85,7 +85,7 @@ object LiveMetricProcessor {
                 SourceStorage.put("spp_${key.type.name.lowercase()}_${key.meterName}_gauge", key.methodName!!)
             }
             log.info("Saving rule: ${key.type.name.lowercase()}_${key.meterName}_gauge")
-            InsightProcessor.viewService!!.saveRule( //todo: saveRuleIfAbsent
+            InsightProcessor.viewService.saveRule( //todo: saveRuleIfAbsent
                 LiveViewRule(
                     name = "${key.type.name.lowercase()}_${key.meterName}_gauge",
                     exp = buildString {
@@ -125,7 +125,7 @@ object LiveMetricProcessor {
                 SourceStorage.put("spp_${key.type.name.lowercase()}_${key.meterName}_count", key.methodName!!)
             }
             log.info("Saving rule: ${key.type.name.lowercase()}_${key.meterName}_count")
-            InsightProcessor.viewService!!.saveRule( //todo: saveRuleIfAbsent
+            InsightProcessor.viewService.saveRule( //todo: saveRuleIfAbsent
                 LiveViewRule(
                     name = "${key.type.name.lowercase()}_${key.meterName}_count",
                     exp = buildString {
