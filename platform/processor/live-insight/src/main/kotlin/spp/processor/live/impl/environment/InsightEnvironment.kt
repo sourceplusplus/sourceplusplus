@@ -83,7 +83,7 @@ class InsightEnvironment {
         }
     }
 
-    fun getAllPsiFiles(): List<PsiFile> {
+    fun getProjectFiles(): List<PsiFile> {
         return projectFiles
 //        val query = AllClassesSearch.search(ProjectScope.getProjectScope(env.project), env.project)
 //        val classNames: MutableSet<String?> = HashSet()
