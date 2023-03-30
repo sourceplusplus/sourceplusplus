@@ -36,6 +36,7 @@ import org.apache.skywalking.oap.server.telemetry.api.MetricsTag
 import spp.jetbrains.artifact.service.getFunctions
 import spp.jetbrains.marker.jvm.detect.JVMEndpointDetector
 import spp.jetbrains.marker.service.getFullyQualifiedName
+import spp.platform.common.util.args
 import spp.platform.storage.SourceStorage
 import spp.processor.InsightProcessor.workspaceQueue
 import spp.processor.ViewProcessor
@@ -164,11 +165,11 @@ class FunctionDurationModerator : InsightModerator(),
 
     override suspend fun searchProject(environment: InsightEnvironment) {
         //iterate over all functions in the project
-        environment.getAllFunctions().forEach { psiMethod ->
-            val qualifiedName = psiMethod.getFullyQualifiedName()
-            log.trace("Checking $qualifiedName for function duration insights")
+        environment.getAllFunctions().forEach { function ->
+            val qualifiedName = function.getFullyQualifiedName()
+            log.trace { "Checking {} for function duration insights".args(qualifiedName) }
 
-            val insights = getInsights(psiMethod)
+            val insights = getInsights(function)
             val duration = ((insights.list.firstOrNull() as? JsonObject)?.map?.values?.first() as? Long)?.let {
                 OptionalLong.of(it)
             } ?: OptionalLong.empty()
@@ -212,13 +213,13 @@ class FunctionDurationModerator : InsightModerator(),
         val qualifiedName = function.getFullyQualifiedName().identifier
         SourceStorage.get<Long>("${InsightType.FUNCTION_DURATION}:${qualifiedName}")?.let { duration ->
             durationInsights.add(JsonObject().put(qualifiedName, duration))
-            log.info("Function: $qualifiedName - Total duration: $duration ms")
+            log.debug("Function: $qualifiedName - Total duration: $duration ms")
         }
 
         JVMEndpointDetector(function.project).determineEndpointName(function as PsiMethod).await().forEach {
             SourceStorage.get<Long>("${InsightType.FUNCTION_DURATION}:${it.name}")?.let { duration ->
                 durationInsights.add(JsonObject().put(it.toString(), duration))
-                log.info("Endpoint: ${it.name} - Total duration: $duration ms")
+                log.debug("Endpoint: ${it.name} - Total duration: $duration ms")
             }
         }
 
