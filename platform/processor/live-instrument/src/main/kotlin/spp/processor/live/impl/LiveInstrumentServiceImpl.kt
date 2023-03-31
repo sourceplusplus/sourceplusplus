@@ -76,16 +76,23 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
             meterProcessService = getService(IMeterProcessService::class.java) as MeterProcessService
         }
 
-        //load hard-coded instruments
-        val instruments = ClusterConnection.config.getJsonArray("instruments", JsonArray())
-        Vertx.currentContext().putLocal("developer", DeveloperAuth("system"))
-        instruments.forEach {
-            val instrument = LiveInstrument.fromJson(JsonObject.mapFrom(it))
-            addLiveInstrument(instrument).await()
-        }
-        Vertx.currentContext().removeLocal("developer")
-        if (instruments.size() > 0) {
-            log.info { "Loaded ${instruments.size()} hard-coded instruments" }
+        //load preset instruments
+        val livePresets = ClusterConnection.config.getJsonObject("live-presets") ?: JsonObject()
+        livePresets.map.keys.forEach {
+            val presetName = it
+            val preset = livePresets.getJsonObject(presetName)
+            if (preset.getString("enabled").toBooleanStrict()) {
+                val instruments = preset.getJsonArray("instruments", JsonArray())
+                Vertx.currentContext().putLocal("developer", DeveloperAuth("system"))
+                instruments.forEach {
+                    val instrument = LiveInstrument.fromJson(JsonObject.mapFrom(it))
+                    addLiveInstrument(instrument).await()
+                }
+                Vertx.currentContext().removeLocal("developer")
+                if (instruments.size() > 0) {
+                    log.info { "Loaded ${instruments.size()} live instruments from preset '$presetName'" }
+                }
+            }
         }
 
         //send active instruments on probe connection

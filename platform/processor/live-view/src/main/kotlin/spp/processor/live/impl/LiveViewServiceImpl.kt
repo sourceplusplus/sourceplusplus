@@ -115,16 +115,23 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
             traceQuery = getService(TraceQueryService::class.java) as TraceQueryService
         }
 
-        //load hard-coded view rules
-        val viewRules = ClusterConnection.config.getJsonArray("view_rules", JsonArray())
-        Vertx.currentContext().putLocal("developer", DeveloperAuth("system"))
-        viewRules.forEach {
-            val viewRule = LiveViewRule(JsonObject.mapFrom(it))
-            saveRuleIfAbsent(viewRule).await()
-        }
-        Vertx.currentContext().removeLocal("developer")
-        if (viewRules.size() > 0) {
-            log.info { "Loaded ${viewRules.size()} hard-coded view rules" }
+        //load preset view rules
+        val livePresets = ClusterConnection.config.getJsonObject("live-presets") ?: JsonObject()
+        livePresets.map.keys.forEach {
+            val presetName = it
+            val preset = livePresets.getJsonObject(presetName)
+            if (preset.getString("enabled").toBooleanStrict()) {
+                val viewRules = preset.getJsonArray("view-rules", JsonArray())
+                Vertx.currentContext().putLocal("developer", DeveloperAuth("system"))
+                viewRules.forEach {
+                    val viewRule = LiveViewRule(JsonObject.mapFrom(it))
+                    saveRuleIfAbsent(viewRule).await()
+                }
+                Vertx.currentContext().removeLocal("developer")
+                if (viewRules.size() > 0) {
+                    log.info { "Loaded ${viewRules.size()} live view rules from preset '$presetName'" }
+                }
+            }
         }
 
         //live traces view

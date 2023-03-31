@@ -53,6 +53,46 @@ spp-platform:
         lookup: 'password'
         replacement: "<Password>"
 
+live-presets:
+  junit:
+    enabled: ${SPP_PRESET_JUNIT_ENABLED:-false}
+    instruments:
+      - id: "junit_test_successful"
+        type: "METER"
+        meterType: "COUNT"
+        metricValue:
+          valueType: "NUMBER"
+          value: 1
+        meterTags:
+          - key: "method_name"
+            valueType: "VALUE_EXPRESSION"
+            value: "localVariables[descriptor].testMethod"
+        location:
+          source: "org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.nodeFinished(...)"
+        condition: "localVariables[result].status.ordinal == 0"
+        meta:
+          metric.mode: "RATE"
+      - id: "junit_test_failed"
+        type: "METER"
+        meterType: "COUNT"
+        metricValue:
+          valueType: "NUMBER"
+          value: 1
+        meterTags:
+          - key: "method_name"
+            valueType: "VALUE_EXPRESSION"
+            value: "localVariables[descriptor].testMethod"
+        location:
+          source: "org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.nodeFinished(...)"
+        condition: "localVariables[result].status.ordinal == 2"
+        meta:
+          metric.mode: "RATE"
+    view-rules:
+      - name: "junit_test_successful"
+        exp: "(count_junit_test_successful.sum(['service', 'method_name'])).service(['service'], Layer.GENERAL)"
+      - name: "junit_test_failed"
+        exp: "(count_junit_test_failed.sum(['service', 'method_name'])).service(['service'], Layer.GENERAL)"
+
 client-access:
   enabled: ${SPP_CLIENT_ACCESS_ENABLED:-false}
   accessors:
