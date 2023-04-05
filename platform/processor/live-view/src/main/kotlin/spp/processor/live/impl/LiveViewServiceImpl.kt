@@ -98,11 +98,9 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
     val meterView = LiveMeterView(subscriptionCache)
     val traceView = LiveTraceView(subscriptionCache)
     val logView = LiveLogView(subscriptionCache)
-    internal lateinit var skywalkingVersion: String
 
     override suspend fun start() {
         log.debug("Starting LiveViewServiceImpl")
-        skywalkingVersion = Version.CURRENT.buildVersion
         FeedbackProcessor.module!!.find(CoreModule.NAME).provider().apply {
             meterSystem = getService(MeterSystem::class.java)
         }
@@ -162,16 +160,9 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
 
     override fun saveRule(rule: ViewRule): Future<ViewRule> {
         //check for existing rule
-        var sppAnalyzers: MutableList<Analyzer>? = null
         val exitingRule = meterProcessService.converts().any { ruleset ->
             val analyzers = Reflect.on(ruleset).get<MutableList<Analyzer>>("analyzers")
-            analyzers.any {
-                val metricName = Reflect.on(it).get<String>("metricName")
-                if (metricName.startsWith("spp_")) {
-                    sppAnalyzers = analyzers
-                }
-                metricName == "spp_" + rule.name
-            }
+            analyzers.any { Reflect.on(it).get<String>("metricName") == "spp_" + rule.name }
         }
         if (exitingRule) {
             return Future.failedFuture(RuleAlreadyExistsException("Rule with name ${rule.name} already exists"))
@@ -186,39 +177,38 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
                 partitions = rule.partitions
             }
         )
-        if (sppAnalyzers == null) {
-            //create spp ruleset
-            try {
-                val passRule = if (rule.partitions.isEmpty()) meterConfig else NOP_RULE
-                meterProcessService.converts().add(LiveMetricConvert(meterConfig, meterSystem, passRule))
-            } catch (e: Exception) {
-                return Future.failedFuture(e)
-            }
-        } else {
-            //add rule to existing spp ruleset
-            val newConvert = try {
-                MetricConvert(meterConfig, meterSystem)
-            } catch (e: Exception) {
-                return Future.failedFuture(e)
-            }
 
-            val newAnalyzer = Reflect.on(newConvert).get<List<Analyzer>>("analyzers").first()
-            sppAnalyzers!!.add(newAnalyzer)
+        //create spp ruleset
+        try {
+            val passRule = if (rule.partitions.isEmpty()) meterConfig else NOP_RULE
+            meterProcessService.converts().add(LiveMetricConvert(meterConfig, meterSystem, passRule))
+        } catch (e: Exception) {
+            return Future.failedFuture(e)
         }
-
         return Future.succeededFuture(rule)
     }
 
     override fun deleteRule(ruleName: String): Future<ViewRule?> {
         var removedRule: ViewRule? = null
-        (meterProcessService.converts() as MutableList<MetricConvert>).removeIf {
-            val analyzers = Reflect.on(it).get<MutableList<Analyzer>>("analyzers")
+        (meterProcessService.converts() as MutableList<MetricConvert>).removeIf { convert ->
+            if (convert !is LiveMetricConvert) return@removeIf false
+            val analyzers = Reflect.on(convert).get<MutableList<Analyzer>>("analyzers")
             analyzers.removeIf {
                 val metricName = Reflect.on(it).get<String>("metricName")
-                val remove = metricName == ruleName || metricName == "spp_$ruleName"
+                var remove = metricName == ruleName || metricName == "spp_$ruleName"
+                if (convert.config.hasPartitions()) {
+                    remove = convert.config.getLiveMetricsRules().first().name == ruleName
+                    removedRule = ViewRule(
+                        "spp_$ruleName",
+                        convert.config.getLiveMetricsRules().first().exp,
+                        convert.config.getLiveMetricsRules().first().partitions
+                    )
+                }
                 if (remove) {
                     val expression = Reflect.on(it).get<Expression>("expression")
-                    removedRule = ViewRule(metricName, Reflect.on(expression).get("literal"))
+                    if (!convert.config.hasPartitions()) {
+                        removedRule = ViewRule(metricName, Reflect.on(expression).get("literal"))
+                    }
                 }
                 remove
             }

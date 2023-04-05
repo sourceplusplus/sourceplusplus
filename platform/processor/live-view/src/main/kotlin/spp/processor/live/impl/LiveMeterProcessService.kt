@@ -22,6 +22,7 @@ import org.apache.skywalking.oap.server.analyzer.provider.meter.process.IMeterPr
 import org.apache.skywalking.oap.server.analyzer.provider.meter.process.MeterProcessService
 import org.apache.skywalking.oap.server.analyzer.provider.meter.process.MeterProcessor
 import spp.processor.live.model.LiveMetricConvert
+import spp.protocol.instrument.LiveMeter
 
 class LiveMeterProcessService(private val delegate: MeterProcessService) : IMeterProcessService by delegate {
 
@@ -32,42 +33,29 @@ class LiveMeterProcessService(private val delegate: MeterProcessService) : IMete
         return object : MeterProcessor(delegate) {
             override fun read(data: MeterData) {
                 val meterName = if (data.hasSingleValue()) {
-                    formatMeterName(data.singleValue.name)
+                    LiveMeter.formatMeterName(data.singleValue.name)
                 } else if (data.hasHistogram()) {
-                    formatMeterName(data.histogram.name)
+                    LiveMeter.formatMeterName(data.histogram.name)
                 } else null ?: return
 
                 if (existingPartitions.contains(meterName)) {
                     processor.read(data)
                 } else {
                     //see if partition is necessary
-                    val thing = delegate.converts().filterIsInstance<LiveMetricConvert>().filter {
+                    delegate.converts().filterIsInstance<LiveMetricConvert>().filter {
                         it.config.hasPartitions()
                     }.find {
                         it.config.getLiveMetricsRules().any {
                             it.partitions.any {
-                                meterName.startsWith(it.replace.replace("_\$partition\$", "")) //todo: *
+                                meterName.startsWith(it.replace.replace("_\$partition\$", ""))
                             }
                         }
-                    }
-                    thing?.addRule(existingPartitions, meterName)
+                    }?.addRule(existingPartitions, meterName)
                     processor.read(data)
                 }
             }
 
             override fun process() = processor.process()
         }
-    }
-
-    private fun formatMeterName(meterName: String): String {
-        val sb = StringBuilder()
-        for (c in meterName) {
-            if (c.isLetterOrDigit() || c == '_') {
-                sb.append(c) //todo: lowercase()?
-            } else {
-                sb.append('_')
-            }
-        }
-        return sb.toString()
     }
 }
