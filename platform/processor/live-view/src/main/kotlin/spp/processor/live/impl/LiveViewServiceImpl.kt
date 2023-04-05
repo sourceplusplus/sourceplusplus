@@ -33,7 +33,6 @@ import org.apache.skywalking.oap.meter.analyzer.Analyzer
 import org.apache.skywalking.oap.meter.analyzer.MetricConvert
 import org.apache.skywalking.oap.meter.analyzer.dsl.Expression
 import org.apache.skywalking.oap.server.analyzer.module.AnalyzerModule
-import org.apache.skywalking.oap.server.analyzer.provider.meter.config.MeterConfig
 import org.apache.skywalking.oap.server.analyzer.provider.meter.process.IMeterProcessService
 import org.apache.skywalking.oap.server.analyzer.provider.meter.process.MeterProcessService
 import org.apache.skywalking.oap.server.analyzer.provider.trace.parser.ISegmentParserService
@@ -47,7 +46,6 @@ import org.apache.skywalking.oap.server.core.query.enumeration.Step
 import org.apache.skywalking.oap.server.core.query.input.Duration
 import org.apache.skywalking.oap.server.core.query.input.Entity
 import org.apache.skywalking.oap.server.core.query.input.MetricsCondition
-import org.apache.skywalking.oap.server.core.query.type.KVInt
 import org.apache.skywalking.oap.server.core.query.type.Ref
 import org.apache.skywalking.oap.server.core.query.type.Span
 import org.apache.skywalking.oap.server.core.version.Version
@@ -63,6 +61,9 @@ import spp.processor.live.impl.view.LiveTraceView
 import spp.processor.live.impl.view.util.EntitySubscribersCache
 import spp.processor.live.impl.view.util.MetricTypeSubscriptionCache
 import spp.processor.live.impl.view.util.ViewSubscriber
+import spp.processor.live.model.LiveMeterConfig
+import spp.processor.live.model.LiveMetricConvert
+import spp.processor.live.model.LiveMetricConvert.Companion.NOP_RULE
 import spp.protocol.artifact.metrics.MetricStep
 import spp.protocol.artifact.metrics.MetricType
 import spp.protocol.artifact.trace.TraceSpan
@@ -176,18 +177,20 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
             return Future.failedFuture(RuleAlreadyExistsException("Rule with name ${rule.name} already exists"))
         }
 
-        val meterConfig = MeterConfig()
+        val meterConfig = LiveMeterConfig()
         meterConfig.metricPrefix = "spp"
         meterConfig.metricsRules = listOf(
-            MeterConfig.Rule().apply {
+            LiveMeterConfig.Rule().apply {
                 name = rule.name
                 exp = rule.exp
+                partitions = rule.partitions
             }
         )
         if (sppAnalyzers == null) {
             //create spp ruleset
             try {
-                meterProcessService.converts().add(MetricConvert(meterConfig, meterSystem))
+                val passRule = if (rule.partitions.isEmpty()) meterConfig else NOP_RULE
+                meterProcessService.converts().add(LiveMetricConvert(meterConfig, meterSystem, passRule))
             } catch (e: Exception) {
                 return Future.failedFuture(e)
             }

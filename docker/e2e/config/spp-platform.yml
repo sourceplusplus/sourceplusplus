@@ -63,8 +63,9 @@ live-presets:
         metricValue:
           valueType: "NUMBER"
           value: 1
-        meterTags:
-          - key: "method_name"
+        meterPartitions:
+          - keys:
+              - "junit_test_failed"
             valueType: "VALUE_EXPRESSION"
             value: "localVariables[descriptor].testMethod"
         location:
@@ -78,8 +79,9 @@ live-presets:
         metricValue:
           valueType: "NUMBER"
           value: 1
-        meterTags:
-          - key: "method_name"
+        meterPartitions:
+          - keys:
+              - "junit_test_successful"
             valueType: "VALUE_EXPRESSION"
             value: "localVariables[descriptor].testMethod"
         location:
@@ -89,9 +91,12 @@ live-presets:
           metric.mode: "RATE"
     view-rules:
       - name: "junit_test_successful"
-        exp: "(count_junit_test_successful.sum(['service', 'method_name']).downsampling(SUM)).service(['service'], Layer.GENERAL)"
-      - name: "junit_test_failed"
-        exp: "(count_junit_test_failed.sum(['service', 'method_name']).downsampling(SUM)).service(['service'], Layer.GENERAL)"
+        exp: "((count_junit_test_successful*100 / (count_junit_test_successful + count_junit_test_failed)).sum(['service'])).service(['service'], Layer.GENERAL)"
+        partitions:
+          - find: "count_junit_test_successful"
+            replace: "count_junit_test_successful_$partition$"
+          - find: "count_junit_test_failed"
+            replace: "count_junit_test_failed_$partition$"
 
 client-access:
   enabled: ${SPP_CLIENT_ACCESS_ENABLED:-false}

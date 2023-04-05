@@ -38,6 +38,9 @@ configure<PublishingExtension> {
 dependencies {
     compileOnly(project(":platform:common"))
     compileOnly(project(":platform:storage"))
+    compileOnly("org.apache.skywalking:skywalking-meter-receiver-plugin:$skywalkingVersion") {
+        isTransitive = false
+    }
 
     testImplementation(project(":probes:jvm:boot"))
     testImplementation("org.apache.logging.log4j:log4j-core:2.20.0")
