@@ -456,7 +456,8 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
         metricIds: List<String>,
         step: MetricStep,
         start: Instant,
-        stop: Instant?
+        stop: Instant?,
+        labels: List<String>
     ): Future<HistoricalView> {
         return vertx.executeBlocking({
             try {
@@ -470,12 +471,9 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
 
                 metricIds.forEach { metricId ->
                     val metricType = MetricType(metricId).asHistorical()
-                    val values = getHistoricalMetrics(metricType, entityId, duration)
-                    values.forEachIndexed { i, metric ->
-                        val stepMetrics = JsonObject()
-                            .put("metricId", metricId)
-                            .put("value", metric.value)
-                        historicalView.data.add(stepMetrics)
+                    val values = getHistoricalMetrics(metricType, entityId, duration, labels)
+                    values.forEach { metric ->
+                        historicalView.data.add((metric as JsonObject).put("metricId", metricId))
                     }
                 }
 
@@ -499,14 +497,33 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
         }
     }
 
-    private fun getHistoricalMetrics(metricType: MetricType, entityId: String, duration: Duration): List<KVInt> {
+    private fun getHistoricalMetrics(
+        metricType: MetricType,
+        entityId: String,
+        duration: Duration,
+        labels: List<String>
+    ): JsonArray {
         val condition = MetricsCondition()
         condition.name = metricType.metricId
         condition.entity = object : Entity() {
             override fun buildId(): String = entityId
             override fun isValid(): Boolean = true
         }
-        return Reflect.on(metricsQuery.readMetricsValues(condition, duration).values).get("values")
+
+        return if (labels.isNotEmpty()) {
+            JsonArray().apply {
+                metricsQuery.readLabeledMetricsValues(condition, labels, duration).forEach {
+                    val label = it.label
+                    it.values.values.forEach { add(JsonObject().put("value", it.value).put("label", label)) }
+                }
+            }
+        } else {
+            JsonArray().apply {
+                metricsQuery.readMetricsValues(condition, duration).values.values.forEach {
+                    add(JsonObject().put("value", it.value))
+                }
+            }
+        }
     }
 
     private fun Span.toProtocol(): TraceSpan {

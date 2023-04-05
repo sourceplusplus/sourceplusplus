@@ -687,9 +687,11 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
         val step = MetricStep.valueOf(vars.getString("step"))
         val start = step.toInstant(vars.getString("start"))
         val stop = vars.getString("stop")?.let { step.toInstant(it) }
+        val labels = vars.getJsonArray("labels", JsonArray()).list.map { it as String }
 
-        return getLiveViewService(env).compose { it.getHistoricalMetrics(entityIds, metricIds, step, start, stop) }
-            .toCompletionStage().toCompletableFuture()
+        return getLiveViewService(env).compose {
+            it.getHistoricalMetrics(entityIds, metricIds, step, start, stop, labels)
+        }.toCompletionStage().toCompletableFuture()
     }
 
     private fun getClientAccessors(env: DataFetchingEnvironment): CompletableFuture<List<ClientAccess>> =
