@@ -26,7 +26,7 @@ import org.joor.Reflect
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito
-import spp.protocol.view.rule.LiveViewRule
+import spp.protocol.view.rule.ViewRule
 
 class LiveViewServiceImplTest {
 
@@ -42,7 +42,7 @@ class LiveViewServiceImplTest {
         }
 
         viewService.saveRule(
-            LiveViewRule(
+            ViewRule(
                 name = "build_test1",
                 exp = "test_count1.tagEqual(\"k1\", \"v1\").service([\"service\"], Layer.GENERAL)"
             )
@@ -75,13 +75,13 @@ class LiveViewServiceImplTest {
         }
 
         viewService.saveRule(
-            LiveViewRule(
+            ViewRule(
                 name = "build_test1",
                 exp = "test_count1.tagEqual(\"k1\", \"v1\").service([\"service\"], Layer.GENERAL)"
             )
         )
         viewService.saveRule(
-            LiveViewRule(
+            ViewRule(
                 name = "build_test2",
                 exp = "test_count2.tagEqual(\"k1\", \"v1\").service([\"service\"], Layer.GENERAL)"
             )
@@ -125,7 +125,7 @@ class LiveViewServiceImplTest {
             Mockito.`when`(converts()).thenReturn(convertList)
         }
 
-        val rule = LiveViewRule(
+        val rule = ViewRule(
             name = "build_test1",
             exp = "test_count1.tagEqual(\"k1\", \"v1\").service([\"service\"], Layer.GENERAL)"
         )
@@ -160,7 +160,7 @@ class LiveViewServiceImplTest {
 
         //add rule
         val rule = viewService.saveRule(
-            LiveViewRule(
+            ViewRule(
                 name = "build_test1",
                 exp = "test_count1.tagEqual(\"k1\", \"v1\").service([\"service\"], Layer.GENERAL)"
             )

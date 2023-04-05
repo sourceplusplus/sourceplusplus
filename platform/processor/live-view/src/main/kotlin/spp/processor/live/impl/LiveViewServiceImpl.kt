@@ -76,7 +76,7 @@ import spp.protocol.service.error.RuleAlreadyExistsException
 import spp.protocol.view.HistoricalView
 import spp.protocol.view.LiveView
 import spp.protocol.view.LiveViewEvent
-import spp.protocol.view.rule.LiveViewRule
+import spp.protocol.view.rule.ViewRule
 import java.time.Instant
 import java.util.*
 
@@ -124,7 +124,7 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
                 val viewRules = preset.getJsonArray("view-rules", JsonArray())
                 Vertx.currentContext().putLocal("developer", DeveloperAuth("system"))
                 viewRules.forEach {
-                    val viewRule = LiveViewRule(JsonObject.mapFrom(it))
+                    val viewRule = ViewRule(JsonObject.mapFrom(it))
                     saveRuleIfAbsent(viewRule).await()
                 }
                 Vertx.currentContext().removeLocal("developer")
@@ -159,7 +159,7 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
         }
     }
 
-    override fun saveRule(rule: LiveViewRule): Future<LiveViewRule> {
+    override fun saveRule(rule: ViewRule): Future<ViewRule> {
         //check for existing rule
         var sppAnalyzers: MutableList<Analyzer>? = null
         val exitingRule = meterProcessService.converts().any { ruleset ->
@@ -206,8 +206,8 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
         return Future.succeededFuture(rule)
     }
 
-    override fun deleteRule(ruleName: String): Future<LiveViewRule?> {
-        var removedRule: LiveViewRule? = null
+    override fun deleteRule(ruleName: String): Future<ViewRule?> {
+        var removedRule: ViewRule? = null
         (meterProcessService.converts() as MutableList<MetricConvert>).removeIf {
             val analyzers = Reflect.on(it).get<MutableList<Analyzer>>("analyzers")
             analyzers.removeIf {
@@ -215,7 +215,7 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
                 val remove = metricName == ruleName || metricName == "spp_$ruleName"
                 if (remove) {
                     val expression = Reflect.on(it).get<Expression>("expression")
-                    removedRule = LiveViewRule(metricName, Reflect.on(expression).get("literal"))
+                    removedRule = ViewRule(metricName, Reflect.on(expression).get("literal"))
                 }
                 remove
             }
