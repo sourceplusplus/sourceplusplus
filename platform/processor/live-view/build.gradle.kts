@@ -51,7 +51,7 @@ dependencies {
         exclude("org.apache.skywalking", "apm-network")
     }
     testImplementation("org.mockito:mockito-core:5.2.0")
-    testImplementation("org.apache.skywalking:apm-toolkit-trace:8.14.0")
+    testImplementation("org.apache.skywalking:apm-toolkit-trace:8.15.0")
 }
 
 tasks {
