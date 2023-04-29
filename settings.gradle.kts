@@ -7,7 +7,7 @@ pluginManagement {
         id("com.avast.gradle.docker-compose") version "0.16.12" apply false
         id("io.gitlab.arturbosch.detekt") version "1.22.0" apply false
         id("com.github.johnrengelman.shadow") version "8.1.1" apply false
-        id("com.apollographql.apollo3") version "3.7.5" apply false
+        id("com.apollographql.apollo3") version "3.8.1" apply false
         id("org.mikeneck.graalvm-native-image") version "1.4.1" apply false
         id("com.diffplug.spotless") version "6.18.0" apply false
     }
