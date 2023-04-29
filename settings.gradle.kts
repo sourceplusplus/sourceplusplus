@@ -9,7 +9,7 @@ pluginManagement {
         id("com.github.johnrengelman.shadow") version "8.1.1" apply false
         id("com.apollographql.apollo3") version "3.8.1" apply false
         id("org.mikeneck.graalvm-native-image") version "1.4.1" apply false
-        id("com.diffplug.spotless") version "6.17.0" apply false
+        id("com.diffplug.spotless") version "6.18.0" apply false
     }
 }
 
@@ -46,7 +46,7 @@ include("tutorials:jvm")
 include("tutorials:python")
 
 plugins {
-    id("org.danilopianini.gradle-pre-commit-git-hooks") version "1.1.5"
+    id("org.danilopianini.gradle-pre-commit-git-hooks") version "1.1.7"
 }
 
 gitHooks {
