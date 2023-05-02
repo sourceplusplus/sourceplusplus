@@ -23,6 +23,9 @@ RUN printf "\nspp-live-instrument:\n  selector: \${SPP_LIVE_INSTRUMENT:default}\
 RUN printf "\nexporter:\n  selector: \${SPP_LIVE_VIEW:default}\n  default:\n" \
     >> /skywalking/config/application.yml
 
+# replace default receiver-meter with spp-live-meter-receiver
+RUN sed -i -z 's/receiver-meter:\n  selector: \${SW_RECEIVER_METER:default}\n  default:/receiver-meter:\n  selector: \${SW_RECEIVER_METER:spp-live-meter-receiver}\n  spp-live-meter-receiver:/' /skywalking/config/application.yml
+
 ENV SW_CORE_REST_PORT=12801
 ENV SW_RECEIVER_AWS_FIREHOSE_HTTP_PORT=12802
 ENV SW_SEARCHABLE_TAG_KEYS="spp.instrument_id,spp.instrument_type,http.method,http.status_code,rpc.status_code,db.type,db.instance,mq.queue,mq.topic,mq.broker"

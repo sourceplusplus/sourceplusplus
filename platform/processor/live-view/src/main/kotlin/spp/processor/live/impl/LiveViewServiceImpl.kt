@@ -33,7 +33,6 @@ import org.apache.skywalking.oap.meter.analyzer.Analyzer
 import org.apache.skywalking.oap.meter.analyzer.MetricConvert
 import org.apache.skywalking.oap.meter.analyzer.dsl.Expression
 import org.apache.skywalking.oap.server.analyzer.module.AnalyzerModule
-import org.apache.skywalking.oap.server.analyzer.provider.meter.config.MeterConfig
 import org.apache.skywalking.oap.server.analyzer.provider.meter.process.IMeterProcessService
 import org.apache.skywalking.oap.server.analyzer.provider.meter.process.MeterProcessService
 import org.apache.skywalking.oap.server.analyzer.provider.trace.parser.ISegmentParserService
@@ -47,7 +46,6 @@ import org.apache.skywalking.oap.server.core.query.enumeration.Step
 import org.apache.skywalking.oap.server.core.query.input.Duration
 import org.apache.skywalking.oap.server.core.query.input.Entity
 import org.apache.skywalking.oap.server.core.query.input.MetricsCondition
-import org.apache.skywalking.oap.server.core.query.type.KVInt
 import org.apache.skywalking.oap.server.core.query.type.Ref
 import org.apache.skywalking.oap.server.core.query.type.Span
 import org.apache.skywalking.oap.server.core.version.Version
@@ -63,6 +61,9 @@ import spp.processor.live.impl.view.LiveTraceView
 import spp.processor.live.impl.view.util.EntitySubscribersCache
 import spp.processor.live.impl.view.util.MetricTypeSubscriptionCache
 import spp.processor.live.impl.view.util.ViewSubscriber
+import spp.processor.live.model.LiveMeterConfig
+import spp.processor.live.model.LiveMetricConvert
+import spp.processor.live.model.LiveMetricConvert.Companion.NOP_RULE
 import spp.protocol.artifact.metrics.MetricStep
 import spp.protocol.artifact.metrics.MetricType
 import spp.protocol.artifact.trace.TraceSpan
@@ -76,7 +77,7 @@ import spp.protocol.service.error.RuleAlreadyExistsException
 import spp.protocol.view.HistoricalView
 import spp.protocol.view.LiveView
 import spp.protocol.view.LiveViewEvent
-import spp.protocol.view.rule.LiveViewRule
+import spp.protocol.view.rule.ViewRule
 import java.time.Instant
 import java.util.*
 
@@ -97,11 +98,9 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
     val meterView = LiveMeterView(subscriptionCache)
     val traceView = LiveTraceView(subscriptionCache)
     val logView = LiveLogView(subscriptionCache)
-    internal lateinit var skywalkingVersion: String
 
     override suspend fun start() {
         log.debug("Starting LiveViewServiceImpl")
-        skywalkingVersion = Version.CURRENT.buildVersion
         FeedbackProcessor.module!!.find(CoreModule.NAME).provider().apply {
             meterSystem = getService(MeterSystem::class.java)
         }
@@ -115,16 +114,23 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
             traceQuery = getService(TraceQueryService::class.java) as TraceQueryService
         }
 
-        //load hard-coded view rules
-        val viewRules = ClusterConnection.config.getJsonArray("view_rules", JsonArray())
-        Vertx.currentContext().putLocal("developer", DeveloperAuth("system"))
-        viewRules.forEach {
-            val viewRule = LiveViewRule(JsonObject.mapFrom(it))
-            saveRuleIfAbsent(viewRule).await()
-        }
-        Vertx.currentContext().removeLocal("developer")
-        if (viewRules.size() > 0) {
-            log.info { "Loaded ${viewRules.size()} hard-coded view rules" }
+        //load preset view rules
+        val livePresets = ClusterConnection.config.getJsonObject("live-presets") ?: JsonObject()
+        livePresets.map.keys.forEach {
+            val presetName = it
+            val preset = livePresets.getJsonObject(presetName)
+            if (preset.getString("enabled").toBooleanStrict()) {
+                val viewRules = preset.getJsonArray("view-rules", JsonArray())
+                Vertx.currentContext().putLocal("developer", DeveloperAuth("system"))
+                viewRules.forEach {
+                    val viewRule = ViewRule(JsonObject.mapFrom(it))
+                    saveRuleIfAbsent(viewRule).await()
+                }
+                Vertx.currentContext().removeLocal("developer")
+                if (viewRules.size() > 0) {
+                    log.info { "Loaded ${viewRules.size()} live view rules from preset '$presetName'" }
+                }
+            }
         }
 
         //live traces view
@@ -152,63 +158,57 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
         }
     }
 
-    override fun saveRule(rule: LiveViewRule): Future<LiveViewRule> {
+    override fun saveRule(rule: ViewRule): Future<ViewRule> {
         //check for existing rule
-        var sppAnalyzers: MutableList<Analyzer>? = null
         val exitingRule = meterProcessService.converts().any { ruleset ->
             val analyzers = Reflect.on(ruleset).get<MutableList<Analyzer>>("analyzers")
-            analyzers.any {
-                val metricName = Reflect.on(it).get<String>("metricName")
-                if (metricName.startsWith("spp_")) {
-                    sppAnalyzers = analyzers
-                }
-                metricName == "spp_" + rule.name
-            }
+            analyzers.any { Reflect.on(it).get<String>("metricName") == "spp_" + rule.name }
         }
         if (exitingRule) {
             return Future.failedFuture(RuleAlreadyExistsException("Rule with name ${rule.name} already exists"))
         }
 
-        val meterConfig = MeterConfig()
+        val meterConfig = LiveMeterConfig()
         meterConfig.metricPrefix = "spp"
         meterConfig.metricsRules = listOf(
-            MeterConfig.Rule().apply {
+            LiveMeterConfig.Rule().apply {
                 name = rule.name
                 exp = rule.exp
+                partitions = rule.partitions
             }
         )
-        if (sppAnalyzers == null) {
-            //create spp ruleset
-            try {
-                meterProcessService.converts().add(MetricConvert(meterConfig, meterSystem))
-            } catch (e: Exception) {
-                return Future.failedFuture(e)
-            }
-        } else {
-            //add rule to existing spp ruleset
-            val newConvert = try {
-                MetricConvert(meterConfig, meterSystem)
-            } catch (e: Exception) {
-                return Future.failedFuture(e)
-            }
 
-            val newAnalyzer = Reflect.on(newConvert).get<List<Analyzer>>("analyzers").first()
-            sppAnalyzers!!.add(newAnalyzer)
+        //create spp ruleset
+        try {
+            val passRule = if (rule.partitions.isEmpty()) meterConfig else NOP_RULE
+            meterProcessService.converts().add(LiveMetricConvert(meterConfig, meterSystem, passRule))
+        } catch (e: Exception) {
+            return Future.failedFuture(e)
         }
-
         return Future.succeededFuture(rule)
     }
 
-    override fun deleteRule(ruleName: String): Future<LiveViewRule?> {
-        var removedRule: LiveViewRule? = null
-        (meterProcessService.converts() as MutableList<MetricConvert>).removeIf {
-            val analyzers = Reflect.on(it).get<MutableList<Analyzer>>("analyzers")
+    override fun deleteRule(ruleName: String): Future<ViewRule?> {
+        var removedRule: ViewRule? = null
+        (meterProcessService.converts() as MutableList<MetricConvert>).removeIf { convert ->
+            if (convert !is LiveMetricConvert) return@removeIf false
+            val analyzers = Reflect.on(convert).get<MutableList<Analyzer>>("analyzers")
             analyzers.removeIf {
                 val metricName = Reflect.on(it).get<String>("metricName")
-                val remove = metricName == ruleName || metricName == "spp_$ruleName"
+                var remove = metricName == ruleName || metricName == "spp_$ruleName"
+                if (convert.config.hasPartitions()) {
+                    remove = convert.config.getLiveMetricsRules().first().name == ruleName
+                    removedRule = ViewRule(
+                        "spp_$ruleName",
+                        convert.config.getLiveMetricsRules().first().exp,
+                        convert.config.getLiveMetricsRules().first().partitions
+                    )
+                }
                 if (remove) {
                     val expression = Reflect.on(it).get<Expression>("expression")
-                    removedRule = LiveViewRule(metricName, Reflect.on(expression).get("literal"))
+                    if (!convert.config.hasPartitions()) {
+                        removedRule = ViewRule(metricName, Reflect.on(expression).get("literal"))
+                    }
                 }
                 remove
             }
@@ -449,7 +449,8 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
         metricIds: List<String>,
         step: MetricStep,
         start: Instant,
-        stop: Instant?
+        stop: Instant?,
+        labels: List<String>
     ): Future<HistoricalView> {
         return vertx.executeBlocking({
             try {
@@ -463,12 +464,9 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
 
                 metricIds.forEach { metricId ->
                     val metricType = MetricType(metricId).asHistorical()
-                    val values = getHistoricalMetrics(metricType, entityId, duration)
-                    values.forEachIndexed { i, metric ->
-                        val stepMetrics = JsonObject()
-                            .put("metricId", metricId)
-                            .put("value", metric.value)
-                        historicalView.data.add(stepMetrics)
+                    val values = getHistoricalMetrics(metricType, entityId, duration, labels)
+                    values.forEach { metric ->
+                        historicalView.data.add((metric as JsonObject).put("metricId", metricId))
                     }
                 }
 
@@ -492,14 +490,33 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
         }
     }
 
-    private fun getHistoricalMetrics(metricType: MetricType, entityId: String, duration: Duration): List<KVInt> {
+    private fun getHistoricalMetrics(
+        metricType: MetricType,
+        entityId: String,
+        duration: Duration,
+        labels: List<String>
+    ): JsonArray {
         val condition = MetricsCondition()
         condition.name = metricType.metricId
         condition.entity = object : Entity() {
             override fun buildId(): String = entityId
             override fun isValid(): Boolean = true
         }
-        return Reflect.on(metricsQuery.readMetricsValues(condition, duration).values).get("values")
+
+        return if (labels.isNotEmpty()) {
+            JsonArray().apply {
+                metricsQuery.readLabeledMetricsValues(condition, labels, duration).forEach {
+                    val label = it.label
+                    it.values.values.forEach { add(JsonObject().put("value", it.value).put("label", label)) }
+                }
+            }
+        } else {
+            JsonArray().apply {
+                metricsQuery.readMetricsValues(condition, duration).values.values.forEach {
+                    add(JsonObject().put("value", it.value))
+                }
+            }
+        }
     }
 
     private fun Span.toProtocol(): TraceSpan {

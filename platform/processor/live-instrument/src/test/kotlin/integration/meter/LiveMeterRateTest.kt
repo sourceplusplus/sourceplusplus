@@ -38,7 +38,7 @@ import spp.protocol.service.SourceServices.Subscribe.toLiveViewSubscription
 import spp.protocol.view.LiveView
 import spp.protocol.view.LiveViewConfig
 import spp.protocol.view.LiveViewEvent
-import spp.protocol.view.rule.LiveViewRule
+import spp.protocol.view.rule.ViewRule
 
 class LiveMeterRateTest : LiveInstrumentIntegrationTest() {
 
@@ -75,7 +75,7 @@ class LiveMeterRateTest : LiveInstrumentIntegrationTest() {
         )
 
         viewService.saveRuleIfAbsent(
-            LiveViewRule(
+            ViewRule(
                 name = liveMeter.toMetricIdWithoutPrefix(),
                 exp = buildString {
                     append("(")

@@ -24,6 +24,9 @@ RUN printf "\nspp-live-instrument:\n  selector: \${SPP_LIVE_INSTRUMENT:default}\
 RUN printf "\nexporter:\n  selector: \${SPP_LIVE_VIEW:default}\n  default:\n" \
     >> /skywalking/config/application.yml
 
+# replace default receiver-meter with spp-live-meter-receiver
+RUN sed -i -z 's/receiver-meter:\n  selector: \${SW_RECEIVER_METER:default}\n  default:/receiver-meter:\n  selector: \${SW_RECEIVER_METER:spp-live-meter-receiver}\n  spp-live-meter-receiver:/' /skywalking/config/application.yml
+
 ADD ./config/spp-platform.crt /skywalking/config/
 ADD ./config/spp-platform.key /skywalking/config/
 ADD ./config/spp-platform.yml /skywalking/config/

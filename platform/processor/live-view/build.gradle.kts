@@ -38,6 +38,9 @@ configure<PublishingExtension> {
 dependencies {
     compileOnly(project(":platform:common"))
     compileOnly(project(":platform:storage"))
+    compileOnly("org.apache.skywalking:skywalking-meter-receiver-plugin:$skywalkingVersion") {
+        isTransitive = false
+    }
 
     testImplementation(project(":probes:jvm:boot"))
     testImplementation("org.apache.logging.log4j:log4j-core:2.20.0")
@@ -47,21 +50,27 @@ dependencies {
         //exclude network dependencies since agent shadows them
         exclude("org.apache.skywalking", "apm-network")
     }
-    testImplementation("org.mockito:mockito-core:5.2.0")
-    testImplementation("org.apache.skywalking:apm-toolkit-trace:8.14.0")
+    testImplementation("org.mockito:mockito-core:5.3.1")
+    testImplementation("org.apache.skywalking:apm-toolkit-trace:8.15.0")
 }
 
 tasks {
     test {
-        dependsOn(":probes:jvm:boot:jar")
-        val probeJar = "${project(":probes:jvm:boot").buildDir}/libs/spp-probe-$version.jar"
-
-        //todo: should have way to distinguish tests that just need platform and tests that attach to self
         val isIntegrationProfile = System.getProperty("test.profile") == "integration"
-        val runningSpecificTests = gradle.startParameter.taskNames.contains("--tests")
+        val testsIndex = gradle.startParameter.taskNames.indexOf("--tests")
+        var runningIntegrationTests = false
+        if (testsIndex != -1) {
+            val testName = gradle.startParameter.taskNames[testsIndex + 1]
+            if (testName.contains("integration.") || testName.endsWith("IT")) {
+                runningIntegrationTests = true
+            }
+        }
 
         //exclude attaching probe to self unless requested
-        if (isIntegrationProfile || runningSpecificTests) {
+        if (isIntegrationProfile || runningIntegrationTests) {
+            dependsOn(":probes:jvm:boot:jar")
+
+            val probeJar = "${project(":probes:jvm:boot").buildDir}/libs/spp-probe-$version.jar"
             jvmArgs = listOf("-javaagent:$probeJar=${projectDir}/src/test/resources/spp-test-probe.yml")
         }
     }

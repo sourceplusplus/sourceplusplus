@@ -26,7 +26,10 @@ import graphql.schema.Coercing
 import graphql.schema.CoercingParseValueException
 import graphql.schema.DataFetchingEnvironment
 import graphql.schema.GraphQLScalarType
-import graphql.schema.idl.*
+import graphql.schema.idl.RuntimeWiring
+import graphql.schema.idl.SchemaGenerator
+import graphql.schema.idl.SchemaParser
+import graphql.schema.idl.TypeRuntimeWiring
 import io.vertx.core.Future
 import io.vertx.core.Promise
 import io.vertx.core.Vertx
@@ -55,7 +58,6 @@ import spp.protocol.instrument.throttle.InstrumentThrottle
 import spp.protocol.instrument.throttle.ThrottleStep
 import spp.protocol.instrument.variable.LiveVariableControl
 import spp.protocol.platform.auth.*
-import spp.protocol.platform.auth.RolePermission.*
 import spp.protocol.platform.developer.Developer
 import spp.protocol.platform.developer.SelfInfo
 import spp.protocol.platform.general.Service
@@ -683,11 +685,13 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
         }
 
         val step = MetricStep.valueOf(vars.getString("step"))
-        val start = Instant.from(step.formatter.parse(vars.getString("start")))
-        val stop = vars.getString("stop")?.let { Instant.from(step.formatter.parse(it)) }
+        val start = step.toInstant(vars.getString("start"))
+        val stop = vars.getString("stop")?.let { step.toInstant(it) }
+        val labels = vars.getJsonArray("labels", JsonArray()).list.map { it as String }
 
-        return getLiveViewService(env).compose { it.getHistoricalMetrics(entityIds, metricIds, step, start, stop) }
-            .toCompletionStage().toCompletableFuture()
+        return getLiveViewService(env).compose {
+            it.getHistoricalMetrics(entityIds, metricIds, step, start, stop, labels)
+        }.toCompletionStage().toCompletableFuture()
     }
 
     private fun getClientAccessors(env: DataFetchingEnvironment): CompletableFuture<List<ClientAccess>> =

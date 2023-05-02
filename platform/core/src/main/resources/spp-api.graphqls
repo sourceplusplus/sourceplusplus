@@ -207,6 +207,7 @@ interface LiveInstrument {
 type LiveMeter implements LiveInstrument {
     meterType: MeterType!
     metricValue: MetricValue!
+    #todo: tags, partitions
     id: String!
     location: LiveSourceLocation!
     condition: String
@@ -516,7 +517,8 @@ type Query {
         metricIds: [String!]!,
         step: MetricStep!,
         start: String!,
-        stop: String
+        stop: String,
+        labels: [String!]
     ): HistoricalView!
 
     getTraceStack(traceId: String!): TraceStack
