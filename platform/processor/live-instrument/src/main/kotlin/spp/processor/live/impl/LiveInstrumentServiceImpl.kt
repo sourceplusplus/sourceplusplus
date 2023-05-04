@@ -445,7 +445,12 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
         val instrumentCommand = it.body().getString("command")
         val instrumentData = if (instrumentCommand != null) {
             val command = LiveInstrumentCommand(JsonObject(instrumentCommand))
-            JsonObject.mapFrom(command.instruments.first()) //todo: check for multiple
+            if (command.instruments.isEmpty()) {
+                log.warn("Got empty instrument removed command: {}", it.body())
+                return
+            } else {
+                JsonObject.mapFrom(command.instruments.first()) //todo: check for multiple, add locations
+            }
         } else if (it.body().containsKey("instrument")) {
             JsonObject(it.body().getString("instrument"))
         } else {
