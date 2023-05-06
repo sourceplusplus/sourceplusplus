@@ -528,8 +528,8 @@ type Query {
 
     getTraceStack(traceId: String!): TraceStack
 
-    getPlatformConfig: [PlatformConfig!]!
-    getPlatformConfigValue(config: String!): String!
+    getSystemConfig: [PlatformConfig!]!
+    getSystemConfigValue(config: String!): String!
 }
 
 type Mutation {
@@ -571,7 +571,7 @@ type Mutation {
     removeClientAccess(id: String!): Boolean!
     refreshClientAccess(id: String!): ClientAccess!
 
-    setPlatformConfigValue(config: String!, value: String!): Boolean!
+    setSystemConfigValue(config: String!, value: String!): Boolean!
 }
 
 scalar Long

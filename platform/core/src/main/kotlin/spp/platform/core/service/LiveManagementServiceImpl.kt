@@ -38,7 +38,7 @@ import spp.platform.common.ClusterConnection
 import spp.platform.common.DeveloperAuth
 import spp.platform.common.service.SourceBridgeService
 import spp.platform.storage.SourceStorage
-import spp.platform.storage.config.PlatformConfig
+import spp.platform.storage.config.SystemConfig
 import spp.protocol.platform.ProbeAddress
 import spp.protocol.platform.auth.*
 import spp.protocol.platform.developer.Developer
@@ -73,13 +73,13 @@ class LiveManagementServiceImpl(
         log.trace { "Setting configuration value $config to $value" }
         val promise = Promise.promise<Boolean>()
         launch(vertx.dispatcher()) {
-            if (!PlatformConfig.isValidConfig(config)) {
+            if (!SystemConfig.isValidConfig(config)) {
                 promise.fail("Invalid configuration $config")
                 return@launch
             }
 
             try {
-                val config = PlatformConfig.get(config)
+                val config = SystemConfig.get(config)
                 config.validator.validateChange(value)
                 val saveValue = config.mapper.mapper(value)!!
                 config.set(saveValue.toString()) //todo: raw saveValue
@@ -96,8 +96,8 @@ class LiveManagementServiceImpl(
         log.trace { "Getting configuration value $config" }
         val promise = Promise.promise<String>()
         launch(vertx.dispatcher()) {
-            if (PlatformConfig.isValidConfig(config)) {
-                promise.complete(PlatformConfig.get(config).get().toString())
+            if (SystemConfig.isValidConfig(config)) {
+                promise.complete(SystemConfig.get(config).get().toString())
             } else {
                 promise.fail("Invalid configuration $config")
             }
@@ -110,7 +110,7 @@ class LiveManagementServiceImpl(
         val promise = Promise.promise<JsonObject>()
         launch(vertx.dispatcher()) {
             val config = JsonObject()
-            PlatformConfig.values().forEach {
+            SystemConfig.values().forEach {
                 config.put(it.name, it.get())
             }
             promise.complete(config)

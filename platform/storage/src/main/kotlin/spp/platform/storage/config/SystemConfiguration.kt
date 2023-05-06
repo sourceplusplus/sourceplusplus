@@ -1,11 +1,11 @@
 package spp.platform.storage.config
 
 import spp.platform.storage.SourceStorage
-import spp.platform.storage.config.DynamicConfiguration.ConfigChangeMapper
-import spp.platform.storage.config.DynamicConfiguration.ConfigChangeValidator
+import spp.platform.storage.config.SystemConfiguration.ConfigChangeMapper
+import spp.platform.storage.config.SystemConfiguration.ConfigChangeValidator
 import java.util.concurrent.atomic.AtomicReference
 
-class DynamicConfiguration<T>(
+class SystemConfiguration<T>(
     val name: String,
     val defaultValue: T,
     val validator: ConfigChangeValidator = ConfigChangeValidator { },
@@ -39,7 +39,7 @@ class DynamicConfiguration<T>(
             set(initial)
         }
 
-        PlatformConfig.register(this)
+        SystemConfig.register(this)
     }
 
     fun addChangeListener(listener: (T) -> Unit) {

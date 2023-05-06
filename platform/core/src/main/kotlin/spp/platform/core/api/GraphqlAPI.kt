@@ -209,8 +209,8 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
             .dataFetcher("getHistoricalMetrics", this::getHistoricalMetrics)
             .dataFetcher("getClientAccessors", this::getClientAccessors)
             .dataFetcher("getTraceStack", this::getTraceStack)
-            .dataFetcher("getPlatformConfig", this::getPlatformConfig)
-            .dataFetcher("getPlatformConfigValue", this::getPlatformConfigValue)
+            .dataFetcher("getSystemConfig", this::getSystemConfig)
+            .dataFetcher("getSystemConfigValue", this::getSystemConfigValue)
     }
 
     private fun withMutationFetchers(builder: TypeRuntimeWiring.Builder): TypeRuntimeWiring.Builder {
@@ -245,7 +245,7 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
             .dataFetcher("addClientAccess", this::addClientAccess)
             .dataFetcher("removeClientAccess", this::removeClientAccess)
             .dataFetcher("refreshClientAccess", this::refreshClientAccess)
-            .dataFetcher("setPlatformConfigValue", this::setPlatformConfigValue)
+            .dataFetcher("setSystemConfigValue", this::setSystemConfigValue)
     }
 
     private fun version(env: DataFetchingEnvironment): CompletableFuture<String> =
@@ -716,18 +716,18 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
             .map { fixJsonMaps(it) }
             .toCompletionStage().toCompletableFuture()
 
-    private fun getPlatformConfig(env: DataFetchingEnvironment): CompletableFuture<List<Map<String, String>>> =
+    private fun getSystemConfig(env: DataFetchingEnvironment): CompletableFuture<List<Map<String, String>>> =
         getLiveManagementService(env).compose { it.getConfiguration() }
             .map { fixConfigObject(it) }
             .toCompletionStage().toCompletableFuture()
 
-    private fun getPlatformConfigValue(env: DataFetchingEnvironment): CompletableFuture<String> =
+    private fun getSystemConfigValue(env: DataFetchingEnvironment): CompletableFuture<String> =
         getLiveManagementService(env).compose {
             it.getConfigurationValue(env.getArgument("config"))
                 .map { value -> value ?: "" }
         }.toCompletionStage().toCompletableFuture()
 
-    private fun setPlatformConfigValue(env: DataFetchingEnvironment): CompletableFuture<Boolean> =
+    private fun setSystemConfigValue(env: DataFetchingEnvironment): CompletableFuture<Boolean> =
         getLiveManagementService(env).compose {
             it.setConfigurationValue(env.getArgument("config"), env.getArgument("value"))
         }.toCompletionStage().toCompletableFuture()
