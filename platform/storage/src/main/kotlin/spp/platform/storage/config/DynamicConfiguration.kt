@@ -18,7 +18,7 @@ class DynamicConfiguration<T>(
         return reference.get()
     }
 
-    @Suppress("unused")
+    @Suppress("MemberVisibilityCanBePrivate")
     suspend fun retrieve(): T {
         return SourceStorage.get("configuration:$name") ?: defaultValue
     }
@@ -34,7 +34,7 @@ class DynamicConfiguration<T>(
     }
 
     suspend fun install() {
-        val initial = SourceStorage.get<T>("configuration:$name")
+        val initial = retrieve()
         if (initial != null && initial != defaultValue) {
             set(initial)
         }
