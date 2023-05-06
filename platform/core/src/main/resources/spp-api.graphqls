@@ -479,7 +479,7 @@ type TimeInfo {
     currentTimestamp: Long!
 }
 
-type PlatformConfig {
+type SystemConfig {
     config: String!
     value: String!
 }
@@ -528,7 +528,7 @@ type Query {
 
     getTraceStack(traceId: String!): TraceStack
 
-    getSystemConfig: [PlatformConfig!]!
+    getSystemConfig: [SystemConfig!]!
     getSystemConfigValue(config: String!): String!
 }
 
