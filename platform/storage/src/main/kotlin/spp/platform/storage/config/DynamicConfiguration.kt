@@ -18,6 +18,11 @@ class DynamicConfiguration<T>(
         return reference.get()
     }
 
+    @Suppress("unused")
+    suspend fun retrieve(): T {
+        return SourceStorage.get("configuration:$name") ?: defaultValue
+    }
+
     suspend fun set(value: T) {
         SourceStorage.put("configuration:$name", value as Any)
         reference.set(value)
