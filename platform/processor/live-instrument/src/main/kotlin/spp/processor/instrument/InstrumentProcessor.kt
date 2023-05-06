@@ -39,6 +39,7 @@ import org.slf4j.LoggerFactory
 import spp.platform.common.ClusterConnection.discovery
 import spp.platform.common.FeedbackProcessor
 import spp.platform.storage.SourceStorage
+import spp.processor.instrument.config.InstrumentConfig
 import spp.processor.instrument.impl.LiveInstrumentServiceImpl
 import spp.protocol.instrument.*
 import spp.protocol.instrument.event.LiveInstrumentEvent
@@ -78,6 +79,8 @@ object InstrumentProcessor : FeedbackProcessor() {
     }
 
     override suspend fun start() {
+        InstrumentConfig.install()
+
         val module = SimpleModule()
         module.addSerializer(DataTable::class.java, object : JsonSerializer<DataTable>() {
             override fun serialize(value: DataTable, gen: JsonGenerator, provider: SerializerProvider) {

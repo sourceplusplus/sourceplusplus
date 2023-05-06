@@ -33,6 +33,7 @@ import spp.platform.common.util.args
 import spp.platform.storage.SourceStorage
 import spp.processor.instrument.InstrumentProcessor.removeInternalMeta
 import spp.processor.instrument.InstrumentProcessor.sendEventToSubscribers
+import spp.processor.instrument.config.InstrumentConfig
 import spp.protocol.artifact.log.Log
 import spp.protocol.artifact.log.LogOrderType
 import spp.protocol.artifact.log.LogResult
@@ -45,12 +46,13 @@ import kotlin.collections.set
 class LiveLogAnalyzer : LogAnalysisListener, LogAnalysisListenerFactory {
 
     private val log = KotlinLogging.logger {}
-    private var logPublishRateLimit = 1000
-    private val logPublishCache = CacheBuilder.newBuilder()
-        .expireAfterAccess(1, TimeUnit.MINUTES)
-        .build(object : CacheLoader<String, Long>() {
-            override fun load(key: String): Long = -1
-        })
+    private val logPublishCache by lazy {
+        CacheBuilder.newBuilder()
+            .expireAfterAccess(InstrumentConfig.LogPublishCacheTTL.get(), TimeUnit.SECONDS)
+            .build(object : CacheLoader<String, Long>() {
+                override fun load(key: String): Long = -1
+            })
+    }
 
     override fun build() = Unit
 
@@ -70,7 +72,7 @@ class LiveLogAnalyzer : LogAnalysisListener, LogAnalysisListenerFactory {
         if (logId == null) return this
 
         val logLastPublished = logPublishCache.get(logId!!)
-        if (System.currentTimeMillis() - logLastPublished < logPublishRateLimit) {
+        if (System.currentTimeMillis() - logLastPublished < InstrumentConfig.LogPublishRateLimit.get()) {
             return this
         }
         logPublishCache.put(logId!!, System.currentTimeMillis())
