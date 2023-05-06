@@ -1,2 +1,2 @@
-spp.processor.live.provider.LiveViewProcessorProvider
-spp.processor.live.provider.LiveMeterReceiverProvider
+spp.processor.view.provider.LiveViewProcessorProvider
+spp.processor.view.provider.LiveMeterReceiverProvider
