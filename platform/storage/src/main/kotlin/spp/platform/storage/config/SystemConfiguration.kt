@@ -1,5 +1,6 @@
 package spp.platform.storage.config
 
+import spp.platform.common.ClusterConnection
 import spp.platform.storage.SourceStorage
 import spp.platform.storage.config.SystemConfiguration.ConfigChangeMapper
 import spp.platform.storage.config.SystemConfiguration.ConfigChangeValidator
@@ -11,7 +12,7 @@ class SystemConfiguration<T>(
     val validator: ConfigChangeValidator = ConfigChangeValidator { },
     val mapper: ConfigChangeMapper<T> = ConfigChangeMapper { it as T }
 ) {
-    private val reference = AtomicReference(defaultValue)
+    private val reference = AtomicReference(getEnv()?.let { mapper.mapper(it) } ?: defaultValue)
     private val changeListeners = mutableListOf<(T) -> Unit>()
 
     fun get(): T {
@@ -20,7 +21,8 @@ class SystemConfiguration<T>(
 
     @Suppress("MemberVisibilityCanBePrivate")
     suspend fun retrieve(): T {
-        return SourceStorage.get("configuration:$name") ?: defaultValue
+        val value: Any? = SourceStorage.get("configuration:$name")
+        return value as T? ?: defaultValue
     }
 
     suspend fun set(value: T) {
@@ -44,6 +46,10 @@ class SystemConfiguration<T>(
 
     fun addChangeListener(listener: (T) -> Unit) {
         changeListeners.add(listener)
+    }
+
+    private fun getEnv(): String? {
+        return ClusterConnection.getConfig(name)
     }
 
     fun interface ConfigChangeValidator {
