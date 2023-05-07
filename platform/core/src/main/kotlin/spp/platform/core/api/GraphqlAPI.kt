@@ -79,7 +79,7 @@ import java.util.concurrent.CompletableFuture
  *
  * [LiveManagementService], [LiveInstrumentService], & [LiveViewService]
  */
-@Suppress("TooManyFunctions") // public API
+@Suppress("TooManyFunctions", "LargeClass") // public API
 class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
 
     private val log = LoggerFactory.getLogger(GraphqlAPI::class.java)
