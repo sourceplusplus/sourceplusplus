@@ -79,7 +79,7 @@ import java.util.concurrent.CompletableFuture
  *
  * [LiveManagementService], [LiveInstrumentService], & [LiveViewService]
  */
-@Suppress("TooManyFunctions") // public API
+@Suppress("TooManyFunctions", "LargeClass") // public API
 class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
 
     private val log = LoggerFactory.getLogger(GraphqlAPI::class.java)
@@ -209,6 +209,8 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
             .dataFetcher("getHistoricalMetrics", this::getHistoricalMetrics)
             .dataFetcher("getClientAccessors", this::getClientAccessors)
             .dataFetcher("getTraceStack", this::getTraceStack)
+            .dataFetcher("getSystemConfig", this::getSystemConfig)
+            .dataFetcher("getSystemConfigValue", this::getSystemConfigValue)
     }
 
     private fun withMutationFetchers(builder: TypeRuntimeWiring.Builder): TypeRuntimeWiring.Builder {
@@ -243,6 +245,7 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
             .dataFetcher("addClientAccess", this::addClientAccess)
             .dataFetcher("removeClientAccess", this::removeClientAccess)
             .dataFetcher("refreshClientAccess", this::refreshClientAccess)
+            .dataFetcher("setSystemConfigValue", this::setSystemConfigValue)
     }
 
     private fun version(env: DataFetchingEnvironment): CompletableFuture<String> =
@@ -713,6 +716,22 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
             .map { fixJsonMaps(it) }
             .toCompletionStage().toCompletableFuture()
 
+    private fun getSystemConfig(env: DataFetchingEnvironment): CompletableFuture<List<Map<String, String>>> =
+        getLiveManagementService(env).compose { it.getConfiguration() }
+            .map { fixConfigObject(it) }
+            .toCompletionStage().toCompletableFuture()
+
+    private fun getSystemConfigValue(env: DataFetchingEnvironment): CompletableFuture<String> =
+        getLiveManagementService(env).compose {
+            it.getConfigurationValue(env.getArgument("config"))
+                .map { value -> value ?: "" }
+        }.toCompletionStage().toCompletableFuture()
+
+    private fun setSystemConfigValue(env: DataFetchingEnvironment): CompletableFuture<Boolean> =
+        getLiveManagementService(env).compose {
+            it.setConfigurationValue(env.getArgument("config"), env.getArgument("value"))
+        }.toCompletionStage().toCompletableFuture()
+
     private fun toJsonMap(metaArray: JsonArray?): MutableMap<String, String> {
         val meta = mutableMapOf<String, String>()
         val metaOb = metaArray ?: JsonArray()
@@ -753,7 +772,12 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
         return rtnMap
     }
 
-    @Suppress("UNCHECKED_CAST")
+    private fun fixConfigObject(json: JsonObject): List<Map<String, String>> {
+        return (JsonObject.mapFrom(json).map as Map<String, Any?>).map {
+            it.key to (it.value?.toString() ?: "")
+        }.map { mapOf("config" to it.first, "value" to it.second) }
+    }
+
     private fun fixJsonMaps(traceStack: TraceStack?): Map<String, Any>? {
         if (traceStack == null) {
             return null

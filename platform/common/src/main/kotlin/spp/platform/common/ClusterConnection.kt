@@ -141,4 +141,19 @@ object ClusterConnection {
         }
         return vertx
     }
+
+    fun getConfig(id: String): String? {
+        val namespace = id.split(".")
+        var config: JsonObject? = ClusterConnection.config
+        for (i in namespace.indices) {
+            if (config == null) {
+                return null
+            }
+            if (i == namespace.size - 1) {
+                return config.getString(namespace[i])
+            }
+            config = config.getJsonObject(namespace[i])
+        }
+        return null
+    }
 }

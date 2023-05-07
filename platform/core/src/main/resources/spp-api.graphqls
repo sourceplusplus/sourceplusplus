@@ -479,6 +479,11 @@ type TimeInfo {
     currentTimestamp: Long!
 }
 
+type SystemConfig {
+    config: String!
+    value: String!
+}
+
 type Query {
     version: String!
     timeInfo: TimeInfo!
@@ -522,6 +527,9 @@ type Query {
     ): HistoricalView!
 
     getTraceStack(traceId: String!): TraceStack
+
+    getSystemConfig: [SystemConfig!]!
+    getSystemConfigValue(config: String!): String!
 }
 
 type Mutation {
@@ -562,6 +570,8 @@ type Mutation {
     addClientAccess: ClientAccess!
     removeClientAccess(id: String!): Boolean!
     refreshClientAccess(id: String!): ClientAccess!
+
+    setSystemConfigValue(config: String!, value: String!): Boolean!
 }
 
 scalar Long

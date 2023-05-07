@@ -38,6 +38,7 @@ import spp.platform.common.ClusterConnection
 import spp.platform.common.DeveloperAuth
 import spp.platform.common.service.SourceBridgeService
 import spp.platform.storage.SourceStorage
+import spp.platform.storage.config.SystemConfig
 import spp.protocol.platform.ProbeAddress
 import spp.protocol.platform.auth.*
 import spp.protocol.platform.developer.Developer
@@ -67,6 +68,55 @@ class LiveManagementServiceImpl(
     private val metadataQueryService = moduleManager.find(CoreModule.NAME)
         .provider()
         .getService(MetadataQueryService::class.java)
+
+    override fun setConfigurationValue(config: String, value: String): Future<Boolean> {
+        log.trace { "Setting configuration value $config to $value" }
+        val promise = Promise.promise<Boolean>()
+        launch(vertx.dispatcher()) {
+            if (!SystemConfig.isValidConfig(config)) {
+                promise.fail("Invalid configuration $config")
+                return@launch
+            }
+
+            try {
+                val config = SystemConfig.get(config)
+                config.validator.validateChange(value)
+                val saveValue = config.mapper.mapper(value)!!
+                config.set(saveValue.toString()) //todo: raw saveValue
+
+                promise.complete(true)
+            } catch (ex: Throwable) {
+                promise.fail(ex)
+            }
+        }
+        return promise.future()
+    }
+
+    override fun getConfigurationValue(config: String): Future<String> {
+        log.trace { "Getting configuration value $config" }
+        val promise = Promise.promise<String>()
+        launch(vertx.dispatcher()) {
+            if (SystemConfig.isValidConfig(config)) {
+                promise.complete(SystemConfig.get(config).get().toString())
+            } else {
+                promise.fail("Invalid configuration $config")
+            }
+        }
+        return promise.future()
+    }
+
+    override fun getConfiguration(): Future<JsonObject> {
+        log.trace { "Getting configuration" }
+        val promise = Promise.promise<JsonObject>()
+        launch(vertx.dispatcher()) {
+            val config = JsonObject()
+            SystemConfig.values().forEach {
+                config.put(it.name, it.get())
+            }
+            promise.complete(config)
+        }
+        return promise.future()
+    }
 
     override fun getVersion(): Future<String> {
         log.trace { "Getting version" }
