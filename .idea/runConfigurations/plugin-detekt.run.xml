@@ -12,7 +12,6 @@
         <list>
           <option value=":interfaces:jetbrains:commander:detekt" />
           <option value=":interfaces:jetbrains:commander:kotlin-compiler-wrapper:detekt" />
-          <option value=":interfaces:jetbrains:common:detekt" />
           <option value=":interfaces:jetbrains:core:detekt" />
           <option value=":interfaces:jetbrains:insight:detekt" />
           <option value=":interfaces:jetbrains:marker:detekt" />
@@ -20,7 +19,6 @@
           <option value=":interfaces:jetbrains:marker:jvm-marker:detekt" />
           <option value=":interfaces:jetbrains:marker:py-marker:detekt" />
           <option value=":interfaces:jetbrains:marker:ult-marker:detekt" />
-          <option value=":interfaces:jetbrains:monitor:detekt" />
           <option value=":interfaces:jetbrains:plugin:detekt" />
         </list>
       </option>
