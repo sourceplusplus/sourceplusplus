@@ -31,7 +31,6 @@ import org.apache.skywalking.apm.network.language.agent.v3.SegmentObject
 import org.apache.skywalking.apm.network.language.agent.v3.SpanObject
 import org.apache.skywalking.oap.server.analyzer.provider.AnalyzerModuleConfig
 import org.apache.skywalking.oap.server.analyzer.provider.trace.parser.listener.*
-import org.apache.skywalking.oap.server.core.query.TraceQueryService
 import org.apache.skywalking.oap.server.library.module.ModuleManager
 import spp.platform.common.ClusterConnection
 import spp.platform.common.util.ContextUtil
@@ -51,9 +50,8 @@ import spp.protocol.platform.auth.RedactionType
 import java.time.Instant
 import java.util.regex.Pattern
 
-class LiveBreakpointAnalyzer(
-    private val traceQueryService: TraceQueryService
-) : LocalAnalysisListener, EntryAnalysisListener, ExitAnalysisListener, AnalysisListenerFactory {
+class LiveBreakpointAnalyzer : LocalAnalysisListener, EntryAnalysisListener, ExitAnalysisListener,
+    AnalysisListenerFactory {
 
     override fun build() = Unit
     override fun containsPoint(point: AnalysisListener.Point): Boolean =
@@ -374,7 +372,7 @@ class LiveBreakpointAnalyzer(
         return redactedVars
     }
 
-    override fun create(p0: ModuleManager, p1: AnalyzerModuleConfig) = LiveBreakpointAnalyzer(traceQueryService)
+    override fun create(p0: ModuleManager, p1: AnalyzerModuleConfig) = LiveBreakpointAnalyzer()
 
     data class IntermediateLiveBreakpointHit(
         val breakpointId: String,
