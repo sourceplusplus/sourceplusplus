@@ -160,6 +160,12 @@ enum MetricValueType {
     VALUE_EXPRESSION
 }
 
+enum LocationScope {
+    LINE,
+    LAMBDA,
+    BOTH
+}
+
 type MetricValue {
     valueType: MetricValueType!
     value: String
@@ -401,6 +407,7 @@ input MetaInfoInput {
 type LiveSourceLocation {
     source: String!
     line: Int!
+    scope: LocationScope!
 }
 
 input LiveSourceLocationInput {
