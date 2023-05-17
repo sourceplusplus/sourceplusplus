@@ -560,12 +560,7 @@ class LiveManagementServiceImpl(
         launch(vertx.dispatcher()) {
             val result = mutableListOf<ServiceEndpoint>()
             metadataQueryService.findEndpoint("", serviceId, limit ?: 1000).forEach {
-                result.add(
-                    ServiceEndpoint(
-                        id = it.id,
-                        name = it.name
-                    )
-                )
+                result.add(ServiceEndpoint(it.id, it.name))
             }
             promise.complete(result)
         }
@@ -578,12 +573,7 @@ class LiveManagementServiceImpl(
         launch(vertx.dispatcher()) {
             val result = mutableListOf<ServiceEndpoint>()
             metadataQueryService.findEndpoint(keyword, serviceId, limit ?: 1000).forEach {
-                result.add(
-                    ServiceEndpoint(
-                        id = it.id,
-                        name = it.name
-                    )
-                )
+                result.add(ServiceEndpoint(it.id, it.name))
             }
             promise.complete(result)
         }
