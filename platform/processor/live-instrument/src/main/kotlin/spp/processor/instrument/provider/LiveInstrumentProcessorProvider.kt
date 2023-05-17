@@ -25,7 +25,6 @@ import org.apache.skywalking.oap.server.analyzer.provider.trace.parser.ISegmentP
 import org.apache.skywalking.oap.server.analyzer.provider.trace.parser.SegmentParserListenerManager
 import org.apache.skywalking.oap.server.analyzer.provider.trace.parser.SegmentParserServiceImpl
 import org.apache.skywalking.oap.server.core.CoreModule
-import org.apache.skywalking.oap.server.core.query.TraceQueryService
 import org.apache.skywalking.oap.server.core.storage.StorageModule
 import org.apache.skywalking.oap.server.library.module.ModuleConfig
 import org.apache.skywalking.oap.server.library.module.ModuleDefine
@@ -56,14 +55,12 @@ class LiveInstrumentProcessorProvider : ModuleProvider() {
         log.info("Starting spp-live-instrument")
 
         //gather live breakpoints
-        val traceQueryService = manager.find(CoreModule.NAME)
-            .provider().getService(TraceQueryService::class.java) as TraceQueryService
         val segmentParserService = manager.find(AnalyzerModule.NAME)
             .provider().getService(ISegmentParserService::class.java) as SegmentParserServiceImpl
         val listenerManager = Reflect.on(segmentParserService).get<SegmentParserListenerManager>("listenerManager")
         val spanListenerFactories = Reflect.on(listenerManager).get<MutableList<Any>>("spanListenerFactories")
         spanListenerFactories.add(0, LiveInstrumentTagAdder())
-        spanListenerFactories.add(LiveBreakpointAnalyzer(traceQueryService))
+        spanListenerFactories.add(LiveBreakpointAnalyzer())
 
         //gather live logs
         val logParserService = manager.find(LogAnalyzerModule.NAME)
