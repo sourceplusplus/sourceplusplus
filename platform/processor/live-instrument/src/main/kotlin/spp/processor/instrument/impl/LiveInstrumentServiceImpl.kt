@@ -62,6 +62,7 @@ import spp.protocol.service.LiveInstrumentService
 import java.time.Instant
 import java.util.*
 
+@Suppress("TooManyFunctions") // public API
 class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
 
     private val log = KotlinLogging.logger {}
