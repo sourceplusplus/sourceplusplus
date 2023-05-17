@@ -61,10 +61,7 @@ import spp.protocol.instrument.variable.LiveVariableControl
 import spp.protocol.platform.auth.*
 import spp.protocol.platform.developer.Developer
 import spp.protocol.platform.developer.SelfInfo
-import spp.protocol.platform.general.Service
-import spp.protocol.platform.general.ServiceEndpoint
-import spp.protocol.platform.general.ServiceInstance
-import spp.protocol.platform.general.TimeInfo
+import spp.protocol.platform.general.*
 import spp.protocol.service.LiveInstrumentService
 import spp.protocol.service.LiveManagementService
 import spp.protocol.service.LiveViewService
@@ -86,7 +83,7 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
     private val log = LoggerFactory.getLogger(GraphqlAPI::class.java)
 
     override suspend fun start() {
-        val graphql = vertx.executeBlocking<GraphQL> {
+        val graphql = vertx.executeBlocking {
             it.complete(setupGraphQL())
         }.await()
         val sppGraphQLHandler = GraphQLHandler.create(graphql)
@@ -207,6 +204,8 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
             .dataFetcher("getServices", this::getServices)
             .dataFetcher("getInstances", this::getInstances)
             .dataFetcher("getEndpoints", this::getEndpoints)
+            .dataFetcher("searchEndpoints", this::searchEndpoints)
+            .dataFetcher("sortMetrics", this::sortMetrics)
             .dataFetcher("getLiveViews", this::getLiveViews)
             .dataFetcher("getHistoricalMetrics", this::getHistoricalMetrics)
             .dataFetcher("getClientAccessors", this::getClientAccessors)
@@ -327,8 +326,37 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
             .toCompletionStage().toCompletableFuture()
 
     private fun getEndpoints(env: DataFetchingEnvironment): CompletableFuture<List<ServiceEndpoint>> =
-        getLiveManagementService(env).compose { it.getEndpoints(env.getArgument("serviceId")) }.toCompletionStage()
-            .toCompletableFuture()
+        getLiveManagementService(env).compose {
+            it.getEndpoints(
+                env.getArgument("serviceId"),
+                env.getArgument<Int?>("limit").toString().toIntOrNull()
+            )
+        }.toCompletionStage().toCompletableFuture()
+
+    private fun searchEndpoints(env: DataFetchingEnvironment): CompletableFuture<List<ServiceEndpoint>> =
+        getLiveManagementService(env).compose {
+            it.searchEndpoints(
+                env.getArgument("serviceId"),
+                env.getArgument("keyword"),
+                env.getArgument<Int?>("limit").toString().toIntOrNull()
+            )
+        }.toCompletionStage().toCompletableFuture()
+
+    private fun sortMetrics(env: DataFetchingEnvironment): CompletableFuture<List<SelectedRecord>> {
+        return getLiveManagementService(env).compose {
+            it.sortMetrics(
+                env.getArgument("name"),
+                env.getArgument<String?>("parentService"),
+                env.getArgument("normal"),
+                env.getArgument<String?>("scope")?.let { Scope.valueOf(it) },
+                env.getArgument("topN"),
+                env.getArgument<String>("order").let { Order.valueOf(it) },
+                env.getArgument<String>("step").let { MetricStep.valueOf(it) },
+                Instant.ofEpochMilli(env.getArgument("start")),
+                env.getArgument<Long?>("stop")?.let { Instant.ofEpochMilli(it) } ?: Instant.now()
+            )
+        }.toCompletionStage().toCompletableFuture()
+    }
 
     private fun refreshAuthorizationCode(env: DataFetchingEnvironment): CompletableFuture<Developer> =
         getLiveManagementService(env).compose { it.refreshAuthorizationCode(env.getArgument("id")) }

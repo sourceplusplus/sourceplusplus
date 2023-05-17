@@ -511,6 +511,28 @@ type SystemConfig {
     value: String!
 }
 
+type SelectedRecord {
+    name: String!
+    id: String!
+    value: String!
+    refId: String
+}
+
+enum MetricScope {
+    All,
+    Service,
+    ServiceInstance,
+    Endpoint,
+    ServiceRelation,
+    ServiceInstanceRelation,
+    EndpointRelation
+}
+
+enum MetricOrder {
+    ASC,
+    DES
+}
+
 type Query {
     version: String!
     timeInfo: TimeInfo!
@@ -549,6 +571,18 @@ type Query {
     getServices: [Service!]!
     getInstances(serviceId: String!): [ServiceInstance!]!
     getEndpoints(serviceId: String!): [ServiceEndpoint!]!
+    searchEndpoints(serviceId: String!, keyword: String!, limit: Int): [ServiceEndpoint!]!
+    sortMetrics(
+        name: String!
+        parentService: String
+        normal: Boolean,
+        scope: MetricScope,
+        topN: Int!,
+        order: MetricOrder!,
+        step: MetricStep!,
+        start: Long!,
+        stop: Long
+    ): [SelectedRecord!]!
     getClientAccessors: [ClientAccess!]!
 
     getLiveViews: [LiveView!]!
