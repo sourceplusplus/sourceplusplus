@@ -26,9 +26,11 @@ import io.vertx.core.shareddata.Lock
 import io.vertx.core.shareddata.Shareable
 import io.vertx.kotlin.coroutines.await
 import spp.protocol.instrument.LiveInstrument
+import spp.protocol.instrument.event.LiveInstrumentEvent
 import spp.protocol.platform.auth.*
 import spp.protocol.platform.developer.Developer
 import java.security.MessageDigest
+import java.time.Instant
 
 open class MemoryStorage(val vertx: Vertx) : CoreStorage {
 
@@ -414,6 +416,31 @@ open class MemoryStorage(val vertx: Vertx) : CoreStorage {
         val archivedStorage = vertx.sharedData().getAsyncMap<String, Any>(namespace("archivedInstruments")).await()
         val archivedArr = archivedStorage.get("archivedInstruments").await() as JsonArray? ?: JsonArray()
         return archivedArr.list.map { it as LiveInstrument }
+    }
+
+    override suspend fun getLiveInstrumentEvents(
+        instrumentId: String?,
+        from: Instant?,
+        to: Instant?,
+        offset: Int,
+        limit: Int
+    ): List<LiveInstrumentEvent> {
+        val eventsStorage = vertx.sharedData().getAsyncMap<String, Any>(namespace("liveInstrumentEvents")).await()
+        val eventsArr = eventsStorage.get("liveInstrumentEvents").await() as JsonArray? ?: JsonArray()
+        val events = eventsArr.list.map { it as LiveInstrumentEvent }
+        return events.filter {
+            (instrumentId == null || it.instrument.id == instrumentId) &&
+                    (from == null || it.occurredAt >= from) &&
+                    (to == null || it.occurredAt <= to)
+        }.sortedByDescending { it.occurredAt }.drop(offset).take(limit)
+    }
+
+    override suspend fun addLiveInstrumentEvent(event: LiveInstrumentEvent): LiveInstrumentEvent {
+        val eventsStorage = vertx.sharedData().getAsyncMap<String, Any>(namespace("liveInstrumentEvents")).await()
+        val eventsArr = eventsStorage.get("liveInstrumentEvents").await() as JsonArray? ?: JsonArray()
+        eventsArr.add(event)
+        eventsStorage.put("liveInstrumentEvents", eventsArr).await()
+        return event
     }
 
     override suspend fun getClientAccessors(): List<ClientAccess> {

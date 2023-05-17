@@ -257,6 +257,7 @@ object InstrumentProcessor : FeedbackProcessor() {
     }
 
     suspend fun sendEventToSubscribers(instrument: LiveInstrument, event: LiveInstrumentEvent) {
+        SourceStorage.addLiveInstrumentEvent(instrument, event.withInstrument(instrument))
         val eventJson = JsonObject.mapFrom(event)
 
         //emit to instrument subscribers

@@ -28,9 +28,11 @@ import io.vertx.redis.client.Redis
 import io.vertx.redis.client.RedisAPI
 import mu.KotlinLogging
 import spp.protocol.instrument.LiveInstrument
+import spp.protocol.instrument.event.LiveInstrumentEvent
 import spp.protocol.platform.auth.*
 import spp.protocol.platform.developer.Developer
 import java.nio.charset.StandardCharsets.UTF_8
+import java.time.Instant
 
 open class RedisStorage(val vertx: Vertx) : CoreStorage {
 
@@ -352,6 +354,38 @@ open class RedisStorage(val vertx: Vertx) : CoreStorage {
             getLiveInstrument(it.toString(UTF_8).substringAfter("live_instruments_archive:"), true)
         }
         return archiveInstruments
+    }
+
+    override suspend fun getLiveInstrumentEvents(
+        instrumentId: String?,
+        from: Instant?,
+        to: Instant?,
+        offset: Int,
+        limit: Int
+    ): List<LiveInstrumentEvent> {
+        val events = redis.zrevrangebyscore(
+            listOf(
+                namespace("live_instrument_events"),
+                to?.toEpochMilli()?.toString() ?: "+inf",
+                from?.toEpochMilli()?.toString() ?: "-inf",
+                "LIMIT",
+                offset.toString(),
+                limit.toString()
+            )
+        ).await()
+        return events.map { LiveInstrumentEvent.fromJson(JsonObject(it.toString(UTF_8))) }
+            .filter { instrumentId == null || it.instrument.id == instrumentId }
+    }
+
+    override suspend fun addLiveInstrumentEvent(event: LiveInstrumentEvent): LiveInstrumentEvent {
+        redis.zadd(
+            listOf(
+                namespace("live_instrument_events"),
+                event.occurredAt.toEpochMilli().toString(),
+                event.toJson().toString()
+            )
+        ).await()
+        return event
     }
 
     override suspend fun getClientAccessors(): List<ClientAccess> {

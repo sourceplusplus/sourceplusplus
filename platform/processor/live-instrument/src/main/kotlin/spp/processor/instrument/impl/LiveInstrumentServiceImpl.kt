@@ -49,6 +49,7 @@ import spp.protocol.instrument.command.CommandType
 import spp.protocol.instrument.command.LiveInstrumentCommand
 import spp.protocol.instrument.event.LiveInstrumentAdded
 import spp.protocol.instrument.event.LiveInstrumentApplied
+import spp.protocol.instrument.event.LiveInstrumentEvent
 import spp.protocol.instrument.event.LiveInstrumentRemoved
 import spp.protocol.instrument.location.LiveSourceLocation
 import spp.protocol.marshall.ProtocolMarshaller
@@ -161,12 +162,12 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
 
                     if (pendingBp.applyImmediately) {
                         addApplyImmediatelyHandler(pendingBp.id!!, promise).onSuccess {
-                            addLiveInstrument(pendingBp, true)
+                            doAddLiveInstrument(pendingBp)
                         }.onFailure {
                             promise.fail(it)
                         }
                     } else {
-                        addLiveInstrument(pendingBp, true).onComplete {
+                        doAddLiveInstrument(pendingBp).onComplete {
                             if (it.succeeded()) {
                                 promise.complete(it.result())
                             } else {
@@ -195,12 +196,12 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
 
                     if (pendingLog.applyImmediately) {
                         addApplyImmediatelyHandler(pendingLog.id!!, promise).onSuccess {
-                            addLiveInstrument(pendingLog, true)
+                            doAddLiveInstrument(pendingLog)
                         }.onFailure {
                             promise.fail(it)
                         }
                     } else {
-                        addLiveInstrument(pendingLog, true).onComplete {
+                        doAddLiveInstrument(pendingLog).onComplete {
                             if (it.succeeded()) {
                                 promise.complete(it.result())
                             } else {
@@ -228,12 +229,12 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
 
                     if (pendingMeter.applyImmediately) {
                         addApplyImmediatelyHandler(pendingMeter.id!!, promise).onSuccess {
-                            addLiveInstrument(pendingMeter, true)
+                            doAddLiveInstrument(pendingMeter)
                         }.onFailure {
                             promise.fail(it)
                         }
                     } else {
-                        addLiveInstrument(pendingMeter, true).onComplete {
+                        doAddLiveInstrument(pendingMeter).onComplete {
                             if (it.succeeded()) {
                                 promise.complete(it.result())
                             } else {
@@ -261,12 +262,12 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
 
                     if (pendingSpan.applyImmediately) {
                         addApplyImmediatelyHandler(pendingSpan.id!!, promise).onSuccess {
-                            addLiveInstrument(pendingSpan, true)
+                            doAddLiveInstrument(pendingSpan)
                         }.onFailure {
                             promise.fail(it)
                         }
                     } else {
-                        addLiveInstrument(pendingSpan, true).onComplete {
+                        doAddLiveInstrument(pendingSpan).onComplete {
                             if (it.succeeded()) {
                                 promise.complete(it.result())
                             } else {
@@ -401,6 +402,29 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
                 SourceStorage.getLiveInstruments()
                     .filter { it.location.isSameLocation(location) }
                     .mapNotNull { removeInternalMeta(it) }
+            )
+        }
+        return promise.future()
+    }
+
+    override fun getLiveInstrumentEvents(
+        instrumentId: String?,
+        from: Instant?,
+        to: Instant?,
+        offset: Int,
+        limit: Int
+    ): Future<List<LiveInstrumentEvent>> {
+        val devAuth = Vertx.currentContext().getLocal<DeveloperAuth>("developer")
+        log.info(
+            "Received get live instrument events request. Developer: {} - InstrumentId: {} - From: {} - To: {} - Offset: {} - Limit: {}",
+            devAuth, instrumentId, from, to, offset, limit
+        )
+
+        val promise = Promise.promise<List<LiveInstrumentEvent>>()
+        launch(vertx.dispatcher()) {
+            promise.complete(
+                SourceStorage.getLiveInstrumentEvents(instrumentId, from, to, offset, limit)
+                    .map { it.withInstrument(removeInternalMeta(it.instrument)!!) }
             )
         }
         return promise.future()
@@ -551,23 +575,23 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
         return promise.future()
     }
 
-    private fun addLiveInstrument(instrument: LiveInstrument, alertSubscribers: Boolean): Future<LiveInstrument> {
+    private fun doAddLiveInstrument(instrument: LiveInstrument): Future<LiveInstrument> {
         log.trace { "Adding live instrument: {}".args(instrument) }
         val promise = Promise.promise<LiveInstrument>()
         launch(vertx.dispatcher()) {
+            val publicInstrument = removeInternalMeta(instrument)!!
             val debuggerCommand = LiveInstrumentCommand(
                 CommandType.ADD_LIVE_INSTRUMENT,
-                setOf(removeInternalMeta(instrument)!!)
+                setOf(publicInstrument)
             )
 
             val accessToken = instrument.meta["spp.access_token"] as String?
             SourceStorage.addLiveInstrument(instrument)
             dispatchCommand(accessToken, debuggerCommand)
 
-            if (alertSubscribers) {
-                sendEventToSubscribers(instrument, LiveInstrumentAdded(removeInternalMeta(instrument)!!))
-            }
-            promise.complete(removeInternalMeta(instrument))
+            sendEventToSubscribers(instrument, LiveInstrumentAdded(publicInstrument))
+
+            promise.complete(publicInstrument)
         }
         return promise.future()
     }

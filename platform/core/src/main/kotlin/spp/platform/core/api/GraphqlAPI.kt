@@ -50,6 +50,7 @@ import spp.protocol.artifact.trace.TraceSpan
 import spp.protocol.artifact.trace.TraceStack
 import spp.protocol.instrument.*
 import spp.protocol.instrument.LiveInstrumentType.*
+import spp.protocol.instrument.event.LiveInstrumentEvent
 import spp.protocol.instrument.location.LiveSourceLocation
 import spp.protocol.instrument.meter.MeterType
 import spp.protocol.instrument.meter.MetricValue
@@ -201,6 +202,7 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
             .dataFetcher("getLiveLogs", this::getLiveLogs)
             .dataFetcher("getLiveMeters", this::getLiveMeters)
             .dataFetcher("getLiveSpans", this::getLiveSpans)
+            .dataFetcher("getLiveInstrumentEvents", this::getLiveInstrumentEvents)
             .dataFetcher("getSelf", this::getSelf)
             .dataFetcher("getServices", this::getServices)
             .dataFetcher("getInstances", this::getInstances)
@@ -356,6 +358,24 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
         getLiveInstrumentService(env).compose { it.getLiveInstruments(SPAN) }.map { instruments ->
             instruments.map { fixJsonMaps(it) }
         }.toCompletionStage().toCompletableFuture()
+
+    private fun getLiveInstrumentEvents(env: DataFetchingEnvironment): CompletableFuture<List<Map<String, Any>>> {
+        val instrumentId: String? = env.getArgument("instrumentId")
+        val start = env.getArgument("start") ?: 0L
+        val stop = env.getArgument("stop") ?: Instant.now().toEpochMilli()
+        val offset = env.getArgument("offset") ?: 0
+        val limit = env.getArgument("limit") ?: 100
+
+        return getLiveInstrumentService(env).compose {
+            it.getLiveInstrumentEvents(
+                instrumentId,
+                Instant.ofEpochMilli(start),
+                Instant.ofEpochMilli(stop),
+                offset,
+                limit
+            )
+        }.map { events -> events.map { fixJsonMaps(it) } }.toCompletionStage().toCompletableFuture()
+    }
 
     private fun reset(env: DataFetchingEnvironment): CompletableFuture<Boolean> =
         getLiveManagementService(env).compose { it.reset() }.map { true }.toCompletionStage().toCompletableFuture()
@@ -761,6 +781,14 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
                 (rtnMap["variableControl"] as MutableMap<String, Any>).put("variableNameConfig", variableNameArray)
             }
         }
+        return rtnMap
+    }
+
+    private fun fixJsonMaps(event: LiveInstrumentEvent): Map<String, Any> {
+        val instrument = fixJsonMaps(event.instrument)
+        val rtnMap = (JsonObject.mapFrom(event).map as Map<String, Any>).toMutableMap()
+        rtnMap["instrument"] = instrument
+        rtnMap["occurredAt"] = event.occurredAt.toEpochMilli()
         return rtnMap
     }
 

@@ -34,10 +34,12 @@ import spp.platform.common.ClusterConnection.getVertx
 import spp.platform.common.util.SecureUUID
 import spp.platform.common.util.args
 import spp.protocol.instrument.LiveInstrument
+import spp.protocol.instrument.event.LiveInstrumentEvent
 import spp.protocol.platform.auth.*
 import spp.protocol.platform.developer.Developer
 import spp.protocol.service.LiveManagementService
 import spp.protocol.service.error.PermissionAccessDenied
+import java.time.Instant
 import java.util.concurrent.CompletableFuture
 
 object SourceStorage {
@@ -448,6 +450,19 @@ object SourceStorage {
             promise.complete()
         }
         return promise.future()
+    }
+    suspend fun getLiveInstrumentEvents(
+        instrumentId: String? = null,
+        from: Instant? = null,
+        to: Instant? = null,
+        offset: Int = 0,
+        limit: Int = 100
+    ): List<LiveInstrumentEvent> {
+        return storage.getLiveInstrumentEvents(instrumentId, from, to, offset, limit)
+    }
+
+    suspend fun addLiveInstrumentEvent(instrument: LiveInstrument, event: LiveInstrumentEvent): LiveInstrumentEvent {
+        return storage.addLiveInstrumentEvent(event.withInstrument(instrument = instrument))
     }
 
     /**
