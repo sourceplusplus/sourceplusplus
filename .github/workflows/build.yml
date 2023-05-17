@@ -409,7 +409,6 @@ jobs:
           ./gradlew --no-daemon -Dtest.profile=integration \
             :interfaces:jetbrains:commander:test \
             :interfaces:jetbrains:commander:kotlin-compiler-wrapper:test \
-            :interfaces:jetbrains:common:test \
             :interfaces:jetbrains:core:test \
             :interfaces:jetbrains:insight:test \
             :interfaces:jetbrains:marker:test \
@@ -417,7 +416,6 @@ jobs:
             :interfaces:jetbrains:marker:jvm-marker:test \
             :interfaces:jetbrains:marker:py-marker:test \
             :interfaces:jetbrains:marker:ult-marker:test \
-            :interfaces:jetbrains:monitor:test \
             :interfaces:jetbrains:plugin:test 
 
   test-protocol:

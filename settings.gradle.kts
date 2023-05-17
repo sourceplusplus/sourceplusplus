@@ -20,7 +20,6 @@ include("demos:nodejs")
 include("interfaces:cli")
 include("interfaces:jetbrains:commander")
 include("interfaces:jetbrains:commander:kotlin-compiler-wrapper")
-include("interfaces:jetbrains:common")
 include("interfaces:jetbrains:core")
 include("interfaces:jetbrains:insight")
 include("interfaces:jetbrains:marker")
@@ -28,7 +27,6 @@ include("interfaces:jetbrains:marker:js-marker")
 include("interfaces:jetbrains:marker:jvm-marker")
 include("interfaces:jetbrains:marker:py-marker")
 include("interfaces:jetbrains:marker:ult-marker")
-include("interfaces:jetbrains:monitor")
 include("interfaces:jetbrains:plugin")
 include("platform:bridge")
 include("platform:common")
@@ -44,26 +42,3 @@ include("probes:nodejs")
 include("protocol")
 include("tutorials:jvm")
 include("tutorials:python")
-
-plugins {
-    id("org.danilopianini.gradle-pre-commit-git-hooks") version "1.1.7"
-}
-
-gitHooks {
-    commitMsg {
-        conventionalCommits {
-            types("build") //Changes that affect the build system or external dependencies
-            types("ci") //Changes to CI configuration files and scripts
-            types("docs") //Documentation only changes
-            types("feat") //A new feature
-            types("fix") //A bug fix
-            types("refactor") //Rewrite/restructure code without any changes in functionality
-            types("perf") //Refactors that improve performance
-            types("style") //Formatting, missing semi colons, etc; no code change
-            types("test") //Adding missing tests or correcting existing tests
-            types("ide") //Changes that affect IDE setup
-            types("chore") //Miscellaneous changes (automated dependency updates, etc)
-        }
-    }
-    createHooks()
-}
