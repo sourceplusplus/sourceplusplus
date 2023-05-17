@@ -27,8 +27,12 @@ import org.apache.skywalking.oap.server.core.storage.StorageID
 import org.joor.Reflect
 import spp.platform.common.ClusterConnection
 import spp.platform.common.util.args
+import spp.platform.storage.SourceStorage
 import spp.processor.view.ViewProcessor.realtimeMetricCache
 import spp.processor.view.impl.view.util.*
+import spp.protocol.instrument.event.LiveMeterHit
+import spp.protocol.instrument.meter.MeterType
+import java.time.Instant
 import java.util.concurrent.CopyOnWriteArrayList
 
 class LiveMeterView(private val subscriptionCache: MetricTypeSubscriptionCache) {
@@ -68,8 +72,23 @@ class LiveMeterView(private val subscriptionCache: MetricTypeSubscriptionCache) 
         } else if (metricName.startsWith("spp_") && !realTime) {
             return // ignore, spp_ metrics are exported only in realtime mode
         }
+
+        val metricService = EntityNaming.getServiceId(metrics)
+        val metricServiceInstance = EntityNaming.getServiceInstanceId(metadata)
         if (metricName.startsWith("spp_")) {
             log.debug { "Processing Source++ metrics: {} - Data: {}".args(metricName, metrics) }
+            val meterId = getLiveMeterId(metricName)
+            val liveMeter = SourceStorage.getLiveInstrument(meterId, true)
+            if (liveMeter != null) {
+                SourceStorage.addLiveInstrumentEvent(
+                    liveMeter,
+                    LiveMeterHit(
+                        liveMeter, JsonObject.mapFrom(metrics), Instant.now(),
+                        metricServiceInstance ?: "Unknown", //todo: test; always unknown for spp_ metrics?
+                        metricService ?: "Unknown"
+                    )
+                )
+            }
         }
 
         val subbedArtifacts = subscriptionCache[metricName]
@@ -80,7 +99,11 @@ class LiveMeterView(private val subscriptionCache: MetricTypeSubscriptionCache) 
             //remove subscribers with additional filters
             subs = subs.filter {
                 val service = it.subscription.artifactLocation?.service
-                if (service != null && service != EntityNaming.getServiceId(metrics)) {
+                if (service != null && service != metricService) {
+                    return@filter false
+                }
+                val serviceInstance = it.subscription.artifactLocation?.serviceInstance
+                if (serviceInstance != null && serviceInstance != metricServiceInstance) {
                     return@filter false
                 }
                 return@filter true
@@ -205,5 +228,14 @@ class LiveMeterView(private val subscriptionCache: MetricTypeSubscriptionCache) 
             jsonEvent.put("percentage", realtimeValue)
         }
         jsonEvent.put("value", realtimeValue)
+    }
+
+    //todo: more robust
+    private fun getLiveMeterId(metricName: String): String {
+        var meterId = metricName
+        MeterType.values().forEach {
+            meterId = meterId.substringAfter("spp_${it.name.lowercase()}_")
+        }
+        return meterId.replace("_", "-").substringBeforeLast("-")
     }
 }

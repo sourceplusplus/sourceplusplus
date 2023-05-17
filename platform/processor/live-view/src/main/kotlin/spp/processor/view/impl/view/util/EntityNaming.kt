@@ -108,4 +108,11 @@ object EntityNaming {
         }
         return null
     }
+
+    fun getServiceInstanceId(metrics: MetricsMetaInfo): String? {
+        if (DefaultScopeDefine.inServiceInstanceCatalog(metrics.scope)) {
+            return IDManager.ServiceInstanceID.analysisId(metrics.id).name
+        }
+        return null
+    }
 }
