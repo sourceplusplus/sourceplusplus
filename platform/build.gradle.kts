@@ -86,7 +86,7 @@ subprojects {
         implementation("org.bouncycastle:bcpkix-jdk15on:$bouncycastleVersion")
         implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
         implementation("commons-io:commons-io:$commonsIoVersion")
-        implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
+        implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.1")
         implementation("io.dropwizard.metrics:metrics-core:4.2.18")
         implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.0")
         implementation("org.apache.commons:commons-text:1.10.0")
