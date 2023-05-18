@@ -73,6 +73,7 @@ class LiveMeterView(private val subscriptionCache: MetricTypeSubscriptionCache) 
             return // ignore, spp_ metrics are exported only in realtime mode
         }
 
+        val jsonEvent = toViewEventJson(metrics, realTime)
         val metricService = EntityNaming.getServiceId(metrics)
         val metricServiceInstance = EntityNaming.getServiceInstanceId(metadata)
         if (metricName.startsWith("spp_")) {
@@ -83,7 +84,7 @@ class LiveMeterView(private val subscriptionCache: MetricTypeSubscriptionCache) 
                 SourceStorage.addLiveInstrumentEvent(
                     liveMeter,
                     LiveMeterHit(
-                        liveMeter, JsonObject.mapFrom(metrics), Instant.now(),
+                        liveMeter, jsonEvent, Instant.now(),
                         metricServiceInstance ?: "Unknown", //todo: test; always unknown for spp_ metrics?
                         metricService ?: "Unknown"
                     )
@@ -111,30 +112,16 @@ class LiveMeterView(private val subscriptionCache: MetricTypeSubscriptionCache) 
 
             if (subs.isNotEmpty()) {
                 log.trace { "Exporting event $metricName to {} subscribers".args(subs.size) }
-                handleEvent(subs, metrics, realTime)
+                subs.forEach { handleSubscriberEvent(it, metrics, jsonEvent) }
             }
         }
 
-        if (realtimeSubscribers.isNotEmpty()) {
-            val metricId = Reflect.on(metrics).call("id0").get<StorageID>().build()
-            val fullMetricId = metrics.javaClass.simpleName + "_" + metricId
-
-            val jsonMetric = JsonObject.mapFrom(metrics)
-            jsonMetric.put("realtime", realTime)
-            jsonMetric.put("metric_type", metrics.javaClass.simpleName)
-            jsonMetric.put("full_metric_id", fullMetricId)
-            if (realTime) {
-                val metricsName = jsonMetric.getJsonObject("meta").getString("metricsName")
-                if (!metricsName.startsWith("spp_")) {
-                    jsonMetric.getJsonObject("meta").put("metricsName", "${metricsName}_realtime")
-                }
-                setRealtimeValue(jsonMetric, metrics)
-                realtimeSubscribers.forEach { it.export(jsonMetric) }
-            }
+        if (realTime && realtimeSubscribers.isNotEmpty()) {
+            realtimeSubscribers.forEach { it.export(jsonEvent) }
         }
     }
 
-    private suspend fun handleEvent(subs: Set<ViewSubscriber>, metrics: Metrics, realTime: Boolean) {
+    private suspend fun toViewEventJson(metrics: Metrics, realTime: Boolean): JsonObject {
         val metricId = Reflect.on(metrics).call("id0").get<StorageID>().build()
         val fullMetricId = metrics.javaClass.simpleName + "_" + metricId
 
@@ -151,7 +138,7 @@ class LiveMeterView(private val subscriptionCache: MetricTypeSubscriptionCache) 
             jsonMetric.put("currentTime", System.currentTimeMillis())
         }
 
-        subs.forEach { handleSubscriberEvent(it, metrics, jsonMetric) }
+        return jsonMetric
     }
 
     private fun handleSubscriberEvent(sub: ViewSubscriber, metrics: Metrics, jsonMetric: JsonObject) {
