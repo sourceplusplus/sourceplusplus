@@ -409,7 +409,7 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
     }
 
     override fun getLiveInstrumentEvents(
-        instrumentId: String?,
+        instrumentIds: List<String>,
         from: Instant?,
         to: Instant?,
         offset: Int,
@@ -417,16 +417,18 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
     ): Future<List<LiveInstrumentEvent>> {
         val devAuth = Vertx.currentContext().getLocal<DeveloperAuth>("developer")
         log.info(
-            "Received get live instrument events request. Developer: {} - InstrumentId: {} - From: {} - To: {} - Offset: {} - Limit: {}",
-            devAuth, instrumentId, from, to, offset, limit
+            "Received get live instrument events request. Developer: {} - Instrument ids: {} - From: {} - To: {} - Offset: {} - Limit: {}",
+            devAuth, instrumentIds, from, to, offset, limit
         )
 
         val promise = Promise.promise<List<LiveInstrumentEvent>>()
         launch(vertx.dispatcher()) {
-            promise.complete(
-                SourceStorage.getLiveInstrumentEvents(instrumentId, from, to, offset, limit)
-                    .map { it.withInstrument(removeInternalMeta(it.instrument)!!) }
-            )
+            val events = mutableListOf<LiveInstrumentEvent>()
+            instrumentIds.forEach { instrumentId ->
+                events.addAll(SourceStorage.getLiveInstrumentEvents(instrumentId, from, to, offset, limit)
+                    .map { it.withInstrument(removeInternalMeta(it.instrument)!!) })
+            }
+            promise.complete(events)
         }
         return promise.future()
     }
