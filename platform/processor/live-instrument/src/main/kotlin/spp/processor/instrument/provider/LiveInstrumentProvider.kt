@@ -40,10 +40,10 @@ class LiveInstrumentModule : ModuleDefine("spp-live-instrument") {
     override fun services(): Array<Class<*>> = emptyArray()
 }
 
-class LiveInstrumentProcessorProvider : ModuleProvider() {
+class LiveInstrumentProvider : ModuleProvider() {
 
     companion object {
-        private val log = LoggerFactory.getLogger(LiveInstrumentProcessorProvider::class.java)
+        private val log = LoggerFactory.getLogger(LiveInstrumentProvider::class.java)
     }
 
     override fun name(): String = "default"

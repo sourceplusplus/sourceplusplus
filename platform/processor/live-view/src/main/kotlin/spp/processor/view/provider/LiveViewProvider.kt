@@ -57,7 +57,7 @@ class LiveViewModule : ModuleDefine("exporter") {
     )
 }
 
-class LiveViewProcessorProvider : ModuleProvider() {
+class LiveViewProvider : ModuleProvider() {
 
     private val log = KotlinLogging.logger {}
     private lateinit var remoteClientManager: RemoteClientManager
