@@ -23,6 +23,9 @@ import io.vertx.core.Vertx
 import io.vertx.core.json.JsonObject
 import io.vertx.ext.auth.JWTOptions
 import io.vertx.ext.auth.jwt.JWTAuth
+import io.vertx.ext.dropwizard.MetricsService
+import io.vertx.ext.healthchecks.HealthChecks
+import io.vertx.ext.healthchecks.Status
 import io.vertx.kotlin.coroutines.CoroutineVerticle
 import io.vertx.kotlin.coroutines.await
 import io.vertx.kotlin.coroutines.dispatcher
@@ -52,6 +55,7 @@ import spp.protocol.service.LiveInstrumentService
 import spp.protocol.service.LiveManagementService
 import spp.protocol.service.LiveViewService
 import spp.protocol.service.SourceServices
+import spp.protocol.service.error.HealthCheckException
 import java.text.SimpleDateFormat
 import java.time.Instant
 import java.time.temporal.ChronoUnit
@@ -73,6 +77,53 @@ class LiveManagementServiceImpl(
     private val aggregationQueryDAO = moduleManager.find(CoreModule.NAME)
         .provider()
         .getService(AggregationQueryService::class.java)
+    private lateinit var healthChecks: HealthChecks
+    private lateinit var metricsService: MetricsService
+
+    override suspend fun start() {
+        healthChecks = HealthChecks.create(vertx)
+        addServiceCheck(healthChecks, SourceServices.LIVE_MANAGEMENT)
+        addServiceCheck(healthChecks, SourceServices.LIVE_INSTRUMENT)
+        addServiceCheck(healthChecks, SourceServices.LIVE_VIEW)
+        metricsService = MetricsService.create(vertx)
+    }
+
+    override fun getHealth(): Future<JsonObject> {
+        log.trace { "Getting health" }
+        val promise = Promise.promise<JsonObject>()
+        healthChecks.checkStatus().onComplete {
+            if (it.result().up) {
+                promise.complete(it.result().toJson())
+            } else {
+                promise.fail(HealthCheckException(it.result().toJson()))
+            }
+        }
+        return promise.future()
+    }
+
+    override fun getMetrics(includeUnused: Boolean): Future<JsonObject> {
+        log.trace { "Getting metrics" }
+        val promise = Promise.promise<JsonObject>()
+        if (includeUnused) {
+            promise.complete(metricsService.getMetricsSnapshot("vertx"))
+        } else {
+            val rtnMetrics = JsonObject()
+            val vertxMetrics = metricsService.getMetricsSnapshot("vertx")
+            vertxMetrics.fieldNames().forEach {
+                val metric = vertxMetrics.getJsonObject(it)
+                val allZeros = metric.fieldNames().all {
+                    if (metric.getValue(it) is Number && (metric.getValue(it) as Number).toDouble() == 0.0) {
+                        true
+                    } else metric.getValue(it) !is Number
+                }
+                if (!allZeros) {
+                    rtnMetrics.put(it, metric)
+                }
+            }
+            promise.complete(rtnMetrics)
+        }
+        return promise.future()
+    }
 
     override fun setConfigurationValue(config: String, value: String): Future<Boolean> {
         log.trace { "Setting configuration value $config to $value" }
@@ -945,5 +996,36 @@ class LiveManagementServiceImpl(
                 .onFailure { promise.fail(it) }
         }
         return promise.future()
+    }
+
+    private fun addServiceCheck(checks: HealthChecks, serviceName: String) {
+        val registeredName = "services/${serviceName.substringAfterLast(".")}"
+        checks.register(registeredName) { promise ->
+            ClusterConnection.discovery.getRecord({ rec -> serviceName == rec.name }
+            ) { record ->
+                when {
+                    record.failed() -> promise.fail(record.cause())
+                    record.result() == null -> {
+                        val debugData = JsonObject().put("reason", "No published record(s)")
+                        promise.complete(Status.KO(debugData))
+                    }
+
+                    else -> {
+                        val reference = ClusterConnection.discovery.getReference(record.result())
+                        try {
+                            reference.get<Any>()
+                            promise.complete(Status.OK())
+                        } catch (ex: Throwable) {
+                            ex.printStackTrace()
+                            val debugData = JsonObject().put("reason", ex.message)
+                                .put("stack_trace", ex.stackTraceToString())
+                            promise.complete(Status.KO(debugData))
+                        } finally {
+                            reference.release()
+                        }
+                    }
+                }
+            }
+        }
     }
 }
