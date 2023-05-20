@@ -136,10 +136,7 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
     }
 
     private fun addLiveInstrument(devAuth: DeveloperAuth, instrument: LiveInstrument): Future<LiveInstrument> {
-        log.info(
-            "Received add live instrument request. Developer: {} - Location: {}",
-            devAuth, instrument.location.let { it.source + ":" + it.line }
-        )
+        log.info("Received add live instrument request. Developer: {} - Location: {}", devAuth, instrument.location)
 
         try {
             val promise = Promise.promise<LiveInstrument>()
@@ -293,7 +290,7 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
         val devAuth = Vertx.currentContext().getLocal<DeveloperAuth>("developer")
         log.info(
             "Received add live instrument batch request. Developer: {} - Location(s): {}",
-            devAuth, instruments.map { it.location.let { it.source + ":" + it.line } }
+            devAuth, instruments.map { it.location }
         )
 
         val results = mutableListOf<Future<*>>()
