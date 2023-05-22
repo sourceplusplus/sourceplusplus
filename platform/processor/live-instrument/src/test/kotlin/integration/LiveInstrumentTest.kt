@@ -58,7 +58,7 @@ class LiveInstrumentTest : LiveInstrumentIntegrationTest() {
     @Test
     fun getLiveInstrumentById(): Unit = runBlocking {
         val instrument = instrumentService.addLiveInstrument(
-            LiveBreakpoint(location = LiveSourceLocation("integration.LiveInstrumentTest", 1))
+            LiveBreakpoint(location = LiveSourceLocation("integration.LiveInstrumentTest", 1, "spp-test-probe"))
         ).await()
 
         val originalId = instrument.id!!
@@ -72,8 +72,8 @@ class LiveInstrumentTest : LiveInstrumentIntegrationTest() {
     fun getLiveInstrumentByIds(): Unit = runBlocking {
         val instrument = instrumentService.addLiveInstruments(
             listOf(
-                LiveBreakpoint(location = LiveSourceLocation("integration.LiveInstrumentTest", 1)),
-                LiveBreakpoint(location = LiveSourceLocation("integration.LiveInstrumentTest", 2))
+                LiveBreakpoint(location = LiveSourceLocation("integration.LiveInstrumentTest", 1, "spp-test-probe")),
+                LiveBreakpoint(location = LiveSourceLocation("integration.LiveInstrumentTest", 2, "spp-test-probe"))
             )
         ).await()
 
