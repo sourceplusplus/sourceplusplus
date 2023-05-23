@@ -47,7 +47,7 @@ class JWTTest : PlatformIntegrationTest() {
         val testContext = VertxTestContext()
         instrumentService.addLiveInstrument(
             LiveBreakpoint(
-                location = LiveSourceLocation("integration.JWTTest", 1),
+                location = LiveSourceLocation(JWTTest::class.java.name, 1, "spp-test-probe"),
                 condition = "1 == 2"
             )
         ).onComplete {
@@ -96,13 +96,15 @@ class JWTTest : PlatformIntegrationTest() {
         managementService.addRole(DeveloperRole.fromString("tester")).await()
         managementService.addDeveloperRole(testDev.id, DeveloperRole.fromString("tester")).await()
         managementService.addRolePermission(DeveloperRole.fromString("tester"), ADD_LIVE_BREAKPOINT).await()
-        val accessPermission = managementService.addAccessPermission(listOf("integration.JWTTest"), BLACK_LIST).await()
+        val accessPermission = managementService.addAccessPermission(
+            listOf(JWTTest::class.java.name), BLACK_LIST
+        ).await()
         managementService.addRoleAccessPermission(DeveloperRole.fromString("tester"), accessPermission.id).await()
         val accessToken = managementService.getAccessToken(testDev.authorizationCode!!).await()
         val instrumentService = LiveInstrumentService.createProxy(vertx, accessToken)
         instrumentService.addLiveInstrument(
             LiveBreakpoint(
-                location = LiveSourceLocation("integration.JWTTest", 2),
+                location = LiveSourceLocation(JWTTest::class.java.name, 2),
                 condition = "-41 == -12"
             )
         ).onComplete {

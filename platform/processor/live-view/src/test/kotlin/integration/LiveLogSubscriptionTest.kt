@@ -60,7 +60,7 @@ class LiveLogSubscriptionTest : LiveInstrumentIntegrationTest() {
             "test log",
             emptyList(),
             LiveSourceLocation(
-                LiveLogSubscriptionTest::class.qualifiedName!!,
+                LiveLogSubscriptionTest::class.java.name,
                 getLineNumber("done"),
                 "spp-test-probe"
             ),
