@@ -30,6 +30,7 @@ import spp.platform.common.util.args
 import spp.platform.storage.SourceStorage
 import spp.processor.view.ViewProcessor.realtimeMetricCache
 import spp.processor.view.impl.view.util.*
+import spp.processor.view.impl.view.util.EntityNaming.isSameService
 import spp.protocol.instrument.event.LiveMeterHit
 import spp.protocol.instrument.meter.MeterType
 import java.time.Instant
@@ -100,7 +101,7 @@ class LiveMeterView(private val subscriptionCache: MetricTypeSubscriptionCache) 
             //remove subscribers with additional filters
             subs = subs.filter {
                 val service = it.subscription.artifactLocation?.service
-                if (service != null && service != metricService) {
+                if (service != null && metricService != null && !isSameService(metricService, service)) {
                     return@filter false
                 }
                 val serviceInstance = it.subscription.artifactLocation?.serviceInstance

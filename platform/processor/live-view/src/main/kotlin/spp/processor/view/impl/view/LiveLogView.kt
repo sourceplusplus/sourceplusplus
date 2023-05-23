@@ -26,11 +26,11 @@ import mu.KotlinLogging
 import org.apache.skywalking.apm.network.logging.v3.LogData
 import org.apache.skywalking.oap.log.analyzer.provider.log.listener.LogAnalysisListener
 import org.apache.skywalking.oap.log.analyzer.provider.log.listener.LogAnalysisListenerFactory
-import org.apache.skywalking.oap.server.core.analysis.IDManager
 import org.apache.skywalking.oap.server.core.analysis.Layer
 import spp.platform.common.ClusterConnection
 import spp.processor.view.ViewProcessor
 import spp.processor.view.impl.view.model.LiveGaugeValueMetrics
+import spp.processor.view.impl.view.util.EntityNaming.isSameService
 import spp.processor.view.impl.view.util.MetricTypeSubscriptionCache
 import spp.processor.view.impl.view.util.ViewSubscriber
 import spp.protocol.artifact.log.Log
@@ -145,10 +145,6 @@ class LiveLogView(private val subscriptionCache: MetricTypeSubscriptionCache) : 
             .put("timeBucket", formatter.format(logRecord.timestamp))
             .put("log", JsonObject.mapFrom(logRecord))
         ClusterConnection.getVertx().eventBus().send(sub.consumer.address(), event)
-    }
-
-    private fun isSameService(serviceIdOrName: String, serviceName: String): Boolean {
-        return serviceIdOrName == serviceName || serviceIdOrName == IDManager.ServiceID.buildId(serviceName, true)
     }
 
     override fun create(layer: Layer?) = sppLogAnalyzer

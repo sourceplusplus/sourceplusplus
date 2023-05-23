@@ -75,7 +75,8 @@ class LiveLogSubscriptionTest : LiveInstrumentIntegrationTest() {
                 viewConfig = LiveViewConfig(
                     "test",
                     listOf("endpoint_logs")
-                )
+                ),
+                artifactLocation = LiveSourceLocation("", service = "spp-test-probe")
             )
         ).await().subscriptionId!!
         log.info("Using subscription id: {}", subscriptionId)
