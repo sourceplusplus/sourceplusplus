@@ -24,8 +24,6 @@ subprojects {
             substitute(module("plus.sourceplus:protocol"))
                 .using(project(":protocol"))
 
-            substitute(module("plus.sourceplus.interface:jetbrains-common"))
-                .using(project(":interfaces:jetbrains:common"))
             substitute(module("plus.sourceplus.interface:jetbrains-core"))
                 .using(project(":interfaces:jetbrains:core"))
             substitute(module("plus.sourceplus.interface:jetbrains-marker"))
