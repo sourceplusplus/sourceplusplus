@@ -1,1 +1,1 @@
-spp.processor.live.provider.LiveInstrumentProcessorProvider
+spp.processor.instrument.provider.LiveInstrumentProvider

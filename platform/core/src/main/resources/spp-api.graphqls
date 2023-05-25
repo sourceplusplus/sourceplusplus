@@ -83,6 +83,14 @@ type DeveloperRole {
 enum RolePermission {
     RESET,
 
+    GET_HEALTH,
+    GET_STATS,
+    GET_CLIENTS,
+    GET_METRICS,
+
+    SET_CONFIGURATION_VALUE,
+    GET_CONFIGURATION_VALUE,
+
     ADD_CLIENT_ACCESS,
     REMOVE_CLIENT_ACCESS,
     GET_CLIENT_ACCESSORS,
@@ -160,6 +168,12 @@ enum MetricValueType {
     VALUE_EXPRESSION
 }
 
+enum LocationScope {
+    LINE,
+    LAMBDA,
+    BOTH
+}
+
 type MetricValue {
     valueType: MetricValueType!
     value: String
@@ -188,6 +202,34 @@ type KeyValue {
 type MetaInfo {
     name: String!
     value: String!
+}
+
+enum LiveInstrumentEventType {
+    BREAKPOINT_ADDED,
+    BREAKPOINT_APPLIED,
+    BREAKPOINT_HIT,
+    BREAKPOINT_REMOVED,
+
+    LOG_ADDED,
+    LOG_APPLIED,
+    LOG_HIT,
+    LOG_REMOVED,
+
+    METER_ADDED,
+    METER_APPLIED,
+    METER_HIT,
+    METER_UPDATED,
+    METER_REMOVED,
+
+    SPAN_ADDED,
+    SPAN_APPLIED,
+    SPAN_REMOVED
+}
+
+type LiveInstrumentEvent {
+    instrument: LiveInstrument!
+    occurredAt: Long!
+    eventType: LiveInstrumentEventType!
 }
 
 interface LiveInstrument {
@@ -372,7 +414,13 @@ input MetaInfoInput {
 
 type LiveSourceLocation {
     source: String!
-    line: Int!
+    line: Int
+    service: String
+    serviceInstance: String
+    commitId: String
+    fileChecksum: String
+    probeId: String
+    scope: LocationScope!
 }
 
 input LiveSourceLocationInput {
@@ -479,6 +527,33 @@ type TimeInfo {
     currentTimestamp: Long!
 }
 
+type SystemConfig {
+    config: String!
+    value: String!
+}
+
+type SelectedRecord {
+    name: String!
+    id: String!
+    value: String!
+    refId: String
+}
+
+enum MetricScope {
+    All,
+    Service,
+    ServiceInstance,
+    Endpoint,
+    ServiceRelation,
+    ServiceInstanceRelation,
+    EndpointRelation
+}
+
+enum MetricOrder {
+    ASC,
+    DES
+}
+
 type Query {
     version: String!
     timeInfo: TimeInfo!
@@ -505,10 +580,30 @@ type Query {
     getLiveMeters: [LiveMeter!]!
     getLiveSpans: [LiveSpan!]!
 
+    getLiveInstrumentEvents(
+        instrumentId: String,
+        start: Long,
+        stop: Long,
+        offset: Int,
+        limit: Int
+    ): [LiveInstrumentEvent!]!
+
     getSelf: Self!
     getServices: [Service!]!
     getInstances(serviceId: String!): [ServiceInstance!]!
     getEndpoints(serviceId: String!): [ServiceEndpoint!]!
+    searchEndpoints(serviceId: String!, keyword: String!, limit: Int): [ServiceEndpoint!]!
+    sortMetrics(
+        name: String!
+        parentService: String
+        normal: Boolean,
+        scope: MetricScope,
+        topN: Int!,
+        order: MetricOrder!,
+        step: MetricStep!,
+        start: Long!,
+        stop: Long
+    ): [SelectedRecord!]!
     getClientAccessors: [ClientAccess!]!
 
     getLiveViews: [LiveView!]!
@@ -522,6 +617,9 @@ type Query {
     ): HistoricalView!
 
     getTraceStack(traceId: String!): TraceStack
+
+    getSystemConfig: [SystemConfig!]!
+    getSystemConfigValue(config: String!): String!
 }
 
 type Mutation {
@@ -562,6 +660,8 @@ type Mutation {
     addClientAccess: ClientAccess!
     removeClientAccess(id: String!): Boolean!
     refreshClientAccess(id: String!): ClientAccess!
+
+    setSystemConfigValue(config: String!, value: String!): Boolean!
 }
 
 scalar Long

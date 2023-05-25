@@ -23,8 +23,10 @@ import io.vertx.core.shareddata.Counter
 import io.vertx.core.shareddata.Lock
 import spp.platform.common.util.SecureUUID
 import spp.protocol.instrument.LiveInstrument
+import spp.protocol.instrument.event.LiveInstrumentEvent
 import spp.protocol.platform.auth.*
 import spp.protocol.platform.developer.Developer
+import java.time.Instant
 
 interface CoreStorage {
 
@@ -117,6 +119,16 @@ interface CoreStorage {
      * Retrieve all archived [LiveInstrument]s.
      */
     suspend fun getArchivedLiveInstruments(): List<LiveInstrument>
+
+    suspend fun getLiveInstrumentEvents(
+        instrumentId: String? = null,
+        from: Instant? = null,
+        to: Instant? = null,
+        offset: Int = 0,
+        limit: Int = 100
+    ): List<LiveInstrumentEvent>
+
+    suspend fun addLiveInstrumentEvent(event: LiveInstrumentEvent): LiveInstrumentEvent
 
     suspend fun namespace(location: String): String = location
 

@@ -68,7 +68,7 @@ class PrimitiveConditionITTest : LiveInstrumentIntegrationTest() {
         instrumentService.addLiveInstrument(
             LiveBreakpoint(
                 location = LiveSourceLocation(
-                    PrimitiveConditionITTest::class.qualifiedName!!,
+                    PrimitiveConditionITTest::class.java.name,
                     getLineNumber("done"),
                     "spp-test-probe"
                 ),
@@ -99,7 +99,7 @@ class PrimitiveConditionITTest : LiveInstrumentIntegrationTest() {
         instrumentService.addLiveInstrument(
             LiveBreakpoint(
                 location = LiveSourceLocation(
-                    PrimitiveConditionITTest::class.qualifiedName!!,
+                    PrimitiveConditionITTest::class.java.name,
                     getLineNumber("done"),
                     "spp-test-probe"
                 ),
@@ -130,7 +130,7 @@ class PrimitiveConditionITTest : LiveInstrumentIntegrationTest() {
         instrumentService.addLiveInstrument(
             LiveBreakpoint(
                 location = LiveSourceLocation(
-                    PrimitiveConditionITTest::class.qualifiedName!!,
+                    PrimitiveConditionITTest::class.java.name,
                     getLineNumber("done"),
                     "spp-test-probe"
                 ),

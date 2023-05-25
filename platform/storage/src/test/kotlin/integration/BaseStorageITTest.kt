@@ -30,11 +30,13 @@ import org.junit.jupiter.api.extension.ExtendWith
 import spp.platform.storage.CoreStorage
 import spp.platform.storage.SourceStorage
 import spp.protocol.instrument.*
+import spp.protocol.instrument.event.LiveInstrumentAdded
 import spp.protocol.instrument.location.LiveSourceLocation
 import spp.protocol.instrument.meter.MeterType
 import spp.protocol.instrument.meter.MetricValue
 import spp.protocol.instrument.meter.MetricValueType
 import spp.protocol.platform.auth.*
+import java.time.Instant
 import java.util.*
 
 @ExtendWith(VertxExtension::class)
@@ -661,5 +663,60 @@ abstract class BaseStorageITTest<T : CoreStorage> {
         assertNull(storageInstance.getLiveInstrument(id))
         assertEquals(0, storageInstance.getLiveInstruments().size)
         assertEquals(updatedInstrument.toJson(), storageInstance.getLiveInstrument(id, true)!!.toJson())
+    }
+
+    @Test
+    fun `get instrument events`(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+        val id = "get-instrument-events-" + UUID.randomUUID().toString()
+        val instrument = LiveBreakpoint(
+            location = LiveSourceLocation("file14", 1),
+            id = id
+        )
+
+        storageInstance.addLiveInstrument(instrument)
+        assertEquals(1, storageInstance.getLiveInstruments().size)
+        assertEquals(instrument.toJson(), storageInstance.getLiveInstrument(id)!!.toJson())
+
+        val addedEvent = LiveInstrumentAdded(instrument)
+        SourceStorage.addLiveInstrumentEvent(instrument, addedEvent)
+
+        val events = storageInstance.getLiveInstrumentEvents(id)
+        assertEquals(1, events.size)
+        assertEquals(addedEvent.toJson(), events.first().toJson())
+    }
+
+    @Test
+    fun `get instrument events by date range`(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+        val id = "get-instrument-events-by-date-range-" + UUID.randomUUID().toString()
+        val instrument1 = LiveBreakpoint(
+            location = LiveSourceLocation("file15", 1),
+            id = "$id-1"
+        )
+        storageInstance.addLiveInstrument(instrument1)
+        val instrument2 = LiveBreakpoint(
+            location = LiveSourceLocation("file15", 2),
+            id = "$id-2"
+        )
+        storageInstance.addLiveInstrument(instrument2)
+        val instrument3 = LiveBreakpoint(
+            location = LiveSourceLocation("file15", 3),
+            id = "$id-3"
+        )
+        storageInstance.addLiveInstrument(instrument3)
+
+        val now = Instant.now()
+        val addedEvent1 = LiveInstrumentAdded(instrument1, occurredAt = now.minusSeconds(10))
+        SourceStorage.addLiveInstrumentEvent(instrument1, addedEvent1)
+        val addedEvent2 = LiveInstrumentAdded(instrument2, occurredAt = now.minusSeconds(5))
+        SourceStorage.addLiveInstrumentEvent(instrument2, addedEvent2)
+        val addedEvent3 = LiveInstrumentAdded(instrument3, occurredAt = now)
+        SourceStorage.addLiveInstrumentEvent(instrument3, addedEvent3)
+
+        val events = storageInstance.getLiveInstrumentEvents(from = now.minusSeconds(6), to = now)
+            .filter { it.instrument.id?.startsWith(id) == true }.toList()
+        assertEquals(2, events.size)
+
+        assertEquals(addedEvent3.toJson(), events[0].toJson())
+        assertEquals(addedEvent2.toJson(), events[1].toJson())
     }
 }

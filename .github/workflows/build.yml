@@ -20,7 +20,7 @@ jobs:
     if: ${{ !contains(github.event.pull_request.head.ref, '#docs') && !(startsWith(github.event.head_commit.message, 'Merge pull request') && contains(github.event.head_commit.message, '#docs')) }}
 
     runs-on: ubuntu-20.04
-    timeout-minutes: 10
+    timeout-minutes: 15
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-verify-mono
       cancel-in-progress: true
@@ -115,14 +115,14 @@ jobs:
         with:
           submodules: 'recursive'
 
-      - uses: actions/cache@v3
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: test-platform-${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            test-platform-${{ runner.os }}-gradle-
+#       - uses: actions/cache@v3
+#         with:
+#           path: |
+#             ~/.gradle/caches
+#             ~/.gradle/wrapper
+#           key: test-platform-${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+#           restore-keys: |
+#             test-platform-${{ runner.os }}-gradle-
 
       - name: Download spp-platform image
         timeout-minutes: 5
@@ -409,7 +409,6 @@ jobs:
           ./gradlew --no-daemon -Dtest.profile=integration \
             :interfaces:jetbrains:commander:test \
             :interfaces:jetbrains:commander:kotlin-compiler-wrapper:test \
-            :interfaces:jetbrains:common:test \
             :interfaces:jetbrains:core:test \
             :interfaces:jetbrains:insight:test \
             :interfaces:jetbrains:marker:test \
@@ -417,7 +416,6 @@ jobs:
             :interfaces:jetbrains:marker:jvm-marker:test \
             :interfaces:jetbrains:marker:py-marker:test \
             :interfaces:jetbrains:marker:ult-marker:test \
-            :interfaces:jetbrains:monitor:test \
             :interfaces:jetbrains:plugin:test 
 
   test-protocol:
@@ -495,7 +493,7 @@ jobs:
           path: ./dist/spp-platform-${{ env.BUILD_VERSION }}.tar.gz
 
       - name: Remove Old Snapshot Packages
-        uses: smartsquaregmbh/delete-old-packages@v0.7.0
+        uses: smartsquaregmbh/delete-old-packages@v0.6.0
         with:
           keep: 0
           version-pattern: "^\\d+\\.\\d+\\.\\d+-SNAPSHOT$"

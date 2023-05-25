@@ -12,7 +12,6 @@
         <list>
           <option value=":interfaces:jetbrains:commander:check" />
           <option value=":interfaces:jetbrains:commander:kotlin-compiler-wrapper:check" />
-          <option value=":interfaces:jetbrains:common:check" />
           <option value=":interfaces:jetbrains:core:check" />
           <option value=":interfaces:jetbrains:insight:check" />
           <option value=":interfaces:jetbrains:marker:check" />
@@ -20,7 +19,6 @@
           <option value=":interfaces:jetbrains:marker:jvm-marker:check" />
           <option value=":interfaces:jetbrains:marker:py-marker:check" />
           <option value=":interfaces:jetbrains:marker:ult-marker:check" />
-          <option value=":interfaces:jetbrains:monitor:check" />
           <option value=":interfaces:jetbrains:plugin:check" />
         </list>
       </option>

@@ -23,6 +23,9 @@ import io.vertx.core.Vertx
 import io.vertx.core.json.JsonObject
 import io.vertx.ext.auth.JWTOptions
 import io.vertx.ext.auth.jwt.JWTAuth
+import io.vertx.ext.dropwizard.MetricsService
+import io.vertx.ext.healthchecks.HealthChecks
+import io.vertx.ext.healthchecks.Status
 import io.vertx.kotlin.coroutines.CoroutineVerticle
 import io.vertx.kotlin.coroutines.await
 import io.vertx.kotlin.coroutines.dispatcher
@@ -30,31 +33,35 @@ import kotlinx.coroutines.launch
 import mu.KotlinLogging
 import org.apache.commons.lang3.RandomStringUtils
 import org.apache.skywalking.oap.server.core.CoreModule
+import org.apache.skywalking.oap.server.core.query.AggregationQueryService
 import org.apache.skywalking.oap.server.core.query.MetadataQueryService
 import org.apache.skywalking.oap.server.core.query.enumeration.Step
 import org.apache.skywalking.oap.server.core.query.input.Duration
+import org.apache.skywalking.oap.server.core.query.input.TopNCondition
 import org.apache.skywalking.oap.server.library.module.ModuleManager
 import spp.platform.common.ClusterConnection
 import spp.platform.common.DeveloperAuth
 import spp.platform.common.service.SourceBridgeService
 import spp.platform.storage.SourceStorage
+import spp.platform.storage.config.SystemConfig
+import spp.protocol.artifact.metrics.MetricStep
 import spp.protocol.platform.ProbeAddress
 import spp.protocol.platform.auth.*
 import spp.protocol.platform.developer.Developer
 import spp.protocol.platform.developer.SelfInfo
-import spp.protocol.platform.general.Service
-import spp.protocol.platform.general.ServiceEndpoint
-import spp.protocol.platform.general.ServiceInstance
-import spp.protocol.platform.general.TimeInfo
+import spp.protocol.platform.general.*
 import spp.protocol.platform.status.InstanceConnection
 import spp.protocol.service.LiveInstrumentService
 import spp.protocol.service.LiveManagementService
 import spp.protocol.service.LiveViewService
 import spp.protocol.service.SourceServices
+import spp.protocol.service.error.HealthCheckException
 import java.text.SimpleDateFormat
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.*
+import org.apache.skywalking.oap.server.core.query.enumeration.Order as SkyWalkingOrder
+import org.apache.skywalking.oap.server.core.query.enumeration.Scope as SkyWalkingScope
 
 @Suppress("LargeClass", "TooManyFunctions") // public API
 class LiveManagementServiceImpl(
@@ -67,6 +74,105 @@ class LiveManagementServiceImpl(
     private val metadataQueryService = moduleManager.find(CoreModule.NAME)
         .provider()
         .getService(MetadataQueryService::class.java)
+    private val aggregationQueryDAO = moduleManager.find(CoreModule.NAME)
+        .provider()
+        .getService(AggregationQueryService::class.java)
+    private lateinit var healthChecks: HealthChecks
+    private lateinit var metricsService: MetricsService
+
+    override suspend fun start() {
+        healthChecks = HealthChecks.create(vertx)
+        addServiceCheck(healthChecks, SourceServices.LIVE_MANAGEMENT)
+        addServiceCheck(healthChecks, SourceServices.LIVE_INSTRUMENT)
+        addServiceCheck(healthChecks, SourceServices.LIVE_VIEW)
+        metricsService = MetricsService.create(vertx)
+    }
+
+    override fun getHealth(): Future<JsonObject> {
+        log.trace { "Getting health" }
+        val promise = Promise.promise<JsonObject>()
+        healthChecks.checkStatus().onComplete {
+            if (it.result().up) {
+                promise.complete(it.result().toJson())
+            } else {
+                promise.fail(HealthCheckException(it.result().toJson()))
+            }
+        }
+        return promise.future()
+    }
+
+    override fun getMetrics(includeUnused: Boolean): Future<JsonObject> {
+        log.trace { "Getting metrics" }
+        val promise = Promise.promise<JsonObject>()
+        if (includeUnused) {
+            promise.complete(metricsService.getMetricsSnapshot("vertx"))
+        } else {
+            val rtnMetrics = JsonObject()
+            val vertxMetrics = metricsService.getMetricsSnapshot("vertx")
+            vertxMetrics.fieldNames().forEach {
+                val metric = vertxMetrics.getJsonObject(it)
+                val allZeros = metric.fieldNames().all {
+                    if (metric.getValue(it) is Number && (metric.getValue(it) as Number).toDouble() == 0.0) {
+                        true
+                    } else metric.getValue(it) !is Number
+                }
+                if (!allZeros) {
+                    rtnMetrics.put(it, metric)
+                }
+            }
+            promise.complete(rtnMetrics)
+        }
+        return promise.future()
+    }
+
+    override fun setConfigurationValue(config: String, value: String): Future<Boolean> {
+        log.trace { "Setting configuration value $config to $value" }
+        val promise = Promise.promise<Boolean>()
+        launch(vertx.dispatcher()) {
+            if (!SystemConfig.isValidConfig(config)) {
+                promise.fail("Invalid configuration $config")
+                return@launch
+            }
+
+            try {
+                val config = SystemConfig.get(config)
+                config.validator.validateChange(value)
+                val saveValue = config.mapper.mapper(value)!!
+                config.set(saveValue.toString()) //todo: raw saveValue
+
+                promise.complete(true)
+            } catch (ex: Throwable) {
+                promise.fail(ex)
+            }
+        }
+        return promise.future()
+    }
+
+    override fun getConfigurationValue(config: String): Future<String> {
+        log.trace { "Getting configuration value $config" }
+        val promise = Promise.promise<String>()
+        launch(vertx.dispatcher()) {
+            if (SystemConfig.isValidConfig(config)) {
+                promise.complete(SystemConfig.get(config).get().toString())
+            } else {
+                promise.fail("Invalid configuration $config")
+            }
+        }
+        return promise.future()
+    }
+
+    override fun getConfiguration(): Future<JsonObject> {
+        log.trace { "Getting configuration" }
+        val promise = Promise.promise<JsonObject>()
+        launch(vertx.dispatcher()) {
+            val config = JsonObject()
+            SystemConfig.values().forEach {
+                config.put(it.name, it.get())
+            }
+            promise.complete(config)
+        }
+        return promise.future()
+    }
 
     override fun getVersion(): Future<String> {
         log.trace { "Getting version" }
@@ -499,20 +605,60 @@ class LiveManagementServiceImpl(
         return promise.future()
     }
 
-    override fun getEndpoints(serviceId: String): Future<List<ServiceEndpoint>> {
+    override fun getEndpoints(serviceId: String, limit: Int?): Future<List<ServiceEndpoint>> {
         log.trace { "Getting endpoints for service $serviceId" }
         val promise = Promise.promise<List<ServiceEndpoint>>()
         launch(vertx.dispatcher()) {
             val result = mutableListOf<ServiceEndpoint>()
-            metadataQueryService.findEndpoint("", serviceId, 1000).forEach {
-                result.add(
-                    ServiceEndpoint(
-                        id = it.id,
-                        name = it.name
-                    )
-                )
+            metadataQueryService.findEndpoint("", serviceId, limit ?: 1000).forEach {
+                result.add(ServiceEndpoint(it.id, it.name))
             }
             promise.complete(result)
+        }
+        return promise.future()
+    }
+
+    override fun searchEndpoints(serviceId: String, keyword: String, limit: Int?): Future<List<ServiceEndpoint>> {
+        log.trace { "Searching endpoints for service $serviceId" }
+        val promise = Promise.promise<List<ServiceEndpoint>>()
+        launch(vertx.dispatcher()) {
+            val result = mutableListOf<ServiceEndpoint>()
+            metadataQueryService.findEndpoint(keyword, serviceId, limit ?: 1000).forEach {
+                result.add(ServiceEndpoint(it.id, it.name))
+            }
+            promise.complete(result)
+        }
+        return promise.future()
+    }
+
+    override fun sortMetrics(
+        name: String,
+        parentService: String?,
+        normal: Boolean?,
+        scope: Scope?,
+        topN: Int,
+        order: Order,
+        step: MetricStep,
+        start: Instant,
+        stop: Instant?
+    ): Future<List<SelectedRecord>> {
+        log.trace { "Sorting metrics" }
+        val promise = Promise.promise<List<SelectedRecord>>()
+        launch(vertx.dispatcher()) {
+            aggregationQueryDAO.sortMetrics(TopNCondition().apply {
+                this.name = name
+                this.parentService = parentService
+                this.isNormal = normal ?: false
+                this.scope = SkyWalkingScope.valueOf(scope?.name ?: "ALL")
+                this.topN = topN
+                this.order = SkyWalkingOrder.valueOf(order.name)
+            }, Duration().apply {
+                this.start = step.formatter.format(start)
+                this.end = step.formatter.format(stop ?: Instant.now())
+                this.step = Step.valueOf(step.name)
+            }).map { JsonObject.mapFrom(it) }.map { SelectedRecord(it) }.let {
+                promise.complete(it)
+            }
         }
         return promise.future()
     }
@@ -850,5 +996,36 @@ class LiveManagementServiceImpl(
                 .onFailure { promise.fail(it) }
         }
         return promise.future()
+    }
+
+    private fun addServiceCheck(checks: HealthChecks, serviceName: String) {
+        val registeredName = "services/${serviceName.substringAfterLast(".")}"
+        checks.register(registeredName) { promise ->
+            ClusterConnection.discovery.getRecord({ rec -> serviceName == rec.name }
+            ) { record ->
+                when {
+                    record.failed() -> promise.fail(record.cause())
+                    record.result() == null -> {
+                        val debugData = JsonObject().put("reason", "No published record(s)")
+                        promise.complete(Status.KO(debugData))
+                    }
+
+                    else -> {
+                        val reference = ClusterConnection.discovery.getReference(record.result())
+                        try {
+                            reference.get<Any>()
+                            promise.complete(Status.OK())
+                        } catch (ex: Throwable) {
+                            ex.printStackTrace()
+                            val debugData = JsonObject().put("reason", ex.message)
+                                .put("stack_trace", ex.stackTraceToString())
+                            promise.complete(Status.KO(debugData))
+                        } finally {
+                            reference.release()
+                        }
+                    }
+                }
+            }
+        }
     }
 }
