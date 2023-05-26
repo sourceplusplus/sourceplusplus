@@ -59,7 +59,7 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
             triggerGauge()
         }
 
-        val supplier = object : Supplier<Double>, Serializable {
+        val supplier = @Suppress("SerialVersionUIDInSerializableClass") object : Supplier<Double>, Serializable {
             override fun get(): Double = System.currentTimeMillis().toDouble()
         }
         val encodedSupplier = Base64.getEncoder().encodeToString(ByteArrayOutputStream().run {
