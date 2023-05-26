@@ -36,7 +36,7 @@ import spp.protocol.insight.InsightType
  * is responsible for collecting live insight data, storing insight data to the CPG, and
  *  maintaining the priority of insight data.
  */
-abstract class InsightModerator : CoroutineVerticle() {
+abstract class InsightModerator : CoroutineVerticle() {//todo: InsightSensor?
 
     private val log = KotlinLogging.logger {}
     protected val offerQueue = BoundedTreeSet<LiveInsightRequest>(100)
