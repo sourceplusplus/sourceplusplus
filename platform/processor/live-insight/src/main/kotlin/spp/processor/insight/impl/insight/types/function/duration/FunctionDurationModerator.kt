@@ -15,10 +15,9 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package spp.processor.live.impl.insight.types.function.duration
+package spp.processor.insight.impl.insight.types.function.duration
 
 import com.intellij.psi.PsiFile
-import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiNamedElement
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
@@ -34,17 +33,16 @@ import org.apache.skywalking.oap.server.analyzer.provider.trace.parser.listener.
 import org.apache.skywalking.oap.server.library.module.ModuleManager
 import org.apache.skywalking.oap.server.telemetry.api.MetricsTag
 import spp.jetbrains.artifact.service.getFunctions
-import spp.jetbrains.marker.jvm.detect.JVMEndpointDetector
 import spp.jetbrains.marker.service.getFullyQualifiedName
 import spp.platform.common.util.args
 import spp.platform.storage.SourceStorage
-import spp.processor.InsightProcessor.workspaceQueue
-import spp.processor.ViewProcessor
-import spp.processor.live.impl.environment.InsightEnvironment
-import spp.processor.live.impl.insight.LiveMetricProcessor
-import spp.processor.live.impl.moderate.InsightModerator
-import spp.processor.live.impl.moderate.model.LiveInsightRequest
-import spp.processor.live.impl.moderate.model.UniqueMeterName
+import spp.processor.insight.InsightProcessor.workspaceQueue
+import spp.processor.insight.impl.environment.InsightEnvironment
+import spp.processor.insight.impl.insight.LiveMetricProcessor
+import spp.processor.insight.impl.moderate.InsightModerator
+import spp.processor.insight.impl.moderate.model.LiveInsightRequest
+import spp.processor.insight.impl.moderate.model.UniqueMeterName
+import spp.processor.view.ViewProcessor
 import spp.protocol.artifact.ArtifactQualifiedName
 import spp.protocol.insight.InsightType
 import spp.protocol.instrument.LiveMeter
@@ -52,7 +50,7 @@ import spp.protocol.instrument.location.LiveSourceLocation
 import spp.protocol.instrument.meter.MeterType
 import spp.protocol.instrument.meter.MetricValue
 import spp.protocol.instrument.meter.MetricValueType
-import spp.protocol.view.rule.LiveViewRule
+import spp.protocol.view.rule.ViewRule
 import java.time.Instant
 import java.util.*
 
@@ -118,7 +116,7 @@ class FunctionDurationModerator : InsightModerator(),
         val metricIdWithoutPrefix = liveMeter.meterType.name.lowercase() + "_" +
                 liveMeter.id!!.replace("[^a-zA-Z0-9]".toRegex(), "_") //todo: remove
         ViewProcessor.liveViewService.saveRuleIfAbsent(
-            LiveViewRule(
+            ViewRule(
                 "${metricIdWithoutPrefix}_avg",
                 buildString {
                     append("(")
@@ -132,7 +130,7 @@ class FunctionDurationModerator : InsightModerator(),
             log.error("Failed to save rule for ${metricIdWithoutPrefix}_avg", it)
         }
         ViewProcessor.liveViewService.saveRuleIfAbsent(
-            LiveViewRule(
+            ViewRule(
                 "${metricIdWithoutPrefix}_count",
                 buildString {
                     append("(")
@@ -216,12 +214,14 @@ class FunctionDurationModerator : InsightModerator(),
             log.debug("Function: $qualifiedName - Total duration: $duration ms")
         }
 
-        JVMEndpointDetector(function.project).determineEndpointName(function as PsiMethod).await().forEach {
-            SourceStorage.get<Long>("${InsightType.FUNCTION_DURATION}:${it.name}")?.let { duration ->
-                durationInsights.add(JsonObject().put(it.toString(), duration))
-                log.debug("Endpoint: ${it.name} - Total duration: $duration ms")
-            }
-        }
+//        val fileMarker = SourceFileMarker(function.containingFile)
+//        val guideMark = MethodGuideMark(fileMarker, function as PsiMethod)
+//        JVMEndpointDetector(function.project).determineEndpointName(guideMark).await().forEach {
+//            SourceStorage.get<Long>("${InsightType.FUNCTION_DURATION}:${it.name}")?.let { duration ->
+//                durationInsights.add(JsonObject().put(it.toString(), duration))
+//                log.debug("Endpoint: ${it.name} - Total duration: $duration ms")
+//            }
+//        }
 
         return durationInsights
     }

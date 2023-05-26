@@ -21,9 +21,10 @@ import com.intellij.psi.PsiFile
 import io.vertx.core.json.JsonObject
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import spp.processor.live.impl.environment.InsightEnvironment
-import spp.processor.live.impl.moderate.InsightModerator
-import spp.processor.live.impl.moderate.model.LiveInsightRequest
+import spp.processor.insight.impl.environment.InsightEnvironment
+import spp.processor.insight.impl.moderate.InsightModerator
+import spp.processor.insight.impl.moderate.model.LiveInsightRequest
+import spp.processor.insight.impl.util.BoundedTreeSet
 import spp.protocol.artifact.ArtifactQualifiedName
 import spp.protocol.insight.InsightType
 import spp.protocol.instrument.LiveMeter

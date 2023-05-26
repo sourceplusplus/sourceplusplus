@@ -15,18 +15,34 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package spp.processor.live.provider
+package spp.processor.insight.impl.util
 
-import spp.processor.live.impl.environment.InsightEnvironment
+import java.util.*
 
-object InsightWorkspaceProvider {
+class BoundedTreeSet<E>(
+    private var limit: Int
+) : TreeSet<E>() {
 
-    val insightEnvironment = InsightEnvironment().apply {
-//        UserData.vertx(project, ClusterConnection.getVertx())
-//        JVMLanguageProvider().setup(project)
+    private fun adjust() {
+        while (limit < size) {
+            remove(last())
+        }
     }
 
-    fun getWorkspace(workspaceId: String): InsightEnvironment {
-        return insightEnvironment
+    override fun add(element: E): Boolean {
+        //replace existing element if it exists
+        if (contains(element)) {
+            remove(element)
+        }
+
+        val out = super.add(element)
+        adjust()
+        return out
+    }
+
+    override fun addAll(elements: Collection<E>): Boolean {
+        val out = super.addAll(elements)
+        adjust()
+        return out
     }
 }

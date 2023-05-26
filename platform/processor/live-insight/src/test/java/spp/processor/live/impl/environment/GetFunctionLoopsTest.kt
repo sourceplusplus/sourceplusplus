@@ -20,6 +20,7 @@ package spp.processor.live.impl.environment
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import spp.jetbrains.artifact.service.ArtifactScopeService
+import spp.processor.insight.impl.environment.InsightEnvironment
 import java.io.File
 
 class GetFunctionLoopsTest {

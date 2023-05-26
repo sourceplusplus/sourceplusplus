@@ -15,9 +15,9 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package spp.processor.live.impl.moderate.model
+package spp.processor.insight.impl.moderate.model
 
-import spp.processor.live.impl.moderate.InsightModerator
+import spp.processor.insight.impl.moderate.InsightModerator
 import spp.protocol.instrument.LiveInstrument
 import java.time.Instant
 

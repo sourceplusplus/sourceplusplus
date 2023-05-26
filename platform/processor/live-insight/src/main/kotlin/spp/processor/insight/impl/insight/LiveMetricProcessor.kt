@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package spp.processor.live.impl.insight
+package spp.processor.insight.impl.insight
 
 import com.codahale.metrics.*
 import com.codahale.metrics.Timer
@@ -27,9 +27,9 @@ import org.apache.skywalking.oap.server.analyzer.provider.meter.process.IMeterPr
 import org.slf4j.LoggerFactory
 import spp.platform.common.FeedbackProcessor
 import spp.platform.storage.SourceStorage
-import spp.processor.InsightProcessor
-import spp.processor.live.impl.moderate.model.UniqueMeterName
-import spp.protocol.view.rule.LiveViewRule
+import spp.processor.insight.InsightProcessor
+import spp.processor.insight.impl.moderate.model.UniqueMeterName
+import spp.protocol.view.rule.ViewRule
 import java.util.*
 import java.util.concurrent.TimeUnit
 
@@ -85,8 +85,8 @@ object LiveMetricProcessor {
                 SourceStorage.put("spp_${key.type.name.lowercase()}_${key.meterName}_gauge", key.methodName!!)
             }
             log.info("Saving rule: ${key.type.name.lowercase()}_${key.meterName}_gauge")
-            InsightProcessor.viewService.saveRule( //todo: saveRuleIfAbsent
-                LiveViewRule(
+            InsightProcessor.viewService.saveRuleIfAbsent( //todo: saveRuleIfAbsent
+                ViewRule(
                     name = "${key.type.name.lowercase()}_${key.meterName}_gauge",
                     exp = buildString {
                         append("(")
@@ -97,11 +97,7 @@ object LiveMetricProcessor {
                     }
                 )
             ).onFailure {
-                if (it.message?.endsWith("already exists") == true) {
-                    log.info(it.message) // expected
-                } else {
-                    log.error("Failed to save rule", it)
-                }
+                log.error("Failed to save rule", it)
             }
 
             return gauge
@@ -125,8 +121,8 @@ object LiveMetricProcessor {
                 SourceStorage.put("spp_${key.type.name.lowercase()}_${key.meterName}_count", key.methodName!!)
             }
             log.info("Saving rule: ${key.type.name.lowercase()}_${key.meterName}_count")
-            InsightProcessor.viewService.saveRule( //todo: saveRuleIfAbsent
-                LiveViewRule(
+            InsightProcessor.viewService.saveRuleIfAbsent(
+                ViewRule(
                     name = "${key.type.name.lowercase()}_${key.meterName}_count",
                     exp = buildString {
                         append("(")
@@ -137,11 +133,7 @@ object LiveMetricProcessor {
                     }
                 )
             ).onFailure {
-                if (it.message?.endsWith("already exists") == true) {
-                    log.info(it.message) // expected
-                } else {
-                    log.error("Failed to save rule", it)
-                }
+                log.error("Failed to save rule", it)
             }
 
             return counter

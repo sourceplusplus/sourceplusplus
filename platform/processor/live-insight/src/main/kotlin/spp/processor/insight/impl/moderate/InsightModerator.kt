@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package spp.processor.live.impl.moderate
+package spp.processor.insight.impl.moderate
 
 import com.intellij.psi.PsiFile
 import io.vertx.core.json.JsonObject
@@ -23,11 +23,11 @@ import io.vertx.kotlin.coroutines.CoroutineVerticle
 import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.launch
 import mu.KotlinLogging
-import spp.processor.InsightProcessor
-import spp.processor.live.impl.environment.InsightEnvironment
-import spp.processor.live.impl.moderate.model.LiveInsightRequest
-import spp.processor.live.impl.util.BoundedTreeSet
-import spp.processor.live.provider.InsightWorkspaceProvider
+import spp.processor.insight.InsightProcessor
+import spp.processor.insight.impl.environment.InsightEnvironment
+import spp.processor.insight.impl.moderate.model.LiveInsightRequest
+import spp.processor.insight.impl.util.BoundedTreeSet
+import spp.processor.insight.provider.InsightWorkspaceProvider
 import spp.protocol.artifact.ArtifactQualifiedName
 import spp.protocol.insight.InsightType
 

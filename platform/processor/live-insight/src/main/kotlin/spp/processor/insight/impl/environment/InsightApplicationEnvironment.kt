@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package spp.processor.live.impl.environment
+package spp.processor.insight.impl.environment
 
 import com.intellij.DynamicBundle
 import com.intellij.codeInsight.ContainerProvider

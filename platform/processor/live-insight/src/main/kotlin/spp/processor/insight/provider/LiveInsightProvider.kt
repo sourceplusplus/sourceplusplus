@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package spp.processor.live.provider
+package spp.processor.insight.provider
 
 import org.apache.skywalking.oap.server.analyzer.module.AnalyzerModule
 import org.apache.skywalking.oap.server.analyzer.provider.trace.parser.ISegmentParserService
@@ -29,16 +29,16 @@ import org.apache.skywalking.oap.server.library.module.ModuleDefine
 import org.apache.skywalking.oap.server.library.module.ModuleProvider
 import org.joor.Reflect
 import org.slf4j.LoggerFactory
-import spp.processor.InsightProcessor
+import spp.processor.insight.InsightProcessor
 
 class LiveInsightModule : ModuleDefine("spp-live-insight") {
     override fun services(): Array<Class<*>> = emptyArray()
 }
 
-class LiveInsightProcessorProvider : ModuleProvider() {
+class LiveInsightProvider : ModuleProvider() {
 
     companion object {
-        private val log = LoggerFactory.getLogger(LiveInsightProcessorProvider::class.java)
+        private val log = LoggerFactory.getLogger(LiveInsightProvider::class.java)
     }
 
     override fun name(): String = "default"
@@ -47,7 +47,7 @@ class LiveInsightProcessorProvider : ModuleProvider() {
     override fun prepare() = Unit
 
     override fun start() {
-        log.info("Starting LiveInsightProcessorProvider")
+        log.info("Starting LiveInsightProvider")
 
         //add inspectors
         val segmentParserService = manager.find(AnalyzerModule.NAME)
@@ -56,7 +56,7 @@ class LiveInsightProcessorProvider : ModuleProvider() {
         listenerManager.spanListenerFactories.addAll(InsightProcessor.moderators.filterIsInstance<AnalysisListenerFactory>())
 
         InsightProcessor.bootProcessor(manager)
-        log.info("LiveInsightProcessorProvider started")
+        log.info("LiveInsightProvider started")
     }
 
     override fun notifyAfterCompleted() = Unit

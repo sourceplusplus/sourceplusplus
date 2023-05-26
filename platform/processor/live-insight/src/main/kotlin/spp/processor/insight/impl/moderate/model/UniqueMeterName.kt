@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package spp.processor.live.impl.moderate.model
+package spp.processor.insight.impl.moderate.model
 
 import org.apache.skywalking.oap.server.telemetry.api.MetricsTag
 import spp.protocol.insight.InsightType

@@ -19,6 +19,7 @@ package spp.processor.live.impl.environment
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import spp.processor.insight.impl.environment.InsightEnvironment
 import java.io.File
 
 class GetProjectFunctionsTest {
@@ -29,6 +30,6 @@ class GetProjectFunctionsTest {
         env.addSourceDirectory(File("src/test/testData"))
 
         val projectFunctions = env.getAllFunctions()
-        assertEquals(3, projectFunctions.size)
+        assertEquals(4, projectFunctions.size)
     }
 }

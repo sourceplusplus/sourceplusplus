@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package spp.processor.live.impl
+package spp.processor.insight.impl
 
 import io.vertx.core.Future
 import io.vertx.core.Promise
@@ -31,8 +31,8 @@ import mu.KotlinLogging
 import org.zeroturnaround.exec.ProcessExecutor
 import org.zeroturnaround.exec.ProcessResult
 import org.zeroturnaround.exec.stream.slf4j.Slf4jStream
-import spp.processor.InsightProcessor
-import spp.processor.live.provider.InsightWorkspaceProvider
+import spp.processor.insight.InsightProcessor
+import spp.processor.insight.provider.InsightWorkspaceProvider
 import spp.protocol.artifact.ArtifactQualifiedName
 import spp.protocol.insight.InsightType
 import spp.protocol.service.LiveInsightService

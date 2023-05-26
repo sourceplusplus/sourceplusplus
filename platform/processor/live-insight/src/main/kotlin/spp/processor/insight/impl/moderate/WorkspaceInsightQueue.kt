@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package spp.processor.live.impl.moderate
+package spp.processor.insight.impl.moderate
 
 import com.intellij.util.ui.update.MergingUpdateQueue
 import com.intellij.util.ui.update.Update
@@ -24,8 +24,8 @@ import io.vertx.kotlin.coroutines.await
 import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
-import spp.processor.InsightProcessor.instrumentService
-import spp.processor.live.impl.moderate.model.LiveInsightRequest
+import spp.processor.insight.InsightProcessor.instrumentService
+import spp.processor.insight.impl.moderate.model.LiveInsightRequest
 
 /**
  * Holds the queue of insights to be collected and prioritized by moderators for a given workspace.

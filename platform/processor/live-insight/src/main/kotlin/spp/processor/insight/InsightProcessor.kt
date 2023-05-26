@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package spp.processor
+package spp.processor.insight
 
 import io.vertx.core.CompositeFuture
 import io.vertx.core.DeploymentOptions
@@ -30,10 +30,10 @@ import org.apache.skywalking.oap.server.library.module.ModuleManager
 import spp.platform.common.ClusterConnection.discovery
 import spp.platform.common.FeedbackProcessor
 import spp.platform.storage.SourceStorage
-import spp.processor.live.impl.LiveInsightServiceImpl
-import spp.processor.live.impl.insight.types.function.duration.FunctionDurationModerator
-import spp.processor.live.impl.moderate.InsightModerator
-import spp.processor.live.impl.moderate.WorkspaceInsightQueue
+import spp.processor.insight.impl.LiveInsightServiceImpl
+import spp.processor.insight.impl.insight.types.function.duration.FunctionDurationModerator
+import spp.processor.insight.impl.moderate.InsightModerator
+import spp.processor.insight.impl.moderate.WorkspaceInsightQueue
 import spp.protocol.service.LiveInsightService
 import spp.protocol.service.LiveInstrumentService
 import spp.protocol.service.LiveViewService
