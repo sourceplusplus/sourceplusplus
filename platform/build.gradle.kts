@@ -106,7 +106,7 @@ subprojects {
         compileOnly("org.apache.skywalking:storage-elasticsearch-plugin:$skywalkingVersion") { isTransitive = false }
         compileOnly("org.apache.skywalking:library-elasticsearch-client:$skywalkingVersion") { isTransitive = false }
 
-        detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.22.0")
+        detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.23.0")
 
         testImplementation("org.slf4j:slf4j-simple:$slf4jVersion")
         testImplementation("org.junit.jupiter:junit-jupiter-engine:$jupiterVersion")
