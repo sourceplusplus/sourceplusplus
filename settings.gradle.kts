@@ -1,6 +1,6 @@
 pluginManagement {
     plugins {
-        val kotlinVersion = "1.8.10"
+        val kotlinVersion = "1.8.21"
         id("org.jetbrains.kotlin.jvm") version kotlinVersion apply false
         id("org.jetbrains.kotlin.kapt") version kotlinVersion apply false
         id("org.jetbrains.kotlin.plugin.noarg") version kotlinVersion apply false
