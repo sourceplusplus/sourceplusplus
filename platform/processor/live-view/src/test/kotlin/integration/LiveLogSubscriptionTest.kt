@@ -64,7 +64,7 @@ class LiveLogSubscriptionTest : LiveInstrumentIntegrationTest() {
                 getLineNumber("done"),
                 "spp-test-probe"
             ),
-            id = "live-log-subscription-test",
+            id = testNameAsInstrumentId,
             hitLimit = 5,
             applyImmediately = true
         )

@@ -796,8 +796,8 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
 
     @Test
     fun `ensure getLiveInstruments works`() = runBlocking {
-        val addLiveMeterResp = request.sendJsonObject(addLiveMeterRequest).await().bodyAsJsonObject()
-        assertNull(addLiveMeterResp.getJsonArray("errors"))
+        val addLiveBreakpointResp = request.sendJsonObject(addLiveBreakpointRequest).await().bodyAsJsonObject()
+        assertNull(addLiveBreakpointResp.getJsonArray("errors"))
 
         val getLiveInstrumentsResp =
             request.sendJsonObject(JsonObject().put("query", getGraphql("instrument/get-live-instruments")))
@@ -822,9 +822,9 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
     //todo: does not validate if LiveInstrument with ID exist
     @Test
     fun `ensure removeLiveInstrument works`() = runBlocking {
-        val addLiveMeterResp = request.sendJsonObject(addLiveMeterRequest).await().bodyAsJsonObject()
-        assertNull(addLiveMeterResp.getJsonArray("errors"))
-        val liveMeter = addLiveMeterResp.getJsonObject("data").getJsonObject("addLiveMeter")
+        val addLiveBreakpointResp = request.sendJsonObject(addLiveBreakpointRequest).await().bodyAsJsonObject()
+        assertNull(addLiveBreakpointResp.getJsonArray("errors"))
+        val liveMeter = addLiveBreakpointResp.getJsonObject("data").getJsonObject("addLiveBreakpoint")
         val liveMeterId = liveMeter.getString("id")
 
         val removeLiveInstrumentResp = request.sendJsonObject(
@@ -840,21 +840,21 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
     //needs verification
     @Test
     fun `ensure removeLiveInstruments works`() = runBlocking {
-        val addLiveMeterResp = request.sendJsonObject(addLiveMeterRequest).await().bodyAsJsonObject()
-        assertNull(addLiveMeterResp.getJsonArray("errors"))
-        val liveMeter = addLiveMeterResp.getJsonObject("data").getJsonObject("addLiveMeter")
-        val liveMeterId = liveMeter.getString("id")
+        val addLiveBreakpointResp = request.sendJsonObject(addLiveBreakpointRequest).await().bodyAsJsonObject()
+        assertNull(addLiveBreakpointResp.getJsonArray("errors"))
+        val liveBreakpoint = addLiveBreakpointResp.getJsonObject("data").getJsonObject("addLiveBreakpoint")
+        val liveBreakpointId = liveBreakpoint.getString("id")
 
         val removeLiveInstrumentsResp = request.sendJsonObject(
             JsonObject().put("query", getGraphql("instrument/remove-live-instruments"))
-                .put("variables", JsonObject().put("source", "doing").put("line", 19))
+                .put("variables", JsonObject().put("source", "doing").put("line", 17))
         ).await().bodyAsJsonObject()
         assertNull(removeLiveInstrumentsResp.getJsonArray("errors"))
         val removedLiveInstruments =
             removeLiveInstrumentsResp.getJsonObject("data").getJsonArray("removeLiveInstruments")
         assertTrue(removedLiveInstruments.any {
             it as JsonObject
-            it.getString("id").equals(liveMeterId)
+            it.getString("id").equals(liveBreakpointId)
         })
     }
 

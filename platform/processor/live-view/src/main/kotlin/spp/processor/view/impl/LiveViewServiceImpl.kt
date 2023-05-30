@@ -89,8 +89,8 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
 
     internal lateinit var meterSystem: MeterSystem
     internal lateinit var meterProcessService: MeterProcessService
-    internal lateinit var metricsQuery: MetricsQueryService
-    internal lateinit var traceQuery: TraceQueryService
+    private lateinit var metricsQuery: MetricsQueryService
+    private lateinit var traceQuery: TraceQueryService
 
     //todo: use ExpiringSharedData
     private val subscriptionCache = MetricTypeSubscriptionCache()
@@ -167,46 +167,52 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
             return Future.failedFuture(RuleAlreadyExistsException("Rule with name ${rule.name} already exists"))
         }
 
+        //setup spp rule
+        var saveRule = rule
+        if (saveRule.name.startsWith("spp_")) {
+            saveRule = saveRule.copy(name = saveRule.name.substring(4))
+        }
         val meterConfig = LiveMeterConfig()
         meterConfig.metricPrefix = "spp"
-        meterConfig.metricsRules = listOf(
-            LiveMeterConfig.Rule().apply {
-                name = rule.name
-                exp = rule.exp
-                partitions = rule.partitions
-            }
-        )
+        meterConfig.metricsRules = listOf(LiveMeterConfig.Rule(saveRule))
 
         //create spp ruleset
         try {
-            val passRule = if (rule.partitions.isEmpty()) meterConfig else NOP_RULE
+            val passRule = if (saveRule.partitions.isEmpty()) meterConfig else NOP_RULE
             meterProcessService.converts().add(LiveMetricConvert(meterConfig, meterSystem, passRule))
         } catch (e: Exception) {
             return Future.failedFuture(e)
         }
-        return Future.succeededFuture(rule)
+        return Future.succeededFuture(saveRule)
     }
 
     override fun deleteRule(ruleName: String): Future<ViewRule?> {
+        var deleteRuleName = ruleName
+        if (deleteRuleName.startsWith("spp_")) {
+            deleteRuleName = deleteRuleName.substring(4)
+        }
+
         var removedRule: ViewRule? = null
         (meterProcessService.converts() as MutableList<MetricConvert>).removeIf { convert ->
             if (convert !is LiveMetricConvert) return@removeIf false
             val analyzers = Reflect.on(convert).get<MutableList<Analyzer>>("analyzers")
             analyzers.removeIf {
                 val metricName = Reflect.on(it).get<String>("metricName")
-                var remove = metricName == ruleName || metricName == "spp_$ruleName"
+                var remove = metricName == deleteRuleName || metricName == "spp_$deleteRuleName"
                 if (convert.config.hasPartitions()) {
-                    remove = convert.config.getLiveMetricsRules().first().name == ruleName
+                    remove = convert.config.getLiveMetricsRules().first().name == deleteRuleName
                     removedRule = ViewRule(
-                        "spp_$ruleName",
+                        "spp_$deleteRuleName",
                         convert.config.getLiveMetricsRules().first().exp,
-                        convert.config.getLiveMetricsRules().first().partitions
+                        convert.config.getLiveMetricsRules().first().partitions,
+                        convert.config.getLiveMetricsRules().first().meterIds
                     )
                 }
                 if (remove) {
                     val expression = Reflect.on(it).get<Expression>("expression")
                     if (!convert.config.hasPartitions()) {
-                        removedRule = ViewRule(metricName, Reflect.on(expression).get("literal"))
+                        val meterIds = convert.config.getLiveMetricsRules().first().meterIds
+                        removedRule = ViewRule(metricName, Reflect.on(expression).get("literal"), meterIds = meterIds)
                     }
                 }
                 remove

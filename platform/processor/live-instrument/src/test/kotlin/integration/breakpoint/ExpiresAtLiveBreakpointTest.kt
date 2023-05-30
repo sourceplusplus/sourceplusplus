@@ -45,14 +45,14 @@ class ExpiresAtLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         ).await()
 
         //verify live breakpoint
-        val breakpoint = instrumentService.getLiveInstrumentById(testNameAsInstrumentId).await()
+        val breakpoint = instrumentService.getLiveInstrument(testNameAsInstrumentId).await()
         assertNotNull(breakpoint)
 
         //wait 15 seconds
         delay(TimeUnit.SECONDS.toMillis(15))
 
         //verify no live breakpoint
-        val noBreakpoint = instrumentService.getLiveInstrumentById(testNameAsInstrumentId).await()
+        val noBreakpoint = instrumentService.getLiveInstrument(testNameAsInstrumentId).await()
         assertNull(noBreakpoint)
     }
 }

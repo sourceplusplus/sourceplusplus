@@ -65,7 +65,7 @@ class LiveMeterRateTest : LiveInstrumentIntegrationTest() {
             MeterType.COUNT,
             MetricValue(MetricValueType.NUMBER, "1"),
             location = LiveSourceLocation(
-                LiveMeterRateTest::class.qualifiedName!!,
+                LiveMeterRateTest::class.java.name,
                 getLineNumber("done"),
                 "spp-test-probe"
             ),
@@ -76,32 +76,33 @@ class LiveMeterRateTest : LiveInstrumentIntegrationTest() {
 
         viewService.saveRuleIfAbsent(
             ViewRule(
-                name = liveMeter.toMetricIdWithoutPrefix(),
+                name = liveMeter.id!!,
                 exp = buildString {
                     append("(")
-                    append(liveMeter.toMetricIdWithoutPrefix())
+                    append(liveMeter.id!!)
                     append(".sum(['service', 'instance'])")
                     append(".downsampling(SUM)")
                     append(")")
                     append(".instance(['service'], ['instance'], Layer.GENERAL)")
-                }
+                },
+                meterIds = listOf(liveMeter.id!!)
             )
         ).await()
 
         val subscriptionId = viewService.addLiveView(
             LiveView(
-                entityIds = mutableSetOf(liveMeter.toMetricId()),
+                entityIds = mutableSetOf(liveMeter.id!!),
                 artifactQualifiedName = ArtifactQualifiedName(
-                    LiveMeterRateTest::class.qualifiedName!!,
+                    LiveMeterRateTest::class.java.name,
                     type = ArtifactType.EXPRESSION
                 ),
                 artifactLocation = LiveSourceLocation(
-                    LiveMeterRateTest::class.qualifiedName!!,
+                    LiveMeterRateTest::class.java.name,
                     getLineNumber("done")
                 ),
                 viewConfig = LiveViewConfig(
                     "test",
-                    listOf(liveMeter.toMetricId())
+                    listOf(liveMeter.id!!)
                 )
             )
         ).await().subscriptionId!!
@@ -116,7 +117,7 @@ class LiveMeterRateTest : LiveInstrumentIntegrationTest() {
 
             testContext.verify {
                 val meta = rawMetrics.getJsonObject("meta")
-                assertEquals(liveMeter.toMetricId(), meta.getString("metricsName"))
+                assertEquals(liveMeter.id!!, meta.getString("metricsName"))
 
                 rate = rawMetrics.getInteger("value")
                 if (rate >= 50) { //allow for some variance (GH actions are sporadic)

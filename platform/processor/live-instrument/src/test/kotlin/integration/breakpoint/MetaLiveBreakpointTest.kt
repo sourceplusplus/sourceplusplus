@@ -46,7 +46,7 @@ class MetaLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         assertEquals(emptyMap<String, String>(), liveInstrument.meta.filter { it.key.startsWith("spp.") })
 
         //get stored instrument meta
-        val storedMeta = instrumentService.getLiveInstrumentById(liveInstrument.id!!).await()
+        val storedMeta = instrumentService.getLiveInstrument(liveInstrument.id!!).await()
         assertNotNull(storedMeta)
         assertEquals(mapOf("key" to "value"), storedMeta!!.meta.filter { it.key == "key" })
 
@@ -150,7 +150,7 @@ class MetaLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         assertNotNull(liveInstrument)
 
         //verify applied_at meta is set
-        val getInstrument = instrumentService.getLiveInstrumentById(liveInstrument.id!!).await()
+        val getInstrument = instrumentService.getLiveInstrument(liveInstrument.id!!).await()
         assertNotNull(getInstrument)
         assertEquals(liveInstrument.meta["applied_at"], getInstrument!!.meta["applied_at"])
 

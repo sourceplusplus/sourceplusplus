@@ -26,6 +26,7 @@ import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInfo
 import org.junit.jupiter.api.extension.ExtendWith
 import spp.platform.storage.CoreStorage
 import spp.platform.storage.SourceStorage
@@ -62,6 +63,22 @@ abstract class BaseStorageITTest<T : CoreStorage> {
                         )
                     )
             )
+    }
+
+    var testName: String? = null
+    val testNameAsInstrumentId: String
+        get() {
+            return "spp_" + testName!!.replace("-", "_").replace(" ", "_")
+                .lowercase().substringBefore("(")
+        }
+    val testNameAsUniqueInstrumentId: String
+        get() {
+            return testNameAsInstrumentId + "_" + UUID.randomUUID().toString().replace("-", "")
+        }
+
+    @BeforeEach
+    open fun setUp(testInfo: TestInfo) {
+        testName = testInfo.displayName
     }
 
     lateinit var storageInstance: T
@@ -501,7 +518,7 @@ abstract class BaseStorageITTest<T : CoreStorage> {
 
     @Test
     fun addLiveInstrument(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
-        val id = "breakpoint1"
+        val id = testNameAsUniqueInstrumentId
         assertEquals(0, storageInstance.getLiveInstruments().size)
         val instrument = LiveBreakpoint(
             location = LiveSourceLocation("file1", 1),
@@ -514,7 +531,7 @@ abstract class BaseStorageITTest<T : CoreStorage> {
 
     @Test
     fun getLiveInstrument(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
-        val id = "breakpoint2"
+        val id = testNameAsUniqueInstrumentId
         val instrument = LiveBreakpoint(
             location = LiveSourceLocation("file2", 2),
             id = id
@@ -526,7 +543,7 @@ abstract class BaseStorageITTest<T : CoreStorage> {
 
     @Test
     fun removeLiveInstrument(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
-        val id = "breakpoint3"
+        val id = testNameAsUniqueInstrumentId
         val instrument = LiveBreakpoint(
             location = LiveSourceLocation("file3", 3),
             id = id
@@ -541,7 +558,7 @@ abstract class BaseStorageITTest<T : CoreStorage> {
 
     @Test
     fun updateLiveInstrument(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
-        val id = "breakpoint4"
+        val id = testNameAsUniqueInstrumentId
         val instrument = LiveBreakpoint(
             location = LiveSourceLocation("file4", 1),
             id = id
@@ -560,29 +577,25 @@ abstract class BaseStorageITTest<T : CoreStorage> {
 
     @Test
     fun getLiveInstruments(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
-        val breakpointId = "breakpoint5"
         val breakpoint = LiveBreakpoint(
             location = LiveSourceLocation("file5", 1),
-            id = breakpointId
+            id = testNameAsUniqueInstrumentId
         )
-        val logId = "log6"
         val log = LiveLog(
             "Log Message",
             location = LiveSourceLocation("file6", 1),
-            id = logId
+            id = testNameAsUniqueInstrumentId
         )
-        val meterId = "watch7"
         val meter = LiveMeter(
             MeterType.COUNT,
             MetricValue(MetricValueType.VALUE, "5"),
             location = LiveSourceLocation("file7", 1),
-            id = meterId
+            id = testNameAsUniqueInstrumentId
         )
-        val spanId = "span8"
         val span = LiveSpan(
             "Span Name",
             location = LiveSourceLocation("file8", 1),
-            id = spanId
+            id = testNameAsUniqueInstrumentId
         )
 
         storageInstance.addLiveInstrument(breakpoint)
@@ -592,15 +605,15 @@ abstract class BaseStorageITTest<T : CoreStorage> {
 
         val instruments = storageInstance.getLiveInstruments()
         assertEquals(4, instruments.size)
-        assertEquals(breakpoint.toJson(), instruments.first { it.id == breakpointId }.toJson())
-        assertEquals(log.toJson(), instruments.first { it.id == logId }.toJson())
-        assertEquals(meter.toJson(), instruments.first { it.id == meterId }.toJson())
-        assertEquals(span.toJson(), instruments.first { it.id == spanId }.toJson())
+        assertEquals(breakpoint.toJson(), instruments.first { it.id == breakpoint.id }.toJson())
+        assertEquals(log.toJson(), instruments.first { it.id == log.id }.toJson())
+        assertEquals(meter.toJson(), instruments.first { it.id == meter.id }.toJson())
+        assertEquals(span.toJson(), instruments.first { it.id == span.id }.toJson())
     }
 
     @Test
     fun `removed instruments get archived`(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
-        val id = "removed-instruments-get-archived-" + UUID.randomUUID().toString()
+        val id = testNameAsUniqueInstrumentId
         val instrument = LiveBreakpoint(
             location = LiveSourceLocation("file11", 1),
             id = id
@@ -620,7 +633,7 @@ abstract class BaseStorageITTest<T : CoreStorage> {
 
     @Test
     fun `updates to non-existent instruments fail`(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
-        val id = "updates-to-non-existent-instruments-fail-" + UUID.randomUUID().toString()
+        val id = testNameAsUniqueInstrumentId
         val instrument = LiveBreakpoint(
             location = LiveSourceLocation("file12", 1),
             id = id
@@ -636,7 +649,7 @@ abstract class BaseStorageITTest<T : CoreStorage> {
 
     @Test
     fun `updates to archived instruments`(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
-        val id = "updates-to-archived-instruments-" + UUID.randomUUID().toString()
+        val id = testNameAsUniqueInstrumentId
         val instrument = LiveBreakpoint(
             location = LiveSourceLocation("file13", 1),
             id = id
@@ -667,7 +680,7 @@ abstract class BaseStorageITTest<T : CoreStorage> {
 
     @Test
     fun `get instrument events`(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
-        val id = "get-instrument-events-" + UUID.randomUUID().toString()
+        val id = testNameAsUniqueInstrumentId
         val instrument = LiveBreakpoint(
             location = LiveSourceLocation("file14", 1),
             id = id
@@ -687,7 +700,7 @@ abstract class BaseStorageITTest<T : CoreStorage> {
 
     @Test
     fun `get instrument events by date range`(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
-        val id = "get-instrument-events-by-date-range-" + UUID.randomUUID().toString()
+        val id = testNameAsUniqueInstrumentId
         val instrument1 = LiveBreakpoint(
             location = LiveSourceLocation("file15", 1),
             id = "$id-1"

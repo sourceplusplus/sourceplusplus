@@ -70,7 +70,7 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
 
         val subscriptionId = viewService.addLiveView(
             LiveView(
-                entityIds = mutableSetOf(liveMeter.toMetricId()),
+                entityIds = mutableSetOf(liveMeter.id!!),
                 artifactQualifiedName = ArtifactQualifiedName(
                     LiveMeterCountTest::class.qualifiedName!!,
                     type = ArtifactType.EXPRESSION
@@ -81,7 +81,7 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
                 ),
                 viewConfig = LiveViewConfig(
                     "test",
-                    listOf(liveMeter.toMetricId())
+                    listOf(liveMeter.id!!)
                 )
             )
         ).await().subscriptionId!!
@@ -96,7 +96,7 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
 
             testContext.verify {
                 val meta = rawMetrics.getJsonObject("meta")
-                assertEquals(liveMeter.toMetricId(), meta.getString("metricsName"))
+                assertEquals(liveMeter.id!!, meta.getString("metricsName"))
 
                 totalCount += rawMetrics.getInteger("value")
                 if (totalCount >= 100) {
@@ -142,7 +142,7 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
 
         val subscriptionId = viewService.addLiveView(
             LiveView(
-                entityIds = mutableSetOf(liveMeter.toMetricId()),
+                entityIds = mutableSetOf(liveMeter.id!!),
                 artifactQualifiedName = ArtifactQualifiedName(
                     LiveMeterCountTest::class.qualifiedName!!,
                     type = ArtifactType.EXPRESSION
@@ -153,7 +153,7 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
                 ),
                 viewConfig = LiveViewConfig(
                     "test",
-                    listOf(liveMeter.toMetricId())
+                    listOf(liveMeter.id!!)
                 )
             )
         ).await().subscriptionId!!
@@ -168,7 +168,7 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
 
             testContext.verify {
                 val meta = rawMetrics.getJsonObject("meta")
-                assertEquals(liveMeter.toMetricId(), meta.getString("metricsName"))
+                assertEquals(liveMeter.id!!, meta.getString("metricsName"))
 
                 totalCount += rawMetrics.getInteger("value")
                 if (totalCount >= 200) {
@@ -214,7 +214,7 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
 
         val subscriptionId1 = viewService.addLiveView(
             LiveView(
-                entityIds = mutableSetOf(liveMeter1.toMetricId()),
+                entityIds = mutableSetOf(liveMeter1.id!!),
                 artifactQualifiedName = ArtifactQualifiedName(
                     LiveMeterCountTest::class.qualifiedName!!,
                     type = ArtifactType.EXPRESSION
@@ -225,7 +225,7 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
                 ),
                 viewConfig = LiveViewConfig(
                     "test",
-                    listOf(liveMeter1.toMetricId())
+                    listOf(liveMeter1.id!!)
                 )
             )
         ).await().subscriptionId!!
@@ -245,7 +245,7 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
 
         val subscriptionId2 = viewService.addLiveView(
             LiveView(
-                entityIds = mutableSetOf(liveMeter2.toMetricId()),
+                entityIds = mutableSetOf(liveMeter2.id!!),
                 artifactQualifiedName = ArtifactQualifiedName(
                     LiveMeterCountTest::class.qualifiedName!!,
                     type = ArtifactType.EXPRESSION
@@ -256,7 +256,7 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
                 ),
                 viewConfig = LiveViewConfig(
                     "test",
-                    listOf(liveMeter2.toMetricId())
+                    listOf(liveMeter2.id!!)
                 )
             )
         ).await().subscriptionId!!
@@ -275,8 +275,8 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
             testContext.verify {
                 val meta = rawMetrics.getJsonObject("meta")
                 assertTrue(
-                    liveMeter1.toMetricId() == meta.getString("metricsName") ||
-                            liveMeter2.toMetricId() == meta.getString("metricsName")
+                    liveMeter1.id!! == meta.getString("metricsName") ||
+                            liveMeter2.id!! == meta.getString("metricsName")
                 )
 
                 totalCount += rawMetrics.getInteger("value")
@@ -287,7 +287,7 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
         }
 
         instrumentService.addLiveMeter(liveMeter1).onSuccess {
-            val metricId = it.toMetricId()
+            val metricId = it.id!!
             println(metricId)
             vertx.setTimer(5000) { //todo: have to wait since not applyImmediately
                 triggerCount()

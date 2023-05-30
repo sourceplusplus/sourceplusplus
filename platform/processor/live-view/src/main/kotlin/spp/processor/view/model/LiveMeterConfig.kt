@@ -19,6 +19,7 @@ package spp.processor.view.model
 
 import org.apache.skywalking.oap.server.analyzer.provider.meter.config.MeterConfig
 import spp.protocol.view.rule.RulePartition
+import spp.protocol.view.rule.ViewRule
 
 class LiveMeterConfig : MeterConfig() {
 
@@ -30,7 +31,14 @@ class LiveMeterConfig : MeterConfig() {
         return getLiveMetricsRules().any { it.partitions.isNotEmpty() }
     }
 
-    class Rule : MeterConfig.Rule() {
-        var partitions: List<RulePartition> = emptyList()
+    class Rule(rule: ViewRule) : MeterConfig.Rule() {
+        val partitions: List<RulePartition>
+        val meterIds = rule.meterIds
+
+        init {
+            name = rule.name
+            exp = rule.exp
+            partitions = rule.partitions
+        }
     }
 }
