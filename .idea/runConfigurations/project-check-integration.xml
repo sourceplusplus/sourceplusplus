@@ -1,0 +1,43 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="project-check-integration" type="GradleRunConfiguration" factoryName="Gradle">
+    <ExternalSystemSettings>
+      <option name="executionName" />
+      <option name="externalProjectPath" value="$PROJECT_DIR$" />
+      <option name="externalSystemIdString" value="GRADLE" />
+      <option name="scriptParameters" value="-Dtest.profile=integration" />
+      <option name="taskDescriptions">
+        <list />
+      </option>
+      <option name="taskNames">
+        <list>
+          <option value=":protocol:check" />
+          <option value=":platform:check" />
+          <option value=":platform:bridge:check" />
+          <option value=":platform:common:check" />
+          <option value=":platform:core:check" />
+          <option value=":platform:processor:live-instrument:check" />
+          <option value=":platform:processor:live-view:check" />
+          <option value=":platform:storage:check" />
+          <option value=":probes:jvm:boot:check" />
+          <option value=":probes:jvm:common:check" />
+          <option value=":probes:jvm:services:check" />
+          <option value=":interfaces:jetbrains:commander:check" />
+          <option value=":interfaces:jetbrains:commander:kotlin-compiler-wrapper:check" />
+          <option value=":interfaces:jetbrains:core:check" />
+          <option value=":interfaces:jetbrains:insight:check" />
+          <option value=":interfaces:jetbrains:marker:check" />
+          <option value=":interfaces:jetbrains:marker:js-marker:check" />
+          <option value=":interfaces:jetbrains:marker:jvm-marker:check" />
+          <option value=":interfaces:jetbrains:marker:py-marker:check" />
+          <option value=":interfaces:jetbrains:marker:ult-marker:check" />
+          <option value=":interfaces:jetbrains:plugin:check" />
+        </list>
+      </option>
+      <option name="vmOptions" />
+    </ExternalSystemSettings>
+    <ExternalSystemDebugServerProcess>true</ExternalSystemDebugServerProcess>
+    <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
+    <DebugAllEnabled>false</DebugAllEnabled>
+    <method v="2" />
+  </configuration>
+</component>
