@@ -57,7 +57,7 @@ live-presets:
   junit:
     enabled: ${SPP_PRESET_JUNIT_ENABLED:-false}
     instruments:
-      - id: "junit_test_successful"
+      - id: "spp_junit_test_successful"
         type: "METER"
         meterType: "COUNT"
         metricValue:
@@ -65,7 +65,7 @@ live-presets:
           value: 1
         meterPartitions:
           - keys:
-              - "junit_test_failed"
+              - "spp_junit_test_failed"
             valueType: "VALUE_EXPRESSION"
             value: "localVariables[descriptor].testMethod"
         location:
@@ -73,7 +73,7 @@ live-presets:
         condition: "localVariables[result].status.ordinal == 0"
         meta:
           metric.mode: "RATE"
-      - id: "junit_test_failed"
+      - id: "spp_junit_test_failed"
         type: "METER"
         meterType: "COUNT"
         metricValue:
@@ -81,7 +81,7 @@ live-presets:
           value: 1
         meterPartitions:
           - keys:
-              - "junit_test_successful"
+              - "spp_junit_test_successful"
             valueType: "VALUE_EXPRESSION"
             value: "localVariables[descriptor].testMethod"
         location:
@@ -90,13 +90,13 @@ live-presets:
         meta:
           metric.mode: "RATE"
     view-rules:
-      - name: "junit_test_successful"
-        exp: "((count_junit_test_successful*100 / (count_junit_test_successful + count_junit_test_failed)).sum(['service'])).service(['service'], Layer.GENERAL)"
+      - name: "spp_junit_test_successful"
+        exp: "((count_spp_junit_test_successful*100 / (count_spp_junit_test_successful + count_spp_junit_test_failed)).sum(['service'])).service(['service'], Layer.GENERAL)"
         partitions:
-          - find: "count_junit_test_successful"
-            replace: "count_junit_test_successful_$partition$"
-          - find: "count_junit_test_failed"
-            replace: "count_junit_test_failed_$partition$"
+          - find: "count_spp_junit_test_successful"
+            replace: "count_spp_junit_test_successful_$partition$"
+          - find: "count_spp_junit_test_failed"
+            replace: "count_spp_junit_test_failed_$partition$"
 
 client-access:
   enabled: ${SPP_CLIENT_ACCESS_ENABLED:-false}
