@@ -204,7 +204,8 @@ tasks.register<Copy>("updateDockerFiles") {
         File(projectDir, "storage/build/libs/spp-platform-storage-${project.version}.jar"),
         File(projectDir, "processor/live-instrument/build/libs/spp-live-instrument-${project.version}.jar"),
         File(projectDir, "processor/live-view/build/libs/spp-live-view-${project.version}.jar"),
-        File(projectDir, "../probes/jvm/boot/build/libs/spp-probe-${project.version}.jar")
+        File(projectDir, "../probes/jvm/boot/build/libs/spp-probe-${project.version}.jar"),
+        File(projectDir, "../probes/jvm/boot/build/libs/spp-probe-platform-${project.version}.jar")
     ).into(File(projectDir, "../docker/e2e"))
 
     doFirst {

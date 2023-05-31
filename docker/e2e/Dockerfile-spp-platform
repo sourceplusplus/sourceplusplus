@@ -42,3 +42,9 @@ ENV SW_RECEIVER_AWS_FIREHOSE_HTTP_PORT=12802
 #ENV SW_RECEIVER_GRPC_SSL_CERT_CHAIN_PATH=/skywalking/config/spp-platform.crt
 
 ENV SW_SEARCHABLE_TAG_KEYS="spp.instrument_id,spp.instrument_type,http.method,http.status_code,rpc.status_code,db.type,db.instance,mq.queue,mq.topic,mq.broker"
+
+#self-monitoring
+ENV SW_EXCLUDE_PLUGINS="h2-1.x,grpc-1.x,redisson-3.x"
+RUN mkdir /tmp/spp-probe
+ADD ./spp-probe-platform-*.jar /tmp/spp-probe/spp-probe.jar
+ADD ./spp-probe-platform.yml /tmp/spp-probe/spp-probe.yml
