@@ -948,7 +948,7 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
     }
 
     @Test
-    fun `ensure default-test client accessor is present`() = runBlocking {
+    fun `ensure get client accessors works`() = runBlocking {
         val generatedClientAccess = managementService.addClientAccess().await()
         assertNotNull(generatedClientAccess.id)
         assertNotNull(generatedClientAccess.secret)
@@ -974,7 +974,7 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
 
     //todo: No GraphQL for this endpoint
     @Test
-    fun `ensure getting client access works`() = runBlocking {
+    fun `ensure get client access works`() = runBlocking {
         val generatedClientAccess = managementService.addClientAccess().await()
         assertNotNull(generatedClientAccess.id)
         assertNotNull(generatedClientAccess.secret)
