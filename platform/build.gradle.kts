@@ -239,3 +239,9 @@ tasks.getByName("assemble") {
         ":probes:jvm:boot:jar"
     )
 }
+
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile::class.java).configureEach {
+    kotlinOptions {
+        freeCompilerArgs = listOf("-Xdebug") //todo: disable this for release builds
+    }
+}
