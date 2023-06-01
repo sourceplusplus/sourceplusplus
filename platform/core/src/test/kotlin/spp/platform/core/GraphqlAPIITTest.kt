@@ -275,7 +275,8 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
 
     @Test
     fun `ensure addRole works`() = runBlocking {
-        val addRoleResp = request.sendJsonObject(getAddRoleRequest()).await().bodyAsJsonObject()
+        val role = UUID.randomUUID().toString()
+        val addRoleResp = request.sendJsonObject(getAddRoleRequest(role)).await().bodyAsJsonObject()
         assertNull(addRoleResp.getJsonArray("errors"))
         assertTrue(addRoleResp.getJsonObject("data").getBoolean("addRole"))
     }
@@ -1051,7 +1052,7 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
         assertNotEquals(clientSecret, updatedClientAccessJsonObject.getString("secret"))
     }
 
-    private fun getAddDataRedactionRequest(redactionId: String = UUID.randomUUID().toString()): JsonObject {
+    private fun getAddDataRedactionRequest(redactionId: String): JsonObject {
         return JsonObject().put("query", getGraphql("data-redaction/add-data-redaction")).put(
             "variables",
             JsonObject().put("id", redactionId).put("type", RedactionType.VALUE_REGEX).put("lookup", "some-lookup")
@@ -1079,7 +1080,7 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
             .put("variables", JsonObject().put("id", developerId).put("role", developerRole))
     }
 
-    private fun getAddRoleRequest(role: String = UUID.randomUUID().toString()): JsonObject {
+    private fun getAddRoleRequest(role: String): JsonObject {
         return JsonObject().put("query", getGraphql("role/add-role"))
             .put("variables", JsonObject().put("role", role))
     }
