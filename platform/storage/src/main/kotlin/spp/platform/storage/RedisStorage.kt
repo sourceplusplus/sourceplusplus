@@ -24,8 +24,10 @@ import io.vertx.core.shareddata.AsyncMap
 import io.vertx.core.shareddata.Counter
 import io.vertx.core.shareddata.Lock
 import io.vertx.kotlin.coroutines.await
+import io.vertx.redis.client.Command.*
 import io.vertx.redis.client.Redis
 import io.vertx.redis.client.RedisAPI
+import io.vertx.redis.client.Request.cmd
 import mu.KotlinLogging
 import spp.protocol.instrument.LiveInstrument
 import spp.protocol.instrument.event.LiveInstrumentEvent
@@ -303,13 +305,15 @@ open class RedisStorage(val vertx: Vertx) : CoreStorage {
     }
 
     override suspend fun removeLiveInstrument(id: String): Boolean {
-        redis.srem(listOf(namespace("live_instruments"), id)).await()
-        val rawInstrument = redis.getdel(namespace("live_instruments:$id")).await()
-        if (rawInstrument != null) {
-            //add to archive
-            redis.set(listOf(namespace("live_instruments_archive:$id"), rawInstrument.toString())).await()
-        }
-        return rawInstrument != null
+        redisClient.batch(
+            listOf(
+                cmd(MULTI),
+                cmd(SREM, namespace("live_instruments"), id),
+                cmd(RENAME, namespace("live_instruments:$id"), namespace("live_instruments_archive:$id")),
+                cmd(EXEC)
+            )
+        ).await()
+        return redis.get(namespace("live_instruments_archive:$id")).await() != null
     }
 
     override suspend fun getLiveInstrument(id: String, includeArchive: Boolean): LiveInstrument? {
@@ -407,17 +411,19 @@ open class RedisStorage(val vertx: Vertx) : CoreStorage {
     override suspend fun removeClientAccess(id: String): Boolean {
         val clientAccessors = getClientAccessors()
         if (clientAccessors.any { it.id == id }) {
-            redis.multi().await()
-            redis.del(listOf(namespace("client_access"))).await()
+            val batchCommand = mutableListOf(
+                cmd(MULTI),
+                cmd(DEL, namespace("client_access"))
+            )
             val updatedClientAccessors = clientAccessors.filter { it.id != id }
             if (updatedClientAccessors.isNotEmpty()) {
-                redis.sadd(mutableListOf(namespace("client_access")).apply {
-                    updatedClientAccessors.forEach {
-                        add(Json.encode(it))
-                    }
-                }).await()
+                batchCommand.add(cmd(SADD).apply {
+                    arg(namespace("client_access"))
+                    updatedClientAccessors.forEach { arg(it.toJson().toString()) }
+                })
             }
-            redis.exec().await()
+            batchCommand.add(cmd(EXEC))
+            redisClient.batch(batchCommand).await()
             return true
         }
         return false
@@ -430,19 +436,24 @@ open class RedisStorage(val vertx: Vertx) : CoreStorage {
         }
 
         var clientAccess: ClientAccess? = null
-        redis.multi().await()
-        redis.del(listOf(namespace("client_access"))).await()
-        redis.sadd(mutableListOf(namespace("client_access")).apply {
-            clientAccessors.forEach {
-                if (it.id != id) {
-                    add(Json.encode(it))
-                } else {
-                    clientAccess = ClientAccess(id, generateClientSecret())
-                    add(Json.encode(clientAccess))
-                }
-            }
-        }).await()
-        redis.exec().await()
+        redisClient.batch(
+            mutableListOf(
+                cmd(MULTI),
+                cmd(DEL, namespace("client_access")),
+                cmd(SADD).apply {
+                    arg(namespace("client_access"))
+                    clientAccessors.forEach {
+                        if (it.id != id) {
+                            arg(it.toJson().toString())
+                        } else {
+                            clientAccess = ClientAccess(id, generateClientSecret())
+                            arg(clientAccess!!.toJson().toString())
+                        }
+                    }
+                },
+                cmd(EXEC)
+            )
+        ).await()
         return clientAccess!!
     }
 }

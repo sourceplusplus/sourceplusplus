@@ -732,4 +732,14 @@ abstract class BaseStorageITTest<T : CoreStorage> {
         assertEquals(addedEvent3.toJson(), events[0].toJson())
         assertEquals(addedEvent2.toJson(), events[1].toJson())
     }
+
+    @Test
+    fun `get non-existent live instrument`(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+        assertNull(storageInstance.getLiveInstrument("non-existent-id"))
+    }
+
+    @Test
+    fun `remove non-existent live instrument`(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+        assertFalse(storageInstance.removeLiveInstrument("non-existent-id"))
+    }
 }
