@@ -128,11 +128,16 @@ object ClusterConnection {
                     val headers = it.message().headers()
                     if (headers != null) {
                         Vertx.currentContext().removeLocal("client_id")
+                        headers.get("client_id")?.let { clientId ->
+                            Vertx.currentContext().putLocal("client_id", clientId)
+                        }
                         Vertx.currentContext().removeLocal("client_secret")
+                        headers.get("client_secret")?.let { clientSecret ->
+                            Vertx.currentContext().putLocal("client_secret", clientSecret)
+                        }
                         Vertx.currentContext().removeLocal("tenant_id")
-
-                        headers.forEach { (key, value) ->
-                            Vertx.currentContext().putLocal(key, value)
+                        headers.get("tenant_id")?.let { tenantId ->
+                            Vertx.currentContext().putLocal("tenant_id", tenantId)
                         }
                     }
                     it.next()
