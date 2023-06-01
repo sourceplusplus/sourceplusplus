@@ -574,6 +574,10 @@ type Query {
     getDeveloperPermissions(id: String!): [RolePermission!]!
 
     getDevelopers: [Developer!]!
+    getLiveInstrument(
+        id: String!,
+        includeArchive: Boolean
+    ): LiveInstrument
     getLiveInstruments: [LiveInstrument!]!
     getLiveBreakpoints: [LiveBreakpoint!]!
     getLiveLogs: [LiveLog!]!

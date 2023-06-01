@@ -194,6 +194,7 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
             .dataFetcher("getDeveloperRoles", this::getDeveloperRoles)
             .dataFetcher("getDeveloperPermissions", this::getDeveloperPermissions)
             .dataFetcher("getDevelopers", this::getDevelopers)
+            .dataFetcher("getLiveInstrument", this::getLiveInstrument)
             .dataFetcher("getLiveInstruments", this::getLiveInstruments)
             .dataFetcher("getLiveBreakpoints", this::getLiveBreakpoints)
             .dataFetcher("getLiveLogs", this::getLiveLogs)
@@ -361,6 +362,11 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
     private fun refreshAuthorizationCode(env: DataFetchingEnvironment): CompletableFuture<Developer> =
         getLiveManagementService(env).compose { it.refreshAuthorizationCode(env.getArgument("id")) }
             .toCompletionStage().toCompletableFuture()
+
+    private fun getLiveInstrument(env: DataFetchingEnvironment): CompletableFuture<Map<String, Any>?> =
+        getLiveInstrumentService(env).compose {
+            it.getLiveInstrument(env.getArgument("id"), env.getArgument("includeArchive") ?: false)
+        }.map { it?.let { fixJsonMaps(it) } }.toCompletionStage().toCompletableFuture()
 
     private fun getLiveInstruments(env: DataFetchingEnvironment): CompletableFuture<List<Map<String, Any>>> =
         getLiveInstrumentService(env).compose { it.getLiveInstruments() }.map { instruments ->

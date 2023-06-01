@@ -326,13 +326,13 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
         return promise.future()
     }
 
-    override fun getLiveInstrumentById(id: String): Future<LiveInstrument?> {
+    override fun getLiveInstrumentById(id: String, includeArchive: Boolean): Future<LiveInstrument?> {
         val devAuth = Vertx.currentContext().getLocal<DeveloperAuth>("developer")
         log.info("Received get live instrument by id request. Developer: {} - Id: {}", devAuth, id)
 
         val promise = Promise.promise<LiveInstrument?>()
         launch(vertx.dispatcher()) {
-            promise.complete(removeInternalMeta(SourceStorage.getLiveInstrument(id)))
+            promise.complete(removeInternalMeta(SourceStorage.getLiveInstrument(id, includeArchive)))
         }
         return promise.future()
     }
