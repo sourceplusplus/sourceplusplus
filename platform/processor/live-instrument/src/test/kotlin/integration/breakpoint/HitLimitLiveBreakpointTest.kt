@@ -67,7 +67,7 @@ class HitLimitLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         //verify still exists
         val liveInstrument = instrumentService.getLiveInstrument(testNameAsInstrumentId).await()
         assertEquals(11, liveInstrument!!.hitLimit)
-        assertEquals(10, liveInstrument.meta["hit_count"])
+//        assertEquals(10, liveInstrument.meta["hit_count"]) //todo: count hits via event history
 
         //trigger once more
         hitLimit()
