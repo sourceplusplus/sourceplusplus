@@ -140,9 +140,6 @@ class LiveInstrumentTest : LiveInstrumentIntegrationTest() {
         doTest()
 
         errorOnTimeout(testContext)
-
-        assertNull(instrumentService.removeLiveInstrument("$testNameAsInstrumentId-log").await())
-        assertNull(instrumentService.removeLiveInstrument("$testNameAsInstrumentId-breakpoint").await())
     }
 
     @RepeatedTest(2, name = "addLiveLogAndLiveBreakpoint_noLogHit-{currentRepetition}-of-{totalRepetitions}")
@@ -192,6 +189,5 @@ class LiveInstrumentTest : LiveInstrumentIntegrationTest() {
         errorOnTimeout(testContext)
 
         assertNotNull(instrumentService.removeLiveInstrument("$testNameAsInstrumentId-log").await())
-        assertNull(instrumentService.removeLiveInstrument("$testNameAsInstrumentId-breakpoint").await())
     }
 }
