@@ -555,7 +555,7 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
     }
 
     private fun dispatchCommand(accessToken: String?, command: LiveInstrumentCommand) {
-        log.trace { "Dispatching command: {}. Using access token: {}".args(command, accessToken) }
+        log.trace { "Dispatching {}. Using access token: {}".args(command, accessToken) }
         val probes = SourceBridgeService.createProxy(vertx, accessToken)
         probes.onSuccess {
             if (it == null) {
@@ -566,24 +566,19 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
             it.getActiveProbes().onSuccess {
                 val alertProbes = it.list.map { InstanceConnection(JsonObject.mapFrom(it)) }
                 if (alertProbes.isEmpty()) {
-                    log.warn("No probes connected. Unable to dispatch {} command", command.commandType)
+                    log.warn("No probes connected. Unable to dispatch $command")
                     return@onSuccess
                 }
 
-                log.debug {
-                    "Dispatching command {} to {} connected probe(s)".args(command.commandType, alertProbes.size)
-                }
+                log.debug { "Dispatching {} to {} connected probe(s)".args(command, alertProbes.size) }
                 alertProbes.forEach { probe ->
                     val probeCommand = LiveInstrumentCommand(
                         command.commandType,
                         command.instruments.filter { it.location.isSameLocation(probe) }.toSet(),
                         command.locations.filter { it.isSameLocation(probe) }.toSet()
                     )
-                    vertx.eventBus().publish(
-                        LIVE_INSTRUMENT_REMOTE + ":" + probe.instanceId,
-                        JsonObject.mapFrom(probeCommand)
-                    )
-                    log.debug { "Dispatched command ${probeCommand.commandType} to probe ${probe.instanceId}" }
+                    vertx.eventBus().publish(LIVE_INSTRUMENT_REMOTE + ":" + probe.instanceId, probeCommand.toJson())
+                    log.debug { "Dispatched $probeCommand to probe ${probe.instanceId}" }
                 }
             }.onFailure {
                 log.error("Failed to get active probes", it)
