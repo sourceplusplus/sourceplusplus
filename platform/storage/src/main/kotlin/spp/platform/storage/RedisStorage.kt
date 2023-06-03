@@ -112,20 +112,32 @@ open class RedisStorage(val vertx: Vertx) : CoreStorage {
     }
 
     override suspend fun addDeveloper(id: String, authorizationCode: String): Developer {
-        redis.sadd(listOf(namespace("developers:ids"), id)).await()
-        redis.set(listOf(namespace("developers:authorization_codes:$authorizationCode"), id)).await()
-        redis.sadd(listOf(namespace("developers:authorization_codes"), authorizationCode)).await()
-        redis.set(listOf(namespace("developers:ids:$id:authorization_code"), authorizationCode)).await()
+        redisClient.batch(
+            listOf(
+                cmd(MULTI),
+                cmd(SADD).arg(namespace("developers:ids")).arg(id),
+                cmd(SET).arg(namespace("developers:authorization_codes:$authorizationCode")).arg(id),
+                cmd(SADD).arg(namespace("developers:authorization_codes")).arg(authorizationCode),
+                cmd(SET).arg(namespace("developers:ids:$id:authorization_code")).arg(authorizationCode),
+                cmd(EXEC)
+            )
+        ).await()
         return Developer(id, authorizationCode)
     }
 
     override suspend fun removeDeveloper(id: String) {
         val authorizationCode = getAuthorizationCode(id)
-        redis.srem(listOf(namespace("developers:ids"), id)).await()
-        redis.del(listOf(namespace("developers:authorization_codes:$authorizationCode"))).await()
-        redis.srem(listOf(namespace("developers:authorization_codes"), authorizationCode)).await()
-        redis.del(listOf(namespace("developers:ids:$id:authorization_code"))).await()
-        redis.del(listOf(namespace("developers:$id:roles"))).await()
+        redisClient.batch(
+            listOf(
+                cmd(MULTI),
+                cmd(SREM).arg(namespace("developers:ids")).arg(id),
+                cmd(DEL).arg(namespace("developers:authorization_codes:$authorizationCode")),
+                cmd(SREM).arg(namespace("developers:authorization_codes")).arg(authorizationCode),
+                cmd(DEL).arg(namespace("developers:ids:$id:authorization_code")),
+                cmd(DEL).arg(namespace("developers:$id:roles")),
+                cmd(EXEC)
+            )
+        ).await()
     }
 
     override suspend fun getAuthorizationCode(id: String): String {
@@ -226,14 +238,16 @@ open class RedisStorage(val vertx: Vertx) : CoreStorage {
     }
 
     override suspend fun addDataRedaction(id: String, type: RedactionType, lookup: String, replacement: String) {
+        redis.set(
+            listOf(namespace("data_redactions:$id"), Json.encode(DataRedaction(id, type, lookup, replacement)))
+        ).await()
         redis.sadd(listOf(namespace("data_redactions"), id)).await()
-        redis.set(listOf(namespace("data_redactions:$id"), Json.encode(DataRedaction(id, type, lookup, replacement))))
-            .await()
     }
 
     override suspend fun updateDataRedaction(id: String, type: RedactionType, lookup: String, replacement: String) {
-        redis.set(listOf(namespace("data_redactions:$id"), Json.encode(DataRedaction(id, type, lookup, replacement))))
-            .await()
+        redis.set(
+            listOf(namespace("data_redactions:$id"), Json.encode(DataRedaction(id, type, lookup, replacement)))
+        ).await()
     }
 
     override suspend fun removeDataRedaction(id: String) {
@@ -285,8 +299,8 @@ open class RedisStorage(val vertx: Vertx) : CoreStorage {
     }
 
     override suspend fun addLiveInstrument(instrument: LiveInstrument): LiveInstrument {
-        redis.sadd(listOf(namespace("live_instruments"), instrument.id)).await()
         redis.set(listOf(namespace("live_instruments:${instrument.id}"), Json.encode(instrument))).await()
+        redis.sadd(listOf(namespace("live_instruments"), instrument.id)).await()
         return instrument
     }
 

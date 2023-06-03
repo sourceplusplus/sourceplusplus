@@ -40,7 +40,7 @@ class LargeObjectLiveBreakpointTest : LiveInstrumentIntegrationTest() {
     }
 
     @Test
-    fun `max size exceeded`() = runBlocking {
+    fun `large object max size exceeded`() = runBlocking {
         setupLineLabels {
             largeObject()
         }

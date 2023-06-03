@@ -61,7 +61,7 @@ class DeepObjectLiveBreakpointTest : LiveInstrumentIntegrationTest() {
     }
 
     @Test
-    fun `max depth exceeded`() = runBlocking {
+    fun `deep object depth exceeded`() = runBlocking {
         setupLineLabels {
             deepObject()
         }

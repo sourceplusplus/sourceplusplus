@@ -45,7 +45,7 @@ class AtomicValueLiveBreakpointTest : LiveInstrumentIntegrationTest() {
     }
 
     @Test
-    fun `atomic value`() = runBlocking {
+    fun `atomic values`() = runBlocking {
         setupLineLabels {
             atomicValue()
         }
