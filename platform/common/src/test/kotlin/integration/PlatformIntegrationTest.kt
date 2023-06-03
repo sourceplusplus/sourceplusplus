@@ -48,10 +48,10 @@ import java.util.regex.Pattern
 @ExtendWith(VertxExtension::class)
 open class PlatformIntegrationTest {
 
-    var testName: String? = null
+    lateinit var testName: String
     val testNameAsInstrumentId: String
         get() {
-            return "spp_" + testName!!.replace("-", "_").replace(" ", "_")
+            return "spp_" + testName.replace("-", "_").replace(" ", "_")
                 .lowercase().substringBefore("(")
         }
     val testNameAsUniqueInstrumentId: String
