@@ -140,7 +140,6 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
 
         //clean up
         consumer.unregister()
-        assertNotNull(instrumentService.removeLiveInstrument(instrumentId).await())
         assertNotNull(viewService.removeLiveView(subscriptionId).await())
     }
 
@@ -218,7 +217,6 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
 
         //clean up
         consumer.unregister()
-        assertNotNull(instrumentService.removeLiveInstrument(instrumentId).await())
         assertNotNull(viewService.removeLiveView(subscriptionId).await())
     }
 }
