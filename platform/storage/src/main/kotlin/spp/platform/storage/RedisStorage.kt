@@ -196,14 +196,17 @@ open class RedisStorage(val vertx: Vertx) : CoreStorage {
     }
 
     override suspend fun addAccessPermission(id: String, locationPatterns: List<String>, type: AccessType) {
-        redis.sadd(listOf(namespace("access_permissions"), id)).await()
-        redis.set(
+        redisClient.batch(
             listOf(
-                namespace("access_permissions:$id"),
-                JsonObject()
-                    .put("locationPatterns", locationPatterns)
-                    .put("type", type.name)
-                    .toString()
+                cmd(MULTI),
+                cmd(SADD).arg(namespace("access_permissions")).arg(id),
+                cmd(SET).arg(namespace("access_permissions:$id")).arg(
+                    JsonObject()
+                        .put("locationPatterns", locationPatterns)
+                        .put("type", type.name)
+                        .toString()
+                ),
+                cmd(EXEC)
             )
         ).await()
     }
@@ -238,10 +241,14 @@ open class RedisStorage(val vertx: Vertx) : CoreStorage {
     }
 
     override suspend fun addDataRedaction(id: String, type: RedactionType, lookup: String, replacement: String) {
-        redis.set(
-            listOf(namespace("data_redactions:$id"), Json.encode(DataRedaction(id, type, lookup, replacement)))
+        redisClient.batch(
+            listOf(
+                cmd(MULTI),
+                cmd(SET, namespace("data_redactions:$id"), Json.encode(DataRedaction(id, type, lookup, replacement))),
+                cmd(SADD, namespace("data_redactions"), id),
+                cmd(EXEC)
+            )
         ).await()
-        redis.sadd(listOf(namespace("data_redactions"), id)).await()
     }
 
     override suspend fun updateDataRedaction(id: String, type: RedactionType, lookup: String, replacement: String) {
@@ -285,8 +292,14 @@ open class RedisStorage(val vertx: Vertx) : CoreStorage {
     }
 
     override suspend fun addPermissionToRole(role: DeveloperRole, permission: RolePermission) {
-        redis.sadd(listOf(namespace("roles"), role.roleName)).await()
-        redis.sadd(listOf(namespace("roles:${role.roleName}:permissions"), permission.name)).await()
+        redisClient.batch(
+            listOf(
+                cmd(MULTI),
+                cmd(SADD, namespace("roles"), role.roleName),
+                cmd(SADD, namespace("roles:${role.roleName}:permissions"), permission.name),
+                cmd(EXEC)
+            )
+        ).await()
     }
 
     override suspend fun removePermissionFromRole(role: DeveloperRole, permission: RolePermission) {
@@ -299,8 +312,14 @@ open class RedisStorage(val vertx: Vertx) : CoreStorage {
     }
 
     override suspend fun addLiveInstrument(instrument: LiveInstrument): LiveInstrument {
-        redis.set(listOf(namespace("live_instruments:${instrument.id}"), Json.encode(instrument))).await()
-        redis.sadd(listOf(namespace("live_instruments"), instrument.id)).await()
+        redisClient.batch(
+            listOf(
+                cmd(MULTI),
+                cmd(SET, namespace("live_instruments:${instrument.id}"), Json.encode(instrument)),
+                cmd(SADD, namespace("live_instruments"), instrument.id),
+                cmd(EXEC)
+            )
+        ).await()
         return instrument
     }
 
