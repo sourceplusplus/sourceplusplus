@@ -55,7 +55,7 @@ class NegativePrimitiveConditionITTest : LiveInstrumentIntegrationTest() {
     }
 
     @Test
-    fun `primitive static variable`() = runBlocking {
+    fun `negative primitive static variable`() = runBlocking {
         setupLineLabels {
             primitiveStaticVariable()
         }
@@ -88,7 +88,7 @@ class NegativePrimitiveConditionITTest : LiveInstrumentIntegrationTest() {
     }
 
     @Test
-    fun `instance local variable`() = runBlocking {
+    fun `negative instance local variable`() = runBlocking {
         setupLineLabels {
             primitiveInstanceVariable()
         }
@@ -121,7 +121,7 @@ class NegativePrimitiveConditionITTest : LiveInstrumentIntegrationTest() {
     }
 
     @Test
-    fun `primitive local variable`() = runBlocking {
+    fun `negative primitive local variable`() = runBlocking {
         setupLineLabels {
             primitiveLocalVariable()
         }

@@ -171,7 +171,7 @@ class LiveLogTest : LiveInstrumentIntegrationTest() {
     }
 
     @Test
-    fun removeMultipleByLocation() {
+    fun `remove multiple live logs by location`() {
         setupLineLabels {
             doTest()
         }
