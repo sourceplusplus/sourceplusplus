@@ -53,7 +53,7 @@ class ExpiringSharedData<K, V> private constructor(
 
         if (storage is RedisStorage) {
             //add ttl to lock
-            storage.redis.expire(listOf("cluster:__vertx:locks:" + storage.namespace(lockName), "60")).await()
+            storage.redis.expire(listOf("cluster:__vertx:locks:" + storage.namespace(lockName), "60"))
         }
 
         return lock
