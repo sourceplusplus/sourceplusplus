@@ -313,14 +313,14 @@ class LiveBreakpointTest : LiveInstrumentIntegrationTest() {
     }
 
     @Test
-    fun removeMultipleByLocation(): Unit = runBlocking {
+    fun `remove multiple bps by location`(): Unit = runBlocking {
         val testContext = VertxTestContext()
         val addedCount = AtomicInteger(0)
         val listener = object : LiveInstrumentListener {
             override fun onBreakpointAddedEvent(event: LiveInstrumentAdded) {
                 if (addedCount.incrementAndGet() == 2) {
                     instrumentService.removeLiveInstruments(
-                        LiveSourceLocation("RemoveMultipleByLocation", 42)
+                        LiveSourceLocation(testName, 42)
                     ).onComplete {
                         if (it.succeeded()) {
                             testContext.verify {
@@ -341,12 +341,12 @@ class LiveBreakpointTest : LiveInstrumentIntegrationTest() {
             listOf(
                 LiveBreakpoint(
                     id = "$testNameAsInstrumentId-1",
-                    location = LiveSourceLocation("RemoveMultipleByLocation", 42),
+                    location = LiveSourceLocation(testName, 42),
                     condition = "1==2"
                 ),
                 LiveBreakpoint(
                     id = "$testNameAsInstrumentId-2",
-                    location = LiveSourceLocation("RemoveMultipleByLocation", 42),
+                    location = LiveSourceLocation(testName, 42),
                     condition = "1==3"
                 )
             )
