@@ -39,7 +39,7 @@ class ExpiresAtLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                     "non-existent-class",
                     0,
                 ),
-                expiresAt = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(10),
+                expiresAt = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(5),
                 id = testNameAsInstrumentId
             )
         ).await()
@@ -48,8 +48,8 @@ class ExpiresAtLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         val breakpoint = instrumentService.getLiveInstrument(testNameAsInstrumentId).await()
         assertNotNull(breakpoint)
 
-        //wait 15 seconds
-        delay(TimeUnit.SECONDS.toMillis(15))
+        //wait 10 seconds
+        delay(TimeUnit.SECONDS.toMillis(10))
 
         //verify no live breakpoint
         val noBreakpoint = instrumentService.getLiveInstrument(testNameAsInstrumentId).await()
