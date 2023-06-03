@@ -570,16 +570,21 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
                     return@onSuccess
                 }
 
-                log.debug { "Dispatching {} to {} connected probe(s)".args(command, alertProbes.size) }
+                var alertCount = 0
+                log.debug { "Dispatching {}. Found {} connected probe(s)".args(command, alertProbes.size) }
                 alertProbes.forEach { probe ->
                     val probeCommand = LiveInstrumentCommand(
                         command.commandType,
                         command.instruments.filter { it.location.isSameLocation(probe) }.toSet(),
                         command.locations.filter { it.isSameLocation(probe) }.toSet()
                     )
-                    vertx.eventBus().publish(LIVE_INSTRUMENT_REMOTE + ":" + probe.instanceId, probeCommand.toJson())
-                    log.debug { "Dispatched $probeCommand to probe ${probe.instanceId}" }
+                    if (probeCommand.isDispatchable()) {
+                        alertCount++
+                        vertx.eventBus().publish(LIVE_INSTRUMENT_REMOTE + ":" + probe.instanceId, probeCommand.toJson())
+                        log.debug { "Dispatched $probeCommand to probe ${probe.instanceId}" }
+                    }
                 }
+                log.info { "Dispatched {} to {} of {} connected probe(s)".args(command, alertCount, alertProbes.size) }
             }.onFailure {
                 log.error("Failed to get active probes", it)
             }
