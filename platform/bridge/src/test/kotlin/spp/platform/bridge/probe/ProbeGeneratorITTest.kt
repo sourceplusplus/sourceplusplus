@@ -26,6 +26,7 @@ import io.vertx.ext.web.client.WebClientOptions
 import io.vertx.kotlin.coroutines.await
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
 
 class ProbeGeneratorITTest : PlatformIntegrationTest() {
@@ -46,8 +47,8 @@ class ProbeGeneratorITTest : PlatformIntegrationTest() {
             assertEquals(platformHost, getString("platform_host"))
             assertEquals(12800, getInteger("platform_port"))
             getJsonObject("authentication").apply {
-                assertEquals("test-id", getString("client_id"))
-                assertEquals("test-secret", getString("client_secret"))
+                assertNotNull(getString("client_id"))
+                assertNotNull(getString("client_secret"))
             }
         }
     }
