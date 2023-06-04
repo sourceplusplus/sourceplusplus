@@ -27,15 +27,9 @@ import io.vertx.kotlin.coroutines.dispatcher
 import io.vertx.serviceproxy.ServiceException
 import kotlinx.coroutines.launch
 import mu.KotlinLogging
-import org.apache.skywalking.oap.server.analyzer.module.AnalyzerModule
-import org.apache.skywalking.oap.server.analyzer.provider.meter.process.IMeterProcessService
-import org.apache.skywalking.oap.server.analyzer.provider.meter.process.MeterProcessService
-import org.apache.skywalking.oap.server.core.CoreModule
-import org.apache.skywalking.oap.server.core.analysis.meter.MeterSystem
 import spp.platform.common.ClientAuth
 import spp.platform.common.ClusterConnection
 import spp.platform.common.DeveloperAuth
-import spp.platform.common.FeedbackProcessor
 import spp.platform.common.service.SourceBridgeService
 import spp.platform.common.util.args
 import spp.platform.storage.SourceStorage
@@ -64,17 +58,9 @@ import java.util.*
 class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
 
     private val log = KotlinLogging.logger {}
-    private lateinit var meterSystem: MeterSystem
-    private lateinit var meterProcessService: MeterProcessService
 
     override suspend fun start() {
         log.debug("Starting LiveInstrumentProcessorImpl")
-        FeedbackProcessor.module!!.find(CoreModule.NAME).provider().apply {
-            meterSystem = getService(MeterSystem::class.java)
-        }
-        FeedbackProcessor.module!!.find(AnalyzerModule.NAME).provider().apply {
-            meterProcessService = getService(IMeterProcessService::class.java) as MeterProcessService
-        }
 
         //load preset instruments
         val livePresets = ClusterConnection.config.getJsonObject("live-presets") ?: JsonObject()
