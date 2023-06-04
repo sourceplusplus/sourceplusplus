@@ -69,7 +69,7 @@ class LiveMeterRateTest : LiveInstrumentIntegrationTest() {
                 getLineNumber("done"),
                 "spp-test-probe"
             ),
-            id = testNameAsInstrumentId,
+            id = testNameAsUniqueInstrumentId,
             meta = mapOf("metric.mode" to "RATE"),
             applyImmediately = true
         )
@@ -143,7 +143,7 @@ class LiveMeterRateTest : LiveInstrumentIntegrationTest() {
 
         //clean up
         consumer.unregister()
-        assertNotNull(instrumentService.removeLiveInstrument(testNameAsInstrumentId).await())
+        assertNotNull(instrumentService.removeLiveInstrument(liveMeter.id!!).await())
         assertNotNull(viewService.removeLiveView(subscriptionId).await())
 
         assertTrue(rate >= 50, rate.toString()) //allow for some variance (GH actions are sporadic)
