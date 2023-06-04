@@ -64,11 +64,10 @@ class MetaLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
     @Test
     fun `verify add live instruments meta`(): Unit = runBlocking {
-        val location = LiveSourceLocation("non-existent-class-1")
         val liveInstruments = instrumentService.addLiveInstruments(
             listOf(
                 LiveBreakpoint(
-                    location = location,
+                    location = LiveSourceLocation("non-existent-class-1"),
                     id = testNameAsInstrumentId
                 )
             )
@@ -89,11 +88,10 @@ class MetaLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
     @Test
     fun `verify get live instruments meta`(): Unit = runBlocking {
-        val location = LiveSourceLocation("non-existent-class-2")
         val liveInstruments = instrumentService.addLiveInstruments(
             listOf(
                 LiveBreakpoint(
-                    location = location,
+                    location = LiveSourceLocation("non-existent-class-2"),
                     id = testNameAsInstrumentId
                 )
             )
@@ -135,16 +133,15 @@ class MetaLiveBreakpointTest : LiveInstrumentIntegrationTest() {
     fun `verify applied at meta update`(): Unit = runBlocking {
         addLineLabel("done") { Throwable().stackTrace[0].lineNumber }
 
-        val location = LiveSourceLocation(
-            MetaLiveBreakpointTest::class.qualifiedName!!,
-            getLineNumber("done"),
-            "spp-test-probe"
-        )
         val liveInstrument = instrumentService.addLiveInstrument(
             LiveBreakpoint(
-                location = location,
+                location = LiveSourceLocation(
+                    MetaLiveBreakpointTest::class.java.name,
+                    getLineNumber("done"),
+                    "spp-test-probe"
+                ),
                 applyImmediately = true,
-                id = testNameAsInstrumentId
+                id = testNameAsUniqueInstrumentId
             )
         ).await()
         assertNotNull(liveInstrument)
