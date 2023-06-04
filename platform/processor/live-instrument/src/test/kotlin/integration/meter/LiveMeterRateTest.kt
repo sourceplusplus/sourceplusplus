@@ -134,6 +134,7 @@ class LiveMeterRateTest : LiveInstrumentIntegrationTest() {
                 repeat((0 until 100).count()) {
                     triggerRate()
                     delay(1000)
+                    if (testContext.completed()) return@runBlocking
                 }
             }
             it.complete()
