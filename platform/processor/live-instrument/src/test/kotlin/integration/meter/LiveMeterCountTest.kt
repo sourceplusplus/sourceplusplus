@@ -24,10 +24,7 @@ import io.vertx.kotlin.coroutines.await
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import org.junit.jupiter.api.Assertions.*
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
-import spp.protocol.artifact.ArtifactQualifiedName
-import spp.protocol.artifact.ArtifactType
 import spp.protocol.instrument.LiveMeter
 import spp.protocol.instrument.location.LiveSourceLocation
 import spp.protocol.instrument.meter.MeterType
@@ -38,8 +35,8 @@ import spp.protocol.service.SourceServices.Subscribe.toLiveViewSubscription
 import spp.protocol.view.LiveView
 import spp.protocol.view.LiveViewConfig
 import spp.protocol.view.LiveViewEvent
+import spp.protocol.view.rule.MeterSumRule
 
-@Disabled //todo: this test is flaky
 class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
 
     companion object {
@@ -64,25 +61,15 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
                 getLineNumber("done"),
                 "spp-test-probe"
             ),
-            id = testNameAsInstrumentId,
+            id = testNameAsUniqueInstrumentId,
             applyImmediately = true
         )
 
+        viewService.saveRule(MeterSumRule(liveMeter)).await()
         val subscriptionId = viewService.addLiveView(
             LiveView(
                 entityIds = mutableSetOf(liveMeter.id!!),
-                artifactQualifiedName = ArtifactQualifiedName(
-                    LiveMeterCountTest::class.java.name,
-                    type = ArtifactType.EXPRESSION
-                ),
-                artifactLocation = LiveSourceLocation(
-                    LiveMeterCountTest::class.java.name,
-                    getLineNumber("done")
-                ),
-                viewConfig = LiveViewConfig(
-                    "test",
-                    listOf(liveMeter.id!!)
-                )
+                viewConfig = LiveViewConfig("test", listOf(liveMeter.id!!)),
             )
         ).await().subscriptionId!!
 
@@ -116,7 +103,7 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
 
         //clean up
         consumer.unregister()
-        assertNotNull(instrumentService.removeLiveInstrument(testNameAsInstrumentId).await())
+        assertNotNull(instrumentService.removeLiveInstrument(liveMeter.id!!).await())
         assertNotNull(viewService.removeLiveView(subscriptionId).await())
 
         assertEquals(100, totalCount)
@@ -136,25 +123,15 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
                 getLineNumber("done"),
                 "spp-test-probe"
             ),
-            id = testNameAsInstrumentId,
+            id = testNameAsUniqueInstrumentId,
             applyImmediately = true
         )
 
+        viewService.saveRule(MeterSumRule(liveMeter)).await()
         val subscriptionId = viewService.addLiveView(
             LiveView(
                 entityIds = mutableSetOf(liveMeter.id!!),
-                artifactQualifiedName = ArtifactQualifiedName(
-                    LiveMeterCountTest::class.java.name,
-                    type = ArtifactType.EXPRESSION
-                ),
-                artifactLocation = LiveSourceLocation(
-                    LiveMeterCountTest::class.java.name,
-                    getLineNumber("done")
-                ),
-                viewConfig = LiveViewConfig(
-                    "test",
-                    listOf(liveMeter.id!!)
-                )
+                viewConfig = LiveViewConfig("test", listOf(liveMeter.id!!))
             )
         ).await().subscriptionId!!
 
@@ -188,7 +165,7 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
 
         //clean up
         consumer.unregister()
-        assertNotNull(instrumentService.removeLiveInstrument(testNameAsInstrumentId).await())
+        assertNotNull(instrumentService.removeLiveInstrument(liveMeter.id!!).await())
         assertNotNull(viewService.removeLiveView(subscriptionId).await())
 
         assertEquals(200, totalCount)
@@ -206,27 +183,17 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
             location = LiveSourceLocation(
                 LiveMeterCountTest::class.java.name,
                 getLineNumber("done"),
-                //"spp-test-probe" //todo: impl this so applyImmediately can be used
+                "spp-test-probe"
             ),
-            id = "$testNameAsInstrumentId-1",
-            //applyImmediately = true //todo: can't use applyImmediately
+            id = testNameAsUniqueInstrumentId,
+            applyImmediately = true
         )
 
+        viewService.saveRule(MeterSumRule(liveMeter1)).await()
         val subscriptionId1 = viewService.addLiveView(
             LiveView(
                 entityIds = mutableSetOf(liveMeter1.id!!),
-                artifactQualifiedName = ArtifactQualifiedName(
-                    LiveMeterCountTest::class.java.name,
-                    type = ArtifactType.EXPRESSION
-                ),
-                artifactLocation = LiveSourceLocation(
-                    LiveMeterCountTest::class.java.name,
-                    getLineNumber("done")
-                ),
-                viewConfig = LiveViewConfig(
-                    "test",
-                    listOf(liveMeter1.id!!)
-                )
+                viewConfig = LiveViewConfig("test", listOf(liveMeter1.id!!))
             )
         ).await().subscriptionId!!
 
@@ -236,35 +203,22 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
             location = LiveSourceLocation(
                 LiveMeterCountTest::class.java.name,
                 getLineNumber("done"),
-                //"spp-test-probe" //todo: impl this so applyImmediately can be used
+                "spp-test-probe"
             ),
-            id = "$testNameAsInstrumentId-2",
-            meta = mapOf("metric.mode" to "RATE")
-            //applyImmediately = true //todo: can't use applyImmediately
+            id = testNameAsUniqueInstrumentId,
+            meta = mapOf("metric.mode" to "RATE"),
+            applyImmediately = true
         )
 
+        viewService.saveRule(MeterSumRule(liveMeter2)).await()
         val subscriptionId2 = viewService.addLiveView(
             LiveView(
                 entityIds = mutableSetOf(liveMeter2.id!!),
-                artifactQualifiedName = ArtifactQualifiedName(
-                    LiveMeterCountTest::class.java.name,
-                    type = ArtifactType.EXPRESSION
-                ),
-                artifactLocation = LiveSourceLocation(
-                    LiveMeterCountTest::class.java.name,
-                    getLineNumber("done")
-                ),
-                viewConfig = LiveViewConfig(
-                    "test",
-                    listOf(liveMeter2.id!!)
-                )
+                viewConfig = LiveViewConfig("test", listOf(liveMeter2.id!!))
             )
         ).await().subscriptionId!!
 
-        val consumer = vertx.eventBus().consumer<JsonObject>(
-            toLiveViewSubscriberAddress("system")
-        )
-
+        val consumer = vertx.eventBus().consumer<JsonObject>(toLiveViewSubscriberAddress("system"))
         val testContext = VertxTestContext()
         var totalCount = 0
         consumer.handler {
@@ -286,29 +240,17 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
             }
         }
 
-        instrumentService.addLiveMeter(liveMeter1).onSuccess {
-            val metricId = it.id!!
-            println(metricId)
-            vertx.setTimer(5000) { //todo: have to wait since not applyImmediately
-                triggerCount()
-            }
-        }.onFailure {
-            testContext.failNow(it)
-        }
-        instrumentService.addLiveMeter(liveMeter2).onSuccess {
-            vertx.setTimer(5000) { //todo: have to wait since not applyImmediately
-                triggerCount()
-            }
-        }.onFailure {
-            testContext.failNow(it)
-        }
+        instrumentService.addLiveMeter(liveMeter1).await()
+        instrumentService.addLiveMeter(liveMeter2).await()
+        triggerCount()
+        triggerCount()
 
         errorOnTimeout(testContext)
 
         //clean up
         consumer.unregister()
-        assertNotNull(instrumentService.removeLiveInstrument("$testNameAsInstrumentId-1").await())
-        assertNotNull(instrumentService.removeLiveInstrument("$testNameAsInstrumentId-2").await())
+        assertNotNull(instrumentService.removeLiveInstrument(liveMeter1.id!!).await())
+        assertNotNull(instrumentService.removeLiveInstrument(liveMeter2.id!!).await())
         assertNotNull(viewService.removeLiveView(subscriptionId1).await())
         assertNotNull(viewService.removeLiveView(subscriptionId2).await())
 
