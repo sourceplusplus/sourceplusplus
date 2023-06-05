@@ -50,7 +50,6 @@ class RemoveByLocationLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         val hitCount = AtomicInteger(0)
         val testContext = VertxTestContext()
         val listener: (LiveBreakpointHit) -> Unit = { bpHit ->
-            log.info("Hit: $bpHit")
             testContext.verify {
                 assertTrue(bpHit.stackTrace.elements.isNotEmpty())
                 val topFrame = bpHit.stackTrace.elements.first()
