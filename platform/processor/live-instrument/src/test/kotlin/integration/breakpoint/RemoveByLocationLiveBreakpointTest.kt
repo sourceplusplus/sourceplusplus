@@ -27,8 +27,7 @@ import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.event.LiveBreakpointHit
 import spp.protocol.instrument.location.LiveSourceLocation
 import spp.protocol.service.listen.addBreakpointHitListener
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicInteger
 
 class RemoveByLocationLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
@@ -48,18 +47,23 @@ class RemoveByLocationLiveBreakpointTest : LiveInstrumentIntegrationTest() {
             removeMultipleByLine()
         }
 
-        val gotAllHitsLatch = CountDownLatch(2)
+        val hitCount = AtomicInteger(0)
         val testContext = VertxTestContext()
         val listener: (LiveBreakpointHit) -> Unit = { bpHit ->
+            log.info("Hit: $bpHit")
             testContext.verify {
                 assertTrue(bpHit.stackTrace.elements.isNotEmpty())
                 val topFrame = bpHit.stackTrace.elements.first()
 
                 if (topFrame.variables.find { it.name == "line2Var" } != null) {
-                    gotAllHitsLatch.countDown()
+                    if (hitCount.incrementAndGet() == 2) {
+                        testContext.completeNow()
+                    }
                 } else {
                     assertNotNull(topFrame.variables.find { it.name == "line1Var" })
-                    gotAllHitsLatch.countDown()
+                    if (hitCount.incrementAndGet() == 2) {
+                        testContext.completeNow()
+                    }
                 }
             }
         }
@@ -73,7 +77,7 @@ class RemoveByLocationLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                     location = LiveSourceLocation(
                         RemoveByLocationLiveBreakpointTest::class.java.name,
                         getLineNumber("line1"),
-                        //"spp-test-probe" //todo: should be able to use with remove by location
+                        "spp-test-probe"
                     ),
                     hitLimit = 2,
                     //applyImmediately = true,
@@ -83,7 +87,7 @@ class RemoveByLocationLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                     location = LiveSourceLocation(
                         RemoveByLocationLiveBreakpointTest::class.java.name,
                         getLineNumber("line2"),
-                        //"spp-test-probe" //todo: should be able to use with remove by location
+                        "spp-test-probe"
                     ),
                     hitLimit = 2,
                     //applyImmediately = true,
@@ -97,19 +101,14 @@ class RemoveByLocationLiveBreakpointTest : LiveInstrumentIntegrationTest() {
             removeMultipleByLine()
         }
 
-        if (!gotAllHitsLatch.await(30, TimeUnit.SECONDS)) {
-            testContext.failNow(RuntimeException("didn't get all hits"))
-        }
-        if (testContext.failed()) {
-            throw testContext.causeOfFailure()
-        }
+        errorOnTimeout(testContext)
 
         //remove line1 breakpoint by line number
         val removedInstruments = instrumentService.removeLiveInstruments(
             LiveSourceLocation(
                 RemoveByLocationLiveBreakpointTest::class.java.name,
                 getLineNumber("line1"),
-                //"spp-test-probe" //todo: doesn't work even if above uses
+                "spp-test-probe"
             )
         ).await()
         testContext.verify {
@@ -119,7 +118,7 @@ class RemoveByLocationLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
         //ensure line1 is removed and line2 is still there
         val remainingInstruments = instrumentService.getLiveInstrumentsByLocation(
-            LiveSourceLocation(RemoveByLocationLiveBreakpointTest::class.java.name)
+            LiveSourceLocation(RemoveByLocationLiveBreakpointTest::class.java.name, service = "spp-test-probe")
         ).await()
         testContext.verify {
             assertEquals(1, remainingInstruments.size)
@@ -136,7 +135,7 @@ class RemoveByLocationLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         assertEquals(
             1,
             instrumentService.removeLiveInstruments(
-                LiveSourceLocation(RemoveByLocationLiveBreakpointTest::class.java.name)
+                LiveSourceLocation(RemoveByLocationLiveBreakpointTest::class.java.name, service = "spp-test-probe")
             ).await().size
         )
     }
