@@ -91,7 +91,7 @@ live-presets:
           metric.mode: "RATE"
     view-rules:
       - name: "spp_junit_test_successful"
-        meterIds: ["spp_junit_test_successful", "spp_junit_test_failed"]
+        meterIds: [ "spp_junit_test_successful", "spp_junit_test_failed" ]
         exp: "((spp_junit_test_successful*100 / (spp_junit_test_successful + spp_junit_test_failed)).sum(['service'])).service(['service'], Layer.GENERAL)"
         partitions:
           - find: "spp_junit_test_successful"
