@@ -149,7 +149,6 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
             triggerGauge()
         }
 
-        val instrumentId = testNameAsUniqueInstrumentId
         val liveMeter = LiveMeter(
             MeterType.GAUGE,
             MetricValue(MetricValueType.VALUE_EXPRESSION, "localVariables[str]"),
@@ -158,7 +157,7 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
                 getLineNumber("done"),
                 "spp-test-probe"
             ),
-            id = instrumentId,
+            id = testNameAsUniqueInstrumentId,
             applyImmediately = true,
             hitLimit = 1
         )
@@ -180,18 +179,7 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
         val subscriptionId = viewService.addLiveView(
             LiveView(
                 entityIds = mutableSetOf(liveMeter.id!!),
-                artifactQualifiedName = ArtifactQualifiedName(
-                    LiveMeterGaugeTest::class.java.name,
-                    type = ArtifactType.EXPRESSION
-                ),
-                artifactLocation = LiveSourceLocation(
-                    LiveMeterGaugeTest::class.java.name,
-                    getLineNumber("done")
-                ),
-                viewConfig = LiveViewConfig(
-                    "test",
-                    listOf(liveMeter.id!!)
-                )
+                viewConfig = LiveViewConfig("test", listOf(liveMeter.id!!))
             )
         ).await().subscriptionId!!
 
