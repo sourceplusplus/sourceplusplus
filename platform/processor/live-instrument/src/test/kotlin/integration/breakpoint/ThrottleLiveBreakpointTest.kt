@@ -57,7 +57,7 @@ class ThrottleLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         val liveInstrument = instrumentService.addLiveInstrument(
             LiveBreakpoint(
                 location = LiveSourceLocation(
-                    ThrottleLiveBreakpointTest::class.qualifiedName!!,
+                    ThrottleLiveBreakpointTest::class.java.name,
                     getLineNumber("done"),
                     "spp-test-probe"
                 ),
@@ -102,7 +102,7 @@ class ThrottleLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         val liveInstrument = instrumentService.addLiveInstrument(
             LiveBreakpoint(
                 location = LiveSourceLocation(
-                    ThrottleLiveBreakpointTest::class.qualifiedName!!,
+                    ThrottleLiveBreakpointTest::class.java.name,
                     getLineNumber("done"),
                     "spp-test-probe"
                 ),
@@ -147,7 +147,7 @@ class ThrottleLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         val liveInstrument = instrumentService.addLiveInstrument(
             LiveBreakpoint(
                 location = LiveSourceLocation(
-                    ThrottleLiveBreakpointTest::class.qualifiedName!!,
+                    ThrottleLiveBreakpointTest::class.java.name,
                     getLineNumber("done"),
                     "spp-test-probe"
                 ),

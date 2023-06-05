@@ -80,7 +80,7 @@ class LargeMapLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         instrumentService.addLiveInstrument(
             LiveBreakpoint(
                 location = LiveSourceLocation(
-                    LargeMapLiveBreakpointTest::class.qualifiedName!!,
+                    LargeMapLiveBreakpointTest::class.java.name,
                     getLineNumber("done"),
                     "spp-test-probe"
                 ),

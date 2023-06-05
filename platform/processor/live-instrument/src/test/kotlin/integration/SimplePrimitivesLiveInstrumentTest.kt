@@ -132,7 +132,7 @@ class SimplePrimitivesLiveInstrumentTest : LiveInstrumentIntegrationTest() {
         instrumentService.addLiveInstrument(
             LiveBreakpoint(
                 location = LiveSourceLocation(
-                    SimplePrimitivesLiveInstrumentTest::class.qualifiedName!!,
+                    SimplePrimitivesLiveInstrumentTest::class.java.name,
                     getLineNumber("done"),
                     "spp-test-probe"
                 ),

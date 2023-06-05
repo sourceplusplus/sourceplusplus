@@ -143,7 +143,7 @@ class LiveBreakpointTest : LiveInstrumentIntegrationTest() {
             LiveBreakpoint(
                 id = testNameAsInstrumentId,
                 location = LiveSourceLocation(
-                    LiveBreakpointTest::class.qualifiedName!!,
+                    LiveBreakpointTest::class.java.name,
                     getLineNumber("done"),
                     "spp-test-probe"
                 ),
@@ -219,7 +219,7 @@ class LiveBreakpointTest : LiveInstrumentIntegrationTest() {
             LiveBreakpoint(
                 id = testNameAsInstrumentId,
                 location = LiveSourceLocation(
-                    LiveBreakpointTest::class.qualifiedName!!,
+                    LiveBreakpointTest::class.java.name,
                     getLineNumber("done"),
                     "spp-test-probe"
                 ),

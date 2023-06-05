@@ -131,7 +131,7 @@ class DeepObjectLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         instrumentService.addLiveInstrument(
             LiveBreakpoint(
                 location = LiveSourceLocation(
-                    DeepObjectLiveBreakpointTest::class.qualifiedName!!,
+                    DeepObjectLiveBreakpointTest::class.java.name,
                     getLineNumber("done"),
                     "spp-test-probe"
                 ),

@@ -60,7 +60,7 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
             MeterType.COUNT,
             MetricValue(MetricValueType.NUMBER, "1"),
             location = LiveSourceLocation(
-                LiveMeterCountTest::class.qualifiedName!!,
+                LiveMeterCountTest::class.java.name,
                 getLineNumber("done"),
                 "spp-test-probe"
             ),
@@ -72,11 +72,11 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
             LiveView(
                 entityIds = mutableSetOf(liveMeter.id!!),
                 artifactQualifiedName = ArtifactQualifiedName(
-                    LiveMeterCountTest::class.qualifiedName!!,
+                    LiveMeterCountTest::class.java.name,
                     type = ArtifactType.EXPRESSION
                 ),
                 artifactLocation = LiveSourceLocation(
-                    LiveMeterCountTest::class.qualifiedName!!,
+                    LiveMeterCountTest::class.java.name,
                     getLineNumber("done")
                 ),
                 viewConfig = LiveViewConfig(
@@ -132,7 +132,7 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
             MeterType.COUNT,
             MetricValue(MetricValueType.NUMBER, "2"),
             location = LiveSourceLocation(
-                LiveMeterCountTest::class.qualifiedName!!,
+                LiveMeterCountTest::class.java.name,
                 getLineNumber("done"),
                 "spp-test-probe"
             ),
@@ -144,11 +144,11 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
             LiveView(
                 entityIds = mutableSetOf(liveMeter.id!!),
                 artifactQualifiedName = ArtifactQualifiedName(
-                    LiveMeterCountTest::class.qualifiedName!!,
+                    LiveMeterCountTest::class.java.name,
                     type = ArtifactType.EXPRESSION
                 ),
                 artifactLocation = LiveSourceLocation(
-                    LiveMeterCountTest::class.qualifiedName!!,
+                    LiveMeterCountTest::class.java.name,
                     getLineNumber("done")
                 ),
                 viewConfig = LiveViewConfig(
@@ -204,7 +204,7 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
             MeterType.COUNT,
             MetricValue(MetricValueType.NUMBER, "1"),
             location = LiveSourceLocation(
-                LiveMeterCountTest::class.qualifiedName!!,
+                LiveMeterCountTest::class.java.name,
                 getLineNumber("done"),
                 //"spp-test-probe" //todo: impl this so applyImmediately can be used
             ),
@@ -216,11 +216,11 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
             LiveView(
                 entityIds = mutableSetOf(liveMeter1.id!!),
                 artifactQualifiedName = ArtifactQualifiedName(
-                    LiveMeterCountTest::class.qualifiedName!!,
+                    LiveMeterCountTest::class.java.name,
                     type = ArtifactType.EXPRESSION
                 ),
                 artifactLocation = LiveSourceLocation(
-                    LiveMeterCountTest::class.qualifiedName!!,
+                    LiveMeterCountTest::class.java.name,
                     getLineNumber("done")
                 ),
                 viewConfig = LiveViewConfig(
@@ -234,7 +234,7 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
             MeterType.COUNT,
             MetricValue(MetricValueType.NUMBER, "100"),
             location = LiveSourceLocation(
-                LiveMeterCountTest::class.qualifiedName!!,
+                LiveMeterCountTest::class.java.name,
                 getLineNumber("done"),
                 //"spp-test-probe" //todo: impl this so applyImmediately can be used
             ),
@@ -247,11 +247,11 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
             LiveView(
                 entityIds = mutableSetOf(liveMeter2.id!!),
                 artifactQualifiedName = ArtifactQualifiedName(
-                    LiveMeterCountTest::class.qualifiedName!!,
+                    LiveMeterCountTest::class.java.name,
                     type = ArtifactType.EXPRESSION
                 ),
                 artifactLocation = LiveSourceLocation(
-                    LiveMeterCountTest::class.qualifiedName!!,
+                    LiveMeterCountTest::class.java.name,
                     getLineNumber("done")
                 ),
                 viewConfig = LiveViewConfig(

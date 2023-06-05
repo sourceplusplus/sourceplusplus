@@ -69,7 +69,7 @@ class NegativePrimitiveConditionITTest : LiveInstrumentIntegrationTest() {
         val liveInstrument = instrumentService.addLiveInstrument(
             LiveBreakpoint(
                 location = LiveSourceLocation(
-                    NegativePrimitiveConditionITTest::class.qualifiedName!!,
+                    NegativePrimitiveConditionITTest::class.java.name,
                     getLineNumber("done"),
                     "spp-test-probe"
                 ),
@@ -102,7 +102,7 @@ class NegativePrimitiveConditionITTest : LiveInstrumentIntegrationTest() {
         val liveInstrument = instrumentService.addLiveInstrument(
             LiveBreakpoint(
                 location = LiveSourceLocation(
-                    NegativePrimitiveConditionITTest::class.qualifiedName!!,
+                    NegativePrimitiveConditionITTest::class.java.name,
                     getLineNumber("done"),
                     "spp-test-probe"
                 ),
@@ -135,7 +135,7 @@ class NegativePrimitiveConditionITTest : LiveInstrumentIntegrationTest() {
         val liveInstrument = instrumentService.addLiveInstrument(
             LiveBreakpoint(
                 location = LiveSourceLocation(
-                    NegativePrimitiveConditionITTest::class.qualifiedName!!,
+                    NegativePrimitiveConditionITTest::class.java.name,
                     getLineNumber("done"),
                     "spp-test-probe"
                 ),

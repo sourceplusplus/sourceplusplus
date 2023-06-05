@@ -82,7 +82,7 @@ class LargeArrayLiveBreakpointTest : LiveInstrumentIntegrationTest() {
             LiveBreakpoint(
                 id = testNameAsInstrumentId,
                 location = LiveSourceLocation(
-                    LargeArrayLiveBreakpointTest::class.qualifiedName!!,
+                    LargeArrayLiveBreakpointTest::class.java.name,
                     getLineNumber("done"),
                     "spp-test-probe"
                 ),
