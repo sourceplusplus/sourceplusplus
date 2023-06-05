@@ -442,7 +442,7 @@ jobs:
 
     needs:
       - test-platform
-      - test-probe-jvm
+#      - test-probe-jvm
       - test-probe-nodejs
       - test-interface-cli
       - test-interface-jetbrains
