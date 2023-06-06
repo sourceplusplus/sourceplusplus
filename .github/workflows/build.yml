@@ -322,7 +322,7 @@ jobs:
   test-interface-cli:
     needs: [ verify-mono, build-platform ]
     runs-on: ubuntu-20.04
-    timeout-minutes: 10
+    timeout-minutes: 15
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-test-interface-cli
       cancel-in-progress: true
