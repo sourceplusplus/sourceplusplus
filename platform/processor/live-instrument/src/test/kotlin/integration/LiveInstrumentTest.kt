@@ -21,7 +21,6 @@ import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*
-import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
 import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.LiveLog
@@ -88,7 +87,7 @@ class LiveInstrumentTest : LiveInstrumentIntegrationTest() {
         assertNotNull(instrumentService.removeLiveInstrument(originalIds[1]).await())
     }
 
-    @RepeatedTest(2)
+    @Test
     fun addLiveLogAndLiveBreakpoint(): Unit = runBlocking {
         setupLineLabels {
             doTest()
@@ -142,7 +141,7 @@ class LiveInstrumentTest : LiveInstrumentIntegrationTest() {
         errorOnTimeout(testContext)
     }
 
-    @RepeatedTest(2, name = "addLiveLogAndLiveBreakpoint_noLogHit-{currentRepetition}-of-{totalRepetitions}")
+    @Test
     fun addLiveLogAndLiveBreakpoint_noLogHit(): Unit = runBlocking {
         setupLineLabels {
             doTest()

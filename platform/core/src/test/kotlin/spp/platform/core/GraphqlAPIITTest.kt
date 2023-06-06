@@ -48,7 +48,7 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
         @BeforeAll
         @JvmStatic
         fun setupInit() {
-            val client = WebClient.create(vertx(), WebClientOptions())
+            val client = WebClient.create(vertx, WebClientOptions())
             request = client.post(platformPort, platformHost, "/graphql/spp")
                 .bearerTokenAuthentication(systemAccessToken)
         }

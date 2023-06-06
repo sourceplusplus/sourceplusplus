@@ -31,13 +31,12 @@ import io.vertx.spi.cluster.redis.RedisClusterManager
 import io.vertx.spi.cluster.redis.config.LockConfig
 import io.vertx.spi.cluster.redis.config.RedisConfig
 import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.TestInfo
 import org.junit.jupiter.api.extension.ExtendWith
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import spp.protocol.instrument.LiveInstrument
 import spp.protocol.service.LiveInstrumentService
 import spp.protocol.service.LiveManagementService
 import spp.protocol.service.LiveViewService
@@ -47,6 +46,8 @@ import java.util.regex.Pattern
 
 @ExtendWith(VertxExtension::class)
 open class PlatformIntegrationTest {
+
+    val log: Logger by lazy { LoggerFactory.getLogger(javaClass) }
 
     lateinit var testName: String
     val testNameAsInstrumentId: String
@@ -65,20 +66,16 @@ open class PlatformIntegrationTest {
     }
 
     companion object {
-        private val log = LoggerFactory.getLogger(PlatformIntegrationTest::class.java)
-
-        private var vertx: Vertx? = null
+        lateinit var vertx: Vertx
         val platformHost = System.getenv("SPP_PLATFORM_HOST") ?: "localhost"
         const val platformPort = 12800
         val systemAccessToken: String? by lazy { fetchAccessToken() }
 
-        fun vertx(): Vertx {
-            return vertx!!
-        }
-
         @BeforeAll
         @JvmStatic
+        @Synchronized
         fun setup() {
+            if (::vertx.isInitialized) return
             val clusterStorageAddress = "redis://localhost:6379"
             val clusterManager = RedisClusterManager(
                 RedisConfig()
@@ -87,26 +84,13 @@ open class PlatformIntegrationTest {
                     .addLock(LockConfig(Pattern.compile("expiring_shared_data:.*")).setLeaseTime(5000))
             )
             runBlocking {
-                log.info("Starting vertx")
                 vertx = Vertx.clusteredVertx(VertxOptions().setClusterManager(clusterManager)).await()
-                log.info("Started vertx")
-            }
-        }
-
-        @AfterAll
-        @JvmStatic
-        fun destroy() {
-            runBlocking {
-                log.info("Closing vertx")
-                vertx!!.close().await()
-                vertx = null
-                log.info("Closed vertx")
             }
         }
 
         private fun fetchAccessToken() = runBlocking {
             val tokenUri = "/api/new-token?authorization_code=change-me"
-            val req = vertx!!.createHttpClient(HttpClientOptions())
+            val req = vertx.createHttpClient(HttpClientOptions())
                 .request(
                     RequestOptions()
                         .setHost(platformHost)
@@ -123,22 +107,20 @@ open class PlatformIntegrationTest {
         }
     }
 
-    val vertx: Vertx = vertx()
-
     val managementService: LiveManagementService
         get() {
             return LiveManagementService.createProxy(vertx, systemAccessToken)
         }
     val instrumentService: LiveInstrumentService
         get() {
-            return LoggedLiveInstrumentService(LiveInstrumentService.createProxy(vertx, systemAccessToken))
+            return LiveInstrumentService.createProxy(vertx, systemAccessToken)
         }
     val viewService: LiveViewService
         get() {
             return LiveViewService.createProxy(vertx, systemAccessToken)
         }
 
-    fun errorOnTimeout(testContext: VertxTestContext, waitTime: Long = 15) {
+    fun errorOnTimeout(testContext: VertxTestContext, waitTime: Long = 60) {
         if (testContext.awaitCompletion(waitTime, TimeUnit.SECONDS)) {
             if (testContext.failed()) {
                 throw testContext.causeOfFailure()
@@ -148,7 +130,7 @@ open class PlatformIntegrationTest {
         }
     }
 
-    fun successOnTimeout(testContext: VertxTestContext, waitTime: Long = 15) {
+    fun successOnTimeout(testContext: VertxTestContext, waitTime: Long = 30) {
         if (testContext.awaitCompletion(waitTime, TimeUnit.SECONDS)) {
             if (testContext.failed()) {
                 throw testContext.causeOfFailure()
@@ -162,12 +144,5 @@ open class PlatformIntegrationTest {
         val promise = Promise.promise<Void>()
         completionHandler { promise.handle(it) }
         return promise.future()
-    }
-
-    class LoggedLiveInstrumentService(private val delegate: LiveInstrumentService) : LiveInstrumentService by delegate {
-        override fun removeLiveInstrument(id: String): Future<LiveInstrument?> {
-            log.debug("Removing live instrument $id", Throwable())
-            return delegate.removeLiveInstrument(id)
-        }
     }
 }

@@ -25,7 +25,6 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
-import org.slf4j.LoggerFactory
 import spp.protocol.instrument.LiveLog
 import spp.protocol.instrument.event.*
 import spp.protocol.instrument.location.LiveSourceLocation
@@ -35,8 +34,6 @@ import spp.protocol.service.listen.LiveInstrumentListener
 import spp.protocol.service.listen.addLiveInstrumentListener
 
 class LiveLogTest : LiveInstrumentIntegrationTest() {
-
-    private val log = LoggerFactory.getLogger(LiveLogTest::class.java)
 
     private fun doTest() {
         startEntrySpan("doTest")

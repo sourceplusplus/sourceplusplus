@@ -24,7 +24,6 @@ import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
-import org.slf4j.LoggerFactory
 import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.event.*
 import spp.protocol.instrument.location.LiveSourceLocation
@@ -36,8 +35,6 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 
 class LiveBreakpointTest : LiveInstrumentIntegrationTest() {
-
-    private val log = LoggerFactory.getLogger(LiveBreakpointTest::class.java)
 
     @Suppress("UNUSED_VARIABLE")
     private fun doTest() {

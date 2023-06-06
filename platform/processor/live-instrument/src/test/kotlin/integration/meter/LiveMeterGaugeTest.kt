@@ -22,7 +22,6 @@ import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
 import kotlinx.coroutines.runBlocking
-import mu.KotlinLogging
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import spp.protocol.artifact.ArtifactQualifiedName
@@ -44,8 +43,6 @@ import java.util.*
 import java.util.function.Supplier
 
 class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
-
-    private val log = KotlinLogging.logger {}
 
     @Suppress("UNUSED_VARIABLE")
     private fun triggerGauge() {

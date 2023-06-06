@@ -18,11 +18,12 @@
 package integration.meter
 
 import integration.LiveInstrumentIntegrationTest
+import io.vertx.core.Handler
+import io.vertx.core.eventbus.Message
 import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
 import kotlinx.coroutines.runBlocking
-import mu.KotlinLogging
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import spp.protocol.instrument.LiveMeter
@@ -39,18 +40,22 @@ import spp.protocol.view.rule.MeterSumRule
 
 class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
 
-    companion object {
-        private val log = KotlinLogging.logger {}
+    private fun count1() {
+        addLineLabel("count1") { Throwable().stackTrace[0].lineNumber }
     }
 
-    private fun triggerCount() {
-        addLineLabel("done") { Throwable().stackTrace[0].lineNumber }
+    private fun count2() {
+        addLineLabel("count2") { Throwable().stackTrace[0].lineNumber }
+    }
+
+    private fun count3() {
+        addLineLabel("count3") { Throwable().stackTrace[0].lineNumber }
     }
 
     @Test
     fun testCountIncrement(): Unit = runBlocking {
         setupLineLabels {
-            triggerCount()
+            count1()
         }
 
         val liveMeter = LiveMeter(
@@ -58,7 +63,7 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
             MetricValue(MetricValueType.NUMBER, "1"),
             location = LiveSourceLocation(
                 LiveMeterCountTest::class.java.name,
-                getLineNumber("done"),
+                getLineNumber("count1"),
                 "spp-test-probe"
             ),
             id = testNameAsUniqueInstrumentId,
@@ -96,7 +101,7 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
 
         //trigger live meter 100 times
         repeat((0 until 100).count()) {
-            triggerCount()
+            count1()
         }
 
         errorOnTimeout(testContext)
@@ -112,7 +117,7 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
     @Test
     fun testDoubleCountIncrement(): Unit = runBlocking {
         setupLineLabels {
-            triggerCount()
+            count2()
         }
 
         val liveMeter = LiveMeter(
@@ -120,7 +125,7 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
             MetricValue(MetricValueType.NUMBER, "2"),
             location = LiveSourceLocation(
                 LiveMeterCountTest::class.java.name,
-                getLineNumber("done"),
+                getLineNumber("count2"),
                 "spp-test-probe"
             ),
             id = testNameAsUniqueInstrumentId,
@@ -158,7 +163,7 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
 
         //trigger live meter 100 times
         repeat((0 until 100).count()) {
-            triggerCount()
+            count2()
         }
 
         errorOnTimeout(testContext)
@@ -174,7 +179,7 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
     @Test
     fun `one method two counts`(): Unit = runBlocking {
         setupLineLabels {
-            triggerCount()
+            count3()
         }
 
         val liveMeter1 = LiveMeter(
@@ -182,7 +187,7 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
             MetricValue(MetricValueType.NUMBER, "1"),
             location = LiveSourceLocation(
                 LiveMeterCountTest::class.java.name,
-                getLineNumber("done"),
+                getLineNumber("count3"),
                 "spp-test-probe"
             ),
             id = testNameAsUniqueInstrumentId,
@@ -202,7 +207,7 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
             MetricValue(MetricValueType.NUMBER, "100"),
             location = LiveSourceLocation(
                 LiveMeterCountTest::class.java.name,
-                getLineNumber("done"),
+                getLineNumber("count3"),
                 "spp-test-probe"
             ),
             id = testNameAsUniqueInstrumentId,
@@ -218,10 +223,9 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
             )
         ).await().subscriptionId!!
 
-        val consumer = vertx.eventBus().consumer<JsonObject>(toLiveViewSubscriberAddress("system"))
         val testContext = VertxTestContext()
         var totalCount = 0
-        consumer.handler {
+        val handler = Handler<Message<JsonObject>> {
             val liveViewEvent = LiveViewEvent(it.body())
             val rawMetrics = JsonObject(liveViewEvent.metricsData)
             log.info("Received metrics: {}", rawMetrics)
@@ -239,16 +243,21 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
                 }
             }
         }
+        val consumer1 = vertx.eventBus().consumer<JsonObject>(toLiveViewSubscriberAddress(subscriptionId1))
+        consumer1.handler(handler)
+        val consumer2 = vertx.eventBus().consumer<JsonObject>(toLiveViewSubscriberAddress(subscriptionId2))
+        consumer2.handler(handler)
 
         instrumentService.addLiveMeter(liveMeter1).await()
         instrumentService.addLiveMeter(liveMeter2).await()
-        triggerCount()
-        triggerCount()
+        count3()
+        count3()
 
         errorOnTimeout(testContext)
 
         //clean up
-        consumer.unregister()
+        consumer1.unregister()
+        consumer2.unregister()
         assertNotNull(instrumentService.removeLiveInstrument(liveMeter1.id!!).await())
         assertNotNull(instrumentService.removeLiveInstrument(liveMeter2.id!!).await())
         assertNotNull(viewService.removeLiveView(subscriptionId1).await())
