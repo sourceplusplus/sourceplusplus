@@ -23,10 +23,10 @@ import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
-import mu.KotlinLogging
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.parallel.Isolated
 import spp.protocol.artifact.ArtifactQualifiedName
 import spp.protocol.artifact.ArtifactType
 import spp.protocol.instrument.LiveMeter
@@ -40,11 +40,8 @@ import spp.protocol.view.LiveViewConfig
 import spp.protocol.view.LiveViewEvent
 import spp.protocol.view.rule.ViewRule
 
+@Isolated
 class LiveMeterRateTest : LiveInstrumentIntegrationTest() {
-
-    companion object {
-        private val log = KotlinLogging.logger {}
-    }
 
     private fun triggerRate() {
         addLineLabel("done") { Throwable().stackTrace[0].lineNumber }
