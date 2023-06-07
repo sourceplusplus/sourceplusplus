@@ -46,7 +46,12 @@ class LiveMetricConvert(
         }
         existingPartitions.add(meterName)
 
-        val rule = config.getLiveMetricsRules().first()
+        val rules = config.getLiveMetricsRules()
+        if (rules.size != 1) {
+            log.error("Only support one rule for now, but got ${rules.size}")
+            throw IllegalArgumentException("Only support one rule for now, but got ${rules.size}")
+        }
+
         val sppAnalyzers = Reflect.on(this).get<MutableList<Analyzer>>("analyzers")
         for (analyzer in sppAnalyzers) {
             val samples = Reflect.on(analyzer).get<List<String>>("samples")
@@ -56,12 +61,7 @@ class LiveMetricConvert(
             }
         }
 
-        if (config.getLiveMetricsRules().size != 1) {
-            log.error("Only support one rule for now, but got ${config.getLiveMetricsRules().size}")
-            throw IllegalArgumentException("Only support one rule for now, but got ${config.getLiveMetricsRules().size}")
-        }
-
-        val partitionValue = rule.partitions.firstNotNullOf {
+        val partitionValue = rules.first().partitions.firstNotNullOf {
             Regex(
                 it.replace.replace("\$partition\$", "(.*)")
             ).find(meterName)?.groupValues?.getOrNull(1)
@@ -71,8 +71,8 @@ class LiveMetricConvert(
         meterConfig.metricPrefix = "spp"
         meterConfig.metricsRules = listOf(
             MeterConfig.Rule().apply {
-                name = rule.name + "_$partitionValue"
-                exp = rule.partitions.fold(rule.exp) { acc, partition ->
+                name = rules.first().name + "_$partitionValue"
+                exp = rules.first().partitions.fold(rules.first().exp) { acc, partition ->
                     acc.replace(partition.find, partition.replace.replace("\$partition\$", partitionValue))
                 }
             }
