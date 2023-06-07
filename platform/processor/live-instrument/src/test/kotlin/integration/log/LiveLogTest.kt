@@ -87,6 +87,7 @@ class LiveLogTest : LiveInstrumentIntegrationTest() {
             }
 
             override fun afterInstrumentEvent(event: LiveInstrumentEvent) {
+                @Suppress("ComplexCondition")
                 if (gotAdded && gotApplied && gotHit && gotRemoved) {
                     testContext.completeNow()
                 }
