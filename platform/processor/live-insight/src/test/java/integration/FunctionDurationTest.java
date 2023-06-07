@@ -50,13 +50,13 @@ public class FunctionDurationTest extends PlatformIntegrationTest {
         var sourceFile = new File("src/test/java/integration/FunctionDurationTest.java");
         getInsightService().uploadSourceCode(new JsonObject()
                 .put("file_path", sourceFile.getAbsolutePath())
-                .put("file_content", getVertx().fileSystem().readFile(
+                .put("file_content", vertx.fileSystem().readFile(
                         sourceFile.getAbsolutePath()).toCompletionStage().toCompletableFuture().get()
                 )
         ).toCompletionStage().toCompletableFuture().get();
 
         //keep executing function1
-        getVertx().setPeriodic(1000, id -> {
+        vertx.setPeriodic(1000, id -> {
             try {
                 function1();
             } catch (Exception e) {
@@ -64,12 +64,12 @@ public class FunctionDurationTest extends PlatformIntegrationTest {
             }
 
             if (testContext.completed() || testContext.failed()) {
-                getVertx().cancelTimer(id);
+                vertx.cancelTimer(id);
             }
         });
 
         //keep requesting function duration insight for function1
-        getVertx().setPeriodic(1000, id -> {
+        vertx.setPeriodic(1000, id -> {
             getInsightService().getArtifactInsights(
                     new ArtifactQualifiedName(
                             FunctionDurationTest.class.getName() + ".function1()",
@@ -94,7 +94,7 @@ public class FunctionDurationTest extends PlatformIntegrationTest {
             });
 
             if (testContext.completed() || testContext.failed()) {
-                getVertx().cancelTimer(id);
+                vertx.cancelTimer(id);
             }
         });
 
