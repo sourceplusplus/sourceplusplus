@@ -24,6 +24,7 @@ import io.vertx.kotlin.coroutines.await
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.parallel.Isolated
@@ -54,6 +55,7 @@ class LiveMeterRateTest : LiveInstrumentIntegrationTest() {
 
     @Test
     fun `60 calls per minute rate`(): Unit = runBlocking {
+        assumeTrue("true" == System.getProperty("test.includeSlow"))
         setupLineLabels {
             triggerRate()
         }

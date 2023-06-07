@@ -21,6 +21,7 @@ import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.Test
 import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.location.LiveSourceLocation
@@ -56,6 +57,7 @@ class NegativePrimitiveConditionITTest : LiveInstrumentIntegrationTest() {
 
     @Test
     fun `negative primitive static variable`() = runBlocking {
+        assumeTrue("true" == System.getProperty("test.includeSlow"))
         setupLineLabels {
             primitiveStaticVariable()
         }
@@ -89,6 +91,7 @@ class NegativePrimitiveConditionITTest : LiveInstrumentIntegrationTest() {
 
     @Test
     fun `negative instance local variable`() = runBlocking {
+        assumeTrue("true" == System.getProperty("test.includeSlow"))
         setupLineLabels {
             primitiveInstanceVariable()
         }
@@ -122,6 +125,7 @@ class NegativePrimitiveConditionITTest : LiveInstrumentIntegrationTest() {
 
     @Test
     fun `negative primitive local variable`() = runBlocking {
+        assumeTrue("true" == System.getProperty("test.includeSlow"))
         setupLineLabels {
             primitiveLocalVariable()
         }

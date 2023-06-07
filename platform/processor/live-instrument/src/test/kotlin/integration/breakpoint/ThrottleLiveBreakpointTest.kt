@@ -22,6 +22,7 @@ import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.Test
 import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.location.LiveSourceLocation
@@ -52,6 +53,7 @@ class ThrottleLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
     @Test
     fun `one per second`() = runBlocking {
+        assumeTrue("true" == System.getProperty("test.includeSlow"))
         setupLineLabels {
             throttle1()
         }
@@ -97,6 +99,7 @@ class ThrottleLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
     @Test
     fun `two per second`() = runBlocking {
+        assumeTrue("true" == System.getProperty("test.includeSlow"))
         setupLineLabels {
             throttle2()
         }
@@ -143,6 +146,7 @@ class ThrottleLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
     @Test
     fun `no throttle`() = runBlocking {
+        assumeTrue("true" == System.getProperty("test.includeSlow"))
         setupLineLabels {
             throttle3()
         }
