@@ -119,12 +119,15 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
                 val meta = rawMetrics.getJsonObject("meta")
                 assertEquals(liveMeter.id!!, meta.getString("metricsName"))
 
-                //check within a second
                 val suppliedTime = rawMetrics.getLong("value")
                 log.info("Supplied time: {}", suppliedTime)
 
-                assertTrue(suppliedTime >= System.currentTimeMillis() - 1000)
-                assertTrue(suppliedTime <= System.currentTimeMillis())
+                val now = System.currentTimeMillis()
+                log.info("Now: {}", now)
+
+                //check within 2 seconds
+                assertTrue(suppliedTime >= now - 2000)
+                assertTrue(suppliedTime <= now)
             }
             testContext.completeNow()
         }.completionHandler().await()

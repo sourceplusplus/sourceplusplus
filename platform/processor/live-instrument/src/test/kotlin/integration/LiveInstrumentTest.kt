@@ -22,6 +22,7 @@ import io.vertx.kotlin.coroutines.await
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.parallel.Isolated
 import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.LiveLog
 import spp.protocol.instrument.location.LiveSourceLocation
@@ -29,6 +30,7 @@ import spp.protocol.service.listen.addBreakpointHitListener
 import spp.protocol.service.listen.addLogHitListener
 import java.util.concurrent.atomic.AtomicInteger
 
+@Isolated
 class LiveInstrumentTest : LiveInstrumentIntegrationTest() {
 
     private fun doTest() {

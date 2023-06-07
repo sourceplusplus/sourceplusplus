@@ -53,7 +53,8 @@ class VariableControlPermissionTest : PlatformIntegrationTest() {
                             maxObjectDepth = 1
                         ),
                         location = LiveSourceLocation("integration.BreakpointPermissionTest", 1),
-                        condition = "1 == 2"
+                        condition = "1 == 2",
+                        id = testNameAsUniqueInstrumentId
                     )
                 ).await()
             }
@@ -72,7 +73,8 @@ class VariableControlPermissionTest : PlatformIntegrationTest() {
                     maxObjectDepth = 1
                 ),
                 location = LiveSourceLocation("integration.BreakpointPermissionTest", 1),
-                condition = "1 == 2"
+                condition = "1 == 2",
+                id = testNameAsUniqueInstrumentId
             )
         ).await()
         assertNotNull(instrument)

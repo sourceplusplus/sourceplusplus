@@ -47,6 +47,7 @@ class RemoveByLocationLiveBreakpointTest : LiveInstrumentIntegrationTest() {
             removeMultipleByLine()
         }
 
+        val instrumentId = testNameAsUniqueInstrumentId
         val hitCount = AtomicInteger(0)
         val testContext = VertxTestContext()
         val listener: (LiveBreakpointHit) -> Unit = { bpHit ->
@@ -66,8 +67,8 @@ class RemoveByLocationLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                 }
             }
         }
-        vertx.addBreakpointHitListener("$testNameAsInstrumentId-1", listener).await()
-        vertx.addBreakpointHitListener("$testNameAsInstrumentId-2", listener).await()
+        vertx.addBreakpointHitListener("$instrumentId-1", listener).await()
+        vertx.addBreakpointHitListener("$instrumentId-2", listener).await()
 
         //add live breakpoints
         instrumentService.addLiveInstruments(
@@ -80,7 +81,7 @@ class RemoveByLocationLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                     ),
                     hitLimit = 2,
                     //applyImmediately = true,
-                    id = "$testNameAsInstrumentId-1"
+                    id = "$instrumentId-1"
                 ),
                 LiveBreakpoint(
                     location = LiveSourceLocation(
@@ -90,7 +91,7 @@ class RemoveByLocationLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                     ),
                     hitLimit = 2,
                     //applyImmediately = true,
-                    id = "$testNameAsInstrumentId-2"
+                    id = "$instrumentId-2"
                 )
             )
         ).await()
