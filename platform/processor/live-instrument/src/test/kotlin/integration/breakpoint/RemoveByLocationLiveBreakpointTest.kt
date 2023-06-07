@@ -18,6 +18,7 @@
 package integration.breakpoint
 
 import integration.LiveInstrumentIntegrationTest
+import io.vertx.core.Promise
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
 import kotlinx.coroutines.runBlocking
@@ -25,8 +26,11 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.event.LiveBreakpointHit
+import spp.protocol.instrument.event.LiveInstrumentApplied
 import spp.protocol.instrument.location.LiveSourceLocation
+import spp.protocol.service.listen.LiveInstrumentListener
 import spp.protocol.service.listen.addBreakpointHitListener
+import spp.protocol.service.listen.addLiveInstrumentListener
 import java.util.concurrent.atomic.AtomicInteger
 
 class RemoveByLocationLiveBreakpointTest : LiveInstrumentIntegrationTest() {
@@ -70,6 +74,18 @@ class RemoveByLocationLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         vertx.addBreakpointHitListener("$instrumentId-1", listener).await()
         vertx.addBreakpointHitListener("$instrumentId-2", listener).await()
 
+        val applyCount = AtomicInteger(0)
+        val instrumentsApplied = Promise.promise<Nothing>()
+        val appliedListener = object : LiveInstrumentListener {
+            override fun onInstrumentAppliedEvent(event: LiveInstrumentApplied) {
+                if (applyCount.incrementAndGet() == 2) {
+                    instrumentsApplied.complete()
+                }
+            }
+        }
+        vertx.addLiveInstrumentListener("$instrumentId-1", appliedListener).await()
+        vertx.addLiveInstrumentListener("$instrumentId-2", appliedListener).await()
+
         //add live breakpoints
         instrumentService.addLiveInstruments(
             listOf(
@@ -96,10 +112,11 @@ class RemoveByLocationLiveBreakpointTest : LiveInstrumentIntegrationTest() {
             )
         ).await()
 
+        //todo: wait since applyImmediately doesn't work on multi adds
+        instrumentsApplied.future().await()
+
         //trigger live breakpoint
-        vertx.setTimer(5000) { //todo: wait since applyImmediately doesn't work on multi adds
-            removeMultipleByLine()
-        }
+        removeMultipleByLine()
 
         errorOnTimeout(testContext)
 
