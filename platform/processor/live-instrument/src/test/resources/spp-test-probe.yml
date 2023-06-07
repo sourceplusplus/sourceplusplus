@@ -4,7 +4,6 @@ spp:
     client_secret: "test-secret"
   platform_host: "localhost"
   platform_port: 12800
-  delete_probe_directory_on_boot: false
 skywalking:
   logging:
     level: "DEBUG"

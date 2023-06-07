@@ -21,7 +21,6 @@ import io.vertx.junit5.VertxExtension
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
 import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import spp.protocol.instrument.LiveBreakpoint
@@ -33,14 +32,10 @@ import spp.protocol.platform.auth.RolePermission.ADD_LIVE_BREAKPOINT
 import spp.protocol.service.LiveInstrumentService
 import spp.protocol.service.error.InstrumentAccessDenied
 import spp.protocol.service.error.PermissionAccessDenied
+import java.util.*
 
 @ExtendWith(VertxExtension::class)
 class JWTTest : PlatformIntegrationTest() {
-
-    @BeforeEach
-    fun reset(): Unit = runBlocking {
-        managementService.reset().await()
-    }
 
     @Test
     fun verifySuccessful() = runBlocking {
@@ -70,7 +65,8 @@ class JWTTest : PlatformIntegrationTest() {
     @Test
     fun verifyUnsuccessfulPermission() = runBlocking {
         val testContext = VertxTestContext()
-        val test2Dev = managementService.addDeveloper("test2").await()
+        val developerId = UUID.randomUUID().toString()
+        val test2Dev = managementService.addDeveloper(developerId).await()
         val accessToken = managementService.getAccessToken(test2Dev.authorizationCode!!).await()
         val instrumentService = LiveInstrumentService.createProxy(vertx, accessToken)
         instrumentService.getLiveInstruments().onComplete {
@@ -92,14 +88,16 @@ class JWTTest : PlatformIntegrationTest() {
     @Test
     fun verifyUnsuccessfulAccess() = runBlocking {
         val testContext = VertxTestContext()
-        val testDev = managementService.addDeveloper("test").await()
-        managementService.addRole(DeveloperRole.fromString("tester")).await()
-        managementService.addDeveloperRole(testDev.id, DeveloperRole.fromString("tester")).await()
-        managementService.addRolePermission(DeveloperRole.fromString("tester"), ADD_LIVE_BREAKPOINT).await()
+        val developerId = UUID.randomUUID().toString()
+        val testDev = managementService.addDeveloper(developerId).await()
+        val developerRole = DeveloperRole.fromString(UUID.randomUUID().toString().replace("-", "_"))
+        managementService.addRole(developerRole).await()
+        managementService.addDeveloperRole(testDev.id, developerRole).await()
+        managementService.addRolePermission(developerRole, ADD_LIVE_BREAKPOINT).await()
         val accessPermission = managementService.addAccessPermission(
             listOf(JWTTest::class.java.name), BLACK_LIST
         ).await()
-        managementService.addRoleAccessPermission(DeveloperRole.fromString("tester"), accessPermission.id).await()
+        managementService.addRoleAccessPermission(developerRole, accessPermission.id).await()
         val accessToken = managementService.getAccessToken(testDev.authorizationCode!!).await()
         val instrumentService = LiveInstrumentService.createProxy(vertx, accessToken)
         instrumentService.addLiveInstrument(

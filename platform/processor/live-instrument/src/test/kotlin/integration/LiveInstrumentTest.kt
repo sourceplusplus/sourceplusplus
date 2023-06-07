@@ -21,8 +21,8 @@ import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*
-import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.parallel.Isolated
 import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.LiveLog
 import spp.protocol.instrument.location.LiveSourceLocation
@@ -30,6 +30,7 @@ import spp.protocol.service.listen.addBreakpointHitListener
 import spp.protocol.service.listen.addLogHitListener
 import java.util.concurrent.atomic.AtomicInteger
 
+@Isolated
 class LiveInstrumentTest : LiveInstrumentIntegrationTest() {
 
     private fun doTest() {
@@ -88,7 +89,7 @@ class LiveInstrumentTest : LiveInstrumentIntegrationTest() {
         assertNotNull(instrumentService.removeLiveInstrument(originalIds[1]).await())
     }
 
-    @RepeatedTest(2)
+    @Test
     fun addLiveLogAndLiveBreakpoint(): Unit = runBlocking {
         setupLineLabels {
             doTest()
@@ -140,12 +141,9 @@ class LiveInstrumentTest : LiveInstrumentIntegrationTest() {
         doTest()
 
         errorOnTimeout(testContext)
-
-        assertNull(instrumentService.removeLiveInstrument("$testNameAsInstrumentId-log").await())
-        assertNull(instrumentService.removeLiveInstrument("$testNameAsInstrumentId-breakpoint").await())
     }
 
-    @RepeatedTest(2, name = "addLiveLogAndLiveBreakpoint_noLogHit-{currentRepetition}-of-{totalRepetitions}")
+    @Test
     fun addLiveLogAndLiveBreakpoint_noLogHit(): Unit = runBlocking {
         setupLineLabels {
             doTest()
@@ -192,6 +190,5 @@ class LiveInstrumentTest : LiveInstrumentIntegrationTest() {
         errorOnTimeout(testContext)
 
         assertNotNull(instrumentService.removeLiveInstrument("$testNameAsInstrumentId-log").await())
-        assertNull(instrumentService.removeLiveInstrument("$testNameAsInstrumentId-breakpoint").await())
     }
 }

@@ -21,22 +21,20 @@ import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
 import kotlinx.coroutines.runBlocking
-import mu.KotlinLogging
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.parallel.Isolated
 import spp.protocol.artifact.metrics.MetricType
 import spp.protocol.instrument.location.LiveSourceLocation
 import spp.protocol.service.SourceServices.Subscribe.toLiveViewSubscription
 import spp.protocol.view.LiveView
 import spp.protocol.view.LiveViewConfig
 import spp.protocol.view.LiveViewEvent
+import java.util.concurrent.atomic.AtomicInteger
 
+@Isolated
 class RealtimeLiveViewTest : PlatformIntegrationTest() {
-
-    companion object {
-        private val log = KotlinLogging.logger {}
-    }
 
     @Test
     fun `realtime instance_jvm_cpu`(): Unit = runBlocking {
@@ -54,7 +52,7 @@ class RealtimeLiveViewTest : PlatformIntegrationTest() {
         ).await().subscriptionId!!
 
         val testContext = VertxTestContext()
-        var totalCount = 0
+        val totalCount = AtomicInteger(0)
         val countSet = mutableSetOf<String>()
         val consumer = vertx.eventBus().consumer<JsonObject>(toLiveViewSubscription(subscriptionId))
         consumer.handler {
@@ -71,7 +69,7 @@ class RealtimeLiveViewTest : PlatformIntegrationTest() {
                 //should never receive duplicate count for the same timeBucket
                 assertTrue(countSet.add("$timeBucket-$count"))
 
-                if (totalCount++ >= 30) {
+                if (totalCount.incrementAndGet() >= 30) {
                     testContext.completeNow()
                 }
             }

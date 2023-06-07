@@ -35,8 +35,6 @@ class MultiDevAuthIT : PlatformIntegrationTest() {
 
     @Test
     fun `test clear self instruments`() = runBlocking {
-        instrumentService.clearAllLiveInstruments().await()
-
         val uuid = UUID.randomUUID().toString()
         val devRole = DeveloperRole.fromString("get-self-instruments-$uuid")
         managementService.addRole(devRole).await()
@@ -59,8 +57,6 @@ class MultiDevAuthIT : PlatformIntegrationTest() {
             )
         ).await()
 
-        assertEquals(1, dev1InstrumentService.getLiveInstruments().await().size)
-
         val dev2AccessToken = managementService.getAccessToken(dev2.authorizationCode!!).await()
         val dev2InstrumentService = LiveInstrumentService.createProxy(vertx, dev2AccessToken)
         val dev2Instrument = dev2InstrumentService.addLiveBreakpoint(
@@ -70,8 +66,6 @@ class MultiDevAuthIT : PlatformIntegrationTest() {
             )
         ).await()
 
-        assertEquals(2, dev2InstrumentService.getLiveInstruments().await().size)
-
         //clear dev1's instruments
         dev1InstrumentService.clearLiveInstruments().await()
         assertNull(dev1InstrumentService.getLiveInstrument(dev1Instrument.id!!).await())
@@ -79,12 +73,12 @@ class MultiDevAuthIT : PlatformIntegrationTest() {
         assertNotNull(dev2InstrumentService.getLiveInstrument(dev2Instrument.id!!).await())
 
         //dev2's instruments should still be there
-        assertEquals(1, dev1InstrumentService.getLiveInstruments().await().size)
-        assertEquals(1, dev2InstrumentService.getLiveInstruments().await().size)
+        assertTrue(dev1InstrumentService.getLiveInstruments().await().any { it.id == dev2Instrument.id })
+        assertTrue(dev2InstrumentService.getLiveInstruments().await().any { it.id == dev2Instrument.id })
 
         //clear dev2's instruments
         dev2InstrumentService.clearLiveInstruments().await()
-        assertEquals(0, dev1InstrumentService.getLiveInstruments().await().size)
-        assertEquals(0, dev2InstrumentService.getLiveInstruments().await().size)
+        assertFalse(dev1InstrumentService.getLiveInstruments().await().any { it.id == dev2Instrument.id })
+        assertFalse(dev2InstrumentService.getLiveInstruments().await().any { it.id == dev2Instrument.id })
     }
 }

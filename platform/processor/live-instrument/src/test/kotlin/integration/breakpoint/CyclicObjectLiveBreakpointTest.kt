@@ -96,7 +96,7 @@ class CyclicObjectLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         instrumentService.addLiveInstrument(
             LiveBreakpoint(
                 location = LiveSourceLocation(
-                    CyclicObjectLiveBreakpointTest::class.qualifiedName!!,
+                    CyclicObjectLiveBreakpointTest::class.java.name,
                     getLineNumber("done"),
                     "spp-test-probe"
                 ),

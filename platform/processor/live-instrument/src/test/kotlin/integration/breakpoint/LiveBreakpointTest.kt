@@ -24,7 +24,6 @@ import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
-import org.slf4j.LoggerFactory
 import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.event.*
 import spp.protocol.instrument.location.LiveSourceLocation
@@ -36,8 +35,6 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 
 class LiveBreakpointTest : LiveInstrumentIntegrationTest() {
-
-    private val log = LoggerFactory.getLogger(LiveBreakpointTest::class.java)
 
     @Suppress("UNUSED_VARIABLE")
     private fun doTest() {
@@ -143,7 +140,7 @@ class LiveBreakpointTest : LiveInstrumentIntegrationTest() {
             LiveBreakpoint(
                 id = testNameAsInstrumentId,
                 location = LiveSourceLocation(
-                    LiveBreakpointTest::class.qualifiedName!!,
+                    LiveBreakpointTest::class.java.name,
                     getLineNumber("done"),
                     "spp-test-probe"
                 ),
@@ -219,7 +216,7 @@ class LiveBreakpointTest : LiveInstrumentIntegrationTest() {
             LiveBreakpoint(
                 id = testNameAsInstrumentId,
                 location = LiveSourceLocation(
-                    LiveBreakpointTest::class.qualifiedName!!,
+                    LiveBreakpointTest::class.java.name,
                     getLineNumber("done"),
                     "spp-test-probe"
                 ),
@@ -313,14 +310,14 @@ class LiveBreakpointTest : LiveInstrumentIntegrationTest() {
     }
 
     @Test
-    fun removeMultipleByLocation(): Unit = runBlocking {
+    fun `remove multiple bps by location`(): Unit = runBlocking {
         val testContext = VertxTestContext()
         val addedCount = AtomicInteger(0)
         val listener = object : LiveInstrumentListener {
             override fun onBreakpointAddedEvent(event: LiveInstrumentAdded) {
                 if (addedCount.incrementAndGet() == 2) {
                     instrumentService.removeLiveInstruments(
-                        LiveSourceLocation("RemoveMultipleByLocation", 42)
+                        LiveSourceLocation(testName, 42)
                     ).onComplete {
                         if (it.succeeded()) {
                             testContext.verify {
@@ -341,12 +338,12 @@ class LiveBreakpointTest : LiveInstrumentIntegrationTest() {
             listOf(
                 LiveBreakpoint(
                     id = "$testNameAsInstrumentId-1",
-                    location = LiveSourceLocation("RemoveMultipleByLocation", 42),
+                    location = LiveSourceLocation(testName, 42),
                     condition = "1==2"
                 ),
                 LiveBreakpoint(
                     id = "$testNameAsInstrumentId-2",
-                    location = LiveSourceLocation("RemoveMultipleByLocation", 42),
+                    location = LiveSourceLocation(testName, 42),
                     condition = "1==3"
                 )
             )

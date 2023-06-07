@@ -61,23 +61,22 @@ class MetaTest : PlatformIntegrationTest() {
     @Test
     fun getInstrumentsWithMeta() {
         val testContext = VertxTestContext()
-        val instrumentId = "instrument-with-meta"
         instrumentService.addLiveInstrument(
             LiveBreakpoint(
                 location = LiveSourceLocation("MetaTest", 42),
                 meta = mutableMapOf("key1" to "value1", "key2" to "value2"),
-                id = instrumentId
+                id = testNameAsInstrumentId
             )
         ).onComplete {
             if (it.succeeded()) {
-                instrumentService.getLiveInstrument(instrumentId).onComplete {
+                instrumentService.getLiveInstrument(testNameAsInstrumentId).onComplete {
                     if (it.succeeded()) {
                         testContext.verify {
                             val instrument = it.result()!!
                             assertEquals(instrument.meta["key1"], "value1")
                             assertEquals(instrument.meta["key2"], "value2")
                         }
-                        instrumentService.removeLiveInstrument(instrumentId).onComplete {
+                        instrumentService.removeLiveInstrument(testNameAsInstrumentId).onComplete {
                             if (it.succeeded()) {
                                 testContext.completeNow()
                             } else {

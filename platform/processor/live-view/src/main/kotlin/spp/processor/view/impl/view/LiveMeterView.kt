@@ -28,11 +28,12 @@ import org.joor.Reflect
 import spp.platform.common.ClusterConnection
 import spp.platform.common.util.args
 import spp.platform.storage.SourceStorage
+import spp.processor.view.ViewProcessor
 import spp.processor.view.ViewProcessor.realtimeMetricCache
 import spp.processor.view.impl.view.util.*
 import spp.processor.view.impl.view.util.EntityNaming.isSameService
+import spp.processor.view.model.LiveMetricConvert
 import spp.protocol.instrument.event.LiveMeterHit
-import spp.protocol.instrument.meter.MeterType
 import java.time.Instant
 import java.util.concurrent.CopyOnWriteArrayList
 
@@ -79,7 +80,10 @@ class LiveMeterView(private val subscriptionCache: MetricTypeSubscriptionCache) 
         val metricServiceInstance = EntityNaming.getServiceInstanceId(metadata)
         if (metricName.startsWith("spp_")) {
             log.debug { "Processing Source++ metrics: {} - Data: {}".args(metricName, metrics) }
-            val meterId = getLiveMeterId(metricName)
+            val meterId = ViewProcessor.liveViewService.meterProcessService.converts()
+                .filterIsInstance<LiveMetricConvert>().firstNotNullOfOrNull {
+                    findMeterId(metricName, it)
+                } ?: metricName
             val liveMeter = SourceStorage.getLiveInstrument(meterId, true)
             if (liveMeter != null) {
                 SourceStorage.addLiveInstrumentEvent(
@@ -90,6 +94,8 @@ class LiveMeterView(private val subscriptionCache: MetricTypeSubscriptionCache) 
                         metricService ?: "Unknown"
                     )
                 )
+            } else {
+                log.error { "LiveMeter not found for metric: $metricName" }
             }
         }
 
@@ -114,12 +120,25 @@ class LiveMeterView(private val subscriptionCache: MetricTypeSubscriptionCache) 
             if (subs.isNotEmpty()) {
                 log.trace { "Exporting event $metricName to {} subscribers".args(subs.size) }
                 subs.forEach { handleSubscriberEvent(it, metrics, jsonEvent) }
+            } else {
+                log.trace { "No subscribers for event $metricName" }
             }
         }
 
         if (realTime && realtimeSubscribers.isNotEmpty()) {
             realtimeSubscribers.forEach { it.export(jsonEvent) }
         }
+    }
+
+    private fun findMeterId(metricName: String, rule: LiveMetricConvert): String? {
+        var checkName = metricName
+        do {
+            if (rule.config.getLiveMetricsRules().any { it.meterIds.contains(checkName) }) {
+                return checkName
+            }
+            checkName = checkName.substringBeforeLast("_")
+        } while (checkName.contains("_"))
+        return null
     }
 
     private suspend fun toViewEventJson(metrics: Metrics, realTime: Boolean): JsonObject {
@@ -216,14 +235,5 @@ class LiveMeterView(private val subscriptionCache: MetricTypeSubscriptionCache) 
             jsonEvent.put("percentage", realtimeValue)
         }
         jsonEvent.put("value", realtimeValue)
-    }
-
-    //todo: more robust
-    private fun getLiveMeterId(metricName: String): String {
-        var meterId = metricName
-        MeterType.values().forEach {
-            meterId = meterId.substringAfter("spp_${it.name.lowercase()}_")
-        }
-        return meterId.replace("_", "-").substringBeforeLast("-")
     }
 }

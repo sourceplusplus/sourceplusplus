@@ -197,7 +197,7 @@ class LiveVariablePresentationTest : LiveInstrumentIntegrationTest() {
         instrumentService.addLiveInstrument(
             LiveBreakpoint(
                 location = LiveSourceLocation(
-                    LiveVariablePresentationTest::class.qualifiedName!!,
+                    LiveVariablePresentationTest::class.java.name,
                     getLineNumber("done"),
                     "spp-test-probe"
                 ),

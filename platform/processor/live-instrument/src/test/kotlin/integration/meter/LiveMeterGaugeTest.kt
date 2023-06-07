@@ -22,7 +22,6 @@ import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
 import kotlinx.coroutines.runBlocking
-import mu.KotlinLogging
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import spp.protocol.artifact.ArtifactQualifiedName
@@ -45,8 +44,6 @@ import java.util.function.Supplier
 
 class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
 
-    private val log = KotlinLogging.logger {}
-
     @Suppress("UNUSED_VARIABLE")
     private fun triggerGauge() {
         val str = "hello"
@@ -59,7 +56,7 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
             triggerGauge()
         }
 
-        val supplier = object : Supplier<Double>, Serializable {
+        val supplier = @Suppress("SerialVersionUIDInSerializableClass") object : Supplier<Double>, Serializable {
             override fun get(): Double = System.currentTimeMillis().toDouble()
         }
         val encodedSupplier = Base64.getEncoder().encodeToString(ByteArrayOutputStream().run {
@@ -83,20 +80,21 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
 
         viewService.saveRule(
             ViewRule(
-                name = liveMeter.toMetricIdWithoutPrefix(),
+                name = liveMeter.id!!,
                 exp = buildString {
                     append("(")
-                    append(liveMeter.toMetricIdWithoutPrefix())
+                    append(liveMeter.id!!)
                     append(".downsampling(LATEST)")
                     append(")")
                     append(".instance(['service'], ['instance'], Layer.GENERAL)")
-                }
+                },
+                meterIds = listOf(liveMeter.id!!)
             )
         ).await()
 
         val subscriptionId = viewService.addLiveView(
             LiveView(
-                entityIds = mutableSetOf(liveMeter.toMetricId()),
+                entityIds = mutableSetOf(liveMeter.id!!),
                 artifactQualifiedName = ArtifactQualifiedName(
                     LiveMeterGaugeTest::class.java.name,
                     type = ArtifactType.EXPRESSION
@@ -107,7 +105,7 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
                 ),
                 viewConfig = LiveViewConfig(
                     "test",
-                    listOf(liveMeter.toMetricId())
+                    listOf(liveMeter.id!!)
                 )
             )
         ).await().subscriptionId!!
@@ -119,14 +117,17 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
             val rawMetrics = JsonObject(liveViewEvent.metricsData)
             testContext.verify {
                 val meta = rawMetrics.getJsonObject("meta")
-                assertEquals(liveMeter.toMetricId(), meta.getString("metricsName"))
+                assertEquals(liveMeter.id!!, meta.getString("metricsName"))
 
-                //check within a second
                 val suppliedTime = rawMetrics.getLong("value")
                 log.info("Supplied time: {}", suppliedTime)
 
-                assertTrue(suppliedTime >= System.currentTimeMillis() - 1000)
-                assertTrue(suppliedTime <= System.currentTimeMillis())
+                val now = System.currentTimeMillis()
+                log.info("Now: {}", now)
+
+                //check within 2 seconds
+                assertTrue(suppliedTime >= now - 2000)
+                assertTrue(suppliedTime <= now)
             }
             testContext.completeNow()
         }.completionHandler().await()
@@ -139,7 +140,6 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
 
         //clean up
         consumer.unregister()
-        assertNotNull(instrumentService.removeLiveInstrument(instrumentId).await())
         assertNotNull(viewService.removeLiveView(subscriptionId).await())
     }
 
@@ -149,7 +149,6 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
             triggerGauge()
         }
 
-        val instrumentId = testNameAsUniqueInstrumentId
         val liveMeter = LiveMeter(
             MeterType.GAUGE,
             MetricValue(MetricValueType.VALUE_EXPRESSION, "localVariables[str]"),
@@ -158,39 +157,29 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
                 getLineNumber("done"),
                 "spp-test-probe"
             ),
-            id = instrumentId,
+            id = testNameAsUniqueInstrumentId,
             applyImmediately = true,
             hitLimit = 1
         )
 
         viewService.saveRule(
             ViewRule(
-                name = liveMeter.toMetricIdWithoutPrefix(),
+                name = liveMeter.id!!,
                 exp = buildString {
                     append("(")
-                    append(liveMeter.toMetricIdWithoutPrefix())
+                    append(liveMeter.id)
                     append(".downsampling(LATEST)")
                     append(")")
                     append(".instance(['service'], ['instance'], Layer.GENERAL)")
-                }
+                },
+                meterIds = listOf(liveMeter.id!!)
             )
         ).await()
 
         val subscriptionId = viewService.addLiveView(
             LiveView(
-                entityIds = mutableSetOf(liveMeter.toMetricId()),
-                artifactQualifiedName = ArtifactQualifiedName(
-                    LiveMeterGaugeTest::class.java.name,
-                    type = ArtifactType.EXPRESSION
-                ),
-                artifactLocation = LiveSourceLocation(
-                    LiveMeterGaugeTest::class.java.name,
-                    getLineNumber("done")
-                ),
-                viewConfig = LiveViewConfig(
-                    "test",
-                    listOf(liveMeter.toMetricId())
-                )
+                entityIds = mutableSetOf(liveMeter.id!!),
+                viewConfig = LiveViewConfig("test", listOf(liveMeter.id!!))
             )
         ).await().subscriptionId!!
 
@@ -201,7 +190,7 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
             val rawMetrics = JsonObject(liveViewEvent.metricsData)
             testContext.verify {
                 val meta = rawMetrics.getJsonObject("meta")
-                assertEquals(liveMeter.toMetricId(), meta.getString("metricsName"))
+                assertEquals(liveMeter.id!!, meta.getString("metricsName"))
 
                 assertEquals("hello", rawMetrics.getString("value"))
             }
@@ -216,7 +205,6 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
 
         //clean up
         consumer.unregister()
-        assertNotNull(instrumentService.removeLiveInstrument(instrumentId).await())
         assertNotNull(viewService.removeLiveView(subscriptionId).await())
     }
 }

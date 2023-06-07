@@ -1,0 +1,21 @@
+spp:
+  authentication:
+    client_id: "test-id"
+    client_secret: "test-secret"
+    tenant_id: "tenant1"
+  platform_host: "localhost"
+  platform_port: 12800
+  delete_probe_directory_on_boot: false
+  transformed_dump_directory: "/tmp/spp-probe/transformed-classes"
+  wait_for_platform: false
+
+skywalking:
+  logging:
+    level: "INFO"
+  agent:
+    service_name: "spp-platform"
+
+application:
+  environment: "dev"
+  version: "1.0.0"
+  git_commit: "8d9b0d9"

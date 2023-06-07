@@ -102,7 +102,7 @@ class SmallMapLiveBreakpointTest : LiveInstrumentIntegrationTest() {
             LiveBreakpoint(
                 id = testNameAsInstrumentId,
                 location = LiveSourceLocation(
-                    SmallMapLiveBreakpointTest::class.qualifiedName!!,
+                    SmallMapLiveBreakpointTest::class.java.name,
                     getLineNumber("done"),
                     "spp-test-probe"
                 ),
@@ -157,7 +157,7 @@ class SmallMapLiveBreakpointTest : LiveInstrumentIntegrationTest() {
             LiveBreakpoint(
                 id = testNameAsInstrumentId,
                 location = LiveSourceLocation(
-                    SmallMapLiveBreakpointTest::class.qualifiedName!!,
+                    SmallMapLiveBreakpointTest::class.java.name,
                     getLineNumber("done"),
                     "spp-test-probe"
                 ),
@@ -212,7 +212,7 @@ class SmallMapLiveBreakpointTest : LiveInstrumentIntegrationTest() {
             LiveBreakpoint(
                 id = testNameAsInstrumentId,
                 location = LiveSourceLocation(
-                    SmallMapLiveBreakpointTest::class.qualifiedName!!,
+                    SmallMapLiveBreakpointTest::class.java.name,
                     getLineNumber("done"),
                     "spp-test-probe"
                 ),

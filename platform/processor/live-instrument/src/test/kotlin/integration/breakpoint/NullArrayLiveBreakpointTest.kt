@@ -74,7 +74,7 @@ class NullArrayLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         instrumentService.addLiveInstrument(
             LiveBreakpoint(
                 location = LiveSourceLocation(
-                    NullArrayLiveBreakpointTest::class.qualifiedName!!,
+                    NullArrayLiveBreakpointTest::class.java.name,
                     getLineNumber("done"),
                     "spp-test-probe"
                 ),

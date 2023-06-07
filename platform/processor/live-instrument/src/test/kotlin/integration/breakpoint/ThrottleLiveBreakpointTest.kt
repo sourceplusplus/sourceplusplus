@@ -22,6 +22,7 @@ import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.Test
 import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.location.LiveSourceLocation
@@ -32,16 +33,29 @@ import java.util.concurrent.atomic.AtomicInteger
 
 class ThrottleLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
-    private fun throttleTest() {
-        startEntrySpan("throttleTest")
-        addLineLabel("done") { Throwable().stackTrace[0].lineNumber }
+    private fun throttle1() {
+        startEntrySpan("throttle1")
+        addLineLabel("throttle1") { Throwable().stackTrace[0].lineNumber }
+        stopSpan()
+    }
+
+    private fun throttle2() {
+        startEntrySpan("throttle2")
+        addLineLabel("throttle2") { Throwable().stackTrace[0].lineNumber }
+        stopSpan()
+    }
+
+    private fun throttle3() {
+        startEntrySpan("throttle3")
+        addLineLabel("throttle3") { Throwable().stackTrace[0].lineNumber }
         stopSpan()
     }
 
     @Test
     fun `one per second`() = runBlocking {
+        assumeTrue("true" == System.getProperty("test.includeSlow"))
         setupLineLabels {
-            throttleTest()
+            throttle1()
         }
 
         //verify breakpoint is hit once per second (10 times)
@@ -57,8 +71,8 @@ class ThrottleLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         val liveInstrument = instrumentService.addLiveInstrument(
             LiveBreakpoint(
                 location = LiveSourceLocation(
-                    ThrottleLiveBreakpointTest::class.qualifiedName!!,
-                    getLineNumber("done"),
+                    ThrottleLiveBreakpointTest::class.java.name,
+                    getLineNumber("throttle1"),
                     "spp-test-probe"
                 ),
                 hitLimit = -1,
@@ -70,7 +84,7 @@ class ThrottleLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         //trigger live breakpoint (100 times)
         val counter = AtomicInteger(0)
         vertx.setPeriodic(100) {
-            throttleTest()
+            throttle1()
             if (counter.incrementAndGet() >= 100) {
                 vertx.cancelTimer(it)
             }
@@ -85,8 +99,9 @@ class ThrottleLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
     @Test
     fun `two per second`() = runBlocking {
+        assumeTrue("true" == System.getProperty("test.includeSlow"))
         setupLineLabels {
-            throttleTest()
+            throttle2()
         }
 
         //verify breakpoint is hit twice per second (20 times)
@@ -102,8 +117,8 @@ class ThrottleLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         val liveInstrument = instrumentService.addLiveInstrument(
             LiveBreakpoint(
                 location = LiveSourceLocation(
-                    ThrottleLiveBreakpointTest::class.qualifiedName!!,
-                    getLineNumber("done"),
+                    ThrottleLiveBreakpointTest::class.java.name,
+                    getLineNumber("throttle2"),
                     "spp-test-probe"
                 ),
                 hitLimit = -1,
@@ -116,7 +131,7 @@ class ThrottleLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         //trigger live breakpoint (100 times)
         val counter = AtomicInteger(0)
         vertx.setPeriodic(100) {
-            throttleTest()
+            throttle2()
             if (counter.incrementAndGet() >= 100) {
                 vertx.cancelTimer(it)
             }
@@ -131,8 +146,9 @@ class ThrottleLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
     @Test
     fun `no throttle`() = runBlocking {
+        assumeTrue("true" == System.getProperty("test.includeSlow"))
         setupLineLabels {
-            throttleTest()
+            throttle3()
         }
 
         val bpHitCount = AtomicInteger(0)
@@ -147,12 +163,12 @@ class ThrottleLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         val liveInstrument = instrumentService.addLiveInstrument(
             LiveBreakpoint(
                 location = LiveSourceLocation(
-                    ThrottleLiveBreakpointTest::class.qualifiedName!!,
-                    getLineNumber("done"),
+                    ThrottleLiveBreakpointTest::class.java.name,
+                    getLineNumber("throttle3"),
                     "spp-test-probe"
                 ),
                 hitLimit = -1,
-                throttle = InstrumentThrottle(1000, ThrottleStep.SECOND), //todo: impl NOP throttle
+                throttle = InstrumentThrottle.NONE,
                 applyImmediately = true,
                 id = testNameAsInstrumentId
             )
@@ -161,7 +177,7 @@ class ThrottleLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         //trigger live breakpoint (100 times)
         val counter = AtomicInteger(0)
         vertx.setPeriodic(100) {
-            throttleTest()
+            throttle3()
             if (counter.incrementAndGet() >= 100) {
                 vertx.cancelTimer(it)
             }

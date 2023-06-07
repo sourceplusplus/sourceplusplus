@@ -1,0 +1,43 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="project-assemble" type="GradleRunConfiguration" factoryName="Gradle">
+    <ExternalSystemSettings>
+      <option name="executionName" />
+      <option name="externalProjectPath" value="$PROJECT_DIR$" />
+      <option name="externalSystemIdString" value="GRADLE" />
+      <option name="scriptParameters" value="" />
+      <option name="taskDescriptions">
+        <list />
+      </option>
+      <option name="taskNames">
+        <list>
+          <option value=":protocol:assemble" />
+          <option value=":platform:assemble" />
+          <option value=":platform:bridge:assemble" />
+          <option value=":platform:common:assemble" />
+          <option value=":platform:core:assemble" />
+          <option value=":platform:processor:live-instrument:assemble" />
+          <option value=":platform:processor:live-view:assemble" />
+          <option value=":platform:storage:assemble" />
+          <option value=":probes:jvm:boot:assemble" />
+          <option value=":probes:jvm:common:assemble" />
+          <option value=":probes:jvm:services:assemble" />
+          <option value=":interfaces:jetbrains:commander:assemble" />
+          <option value=":interfaces:jetbrains:commander:kotlin-compiler-wrapper:assemble" />
+          <option value=":interfaces:jetbrains:core:assemble" />
+          <option value=":interfaces:jetbrains:insight:assemble" />
+          <option value=":interfaces:jetbrains:marker:assemble" />
+          <option value=":interfaces:jetbrains:marker:js-marker:assemble" />
+          <option value=":interfaces:jetbrains:marker:jvm-marker:assemble" />
+          <option value=":interfaces:jetbrains:marker:py-marker:assemble" />
+          <option value=":interfaces:jetbrains:marker:ult-marker:assemble" />
+          <option value=":interfaces:jetbrains:plugin:assemble" />
+        </list>
+      </option>
+      <option name="vmOptions" />
+    </ExternalSystemSettings>
+    <ExternalSystemDebugServerProcess>true</ExternalSystemDebugServerProcess>
+    <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
+    <DebugAllEnabled>false</DebugAllEnabled>
+    <method v="2" />
+  </configuration>
+</component>

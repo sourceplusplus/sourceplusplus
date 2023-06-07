@@ -337,9 +337,7 @@ open class MemoryStorage(val vertx: Vertx) : CoreStorage {
 
     override suspend fun updateLiveInstrument(id: String, instrument: LiveInstrument): LiveInstrument {
         return if (getLiveInstrument(id) == null) {
-            if (getArchiveLiveInstrument(id) == null) {
-                throw IllegalArgumentException("Live instrument with id $id does not exist")
-            }
+            require(getArchiveLiveInstrument(id) != null) { "Live instrument with id $id does not exist" }
 
             val archivedStorage = vertx.sharedData().getAsyncMap<String, Any>(namespace("archivedInstruments")).await()
             val archivedArr = archivedStorage.get("archivedInstruments").await() as JsonArray? ?: JsonArray()

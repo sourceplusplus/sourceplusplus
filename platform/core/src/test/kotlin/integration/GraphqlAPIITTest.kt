@@ -15,9 +15,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package spp.platform.core
+package integration
 
-import integration.PlatformIntegrationTest
 import io.vertx.core.buffer.Buffer
 import io.vertx.core.json.JsonObject
 import io.vertx.ext.web.client.HttpRequest
@@ -28,7 +27,6 @@ import io.vertx.kotlin.coroutines.await
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import spp.platform.core.api.GraphqlAPI
 import spp.protocol.instrument.meter.MeterType
@@ -38,8 +36,9 @@ import spp.protocol.platform.auth.AccessType
 import spp.protocol.platform.auth.DeveloperRole.Companion.ROLE_MANAGER
 import spp.protocol.platform.auth.RedactionType
 import spp.protocol.platform.auth.RolePermission
+import java.util.*
 
-@Suppress("LargeClass", "TooManyFunctions") // public API test
+@Suppress("LargeClass", "TooManyFunctions", "MaximumLineLength") // public API test
 class GraphqlAPIITTest : PlatformIntegrationTest() {
 
     companion object {
@@ -48,7 +47,7 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
         @BeforeAll
         @JvmStatic
         fun setupInit() {
-            val client = WebClient.create(vertx(), WebClientOptions())
+            val client = WebClient.create(vertx, WebClientOptions())
             request = client.post(platformPort, platformHost, "/graphql/spp")
                 .bearerTokenAuthentication(systemAccessToken)
         }
@@ -57,15 +56,6 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
     private fun getGraphql(path: String): String {
         return GraphqlAPI::class.java.getResource("/graphql/$path.graphql")?.readText()
             ?: error("GraphQL file not found: $path")
-    }
-
-    @BeforeEach
-    fun reset() = runBlocking {
-        val resetResp = request
-            .sendJsonObject(
-                JsonObject().put("query", getGraphql("system/reset"))
-            ).await().bodyAsJsonObject()
-        assertTrue(resetResp.getJsonObject("data").getBoolean("reset"))
     }
 
     @Test
@@ -77,11 +67,13 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
             .sendJsonObject(JsonObject().put("query", getGraphql("access/get-access-permissions")))
             .await().bodyAsJsonObject()
         assertNull(getAccessPermissionsResp.getJsonArray("errors"))
-
-        val accessPermission: JsonObject = getAccessPermissionsResp.getJsonObject("data")
-            .getJsonArray("getAccessPermissions")[0]
-        assertEquals(AccessType.WHITE_LIST.name, accessPermission.getString("type"))
-        assertEquals("some-pattern", accessPermission.getJsonArray("locationPatterns")[0])
+        assertTrue {
+            getAccessPermissionsResp.getJsonObject("data")
+                .getJsonArray("getAccessPermissions").map { it as JsonObject }.any {
+                    it.getString("type") == AccessType.WHITE_LIST.name
+                            && it.getJsonArray("locationPatterns").getString(0) == "some-pattern"
+                }
+        }
     }
 
     @Test
@@ -95,10 +87,12 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
 
     @Test
     fun `ensure addDataRedaction works`() = runBlocking {
-        val addDataRedactionResp = request.sendJsonObject(addDataRedactionRequest).await().bodyAsJsonObject()
+        val redactionId = UUID.randomUUID().toString()
+        val addDataRedactionResp =
+            request.sendJsonObject(getAddDataRedactionRequest(redactionId)).await().bodyAsJsonObject()
         assertNull(addDataRedactionResp.getJsonArray("errors"))
         val dataRedaction = addDataRedactionResp.getJsonObject("data").getJsonObject("addDataRedaction")
-        assertEquals("some-id", dataRedaction.getString("id"))
+        assertEquals(redactionId, dataRedaction.getString("id"))
         assertEquals(RedactionType.VALUE_REGEX.name, dataRedaction.getString("type"))
         assertEquals("some-lookup", dataRedaction.getString("lookup"))
         assertEquals("some-replacement", dataRedaction.getString("replacement"))
@@ -106,7 +100,9 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
 
     @Test
     fun `ensure updateDataRedaction works`() = runBlocking {
-        val addDataRedactionResp = request.sendJsonObject(addDataRedactionRequest).await().bodyAsJsonObject()
+        val redactionId = UUID.randomUUID().toString()
+        val addDataRedactionResp =
+            request.sendJsonObject(getAddDataRedactionRequest(redactionId)).await().bodyAsJsonObject()
         assertNull(addDataRedactionResp.getJsonArray("errors"))
 
         val updateDataRedactionResp = request
@@ -116,7 +112,7 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
                     getGraphql("data-redaction/update-data-redaction")
                 ).put(
                     "variables",
-                    JsonObject().put("id", "some-id").put("type", RedactionType.IDENTIFIER_MATCH)
+                    JsonObject().put("id", redactionId).put("type", RedactionType.IDENTIFIER_MATCH)
                         .put("lookup", "other-lookup")
                         .put("replacement", "other-replacement")
                 )
@@ -130,14 +126,16 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
 
     @Test
     fun `ensure getDataRedaction with ID works`() = runBlocking {
-        val addDataRedactionResp = request.sendJsonObject(addDataRedactionRequest).await().bodyAsJsonObject()
+        val redactionId = UUID.randomUUID().toString()
+        val addDataRedactionResp =
+            request.sendJsonObject(getAddDataRedactionRequest(redactionId)).await().bodyAsJsonObject()
         assertNull(addDataRedactionResp.getJsonArray("errors"))
 
         val getDataRedactionResp = request
             .sendJsonObject(
                 JsonObject().put(
                     "query", getGraphql("data-redaction/get-data-redaction")
-                ).put("variables", JsonObject().put("id", "some-id"))
+                ).put("variables", JsonObject().put("id", redactionId))
             ).await().bodyAsJsonObject()
         assertNull(getDataRedactionResp.getJsonArray("errors"))
         val updatedDataRedaction = getDataRedactionResp.getJsonObject("data").getJsonObject("getDataRedaction")
@@ -148,7 +146,9 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
 
     @Test
     fun `ensure getDataRedactions works`() = runBlocking {
-        val addDataRedactionResp = request.sendJsonObject(addDataRedactionRequest).await().bodyAsJsonObject()
+        val redactionId = UUID.randomUUID().toString()
+        val addDataRedactionResp =
+            request.sendJsonObject(getAddDataRedactionRequest(redactionId)).await().bodyAsJsonObject()
         assertNull(addDataRedactionResp.getJsonArray("errors"))
 
         val getDataRedactionsResp = request
@@ -161,7 +161,7 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
         val dataRedactions = getDataRedactionsResp.getJsonObject("data").getJsonArray("getDataRedactions")
         assertTrue(dataRedactions.any {
             it as JsonObject
-            it.getString("id").equals("some-id")
+            it.getString("id").equals(redactionId)
         })
         assertTrue(dataRedactions.any {
             it as JsonObject
@@ -171,14 +171,16 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
 
     @Test
     fun `ensure removeDataRedaction works`() = runBlocking {
-        val addDataRedactionResp = request.sendJsonObject(addDataRedactionRequest).await().bodyAsJsonObject()
+        val redactionId = UUID.randomUUID().toString()
+        val addDataRedactionResp =
+            request.sendJsonObject(getAddDataRedactionRequest(redactionId)).await().bodyAsJsonObject()
         assertNull(addDataRedactionResp.getJsonArray("errors"))
 
         val removeDataRedactionResp = request
             .sendJsonObject(
                 JsonObject().put(
                     "query", getGraphql("data-redaction/remove-data-redaction")
-                ).put("variables", JsonObject().put("id", "some-id"))
+                ).put("variables", JsonObject().put("id", redactionId))
             ).await().bodyAsJsonObject()
         assertNull(removeDataRedactionResp.getJsonArray("errors"))
         assertTrue(removeDataRedactionResp.getJsonObject("data").getBoolean("removeDataRedaction"))
@@ -207,21 +209,22 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
 
     @Test
     fun `ensure addDeveloper works`() = runBlocking {
-        val addDeveloperResp = request.sendJsonObject(addDeveloperRequest).await().bodyAsJsonObject()
+        val developerId = UUID.randomUUID().toString()
+        val addDeveloperResp = request.sendJsonObject(getAddDeveloperRequest(developerId)).await().bodyAsJsonObject()
         assertNull(addDeveloperResp.getJsonArray("errors"))
 
         val developer: JsonObject = addDeveloperResp.getJsonObject("data").getJsonObject("addDeveloper")
-        assertEquals("developer-id", developer.getString("id"))
+        assertEquals(developerId, developer.getString("id"))
         assertNotNull(developer.getString("authorizationCode"))
     }
 
     @Test
     fun `ensure refreshAuthorizationCode works`() = runBlocking {
-        val addDeveloperResp = request.sendJsonObject(addDeveloperRequest).await().bodyAsJsonObject()
+        val developerId = UUID.randomUUID().toString()
+        val addDeveloperResp = request.sendJsonObject(getAddDeveloperRequest(developerId)).await().bodyAsJsonObject()
         assertNull(addDeveloperResp.getJsonArray("errors"))
 
         val developer: JsonObject = addDeveloperResp.getJsonObject("data").getJsonObject("addDeveloper")
-        val developerId = developer.getString("id")
         val authorizationCode = developer.getString("authorizationCode")
         val getDevelopersResp = request.sendJsonObject(
             JsonObject().put("query", getGraphql("developer/refresh-authorization-code"))
@@ -236,7 +239,8 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
 
     @Test
     fun `ensure getDevelopers works`() = runBlocking {
-        val addDeveloperResp = request.sendJsonObject(addDeveloperRequest).await().bodyAsJsonObject()
+        val developerId = UUID.randomUUID().toString()
+        val addDeveloperResp = request.sendJsonObject(getAddDeveloperRequest(developerId)).await().bodyAsJsonObject()
         assertNull(addDeveloperResp.getJsonArray("errors"))
 
         val getDevelopersResp = request
@@ -248,20 +252,21 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
         val developers = getDevelopersResp.getJsonObject("data").getJsonArray("getDevelopers")
         assertTrue(developers.any {
             it as JsonObject
-            it.getString("id").equals("developer-id")
+            it.getString("id").equals(developerId)
         })
     }
 
     @Test
     fun `ensure removeDeveloper works`() = runBlocking {
-        val addDeveloperResp = request.sendJsonObject(addDeveloperRequest).await().bodyAsJsonObject()
+        val developerId = UUID.randomUUID().toString()
+        val addDeveloperResp = request.sendJsonObject(getAddDeveloperRequest(developerId)).await().bodyAsJsonObject()
         assertNull(addDeveloperResp.getJsonArray("errors"))
 
         val removeDeveloperResp = request
             .sendJsonObject(
                 JsonObject().put(
                     "query", getGraphql("developer/remove-developer")
-                ).put("variables", JsonObject().put("id", "developer-id"))
+                ).put("variables", JsonObject().put("id", developerId))
             ).await().bodyAsJsonObject()
         assertNull(removeDeveloperResp.getJsonArray("errors"))
         assertTrue(removeDeveloperResp.getJsonObject("data").getBoolean("removeDeveloper"))
@@ -269,7 +274,8 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
 
     @Test
     fun `ensure addRole works`() = runBlocking {
-        val addRoleResp = request.sendJsonObject(addRoleRequest).await().bodyAsJsonObject()
+        val role = UUID.randomUUID().toString()
+        val addRoleResp = request.sendJsonObject(getAddRoleRequest(role)).await().bodyAsJsonObject()
         assertNull(addRoleResp.getJsonArray("errors"))
         assertTrue(addRoleResp.getJsonObject("data").getBoolean("addRole"))
     }
@@ -287,33 +293,41 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
 
     @Test
     fun `ensure addRoleDataRedaction works`() = runBlocking {
-        val addRoleResp = request.sendJsonObject(addRoleRequest).await().bodyAsJsonObject()
+        val role = UUID.randomUUID().toString()
+        val addRoleResp = request.sendJsonObject(getAddRoleRequest(role)).await().bodyAsJsonObject()
         assertNull(addRoleResp.getJsonArray("errors"))
 
-        val addDataRedactionResp = request.sendJsonObject(addDataRedactionRequest).await().bodyAsJsonObject()
+        val redactionId = UUID.randomUUID().toString()
+        val addDataRedactionResp =
+            request.sendJsonObject(getAddDataRedactionRequest(redactionId)).await().bodyAsJsonObject()
         assertNull(addDataRedactionResp.getJsonArray("errors"))
 
-        val addRoleDataRedactionResp = request.sendJsonObject(addRoleDataRedactionRequest).await().bodyAsJsonObject()
+        val addRoleDataRedactionResp =
+            request.sendJsonObject(getAddRoleDataRedactionRequest(role, redactionId)).await().bodyAsJsonObject()
         assertNull(addRoleDataRedactionResp.getJsonArray("errors"))
         assertTrue(addRoleDataRedactionResp.getJsonObject("data").getBoolean("addRoleDataRedaction"))
     }
 
     @Test
     fun `ensure removeRoleDataRedaction works`() = runBlocking {
-        val addRoleResp = request.sendJsonObject(addRoleRequest).await().bodyAsJsonObject()
+        val role = UUID.randomUUID().toString()
+        val addRoleResp = request.sendJsonObject(getAddRoleRequest(role)).await().bodyAsJsonObject()
         assertNull(addRoleResp.getJsonArray("errors"))
 
-        val addDataRedactionResp = request.sendJsonObject(addDataRedactionRequest).await().bodyAsJsonObject()
+        val redactionId = UUID.randomUUID().toString()
+        val addDataRedactionResp =
+            request.sendJsonObject(getAddDataRedactionRequest(redactionId)).await().bodyAsJsonObject()
         assertNull(addDataRedactionResp.getJsonArray("errors"))
 
-        val addRoleDataRedactionResp = request.sendJsonObject(addRoleDataRedactionRequest).await().bodyAsJsonObject()
+        val addRoleDataRedactionResp =
+            request.sendJsonObject(getAddRoleDataRedactionRequest(role, redactionId)).await().bodyAsJsonObject()
         assertNull(addRoleDataRedactionResp.getJsonArray("errors"))
 
         val removeRoleDataRedactionResp = request
             .sendJsonObject(
                 JsonObject().put(
                     "query", getGraphql("data-redaction/remove-role-data-redaction")
-                ).put("variables", JsonObject().put("role", "developer-role").put("dataRedactionId", "some-id"))
+                ).put("variables", JsonObject().put("role", role).put("dataRedactionId", redactionId))
             ).await().bodyAsJsonObject()
         assertNull(removeRoleDataRedactionResp.getJsonArray("errors"))
         assertTrue(removeRoleDataRedactionResp.getJsonObject("data").getBoolean("removeRoleDataRedaction"))
@@ -321,13 +335,17 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
 
     @Test
     fun `ensure getRoleDataRedactions works`() = runBlocking {
-        val addRoleResp = request.sendJsonObject(addRoleRequest).await().bodyAsJsonObject()
+        val role = UUID.randomUUID().toString()
+        val addRoleResp = request.sendJsonObject(getAddRoleRequest(role)).await().bodyAsJsonObject()
         assertNull(addRoleResp.getJsonArray("errors"))
 
-        val addDataRedactionResp = request.sendJsonObject(addDataRedactionRequest).await().bodyAsJsonObject()
+        val redactionId = UUID.randomUUID().toString()
+        val addDataRedactionResp =
+            request.sendJsonObject(getAddDataRedactionRequest(redactionId)).await().bodyAsJsonObject()
         assertNull(addDataRedactionResp.getJsonArray("errors"))
 
-        val addRoleDataRedactionResp = request.sendJsonObject(addRoleDataRedactionRequest).await().bodyAsJsonObject()
+        val addRoleDataRedactionResp =
+            request.sendJsonObject(getAddRoleDataRedactionRequest(role, redactionId)).await().bodyAsJsonObject()
         assertNull(addRoleDataRedactionResp.getJsonArray("errors"))
         assertTrue(addRoleDataRedactionResp.getJsonObject("data").getBoolean("addRoleDataRedaction"))
 
@@ -335,13 +353,13 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
             .sendJsonObject(
                 JsonObject().put(
                     "query", getGraphql("data-redaction/get-role-data-redaction")
-                ).put("variables", JsonObject().put("role", "developer-role"))
+                ).put("variables", JsonObject().put("role", role))
             ).await().bodyAsJsonObject()
         assertNull(getRoleDataRedactionsResp.getJsonArray("errors"))
         val roleDataRedactions = getRoleDataRedactionsResp.getJsonObject("data").getJsonArray("getRoleDataRedactions")
         assertTrue(roleDataRedactions.any {
             it as JsonObject
-            it.getString("id").equals("some-id")
+            it.getString("id").equals(redactionId)
         })
         assertTrue(roleDataRedactions.any {
             it as JsonObject
@@ -351,33 +369,42 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
 
     @Test
     fun `ensure getDeveloperDataRedactions works`() = runBlocking {
-        val addRoleResp = request.sendJsonObject(addRoleRequest).await().bodyAsJsonObject()
+        val role = UUID.randomUUID().toString()
+        val addRoleResp = request.sendJsonObject(getAddRoleRequest(role)).await().bodyAsJsonObject()
         assertNull(addRoleResp.getJsonArray("errors"))
 
-        val addDeveloperResp = request.sendJsonObject(addDeveloperRequest).await().bodyAsJsonObject()
+        val developerId = UUID.randomUUID().toString()
+        val addDeveloperResp = request.sendJsonObject(getAddDeveloperRequest(developerId)).await().bodyAsJsonObject()
         assertNull(addDeveloperResp.getJsonArray("errors"))
 
-        val addDeveloperRoleResp = request.sendJsonObject(addDeveloperRoleRequest).await().bodyAsJsonObject()
+        val addDeveloperRoleResp = request.sendJsonObject(
+            getAddDeveloperRoleRequest(
+                developerId, role
+            )
+        ).await().bodyAsJsonObject()
         assertNull(addDeveloperRoleResp.getJsonArray("errors"))
 
-        val addDataRedactionResp = request.sendJsonObject(addDataRedactionRequest).await().bodyAsJsonObject()
+        val redactionId = UUID.randomUUID().toString()
+        val addDataRedactionResp =
+            request.sendJsonObject(getAddDataRedactionRequest(redactionId)).await().bodyAsJsonObject()
         assertNull(addDataRedactionResp.getJsonArray("errors"))
 
-        val addRoleDataRedactionResp = request.sendJsonObject(addRoleDataRedactionRequest).await().bodyAsJsonObject()
+        val addRoleDataRedactionResp =
+            request.sendJsonObject(getAddRoleDataRedactionRequest(role, redactionId)).await().bodyAsJsonObject()
         assertNull(addRoleDataRedactionResp.getJsonArray("errors"))
         assertTrue(addRoleDataRedactionResp.getJsonObject("data").getBoolean("addRoleDataRedaction"))
 
         val getDeveloperDataRedactionsResp = request
             .sendJsonObject(
                 JsonObject().put("query", getGraphql("data-redaction/get-developer-data-redaction"))
-                    .put("variables", JsonObject().put("developerId", "developer-id"))
+                    .put("variables", JsonObject().put("developerId", developerId))
             ).await().bodyAsJsonObject()
         assertNull(getDeveloperDataRedactionsResp.getJsonArray("errors"))
         val developerDataRedactions =
             getDeveloperDataRedactionsResp.getJsonObject("data").getJsonArray("getDeveloperDataRedactions")
         assertTrue(developerDataRedactions.any {
             it as JsonObject
-            it.getString("id").equals("some-id")
+            it.getString("id").equals(redactionId)
         })
         assertTrue(developerDataRedactions.any {
             it as JsonObject
@@ -387,12 +414,13 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
 
     @Test
     fun `ensure removeRole works`() = runBlocking {
-        val addRoleResp = request.sendJsonObject(addRoleRequest).await().bodyAsJsonObject()
+        val role = UUID.randomUUID().toString()
+        val addRoleResp = request.sendJsonObject(getAddRoleRequest(role)).await().bodyAsJsonObject()
         assertNull(addRoleResp.getJsonArray("errors"))
 
         val removeRoleResp = request.sendJsonObject(
             JsonObject().put("query", getGraphql("role/remove-role"))
-                .put("variables", JsonObject().put("role", "developer-role"))
+                .put("variables", JsonObject().put("role", role))
         ).await().bodyAsJsonObject()
         assertNull(removeRoleResp.getJsonArray("errors"))
         assertTrue(removeRoleResp.getJsonObject("data").getBoolean("removeRole"))
@@ -400,52 +428,70 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
 
     @Test
     fun `ensure addDeveloperRole works`() = runBlocking {
-        val addDeveloperResp = request.sendJsonObject(addDeveloperRequest).await().bodyAsJsonObject()
+        val developerId = UUID.randomUUID().toString()
+        val addDeveloperResp = request.sendJsonObject(getAddDeveloperRequest(developerId)).await().bodyAsJsonObject()
         assertNull(addDeveloperResp.getJsonArray("errors"))
 
-        val addRoleResp = request.sendJsonObject(addRoleRequest).await().bodyAsJsonObject()
+        val role = UUID.randomUUID().toString()
+        val addRoleResp = request.sendJsonObject(getAddRoleRequest(role)).await().bodyAsJsonObject()
         assertNull(addRoleResp.getJsonArray("errors"))
 
-        val addDeveloperRoleResp = request.sendJsonObject(addDeveloperRoleRequest).await().bodyAsJsonObject()
+        val addDeveloperRoleResp = request.sendJsonObject(
+            getAddDeveloperRoleRequest(
+                developerId, role
+            )
+        ).await().bodyAsJsonObject()
         assertNull(addDeveloperRoleResp.getJsonArray("errors"))
         assertTrue(addDeveloperRoleResp.getJsonObject("data").getBoolean("addDeveloperRole"))
     }
 
     @Test
     fun `ensure getDeveloperRoles works`() = runBlocking {
-        val addDeveloperResp = request.sendJsonObject(addDeveloperRequest).await().bodyAsJsonObject()
+        val developerId = UUID.randomUUID().toString()
+        val addDeveloperResp = request.sendJsonObject(getAddDeveloperRequest(developerId)).await().bodyAsJsonObject()
         assertNull(addDeveloperResp.getJsonArray("errors"))
 
-        val addRoleResp = request.sendJsonObject(addRoleRequest).await().bodyAsJsonObject()
+        val role = UUID.randomUUID().toString()
+        val addRoleResp = request.sendJsonObject(getAddRoleRequest(role)).await().bodyAsJsonObject()
         assertNull(addRoleResp.getJsonArray("errors"))
 
-        val addDeveloperRoleResp = request.sendJsonObject(addDeveloperRoleRequest).await().bodyAsJsonObject()
+        val addDeveloperRoleResp = request.sendJsonObject(
+            getAddDeveloperRoleRequest(
+                developerId, role
+            )
+        ).await().bodyAsJsonObject()
         assertNull(addDeveloperRoleResp.getJsonArray("errors"))
 
         val getDeveloperRolesResp = request.sendJsonObject(
             JsonObject().put("query", getGraphql("role/get-developer-roles"))
-                .put("variables", JsonObject().put("id", "developer-id"))
+                .put("variables", JsonObject().put("id", developerId))
         ).await().bodyAsJsonObject()
         assertNull(getDeveloperRolesResp.getJsonArray("errors"))
     }
 
     @Test
     fun `ensure getDeveloperPermissions works`() = runBlocking {
-        val addDeveloperResp = request.sendJsonObject(addDeveloperRequest).await().bodyAsJsonObject()
+        val developerId = UUID.randomUUID().toString()
+        val addDeveloperResp = request.sendJsonObject(getAddDeveloperRequest(developerId)).await().bodyAsJsonObject()
         assertNull(addDeveloperResp.getJsonArray("errors"))
 
-        val addRoleResp = request.sendJsonObject(addRoleRequest).await().bodyAsJsonObject()
+        val role = UUID.randomUUID().toString()
+        val addRoleResp = request.sendJsonObject(getAddRoleRequest(role)).await().bodyAsJsonObject()
         assertNull(addRoleResp.getJsonArray("errors"))
 
-        val addDeveloperRoleResp = request.sendJsonObject(addDeveloperRoleRequest).await().bodyAsJsonObject()
+        val addDeveloperRoleResp = request.sendJsonObject(
+            getAddDeveloperRoleRequest(
+                developerId, role
+            )
+        ).await().bodyAsJsonObject()
         assertNull(addDeveloperRoleResp.getJsonArray("errors"))
 
-        val addRolePermissionResp = request.sendJsonObject(addRolePermissionRequest).await().bodyAsJsonObject()
+        val addRolePermissionResp = request.sendJsonObject(getAddRolePermissionRequest(role)).await().bodyAsJsonObject()
         assertNull(addRolePermissionResp.getJsonArray("errors"))
 
         val getDeveloperPermissionsResp = request.sendJsonObject(
             JsonObject().put("query", getGraphql("permission/get-developer-permissions"))
-                .put("variables", JsonObject().put("id", "developer-id"))
+                .put("variables", JsonObject().put("id", developerId))
         ).await().bodyAsJsonObject()
         assertNull(getDeveloperPermissionsResp.getJsonArray("errors"))
         val developerPermissions =
@@ -458,18 +504,24 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
 
     @Test
     fun `ensure removeDeveloperRole works`() = runBlocking {
-        val addDeveloperResp = request.sendJsonObject(addDeveloperRequest).await().bodyAsJsonObject()
+        val developerId = UUID.randomUUID().toString()
+        val addDeveloperResp = request.sendJsonObject(getAddDeveloperRequest(developerId)).await().bodyAsJsonObject()
         assertNull(addDeveloperResp.getJsonArray("errors"))
 
-        val addRoleResp = request.sendJsonObject(addRoleRequest).await().bodyAsJsonObject()
+        val role = UUID.randomUUID().toString()
+        val addRoleResp = request.sendJsonObject(getAddRoleRequest(role)).await().bodyAsJsonObject()
         assertNull(addRoleResp.getJsonArray("errors"))
 
-        val addDeveloperRoleResp = request.sendJsonObject(addDeveloperRoleRequest).await().bodyAsJsonObject()
+        val addDeveloperRoleResp = request.sendJsonObject(
+            getAddDeveloperRoleRequest(
+                developerId, role
+            )
+        ).await().bodyAsJsonObject()
         assertNull(addDeveloperRoleResp.getJsonArray("errors"))
 
         val removeDeveloperRoleResp = request.sendJsonObject(
             JsonObject().put("query", getGraphql("role/remove-developer-role"))
-                .put("variables", JsonObject().put("id", "developer-id").put("role", "developer-role"))
+                .put("variables", JsonObject().put("id", developerId).put("role", role))
         ).await().bodyAsJsonObject()
         assertNull(removeDeveloperRoleResp.getJsonArray("errors"))
         assertTrue(removeDeveloperRoleResp.getJsonObject("data").getBoolean("removeDeveloperRole"))
@@ -477,7 +529,8 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
 
     @Test
     fun `ensure getRoleAccessPermissions works`() = runBlocking {
-        val addRoleResp = request.sendJsonObject(addRoleRequest).await().bodyAsJsonObject()
+        val role = UUID.randomUUID().toString()
+        val addRoleResp = request.sendJsonObject(getAddRoleRequest(role)).await().bodyAsJsonObject()
         assertNull(addRoleResp.getJsonArray("errors"))
 
         val addAccessPermissionResp = request.sendJsonObject(addAccessPermissionRequest).await().bodyAsJsonObject()
@@ -486,12 +539,12 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
         val accessPermissionId = accessPermission.getString("id")
 
         val addRoleAccessPermissionResp =
-            request.sendJsonObject(addRoleAccessPermissionRequest(accessPermissionId)).await().bodyAsJsonObject()
+            request.sendJsonObject(addRoleAccessPermissionRequest(accessPermissionId, role)).await().bodyAsJsonObject()
         assertNull(addRoleAccessPermissionResp.getJsonArray("errors"))
 
         val getRoleAccessPermissions = request.sendJsonObject(
             JsonObject().put("query", getGraphql("access/get-role-access-permissions"))
-                .put("variables", JsonObject().put("role", "developer-role"))
+                .put("variables", JsonObject().put("role", role))
         ).await().bodyAsJsonObject()
         assertNull(getRoleAccessPermissions.getJsonArray("errors"))
         val roleAccessPermission: JsonObject = getRoleAccessPermissions.getJsonObject("data")
@@ -502,7 +555,8 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
 
     @Test
     fun `ensure removeRoleAccessPermission works`() = runBlocking {
-        val addRoleResp = request.sendJsonObject(addRoleRequest).await().bodyAsJsonObject()
+        val role = UUID.randomUUID().toString()
+        val addRoleResp = request.sendJsonObject(getAddRoleRequest(role)).await().bodyAsJsonObject()
         assertNull(addRoleResp.getJsonArray("errors"))
 
         val addAccessPermissionResp = request.sendJsonObject(addAccessPermissionRequest).await().bodyAsJsonObject()
@@ -518,7 +572,7 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
         val removeRoleAccessPermissionResp = request.sendJsonObject(
             JsonObject().put("query", getGraphql("access/remove-role-access-permission")).put(
                 "variables",
-                JsonObject().put("role", "developer-role").put("accessPermissionId", accessPermissionId)
+                JsonObject().put("role", role).put("accessPermissionId", accessPermissionId)
             )
         ).await().bodyAsJsonObject()
         assertNull(removeRoleAccessPermissionResp.getJsonArray("errors"))
@@ -529,13 +583,19 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
 
     @Test
     fun `ensure getDeveloperAccessPermissions works`() = runBlocking {
-        val addDeveloperResp = request.sendJsonObject(addDeveloperRequest).await().bodyAsJsonObject()
+        val developerId = UUID.randomUUID().toString()
+        val addDeveloperResp = request.sendJsonObject(getAddDeveloperRequest(developerId)).await().bodyAsJsonObject()
         assertNull(addDeveloperResp.getJsonArray("errors"))
 
-        val addRoleResp = request.sendJsonObject(addRoleRequest).await().bodyAsJsonObject()
+        val role = UUID.randomUUID().toString()
+        val addRoleResp = request.sendJsonObject(getAddRoleRequest(role)).await().bodyAsJsonObject()
         assertNull(addRoleResp.getJsonArray("errors"))
 
-        val addDeveloperRoleResp = request.sendJsonObject(addDeveloperRoleRequest).await().bodyAsJsonObject()
+        val addDeveloperRoleResp = request.sendJsonObject(
+            getAddDeveloperRoleRequest(
+                developerId, role
+            )
+        ).await().bodyAsJsonObject()
         assertNull(addDeveloperRoleResp.getJsonArray("errors"))
 
         val addAccessPermissionResp = request.sendJsonObject(addAccessPermissionRequest).await().bodyAsJsonObject()
@@ -544,12 +604,12 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
         val accessPermissionId = accessPermission.getString("id")
 
         val addRoleAccessPermissionResp =
-            request.sendJsonObject(addRoleAccessPermissionRequest(accessPermissionId)).await().bodyAsJsonObject()
+            request.sendJsonObject(addRoleAccessPermissionRequest(accessPermissionId, role)).await().bodyAsJsonObject()
         assertNull(addRoleAccessPermissionResp.getJsonArray("errors"))
 
         val getDeveloperAccessPermissions = request.sendJsonObject(
             JsonObject().put("query", getGraphql("access/get-developer-access-permissions"))
-                .put("variables", JsonObject().put("developerId", "developer-id"))
+                .put("variables", JsonObject().put("developerId", developerId))
         ).await().bodyAsJsonObject()
         assertNull(getDeveloperAccessPermissions.getJsonArray("errors"))
         val developerAccessPermission: JsonObject = getDeveloperAccessPermissions.getJsonObject("data")
@@ -597,10 +657,11 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
 
     @Test
     fun `ensure addRolePermission works`() = runBlocking {
-        val addRoleResp = request.sendJsonObject(addRoleRequest).await().bodyAsJsonObject()
+        val role = UUID.randomUUID().toString()
+        val addRoleResp = request.sendJsonObject(getAddRoleRequest(role)).await().bodyAsJsonObject()
         assertNull(addRoleResp.getJsonArray("errors"))
 
-        val addRolePermissionResp = request.sendJsonObject(addRolePermissionRequest).await().bodyAsJsonObject()
+        val addRolePermissionResp = request.sendJsonObject(getAddRolePermissionRequest(role)).await().bodyAsJsonObject()
         assertNull(addRolePermissionResp.getJsonArray("errors"))
         assertTrue(addRolePermissionResp.getJsonObject("data").getBoolean("addRolePermission"))
     }
@@ -628,17 +689,18 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
     }
 
     @Test
-    fun `ensure addLiveBreakpoint works`() = runBlocking {
+    fun `ensure addLiveBreakpoint works`(): Unit = runBlocking {
         val addLiveBreakpointResp = request.sendJsonObject(addLiveBreakpointRequest).await().bodyAsJsonObject()
         assertNull(addLiveBreakpointResp.getJsonArray("errors"))
         val liveBreakpoint = addLiveBreakpointResp.getJsonObject("data").getJsonObject("addLiveBreakpoint")
         val liveBreakpointLocation = liveBreakpoint.getJsonObject("location")
         assertEquals("doing", liveBreakpointLocation.getString("source"))
         assertEquals(17, liveBreakpointLocation.getInteger("line"))
+        instrumentService.removeLiveInstrument(liveBreakpoint.getString("id")).await()
     }
 
     @Test
-    fun `ensure getLiveBreakpoints works`() = runBlocking {
+    fun `ensure getLiveBreakpoints works`(): Unit = runBlocking {
         val addLiveBreakpointResp = request.sendJsonObject(addLiveBreakpointRequest).await().bodyAsJsonObject()
         assertNull(addLiveBreakpointResp.getJsonArray("errors"))
 
@@ -655,20 +717,25 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
             it as JsonObject
             it.getJsonObject("location").getInteger("line").equals(17)
         })
+        instrumentService.removeLiveInstrument(
+            addLiveBreakpointResp.getJsonObject("data")
+                .getJsonObject("addLiveBreakpoint").getString("id")
+        ).await()
     }
 
     @Test
-    fun `ensure addLiveLog works`() = runBlocking {
+    fun `ensure addLiveLog works`(): Unit = runBlocking {
         val addLiveLogResp = request.sendJsonObject(addLiveLogRequest).await().bodyAsJsonObject()
         assertNull(addLiveLogResp.getJsonArray("errors"))
         val liveLog = addLiveLogResp.getJsonObject("data").getJsonObject("addLiveLog")
         val liveLogLocation = liveLog.getJsonObject("location")
         assertEquals("doing", liveLogLocation.getString("source"))
         assertEquals(19, liveLogLocation.getInteger("line"))
+        instrumentService.removeLiveInstrument(liveLog.getString("id")).await()
     }
 
     @Test
-    fun `ensure getLiveLogs works`() = runBlocking {
+    fun `ensure getLiveLogs works`(): Unit = runBlocking {
         val addLiveLogResp = request.sendJsonObject(addLiveLogRequest).await().bodyAsJsonObject()
         assertNull(addLiveLogResp.getJsonArray("errors"))
 
@@ -686,19 +753,24 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
             it as JsonObject
             it.getJsonObject("location").getInteger("line").equals(19)
         })
+        instrumentService.removeLiveInstrument(
+            addLiveLogResp.getJsonObject("data")
+                .getJsonObject("addLiveLog").getString("id")
+        ).await()
     }
 
     @Test
-    fun `ensure addLiveSpan works`() = runBlocking {
+    fun `ensure addLiveSpan works`(): Unit = runBlocking {
         val addLiveSpanResp = request.sendJsonObject(addLiveSpanRequest).await().bodyAsJsonObject()
         assertNull(addLiveSpanResp.getJsonArray("errors"))
         val liveSpan = addLiveSpanResp.getJsonObject("data").getJsonObject("addLiveSpan")
         assertEquals("doing", liveSpan.getJsonObject("location").getString("source"))
         assertEquals("name-of-operation", liveSpan.getString("operationName"))
+        instrumentService.removeLiveInstrument(liveSpan.getString("id")).await()
     }
 
     @Test
-    fun `ensure getLiveSpans works`() = runBlocking {
+    fun `ensure getLiveSpans works`(): Unit = runBlocking {
         val addLiveSpanResp = request.sendJsonObject(addLiveSpanRequest).await().bodyAsJsonObject()
         assertNull(addLiveSpanResp.getJsonArray("errors"))
 
@@ -715,20 +787,25 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
             it as JsonObject
             it.getString("operationName").equals("name-of-operation")
         })
+        instrumentService.removeLiveInstrument(
+            addLiveSpanResp.getJsonObject("data")
+                .getJsonObject("addLiveSpan").getString("id")
+        ).await()
     }
 
     @Test
-    fun `ensure addLiveMeter works`() = runBlocking {
+    fun `ensure addLiveMeter works`(): Unit = runBlocking {
         val addLiveMeterResp = request.sendJsonObject(addLiveMeterRequest).await().bodyAsJsonObject()
         assertNull(addLiveMeterResp.getJsonArray("errors"))
         val liveMeter = addLiveMeterResp.getJsonObject("data").getJsonObject("addLiveMeter")
         val liveMeterLocation = liveMeter.getJsonObject("location")
         assertEquals("doing", liveMeterLocation.getString("source"))
         assertEquals(19, liveMeterLocation.getInteger("line"))
+        instrumentService.removeLiveInstrument(liveMeter.getString("id")).await()
     }
 
     @Test
-    fun `ensure getLiveMeters works`() = runBlocking {
+    fun `ensure getLiveMeters works`(): Unit = runBlocking {
         val addLiveMeterResp = request.sendJsonObject(addLiveMeterRequest).await().bodyAsJsonObject()
         assertNull(addLiveMeterResp.getJsonArray("errors"))
 
@@ -745,6 +822,10 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
             it as JsonObject
             it.getJsonObject("location").getInteger("line").equals(19)
         })
+        instrumentService.removeLiveInstrument(
+            addLiveMeterResp.getJsonObject("data")
+                .getJsonObject("addLiveMeter").getString("id")
+        ).await()
     }
 
     @Test
@@ -795,9 +876,9 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
     }
 
     @Test
-    fun `ensure getLiveInstruments works`() = runBlocking {
-        val addLiveMeterResp = request.sendJsonObject(addLiveMeterRequest).await().bodyAsJsonObject()
-        assertNull(addLiveMeterResp.getJsonArray("errors"))
+    fun `ensure getLiveInstruments works`(): Unit = runBlocking {
+        val addLiveBreakpointResp = request.sendJsonObject(addLiveBreakpointRequest).await().bodyAsJsonObject()
+        assertNull(addLiveBreakpointResp.getJsonArray("errors"))
 
         val getLiveInstrumentsResp =
             request.sendJsonObject(JsonObject().put("query", getGraphql("instrument/get-live-instruments")))
@@ -806,6 +887,10 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
 
         val liveViews = getLiveInstrumentsResp.getJsonObject("data").getJsonArray("getLiveInstruments")
         assertFalse(liveViews.isEmpty)
+        instrumentService.removeLiveInstrument(
+            addLiveBreakpointResp.getJsonObject("data")
+                .getJsonObject("addLiveBreakpoint").getString("id")
+        ).await()
     }
 
     @Test
@@ -822,9 +907,9 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
     //todo: does not validate if LiveInstrument with ID exist
     @Test
     fun `ensure removeLiveInstrument works`() = runBlocking {
-        val addLiveMeterResp = request.sendJsonObject(addLiveMeterRequest).await().bodyAsJsonObject()
-        assertNull(addLiveMeterResp.getJsonArray("errors"))
-        val liveMeter = addLiveMeterResp.getJsonObject("data").getJsonObject("addLiveMeter")
+        val addLiveBreakpointResp = request.sendJsonObject(addLiveBreakpointRequest).await().bodyAsJsonObject()
+        assertNull(addLiveBreakpointResp.getJsonArray("errors"))
+        val liveMeter = addLiveBreakpointResp.getJsonObject("data").getJsonObject("addLiveBreakpoint")
         val liveMeterId = liveMeter.getString("id")
 
         val removeLiveInstrumentResp = request.sendJsonObject(
@@ -840,55 +925,51 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
     //needs verification
     @Test
     fun `ensure removeLiveInstruments works`() = runBlocking {
-        val addLiveMeterResp = request.sendJsonObject(addLiveMeterRequest).await().bodyAsJsonObject()
-        assertNull(addLiveMeterResp.getJsonArray("errors"))
-        val liveMeter = addLiveMeterResp.getJsonObject("data").getJsonObject("addLiveMeter")
-        val liveMeterId = liveMeter.getString("id")
+        val addLiveBreakpointResp = request.sendJsonObject(addLiveBreakpointRequest).await().bodyAsJsonObject()
+        assertNull(addLiveBreakpointResp.getJsonArray("errors"))
+        val liveBreakpoint = addLiveBreakpointResp.getJsonObject("data").getJsonObject("addLiveBreakpoint")
+        val liveBreakpointId = liveBreakpoint.getString("id")
 
         val removeLiveInstrumentsResp = request.sendJsonObject(
             JsonObject().put("query", getGraphql("instrument/remove-live-instruments"))
-                .put("variables", JsonObject().put("source", "doing").put("line", 19))
+                .put("variables", JsonObject().put("source", "doing").put("line", 17))
         ).await().bodyAsJsonObject()
         assertNull(removeLiveInstrumentsResp.getJsonArray("errors"))
         val removedLiveInstruments =
             removeLiveInstrumentsResp.getJsonObject("data").getJsonArray("removeLiveInstruments")
         assertTrue(removedLiveInstruments.any {
             it as JsonObject
-            it.getString("id").equals(liveMeterId)
+            it.getString("id").equals(liveBreakpointId)
         })
     }
 
     @Test
-    fun `ensure clearLiveInstruments works`() = runBlocking {
-        val clearLiveInstrumentsResp =
-            request.sendJsonObject(JsonObject().put("query", getGraphql("instrument/clear-live-instruments")))
-                .await().bodyAsJsonObject()
-        assertNull(clearLiveInstrumentsResp.getJsonArray("errors"))
-        assertNotNull(clearLiveInstrumentsResp.getJsonObject("data").getBoolean("clearLiveInstruments"))
-    }
-
-    @Test
     fun `ensure removeRolePermission works`() = runBlocking {
-        val addRoleResp = request.sendJsonObject(addRoleRequest).await().bodyAsJsonObject()
+        val role = UUID.randomUUID().toString()
+        val addRoleResp = request.sendJsonObject(getAddRoleRequest(role)).await().bodyAsJsonObject()
         assertNull(addRoleResp.getJsonArray("errors"))
 
-        val addRolePermissionResp = request.sendJsonObject(addRolePermissionRequest).await().bodyAsJsonObject()
+        val addRolePermissionResp = request.sendJsonObject(getAddRolePermissionRequest(role)).await().bodyAsJsonObject()
         assertNull(addRolePermissionResp.getJsonArray("errors"))
         assertTrue(addRolePermissionResp.getJsonObject("data").getBoolean("addRolePermission"))
 
         val removeRolePermissionResp = request.sendJsonObject(
             JsonObject().put("query", getGraphql("permission/remove-role-permission"))
-                .put("variables", JsonObject().put("role", "developer-role").put("permission", RolePermission.ADD_ROLE))
+                .put("variables", JsonObject().put("role", role).put("permission", RolePermission.ADD_ROLE))
         ).await().bodyAsJsonObject()
         assertNull(removeRolePermissionResp.getJsonArray("errors"))
         assertTrue(removeRolePermissionResp.getJsonObject("data").getBoolean("removeRolePermission"))
     }
 
     @Test
-    fun `ensure default-test client accessor is present`() = runBlocking {
+    fun `ensure get client accessors works`() = runBlocking {
+        val generatedClientAccess = managementService.addClientAccess().await()
+        assertNotNull(generatedClientAccess.id)
+        assertNotNull(generatedClientAccess.secret)
+
         val testClientAccessList = managementService.getClientAccessors().await()
-        assertNotNull(testClientAccessList.find { it.id == "test-id" })
-        assertNotNull(testClientAccessList.find { it.secret == "test-secret" })
+        assertNotNull(testClientAccessList.find { it.id == generatedClientAccess.id })
+        assertNotNull(testClientAccessList.find { it.secret == generatedClientAccess.secret })
 
         val getClientAccessorsResp =
             request.sendJsonObject(JsonObject().put("query", getGraphql("client/get-client-accessors"))).await()
@@ -897,20 +978,24 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
         val testClientAccessJsonArray = getClientAccessorsResp.getJsonObject("data").getJsonArray("getClientAccessors")
         assertTrue(testClientAccessJsonArray.any {
             it as JsonObject
-            it.getString("id").equals("test-id")
+            it.getString("id").equals(generatedClientAccess.id)
         })
         assertTrue(testClientAccessJsonArray.any {
             it as JsonObject
-            it.getString("secret").equals("test-secret")
+            it.getString("secret").equals(generatedClientAccess.secret)
         })
     }
 
     //todo: No GraphQL for this endpoint
     @Test
-    fun `ensure getting client access works`() = runBlocking {
-        val clientAccess = managementService.getClientAccess("test-id").await()
-        assertEquals("test-id", clientAccess?.id)
-        assertEquals("test-secret", clientAccess?.secret)
+    fun `ensure get client access works`() = runBlocking {
+        val generatedClientAccess = managementService.addClientAccess().await()
+        assertNotNull(generatedClientAccess.id)
+        assertNotNull(generatedClientAccess.secret)
+
+        val clientAccess = managementService.getClientAccess(generatedClientAccess.id).await()
+        assertNotNull(clientAccess)
+        assertEquals(generatedClientAccess.secret, clientAccess!!.secret)
     }
 
     //todo: does not accept custom id nor secret
@@ -931,13 +1016,17 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
 
     @Test
     fun `ensure remove client access works`() = runBlocking {
-        val clientAccessList = managementService.getClientAccessors().await()
-        assertNotNull(clientAccessList.find { it.id == "test-id" })
+        val generatedClientAccess = managementService.addClientAccess().await()
+        assertNotNull(generatedClientAccess.id)
+        assertNotNull(generatedClientAccess.secret)
 
-        assertTrue(managementService.removeClientAccess("test-id").await())
+        val clientAccessList = managementService.getClientAccessors().await()
+        assertNotNull(clientAccessList.find { it.id == generatedClientAccess.id })
+
+        assertTrue(managementService.removeClientAccess(generatedClientAccess.id).await())
 
         val removedClientAccessList = managementService.getClientAccessors().await()
-        assertNull(removedClientAccessList.find { it.id == "test-id" })
+        assertNull(removedClientAccessList.find { it.id == generatedClientAccess.id })
 
         val clientId = managementService.addClientAccess().await().id
         val addedClientAccess = managementService.getClientAccessors().await()
@@ -977,38 +1066,47 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
         assertNotEquals(clientSecret, updatedClientAccessJsonObject.getString("secret"))
     }
 
-    private val addDataRedactionRequest: JsonObject =
-        JsonObject().put("query", getGraphql("data-redaction/add-data-redaction")).put(
+    private fun getAddDataRedactionRequest(redactionId: String): JsonObject {
+        return JsonObject().put("query", getGraphql("data-redaction/add-data-redaction")).put(
             "variables",
-            JsonObject().put("id", "some-id").put("type", RedactionType.VALUE_REGEX).put("lookup", "some-lookup")
+            JsonObject().put("id", redactionId).put("type", RedactionType.VALUE_REGEX).put("lookup", "some-lookup")
                 .put("replacement", "some-replacement")
         )
+    }
 
-    private val addRoleDataRedactionRequest =
-        JsonObject().put("query", getGraphql("data-redaction/add-role-data-redaction"))
-            .put("variables", JsonObject().put("role", "developer-role").put("dataRedactionId", "some-id"))
+    private fun getAddRoleDataRedactionRequest(role: String, redactionId: String): JsonObject {
+        return JsonObject().put("query", getGraphql("data-redaction/add-role-data-redaction"))
+            .put("variables", JsonObject().put("role", role).put("dataRedactionId", redactionId))
+    }
 
     private val addAccessPermissionRequest: JsonObject =
         JsonObject().put("query", getGraphql("access/add-access-permission")).put(
             "variables", JsonObject().put("type", AccessType.WHITE_LIST).put("locationPatterns", "some-pattern")
         )
 
-    private val addDeveloperRequest: JsonObject = JsonObject().put("query", getGraphql("developer/add-developer"))
-        .put("variables", JsonObject().put("id", "developer-id"))
+    private fun getAddDeveloperRequest(developerId: String): JsonObject {
+        return JsonObject().put("query", getGraphql("developer/add-developer"))
+            .put("variables", JsonObject().put("id", developerId))
+    }
 
-    private val addDeveloperRoleRequest: JsonObject =
-        JsonObject().put("query", getGraphql("role/add-developer-role"))
-            .put("variables", JsonObject().put("id", "developer-id").put("role", "developer-role"))
+    private fun getAddDeveloperRoleRequest(developerId: String, developerRole: String): JsonObject {
+        return JsonObject().put("query", getGraphql("role/add-developer-role"))
+            .put("variables", JsonObject().put("id", developerId).put("role", developerRole))
+    }
 
-    private val addRoleRequest: JsonObject = JsonObject().put("query", getGraphql("role/add-role"))
-        .put("variables", JsonObject().put("role", "developer-role"))
+    private fun getAddRoleRequest(role: String): JsonObject {
+        return JsonObject().put("query", getGraphql("role/add-role"))
+            .put("variables", JsonObject().put("role", role))
+    }
 
-    private val addRolePermissionRequest = JsonObject().put("query", getGraphql("permission/add-role-permission"))
-        .put("variables", JsonObject().put("role", "developer-role").put("permission", RolePermission.ADD_ROLE))
+    private fun getAddRolePermissionRequest(role: String): JsonObject {
+        return JsonObject().put("query", getGraphql("permission/add-role-permission"))
+            .put("variables", JsonObject().put("role", role).put("permission", RolePermission.ADD_ROLE))
+    }
 
-    private fun addRoleAccessPermissionRequest(accessPermissionId: String): JsonObject {
+    private fun addRoleAccessPermissionRequest(accessPermissionId: String, role: String): JsonObject {
         return JsonObject().put("query", getGraphql("access/add-role-access-permission"))
-            .put("variables", JsonObject().put("accessPermissionId", accessPermissionId).put("role", "developer-role"))
+            .put("variables", JsonObject().put("accessPermissionId", accessPermissionId).put("role", role))
     }
 
     private val addLiveViewRequest =

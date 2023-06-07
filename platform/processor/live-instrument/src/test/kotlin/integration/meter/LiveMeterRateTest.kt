@@ -23,10 +23,11 @@ import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
-import mu.KotlinLogging
 import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.parallel.Isolated
 import spp.protocol.artifact.ArtifactQualifiedName
 import spp.protocol.artifact.ArtifactType
 import spp.protocol.instrument.LiveMeter
@@ -40,11 +41,8 @@ import spp.protocol.view.LiveViewConfig
 import spp.protocol.view.LiveViewEvent
 import spp.protocol.view.rule.ViewRule
 
+@Isolated
 class LiveMeterRateTest : LiveInstrumentIntegrationTest() {
-
-    companion object {
-        private val log = KotlinLogging.logger {}
-    }
 
     private fun triggerRate() {
         addLineLabel("done") { Throwable().stackTrace[0].lineNumber }
@@ -57,6 +55,7 @@ class LiveMeterRateTest : LiveInstrumentIntegrationTest() {
 
     @Test
     fun `60 calls per minute rate`(): Unit = runBlocking {
+        assumeTrue("true" == System.getProperty("test.includeSlow"))
         setupLineLabels {
             triggerRate()
         }
@@ -65,43 +64,44 @@ class LiveMeterRateTest : LiveInstrumentIntegrationTest() {
             MeterType.COUNT,
             MetricValue(MetricValueType.NUMBER, "1"),
             location = LiveSourceLocation(
-                LiveMeterRateTest::class.qualifiedName!!,
+                LiveMeterRateTest::class.java.name,
                 getLineNumber("done"),
                 "spp-test-probe"
             ),
-            id = testNameAsInstrumentId,
+            id = testNameAsUniqueInstrumentId,
             meta = mapOf("metric.mode" to "RATE"),
             applyImmediately = true
         )
 
         viewService.saveRuleIfAbsent(
             ViewRule(
-                name = liveMeter.toMetricIdWithoutPrefix(),
+                name = liveMeter.id!!,
                 exp = buildString {
                     append("(")
-                    append(liveMeter.toMetricIdWithoutPrefix())
+                    append(liveMeter.id!!)
                     append(".sum(['service', 'instance'])")
                     append(".downsampling(SUM)")
                     append(")")
                     append(".instance(['service'], ['instance'], Layer.GENERAL)")
-                }
+                },
+                meterIds = listOf(liveMeter.id!!)
             )
         ).await()
 
         val subscriptionId = viewService.addLiveView(
             LiveView(
-                entityIds = mutableSetOf(liveMeter.toMetricId()),
+                entityIds = mutableSetOf(liveMeter.id!!),
                 artifactQualifiedName = ArtifactQualifiedName(
-                    LiveMeterRateTest::class.qualifiedName!!,
+                    LiveMeterRateTest::class.java.name,
                     type = ArtifactType.EXPRESSION
                 ),
                 artifactLocation = LiveSourceLocation(
-                    LiveMeterRateTest::class.qualifiedName!!,
+                    LiveMeterRateTest::class.java.name,
                     getLineNumber("done")
                 ),
                 viewConfig = LiveViewConfig(
                     "test",
-                    listOf(liveMeter.toMetricId())
+                    listOf(liveMeter.id!!)
                 )
             )
         ).await().subscriptionId!!
@@ -116,7 +116,7 @@ class LiveMeterRateTest : LiveInstrumentIntegrationTest() {
 
             testContext.verify {
                 val meta = rawMetrics.getJsonObject("meta")
-                assertEquals(liveMeter.toMetricId(), meta.getString("metricsName"))
+                assertEquals(liveMeter.id!!, meta.getString("metricsName"))
 
                 rate = rawMetrics.getInteger("value")
                 if (rate >= 50) { //allow for some variance (GH actions are sporadic)
@@ -133,6 +133,7 @@ class LiveMeterRateTest : LiveInstrumentIntegrationTest() {
                 repeat((0 until 100).count()) {
                     triggerRate()
                     delay(1000)
+                    if (testContext.completed()) return@runBlocking
                 }
             }
             it.complete()
@@ -142,7 +143,7 @@ class LiveMeterRateTest : LiveInstrumentIntegrationTest() {
 
         //clean up
         consumer.unregister()
-        assertNotNull(instrumentService.removeLiveInstrument(testNameAsInstrumentId).await())
+        assertNotNull(instrumentService.removeLiveInstrument(liveMeter.id!!).await())
         assertNotNull(viewService.removeLiveView(subscriptionId).await())
 
         assertTrue(rate >= 50, rate.toString()) //allow for some variance (GH actions are sporadic)

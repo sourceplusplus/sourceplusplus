@@ -58,7 +58,7 @@ subprojects {
         implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
         implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:$jacksonVersion")
         implementation("org.zeroturnaround:zt-zip:1.15")
-        implementation("org.kohsuke:github-api:1.314")
+        implementation("org.kohsuke:github-api:1.315")
         implementation("org.bouncycastle:bcprov-jdk15on:$bouncycastleVersion")
         implementation("org.bouncycastle:bcpkix-jdk15on:$bouncycastleVersion")
         implementation("org.apache.logging.log4j:log4j-core:2.20.0")
@@ -87,7 +87,7 @@ subprojects {
         implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
         implementation("commons-io:commons-io:$commonsIoVersion")
         implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.1")
-        implementation("io.dropwizard.metrics:metrics-core:4.2.18")
+        implementation("io.dropwizard.metrics:metrics-core:4.2.19")
         implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.0")
         implementation("org.apache.commons:commons-text:1.10.0")
         compileOnly("org.apache.skywalking:apm-network:$skywalkingVersion") { isTransitive = false }
@@ -106,7 +106,7 @@ subprojects {
         compileOnly("org.apache.skywalking:storage-elasticsearch-plugin:$skywalkingVersion") { isTransitive = false }
         compileOnly("org.apache.skywalking:library-elasticsearch-client:$skywalkingVersion") { isTransitive = false }
 
-        detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.22.0")
+        detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.23.0")
 
         testImplementation("org.slf4j:slf4j-simple:$slf4jVersion")
         testImplementation("org.junit.jupiter:junit-jupiter-engine:$jupiterVersion")
@@ -158,7 +158,6 @@ subprojects {
     }
 
     tasks.getByName<Test>("test") {
-        failFast = true
         useJUnitPlatform()
 
         val isIntegrationProfile = System.getProperty("test.profile") == "integration"
@@ -205,7 +204,8 @@ tasks.register<Copy>("updateDockerFiles") {
         File(projectDir, "processor/live-insight/build/libs/spp-live-insight-${project.version}.jar"),
         File(projectDir, "processor/live-instrument/build/libs/spp-live-instrument-${project.version}.jar"),
         File(projectDir, "processor/live-view/build/libs/spp-live-view-${project.version}.jar"),
-        File(projectDir, "../probes/jvm/boot/build/libs/spp-probe-${project.version}.jar")
+        File(projectDir, "../probes/jvm/boot/build/libs/spp-probe-${project.version}.jar"),
+        File(projectDir, "../probes/jvm/boot/build/libs/spp-probe-platform-${project.version}.jar")
     ).into(File(projectDir, "../docker/e2e"))
 
     doFirst {
@@ -239,4 +239,10 @@ tasks.getByName("assemble") {
         ":platform:processor:live-view:jar",
         ":probes:jvm:boot:jar"
     )
+}
+
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile::class.java).configureEach {
+    kotlinOptions {
+        freeCompilerArgs = listOf("-Xdebug") //todo: disable this for release builds
+    }
 }

@@ -39,13 +39,13 @@ class RemoveInstrumentsTest : LiveInstrumentIntegrationTest() {
             listOf(
                 LiveBreakpoint(
                     location = LiveSourceLocation(
-                        RemoveInstrumentsTest::class.qualifiedName!!,
+                        RemoveInstrumentsTest::class.java.name,
                         1,
                     )
                 ),
                 LiveBreakpoint(
                     location = LiveSourceLocation(
-                        RemoveInstrumentsTest::class.qualifiedName!!,
+                        RemoveInstrumentsTest::class.java.name,
                         1,
                     )
                 )
@@ -58,7 +58,7 @@ class RemoveInstrumentsTest : LiveInstrumentIntegrationTest() {
             override fun onInstrumentRemovedEvent(event: LiveInstrumentRemoved) {
                 testContext.verify {
                     assertEquals(
-                        LiveSourceLocation(RemoveInstrumentsTest::class.qualifiedName!!, 1),
+                        LiveSourceLocation(RemoveInstrumentsTest::class.java.name, 1),
                         event.instrument.location
                     )
 
@@ -74,7 +74,7 @@ class RemoveInstrumentsTest : LiveInstrumentIntegrationTest() {
 
         val removeInstruments = instrumentService.removeLiveInstruments(
             LiveSourceLocation(
-                RemoveInstrumentsTest::class.qualifiedName!!,
+                RemoveInstrumentsTest::class.java.name,
                 1,
             )
         ).await()

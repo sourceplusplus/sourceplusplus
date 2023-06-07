@@ -21,6 +21,7 @@ import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.Test
 import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.location.LiveSourceLocation
@@ -55,7 +56,8 @@ class NegativePrimitiveConditionITTest : LiveInstrumentIntegrationTest() {
     }
 
     @Test
-    fun `primitive static variable`() = runBlocking {
+    fun `negative primitive static variable`() = runBlocking {
+        assumeTrue("true" == System.getProperty("test.includeSlow"))
         setupLineLabels {
             primitiveStaticVariable()
         }
@@ -69,7 +71,7 @@ class NegativePrimitiveConditionITTest : LiveInstrumentIntegrationTest() {
         val liveInstrument = instrumentService.addLiveInstrument(
             LiveBreakpoint(
                 location = LiveSourceLocation(
-                    NegativePrimitiveConditionITTest::class.qualifiedName!!,
+                    NegativePrimitiveConditionITTest::class.java.name,
                     getLineNumber("done"),
                     "spp-test-probe"
                 ),
@@ -88,7 +90,8 @@ class NegativePrimitiveConditionITTest : LiveInstrumentIntegrationTest() {
     }
 
     @Test
-    fun `instance local variable`() = runBlocking {
+    fun `negative instance local variable`() = runBlocking {
+        assumeTrue("true" == System.getProperty("test.includeSlow"))
         setupLineLabels {
             primitiveInstanceVariable()
         }
@@ -102,7 +105,7 @@ class NegativePrimitiveConditionITTest : LiveInstrumentIntegrationTest() {
         val liveInstrument = instrumentService.addLiveInstrument(
             LiveBreakpoint(
                 location = LiveSourceLocation(
-                    NegativePrimitiveConditionITTest::class.qualifiedName!!,
+                    NegativePrimitiveConditionITTest::class.java.name,
                     getLineNumber("done"),
                     "spp-test-probe"
                 ),
@@ -121,7 +124,8 @@ class NegativePrimitiveConditionITTest : LiveInstrumentIntegrationTest() {
     }
 
     @Test
-    fun `primitive local variable`() = runBlocking {
+    fun `negative primitive local variable`() = runBlocking {
+        assumeTrue("true" == System.getProperty("test.includeSlow"))
         setupLineLabels {
             primitiveLocalVariable()
         }
@@ -135,7 +139,7 @@ class NegativePrimitiveConditionITTest : LiveInstrumentIntegrationTest() {
         val liveInstrument = instrumentService.addLiveInstrument(
             LiveBreakpoint(
                 location = LiveSourceLocation(
-                    NegativePrimitiveConditionITTest::class.qualifiedName!!,
+                    NegativePrimitiveConditionITTest::class.java.name,
                     getLineNumber("done"),
                     "spp-test-probe"
                 ),

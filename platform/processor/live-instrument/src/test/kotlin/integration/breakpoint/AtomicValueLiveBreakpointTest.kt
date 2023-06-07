@@ -45,7 +45,7 @@ class AtomicValueLiveBreakpointTest : LiveInstrumentIntegrationTest() {
     }
 
     @Test
-    fun `atomic value`() = runBlocking {
+    fun `atomic values`() = runBlocking {
         setupLineLabels {
             atomicValue()
         }
@@ -114,7 +114,7 @@ class AtomicValueLiveBreakpointTest : LiveInstrumentIntegrationTest() {
             LiveBreakpoint(
                 id = testNameAsInstrumentId,
                 location = LiveSourceLocation(
-                    AtomicValueLiveBreakpointTest::class.qualifiedName!!,
+                    AtomicValueLiveBreakpointTest::class.java.name,
                     getLineNumber("done"),
                     "spp-test-probe"
                 ),

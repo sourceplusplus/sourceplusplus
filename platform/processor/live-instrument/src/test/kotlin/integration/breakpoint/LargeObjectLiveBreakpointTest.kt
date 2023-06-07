@@ -40,7 +40,7 @@ class LargeObjectLiveBreakpointTest : LiveInstrumentIntegrationTest() {
     }
 
     @Test
-    fun `max size exceeded`() = runBlocking {
+    fun `large object max size exceeded`() = runBlocking {
         setupLineLabels {
             largeObject()
         }
@@ -81,7 +81,7 @@ class LargeObjectLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         instrumentService.addLiveInstrument(
             LiveBreakpoint(
                 location = LiveSourceLocation(
-                    LargeObjectLiveBreakpointTest::class.qualifiedName!!,
+                    LargeObjectLiveBreakpointTest::class.java.name,
                     getLineNumber("done"),
                     "spp-test-probe"
                 ),

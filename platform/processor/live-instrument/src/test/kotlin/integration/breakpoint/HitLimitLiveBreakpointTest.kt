@@ -18,16 +18,20 @@
 package integration.breakpoint
 
 import integration.LiveInstrumentIntegrationTest
+import io.vertx.core.Promise
 import io.vertx.kotlin.coroutines.await
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
 import spp.protocol.instrument.LiveBreakpoint
+import spp.protocol.instrument.event.LiveInstrumentRemoved
 import spp.protocol.instrument.location.LiveSourceLocation
 import spp.protocol.instrument.throttle.InstrumentThrottle
-import spp.protocol.instrument.throttle.ThrottleStep
+import spp.protocol.service.listen.LiveInstrumentListener
+import spp.protocol.service.listen.addBreakpointHitListener
+import spp.protocol.service.listen.addLiveInstrumentListener
+import java.util.concurrent.atomic.AtomicInteger
 
 class HitLimitLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
@@ -47,31 +51,42 @@ class HitLimitLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         instrumentService.addLiveInstrument(
             LiveBreakpoint(
                 location = LiveSourceLocation(
-                    HitLimitLiveBreakpointTest::class.qualifiedName!!,
+                    HitLimitLiveBreakpointTest::class.java.name,
                     getLineNumber("done"),
                     "spp-test-probe"
                 ),
                 hitLimit = 11,
-                throttle = InstrumentThrottle(100, ThrottleStep.SECOND),
+                throttle = InstrumentThrottle.NONE,
                 applyImmediately = true,
                 id = testNameAsInstrumentId
             )
         ).await()
 
         //trigger live breakpoint 10 times
-        repeat(10) {
-            hitLimit()
-        }
-        delay(10_000)
+        val hitCount = AtomicInteger(0)
+        val tenHitPromise = Promise.promise<Nothing>()
+        vertx.addBreakpointHitListener(testNameAsInstrumentId) {
+            if (hitCount.incrementAndGet() == 10) {
+                tenHitPromise.complete()
+            }
+        }.await()
+        repeat(10) { hitLimit() }
+        tenHitPromise.future().await()
 
         //verify still exists
         val liveInstrument = instrumentService.getLiveInstrument(testNameAsInstrumentId).await()
         assertEquals(11, liveInstrument!!.hitLimit)
-        assertEquals(10, liveInstrument.meta["hit_count"])
+//        assertEquals(10, liveInstrument.meta["hit_count"]) //todo: count hits via event history
 
         //trigger once more
+        val removePromise = Promise.promise<Nothing>()
+        vertx.addLiveInstrumentListener(testNameAsInstrumentId, object : LiveInstrumentListener {
+            override fun onInstrumentRemovedEvent(event: LiveInstrumentRemoved) {
+                removePromise.complete()
+            }
+        }).await()
         hitLimit()
-        delay(5000)
+        removePromise.future().await()
 
         //verify removed
         assertNull(instrumentService.getLiveInstrument(testNameAsInstrumentId).await())

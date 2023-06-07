@@ -70,7 +70,7 @@ class MultiLiveBreakpointTest : LiveInstrumentIntegrationTest() {
             listOf(
                 LiveBreakpoint(
                     location = LiveSourceLocation(
-                        MultiLiveBreakpointTest::class.qualifiedName!!,
+                        MultiLiveBreakpointTest::class.java.name,
                         getLineNumber("line1"),
                         "spp-test-probe"
                     ),
@@ -79,7 +79,7 @@ class MultiLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                 ),
                 LiveBreakpoint(
                     location = LiveSourceLocation(
-                        MultiLiveBreakpointTest::class.qualifiedName!!,
+                        MultiLiveBreakpointTest::class.java.name,
                         getLineNumber("line1"),
                         "spp-test-probe"
                     ),
@@ -139,7 +139,7 @@ class MultiLiveBreakpointTest : LiveInstrumentIntegrationTest() {
             listOf(
                 LiveBreakpoint(
                     location = LiveSourceLocation(
-                        MultiLiveBreakpointTest::class.qualifiedName!!,
+                        MultiLiveBreakpointTest::class.java.name,
                         getLineNumber("line1"),
                         "spp-test-probe"
                     ),
@@ -148,7 +148,7 @@ class MultiLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                 ),
                 LiveBreakpoint(
                     location = LiveSourceLocation(
-                        MultiLiveBreakpointTest::class.qualifiedName!!,
+                        MultiLiveBreakpointTest::class.java.name,
                         getLineNumber("line2"),
                         "spp-test-probe"
                     ),

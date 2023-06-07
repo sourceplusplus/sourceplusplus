@@ -27,7 +27,6 @@ import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
-import mu.KotlinLogging
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import spp.protocol.platform.PlatformAddress.MARKER_CONNECTED
@@ -36,10 +35,6 @@ import spp.protocol.service.SourceServices
 import java.util.*
 
 class MarkerBridgeITTest : PlatformIntegrationTest() {
-
-    companion object {
-        private val log = KotlinLogging.logger {}
-    }
 
     @Test
     fun testMarkerCounter(): Unit = runBlocking {

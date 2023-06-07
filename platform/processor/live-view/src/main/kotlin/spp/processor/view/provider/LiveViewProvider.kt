@@ -99,11 +99,11 @@ class LiveViewProvider : ModuleProvider() {
 
         class SPPRemoteClientManager : RemoteClientManager {
 
-            constructor(manager: ModuleManager, remoteTimeout: Int, grpcSslTrustedCAPath: String)
-                    : super(manager, remoteTimeout, grpcSslTrustedCAPath)
+            constructor(manager: ModuleManager, remoteTimeout: Int, grpcSslTrustedCAPath: String) :
+                    super(manager, remoteTimeout, grpcSslTrustedCAPath)
 
-            constructor(manager: ModuleManager, remoteTimeout: Int)
-                    : super(manager, remoteTimeout)
+            constructor(manager: ModuleManager, remoteTimeout: Int) :
+                    super(manager, remoteTimeout)
 
             override fun getRemoteClient(): List<RemoteClient> {
                 return super.getRemoteClient().map {

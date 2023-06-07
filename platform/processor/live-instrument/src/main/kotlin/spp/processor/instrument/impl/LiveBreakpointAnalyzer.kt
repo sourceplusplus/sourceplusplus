@@ -196,11 +196,11 @@ class LiveBreakpointAnalyzer : LocalAnalysisListener, EntryAnalysisListener, Exi
 
         private fun toLiveVariableArray(varName: String, scope: LiveVariableScope?, varData: JsonArray): LiveVariable {
             val innerVars = mutableListOf<LiveVariable>()
-            varData.forEachIndexed { index, it ->
-                if (it is JsonObject) {
-                    innerVars.add(toLiveVariable("$index", null, it))
+            varData.forEachIndexed { index, varData ->
+                if (varData is JsonObject) {
+                    innerVars.add(toLiveVariable("$index", null, varData))
                 } else {
-                    innerVars.add(LiveVariable("$index", it))
+                    innerVars.add(LiveVariable("$index", varData))
                 }
             }
             return LiveVariable(varName, innerVars, scope = scope)

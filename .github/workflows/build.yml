@@ -163,7 +163,7 @@ jobs:
         run: ./gradlew --no-daemon -p probes/jvm jar
 
       - name: Test platform
-        run: ./gradlew --no-daemon -p platform test -Dtest.profile=integration
+        run: ./gradlew --no-daemon -p platform test -Dtest.profile=integration -Dtest.includeSlow=true
 
       - run: cd docker/e2e && docker-compose logs spp-platform > spp-platform.log
         if: ${{ always() }}
@@ -322,7 +322,7 @@ jobs:
   test-interface-cli:
     needs: [ verify-mono, build-platform ]
     runs-on: ubuntu-20.04
-    timeout-minutes: 10
+    timeout-minutes: 15
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-test-interface-cli
       cancel-in-progress: true
