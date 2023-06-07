@@ -15,9 +15,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package spp.platform.core
+package integration
 
-import integration.PlatformIntegrationTest
 import io.vertx.core.buffer.Buffer
 import io.vertx.core.json.JsonObject
 import io.vertx.ext.web.client.HttpRequest
@@ -690,17 +689,18 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
     }
 
     @Test
-    fun `ensure addLiveBreakpoint works`() = runBlocking {
+    fun `ensure addLiveBreakpoint works`(): Unit = runBlocking {
         val addLiveBreakpointResp = request.sendJsonObject(addLiveBreakpointRequest).await().bodyAsJsonObject()
         assertNull(addLiveBreakpointResp.getJsonArray("errors"))
         val liveBreakpoint = addLiveBreakpointResp.getJsonObject("data").getJsonObject("addLiveBreakpoint")
         val liveBreakpointLocation = liveBreakpoint.getJsonObject("location")
         assertEquals("doing", liveBreakpointLocation.getString("source"))
         assertEquals(17, liveBreakpointLocation.getInteger("line"))
+        instrumentService.removeLiveInstrument(liveBreakpoint.getString("id")).await()
     }
 
     @Test
-    fun `ensure getLiveBreakpoints works`() = runBlocking {
+    fun `ensure getLiveBreakpoints works`(): Unit = runBlocking {
         val addLiveBreakpointResp = request.sendJsonObject(addLiveBreakpointRequest).await().bodyAsJsonObject()
         assertNull(addLiveBreakpointResp.getJsonArray("errors"))
 
@@ -717,20 +717,25 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
             it as JsonObject
             it.getJsonObject("location").getInteger("line").equals(17)
         })
+        instrumentService.removeLiveInstrument(
+            addLiveBreakpointResp.getJsonObject("data")
+                .getJsonObject("addLiveBreakpoint").getString("id")
+        ).await()
     }
 
     @Test
-    fun `ensure addLiveLog works`() = runBlocking {
+    fun `ensure addLiveLog works`(): Unit = runBlocking {
         val addLiveLogResp = request.sendJsonObject(addLiveLogRequest).await().bodyAsJsonObject()
         assertNull(addLiveLogResp.getJsonArray("errors"))
         val liveLog = addLiveLogResp.getJsonObject("data").getJsonObject("addLiveLog")
         val liveLogLocation = liveLog.getJsonObject("location")
         assertEquals("doing", liveLogLocation.getString("source"))
         assertEquals(19, liveLogLocation.getInteger("line"))
+        instrumentService.removeLiveInstrument(liveLog.getString("id")).await()
     }
 
     @Test
-    fun `ensure getLiveLogs works`() = runBlocking {
+    fun `ensure getLiveLogs works`(): Unit = runBlocking {
         val addLiveLogResp = request.sendJsonObject(addLiveLogRequest).await().bodyAsJsonObject()
         assertNull(addLiveLogResp.getJsonArray("errors"))
 
@@ -748,19 +753,24 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
             it as JsonObject
             it.getJsonObject("location").getInteger("line").equals(19)
         })
+        instrumentService.removeLiveInstrument(
+            addLiveLogResp.getJsonObject("data")
+                .getJsonObject("addLiveLog").getString("id")
+        ).await()
     }
 
     @Test
-    fun `ensure addLiveSpan works`() = runBlocking {
+    fun `ensure addLiveSpan works`(): Unit = runBlocking {
         val addLiveSpanResp = request.sendJsonObject(addLiveSpanRequest).await().bodyAsJsonObject()
         assertNull(addLiveSpanResp.getJsonArray("errors"))
         val liveSpan = addLiveSpanResp.getJsonObject("data").getJsonObject("addLiveSpan")
         assertEquals("doing", liveSpan.getJsonObject("location").getString("source"))
         assertEquals("name-of-operation", liveSpan.getString("operationName"))
+        instrumentService.removeLiveInstrument(liveSpan.getString("id")).await()
     }
 
     @Test
-    fun `ensure getLiveSpans works`() = runBlocking {
+    fun `ensure getLiveSpans works`(): Unit = runBlocking {
         val addLiveSpanResp = request.sendJsonObject(addLiveSpanRequest).await().bodyAsJsonObject()
         assertNull(addLiveSpanResp.getJsonArray("errors"))
 
@@ -777,20 +787,25 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
             it as JsonObject
             it.getString("operationName").equals("name-of-operation")
         })
+        instrumentService.removeLiveInstrument(
+            addLiveSpanResp.getJsonObject("data")
+                .getJsonObject("addLiveSpan").getString("id")
+        ).await()
     }
 
     @Test
-    fun `ensure addLiveMeter works`() = runBlocking {
+    fun `ensure addLiveMeter works`(): Unit = runBlocking {
         val addLiveMeterResp = request.sendJsonObject(addLiveMeterRequest).await().bodyAsJsonObject()
         assertNull(addLiveMeterResp.getJsonArray("errors"))
         val liveMeter = addLiveMeterResp.getJsonObject("data").getJsonObject("addLiveMeter")
         val liveMeterLocation = liveMeter.getJsonObject("location")
         assertEquals("doing", liveMeterLocation.getString("source"))
         assertEquals(19, liveMeterLocation.getInteger("line"))
+        instrumentService.removeLiveInstrument(liveMeter.getString("id")).await()
     }
 
     @Test
-    fun `ensure getLiveMeters works`() = runBlocking {
+    fun `ensure getLiveMeters works`(): Unit = runBlocking {
         val addLiveMeterResp = request.sendJsonObject(addLiveMeterRequest).await().bodyAsJsonObject()
         assertNull(addLiveMeterResp.getJsonArray("errors"))
 
@@ -807,6 +822,10 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
             it as JsonObject
             it.getJsonObject("location").getInteger("line").equals(19)
         })
+        instrumentService.removeLiveInstrument(
+            addLiveMeterResp.getJsonObject("data")
+                .getJsonObject("addLiveMeter").getString("id")
+        ).await()
     }
 
     @Test
@@ -857,7 +876,7 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
     }
 
     @Test
-    fun `ensure getLiveInstruments works`() = runBlocking {
+    fun `ensure getLiveInstruments works`(): Unit = runBlocking {
         val addLiveBreakpointResp = request.sendJsonObject(addLiveBreakpointRequest).await().bodyAsJsonObject()
         assertNull(addLiveBreakpointResp.getJsonArray("errors"))
 
@@ -868,6 +887,10 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
 
         val liveViews = getLiveInstrumentsResp.getJsonObject("data").getJsonArray("getLiveInstruments")
         assertFalse(liveViews.isEmpty)
+        instrumentService.removeLiveInstrument(
+            addLiveBreakpointResp.getJsonObject("data")
+                .getJsonObject("addLiveBreakpoint").getString("id")
+        ).await()
     }
 
     @Test
@@ -918,15 +941,6 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
             it as JsonObject
             it.getString("id").equals(liveBreakpointId)
         })
-    }
-
-    @Test
-    fun `ensure clearLiveInstruments works`() = runBlocking {
-        val clearLiveInstrumentsResp =
-            request.sendJsonObject(JsonObject().put("query", getGraphql("instrument/clear-live-instruments")))
-                .await().bodyAsJsonObject()
-        assertNull(clearLiveInstrumentsResp.getJsonArray("errors"))
-        assertNotNull(clearLiveInstrumentsResp.getJsonObject("data").getBoolean("clearLiveInstruments"))
     }
 
     @Test
