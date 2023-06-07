@@ -25,8 +25,8 @@ object SystemConfig {
     private val registeredConfigurations = ConcurrentHashSet<SystemConfiguration<*>>()
 
     fun <T> register(config: SystemConfiguration<T>): SystemConfiguration<T> {
-        if (registeredConfigurations.any { it.name == config.name }) {
-            throw IllegalArgumentException("System config ${config.name} already registered")
+        require(registeredConfigurations.none { it.name == config.name }) {
+            "System config ${config.name} already registered"
         }
 
         registeredConfigurations.add(config)

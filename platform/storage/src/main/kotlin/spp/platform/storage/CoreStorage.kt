@@ -133,9 +133,7 @@ interface CoreStorage {
     suspend fun namespace(location: String): String = location
 
     fun generateClientAccess(id: String? = null, secret: String? = null): ClientAccess {
-        if (id?.isBlank() == true || secret?.isBlank() == true) {
-            throw IllegalArgumentException("id and secret must be non-blank")
-        }
+        require(id?.isBlank() != true && secret?.isBlank() != true) { "id and secret must be non-blank" }
         return ClientAccess(id ?: generateClientId(), secret ?: generateClientSecret())
     }
 

@@ -325,9 +325,7 @@ open class RedisStorage(val vertx: Vertx) : CoreStorage {
 
     override suspend fun updateLiveInstrument(id: String, instrument: LiveInstrument): LiveInstrument {
         return if (getLiveInstrument(id) == null) {
-            if (getArchiveLiveInstrument(id) == null) {
-                throw IllegalArgumentException("Live instrument with id $id does not exist")
-            }
+            require(getArchiveLiveInstrument(id) != null) { "Live instrument with id $id does not exist" }
 
             redis.set(listOf(namespace("live_instruments_archive:$id"), Json.encode(instrument))).await()
             instrument
@@ -464,9 +462,7 @@ open class RedisStorage(val vertx: Vertx) : CoreStorage {
 
     override suspend fun refreshClientAccess(id: String): ClientAccess {
         val clientAccessors = getClientAccessors()
-        if (clientAccessors.find { it.id == id } == null) {
-            throw IllegalArgumentException("Client accessor with id $id does not exist")
-        }
+        require(clientAccessors.any { it.id == id }) { "Client accessor with id $id does not exist" }
 
         var clientAccess: ClientAccess? = null
         redisClient.batch(
