@@ -358,8 +358,15 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
     ): Future<List<LiveInstrumentEvent>> {
         val devAuth = Vertx.currentContext().getLocal<DeveloperAuth>("developer")
         log.info(
-            "Received get live instrument events request. Developer: {} - Instrument ids: {} - From: {} - To: {} - Offset: {} - Limit: {}",
-            devAuth, instrumentIds, from, to, offset, limit
+            buildString {
+                append("Received get live instrument events request. ")
+                append("Developer: {} - ")
+                append("Instrument ids: {} - ")
+                append("From: {} - ")
+                append("To: {} - ")
+                append("Offset: {} - ")
+                append("Limit: {}")
+            }, devAuth, instrumentIds, from, to, offset, limit
         )
 
         val promise = Promise.promise<List<LiveInstrumentEvent>>()

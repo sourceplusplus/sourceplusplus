@@ -32,27 +32,21 @@ class ExpiresAtLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
     @Test
     fun `expires at breakpoint`() = runBlocking {
-        //add live breakpoint
-        instrumentService.addLiveInstrument(
+        val instrument = instrumentService.addLiveInstrument(
             LiveBreakpoint(
-                location = LiveSourceLocation(
-                    "non-existent-class",
-                    0,
-                ),
+                location = LiveSourceLocation("non-existent-class", 0),
                 expiresAt = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(5),
-                id = testNameAsInstrumentId
+                id = testNameAsUniqueInstrumentId
             )
         ).await()
 
         //verify live breakpoint
-        val breakpoint = instrumentService.getLiveInstrument(testNameAsInstrumentId).await()
-        assertNotNull(breakpoint)
+        assertNotNull(instrumentService.getLiveInstrument(instrument.id!!).await())
 
         //wait 10 seconds
         delay(TimeUnit.SECONDS.toMillis(10))
 
         //verify no live breakpoint
-        val noBreakpoint = instrumentService.getLiveInstrument(testNameAsInstrumentId).await()
-        assertNull(noBreakpoint)
+        assertNull(instrumentService.getLiveInstrument(instrument.id!!).await())
     }
 }

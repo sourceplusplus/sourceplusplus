@@ -153,6 +153,7 @@ class ServiceProvider(
         return promise.future()
     }
 
+    @Suppress("MaxLineLength") //todo: clean up (#892/#930)
     private fun validateRolePermission(
         selfInfo: SelfInfo,
         msg: Message<JsonObject>,
