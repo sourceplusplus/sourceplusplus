@@ -376,6 +376,16 @@ jobs:
           ./gradlew --no-daemon -Dtest.profile=integration \
             :interfaces:cli:test
 
+      - run: cd docker/e2e && docker-compose logs spp-platform > spp-platform.log
+        if: ${{ always() }}
+
+      - name: Upload docker logs artifact
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-interface-cli-platform-logs
+          path: docker/e2e/spp-platform.log
+
   test-interface-jetbrains:
     needs: [ verify-mono ]
     runs-on: ubuntu-20.04
