@@ -38,16 +38,12 @@ class RemoveInstrumentsTest : LiveInstrumentIntegrationTest() {
         val instruments = instrumentService.addLiveInstruments(
             listOf(
                 LiveBreakpoint(
-                    location = LiveSourceLocation(
-                        RemoveInstrumentsTest::class.java.name,
-                        1,
-                    )
+                    location = LiveSourceLocation(RemoveInstrumentsTest::class.java.name, service = "spp-test-probe"),
+                    id = testNameAsUniqueInstrumentId
                 ),
                 LiveBreakpoint(
-                    location = LiveSourceLocation(
-                        RemoveInstrumentsTest::class.java.name,
-                        1,
-                    )
+                    location = LiveSourceLocation(RemoveInstrumentsTest::class.java.name, service = "spp-test-probe"),
+                    id = testNameAsUniqueInstrumentId
                 )
             )
         ).await()
@@ -58,7 +54,7 @@ class RemoveInstrumentsTest : LiveInstrumentIntegrationTest() {
             override fun onInstrumentRemovedEvent(event: LiveInstrumentRemoved) {
                 testContext.verify {
                     assertEquals(
-                        LiveSourceLocation(RemoveInstrumentsTest::class.java.name, 1),
+                        LiveSourceLocation(RemoveInstrumentsTest::class.java.name, service = "spp-test-probe"),
                         event.instrument.location
                     )
 
@@ -73,10 +69,7 @@ class RemoveInstrumentsTest : LiveInstrumentIntegrationTest() {
         }
 
         val removeInstruments = instrumentService.removeLiveInstruments(
-            LiveSourceLocation(
-                RemoveInstrumentsTest::class.java.name,
-                1,
-            )
+            LiveSourceLocation(RemoveInstrumentsTest::class.java.name, service = "spp-test-probe")
         ).await()
         assertEquals(2, removeInstruments.size)
 
