@@ -53,7 +53,8 @@ class LiveLogTest : LiveInstrumentIntegrationTest() {
         var gotHit = false
         var gotRemoved = false
 
-        vertx.addLiveInstrumentListener(testNameAsInstrumentId, object : LiveInstrumentListener {
+        val instrumentId = testNameAsUniqueInstrumentId
+        vertx.addLiveInstrumentListener(instrumentId, object : LiveInstrumentListener {
             override fun onLogAddedEvent(event: LiveInstrumentAdded) {
                 if (gotAdded) {
                     testContext.failNow("Got added twice")
@@ -96,7 +97,7 @@ class LiveLogTest : LiveInstrumentIntegrationTest() {
 
         instrumentService.addLiveInstrument(
             LiveLog(
-                id = testNameAsInstrumentId,
+                id = instrumentId,
                 location = LiveSourceLocation(
                     LiveLogTest::class.java.name,
                     getLineNumber("done"),
@@ -115,10 +116,12 @@ class LiveLogTest : LiveInstrumentIntegrationTest() {
     @Test
     fun removeLogById(): Unit = runBlocking {
         val testContext = VertxTestContext()
-        vertx.addLiveInstrumentListener(testNameAsInstrumentId, object : LiveInstrumentListener {
+
+        val instrumentId = testNameAsUniqueInstrumentId
+        vertx.addLiveInstrumentListener(instrumentId, object : LiveInstrumentListener {
             override fun onLogAddedEvent(event: LiveInstrumentAdded) {
                 log.info("Got added event: {}", event)
-                instrumentService.removeLiveInstrument(testNameAsInstrumentId).onComplete {
+                instrumentService.removeLiveInstrument(instrumentId).onComplete {
                     if (it.failed()) {
                         testContext.failNow(it.cause())
                     }
@@ -133,7 +136,7 @@ class LiveLogTest : LiveInstrumentIntegrationTest() {
 
         val instrument = instrumentService.addLiveInstrument(
             LiveLog(
-                id = testNameAsInstrumentId,
+                id = instrumentId,
                 location = LiveSourceLocation(
                     "FakeClass",
                     4,
@@ -143,7 +146,7 @@ class LiveLogTest : LiveInstrumentIntegrationTest() {
                 logFormat = "removeById"
             )
         ).await()
-        assertEquals(testNameAsInstrumentId, instrument.id!!)
+        assertEquals(instrumentId, instrument.id)
         log.info("Added instrument: {}", instrument)
 
         errorOnTimeout(testContext)
@@ -151,9 +154,9 @@ class LiveLogTest : LiveInstrumentIntegrationTest() {
 
     @Test
     fun removeByLocation(): Unit = runBlocking {
-        instrumentService.addLiveInstrument(
+        val instrument = instrumentService.addLiveInstrument(
             LiveLog(
-                id = testNameAsInstrumentId,
+                id = testNameAsUniqueInstrumentId,
                 location = LiveSourceLocation("bad.Clazz", 133),
                 condition = "1==2",
                 logFormat = "removeByLocation"
@@ -165,7 +168,7 @@ class LiveLogTest : LiveInstrumentIntegrationTest() {
         ).await()
 
         assertEquals(1, removedInstruments.size)
-        assertEquals(testNameAsInstrumentId, removedInstruments[0].id!!)
+        assertEquals(instrument.id, removedInstruments[0].id)
     }
 
     @Test
@@ -178,7 +181,7 @@ class LiveLogTest : LiveInstrumentIntegrationTest() {
         instrumentService.addLiveInstruments(
             listOf(
                 LiveLog(
-                    id = "$testNameAsInstrumentId-1",
+                    id = "$testNameAsUniqueInstrumentId-1",
                     location = LiveSourceLocation(
                         LiveLogTest::class.java.name,
                         100,
@@ -188,7 +191,7 @@ class LiveLogTest : LiveInstrumentIntegrationTest() {
                     logFormat = "removeMultipleByLocation"
                 ),
                 LiveLog(
-                    id = "$testNameAsInstrumentId-2",
+                    id = "$testNameAsUniqueInstrumentId-2",
                     location = LiveSourceLocation(
                         LiveLogTest::class.java.name,
                         100,
@@ -241,7 +244,8 @@ class LiveLogTest : LiveInstrumentIntegrationTest() {
                 ),
                 condition = "1===2",
                 logFormat = "addLogWithInvalidCondition",
-                applyImmediately = true
+                applyImmediately = true,
+                id = testNameAsUniqueInstrumentId
             )
         ).onComplete {
             if (it.failed()) {
