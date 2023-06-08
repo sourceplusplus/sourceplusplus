@@ -786,9 +786,7 @@ class LiveManagementServiceImpl(
         log.trace { "Adding developer with id: $id" }
         val promise = Promise.promise<Developer>()
         launch(vertx.dispatcher()) {
-            if (authorizationCode != null && authorizationCode.length < 8) {
-                promise.fail("Authorization code must be at least 8 characters long")
-            } else if (SourceStorage.hasDeveloper(id)) {
+            if (SourceStorage.hasDeveloper(id)) {
                 promise.fail("Existing developer: $id")
             } else if (authorizationCode != null && SourceStorage.isExistingAuthorizationCode(authorizationCode)) {
                 promise.fail("Existing authorization code: $authorizationCode")
