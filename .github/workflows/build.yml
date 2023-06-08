@@ -192,7 +192,7 @@ jobs:
   test-probe-jvm:
     needs: [ verify-mono, build-platform ]
     runs-on: ubuntu-20.04
-    timeout-minutes: 10
+    timeout-minutes: 15
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-test-probe-jvm
       cancel-in-progress: true
