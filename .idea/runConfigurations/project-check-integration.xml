@@ -21,6 +21,7 @@
           <option value=":probes:jvm:boot:check" />
           <option value=":probes:jvm:common:check" />
           <option value=":probes:jvm:services:check" />
+          <option value=":interfaces:cli:check" />
           <option value=":interfaces:jetbrains:commander:check" />
           <option value=":interfaces:jetbrains:commander:kotlin-compiler-wrapper:check" />
           <option value=":interfaces:jetbrains:core:check" />
