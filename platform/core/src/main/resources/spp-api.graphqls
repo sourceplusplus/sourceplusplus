@@ -558,6 +558,7 @@ type Query {
     version: String!
     timeInfo: TimeInfo!
 
+    getAccessToken(authorizationCode: String!): String!
     getAccessPermissions: [AccessPermission!]!
     getAccessPermission(id: String!): AccessPermission!
     getRoleAccessPermissions(role: String!): [AccessPermission!]!

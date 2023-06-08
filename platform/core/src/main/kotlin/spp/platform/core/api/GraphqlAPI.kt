@@ -181,6 +181,7 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
     private fun withQueryFetchers(builder: TypeRuntimeWiring.Builder): TypeRuntimeWiring.Builder {
         return builder.dataFetcher("version", this::version)
             .dataFetcher("timeInfo", this::timeInfo)
+            .dataFetcher("getAccessToken", this::getAccessToken)
             .dataFetcher("getAccessPermissions", this::getAccessPermissions)
             .dataFetcher("getAccessPermission", this::getAccessPermission)
             .dataFetcher("getRoleAccessPermissions", this::getRoleAccessPermissions)
@@ -255,6 +256,10 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
 
     private fun timeInfo(env: DataFetchingEnvironment): CompletableFuture<TimeInfo> =
         getLiveManagementService(env).compose { it.getTimeInfo() }.toCompletionStage().toCompletableFuture()
+
+    private fun getAccessToken(env: DataFetchingEnvironment): CompletableFuture<String> =
+        getLiveManagementService(env).compose { it.getAccessToken(env.getArgument("authorizationCode")) }
+            .toCompletionStage().toCompletableFuture()
 
     private fun getAccessPermissions(env: DataFetchingEnvironment): CompletableFuture<List<AccessPermission>> =
         getLiveManagementService(env).compose { it.getAccessPermissions() }.toCompletionStage().toCompletableFuture()
