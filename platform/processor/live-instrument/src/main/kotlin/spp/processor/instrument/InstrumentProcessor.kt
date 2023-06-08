@@ -269,5 +269,6 @@ object InstrumentProcessor : FeedbackProcessor() {
                 vertx.eventBus().publish(toLiveInstrumentSubscriberAddress(it.id), eventJson)
             }
         }
+        log.debug("Published event for instrument {}: {}", instrument.id, eventJson)
     }
 }
