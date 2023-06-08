@@ -54,6 +54,14 @@ spp-platform:
         replacement: "<Password>"
 
 live-presets:
+  uncaught-exception:
+    enabled: ${SPP_PRESET_UNCAUGHT_EXCEPTIONS_ENABLED:-true}
+    instruments:
+      - id: "spp_uncaught_exception"
+        type: "BREAKPOINT"
+        hitLimit: -1
+        location:
+          source: "spp.probe.services.LiveInstrumentRemote.dispatchUncaughtException(...)"
   junit:
     enabled: ${SPP_PRESET_JUNIT_ENABLED:-false}
     instruments:
