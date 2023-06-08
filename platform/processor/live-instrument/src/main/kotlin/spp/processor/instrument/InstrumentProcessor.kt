@@ -41,7 +41,7 @@ import spp.platform.common.FeedbackProcessor
 import spp.platform.storage.SourceStorage
 import spp.processor.instrument.config.InstrumentConfig
 import spp.processor.instrument.impl.LiveInstrumentServiceImpl
-import spp.protocol.instrument.*
+import spp.protocol.instrument.LiveInstrument
 import spp.protocol.instrument.event.LiveInstrumentEvent
 import spp.protocol.platform.auth.AccessChecker
 import spp.protocol.platform.auth.RolePermission
@@ -248,12 +248,7 @@ object InstrumentProcessor : FeedbackProcessor() {
 
     fun removeInternalMeta(it: LiveInstrument?): LiveInstrument? {
         if (it == null) return null
-        return when (it) {
-            is LiveBreakpoint -> it.copy(meta = it.meta.filterKeys { !it.startsWith("spp.") }.toMutableMap())
-            is LiveLog -> it.copy(meta = it.meta.filterKeys { !it.startsWith("spp.") }.toMutableMap())
-            is LiveMeter -> it.copy(meta = it.meta.filterKeys { !it.startsWith("spp.") }.toMutableMap())
-            is LiveSpan -> it.copy(meta = it.meta.filterKeys { !it.startsWith("spp.") }.toMutableMap())
-        }
+        return it.copy(meta = it.meta.filterKeys { !it.startsWith("spp.") }.toMutableMap())
     }
 
     suspend fun sendEventToSubscribers(instrument: LiveInstrument, event: LiveInstrumentEvent) {
