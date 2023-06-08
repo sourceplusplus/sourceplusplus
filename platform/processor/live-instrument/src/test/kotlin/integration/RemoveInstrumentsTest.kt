@@ -35,6 +35,7 @@ class RemoveInstrumentsTest : LiveInstrumentIntegrationTest() {
     fun `remove multiple by location`() = runBlocking {
         val testContext = VertxTestContext()
 
+        log.info("Adding instruments")
         val instruments = instrumentService.addLiveInstruments(
             listOf(
                 LiveBreakpoint(
@@ -48,6 +49,7 @@ class RemoveInstrumentsTest : LiveInstrumentIntegrationTest() {
             )
         ).await()
         assertEquals(2, instruments.size)
+        log.info("Added ${instruments.size} instruments")
 
         val removedCount = AtomicInteger()
         val listener = object : LiveInstrumentListener {
