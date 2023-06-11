@@ -859,9 +859,9 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
         val rtnMap = (JsonObject.mapFrom(traceSpan).map as Map<String, Any>).toMutableMap()
         rtnMap["startTime"] = traceSpan.startTime.toEpochMilli()
         rtnMap["endTime"] = traceSpan.endTime.toEpochMilli()
-        val tags = rtnMap["tags"] as LinkedHashMap<String, String>
+        val tags = rtnMap["tags"] as LinkedHashMap<*, *>
         rtnMap["tags"] = tags.map { mapOf("key" to it.key, "value" to it.value) }.toTypedArray()
-        val meta = rtnMap["meta"] as LinkedHashMap<String, String>
+        val meta = rtnMap["meta"] as LinkedHashMap<*, *>
         rtnMap["meta"] = meta.map { mapOf("key" to it.key, "value" to it.value) }.toTypedArray()
         return rtnMap
     }
