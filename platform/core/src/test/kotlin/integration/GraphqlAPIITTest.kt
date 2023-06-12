@@ -1122,9 +1122,15 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
             )
         )
 
-    private val addLiveBreakpointRequest: JsonObject =
-        JsonObject().put("query", getGraphql("instrument/add-live-breakpoint"))
-            .put("variables", JsonObject().put("input", mapOf("location" to mapOf("source" to "doing", "line" to 17))))
+    private val addLiveBreakpointRequest = JsonObject().put("query", getGraphql("instrument/add-live-breakpoint")).put(
+        "variables", JsonObject().put(
+            "input",
+            mapOf(
+                "id" to testNameAsUniqueInstrumentId,
+                "location" to mapOf("source" to "doing", "line" to 17)
+            )
+        )
+    )
 
     private val addLiveLogRequest = JsonObject().put("query", getGraphql("instrument/add-live-log")).put(
         "variables",
