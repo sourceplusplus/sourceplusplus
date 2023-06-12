@@ -34,7 +34,11 @@ class RedisStorageITTest : BaseStorageITTest<RedisStorage>() {
                     "storage",
                     JsonObject()
                         .put("selector", "redis")
-                        .put("redis", JsonObject())
+                        .put(
+                            "redis",
+                            JsonObject()
+                                .put("install_defaults", "false")
+                        )
                 )
         }
     }

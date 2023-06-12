@@ -94,7 +94,7 @@ abstract class BaseStorageITTest<T : CoreStorage> {
     fun getDevelopers(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
         val devId = testNameAsUniqueInstrumentId
         storageInstance.addDeveloper(devId, "code")
-        assertTrue(storageInstance.getDevelopers().size >= 2)
+        assertTrue(storageInstance.getDevelopers().isNotEmpty())
         assertNotNull(storageInstance.getDevelopers().find { it.id == devId })
     }
 
@@ -440,7 +440,6 @@ abstract class BaseStorageITTest<T : CoreStorage> {
         val id = testNameAsUniqueInstrumentId
         val secret = testNameAsUniqueInstrumentId
         assertNull(storageInstance.getClientAccess(id))
-        assertTrue(storageInstance.getClientAccessors().isNotEmpty())
 
         storageInstance.addClientAccess(id, secret)
         val clientAccess = storageInstance.getClientAccess(id)
