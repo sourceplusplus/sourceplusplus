@@ -157,6 +157,20 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
         }
     }
 
+    override fun getRules(): Future<List<ViewRule>> {
+        val rules = mutableListOf<ViewRule>()
+        meterProcessService.converts().forEach { convert ->
+            if (convert !is LiveMetricConvert) return@forEach
+            val rule = convert.config.getLiveMetricsRules().first().rule
+            rules.add(rule.copy(name = "spp_" + rule.name))
+        }
+        return Future.succeededFuture(rules)
+    }
+
+    override fun getRule(ruleName: String): Future<ViewRule?> {
+        return getRules().map { it.firstOrNull { it.name == ruleName } }
+    }
+
     override fun saveRule(rule: ViewRule): Future<ViewRule> {
         //check for existing rule
         val exitingRule = meterProcessService.converts().any { ruleset ->

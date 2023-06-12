@@ -78,7 +78,7 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
             hitLimit = 1
         )
 
-        viewService.saveRule(
+        val viewRule = viewService.saveRule(
             ViewRule(
                 name = liveMeter.id!!,
                 exp = buildString {
@@ -141,6 +141,7 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
         //clean up
         consumer.unregister()
         assertNotNull(viewService.removeLiveView(subscriptionId).await())
+        assertNotNull(viewService.deleteRule(viewRule.name).await())
     }
 
     @Test
@@ -162,7 +163,7 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
             hitLimit = 1
         )
 
-        viewService.saveRule(
+        val viewRule = viewService.saveRule(
             ViewRule(
                 name = liveMeter.id!!,
                 exp = buildString {
@@ -206,5 +207,6 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
         //clean up
         consumer.unregister()
         assertNotNull(viewService.removeLiveView(subscriptionId).await())
+        assertNotNull(viewService.deleteRule(viewRule.name).await())
     }
 }

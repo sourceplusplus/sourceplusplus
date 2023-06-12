@@ -539,6 +539,18 @@ type SelectedRecord {
     refId: String
 }
 
+type RulePartition {
+    find: String!
+    replace: String!
+}
+
+type ViewRule {
+    name: String!
+    exp: String!
+    partitions: [RulePartition!]!
+    meterIds: [String!]!
+}
+
 enum MetricScope {
     All,
     Service,
@@ -611,6 +623,8 @@ type Query {
     ): [SelectedRecord!]!
     getClientAccessors: [ClientAccess!]!
 
+    getRules: [ViewRule!]!
+    getRule(ruleName: String!): ViewRule
     getLiveViews: [LiveView!]!
     getHistoricalMetrics(
         entityIds: [String!]!,

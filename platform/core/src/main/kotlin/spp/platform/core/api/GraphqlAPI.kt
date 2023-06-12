@@ -68,6 +68,7 @@ import spp.protocol.service.LiveViewService
 import spp.protocol.view.HistoricalView
 import spp.protocol.view.LiveView
 import spp.protocol.view.LiveViewConfig
+import spp.protocol.view.rule.ViewRule
 import java.time.Instant
 import java.util.*
 import java.util.concurrent.CompletableFuture
@@ -208,6 +209,8 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
             .dataFetcher("getEndpoints", this::getEndpoints)
             .dataFetcher("searchEndpoints", this::searchEndpoints)
             .dataFetcher("sortMetrics", this::sortMetrics)
+            .dataFetcher("getRules", this::getRules)
+            .dataFetcher("getRule", this::getRule)
             .dataFetcher("getLiveViews", this::getLiveViews)
             .dataFetcher("getHistoricalMetrics", this::getHistoricalMetrics)
             .dataFetcher("getClientAccessors", this::getClientAccessors)
@@ -725,6 +728,13 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
         return getLiveViewService(env).compose { it.addLiveView(subscription) }.toCompletionStage()
             .toCompletableFuture()
     }
+
+    private fun getRules(env: DataFetchingEnvironment): CompletableFuture<List<ViewRule>> =
+        getLiveViewService(env).compose { it.getRules() }.toCompletionStage().toCompletableFuture()
+
+    private fun getRule(env: DataFetchingEnvironment): CompletableFuture<ViewRule?> =
+        getLiveViewService(env).compose { it.getRule(env.getArgument("ruleName")) }
+            .toCompletionStage().toCompletableFuture()
 
     private fun getLiveViews(env: DataFetchingEnvironment): CompletableFuture<List<LiveView>> =
         getLiveViewService(env).compose { it.getLiveViews() }.toCompletionStage().toCompletableFuture()
