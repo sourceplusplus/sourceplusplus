@@ -717,18 +717,11 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
 
     private fun saveRule(env: DataFetchingEnvironment): CompletableFuture<ViewRule> {
         val input = JsonObject.mapFrom(env.getArgument("input"))
-        val partitions = input.getJsonArray("partitions").list.map {
-            val partition = it as JsonObject
-            RulePartition(
-                partition.getString("find"),
-                partition.getString("replace")
-            )
-        }
         val viewRule = ViewRule(
             name = input.getString("name"),
             exp = input.getString("exp"),
-            partitions = partitions,
-            meterIds = input.getJsonArray("meterIds").list.map { it as String },
+            partitions = (input.map["partitions"] as List<*>).map { RulePartition(JsonObject.mapFrom(it)) },
+            meterIds = (input.map["meterIds"] as List<*>).map { it.toString() },
         )
         return getLiveViewService(env).compose { it.saveRule(viewRule) }.toCompletionStage().toCompletableFuture()
     }
