@@ -246,7 +246,7 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
         }
 
         val promise = Promise.promise<List<LiveInstrument>>()
-        CompositeFuture.all(results).onComplete {
+        Future.all(results).onComplete {
             if (it.succeeded()) {
                 promise.complete(it.result().list())
             } else {
@@ -299,7 +299,7 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
             val metersResult = removeInstruments(devAuth, location, LiveInstrumentType.METER)
             val spansResult = removeInstruments(devAuth, location, LiveInstrumentType.SPAN)
 
-            CompositeFuture.all(breakpointsResult, logsResult, metersResult, spansResult).onComplete {
+            Future.all(breakpointsResult, logsResult, metersResult, spansResult).onComplete {
                 if (it.succeeded()) {
                     promise.complete(
                         it.result().list<List<LiveInstrument>>().flatten().mapNotNull { removeInternalMeta(it) }
