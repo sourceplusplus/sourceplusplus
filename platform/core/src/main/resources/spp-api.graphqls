@@ -539,6 +539,11 @@ type SelectedRecord {
     refId: String
 }
 
+input RulePartitionInput {
+    find: String!
+    replace: String!
+}
+
 type RulePartition {
     find: String!
     replace: String!
@@ -548,6 +553,13 @@ type ViewRule {
     name: String!
     exp: String!
     partitions: [RulePartition!]!
+    meterIds: [String!]!
+}
+
+input ViewRuleInput {
+    name: String!
+    exp: String!
+    partitions: [RulePartitionInput!]!
     meterIds: [String!]!
 }
 
@@ -673,6 +685,7 @@ type Mutation {
     addLiveMeter(input: LiveMeterInput!): LiveMeter!
     addLiveSpan(input: LiveSpanInput!): LiveSpan!
 
+    saveRule(input: ViewRuleInput!): ViewRule!
     addLiveView(input: LiveViewInput!): LiveView!
     clearLiveViews: Boolean!
 

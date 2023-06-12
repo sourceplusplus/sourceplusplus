@@ -68,6 +68,7 @@ import spp.protocol.service.LiveViewService
 import spp.protocol.view.HistoricalView
 import spp.protocol.view.LiveView
 import spp.protocol.view.LiveViewConfig
+import spp.protocol.view.rule.RulePartition
 import spp.protocol.view.rule.ViewRule
 import java.time.Instant
 import java.util.*
@@ -246,6 +247,7 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
             .dataFetcher("addLiveLog", this::addLiveLog)
             .dataFetcher("addLiveMeter", this::addLiveMeter)
             .dataFetcher("addLiveSpan", this::addLiveSpan)
+            .dataFetcher("saveRule", this::saveRule)
             .dataFetcher("addLiveView", this::addLiveView)
             .dataFetcher("clearLiveViews", this::clearLiveViews)
             .dataFetcher("addClientAccess", this::addClientAccess)
@@ -711,6 +713,24 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
         )
         return getLiveInstrumentService(env).compose { it.addLiveInstrument(instrument) }.map { fixJsonMaps(it) }
             .toCompletionStage().toCompletableFuture()
+    }
+
+    private fun saveRule(env: DataFetchingEnvironment): CompletableFuture<ViewRule> {
+        val input = JsonObject.mapFrom(env.getArgument("input"))
+        val partitions = input.getJsonArray("partitions").list.map {
+            val partition = it as JsonObject
+            RulePartition(
+                partition.getString("find"),
+                partition.getString("replace")
+            )
+        }
+        val viewRule = ViewRule(
+            name = input.getString("name"),
+            exp = input.getString("exp"),
+            partitions = partitions,
+            meterIds = input.getJsonArray("meterIds").list.map { it as String },
+        )
+        return getLiveViewService(env).compose { it.saveRule(viewRule) }.toCompletionStage().toCompletableFuture()
     }
 
     private fun addLiveView(env: DataFetchingEnvironment): CompletableFuture<LiveView> {
