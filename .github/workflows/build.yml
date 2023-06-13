@@ -110,7 +110,7 @@ jobs:
       cancel-in-progress: true
     strategy:
       matrix:
-        test_profile: [ 'unit', 'integration',
+        test_profile: [ 'unit', 'integration' ]
 
     steps:
       - uses: docker-practice/actions-setup-docker@master
