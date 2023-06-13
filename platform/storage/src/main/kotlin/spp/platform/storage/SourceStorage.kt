@@ -420,21 +420,6 @@ object SourceStorage {
         return getDeveloperRoles(id).any { getRolePermissions(it).contains(permission) }
     }
 
-    suspend fun requiresPermission(
-        id: String,
-        permission: RolePermission,
-        completableFuture: CompletableFuture<*>
-    ): Boolean {
-        return if (hasPermission(id, permission)) {
-            false
-        } else {
-            completableFuture.completeExceptionally(
-                PermissionAccessDenied(permission, "Developer '$id' missing permission: $permission")
-            )
-            true
-        }
-    }
-
     fun isValidClientAccess(clientId: String, clientSecret: String?): Future<Void> {
         val promise = Promise.promise<Void>()
         val authEnabled = config.getJsonObject("client-access")?.getString("enabled")?.toBooleanStrictOrNull()
