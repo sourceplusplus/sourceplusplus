@@ -106,11 +106,11 @@ jobs:
     runs-on: ubuntu-20.04
     timeout-minutes: 25
     concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}-test-platform-${{ matrix.test_profile }}
+      group: ${{ github.workflow }}-${{ github.ref }}-test-platform-${{ matrix.test_module }}
       cancel-in-progress: true
     strategy:
       matrix:
-        test_profile: [ 'unit', 'integration' ]
+        test_module: [ 'bridge', 'common', 'core', 'processor:live-view', 'processor:live-instrument', 'storage' ]
 
     steps:
       - uses: docker-practice/actions-setup-docker@master
@@ -163,10 +163,10 @@ jobs:
           until $(curl --header "Authorization: Bearer ${{ env.SPP_JWT_TOKEN }}" --output /dev/null --silent --fail http://localhost:12800/health); do printf '.'; sleep 5; done
 
       - name: Build probe
-        run: ./gradlew --no-daemon -p probes/jvm jar
+        run: ./gradlew --no-daemon :probes:jvm:jar
 
       - name: Test platform
-        run: ./gradlew --no-daemon -p platform test -Dtest.profile=${{ matrix.test_profile }} -Dtest.includeSlow=true
+        run: ./gradlew --no-daemon :platform:${{ matrix.test_module }}:test -Dtest.profile=integration -Dtest.includeSlow=true
 
       - run: cd docker/e2e && docker-compose logs spp-platform > spp-platform.log
         if: ${{ always() }}
@@ -175,21 +175,21 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ matrix.test_profile }}-platform-logs
+          name: ${{ matrix.test_module }}-platform-logs
           path: docker/e2e/spp-platform.log
 
       - name: Upload test-live-instrument.log artifact
         if: ${{ always() }}
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ matrix.test_profile }}-live-instrument.log
+          name: ${{ matrix.test_module }}-live-instrument.log
           path: /tmp/spp-probe/logs/test-live-instrument.log
 
       - name: Upload test-live-view.log artifact
         if: ${{ always() }}
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ matrix.test_profile }}-live-view.log
+          name: ${{ matrix.test_module }}-live-view.log
           path: /tmp/spp-probe/logs/test-live-view.log
 
   test-probe-jvm:
