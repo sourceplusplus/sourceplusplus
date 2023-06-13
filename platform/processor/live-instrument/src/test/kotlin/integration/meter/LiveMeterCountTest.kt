@@ -107,6 +107,7 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
         }
 
         errorOnTimeout(testContext)
+        log.info("Total count: {}", totalCount)
 
         //clean up
         consumer.unregister()
@@ -170,6 +171,7 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
         }
 
         errorOnTimeout(testContext)
+        log.info("Total count: {}", totalCount)
 
         //clean up
         consumer.unregister()
@@ -258,6 +260,7 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
         count3()
 
         errorOnTimeout(testContext)
+        log.info("Total count: {}", totalCount)
 
         //clean up
         consumer1.unregister()
