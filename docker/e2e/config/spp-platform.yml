@@ -106,6 +106,14 @@ live-presets:
             replace: "spp_junit_test_successful_$partition$"
           - find: "spp_junit_test_failed"
             replace: "spp_junit_test_failed_$partition$"
+  jvm-probe:
+    enabled: ${SPP_PRESET_JVM_PROBE_ENABLED:-false}
+    instruments:
+      - id: "spp_meter_sender_transform"
+        type: "BREAKPOINT"
+        location:
+          source: "org.apache.skywalking.apm.agent.core.meter.MeterSender.transform(...)"
+        hitLimit: -1
 
 client-access:
   enabled: ${SPP_CLIENT_ACCESS_ENABLED:-false}

@@ -28,6 +28,7 @@ services:
       - SPP_STORAGE_HOST=redis
       - SPP_STORAGE_CLUSTER_ENABLED=true
       - SPP_PRESET_JUNIT_ENABLED=true
+      - SPP_PRESET_JVM_PROBE_ENABLED=true
       - SW_OAL_ENGINE_DEBUG=Y
       - SW_ENABLE_UPDATE_UI_TEMPLATE=true
 #      - SW_TELEMETRY=prometheus
