@@ -97,11 +97,11 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
 
                     val bootInstruments = SourceStorage.getLiveInstruments()
                     val bootCommand = LiveInstrumentCommand(
-                        CommandType.SET_INITIAL_INSTRUMENTS,
+                        CommandType.ADD_LIVE_INSTRUMENT,
                         bootInstruments.mapNotNull { removeInternalMeta(it) }.toSet()
                     )
 
-                    dispatchCommand(SourceStorage.getSystemAccessToken(vertx), bootCommand)
+                    dispatchCommand(SourceStorage.getSystemAccessToken(vertx), bootCommand, true)
                 }
             }
         }
@@ -547,7 +547,7 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
         return promise.future()
     }
 
-    private fun dispatchCommand(accessToken: String?, command: LiveInstrumentCommand) {
+    private fun dispatchCommand(accessToken: String?, command: LiveInstrumentCommand, forceDispatch: Boolean = false) {
         log.trace { "Dispatching {}. Using access token: {}".args(command, accessToken) }
         val probes = SourceBridgeService.createProxy(vertx, accessToken)
         probes.onSuccess {
@@ -571,7 +571,7 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
                         command.instruments.filter { it.location.isSameLocation(probe) }.toSet(),
                         command.locations.filter { it.isSameLocation(probe) }.toSet()
                     )
-                    if (probeCommand.isDispatchable()) {
+                    if (probeCommand.isDispatchable() || forceDispatch) {
                         alertCount++
                         vertx.eventBus().publish(LIVE_INSTRUMENT_REMOTE + ":" + probe.instanceId, probeCommand.toJson())
                         log.debug { "Dispatched $probeCommand to probe ${probe.instanceId}" }
