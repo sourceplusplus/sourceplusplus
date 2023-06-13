@@ -106,7 +106,7 @@ jobs:
     runs-on: ubuntu-20.04
     timeout-minutes: 25
     concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}-test-platform
+      group: ${{ github.workflow }}-${{ github.ref }}-test-platform-${{ matrix.test_profile }}
       cancel-in-progress: true
     strategy:
       matrix:
@@ -175,21 +175,21 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@v3
         with:
-          name: test-platform-logs
+          name: ${{ matrix.test_profile }}-platform-logs
           path: docker/e2e/spp-platform.log
 
       - name: Upload test-live-instrument.log artifact
         if: ${{ always() }}
         uses: actions/upload-artifact@v3
         with:
-          name: test-live-instrument.log
+          name: ${{ matrix.test_profile }}-live-instrument.log
           path: /tmp/spp-probe/logs/test-live-instrument.log
 
       - name: Upload test-live-view.log artifact
         if: ${{ always() }}
         uses: actions/upload-artifact@v3
         with:
-          name: test-live-view.log
+          name: ${{ matrix.test_profile }}-live-view.log
           path: /tmp/spp-probe/logs/test-live-view.log
 
   test-probe-jvm:
