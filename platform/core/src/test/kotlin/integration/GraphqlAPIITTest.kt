@@ -87,7 +87,7 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
 
     @Test
     fun `ensure addDataRedaction works`() = runBlocking {
-        val redactionId = UUID.randomUUID().toString()
+        val redactionId = testNameAsUniqueInstrumentId
         val addDataRedactionResp =
             request.sendJsonObject(getAddDataRedactionRequest(redactionId)).await().bodyAsJsonObject()
         assertNull(addDataRedactionResp.getJsonArray("errors"))
@@ -100,7 +100,7 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
 
     @Test
     fun `ensure updateDataRedaction works`() = runBlocking {
-        val redactionId = UUID.randomUUID().toString()
+        val redactionId = testNameAsUniqueInstrumentId
         val addDataRedactionResp =
             request.sendJsonObject(getAddDataRedactionRequest(redactionId)).await().bodyAsJsonObject()
         assertNull(addDataRedactionResp.getJsonArray("errors"))
@@ -126,7 +126,7 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
 
     @Test
     fun `ensure getDataRedaction with ID works`() = runBlocking {
-        val redactionId = UUID.randomUUID().toString()
+        val redactionId = testNameAsUniqueInstrumentId
         val addDataRedactionResp =
             request.sendJsonObject(getAddDataRedactionRequest(redactionId)).await().bodyAsJsonObject()
         assertNull(addDataRedactionResp.getJsonArray("errors"))
@@ -146,7 +146,7 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
 
     @Test
     fun `ensure getDataRedactions works`() = runBlocking {
-        val redactionId = UUID.randomUUID().toString()
+        val redactionId = testNameAsUniqueInstrumentId
         val addDataRedactionResp =
             request.sendJsonObject(getAddDataRedactionRequest(redactionId)).await().bodyAsJsonObject()
         assertNull(addDataRedactionResp.getJsonArray("errors"))
@@ -171,7 +171,7 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
 
     @Test
     fun `ensure removeDataRedaction works`() = runBlocking {
-        val redactionId = UUID.randomUUID().toString()
+        val redactionId = testNameAsUniqueInstrumentId
         val addDataRedactionResp =
             request.sendJsonObject(getAddDataRedactionRequest(redactionId)).await().bodyAsJsonObject()
         assertNull(addDataRedactionResp.getJsonArray("errors"))
@@ -209,7 +209,7 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
 
     @Test
     fun `ensure addDeveloper works`() = runBlocking {
-        val developerId = UUID.randomUUID().toString()
+        val developerId = testNameAsUniqueInstrumentId
         val addDeveloperResp = request.sendJsonObject(getAddDeveloperRequest(developerId)).await().bodyAsJsonObject()
         assertNull(addDeveloperResp.getJsonArray("errors"))
 
@@ -220,7 +220,7 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
 
     @Test
     fun `ensure refreshAuthorizationCode works`() = runBlocking {
-        val developerId = UUID.randomUUID().toString()
+        val developerId = testNameAsUniqueInstrumentId
         val addDeveloperResp = request.sendJsonObject(getAddDeveloperRequest(developerId)).await().bodyAsJsonObject()
         assertNull(addDeveloperResp.getJsonArray("errors"))
 
@@ -239,7 +239,7 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
 
     @Test
     fun `ensure getDevelopers works`() = runBlocking {
-        val developerId = UUID.randomUUID().toString()
+        val developerId = testNameAsUniqueInstrumentId
         val addDeveloperResp = request.sendJsonObject(getAddDeveloperRequest(developerId)).await().bodyAsJsonObject()
         assertNull(addDeveloperResp.getJsonArray("errors"))
 
@@ -258,7 +258,7 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
 
     @Test
     fun `ensure removeDeveloper works`() = runBlocking {
-        val developerId = UUID.randomUUID().toString()
+        val developerId = testNameAsUniqueInstrumentId
         val addDeveloperResp = request.sendJsonObject(getAddDeveloperRequest(developerId)).await().bodyAsJsonObject()
         assertNull(addDeveloperResp.getJsonArray("errors"))
 
@@ -274,7 +274,7 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
 
     @Test
     fun `ensure addRole works`() = runBlocking {
-        val role = UUID.randomUUID().toString()
+        val role = testNameAsUniqueInstrumentId
         val addRoleResp = request.sendJsonObject(getAddRoleRequest(role)).await().bodyAsJsonObject()
         assertNull(addRoleResp.getJsonArray("errors"))
         assertTrue(addRoleResp.getJsonObject("data").getBoolean("addRole"))
@@ -293,11 +293,11 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
 
     @Test
     fun `ensure addRoleDataRedaction works`() = runBlocking {
-        val role = UUID.randomUUID().toString()
+        val role = testNameAsUniqueInstrumentId
         val addRoleResp = request.sendJsonObject(getAddRoleRequest(role)).await().bodyAsJsonObject()
         assertNull(addRoleResp.getJsonArray("errors"))
 
-        val redactionId = UUID.randomUUID().toString()
+        val redactionId = testNameAsUniqueInstrumentId
         val addDataRedactionResp =
             request.sendJsonObject(getAddDataRedactionRequest(redactionId)).await().bodyAsJsonObject()
         assertNull(addDataRedactionResp.getJsonArray("errors"))
@@ -310,11 +310,11 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
 
     @Test
     fun `ensure removeRoleDataRedaction works`() = runBlocking {
-        val role = UUID.randomUUID().toString()
+        val role = testNameAsUniqueInstrumentId
         val addRoleResp = request.sendJsonObject(getAddRoleRequest(role)).await().bodyAsJsonObject()
         assertNull(addRoleResp.getJsonArray("errors"))
 
-        val redactionId = UUID.randomUUID().toString()
+        val redactionId = testNameAsUniqueInstrumentId
         val addDataRedactionResp =
             request.sendJsonObject(getAddDataRedactionRequest(redactionId)).await().bodyAsJsonObject()
         assertNull(addDataRedactionResp.getJsonArray("errors"))
@@ -335,11 +335,11 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
 
     @Test
     fun `ensure getRoleDataRedactions works`() = runBlocking {
-        val role = UUID.randomUUID().toString()
+        val role = testNameAsUniqueInstrumentId
         val addRoleResp = request.sendJsonObject(getAddRoleRequest(role)).await().bodyAsJsonObject()
         assertNull(addRoleResp.getJsonArray("errors"))
 
-        val redactionId = UUID.randomUUID().toString()
+        val redactionId = testNameAsUniqueInstrumentId
         val addDataRedactionResp =
             request.sendJsonObject(getAddDataRedactionRequest(redactionId)).await().bodyAsJsonObject()
         assertNull(addDataRedactionResp.getJsonArray("errors"))
@@ -369,11 +369,11 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
 
     @Test
     fun `ensure getDeveloperDataRedactions works`() = runBlocking {
-        val role = UUID.randomUUID().toString()
+        val role = testNameAsUniqueInstrumentId
         val addRoleResp = request.sendJsonObject(getAddRoleRequest(role)).await().bodyAsJsonObject()
         assertNull(addRoleResp.getJsonArray("errors"))
 
-        val developerId = UUID.randomUUID().toString()
+        val developerId = testNameAsUniqueInstrumentId
         val addDeveloperResp = request.sendJsonObject(getAddDeveloperRequest(developerId)).await().bodyAsJsonObject()
         assertNull(addDeveloperResp.getJsonArray("errors"))
 
@@ -384,7 +384,7 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
         ).await().bodyAsJsonObject()
         assertNull(addDeveloperRoleResp.getJsonArray("errors"))
 
-        val redactionId = UUID.randomUUID().toString()
+        val redactionId = testNameAsUniqueInstrumentId
         val addDataRedactionResp =
             request.sendJsonObject(getAddDataRedactionRequest(redactionId)).await().bodyAsJsonObject()
         assertNull(addDataRedactionResp.getJsonArray("errors"))
@@ -414,7 +414,7 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
 
     @Test
     fun `ensure removeRole works`() = runBlocking {
-        val role = UUID.randomUUID().toString()
+        val role = testNameAsUniqueInstrumentId
         val addRoleResp = request.sendJsonObject(getAddRoleRequest(role)).await().bodyAsJsonObject()
         assertNull(addRoleResp.getJsonArray("errors"))
 
@@ -428,11 +428,11 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
 
     @Test
     fun `ensure addDeveloperRole works`() = runBlocking {
-        val developerId = UUID.randomUUID().toString()
+        val developerId = testNameAsUniqueInstrumentId
         val addDeveloperResp = request.sendJsonObject(getAddDeveloperRequest(developerId)).await().bodyAsJsonObject()
         assertNull(addDeveloperResp.getJsonArray("errors"))
 
-        val role = UUID.randomUUID().toString()
+        val role = testNameAsUniqueInstrumentId
         val addRoleResp = request.sendJsonObject(getAddRoleRequest(role)).await().bodyAsJsonObject()
         assertNull(addRoleResp.getJsonArray("errors"))
 
@@ -447,11 +447,11 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
 
     @Test
     fun `ensure getDeveloperRoles works`() = runBlocking {
-        val developerId = UUID.randomUUID().toString()
+        val developerId = testNameAsUniqueInstrumentId
         val addDeveloperResp = request.sendJsonObject(getAddDeveloperRequest(developerId)).await().bodyAsJsonObject()
         assertNull(addDeveloperResp.getJsonArray("errors"))
 
-        val role = UUID.randomUUID().toString()
+        val role = testNameAsUniqueInstrumentId
         val addRoleResp = request.sendJsonObject(getAddRoleRequest(role)).await().bodyAsJsonObject()
         assertNull(addRoleResp.getJsonArray("errors"))
 
@@ -471,11 +471,11 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
 
     @Test
     fun `ensure getDeveloperPermissions works`() = runBlocking {
-        val developerId = UUID.randomUUID().toString()
+        val developerId = testNameAsUniqueInstrumentId
         val addDeveloperResp = request.sendJsonObject(getAddDeveloperRequest(developerId)).await().bodyAsJsonObject()
         assertNull(addDeveloperResp.getJsonArray("errors"))
 
-        val role = UUID.randomUUID().toString()
+        val role = testNameAsUniqueInstrumentId
         val addRoleResp = request.sendJsonObject(getAddRoleRequest(role)).await().bodyAsJsonObject()
         assertNull(addRoleResp.getJsonArray("errors"))
 
@@ -504,11 +504,11 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
 
     @Test
     fun `ensure removeDeveloperRole works`() = runBlocking {
-        val developerId = UUID.randomUUID().toString()
+        val developerId = testNameAsUniqueInstrumentId
         val addDeveloperResp = request.sendJsonObject(getAddDeveloperRequest(developerId)).await().bodyAsJsonObject()
         assertNull(addDeveloperResp.getJsonArray("errors"))
 
-        val role = UUID.randomUUID().toString()
+        val role = testNameAsUniqueInstrumentId
         val addRoleResp = request.sendJsonObject(getAddRoleRequest(role)).await().bodyAsJsonObject()
         assertNull(addRoleResp.getJsonArray("errors"))
 
@@ -529,7 +529,7 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
 
     @Test
     fun `ensure getRoleAccessPermissions works`() = runBlocking {
-        val role = UUID.randomUUID().toString()
+        val role = testNameAsUniqueInstrumentId
         val addRoleResp = request.sendJsonObject(getAddRoleRequest(role)).await().bodyAsJsonObject()
         assertNull(addRoleResp.getJsonArray("errors"))
 
@@ -555,7 +555,7 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
 
     @Test
     fun `ensure removeRoleAccessPermission works`() = runBlocking {
-        val role = UUID.randomUUID().toString()
+        val role = testNameAsUniqueInstrumentId
         val addRoleResp = request.sendJsonObject(getAddRoleRequest(role)).await().bodyAsJsonObject()
         assertNull(addRoleResp.getJsonArray("errors"))
 
@@ -583,11 +583,11 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
 
     @Test
     fun `ensure getDeveloperAccessPermissions works`() = runBlocking {
-        val developerId = UUID.randomUUID().toString()
+        val developerId = testNameAsUniqueInstrumentId
         val addDeveloperResp = request.sendJsonObject(getAddDeveloperRequest(developerId)).await().bodyAsJsonObject()
         assertNull(addDeveloperResp.getJsonArray("errors"))
 
-        val role = UUID.randomUUID().toString()
+        val role = testNameAsUniqueInstrumentId
         val addRoleResp = request.sendJsonObject(getAddRoleRequest(role)).await().bodyAsJsonObject()
         assertNull(addRoleResp.getJsonArray("errors"))
 
@@ -657,7 +657,7 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
 
     @Test
     fun `ensure addRolePermission works`() = runBlocking {
-        val role = UUID.randomUUID().toString()
+        val role = testNameAsUniqueInstrumentId
         val addRoleResp = request.sendJsonObject(getAddRoleRequest(role)).await().bodyAsJsonObject()
         assertNull(addRoleResp.getJsonArray("errors"))
 
@@ -945,7 +945,7 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
 
     @Test
     fun `ensure removeRolePermission works`() = runBlocking {
-        val role = UUID.randomUUID().toString()
+        val role = testNameAsUniqueInstrumentId
         val addRoleResp = request.sendJsonObject(getAddRoleRequest(role)).await().bodyAsJsonObject()
         assertNull(addRoleResp.getJsonArray("errors"))
 
