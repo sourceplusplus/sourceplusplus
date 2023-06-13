@@ -242,7 +242,7 @@ tasks.getByName("assemble") {
 }
 
 tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile::class.java).configureEach {
-    kotlinOptions {
-        freeCompilerArgs = listOf("-Xdebug") //todo: disable this for release builds
+    if (System.getProperty("build.profile") != "release") {
+        kotlinOptions.freeCompilerArgs = listOf("-Xdebug")
     }
 }
