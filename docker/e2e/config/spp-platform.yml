@@ -63,7 +63,7 @@ live-presets:
         location:
           source: "spp.probe.services.LiveInstrumentRemote.dispatchUncaughtException(...)"
   junit:
-    enabled: ${SPP_PRESET_JUNIT_ENABLED:-false}
+    enabled: ${SPP_PRESET_JUNIT_ENABLED:-true}
     instruments:
       - id: "spp_junit_test_successful"
         type: "METER"
