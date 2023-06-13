@@ -219,6 +219,8 @@ tasks.register<Copy>("updateDockerFiles") {
 dockerCompose {
     dockerComposeWorkingDirectory.set(File("../docker/e2e"))
     waitForTcpPorts.set(false)
+
+    environment.put("SPP_PROBE_ENABLED", System.getenv("CI") == "true")
 }
 tasks.getByName("composeBuild")
     .dependsOn("updateDockerFiles")

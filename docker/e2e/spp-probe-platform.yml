@@ -1,4 +1,5 @@
 spp:
+  enabled: ${SPP_PROBE_ENABLED:-true}
   authentication:
     client_id: "spp_ci_ouSeYbx23Am6IMMfEnobeHWVt7j2X7EJTvyzoi65ktUSH9lmZp"
     client_secret: "spp_cs_VvT7ryzSE7ud5UdMEi5iiVRfzt3u2mBRT2dqjZDaaNaPABR5dr"
