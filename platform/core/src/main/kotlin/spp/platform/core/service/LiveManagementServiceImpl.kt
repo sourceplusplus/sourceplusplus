@@ -534,7 +534,7 @@ class LiveManagementServiceImpl(
     }
 
     override fun getSelf(): Future<SelfInfo> {
-        log.debug { "Getting self info" }
+        log.trace { "Getting self info" }
         val promise = Promise.promise<SelfInfo>()
         val selfId = Vertx.currentContext().getLocal<DeveloperAuth>("developer").selfId
 
