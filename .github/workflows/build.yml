@@ -108,6 +108,9 @@ jobs:
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-test-platform
       cancel-in-progress: true
+    strategy:
+      matrix:
+        test_profile: [ 'unit', 'integration',
 
     steps:
       - uses: docker-practice/actions-setup-docker@master
@@ -163,7 +166,7 @@ jobs:
         run: ./gradlew --no-daemon -p probes/jvm jar
 
       - name: Test platform
-        run: ./gradlew --no-daemon -p platform test -Dtest.profile=integration -Dtest.includeSlow=true
+        run: ./gradlew --no-daemon -p platform test -Dtest.profile=${{ matrix.test_profile }} -Dtest.includeSlow=true
 
       - run: cd docker/e2e && docker-compose logs spp-platform > spp-platform.log
         if: ${{ always() }}
