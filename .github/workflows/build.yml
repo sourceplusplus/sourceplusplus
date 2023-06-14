@@ -109,6 +109,7 @@ jobs:
       group: ${{ github.workflow }}-${{ github.ref }}-test-platform-${{ matrix.test_module }}
       cancel-in-progress: true
     strategy:
+      fail-fast: false
       matrix:
         test_module: [ 'bridge', 'common', 'core', 'processor:live-view', 'processor:live-instrument', 'storage' ]
 
