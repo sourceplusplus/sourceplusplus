@@ -121,6 +121,9 @@ jobs:
           name: repo
           path: .
 
+      - name: Extract repo
+        run: tar -xzf repo.tar.gz
+
       - name: Start spp-platform
         run: cd docker/e2e && docker-compose up -d
 
