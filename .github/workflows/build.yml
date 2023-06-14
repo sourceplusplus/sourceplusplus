@@ -90,8 +90,9 @@ jobs:
 
       - name: Tar repo
         run: |
-          touch repo.tar.gz
-          tar --exclude=repo.tar.gz cvf - . | gzip -9 - > repo.tar.gz
+          rm -rf .git
+          touch repo.tar
+          tar --exclude=repo.tar -czf repo.tar ./ && gzip -9 repo.tar
 
       - name: Upload repo
         uses: actions/upload-artifact@v3
