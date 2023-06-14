@@ -90,7 +90,7 @@ jobs:
 
       - name: Tar repo
         run: |
-          rm -rf .git
+          rm -rf $(find . -type d -name ".git")
           touch repo.tar
           tar --exclude=repo.tar -czf repo.tar ./ && gzip -9 repo.tar
 
