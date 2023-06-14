@@ -66,15 +66,6 @@ jobs:
         with:
           submodules: 'recursive'
 
-      - uses: actions/cache@v3
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: build-platform-${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            build-platform-${{ runner.os }}-gradle-
-
       - name: Export Properties
         id: properties
         shell: bash
