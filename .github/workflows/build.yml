@@ -52,7 +52,7 @@ jobs:
     if: ${{ !contains(github.event.pull_request.head.ref, '#docs') && !(startsWith(github.event.head_commit.message, 'Merge pull request') && contains(github.event.head_commit.message, '#docs')) }}
 
     runs-on: ubuntu-20.04
-    timeout-minutes: 15
+    timeout-minutes: 20
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-build-platform
       cancel-in-progress: true
@@ -65,6 +65,15 @@ jobs:
       - uses: actions/checkout@v3
         with:
           submodules: 'recursive'
+
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: build-platform-${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            build-platform-${{ runner.os }}-gradle-
 
       - name: Export Properties
         id: properties
