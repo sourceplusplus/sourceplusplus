@@ -172,19 +172,19 @@ jobs:
       - run: cd docker/e2e && docker-compose logs spp-platform > spp-platform.log
         if: ${{ always() }}
 
-      - name: Upload docker logs artifact
-        if: ${{ always() }}
-        uses: actions/upload-artifact@v3
-        with:
-          name: ${{ matrix.test_module }}-platform-logs
-          path: docker/e2e/spp-platform.log
-
       - name: Set test module name
         run: |
           TEST_MODULE=${{ matrix.test_module }}
           TEST_MODULE=${TEST_MODULE//:/-}
           echo "TEST_MODULE=$TEST_MODULE" >> $GITHUB_ENV
           echo "TEST_MODULE=$TEST_MODULE"
+
+      - name: Upload docker logs artifact
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ env.TEST_MODULE }}-docker.log
+          path: docker/e2e/spp-platform.log
 
       - name: Upload test-live-instrument.log artifact
         if: ${{ always() }}
