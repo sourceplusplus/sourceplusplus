@@ -92,15 +92,6 @@ jobs:
       - name: Build platform
         run: ./gradlew --no-daemon -p platform composeBuild -Dbuild.profile=release -PplatformVersion=$BUILD_VERSION -PprobeVersion=$BUILD_VERSION
 
-      - name: Save platform image
-        run: docker save $(docker image ls  | grep 'spp-platform' | awk '{print $1}') > spp-platform.tar
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: spp-platform
-          path: spp-platform.tar
-
       - name: Upload repo
         uses: actions/upload-artifact@v3
         with:
@@ -127,24 +118,6 @@ jobs:
         with:
           name: repo
           path: .
-
-      - name: Download spp-platform image
-        timeout-minutes: 5
-        uses: actions/download-artifact@v3
-        with:
-          name: spp-platform
-          path: .
-
-      - name: Load spp-platform
-        run: docker load --input spp-platform.tar
-
-      - name: Write docker-compose.override.yml
-        working-directory: docker/e2e
-        run: |
-          echo "version: '3.3'" > docker-compose.override.yml
-          echo "services:" >> docker-compose.override.yml
-          echo "  spp-platform:" >> docker-compose.override.yml
-          echo "    image: $(docker image ls  | grep 'spp-platform' | awk '{print $1}')" >> docker-compose.override.yml
 
       - name: Start spp-platform
         run: cd docker/e2e && docker-compose up -d
