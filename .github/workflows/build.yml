@@ -93,7 +93,9 @@ jobs:
         run: ./gradlew --no-daemon -p platform composeBuild -Dbuild.profile=release -PplatformVersion=$BUILD_VERSION -PprobeVersion=$BUILD_VERSION
 
       - name: Tar repo
-        run: tar -czf repo.tar.gz ./
+        run: |
+          touch repo.tar.gz
+          tar --exclude=archive.tar.gz -czf repo.tar.gz ./
 
       - name: Upload repo
         uses: actions/upload-artifact@v3
