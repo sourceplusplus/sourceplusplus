@@ -163,9 +163,6 @@ jobs:
         run: |
           until $(curl --header "Authorization: Bearer ${{ env.SPP_JWT_TOKEN }}" --output /dev/null --silent --fail http://localhost:12800/health); do printf '.'; sleep 5; done
 
-      - name: Build probe
-        run: ./gradlew --no-daemon -p probes/jvm jar
-
       - name: Test platform
         run: ./gradlew --no-daemon :platform:${{ matrix.test_module }}:test -Dtest.profile=integration -Dtest.includeSlow=true
 
