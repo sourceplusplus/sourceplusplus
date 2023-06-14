@@ -95,7 +95,7 @@ jobs:
       - name: Tar repo
         run: |
           touch repo.tar.gz
-          tar --exclude=archive.tar.gz -czf repo.tar.gz ./
+          tar --exclude=repo.tar.gz -czf repo.tar.gz ./
 
       - name: Upload repo
         uses: actions/upload-artifact@v3
