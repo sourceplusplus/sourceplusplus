@@ -101,6 +101,12 @@ jobs:
           name: spp-platform
           path: spp-platform.tar
 
+      - name: Upload repo
+        uses: actions/upload-artifact@v3
+        with:
+          name: repo
+          path: ./
+
   test-platform:
     needs: [ verify-mono, build-platform ]
     runs-on: ubuntu-20.04
@@ -115,18 +121,12 @@ jobs:
 
     steps:
       - uses: docker-practice/actions-setup-docker@master
-      - uses: actions/checkout@v3
-        with:
-          submodules: 'recursive'
 
-#       - uses: actions/cache@v3
-#         with:
-#           path: |
-#             ~/.gradle/caches
-#             ~/.gradle/wrapper
-#           key: test-platform-${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-#           restore-keys: |
-#             test-platform-${{ runner.os }}-gradle-
+      - name: Download repo
+        uses: actions/download-artifact@v3
+        with:
+          name: repo
+          path: .
 
       - name: Download spp-platform image
         timeout-minutes: 5
