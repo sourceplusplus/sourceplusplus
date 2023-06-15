@@ -185,19 +185,15 @@ jobs:
 
     steps:
       - uses: docker-practice/actions-setup-docker@master
-      - uses: actions/checkout@v3
-        with:
-          submodules: 'true'
 
-      - name: Download spp-platform image
-        timeout-minutes: 5
+      - name: Download repo
         uses: actions/download-artifact@v3
         with:
-          name: spp-platform
+          name: repo
           path: .
 
-      - name: Load spp-platform
-        run: docker load --input spp-platform.tar
+      - name: Extract repo
+        run: gzip -d repo.tar.gz && tar -xzf repo.tar
 
       - name: Write docker-compose.override.yml
         working-directory: docker/e2e
@@ -242,19 +238,15 @@ jobs:
 
     steps:
       - uses: docker-practice/actions-setup-docker@master
-      - uses: actions/checkout@v3
-        with:
-          submodules: 'true'
 
-      - name: Download spp-platform image
-        timeout-minutes: 5
+      - name: Download repo
         uses: actions/download-artifact@v3
         with:
-          name: spp-platform
+          name: repo
           path: .
 
-      - name: Load spp-platform
-        run: docker load --input spp-platform.tar
+      - name: Extract repo
+        run: gzip -d repo.tar.gz && tar -xzf repo.tar
 
         #todo: shouldn't need SPP_CLIENT_ACCESS_ENABLED=false
       - name: Write docker-compose.override.yml
@@ -315,19 +307,15 @@ jobs:
 
     steps:
       - uses: docker-practice/actions-setup-docker@master
-      - uses: actions/checkout@v3
-        with:
-          submodules: 'true'
 
-      - name: Download spp-platform image
-        timeout-minutes: 5
+      - name: Download repo
         uses: actions/download-artifact@v3
         with:
-          name: spp-platform
+          name: repo
           path: .
 
-      - name: Load spp-platform
-        run: docker load --input spp-platform.tar
+      - name: Extract repo
+        run: gzip -d repo.tar.gz && tar -xzf repo.tar
 
       - name: Write docker-compose.override.yml
         working-directory: docker/e2e
