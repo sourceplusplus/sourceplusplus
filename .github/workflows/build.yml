@@ -419,9 +419,15 @@ jobs:
       release_version: ${{ steps.properties.outputs.release_version }}
     steps:
       - uses: docker-practice/actions-setup-docker@master
-      - uses: actions/checkout@v3
+
+      - name: Download repo
+        uses: actions/download-artifact@v3
         with:
-          submodules: 'recursive'
+          name: repo
+          path: .
+
+      - name: Extract repo
+        run: gzip -d repo.tar.gz && tar -xzf repo.tar
 
       - uses: actions/setup-java@v3
         with:
