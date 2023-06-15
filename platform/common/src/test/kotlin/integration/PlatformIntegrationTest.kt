@@ -162,6 +162,15 @@ open class PlatformIntegrationTest {
             }
         }
 
+        override fun addLiveInstruments(instruments: List<LiveInstrument>): Future<List<LiveInstrument>> {
+            log.info("Adding live instruments {}", instruments)
+            val value = delegate.addLiveInstruments(instruments)
+            return value.map {
+                log.info("Added live instruments {}", it)
+                it
+            }
+        }
+
         override fun removeLiveInstrument(id: String): Future<LiveInstrument?> {
             log.info("Removing live instrument {}", id)
             val value = delegate.removeLiveInstrument(id)
