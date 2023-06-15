@@ -41,16 +41,30 @@ class InnerClassBreakpointTest : LiveInstrumentIntegrationTest() {
     }
 
     @Test
-    fun `inner class`() = runBlocking {
+    fun `inner class variable`() = runBlocking {
         setupLineLabels {
             InnerClass().doHit()
         }
 
+        //add live breakpoint
+        val instrument = instrumentService.addLiveInstrument(
+            LiveBreakpoint(
+                location = LiveSourceLocation(
+                    InnerClass::class.java.name,
+                    getLineNumber("done"),
+                    "spp-test-probe"
+                ),
+                applyImmediately = true,
+                id = testNameAsUniqueInstrumentId
+            )
+        ).await()
+
+        //add breakpoint hit listener
         val testContext = VertxTestContext()
-        vertx.addBreakpointHitListener(testNameAsInstrumentId) { bpHit ->
+        vertx.addBreakpointHitListener(instrument.id!!) {
             testContext.verify {
-                assertTrue(bpHit.stackTrace.elements.isNotEmpty())
-                val topFrame = bpHit.stackTrace.elements.first()
+                assertTrue(it.stackTrace.elements.isNotEmpty())
+                val topFrame = it.stackTrace.elements.first()
                 assertEquals(2, topFrame.variables.size)
 
                 val myVar = topFrame.variables.first { it.name == "myVar" }
@@ -60,23 +74,8 @@ class InnerClassBreakpointTest : LiveInstrumentIntegrationTest() {
                 assertEquals(LiveVariableScope.LOCAL_VARIABLE, myVar.scope)
                 assertNotNull(myVar.liveIdentity)
             }
-
-            //test passed
             testContext.completeNow()
         }.await()
-
-        //add live breakpoint
-        instrumentService.addLiveInstrument(
-            LiveBreakpoint(
-                location = LiveSourceLocation(
-                    InnerClass::class.java.name,
-                    getLineNumber("done"),
-                    "spp-test-probe"
-                ),
-                applyImmediately = true,
-                id = testNameAsInstrumentId
-            )
-        ).await()
 
         //trigger live breakpoint
         InnerClass().doHit()
