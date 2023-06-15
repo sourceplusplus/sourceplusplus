@@ -41,6 +41,8 @@ import spp.protocol.instrument.LiveInstrument
 import spp.protocol.service.LiveInstrumentService
 import spp.protocol.service.LiveManagementService
 import spp.protocol.service.LiveViewService
+import spp.protocol.view.LiveView
+import spp.protocol.view.rule.ViewRule
 import java.util.*
 import java.util.concurrent.TimeUnit
 import java.util.regex.Pattern
@@ -118,7 +120,7 @@ open class PlatformIntegrationTest {
         }
     val viewService: LiveViewService
         get() {
-            return LiveViewService.createProxy(vertx, systemAccessToken)
+            return LoggedLiveViewService(LiveViewService.createProxy(vertx, systemAccessToken))
         }
 
     fun errorOnTimeout(testContext: VertxTestContext, waitTime: Long = 60) {
@@ -165,6 +167,29 @@ open class PlatformIntegrationTest {
             val value = delegate.removeLiveInstrument(id)
             return value.map {
                 log.info("Removed live instrument {}: {}", id, it)
+                it
+            }
+        }
+    }
+
+    class LoggedLiveViewService(private val delegate: LiveViewService) : LiveViewService by delegate {
+
+        private val log: Logger by lazy { LoggerFactory.getLogger(javaClass) }
+
+        override fun removeLiveView(id: String): Future<LiveView> {
+            log.info("Removing live view {}", id)
+            val value = delegate.removeLiveView(id)
+            return value.map {
+                log.info("Removed live view {}: {}", id, it)
+                it
+            }
+        }
+
+        override fun deleteRule(ruleName: String): Future<ViewRule?> {
+            log.info("Deleting rule {}", ruleName)
+            val value = delegate.deleteRule(ruleName)
+            return value.map {
+                log.info("Deleted rule {}: {}", ruleName, it)
                 it
             }
         }
