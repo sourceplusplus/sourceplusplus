@@ -276,13 +276,6 @@ jobs:
         working-directory: probes/nodejs
         run: npm install
 
-      - name: Download spp-platform image
-        timeout-minutes: 5
-        uses: actions/download-artifact@v3
-        with:
-          name: spp-platform
-          path: .
-
       - name: Test probe-nodejs
         run: ./gradlew -p probes/nodejs test
         env:
