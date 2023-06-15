@@ -37,6 +37,7 @@ import org.junit.jupiter.api.TestInfo
 import org.junit.jupiter.api.extension.ExtendWith
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import spp.protocol.instrument.LiveInstrument
 import spp.protocol.service.LiveInstrumentService
 import spp.protocol.service.LiveManagementService
 import spp.protocol.service.LiveViewService
@@ -113,7 +114,7 @@ open class PlatformIntegrationTest {
         }
     val instrumentService: LiveInstrumentService
         get() {
-            return LiveInstrumentService.createProxy(vertx, systemAccessToken)
+            return LoggedLiveInstrumentService(LiveInstrumentService.createProxy(vertx, systemAccessToken))
         }
     val viewService: LiveViewService
         get() {
@@ -144,5 +145,28 @@ open class PlatformIntegrationTest {
         val promise = Promise.promise<Void>()
         completionHandler { promise.handle(it) }
         return promise.future()
+    }
+
+    class LoggedLiveInstrumentService(private val delegate: LiveInstrumentService) : LiveInstrumentService by delegate {
+
+        private val log: Logger by lazy { LoggerFactory.getLogger(javaClass) }
+
+        override fun addLiveInstrument(instrument: LiveInstrument): Future<LiveInstrument> {
+            log.info("Adding live instrument {}", instrument)
+            val value = delegate.addLiveInstrument(instrument)
+            return value.map {
+                log.info("Added live instrument {}: {}", it.id, it)
+                it
+            }
+        }
+
+        override fun removeLiveInstrument(id: String): Future<LiveInstrument?> {
+            log.info("Removing live instrument {}", id)
+            val value = delegate.removeLiveInstrument(id)
+            return value.map {
+                log.info("Removed live instrument {}: {}", id, it)
+                it
+            }
+        }
     }
 }
