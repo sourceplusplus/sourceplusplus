@@ -148,6 +148,7 @@ jobs:
         if: ${{ always() }}
 
       - name: Set test module name
+        if: ${{ always() }}
         run: |
           TEST_MODULE=${{ matrix.test_module }}
           TEST_MODULE=${TEST_MODULE//:/-}
@@ -165,14 +166,14 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ env.TEST_MODULE }}-live-instrument.log
+          name: test-live-instrument.log
           path: /tmp/spp-probe/logs/test-live-instrument.log
 
       - name: Upload test-live-view.log artifact
         if: ${{ always() }}
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ env.TEST_MODULE }}-live-view.log
+          name: test-live-view.log
           path: /tmp/spp-probe/logs/test-live-view.log
 
   test-probe-jvm:
