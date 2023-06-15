@@ -539,14 +539,14 @@ class LiveManagementServiceImpl(
         val selfId = Vertx.currentContext().getLocal<DeveloperAuth>("developer").selfId
 
         launch(vertx.dispatcher()) {
-            promise.complete(
-                SelfInfo(
-                    developer = Developer(selfId),
-                    roles = SourceStorage.getDeveloperRoles(selfId),
-                    permissions = SourceStorage.getDeveloperPermissions(selfId).toList(),
-                    access = SourceStorage.getDeveloperAccessPermissions(selfId)
-                )
+            val selfInfo = SelfInfo(
+                developer = Developer(selfId),
+                roles = SourceStorage.getDeveloperRoles(selfId),
+                permissions = SourceStorage.getDeveloperPermissions(selfId).toList(),
+                access = SourceStorage.getDeveloperAccessPermissions(selfId)
             )
+            log.trace { "Self info: $selfInfo" }
+            promise.complete(selfInfo)
         }
         return promise.future()
     }
