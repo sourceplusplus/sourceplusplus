@@ -13,7 +13,7 @@ on:
   workflow_dispatch:
 
 env:
-  GRADLE_OPTS: -Xmx5g -Xms5g
+  GRADLE_OPTS: -Dorg.gradle.daemon=false -Xmx5g -Xms5g
 
 jobs:
   verify-mono:
@@ -43,10 +43,10 @@ jobs:
             verify-mono-${{ runner.os }}-gradle-
 
       - name: Verify code style
-        run: ./gradlew --no-daemon detekt
+        run: ./gradlew detekt
 
       - name: Verify license headers
-        run: ./gradlew --no-daemon spotlessCheck
+        run: ./gradlew spotlessCheck
 
   build-platform:
     if: ${{ !contains(github.event.pull_request.head.ref, '#docs') && !(startsWith(github.event.head_commit.message, 'Merge pull request') && contains(github.event.head_commit.message, '#docs')) }}
@@ -86,7 +86,7 @@ jobs:
         run: echo "BUILD_VERSION=$SPP_RELEASE_VERSION" >> $GITHUB_ENV
 
       - name: Build platform
-        run: ./gradlew --no-daemon -p platform composeBuild -Dbuild.profile=release -PplatformVersion=$BUILD_VERSION -PprobeVersion=$BUILD_VERSION
+        run: ./gradlew -p platform composeBuild -Dbuild.profile=release -PplatformVersion=$BUILD_VERSION -PprobeVersion=$BUILD_VERSION
 
       - name: Tar repo
         run: |
@@ -142,7 +142,7 @@ jobs:
           until $(curl --header "Authorization: Bearer ${{ env.SPP_JWT_TOKEN }}" --output /dev/null --silent --fail http://localhost:12800/health); do printf '.'; sleep 5; done
 
       - name: Test platform
-        run: ./gradlew --no-daemon :platform:${{ matrix.test_module }}:test -Dtest.profile=integration -Dtest.includeSlow=true
+        run: ./gradlew :platform:${{ matrix.test_module }}:test -Dtest.profile=integration -Dtest.includeSlow=true
 
       - run: cd docker/e2e && docker-compose logs spp-platform > spp-platform.log
         if: ${{ always() }}
@@ -215,7 +215,7 @@ jobs:
 
       - name: Test probe-jvm
         run: |
-          ./gradlew --no-daemon -Dtest.profile=integration \
+          ./gradlew -Dtest.profile=integration \
             :probes:jvm:boot:assemble \
             :probes:jvm:boot:test \
             :probes:jvm:common:test \
@@ -320,11 +320,11 @@ jobs:
           until $(curl --header "Authorization: Bearer ${{ env.SPP_JWT_TOKEN }}" --output /dev/null --silent --fail http://localhost:12800/health); do printf '.'; sleep 5; done
 
       - name: Build protocol
-        run: ./gradlew --no-daemon :protocol:assemble
+        run: ./gradlew :protocol:assemble
 
       - name: Test interface-cli
         run: |
-          ./gradlew --no-daemon -Dtest.profile=integration \
+          ./gradlew -Dtest.profile=integration \
             :interfaces:cli:test
 
       - run: cd docker/e2e && docker-compose logs spp-platform > spp-platform.log
@@ -358,7 +358,7 @@ jobs:
 
       - name: Test interface-jetbrains
         run: |
-          ./gradlew --no-daemon -Dtest.profile=integration \
+          ./gradlew \
             :interfaces:jetbrains:commander:test \
             :interfaces:jetbrains:commander:kotlin-compiler-wrapper:test \
             :interfaces:jetbrains:core:test \
@@ -441,7 +441,7 @@ jobs:
           echo "BUILD_VERSION=$SPP_RELEASE_VERSION" >> $GITHUB_ENV
 
       - name: Make distribution
-        run: ./gradlew --no-daemon makeDist -Dbuild.profile=release -PplatformVersion=$BUILD_VERSION
+        run: ./gradlew makeDist -Dbuild.profile=release -PplatformVersion=$BUILD_VERSION
 
       - name: Upload spp-platform
         uses: actions/upload-artifact@v3
@@ -463,7 +463,7 @@ jobs:
             plus.sourceplus.platform.live-view-processor
 
       - name: Publish New Snapshot Packages
-        run: ./gradlew --no-daemon -p platform publish -Dbuild.profile=release
+        run: ./gradlew -p platform publish -Dbuild.profile=release
         env:
           GH_PUBLISH_USERNAME: $GITHUB_ACTOR
           GH_PUBLISH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
