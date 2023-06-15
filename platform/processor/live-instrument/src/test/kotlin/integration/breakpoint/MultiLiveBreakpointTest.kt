@@ -51,6 +51,7 @@ class MultiLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         val gotAllHitsLatch = CountDownLatch(2)
         val testContext = VertxTestContext()
         val listener: (LiveBreakpointHit) -> Unit = { bpHit ->
+            log.info("Hit: $bpHit")
             testContext.verify {
                 assertTrue(bpHit.stackTrace.elements.isNotEmpty())
                 val topFrame = bpHit.stackTrace.elements.first()
@@ -110,6 +111,7 @@ class MultiLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         val gotLine2Promise = Promise.promise<Void>()
         val testContext = VertxTestContext()
         val listener: (LiveBreakpointHit) -> Unit = { bpHit ->
+            log.info("Hit: $bpHit")
             testContext.verify {
                 assertTrue(bpHit.stackTrace.elements.isNotEmpty())
                 val topFrame = bpHit.stackTrace.elements.first()
