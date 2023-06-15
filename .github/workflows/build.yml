@@ -37,10 +37,10 @@ jobs:
         uses: gradle/gradle-build-action@v2.4.2
 
       - name: Verify code style
-        run: ./gradlew detekt
+        run: ./gradlew --scan detekt
 
       - name: Verify license headers
-        run: ./gradlew spotlessCheck
+        run: ./gradlew --scan spotlessCheck
 
   build-platform:
     if: ${{ !contains(github.event.pull_request.head.ref, '#docs') && !(startsWith(github.event.head_commit.message, 'Merge pull request') && contains(github.event.head_commit.message, '#docs')) }}
@@ -83,7 +83,7 @@ jobs:
         uses: gradle/gradle-build-action@v2.4.2
 
       - name: Build platform
-        run: ./gradlew -p platform composeBuild -Dbuild.profile=release -PplatformVersion=$BUILD_VERSION -PprobeVersion=$BUILD_VERSION
+        run: ./gradlew --scan -p platform composeBuild -Dbuild.profile=release -PplatformVersion=$BUILD_VERSION -PprobeVersion=$BUILD_VERSION
 
       - name: Tar repo
         run: |
@@ -142,7 +142,7 @@ jobs:
         uses: gradle/gradle-build-action@v2.4.2
 
       - name: Test platform
-        run: ./gradlew :platform:${{ matrix.test_module }}:test -Dtest.profile=integration -Dtest.includeSlow=true
+        run: ./gradlew --scan :platform:${{ matrix.test_module }}:test -Dtest.profile=integration -Dtest.includeSlow=true
 
       - run: cd docker/e2e && docker-compose logs spp-platform > spp-platform.log
         if: ${{ always() }}
@@ -218,7 +218,7 @@ jobs:
 
       - name: Test probe-jvm
         run: |
-          ./gradlew -Dtest.profile=integration \
+          ./gradlew --scan -Dtest.profile=integration \
             :probes:jvm:boot:assemble \
             :probes:jvm:boot:test \
             :probes:jvm:common:test \
@@ -284,7 +284,7 @@ jobs:
         uses: gradle/gradle-build-action@v2.4.2
 
       - name: Test probe-nodejs
-        run: ./gradlew -p probes/nodejs test
+        run: ./gradlew --scan -p probes/nodejs test
         env:
           CI: true
 
@@ -329,11 +329,11 @@ jobs:
         uses: gradle/gradle-build-action@v2.4.2
 
       - name: Build protocol
-        run: ./gradlew :protocol:assemble
+        run: ./gradlew --scan :protocol:assemble
 
       - name: Test interface-cli
         run: |
-          ./gradlew -Dtest.profile=integration \
+          ./gradlew --scan -Dtest.profile=integration \
             :interfaces:cli:test
 
       - run: cd docker/e2e && docker-compose logs spp-platform > spp-platform.log
@@ -370,7 +370,7 @@ jobs:
 
       - name: Test interface-jetbrains
         run: |
-          ./gradlew \
+          ./gradlew --scan \
             :interfaces:jetbrains:commander:test \
             :interfaces:jetbrains:commander:kotlin-compiler-wrapper:test \
             :interfaces:jetbrains:core:test \
@@ -400,7 +400,7 @@ jobs:
         uses: gradle/gradle-build-action@v2.4.2
 
       - name: Test protocol
-        run: ./gradlew -p protocol test
+        run: ./gradlew --scan -p protocol test
 
   make-distribution:
     #todo: can ignore commits starting with docs
@@ -459,7 +459,7 @@ jobs:
         uses: gradle/gradle-build-action@v2.4.2
 
       - name: Make distribution
-        run: ./gradlew makeDist -Dbuild.profile=release -PplatformVersion=$BUILD_VERSION
+        run: ./gradlew --scan makeDist -Dbuild.profile=release -PplatformVersion=$BUILD_VERSION
 
       - name: Upload spp-platform
         uses: actions/upload-artifact@v3
@@ -481,7 +481,7 @@ jobs:
             plus.sourceplus.platform.live-view-processor
 
       - name: Publish New Snapshot Packages
-        run: ./gradlew -p platform publish -Dbuild.profile=release
+        run: ./gradlew --scan -p platform publish -Dbuild.profile=release
         env:
           GH_PUBLISH_USERNAME: $GITHUB_ACTOR
           GH_PUBLISH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
