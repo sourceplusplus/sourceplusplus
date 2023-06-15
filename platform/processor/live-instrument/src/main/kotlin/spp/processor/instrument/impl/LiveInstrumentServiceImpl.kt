@@ -549,8 +549,7 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
 
     private fun dispatchCommand(accessToken: String?, command: LiveInstrumentCommand, forceDispatch: Boolean = false) {
         log.trace { "Dispatching {}. Using access token: {}".args(command, accessToken) }
-        val probes = SourceBridgeService.createProxy(vertx, accessToken)
-        probes.onSuccess {
+        SourceBridgeService.createProxy(vertx, accessToken).onSuccess {
             if (it == null) {
                 log.error("Bridge service not available")
                 return@onSuccess
