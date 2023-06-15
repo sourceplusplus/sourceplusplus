@@ -347,15 +347,9 @@ jobs:
 
     steps:
       - uses: docker-practice/actions-setup-docker@master
-
-      - name: Download repo
-        uses: actions/download-artifact@v3
+      - uses: actions/checkout@v3
         with:
-          name: repo
-          path: .
-
-      - name: Extract repo
-        run: gzip -d repo.tar.gz && tar -xzf repo.tar
+          submodules: 'recursive'
 
       - uses: actions/setup-java@v3
         with:
