@@ -530,9 +530,17 @@ jobs:
           asset_content_type: application/gzip
 
   docker-push:
-    needs: [ make-distribution ]
-    runs-on: ubuntu-20.04
     if: github.ref == 'refs/heads/master'
+    name: Docker Push
+    needs:
+      - test-platform
+      - test-probe-jvm
+      - test-probe-nodejs
+      - test-interface-cli
+      - test-interface-jetbrains
+      - test-protocol
+      - make-distribution
+    runs-on: ubuntu-20.04
 
     steps:
       - uses: actions/checkout@v3
