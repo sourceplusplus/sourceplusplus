@@ -324,15 +324,29 @@ open class RedisStorage(val vertx: Vertx) : CoreStorage {
     }
 
     override suspend fun updateLiveInstrument(id: String, instrument: LiveInstrument): LiveInstrument {
-        return if (getLiveInstrument(id) == null) {
-            require(getArchiveLiveInstrument(id) != null) { "Live instrument with id $id does not exist" }
-
-            redis.set(listOf(namespace("live_instruments_archive:$id"), Json.encode(instrument))).await()
-            instrument
-        } else {
-            redis.set(listOf(namespace("live_instruments:$id"), Json.encode(instrument))).await()
-            instrument
-        }
+        val instrumentJson = redis.eval(
+            listOf(
+                "local live_instrument = redis.call('get', KEYS[1])\n" +
+                        "if live_instrument then\n" +
+                        "    redis.call('set', KEYS[1], ARGV[1])\n" +
+                        "    return live_instrument\n" +
+                        "else\n" +
+                        "    local live_instrument_archive = redis.call('get', KEYS[2])\n" +
+                        "    if live_instrument_archive then\n" +
+                        "        redis.call('set', KEYS[2], ARGV[1])\n" +
+                        "        return live_instrument_archive\n" +
+                        "    else\n" +
+                        "        return nil\n" +
+                        "    end\n" +
+                        "end",
+                "2",
+                namespace("live_instruments:$id"),
+                namespace("live_instruments_archive:$id"),
+                Json.encode(instrument)
+            )
+        ).await()?.toString(UTF_8)
+        require(instrumentJson != null) { "Live instrument with id $id does not exist" }
+        return LiveInstrument.fromJson(JsonObject(instrumentJson))
     }
 
     override suspend fun removeLiveInstrument(id: String): Boolean {
