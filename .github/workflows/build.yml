@@ -55,7 +55,6 @@ jobs:
       version: ${{ steps.properties.outputs.version }}
       release_version: ${{ steps.properties.outputs.release_version }}
     steps:
-      - uses: docker-practice/actions-setup-docker@master
       - uses: actions/checkout@v3
         with:
           submodules: 'recursive'
