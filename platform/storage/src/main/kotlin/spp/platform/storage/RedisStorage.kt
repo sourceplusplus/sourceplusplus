@@ -49,7 +49,7 @@ open class RedisStorage(val vertx: Vertx) : CoreStorage {
         val sdHost = config.getString("host")
         val sdPort = config.getString("port")
         redisClient = Redis.createClient(vertx, "redis://$sdHost:$sdPort")
-        redis = RedisAPI.api(redisClient.connect().await())
+        redis = RedisAPI.api(redisClient)
     }
 
     override suspend fun counter(name: String): Counter {
