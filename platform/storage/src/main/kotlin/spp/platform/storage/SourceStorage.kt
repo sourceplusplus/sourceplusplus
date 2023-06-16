@@ -278,11 +278,7 @@ object SourceStorage {
         return storage.hasDeveloper(id)
     }
 
-    suspend fun addDeveloper(id: String): Developer {
-        return addDeveloper(id, null)
-    }
-
-    suspend fun addDeveloper(id: String, token: String?): Developer {
+    suspend fun addDeveloper(id: String, token: String? = null): Developer {
         return storage.addDeveloper(id, token ?: SecureUUID.get())
     }
 
@@ -300,11 +296,6 @@ object SourceStorage {
 
     suspend fun getDeveloperAccessPermissions(developerId: String): List<AccessPermission> {
         return getDeveloperRoles(developerId).flatMap { getRoleAccessPermissions(it) }
-    }
-
-    suspend fun hasInstrumentAccess(developerId: String, locationPattern: String): Boolean {
-        val permissions = getDeveloperAccessPermissions(developerId)
-        return AccessChecker.hasInstrumentAccess(permissions, locationPattern)
     }
 
     suspend fun getRoleAccessPermissions(role: DeveloperRole): Set<AccessPermission> {
