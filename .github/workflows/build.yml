@@ -423,8 +423,6 @@ jobs:
       version: ${{ steps.properties.outputs.version }}
       release_version: ${{ steps.properties.outputs.release_version }}
     steps:
-      - uses: docker-practice/actions-setup-docker@master
-
       - name: Download repo
         uses: actions/download-artifact@v3
         with:
