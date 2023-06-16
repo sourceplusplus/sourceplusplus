@@ -20,6 +20,8 @@ package spp.platform.core.service
 import io.vertx.core.Future
 import io.vertx.core.Promise
 import io.vertx.core.Vertx
+import io.vertx.core.eventbus.ReplyException
+import io.vertx.core.eventbus.ReplyFailure
 import io.vertx.core.json.JsonObject
 import io.vertx.ext.auth.JWTOptions
 import io.vertx.ext.auth.jwt.JWTAuth
@@ -550,7 +552,7 @@ class LiveManagementServiceImpl(
                 promise.complete(selfInfo)
             } catch (e: Exception) {
                 log.error(e) { "Failed to get self info" }
-                promise.fail(e)
+                promise.fail(ReplyException(ReplyFailure.RECIPIENT_FAILURE, 500, e.message))
             }
         }
         return promise.future()
