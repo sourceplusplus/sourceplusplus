@@ -346,7 +346,7 @@ open class RedisStorage(val vertx: Vertx) : CoreStorage {
             )
         ).await()?.toString(UTF_8)
         require(instrumentJson != null) { "Live instrument with id $id does not exist" }
-        return LiveInstrument.fromJson(JsonObject(instrumentJson))
+        return instrument
     }
 
     override suspend fun removeLiveInstrument(id: String): Boolean {
