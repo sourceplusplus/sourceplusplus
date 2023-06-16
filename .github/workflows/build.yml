@@ -480,7 +480,6 @@ jobs:
 
   release-draft:
     if: github.ref == 'refs/heads/master'
-    name: Release Draft
     needs:
       - test-platform
       - test-probe-jvm
@@ -531,7 +530,6 @@ jobs:
 
   docker-push:
     if: github.ref == 'refs/heads/master'
-    name: Docker Push
     needs:
       - test-platform
       - test-probe-jvm
