@@ -407,12 +407,7 @@ jobs:
     #if: ${{ !contains(github.event.pull_request.head.ref, '#docs') && !(startsWith(github.event.head_commit.message, 'Merge pull request') && contains(github.event.head_commit.message, '#docs')) }}
 
     needs:
-      - test-platform
-      - test-probe-jvm
-      - test-probe-nodejs
-      - test-interface-cli
-      - test-interface-jetbrains
-      - test-protocol
+      - verify-mono
     runs-on: ubuntu-20.04
     timeout-minutes: 40
     concurrency:
@@ -484,10 +479,18 @@ jobs:
           GH_PUBLISH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   release-draft:
-    name: Release Draft
-    needs: [ make-distribution ]
-    runs-on: ubuntu-20.04
     if: github.ref == 'refs/heads/master'
+    name: Release Draft
+    needs:
+      - test-platform
+      - test-probe-jvm
+      - test-probe-nodejs
+      - test-interface-cli
+      - test-interface-jetbrains
+      - test-protocol
+      - make-distribution
+    runs-on: ubuntu-20.04
+
     steps:
 
       - name: Remove Old Release Drafts
