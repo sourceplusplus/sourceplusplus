@@ -338,11 +338,7 @@ object SourceStorage {
         return storage.getDataRedactions()
     }
 
-    suspend fun hasDataRedaction(id: String): Boolean {
-        return storage.hasDataRedaction(id)
-    }
-
-    suspend fun getDataRedaction(id: String): DataRedaction {
+    suspend fun getDataRedaction(id: String): DataRedaction? {
         return storage.getDataRedaction(id)
     }
 
@@ -352,7 +348,9 @@ object SourceStorage {
 
     suspend fun updateDataRedaction(id: String, type: RedactionType?, lookup: String?, replacement: String?) {
         val existingDataRedaction = storage.getDataRedaction(id)
-        return storage.updateDataRedaction(
+        requireNotNull(existingDataRedaction) { "Data redaction with id $id does not exist" }
+
+        storage.updateDataRedaction(
             id,
             type ?: existingDataRedaction.type,
             lookup ?: existingDataRedaction.lookup,

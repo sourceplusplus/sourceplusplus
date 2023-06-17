@@ -337,7 +337,8 @@ abstract class BaseStorageITTest<T : CoreStorage> {
         val id = testNameAsUniqueInstrumentId
         storageInstance.addDataRedaction(id, RedactionType.IDENTIFIER_MATCH, "lookup1", "value1")
         val dataRedaction = storageInstance.getDataRedaction(id)
-        assertEquals(id, dataRedaction.id)
+        assertNotNull(dataRedaction)
+        assertEquals(id, dataRedaction!!.id)
         assertEquals(RedactionType.IDENTIFIER_MATCH, dataRedaction.type)
         assertEquals("lookup1", dataRedaction.lookup)
         assertEquals("value1", dataRedaction.replacement)
@@ -346,9 +347,9 @@ abstract class BaseStorageITTest<T : CoreStorage> {
     @Test
     fun hasDataRedaction(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
         val id = testNameAsUniqueInstrumentId
-        assertFalse(storageInstance.hasDataRedaction(id))
+        assertNull(storageInstance.getDataRedaction(id))
         storageInstance.addDataRedaction(id, RedactionType.IDENTIFIER_MATCH, "lookup2", "value2")
-        assertTrue(storageInstance.hasDataRedaction(id))
+        assertNotNull(storageInstance.getDataRedaction(id))
     }
 
     @Test
@@ -367,14 +368,16 @@ abstract class BaseStorageITTest<T : CoreStorage> {
         val id = testNameAsUniqueInstrumentId
         storageInstance.addDataRedaction(id, RedactionType.IDENTIFIER_MATCH, "lookup1", "value1")
         val dataRedaction = storageInstance.getDataRedaction(id)
-        assertEquals(id, dataRedaction.id)
+        assertNotNull(dataRedaction)
+        assertEquals(id, dataRedaction!!.id)
         assertEquals(RedactionType.IDENTIFIER_MATCH, dataRedaction.type)
         assertEquals("lookup1", dataRedaction.lookup)
         assertEquals("value1", dataRedaction.replacement)
 
         storageInstance.updateDataRedaction(id, RedactionType.VALUE_REGEX, "lookup6", "value6")
         val updatedDataRedaction = storageInstance.getDataRedaction(id)
-        assertEquals(id, updatedDataRedaction.id)
+        assertNotNull(updatedDataRedaction)
+        assertEquals(id, updatedDataRedaction!!.id)
         assertEquals(RedactionType.VALUE_REGEX, updatedDataRedaction.type)
         assertEquals("lookup6", updatedDataRedaction.lookup)
         assertEquals("value6", updatedDataRedaction.replacement)
@@ -384,9 +387,9 @@ abstract class BaseStorageITTest<T : CoreStorage> {
     fun removeDataRedaction(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
         val id = testNameAsUniqueInstrumentId
         storageInstance.addDataRedaction(id, RedactionType.IDENTIFIER_MATCH, "lookup7", "value7")
-        assertTrue(storageInstance.hasDataRedaction(id))
+        assertNotNull(storageInstance.getDataRedaction(id))
         storageInstance.removeDataRedaction(id)
-        assertFalse(storageInstance.hasDataRedaction(id))
+        assertNull(storageInstance.getDataRedaction(id))
     }
 
     @Test

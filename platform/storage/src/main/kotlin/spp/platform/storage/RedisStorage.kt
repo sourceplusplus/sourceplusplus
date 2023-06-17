@@ -42,7 +42,7 @@ open class RedisStorage(val vertx: Vertx) : CoreStorage {
         private val log = KotlinLogging.logger {}
     }
 
-    lateinit var redisClient: Redis
+    private lateinit var redisClient: Redis
     lateinit var redis: RedisAPI
 
     override suspend fun init(config: JsonObject) {
@@ -229,15 +229,12 @@ open class RedisStorage(val vertx: Vertx) : CoreStorage {
 
     override suspend fun getDataRedactions(): Set<DataRedaction> {
         val roles = redis.smembers(namespace("data_redactions")).await()
-        return roles.map { getDataRedaction(it.toString(UTF_8)) }.toSet()
+        return roles.mapNotNull { getDataRedaction(it.toString(UTF_8)) }.toSet()
     }
 
-    override suspend fun hasDataRedaction(id: String): Boolean {
-        return redis.sismember(namespace("data_redactions"), id).await().toBoolean()
-    }
-
-    override suspend fun getDataRedaction(id: String): DataRedaction {
-        return DataRedaction(JsonObject(redis.get(namespace("data_redactions:$id")).await().toString(UTF_8)))
+    override suspend fun getDataRedaction(id: String): DataRedaction? {
+        val dataRedactionJson = redis.get(namespace("data_redactions:$id")).await()?.toString(UTF_8)
+        return dataRedactionJson?.let { DataRedaction(JsonObject(it)) }
     }
 
     override suspend fun addDataRedaction(id: String, type: RedactionType, lookup: String, replacement: String) {
@@ -275,7 +272,7 @@ open class RedisStorage(val vertx: Vertx) : CoreStorage {
 
     override suspend fun getRoleDataRedactions(role: DeveloperRole): Set<DataRedaction> {
         val dataRedactions = redis.smembers(namespace("roles:${role.roleName}:data_redactions")).await()
-        return dataRedactions.map { getDataRedaction(it.toString(UTF_8)) }.toSet()
+        return dataRedactions.mapNotNull { getDataRedaction(it.toString(UTF_8)) }.toSet()
     }
 
     override suspend fun getRoles(): Set<DeveloperRole> {

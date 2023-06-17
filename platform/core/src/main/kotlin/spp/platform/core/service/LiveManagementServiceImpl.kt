@@ -309,7 +309,7 @@ class LiveManagementServiceImpl(
         log.debug { "Getting data redaction $id" }
         val promise = Promise.promise<DataRedaction>()
         launch(vertx.dispatcher()) {
-            if (!SourceStorage.hasDataRedaction(id)) {
+            if (SourceStorage.getDataRedaction(id) == null) {
                 promise.fail("Non-existing data redaction: $id")
             } else {
                 promise.complete(SourceStorage.getDataRedaction(id))
@@ -327,7 +327,7 @@ class LiveManagementServiceImpl(
         log.debug { "Adding data redaction $id" }
         val promise = Promise.promise<DataRedaction>()
         launch(vertx.dispatcher()) {
-            if (SourceStorage.hasDataRedaction(id)) {
+            if (SourceStorage.getDataRedaction(id) != null) {
                 promise.fail("Data redaction already exists: $id")
             } else {
                 val redaction = DataRedaction(id, type, lookup, replacement)
@@ -347,12 +347,12 @@ class LiveManagementServiceImpl(
         log.debug { "Updating data redaction $id" }
         val promise = Promise.promise<DataRedaction>()
         launch(vertx.dispatcher()) {
-            if (!SourceStorage.hasDataRedaction(id)) {
-                promise.fail("Non-existing data redaction: $id")
-            } else {
+            try {
                 val redaction = DataRedaction(id, type, lookup, replacement)
                 SourceStorage.updateDataRedaction(id, type, lookup, replacement)
                 promise.complete(redaction)
+            } catch (e: Exception) {
+                promise.fail(e)
             }
         }
         return promise.future()
@@ -362,7 +362,7 @@ class LiveManagementServiceImpl(
         log.debug { "Removing data redaction $id" }
         val promise = Promise.promise<Void>()
         launch(vertx.dispatcher()) {
-            if (!SourceStorage.hasDataRedaction(id)) {
+            if (SourceStorage.getDataRedaction(id) == null) {
                 promise.fail("Non-existing data redaction: $id")
             } else {
                 SourceStorage.removeDataRedaction(id)
@@ -391,7 +391,7 @@ class LiveManagementServiceImpl(
         launch(vertx.dispatcher()) {
             if (!SourceStorage.hasRole(role)) {
                 promise.fail("Non-existing role: $role")
-            } else if (!SourceStorage.hasDataRedaction(id)) {
+            } else if (SourceStorage.getDataRedaction(id) == null) {
                 promise.fail("Non-existing data redaction: $id")
             } else {
                 SourceStorage.addDataRedactionToRole(id, role)
@@ -407,7 +407,7 @@ class LiveManagementServiceImpl(
         launch(vertx.dispatcher()) {
             if (!SourceStorage.hasRole(role)) {
                 promise.fail("Non-existing role: $role")
-            } else if (!SourceStorage.hasDataRedaction(id)) {
+            } else if (SourceStorage.getDataRedaction(id) == null) {
                 promise.fail("Non-existing data redaction: $id")
             } else {
                 SourceStorage.removeDataRedactionFromRole(id, role)

@@ -64,8 +64,7 @@ interface CoreStorage {
     suspend fun addAccessPermissionToRole(id: String, role: DeveloperRole)
     suspend fun removeAccessPermissionFromRole(id: String, role: DeveloperRole)
     suspend fun getDataRedactions(): Set<DataRedaction>
-    suspend fun hasDataRedaction(id: String): Boolean
-    suspend fun getDataRedaction(id: String): DataRedaction
+    suspend fun getDataRedaction(id: String): DataRedaction?
     suspend fun addDataRedaction(id: String, type: RedactionType, lookup: String, replacement: String)
     suspend fun updateDataRedaction(id: String, type: RedactionType, lookup: String, replacement: String)
     suspend fun removeDataRedaction(id: String)
