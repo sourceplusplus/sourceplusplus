@@ -153,6 +153,7 @@ class ExpiringSharedDataITTest : PlatformIntegrationTest() {
         val sharedData = ExpiringSharedData.newBuilder().build<String, String>("ttl-test", storage)
         val lockName = "lock-test-" + System.currentTimeMillis()
         sharedData.getLock(lockName, 1000)
+        delay(1000) //expire added async
 
         val ttl = storage.redis.ttl("cluster:__vertx:locks:expiring_shared_data:ttl-test:lock:$lockName").await()
         log.info("ttl: {}", ttl)
