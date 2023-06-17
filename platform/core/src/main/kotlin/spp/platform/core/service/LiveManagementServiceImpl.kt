@@ -770,8 +770,8 @@ class LiveManagementServiceImpl(
                     }
                         .put("developer_id", dev.id)
                         .put("created_at", Instant.now().toEpochMilli())
-                        //todo: reasonable expires_at
-                        .put("expires_at", Instant.now().plus(365, ChronoUnit.DAYS).toEpochMilli()),
+                        //todo: reasonable exp
+                        .put("exp", Instant.now().plus(30, ChronoUnit.DAYS).toEpochMilli()),
                     JWTOptions().setAlgorithm("RS256")
                 )
                 promise.complete(jwtToken)
