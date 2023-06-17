@@ -155,6 +155,8 @@ class ExpiringSharedDataITTest : PlatformIntegrationTest() {
         sharedData.getLock(lockName, 1000)
 
         val ttl = storage.redis.ttl("cluster:__vertx:locks:expiring_shared_data:ttl-test:lock:$lockName").await()
+        log.info("ttl: {}", ttl)
+
         assertTrue(ttl is NumberType)
         assertTrue((ttl as NumberType).toNumber().toInt() > 0)
     }
