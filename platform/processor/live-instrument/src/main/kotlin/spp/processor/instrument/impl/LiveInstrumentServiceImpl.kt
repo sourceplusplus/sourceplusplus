@@ -596,10 +596,10 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
         dispatchCommand(accessToken, debuggerCommand)
 
         val jvmCause = if (cause == null) null else LiveStackTrace.fromString(cause)
-        val ebException = if (cause?.startsWith("EventBusException") == true) {
-            ServiceExceptionConverter.fromEventBusException(cause, true)
-        } else null
-        vertx.eventBus().send("apply-immediately.${instrument.id}", ebException)
+        if (cause?.startsWith("EventBusException") == true) {
+            val ebException = ServiceExceptionConverter.fromEventBusException(cause, true)
+            vertx.eventBus().send("apply-immediately.${instrument.id}", ebException)
+        }
 
         val removedEvent = LiveInstrumentRemoved(removeInternalMeta(instrument)!!, occurredAt, jvmCause)
         sendEventToSubscribers(instrument, removedEvent)
