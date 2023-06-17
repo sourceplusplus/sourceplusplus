@@ -505,14 +505,12 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
             if (it.body() is LiveInstrument) {
                 val instrument = it.body() as LiveInstrument
                 handler.handle(Future.succeededFuture(removeInternalMeta(instrument)))
+                consumer.unregister()
             } else if (it.body() is ServiceException) {
                 val exception = it.body() as ServiceException
                 handler.handle(Future.failedFuture(exception))
-            } else {
-                log.debug("Live instrument removed before applied: $instrumentId")
-                handler.handle(Future.failedFuture("Live instrument was removed"))
+                consumer.unregister()
             }
-            consumer.unregister()
             it.reply(true)
         }.exceptionHandler {
             handler.handle(Future.failedFuture(it))
