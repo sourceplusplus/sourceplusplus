@@ -127,17 +127,17 @@ class LiveManagementServiceImpl(
         return promise.future()
     }
 
-    override fun setConfigurationValue(config: String, value: String): Future<Boolean> {
-        log.debug { "Setting configuration value $config to $value" }
+    override fun setConfigurationValue(name: String, value: String): Future<Boolean> {
+        log.debug { "Setting configuration value $name to $value" }
         val promise = Promise.promise<Boolean>()
         launch(vertx.dispatcher()) {
-            if (!SystemConfig.isValidConfig(config)) {
-                promise.fail("Invalid configuration $config")
+            if (!SystemConfig.isValidConfig(name)) {
+                promise.fail("Invalid configuration $name")
                 return@launch
             }
 
             try {
-                val config = SystemConfig.get(config)
+                val config = SystemConfig.get(name)
                 config.validator.validateChange(value)
                 val saveValue = config.mapper.mapper(value)!!
                 config.set(saveValue.toString()) //todo: raw saveValue
@@ -150,14 +150,14 @@ class LiveManagementServiceImpl(
         return promise.future()
     }
 
-    override fun getConfigurationValue(config: String): Future<String> {
-        log.debug { "Getting configuration value $config" }
+    override fun getConfigurationValue(name: String): Future<String> {
+        log.debug { "Getting configuration value $name" }
         val promise = Promise.promise<String>()
         launch(vertx.dispatcher()) {
-            if (SystemConfig.isValidConfig(config)) {
-                promise.complete(SystemConfig.get(config).get().toString())
+            if (SystemConfig.isValidConfig(name)) {
+                promise.complete(SystemConfig.get(name).get().toString())
             } else {
-                promise.fail("Invalid configuration $config")
+                promise.fail("Invalid configuration $name")
             }
         }
         return promise.future()

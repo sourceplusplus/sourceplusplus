@@ -33,8 +33,8 @@ object SystemConfig {
         return config
     }
 
-    fun isValidConfig(config: String): Boolean {
-        return registeredConfigurations.any { it.name == config }
+    fun isValidConfig(name: String): Boolean {
+        return registeredConfigurations.any { it.name == name }
     }
 
     fun values(): Stream<SystemConfiguration<*>> {
