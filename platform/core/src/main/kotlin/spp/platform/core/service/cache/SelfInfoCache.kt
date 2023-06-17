@@ -19,6 +19,7 @@ package spp.platform.core.service.cache
 
 import com.google.common.cache.CacheBuilder
 import io.vertx.core.Vertx
+import io.vertx.core.eventbus.Message
 import io.vertx.core.json.JsonObject
 import io.vertx.kotlin.coroutines.CoroutineVerticle
 import mu.KotlinLogging
@@ -34,6 +35,16 @@ import java.util.concurrent.TimeUnit
  */
 class SelfInfoCache : CoroutineVerticle() {
 
+    private val resetCacheMethods = setOf(
+        LiveManagementService::addDeveloperRole.name,
+        LiveManagementService::removeDeveloperRole.name,
+        LiveManagementService::addAccessPermission.name,
+        LiveManagementService::removeAccessPermission.name,
+        LiveManagementService::addRolePermission.name,
+        LiveManagementService::removeRolePermission.name,
+        LiveManagementService::addRoleAccessPermission.name,
+        LiveManagementService::removeRoleAccessPermission.name
+    )
     private val log = KotlinLogging.logger {}
     private val contextCacheName = "spp.cache.is-get-self"
     private val cache = CacheBuilder.newBuilder()
@@ -42,40 +53,18 @@ class SelfInfoCache : CoroutineVerticle() {
 
     override suspend fun start() {
         vertx.eventBus().addOutboundInterceptor<Any> {
-            if (it.message().address() != SourceServices.LIVE_MANAGEMENT) {
-                it.next()
-                return@addOutboundInterceptor
-            }
-
-            when (it.message().headers().get("action")) {
-                LiveManagementService::getSelf.name -> {
-                    val accessToken = it.message().headers().get("auth-token")
-                    val selfInfo = getCached(accessToken)
-                    if (selfInfo != null) {
-                        log.info { "Using cached $selfInfo for access token $accessToken" }
-                        it.message().reply(selfInfo.toJson())
-                    } else {
-                        Vertx.currentContext().putLocal(contextCacheName, true)
-                        it.next()
-                    }
-                }
-
-                LiveManagementService::addDeveloperRole.name,
-                LiveManagementService::removeDeveloperRole.name,
-                LiveManagementService::addAccessPermission.name,
-                LiveManagementService::removeAccessPermission.name,
-                LiveManagementService::addRolePermission.name,
-                LiveManagementService::removeRolePermission.name,
-                LiveManagementService::addRoleAccessPermission.name,
-                LiveManagementService::removeRoleAccessPermission.name -> {
-                    it.message().headers().get("auth-token")?.let {
-                        cache.invalidate(it)
-                        log.trace { "Invalidated cache for access token $it" }
-                    }
+            if (isGetSelfAction(it.message())) {
+                val accessToken = it.message().headers().get("auth-token")
+                val selfInfo = getCached(accessToken)
+                if (selfInfo != null) {
+                    log.trace { "Using cached $selfInfo for access token $accessToken" }
+                    it.message().reply(selfInfo.toJson())
+                } else {
+                    Vertx.currentContext().putLocal(contextCacheName, true)
                     it.next()
                 }
-
-                else -> it.next()
+            } else {
+                it.next()
             }
         }
         vertx.eventBus().addInboundInterceptor<Any> {
@@ -84,10 +73,23 @@ class SelfInfoCache : CoroutineVerticle() {
                 if (accessToken != null) {
                     cache.put(accessToken, SelfInfo(it.message().body() as JsonObject))
                 }
+            } else if (isResetCacheAction(it.message())) {
+                cache.invalidateAll()
+                log.trace { "Invalidated cache" }
             }
 
             it.next()
         }
+    }
+
+    private fun isResetCacheAction(message: Message<Any?>): Boolean {
+        val action = message.headers().get("action") ?: false
+        return message.address() == SourceServices.LIVE_MANAGEMENT && resetCacheMethods.contains(action)
+    }
+
+    private fun isGetSelfAction(message: Message<Any?>): Boolean {
+        val action = message.headers().get("action") ?: false
+        return message.address() == SourceServices.LIVE_MANAGEMENT && action == LiveManagementService::getSelf.name
     }
 
     private fun getCached(accessToken: String?): SelfInfo? {
