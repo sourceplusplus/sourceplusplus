@@ -107,10 +107,10 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
         }
 
         //listen for instruments applied/removed
-        vertx.eventBus().consumer<JsonObject>(ProcessorAddress.LIVE_INSTRUMENT_APPLIED) {
+        vertx.eventBus().consumer(ProcessorAddress.LIVE_INSTRUMENT_APPLIED) {
             launch(vertx.dispatcher()) { handleLiveInstrumentApplied(it) }
         }
-        vertx.eventBus().consumer<JsonObject>(ProcessorAddress.LIVE_INSTRUMENT_REMOVED) {
+        vertx.eventBus().consumer(ProcessorAddress.LIVE_INSTRUMENT_REMOVED) {
             launch(vertx.dispatcher()) { handleInstrumentRemoved(it) }
         }
     }
@@ -599,12 +599,10 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
         val ebException = if (cause?.startsWith("EventBusException") == true) {
             ServiceExceptionConverter.fromEventBusException(cause, true)
         } else null
-        vertx.eventBus().request<Void>("apply-immediately.${instrument.id}", ebException).onFailure {
-            launch(vertx.dispatcher()) {
-                val removedEvent = LiveInstrumentRemoved(removeInternalMeta(instrument)!!, occurredAt, jvmCause)
-                sendEventToSubscribers(instrument, removedEvent)
-            }
-        }
+        vertx.eventBus().send("apply-immediately.${instrument.id}", ebException)
+
+        val removedEvent = LiveInstrumentRemoved(removeInternalMeta(instrument)!!, occurredAt, jvmCause)
+        sendEventToSubscribers(instrument, removedEvent)
 
         if (jvmCause != null) {
             log.warn("Publish live instrument removed. Cause: {} - {}", jvmCause.exceptionType, jvmCause.message)
