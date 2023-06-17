@@ -217,7 +217,7 @@ open class MemoryStorage(val vertx: Vertx) : CoreStorage {
     override suspend fun getDataRedaction(id: String): DataRedaction? {
         val dataRedactionsStorage = vertx.sharedData().getAsyncMap<String, Any>(namespace("dataRedactions")).await()
         val dataRedactions = dataRedactionsStorage.get("dataRedactions").await() as JsonArray? ?: JsonArray()
-        return dataRedactions.list.find { (it as DataRedaction).id == id } as DataRedaction
+        return dataRedactions.list.find { (it as DataRedaction).id == id } as DataRedaction?
     }
 
     override suspend fun addDataRedaction(id: String, type: RedactionType, lookup: String, replacement: String) {
