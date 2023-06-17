@@ -509,6 +509,7 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
                 val exception = it.body() as ServiceException
                 handler.handle(Future.failedFuture(exception))
             } else {
+                log.debug("Live instrument removed before applied: $instrumentId")
                 handler.handle(Future.failedFuture("Live instrument was removed"))
             }
             consumer.unregister()
@@ -586,7 +587,7 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
     }
 
     private suspend fun removeLiveInstrument(occurredAt: Instant, instrument: LiveInstrument, cause: String?) {
-        log.debug { "Removing live instrument: {}".args(instrument.id) }
+        log.debug { "Removing live instrument: {} with cause: {}".args(instrument, cause) }
         SourceStorage.removeLiveInstrument(instrument.id!!)
 
         val accessToken = instrument.meta["spp.access_token"] as String?
