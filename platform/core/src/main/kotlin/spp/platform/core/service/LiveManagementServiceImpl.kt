@@ -44,6 +44,7 @@ import org.apache.skywalking.oap.server.library.module.ModuleManager
 import spp.platform.common.ClusterConnection
 import spp.platform.common.DeveloperAuth
 import spp.platform.common.service.SourceBridgeService
+import spp.platform.core.service.cache.SelfInfoCache
 import spp.platform.storage.SourceStorage
 import spp.platform.storage.config.SystemConfig
 import spp.protocol.artifact.metrics.MetricStep
@@ -83,6 +84,8 @@ class LiveManagementServiceImpl(
     private lateinit var metricsService: MetricsService
 
     override suspend fun start() {
+        vertx.deployVerticle(SelfInfoCache()).await()
+
         healthChecks = HealthChecks.create(vertx)
         addServiceCheck(healthChecks, SourceServices.LIVE_MANAGEMENT)
         addServiceCheck(healthChecks, SourceServices.LIVE_INSTRUMENT)
