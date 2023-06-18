@@ -1,0 +1,11 @@
+name: Clear cache
+on:
+  workflow_dispatch:
+
+jobs:
+  clear-cache:
+    runs-on: ubuntu-20.04
+
+    steps:
+      - name: Clear caches
+        uses: easimon/wipe-cache@main
