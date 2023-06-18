@@ -218,7 +218,7 @@ tasks.register<Copy>("updateDockerFiles") {
 
 dockerCompose {
     dockerComposeWorkingDirectory.set(File("../docker/e2e"))
-    waitForTcpPorts.set(false)
+    tcpPortsToIgnoreWhenWaiting.set(listOf(5106))
 }
 tasks.getByName("composeBuild")
     .dependsOn("updateDockerFiles")
