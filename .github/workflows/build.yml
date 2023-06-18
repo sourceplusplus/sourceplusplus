@@ -65,6 +65,8 @@ jobs:
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2.4.2
 
+      - uses: docker-practice/actions-setup-docker@master
+
       - name: Write docker-compose.override.yml
         working-directory: docker/e2e
         run: |
@@ -146,6 +148,8 @@ jobs:
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2.4.2
 
+      - uses: docker-practice/actions-setup-docker@master
+
       - name: Write docker-compose.override.yml
         working-directory: docker/e2e
         run: |
@@ -174,6 +178,8 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2.4.2
+
+      - uses: docker-practice/actions-setup-docker@master
 
       - name: Test probe-jvm
         run: |
@@ -212,6 +218,8 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2.4.2
+
+      - uses: docker-practice/actions-setup-docker@master
 
         #todo: shouldn't need SPP_CLIENT_ACCESS_ENABLED=false
       - name: Write docker-compose.override.yml
@@ -253,6 +261,8 @@ jobs:
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2.4.2
 
+      - uses: docker-practice/actions-setup-docker@master
+
       - name: Test probe-nodejs
         run: ./gradlew --scan -p probes/nodejs test
 
@@ -286,6 +296,8 @@ jobs:
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2.4.2
 
+      - uses: docker-practice/actions-setup-docker@master
+
       - name: Write docker-compose.override.yml
         working-directory: docker/e2e
         run: |
@@ -311,9 +323,6 @@ jobs:
         timeout-minutes: 5
         run: |
           until $(curl --header "Authorization: Bearer ${{ env.SPP_JWT_TOKEN }}" --output /dev/null --silent --fail http://localhost:12800/health); do printf '.'; sleep 5; done
-
-      - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2.4.2
 
       - name: Build protocol
         run: ./gradlew --scan :protocol:assemble
