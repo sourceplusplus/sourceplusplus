@@ -390,6 +390,12 @@ jobs:
 
     needs:
       - verify-mono
+      - test-platform
+      - test-probe-jvm
+      - test-probe-nodejs
+      - test-interface-cli
+      - test-interface-jetbrains
+      - test-protocol
     runs-on: ubuntu-20.04
     timeout-minutes: 40
     concurrency:
@@ -458,12 +464,6 @@ jobs:
   release-draft:
     if: github.ref == 'refs/heads/master'
     needs:
-      - test-platform
-      - test-probe-jvm
-      - test-probe-nodejs
-      - test-interface-cli
-      - test-interface-jetbrains
-      - test-protocol
       - make-distribution
     runs-on: ubuntu-20.04
 
@@ -508,12 +508,6 @@ jobs:
   docker-push:
     if: github.ref == 'refs/heads/master'
     needs:
-      - test-platform
-      - test-probe-jvm
-      - test-probe-nodejs
-      - test-interface-cli
-      - test-interface-jetbrains
-      - test-protocol
       - make-distribution
     runs-on: ubuntu-20.04
 
