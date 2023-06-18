@@ -189,6 +189,7 @@ jobs:
             :probes:jvm:common:test \
             :probes:jvm:services:test
 
+
   test-probe-nodejs:
 #    needs: [ verify-mono ]
     runs-on: ubuntu-20.04
@@ -363,6 +364,7 @@ jobs:
             :interfaces:jetbrains:marker:ult-marker:test \
             :interfaces:jetbrains:plugin:test 
 
+
   test-protocol:
 #    needs: [ verify-mono ]
     runs-on: ubuntu-20.04
@@ -383,11 +385,8 @@ jobs:
       - name: Test protocol
         run: ./gradlew --scan -p protocol test
 
-  make-distribution:
-    #todo: can ignore commits starting with docs
-    if: github.ref == 'refs/heads/master'
-    #if: ${{ !contains(github.event.pull_request.head.ref, '#docs') && !(startsWith(github.event.head_commit.message, 'Merge pull request') && contains(github.event.head_commit.message, '#docs')) }}
-
+  # Delete build artifacts
+  cleanup:
     needs:
       - verify-mono
       - test-platform
@@ -396,150 +395,6 @@ jobs:
       - test-interface-cli
       - test-interface-jetbrains
       - test-protocol
-    runs-on: ubuntu-20.04
-    timeout-minutes: 40
-    concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}
-      cancel-in-progress: true
-
-    outputs:
-      version: ${{ steps.properties.outputs.version }}
-      release_version: ${{ steps.properties.outputs.release_version }}
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: 'recursive'
-
-      - uses: actions/setup-java@v3
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-
-      - name: Export Properties
-        id: properties
-        shell: bash
-        run: |
-          VERSION=$(grep "projectVersion" gradle.properties | cut -d'=' -f2)
-          echo "::set-output name=version::$VERSION"
-          echo "SPP_PLATFORM_VERSION=$VERSION" >> $GITHUB_ENV
-          echo "SPP_RELEASE_VERSION=${VERSION/-SNAPSHOT/}" >> $GITHUB_ENV
-          SPP_RELEASE_VERSION=${VERSION/-SNAPSHOT/}
-          echo "::set-output name=release_version::$SPP_RELEASE_VERSION"
-
-      - name: Set build version
-        run: |
-          echo "BUILD_VERSION=$SPP_RELEASE_VERSION" >> $GITHUB_ENV
-
-      - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2.4.2
-
-      - name: Make distribution
-        run: ./gradlew --scan makeDist -Dbuild.profile=release -PplatformVersion=$BUILD_VERSION
-
-      - name: Upload spp-platform
-        uses: actions/upload-artifact@v3
-        with:
-          name: spp-platform-${{ env.BUILD_VERSION }}.tar.gz
-          path: ./dist/spp-platform-${{ env.BUILD_VERSION }}.tar.gz
-
-      - name: Remove Old Snapshot Packages
-        uses: smartsquaregmbh/delete-old-packages@v0.6.0
-        with:
-          keep: 0
-          version-pattern: "^\\d+\\.\\d+\\.\\d+-SNAPSHOT$"
-          names: |
-            plus.sourceplus.platform.platform-bridge
-            plus.sourceplus.platform.platform-common
-            plus.sourceplus.platform.platform-core
-            plus.sourceplus.platform.platform-storage
-            plus.sourceplus.platform.live-instrument-processor
-            plus.sourceplus.platform.live-view-processor
-
-      - name: Publish New Snapshot Packages
-        run: ./gradlew --scan -p platform publish -Dbuild.profile=release
-        env:
-          GH_PUBLISH_USERNAME: $GITHUB_ACTOR
-          GH_PUBLISH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  release-draft:
-    if: github.ref == 'refs/heads/master'
-    needs:
-      - make-distribution
-    runs-on: ubuntu-20.04
-
-    steps:
-
-      - name: Remove Old Release Drafts
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          curl -H "Authorization: Bearer $GITHUB_TOKEN" https://api.github.com/repos/$GITHUB_REPOSITORY/releases \
-            | tr '\r\n' ' ' \
-            | jq '.[] | select(.draft == true) | .id' \
-            | xargs -I '{}' \
-          curl -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" https://api.github.com/repos/$GITHUB_REPOSITORY/releases/{}
-
-      - name: Create Release Draft
-        id: createDraft
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ needs.make-distribution.outputs.release_version }}
-          release_name: v${{ needs.make-distribution.outputs.release_version }}
-          body: ${{ needs.build.outputs.changelog }}
-          draft: true
-
-      - name: Download spp-platform artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: spp-platform-${{ needs.make-distribution.outputs.release_version }}.tar.gz
-
-      - name: Upload spp-platform asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.createDraft.outputs.upload_url }}
-          asset_path: ./spp-platform-${{ needs.make-distribution.outputs.release_version }}.tar.gz
-          asset_name: spp-platform-${{ needs.make-distribution.outputs.release_version }}.tar.gz
-          asset_content_type: application/gzip
-
-  docker-push:
-    if: github.ref == 'refs/heads/master'
-    needs:
-      - make-distribution
-    runs-on: ubuntu-20.04
-
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: true
-
-      - name: Login to DockerHub Registry
-        run: echo ${{ secrets.DOCKERHUB_PASSWORD }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
-
-      - name: Download spp-platform artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: spp-platform-${{ needs.make-distribution.outputs.release_version }}.tar.gz
-          path: ./docker/spp-platform
-
-      - name: Untar spp-platform
-        run: cd ./docker/spp-platform && tar -zxvf spp-platform-${{ needs.make-distribution.outputs.release_version }}.tar.gz --strip-components=1
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
-
-      - name: Set up Docker Buildx
-        run: docker buildx create --use --platform linux/arm64,linux/amd64 --driver-opt=network=host
-
-      - name: Build & push spp-platform latest Docker image
-        run: cd ./docker/spp-platform && docker buildx build . --platform linux/arm64,linux/amd64 --file Dockerfile --tag sourceplusplus/spp-platform:latest --push
-
-  # Delete build artifacts
-  cleanup:
-    needs: [ release-draft, docker-push ]
     runs-on: ubuntu-20.04
 
     steps:
