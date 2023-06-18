@@ -165,7 +165,7 @@ class SourcePlatform(private val manager: ModuleManager) : CoroutineVerticle() {
             if (record.status == Status.UP) {
                 launch(vertx.dispatcher()) {
                     SourceStorage.counter(record.name).andIncrement.await()
-                    log.debug { "Service UP: ${record.name}" }
+                    log.trace { "Service UP: ${record.name}" }
                 }
             } else if (record.status == Status.DOWN) {
                 launch(vertx.dispatcher()) {
