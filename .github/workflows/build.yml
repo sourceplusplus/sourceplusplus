@@ -328,7 +328,7 @@ jobs:
           path: docker/e2e/spp-platform.log
 
   test-interface-jetbrains:
-    needs: [ verify-mono ]
+#    needs: [ verify-mono ]
     runs-on: ubuntu-20.04
     timeout-minutes: 20
     concurrency:
@@ -364,7 +364,7 @@ jobs:
             :interfaces:jetbrains:plugin:test 
 
   test-protocol:
-    needs: [ verify-mono ]
+#    needs: [ verify-mono ]
     runs-on: ubuntu-20.04
     timeout-minutes: 10
     concurrency:
