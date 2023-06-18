@@ -38,7 +38,7 @@ tasks {
 
         into("dist/spp-platform-${project.version}")
 
-        from(file("docker/e2e/config/spp-platform.yml")){
+        from(file("docker/e2e/config/spp-platform.yml")) {
             into("config")
         }
         from(
