@@ -114,14 +114,14 @@ jobs:
           path: docker/e2e/spp-platform.log
 
       - name: Upload test-live-instrument.log artifact
-        if: ${{ always() }}
+        if: ${{ always() && matrix.test_module == 'processor:live-instrument' }}
         uses: actions/upload-artifact@v3
         with:
           name: test-live-instrument.log
           path: /tmp/spp-probe/logs/test-live-instrument.log
 
       - name: Upload test-live-view.log artifact
-        if: ${{ always() }}
+        if: ${{ always() && matrix.test_module == 'processor:live-view' }}
         uses: actions/upload-artifact@v3
         with:
           name: test-live-view.log
