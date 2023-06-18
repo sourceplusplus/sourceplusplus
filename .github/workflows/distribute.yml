@@ -10,6 +10,7 @@ env:
   GRADLE_OPTS: -Dorg.gradle.caching=true -Dorg.gradle.daemon=false -Xmx5g -Xms5g
 
 jobs:
+  if: ${{ github.event.workflow_run.conclusion == 'success' }}
   make-distribution:
     #todo: can ignore commits starting with docs
     if: github.ref == 'refs/heads/master'
