@@ -148,8 +148,6 @@ jobs:
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2.4.2
 
-      - uses: docker-practice/actions-setup-docker@master
-
       - name: Write docker-compose.override.yml
         working-directory: docker/e2e
         run: |
@@ -187,7 +185,6 @@ jobs:
             :probes:jvm:common:test \
             :probes:jvm:services:test
 
-
   test-probe-nodejs:
 #    needs: [ verify-mono ]
     runs-on: ubuntu-20.04
@@ -208,8 +205,6 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2.4.2
-
-      - uses: docker-practice/actions-setup-docker@master
 
         #todo: shouldn't need SPP_CLIENT_ACCESS_ENABLED=false
       - name: Write docker-compose.override.yml
@@ -277,8 +272,6 @@ jobs:
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2.4.2
 
-      - uses: docker-practice/actions-setup-docker@master
-
       - name: Write docker-compose.override.yml
         working-directory: docker/e2e
         run: |
@@ -335,7 +328,6 @@ jobs:
       cancel-in-progress: true
 
     steps:
-      - uses: docker-practice/actions-setup-docker@master
       - uses: actions/checkout@v3
         with:
           submodules: 'recursive'
@@ -360,8 +352,7 @@ jobs:
             :interfaces:jetbrains:marker:jvm-marker:test \
             :interfaces:jetbrains:marker:py-marker:test \
             :interfaces:jetbrains:marker:ult-marker:test \
-            :interfaces:jetbrains:plugin:test 
-
+            :interfaces:jetbrains:plugin:test
 
   test-protocol:
 #    needs: [ verify-mono ]
@@ -372,7 +363,6 @@ jobs:
       cancel-in-progress: true
 
     steps:
-      - uses: docker-practice/actions-setup-docker@master
       - uses: actions/checkout@v3
         with:
           submodules: 'true'
