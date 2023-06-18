@@ -185,6 +185,16 @@ jobs:
             :probes:jvm:common:test \
             :probes:jvm:services:test
 
+      - run: cd docker/e2e && docker-compose logs spp-platform > spp-platform.log
+        if: ${{ always() }}
+
+      - name: Upload docker logs artifact
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-probe-jvm-platform-logs
+          path: docker/e2e/spp-platform.log
+
   test-probe-nodejs:
 #    needs: [ verify-mono ]
     runs-on: ubuntu-20.04
@@ -249,7 +259,17 @@ jobs:
       - name: Test probe-nodejs
         run: ./gradlew --scan -p probes/nodejs test
         env:
-          CI: true
+          CI: true #todo: shouldn't need this
+
+      - run: cd docker/e2e && docker-compose logs spp-platform > spp-platform.log
+        if: ${{ always() }}
+
+      - name: Upload docker logs artifact
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-probe-nodejs-platform-logs
+          path: docker/e2e/spp-platform.log
 
   test-interface-cli:
 #    needs: [ verify-mono ]
