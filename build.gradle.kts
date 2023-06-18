@@ -74,6 +74,10 @@ tasks {
                 println("Downloaded Apache SkyWalking")
             }
         }
+
+        inputs.property("skywalkingVersion", skywalkingVersion)
+        outputs.file(File(projectDir, "docker/e2e/apache-skywalking-apm-$skywalkingVersion.tar.gz"))
+        outputs.cacheIf { true }
     }
 }
 
