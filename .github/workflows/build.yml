@@ -44,7 +44,7 @@ jobs:
 
   test-platform:
     runs-on: ubuntu-20.04
-    timeout-minutes: 25
+    timeout-minutes: 15
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-test-platform-${{ matrix.test_module }}
       cancel-in-progress: true
@@ -65,8 +65,6 @@ jobs:
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2.4.2
 
-      - uses: docker-practice/actions-setup-docker@master
-
       - name: Write docker-compose.override.yml
         working-directory: docker/e2e
         run: |
@@ -77,7 +75,7 @@ jobs:
           echo "      - SPP_PROBE_ENABLED=true" >> docker-compose.override.yml
 
       - name: Start spp-platform
-        run: ./gradlew --scan :platform:assembleUp
+        run: ./gradlew :platform:assembleUp
 
       - name: Docker IPs
         run: docker inspect --format='{{.Name}} - {{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $(docker ps -aq)
@@ -96,9 +94,6 @@ jobs:
       - name: Test platform
         run: ./gradlew --scan :platform:${{ matrix.test_module }}:test -Dtest.profile=integration -Dtest.includeSlow=true
 
-      - run: cd docker/e2e && docker-compose logs spp-platform > spp-platform.log
-        if: ${{ always() }}
-
       - name: Set test module name
         if: ${{ always() }}
         run: |
@@ -107,12 +102,16 @@ jobs:
           echo "TEST_MODULE=$TEST_MODULE" >> $GITHUB_ENV
           echo "TEST_MODULE=$TEST_MODULE"
 
+      - name: Make docker logs artifact
+        if: ${{ always() }}
+        run: ./gradlew :platform:composeLogs
+
       - name: Upload docker logs artifact
         if: ${{ always() }}
         uses: actions/upload-artifact@v3
         with:
           name: ${{ env.TEST_MODULE }}-docker.log
-          path: docker/e2e/spp-platform.log
+          path: platform/build/containers-logs/spp-platform.log
 
       - name: Upload test-live-instrument.log artifact
         if: ${{ always() && matrix.test_module == 'processor:live-instrument' }}
@@ -148,8 +147,6 @@ jobs:
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2.4.2
 
-      - uses: docker-practice/actions-setup-docker@master
-
       - name: Write docker-compose.override.yml
         working-directory: docker/e2e
         run: |
@@ -160,7 +157,7 @@ jobs:
           echo "      - SPP_PROBE_ENABLED=true" >> docker-compose.override.yml
 
       - name: Start spp-platform
-        run: ./gradlew --scan :platform:assembleUp
+        run: ./gradlew :platform:assembleUp
 
       - name: Docker IPs
         run: docker inspect --format='{{.Name}} - {{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $(docker ps -aq)
@@ -184,19 +181,20 @@ jobs:
             :probes:jvm:common:test \
             :probes:jvm:services:test
 
-      - run: cd docker/e2e && docker-compose logs spp-platform > spp-platform.log
+      - name: Make docker logs artifact
         if: ${{ always() }}
+        run: ./gradlew :platform:composeLogs
 
       - name: Upload docker logs artifact
         if: ${{ always() }}
         uses: actions/upload-artifact@v3
         with:
           name: test-probe-jvm-platform-logs
-          path: docker/e2e/spp-platform.log
+          path: platform/build/containers-logs/spp-platform.log
 
   test-probe-nodejs:
     runs-on: ubuntu-20.04
-    timeout-minutes: 10
+    timeout-minutes: 15
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-test-probe-nodejs
       cancel-in-progress: true
@@ -214,8 +212,6 @@ jobs:
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2.4.2
 
-      - uses: docker-practice/actions-setup-docker@master
-
         #todo: shouldn't need SPP_CLIENT_ACCESS_ENABLED=false
       - name: Write docker-compose.override.yml
         working-directory: docker/e2e
@@ -228,7 +224,7 @@ jobs:
           echo "      - SPP_CLIENT_ACCESS_ENABLED=false" >> docker-compose.override.yml
 
       - name: Start spp-platform
-        run: ./gradlew --scan :platform:assembleUp
+        run: ./gradlew :platform:assembleUp
 
       - name: Docker IPs
         run: docker inspect --format='{{.Name}} - {{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $(docker ps -aq)
@@ -256,15 +252,16 @@ jobs:
       - name: Test probe-nodejs
         run: ./gradlew --scan -p probes/nodejs test
 
-      - run: cd docker/e2e && docker-compose logs spp-platform > spp-platform.log
+      - name: Make docker logs artifact
         if: ${{ always() }}
+        run: ./gradlew :platform:composeLogs
 
       - name: Upload docker logs artifact
         if: ${{ always() }}
         uses: actions/upload-artifact@v3
         with:
           name: test-probe-nodejs-platform-logs
-          path: docker/e2e/spp-platform.log
+          path: platform/build/containers-logs/spp-platform.log
 
   test-interface-cli:
     runs-on: ubuntu-20.04
@@ -286,8 +283,6 @@ jobs:
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2.4.2
 
-      - uses: docker-practice/actions-setup-docker@master
-
       - name: Write docker-compose.override.yml
         working-directory: docker/e2e
         run: |
@@ -298,7 +293,7 @@ jobs:
           echo "      - SPP_PROBE_ENABLED=true" >> docker-compose.override.yml
 
       - name: Start spp-platform
-        run: ./gradlew --scan :platform:assembleUp
+        run: ./gradlew :platform:assembleUp
 
       - name: Docker IPs
         run: docker inspect --format='{{.Name}} - {{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $(docker ps -aq)
@@ -322,19 +317,20 @@ jobs:
           ./gradlew --scan -Dtest.profile=integration \
             :interfaces:cli:test
 
-      - run: cd docker/e2e && docker-compose logs spp-platform > spp-platform.log
+      - name: Make docker logs artifact
         if: ${{ always() }}
+        run: ./gradlew :platform:composeLogs
 
       - name: Upload docker logs artifact
         if: ${{ always() }}
         uses: actions/upload-artifact@v3
         with:
           name: test-interface-cli-platform-logs
-          path: docker/e2e/spp-platform.log
+          path: platform/build/containers-logs/spp-platform.log
 
   test-interface-jetbrains:
     runs-on: ubuntu-20.04
-    timeout-minutes: 20
+    timeout-minutes: 15
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-test-interface-jetbrains
       cancel-in-progress: true
@@ -368,7 +364,7 @@ jobs:
 
   test-protocol:
     runs-on: ubuntu-20.04
-    timeout-minutes: 10
+    timeout-minutes: 15
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-protocol
       cancel-in-progress: true
@@ -398,7 +394,7 @@ jobs:
     #if: ${{ !contains(github.event.pull_request.head.ref, '#docs') && !(startsWith(github.event.head_commit.message, 'Merge pull request') && contains(github.event.head_commit.message, '#docs')) }}
 
     runs-on: ubuntu-20.04
-    timeout-minutes: 40
+    timeout-minutes: 15
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}
       cancel-in-progress: true
