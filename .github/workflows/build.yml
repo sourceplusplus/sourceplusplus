@@ -44,7 +44,7 @@ jobs:
 
   test-platform:
 #    needs: [ verify-mono ]
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest-m
     timeout-minutes: 25
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-test-platform-${{ matrix.test_module }}
