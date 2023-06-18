@@ -524,26 +524,3 @@ jobs:
 
       - name: Build & push spp-platform latest Docker image
         run: cd ./docker/spp-platform && docker buildx build . --platform linux/arm64,linux/amd64 --file Dockerfile --tag sourceplusplus/spp-platform:latest --push
-
-  # Delete build artifacts
-  cleanup:
-    needs:
-      - verify-mono
-      - test-platform
-      - test-probe-jvm
-      - test-probe-nodejs
-      - test-interface-cli
-      - test-interface-jetbrains
-      - test-protocol
-    runs-on: ubuntu-20.04
-
-    steps:
-      - name: Delete spp-platform image
-        uses: geekyeggo/delete-artifact@v2
-        with:
-          name: spp-platform
-
-      - name: Delete spp-platform distribution
-        uses: geekyeggo/delete-artifact@v2
-        with:
-          name: spp-platform-${{ needs.make-distribution.outputs.release_version }}.tar.gz
