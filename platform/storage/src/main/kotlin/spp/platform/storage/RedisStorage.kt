@@ -42,7 +42,8 @@ open class RedisStorage(val vertx: Vertx) : CoreStorage {
         private val log = KotlinLogging.logger {}
     }
 
-    private lateinit var redisClient: Redis
+    @Suppress("MemberVisibilityCanBePrivate")
+    lateinit var redisClient: Redis
     lateinit var redis: RedisAPI
 
     override suspend fun init(config: JsonObject) {
