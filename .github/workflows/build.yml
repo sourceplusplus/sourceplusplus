@@ -97,7 +97,7 @@ jobs:
           path: repo.tar.gz
 
   test-platform:
-    needs: [ verify-mono, build-platform ]
+#    needs: [ verify-mono ]
     runs-on: ubuntu-20.04
     timeout-minutes: 25
     concurrency:
@@ -109,16 +109,19 @@ jobs:
         test_module: [ 'bridge', 'common', 'core', 'processor:live-view', 'processor:live-instrument', 'storage' ]
 
     steps:
-      - uses: docker-practice/actions-setup-docker@master
-
-      - name: Download repo
-        uses: actions/download-artifact@v3
+      - uses: actions/checkout@v3
         with:
-          name: repo
-          path: .
+          submodules: 'recursive'
 
-      - name: Extract repo
-        run: gzip -d repo.tar.gz && tar -xzf repo.tar
+      - uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2.4.2
+
+      - uses: docker-practice/actions-setup-docker@master
 
       - name: Write docker-compose.override.yml
         working-directory: docker/e2e
@@ -130,7 +133,7 @@ jobs:
           echo "      - SPP_PROBE_ENABLED=true" >> docker-compose.override.yml
 
       - name: Start spp-platform
-        run: cd docker/e2e && docker-compose up -d
+        run: ./gradlew --scan :platform:assembleUp
 
       - name: Docker IPs
         run: docker inspect --format='{{.Name}} - {{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $(docker ps -aq)
@@ -145,9 +148,6 @@ jobs:
         timeout-minutes: 5
         run: |
           until $(curl --header "Authorization: Bearer ${{ env.SPP_JWT_TOKEN }}" --output /dev/null --silent --fail http://localhost:12800/health); do printf '.'; sleep 5; done
-
-      - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2.4.2
 
       - name: Test platform
         run: ./gradlew --scan :platform:${{ matrix.test_module }}:test -Dtest.profile=integration -Dtest.includeSlow=true
