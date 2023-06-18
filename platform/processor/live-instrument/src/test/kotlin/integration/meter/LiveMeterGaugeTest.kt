@@ -113,6 +113,7 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
         val testContext = VertxTestContext()
         val consumer = vertx.eventBus().consumer<JsonObject>(toLiveViewSubscription(subscriptionId))
         consumer.handler {
+            log.info("Received live view event: ${it.body()}")
             val liveViewEvent = LiveViewEvent(it.body())
             val rawMetrics = JsonObject(liveViewEvent.metricsData)
             testContext.verify {
@@ -187,6 +188,7 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
         val testContext = VertxTestContext()
         val consumer = vertx.eventBus().consumer<JsonObject>(toLiveViewSubscription(subscriptionId))
         consumer.handler {
+            log.info("Received live view event: ${it.body()}")
             val liveViewEvent = LiveViewEvent(it.body())
             val rawMetrics = JsonObject(liveViewEvent.metricsData)
             testContext.verify {
