@@ -220,7 +220,10 @@ dockerCompose {
     dockerComposeWorkingDirectory.set(File("../docker/e2e"))
     waitForTcpPorts.set(false)
 
-    environment.put("SPP_PROBE_ENABLED", System.getenv("CI") == "true")
+    if (System.getenv("CI") == "true") {
+        environment.put("SPP_PROBE_ENABLED", "true")
+        println("CI detected. Enabled self-monitoring")
+    }
 }
 tasks.getByName("composeBuild")
     .dependsOn("updateDockerFiles")
