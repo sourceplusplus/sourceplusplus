@@ -258,11 +258,6 @@ jobs:
         working-directory: probes/nodejs
         run: npm install
 
-      - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2.4.2
-
-      - uses: docker-practice/actions-setup-docker@master
-
       - name: Test probe-nodejs
         run: ./gradlew --scan -p probes/nodejs test
 
