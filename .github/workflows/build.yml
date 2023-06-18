@@ -104,7 +104,6 @@ jobs:
       group: ${{ github.workflow }}-${{ github.ref }}-test-platform-${{ matrix.test_module }}
       cancel-in-progress: true
     strategy:
-      fail-fast: false
       matrix:
         test_module: [ 'bridge', 'common', 'core', 'processor:live-view', 'processor:live-instrument', 'storage' ]
 
@@ -185,7 +184,7 @@ jobs:
           path: /tmp/spp-probe/logs/test-live-view.log
 
   test-probe-jvm:
-    needs: [ verify-mono, build-platform ]
+#    needs: [ verify-mono ]
     runs-on: ubuntu-20.04
     timeout-minutes: 15
     concurrency:
@@ -193,16 +192,19 @@ jobs:
       cancel-in-progress: true
 
     steps:
-      - uses: docker-practice/actions-setup-docker@master
-
-      - name: Download repo
-        uses: actions/download-artifact@v3
+      - uses: actions/checkout@v3
         with:
-          name: repo
-          path: .
+          submodules: 'recursive'
 
-      - name: Extract repo
-        run: gzip -d repo.tar.gz && tar -xzf repo.tar
+      - uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2.4.2
+
+      - uses: docker-practice/actions-setup-docker@master
 
       - name: Write docker-compose.override.yml
         working-directory: docker/e2e
@@ -242,7 +244,7 @@ jobs:
             :probes:jvm:services:test
 
   test-probe-nodejs:
-    needs: [ verify-mono, build-platform ]
+#    needs: [ verify-mono ]
     runs-on: ubuntu-20.04
     timeout-minutes: 10
     concurrency:
@@ -250,16 +252,19 @@ jobs:
       cancel-in-progress: true
 
     steps:
-      - uses: docker-practice/actions-setup-docker@master
-
-      - name: Download repo
-        uses: actions/download-artifact@v3
+      - uses: actions/checkout@v3
         with:
-          name: repo
-          path: .
+          submodules: 'recursive'
 
-      - name: Extract repo
-        run: gzip -d repo.tar.gz && tar -xzf repo.tar
+      - uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2.4.2
+
+      - uses: docker-practice/actions-setup-docker@master
 
         #todo: shouldn't need SPP_CLIENT_ACCESS_ENABLED=false
       - name: Write docker-compose.override.yml
