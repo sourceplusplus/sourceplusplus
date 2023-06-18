@@ -43,7 +43,6 @@ jobs:
         run: ./gradlew --scan spotlessCheck
 
   test-platform:
-#    needs: [ verify-mono ]
     runs-on: ubuntu-20.04
     timeout-minutes: 25
     concurrency:
@@ -128,7 +127,6 @@ jobs:
           path: /tmp/spp-probe/logs/test-live-view.log
 
   test-probe-jvm:
-#    needs: [ verify-mono ]
     runs-on: ubuntu-20.04
     timeout-minutes: 15
     concurrency:
@@ -196,7 +194,6 @@ jobs:
           path: docker/e2e/spp-platform.log
 
   test-probe-nodejs:
-#    needs: [ verify-mono ]
     runs-on: ubuntu-20.04
     timeout-minutes: 10
     concurrency:
@@ -258,8 +255,6 @@ jobs:
 
       - name: Test probe-nodejs
         run: ./gradlew --scan -p probes/nodejs test
-        env:
-          CI: true #todo: shouldn't need this
 
       - run: cd docker/e2e && docker-compose logs spp-platform > spp-platform.log
         if: ${{ always() }}
@@ -272,7 +267,6 @@ jobs:
           path: docker/e2e/spp-platform.log
 
   test-interface-cli:
-#    needs: [ verify-mono ]
     runs-on: ubuntu-20.04
     timeout-minutes: 15
     concurrency:
@@ -340,7 +334,6 @@ jobs:
           path: docker/e2e/spp-platform.log
 
   test-interface-jetbrains:
-#    needs: [ verify-mono ]
     runs-on: ubuntu-20.04
     timeout-minutes: 20
     concurrency:
@@ -375,7 +368,6 @@ jobs:
             :interfaces:jetbrains:plugin:test
 
   test-protocol:
-#    needs: [ verify-mono ]
     runs-on: ubuntu-20.04
     timeout-minutes: 10
     concurrency:
