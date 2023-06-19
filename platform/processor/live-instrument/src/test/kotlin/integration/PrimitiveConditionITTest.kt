@@ -59,13 +59,8 @@ class PrimitiveConditionITTest : LiveInstrumentIntegrationTest() {
             primitiveStaticVariable()
         }
 
-        val testContext = VertxTestContext()
-        vertx.addBreakpointHitListener(testNameAsInstrumentId) {
-            testContext.completeNow()
-        }
-
         //add live breakpoint
-        instrumentService.addLiveInstrument(
+        val instrument = instrumentService.addLiveInstrument(
             LiveBreakpoint(
                 location = LiveSourceLocation(
                     PrimitiveConditionITTest::class.java.name,
@@ -74,9 +69,14 @@ class PrimitiveConditionITTest : LiveInstrumentIntegrationTest() {
                 ),
                 condition = "staticFields[fieldI] == 100",
                 applyImmediately = true,
-                id = testNameAsInstrumentId
+                id = testNameAsUniqueInstrumentId
             )
         ).await()
+
+        val testContext = VertxTestContext()
+        vertx.addBreakpointHitListener(instrument.id!!) {
+            testContext.completeNow()
+        }
 
         //trigger live breakpoint
         primitiveStaticVariable()
@@ -90,13 +90,8 @@ class PrimitiveConditionITTest : LiveInstrumentIntegrationTest() {
             primitiveInstanceVariable()
         }
 
-        val testContext = VertxTestContext()
-        vertx.addBreakpointHitListener(testNameAsInstrumentId) {
-            testContext.completeNow()
-        }
-
         //add live breakpoint
-        instrumentService.addLiveInstrument(
+        val instrument = instrumentService.addLiveInstrument(
             LiveBreakpoint(
                 location = LiveSourceLocation(
                     PrimitiveConditionITTest::class.java.name,
@@ -105,9 +100,14 @@ class PrimitiveConditionITTest : LiveInstrumentIntegrationTest() {
                 ),
                 condition = "fields[instanceI] == 100",
                 applyImmediately = true,
-                id = testNameAsInstrumentId
+                id = testNameAsUniqueInstrumentId
             )
         ).await()
+
+        val testContext = VertxTestContext()
+        vertx.addBreakpointHitListener(instrument.id!!) {
+            testContext.completeNow()
+        }
 
         //trigger live breakpoint
         primitiveInstanceVariable()
@@ -121,13 +121,8 @@ class PrimitiveConditionITTest : LiveInstrumentIntegrationTest() {
             primitiveLocalVariable()
         }
 
-        val testContext = VertxTestContext()
-        vertx.addBreakpointHitListener(testNameAsInstrumentId) {
-            testContext.completeNow()
-        }
-
         //add live breakpoint
-        instrumentService.addLiveInstrument(
+        val instrument = instrumentService.addLiveInstrument(
             LiveBreakpoint(
                 location = LiveSourceLocation(
                     PrimitiveConditionITTest::class.java.name,
@@ -136,9 +131,14 @@ class PrimitiveConditionITTest : LiveInstrumentIntegrationTest() {
                 ),
                 condition = "localVariables[localI] == 100",
                 applyImmediately = true,
-                id = testNameAsInstrumentId
+                id = testNameAsUniqueInstrumentId
             )
         ).await()
+
+        val testContext = VertxTestContext()
+        vertx.addBreakpointHitListener(instrument.id!!) {
+            testContext.completeNow()
+        }
 
         //trigger live breakpoint
         primitiveLocalVariable()
