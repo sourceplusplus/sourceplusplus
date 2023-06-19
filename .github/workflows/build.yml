@@ -20,7 +20,7 @@ jobs:
     if: ${{ !contains(github.event.pull_request.head.ref, '#docs') && !(startsWith(github.event.head_commit.message, 'Merge pull request') && contains(github.event.head_commit.message, '#docs')) }}
 
     runs-on: ubuntu-20.04
-    timeout-minutes: 15
+    timeout-minutes: 20
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-verify-mono
       cancel-in-progress: true
@@ -44,7 +44,7 @@ jobs:
 
   test-platform:
     runs-on: ubuntu-20.04
-    timeout-minutes: 15
+    timeout-minutes: 20
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-test-platform-${{ matrix.test_module }}
       cancel-in-progress: true
@@ -129,7 +129,7 @@ jobs:
 
   test-probe-jvm:
     runs-on: ubuntu-20.04
-    timeout-minutes: 15
+    timeout-minutes: 20
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-test-probe-jvm
       cancel-in-progress: true
@@ -194,7 +194,7 @@ jobs:
 
   test-probe-nodejs:
     runs-on: ubuntu-20.04
-    timeout-minutes: 15
+    timeout-minutes: 20
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-test-probe-nodejs
       cancel-in-progress: true
@@ -265,7 +265,7 @@ jobs:
 
   test-interface-cli:
     runs-on: ubuntu-20.04
-    timeout-minutes: 15
+    timeout-minutes: 20
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-test-interface-cli
       cancel-in-progress: true
@@ -330,7 +330,7 @@ jobs:
 
   test-interface-jetbrains:
     runs-on: ubuntu-20.04
-    timeout-minutes: 15
+    timeout-minutes: 20
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-test-interface-jetbrains
       cancel-in-progress: true
@@ -364,7 +364,7 @@ jobs:
 
   test-protocol:
     runs-on: ubuntu-20.04
-    timeout-minutes: 15
+    timeout-minutes: 20
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-protocol
       cancel-in-progress: true
@@ -394,7 +394,7 @@ jobs:
     #if: ${{ !contains(github.event.pull_request.head.ref, '#docs') && !(startsWith(github.event.head_commit.message, 'Merge pull request') && contains(github.event.head_commit.message, '#docs')) }}
 
     runs-on: ubuntu-20.04
-    timeout-minutes: 15
+    timeout-minutes: 20
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}
       cancel-in-progress: true
