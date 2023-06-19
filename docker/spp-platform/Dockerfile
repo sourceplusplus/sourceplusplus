@@ -1,4 +1,4 @@
-FROM apache/skywalking-oap-server:9.4.0-java17
+FROM apache/skywalking-oap-server:9.5.0-java17
 
 ADD ./config/spp-platform.yml /skywalking/config/
 
