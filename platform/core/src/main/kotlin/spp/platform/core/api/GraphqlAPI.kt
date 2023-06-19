@@ -18,10 +18,15 @@
 package spp.platform.core.api
 
 import graphql.ExceptionWhileDataFetching
+import graphql.ExecutionResult
 import graphql.GraphQL
 import graphql.execution.DataFetcherExceptionHandler
 import graphql.execution.DataFetcherExceptionHandlerParameters
 import graphql.execution.DataFetcherExceptionHandlerResult
+import graphql.execution.instrumentation.ExecutionStrategyInstrumentationContext
+import graphql.execution.instrumentation.InstrumentationState
+import graphql.execution.instrumentation.SimpleInstrumentation
+import graphql.execution.instrumentation.parameters.InstrumentationExecutionStrategyParameters
 import graphql.schema.Coercing
 import graphql.schema.CoercingParseValueException
 import graphql.schema.DataFetchingEnvironment
@@ -167,6 +172,21 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
         val schema = SchemaGenerator().makeExecutableSchema(typeDefinitionRegistry, runtimeWiring)
         return GraphQL.newGraphQL(schema)
             .instrumentation(VertxFutureAdapter.create())
+            .instrumentation(object : SimpleInstrumentation() {
+                override fun beginExecutionStrategy(
+                    parameters: InstrumentationExecutionStrategyParameters?,
+                    state: InstrumentationState?
+                ): ExecutionStrategyInstrumentationContext {
+                    return object : ExecutionStrategyInstrumentationContext {
+                        override fun onDispatched(result: CompletableFuture<ExecutionResult>?) = Unit
+                        override fun onCompleted(result: ExecutionResult?, t: Throwable?) {
+                            if (t != null) {
+                                log.warn("GraphQL execution failed", t)
+                            }
+                        }
+                    }
+                }
+            })
             .defaultDataFetcherExceptionHandler(object : DataFetcherExceptionHandler {
                 override fun handleException(
                     handlerParameters: DataFetcherExceptionHandlerParameters
