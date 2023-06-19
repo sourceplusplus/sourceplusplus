@@ -38,6 +38,7 @@ import io.vertx.core.json.JsonObject
 import io.vertx.ext.web.RoutingContext
 import io.vertx.ext.web.handler.BodyHandler
 import io.vertx.ext.web.handler.graphql.GraphQLHandler
+import io.vertx.ext.web.handler.graphql.instrumentation.VertxFutureAdapter
 import io.vertx.kotlin.coroutines.CoroutineVerticle
 import io.vertx.kotlin.coroutines.await
 import io.vertx.servicediscovery.types.EventBusService
@@ -164,20 +165,22 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
             .build()
 
         val schema = SchemaGenerator().makeExecutableSchema(typeDefinitionRegistry, runtimeWiring)
-        return GraphQL.newGraphQL(schema).defaultDataFetcherExceptionHandler(object : DataFetcherExceptionHandler {
-            override fun handleException(
-                handlerParameters: DataFetcherExceptionHandlerParameters
-            ): CompletableFuture<DataFetcherExceptionHandlerResult> {
-                val exception = handlerParameters.exception
-                exception.message?.let { log.warn(it) }
-                val sourceLocation = handlerParameters.sourceLocation
-                val path = handlerParameters.path
-                val error = ExceptionWhileDataFetching(path, exception, sourceLocation)
-                return CompletableFuture.completedFuture(
-                    DataFetcherExceptionHandlerResult.newResult().error(error).build()
-                )
-            }
-        }).build()
+        return GraphQL.newGraphQL(schema)
+            .instrumentation(VertxFutureAdapter.create())
+            .defaultDataFetcherExceptionHandler(object : DataFetcherExceptionHandler {
+                override fun handleException(
+                    handlerParameters: DataFetcherExceptionHandlerParameters
+                ): CompletableFuture<DataFetcherExceptionHandlerResult> {
+                    val exception = handlerParameters.exception
+                    exception.message?.let { log.warn(it) }
+                    val sourceLocation = handlerParameters.sourceLocation
+                    val path = handlerParameters.path
+                    val error = ExceptionWhileDataFetching(path, exception, sourceLocation)
+                    return CompletableFuture.completedFuture(
+                        DataFetcherExceptionHandlerResult.newResult().error(error).build()
+                    )
+                }
+            }).build()
     }
 
     private fun withQueryFetchers(builder: TypeRuntimeWiring.Builder): TypeRuntimeWiring.Builder {
@@ -256,104 +259,95 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
             .dataFetcher("setSystemConfigValue", this::setSystemConfigValue)
     }
 
-    private fun version(env: DataFetchingEnvironment): CompletableFuture<String> =
-        getLiveManagementService(env).compose { it.getVersion() }.toCompletionStage().toCompletableFuture()
+    private fun version(env: DataFetchingEnvironment): Future<String> =
+        getLiveManagementService(env).compose { it.getVersion() }
 
-    private fun timeInfo(env: DataFetchingEnvironment): CompletableFuture<TimeInfo> =
-        getLiveManagementService(env).compose { it.getTimeInfo() }.toCompletionStage().toCompletableFuture()
+    private fun timeInfo(env: DataFetchingEnvironment): Future<TimeInfo> =
+        getLiveManagementService(env).compose { it.getTimeInfo() }
 
-    private fun getAccessToken(env: DataFetchingEnvironment): CompletableFuture<String> =
+    private fun getAccessToken(env: DataFetchingEnvironment): Future<String> =
         getLiveManagementService(env).compose { it.getAccessToken(env.getArgument("authorizationCode")) }
-            .toCompletionStage().toCompletableFuture()
 
-    private fun getAccessPermissions(env: DataFetchingEnvironment): CompletableFuture<List<AccessPermission>> =
-        getLiveManagementService(env).compose { it.getAccessPermissions() }.toCompletionStage().toCompletableFuture()
+    private fun getAccessPermissions(env: DataFetchingEnvironment): Future<List<AccessPermission>> =
+        getLiveManagementService(env).compose { it.getAccessPermissions() }
 
-    private fun getAccessPermission(env: DataFetchingEnvironment): CompletableFuture<AccessPermission> =
+    private fun getAccessPermission(env: DataFetchingEnvironment): Future<AccessPermission> =
         getLiveManagementService(env).compose { it.getAccessPermission(env.getArgument("id")) }
-            .toCompletionStage().toCompletableFuture()
 
-    private fun getRoleAccessPermissions(env: DataFetchingEnvironment): CompletableFuture<List<AccessPermission>> =
+    private fun getRoleAccessPermissions(env: DataFetchingEnvironment): Future<List<AccessPermission>> =
         getLiveManagementService(env)
             .compose { it.getRoleAccessPermissions(DeveloperRole.fromString(env.getArgument("role"))) }
-            .toCompletionStage().toCompletableFuture()
 
-    private fun getDeveloperAccessPermissions(env: DataFetchingEnvironment): CompletableFuture<List<AccessPermission>> =
+    private fun getDeveloperAccessPermissions(env: DataFetchingEnvironment): Future<List<AccessPermission>> =
         getLiveManagementService(env)
             .compose { it.getDeveloperAccessPermissions(env.getArgument("developerId")) }
-            .toCompletionStage().toCompletableFuture()
 
-    private fun getDataRedactions(env: DataFetchingEnvironment): CompletableFuture<List<DataRedaction>> =
-        getLiveManagementService(env).compose { it.getDataRedactions() }.toCompletionStage().toCompletableFuture()
+    private fun getDataRedactions(env: DataFetchingEnvironment): Future<List<DataRedaction>> =
+        getLiveManagementService(env).compose { it.getDataRedactions() }
 
-    private fun getDataRedaction(env: DataFetchingEnvironment): CompletableFuture<DataRedaction> =
+    private fun getDataRedaction(env: DataFetchingEnvironment): Future<DataRedaction> =
         getLiveManagementService(env).compose { it.getDataRedaction(env.getArgument("id")) }
-            .toCompletionStage().toCompletableFuture()
 
-    private fun getRoleDataRedactions(env: DataFetchingEnvironment): CompletableFuture<List<DataRedaction>> =
+    private fun getRoleDataRedactions(env: DataFetchingEnvironment): Future<List<DataRedaction>> =
         getLiveManagementService(env)
             .compose { it.getRoleDataRedactions(DeveloperRole.fromString(env.getArgument("role"))) }
-            .toCompletionStage().toCompletableFuture()
 
-    private fun getDeveloperDataRedactions(env: DataFetchingEnvironment): CompletableFuture<List<DataRedaction>> =
+    private fun getDeveloperDataRedactions(env: DataFetchingEnvironment): Future<List<DataRedaction>> =
         getLiveManagementService(env)
             .compose { it.getDeveloperDataRedactions(env.getArgument("developerId")) }
-            .toCompletionStage().toCompletableFuture()
 
-    private fun getRoles(env: DataFetchingEnvironment): CompletableFuture<List<DeveloperRole>> =
-        getLiveManagementService(env).compose { it.getRoles() }.toCompletionStage().toCompletableFuture()
+    private fun getRoles(env: DataFetchingEnvironment): Future<List<DeveloperRole>> =
+        getLiveManagementService(env).compose { it.getRoles() }
 
-    private fun getRolePermissions(env: DataFetchingEnvironment): CompletableFuture<List<RolePermission>> =
+    private fun getRolePermissions(env: DataFetchingEnvironment): Future<List<RolePermission>> =
         getLiveManagementService(env)
             .compose { it.getRolePermissions(DeveloperRole.fromString(env.getArgument("role"))) }
-            .toCompletionStage().toCompletableFuture()
 
-    private fun getDeveloperRoles(env: DataFetchingEnvironment): CompletableFuture<List<DeveloperRole>> =
+    private fun getDeveloperRoles(env: DataFetchingEnvironment): Future<List<DeveloperRole>> =
         getLiveManagementService(env).compose {
             it.getDeveloperRoles(
                 env.getArgument<String>("id").lowercase().replace(" ", "")
             )
-        }.toCompletionStage().toCompletableFuture()
+        }
 
-    private fun getDeveloperPermissions(env: DataFetchingEnvironment): CompletableFuture<List<RolePermission>> =
+    private fun getDeveloperPermissions(env: DataFetchingEnvironment): Future<List<RolePermission>> =
         getLiveManagementService(env).compose {
             it.getDeveloperPermissions(
                 env.getArgument<String>("id").lowercase().replace(" ", "")
             )
-        }.toCompletionStage().toCompletableFuture()
+        }
 
-    private fun getDevelopers(env: DataFetchingEnvironment): CompletableFuture<List<Developer>> =
-        getLiveManagementService(env).compose { it.getDevelopers() }.toCompletionStage().toCompletableFuture()
+    private fun getDevelopers(env: DataFetchingEnvironment): Future<List<Developer>> =
+        getLiveManagementService(env).compose { it.getDevelopers() }
 
-    private fun getSelf(env: DataFetchingEnvironment): CompletableFuture<SelfInfo> =
-        getLiveManagementService(env).compose { it.getSelf() }.toCompletionStage().toCompletableFuture()
+    private fun getSelf(env: DataFetchingEnvironment): Future<SelfInfo> =
+        getLiveManagementService(env).compose { it.getSelf() }
 
-    private fun getServices(env: DataFetchingEnvironment): CompletableFuture<List<Service>> =
-        getLiveManagementService(env).compose { it.getServices() }.toCompletionStage().toCompletableFuture()
+    private fun getServices(env: DataFetchingEnvironment): Future<List<Service>> =
+        getLiveManagementService(env).compose { it.getServices() }
 
-    private fun getInstances(env: DataFetchingEnvironment): CompletableFuture<List<Map<String, Any>>> =
+    private fun getInstances(env: DataFetchingEnvironment): Future<List<Map<String, Any>>> =
         getLiveManagementService(env).compose { it.getInstances(env.getArgument("serviceId")) }
             .map { instances -> instances.map { fixJsonMaps(it) } }
-            .toCompletionStage().toCompletableFuture()
 
-    private fun getEndpoints(env: DataFetchingEnvironment): CompletableFuture<List<ServiceEndpoint>> =
+    private fun getEndpoints(env: DataFetchingEnvironment): Future<List<ServiceEndpoint>> =
         getLiveManagementService(env).compose {
             it.getEndpoints(
                 env.getArgument("serviceId"),
                 env.getArgument<Int?>("limit").toString().toIntOrNull()
             )
-        }.toCompletionStage().toCompletableFuture()
+        }
 
-    private fun searchEndpoints(env: DataFetchingEnvironment): CompletableFuture<List<ServiceEndpoint>> =
+    private fun searchEndpoints(env: DataFetchingEnvironment): Future<List<ServiceEndpoint>> =
         getLiveManagementService(env).compose {
             it.searchEndpoints(
                 env.getArgument("serviceId"),
                 env.getArgument("keyword"),
                 env.getArgument<Int?>("limit").toString().toIntOrNull()
             )
-        }.toCompletionStage().toCompletableFuture()
+        }
 
-    private fun sortMetrics(env: DataFetchingEnvironment): CompletableFuture<List<SelectedRecord>> {
+    private fun sortMetrics(env: DataFetchingEnvironment): Future<List<SelectedRecord>> {
         return getLiveManagementService(env).compose {
             it.sortMetrics(
                 env.getArgument("name"),
@@ -366,44 +360,43 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
                 Instant.ofEpochMilli(env.getArgument("start")),
                 env.getArgument<Long?>("stop")?.let { Instant.ofEpochMilli(it) } ?: Instant.now()
             )
-        }.toCompletionStage().toCompletableFuture()
+        }
     }
 
-    private fun refreshAuthorizationCode(env: DataFetchingEnvironment): CompletableFuture<Developer> =
+    private fun refreshAuthorizationCode(env: DataFetchingEnvironment): Future<Developer> =
         getLiveManagementService(env).compose { it.refreshAuthorizationCode(env.getArgument("id")) }
-            .toCompletionStage().toCompletableFuture()
 
-    private fun getLiveInstrument(env: DataFetchingEnvironment): CompletableFuture<Map<String, Any>?> =
+    private fun getLiveInstrument(env: DataFetchingEnvironment): Future<Map<String, Any>?> =
         getLiveInstrumentService(env).compose {
             it.getLiveInstrument(env.getArgument("id"), env.getArgument("includeArchive") ?: false)
-        }.map { it?.let { fixJsonMaps(it) } }.toCompletionStage().toCompletableFuture()
+        }.map { it?.let { fixJsonMaps(it) } }
 
-    private fun getLiveInstruments(env: DataFetchingEnvironment): CompletableFuture<List<Map<String, Any>>> =
+    private fun getLiveInstruments(env: DataFetchingEnvironment): Future<List<Map<String, Any>>> =
         getLiveInstrumentService(env).compose { it.getLiveInstruments() }.map { instruments ->
             instruments.map { fixJsonMaps(it) }
-        }.toCompletionStage().toCompletableFuture()
+        }
 
-    private fun getLiveBreakpoints(env: DataFetchingEnvironment): CompletableFuture<List<Map<String, Any>>> =
+    private fun getLiveBreakpoints(env: DataFetchingEnvironment): Future<List<Map<String, Any>>> =
         getLiveInstrumentService(env).compose { it.getLiveInstruments(BREAKPOINT) }.map { instruments ->
             instruments.map { fixJsonMaps(it) }
-        }.toCompletionStage().toCompletableFuture()
+        }
 
-    private fun getLiveLogs(env: DataFetchingEnvironment): CompletableFuture<List<Map<String, Any>>> =
+    private fun getLiveLogs(env: DataFetchingEnvironment): Future<List<Map<String, Any>>> =
         getLiveInstrumentService(env).compose { it.getLiveInstruments(LOG) }.map { instruments ->
             instruments.map { fixJsonMaps(it) }
-        }.toCompletionStage().toCompletableFuture()
+        }
 
-    private fun getLiveMeters(env: DataFetchingEnvironment): CompletableFuture<List<Map<String, Any>>> =
+    private fun getLiveMeters(env: DataFetchingEnvironment): Future<List<Map<String, Any>>> =
         getLiveInstrumentService(env).compose { it.getLiveInstruments(METER) }.map { instruments ->
             instruments.map { fixJsonMaps(it) }
-        }.toCompletionStage().toCompletableFuture()
+        }
 
-    private fun getLiveSpans(env: DataFetchingEnvironment): CompletableFuture<List<Map<String, Any>>> =
+    private fun getLiveSpans(env: DataFetchingEnvironment): Future<List<Map<String, Any>>> =
         getLiveInstrumentService(env).compose { it.getLiveInstruments(SPAN) }.map { instruments ->
             instruments.map { fixJsonMaps(it) }
-        }.toCompletionStage().toCompletableFuture()
+        }
 
-    private fun getLiveInstrumentEvents(env: DataFetchingEnvironment): CompletableFuture<List<Map<String, Any>>> {
+    private fun getLiveInstrumentEvents(env: DataFetchingEnvironment): Future<List<Map<String, Any>>> {
         val instrumentId: String? = env.getArgument("instrumentId")
         val start = env.getArgument("start") ?: 0L
         val stop = env.getArgument("stop") ?: Instant.now().toEpochMilli()
@@ -418,13 +411,13 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
                 offset,
                 limit
             )
-        }.map { events -> events.map { fixJsonMaps(it) } }.toCompletionStage().toCompletableFuture()
+        }.map { events -> events.map { fixJsonMaps(it) } }
     }
 
-    private fun reset(env: DataFetchingEnvironment): CompletableFuture<Boolean> =
-        getLiveManagementService(env).compose { it.reset() }.map { true }.toCompletionStage().toCompletableFuture()
+    private fun reset(env: DataFetchingEnvironment): Future<Boolean> =
+        getLiveManagementService(env).compose { it.reset() }.map { true }
 
-    private fun addDataRedaction(env: DataFetchingEnvironment): CompletableFuture<DataRedaction> =
+    private fun addDataRedaction(env: DataFetchingEnvironment): Future<DataRedaction> =
         getLiveManagementService(env).compose {
             it.addDataRedaction(
                 env.getArgument<String>("id") ?: UUID.randomUUID().toString(),
@@ -432,9 +425,9 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
                 env.getArgument("lookup"),
                 env.getArgument("replacement")
             )
-        }.toCompletionStage().toCompletableFuture()
+        }
 
-    private fun updateDataRedaction(env: DataFetchingEnvironment): CompletableFuture<DataRedaction> =
+    private fun updateDataRedaction(env: DataFetchingEnvironment): Future<DataRedaction> =
         getLiveManagementService(env).compose {
             it.updateDataRedaction(
                 env.getArgument("id"),
@@ -442,131 +435,127 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
                 env.getArgument("lookup"),
                 env.getArgument("replacement")
             )
-        }.toCompletionStage().toCompletableFuture()
+        }
 
-    private fun removeDataRedaction(env: DataFetchingEnvironment): CompletableFuture<Boolean> =
+    private fun removeDataRedaction(env: DataFetchingEnvironment): Future<Boolean> =
         getLiveManagementService(env).compose { it.removeDataRedaction(env.getArgument("id")) }
-            .map { true }.toCompletionStage().toCompletableFuture()
+            .map { true }
 
-    private fun addRoleDataRedaction(env: DataFetchingEnvironment): CompletableFuture<Boolean> =
+    private fun addRoleDataRedaction(env: DataFetchingEnvironment): Future<Boolean> =
         getLiveManagementService(env).compose {
             it.addRoleDataRedaction(
                 DeveloperRole.fromString(env.getArgument("role")),
                 env.getArgument("dataRedactionId")
             )
-        }.map { true }.toCompletionStage().toCompletableFuture()
+        }.map { true }
 
-    private fun removeRoleDataRedaction(env: DataFetchingEnvironment): CompletableFuture<Boolean> =
+    private fun removeRoleDataRedaction(env: DataFetchingEnvironment): Future<Boolean> =
         getLiveManagementService(env).compose {
             it.removeRoleDataRedaction(
                 DeveloperRole.fromString(env.getArgument("role")),
                 env.getArgument("dataRedactionId")
             )
-        }.map { true }.toCompletionStage().toCompletableFuture()
+        }.map { true }
 
-    private fun addAccessPermission(env: DataFetchingEnvironment): CompletableFuture<AccessPermission> =
+    private fun addAccessPermission(env: DataFetchingEnvironment): Future<AccessPermission> =
         getLiveManagementService(env).compose {
             it.addAccessPermission(
                 env.getArgument("locationPatterns"),
                 AccessType.valueOf(env.getArgument("type"))
             )
-        }.toCompletionStage().toCompletableFuture()
+        }
 
-    private fun removeAccessPermission(env: DataFetchingEnvironment): CompletableFuture<Boolean> =
+    private fun removeAccessPermission(env: DataFetchingEnvironment): Future<Boolean> =
         getLiveManagementService(env).compose { it.removeAccessPermission(env.getArgument("id")) }
-            .map { true }.toCompletionStage().toCompletableFuture()
+            .map { true }
 
-    private fun addRoleAccessPermission(env: DataFetchingEnvironment): CompletableFuture<Boolean> =
+    private fun addRoleAccessPermission(env: DataFetchingEnvironment): Future<Boolean> =
         getLiveManagementService(env).compose {
             it.addRoleAccessPermission(
                 DeveloperRole.fromString(env.getArgument("role")),
                 env.getArgument("accessPermissionId")
             )
-        }.map { true }.toCompletionStage().toCompletableFuture()
+        }.map { true }
 
-    private fun removeRoleAccessPermission(env: DataFetchingEnvironment): CompletableFuture<Boolean> =
+    private fun removeRoleAccessPermission(env: DataFetchingEnvironment): Future<Boolean> =
         getLiveManagementService(env).compose {
             it.removeRoleAccessPermission(
                 DeveloperRole.fromString(env.getArgument("role")),
                 env.getArgument("accessPermissionId")
             )
-        }.map { true }.toCompletionStage().toCompletableFuture()
+        }.map { true }
 
-    private fun addRole(env: DataFetchingEnvironment): CompletableFuture<Boolean> =
+    private fun addRole(env: DataFetchingEnvironment): Future<Boolean> =
         getLiveManagementService(env).compose { it.addRole(DeveloperRole.fromString(env.getArgument("role"))) }
-            .toCompletionStage().toCompletableFuture()
 
-    private fun removeRole(env: DataFetchingEnvironment): CompletableFuture<Boolean> =
+    private fun removeRole(env: DataFetchingEnvironment): Future<Boolean> =
         getLiveManagementService(env).compose { it.removeRole(DeveloperRole.fromString(env.getArgument("role"))) }
-            .toCompletionStage().toCompletableFuture()
 
-    private fun addRolePermission(env: DataFetchingEnvironment): CompletableFuture<Boolean> =
+    private fun addRolePermission(env: DataFetchingEnvironment): Future<Boolean> =
         getLiveManagementService(env).compose {
             it.addRolePermission(
                 DeveloperRole.fromString(env.getArgument("role")),
                 RolePermission.valueOf(env.getArgument("permission"))
             )
-        }.map { true }.toCompletionStage().toCompletableFuture()
+        }.map { true }
 
-    private fun removeRolePermission(env: DataFetchingEnvironment): CompletableFuture<Boolean> =
+    private fun removeRolePermission(env: DataFetchingEnvironment): Future<Boolean> =
         getLiveManagementService(env).compose {
             it.removeRolePermission(
                 DeveloperRole.fromString(env.getArgument("role")),
                 RolePermission.valueOf(env.getArgument("permission"))
             )
-        }.map { true }.toCompletionStage().toCompletableFuture()
+        }.map { true }
 
-    private fun addDeveloperRole(env: DataFetchingEnvironment): CompletableFuture<Boolean> =
+    private fun addDeveloperRole(env: DataFetchingEnvironment): Future<Boolean> =
         getLiveManagementService(env).compose {
             it.addDeveloperRole(
                 env.getArgument<String>("id").lowercase().replace(" ", ""),
                 DeveloperRole.fromString(env.getArgument("role"))
             )
-        }.map { true }.toCompletionStage().toCompletableFuture()
+        }.map { true }
 
-    private fun removeDeveloperRole(env: DataFetchingEnvironment): CompletableFuture<Boolean> =
+    private fun removeDeveloperRole(env: DataFetchingEnvironment): Future<Boolean> =
         getLiveManagementService(env).compose {
             it.removeDeveloperRole(
                 env.getArgument<String>("id").lowercase().replace(" ", ""),
                 DeveloperRole.fromString(env.getArgument("role"))
             )
-        }.map { true }.toCompletionStage().toCompletableFuture()
+        }.map { true }
 
-    private fun addDeveloper(env: DataFetchingEnvironment): CompletableFuture<Developer> =
+    private fun addDeveloper(env: DataFetchingEnvironment): Future<Developer> =
         getLiveManagementService(env).compose {
             it.addDeveloper(
                 env.getArgument<String>("id").lowercase().replace(" ", ""),
                 env.getArgument("authorizationCode")
             )
-        }.toCompletionStage().toCompletableFuture()
+        }
 
-    private fun removeDeveloper(env: DataFetchingEnvironment): CompletableFuture<Boolean> =
+    private fun removeDeveloper(env: DataFetchingEnvironment): Future<Boolean> =
         getLiveManagementService(env).compose {
             it.removeDeveloper(
                 env.getArgument<String>("id").lowercase().replace(" ", "")
             )
-        }.map { true }.toCompletionStage().toCompletableFuture()
+        }.map { true }
 
-    private fun removeLiveInstrument(env: DataFetchingEnvironment): CompletableFuture<Map<String, Any>?> =
+    private fun removeLiveInstrument(env: DataFetchingEnvironment): Future<Map<String, Any>?> =
         getLiveInstrumentService(env).compose { it.removeLiveInstrument(env.getArgument("id")) }
             .map { it?.let { fixJsonMaps(it) } }
-            .toCompletionStage().toCompletableFuture()
 
-    private fun removeLiveInstruments(env: DataFetchingEnvironment): CompletableFuture<List<Map<String, Any>>> {
+    private fun removeLiveInstruments(env: DataFetchingEnvironment): Future<List<Map<String, Any>>> {
         val source: String = env.getArgument("source")
         val line: Int = env.getArgument("line")
 
         val location = LiveSourceLocation(source, line)
         return getLiveInstrumentService(env).compose { it.removeLiveInstruments(location) }.map { instrument ->
             instrument.map { fixJsonMaps(it) }
-        }.toCompletionStage().toCompletableFuture()
+        }
     }
 
-    private fun clearLiveInstruments(env: DataFetchingEnvironment): CompletableFuture<Boolean> =
+    private fun clearLiveInstruments(env: DataFetchingEnvironment): Future<Boolean> =
         getLiveInstrumentService(env).compose { it.clearLiveInstruments(null) }
-            .toCompletionStage().toCompletableFuture()
 
-    private fun addLiveBreakpoint(env: DataFetchingEnvironment): CompletableFuture<Map<String, Any>> {
+    private fun addLiveBreakpoint(env: DataFetchingEnvironment): Future<Map<String, Any>> {
         val input = JsonObject.mapFrom(env.getArgument("input"))
         val id: String? = input.getString("id")
         val variableControl = input.getJsonObject("variableControl")
@@ -598,10 +587,10 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
             meta = toJsonMap(input.getJsonArray("meta"))
         )
         return getLiveInstrumentService(env).compose { it.addLiveInstrument(instrument) }.map { fixJsonMaps(it) }
-            .toCompletionStage().toCompletableFuture()
+
     }
 
-    private fun addLiveLog(env: DataFetchingEnvironment): CompletableFuture<Map<String, Any>> {
+    private fun addLiveLog(env: DataFetchingEnvironment): Future<Map<String, Any>> {
         val input = JsonObject.mapFrom(env.getArgument("input"))
         val id: String? = input.getString("id")
         val location = input.getJsonObject("location")
@@ -636,10 +625,10 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
             meta = toJsonMap(input.getJsonArray("meta"))
         )
         return getLiveInstrumentService(env).compose { it.addLiveInstrument(instrument) }.map { fixJsonMaps(it) }
-            .toCompletionStage().toCompletableFuture()
+
     }
 
-    private fun addLiveMeter(env: DataFetchingEnvironment): CompletableFuture<Map<String, Any>> {
+    private fun addLiveMeter(env: DataFetchingEnvironment): Future<Map<String, Any>> {
         val input = JsonObject.mapFrom(env.getArgument("input"))
         val id: String? = input.getString("id")
         val location = input.getJsonObject("location")
@@ -677,10 +666,10 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
             meta = toJsonMap(input.getJsonArray("meta"))
         )
         return getLiveInstrumentService(env).compose { it.addLiveInstrument(instrument) }.map { fixJsonMaps(it) }
-            .toCompletionStage().toCompletableFuture()
+
     }
 
-    private fun addLiveSpan(env: DataFetchingEnvironment): CompletableFuture<Map<String, Any>> {
+    private fun addLiveSpan(env: DataFetchingEnvironment): Future<Map<String, Any>> {
         val input = JsonObject.mapFrom(env.getArgument("input"))
         val id: String? = input.getString("id")
         val operationName = input.getString("operationName")
@@ -712,10 +701,10 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
             meta = toJsonMap(input.getJsonArray("meta"))
         )
         return getLiveInstrumentService(env).compose { it.addLiveInstrument(instrument) }.map { fixJsonMaps(it) }
-            .toCompletionStage().toCompletableFuture()
+
     }
 
-    private fun saveRule(env: DataFetchingEnvironment): CompletableFuture<ViewRule> {
+    private fun saveRule(env: DataFetchingEnvironment): Future<ViewRule> {
         val input = JsonObject.mapFrom(env.getArgument("input"))
         val viewRule = ViewRule(
             name = input.getString("name"),
@@ -723,10 +712,10 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
             partitions = (input.map["partitions"] as List<*>).map { RulePartition(JsonObject.mapFrom(it)) },
             meterIds = (input.map["meterIds"] as List<*>).map { it.toString() },
         )
-        return getLiveViewService(env).compose { it.saveRule(viewRule) }.toCompletionStage().toCompletableFuture()
+        return getLiveViewService(env).compose { it.saveRule(viewRule) }
     }
 
-    private fun addLiveView(env: DataFetchingEnvironment): CompletableFuture<LiveView> {
+    private fun addLiveView(env: DataFetchingEnvironment): Future<LiveView> {
         val input = JsonObject.mapFrom(env.getArgument("input"))
         val viewConfig = LiveViewConfig(
             input.getJsonObject("viewConfig").getString("viewName"),
@@ -738,35 +727,34 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
             viewConfig = viewConfig
         )
 
-        return getLiveViewService(env).compose { it.addLiveView(subscription) }.toCompletionStage()
-            .toCompletableFuture()
+        return getLiveViewService(env).compose { it.addLiveView(subscription) }
     }
 
-    private fun getRules(env: DataFetchingEnvironment): CompletableFuture<List<ViewRule>> =
-        getLiveViewService(env).compose { it.getRules() }.toCompletionStage().toCompletableFuture()
+    private fun getRules(env: DataFetchingEnvironment): Future<List<ViewRule>> =
+        getLiveViewService(env).compose { it.getRules() }
 
-    private fun getRule(env: DataFetchingEnvironment): CompletableFuture<ViewRule?> =
+    private fun getRule(env: DataFetchingEnvironment): Future<ViewRule?> =
         getLiveViewService(env).compose { it.getRule(env.getArgument("ruleName")) }
-            .toCompletionStage().toCompletableFuture()
 
-    private fun getLiveViews(env: DataFetchingEnvironment): CompletableFuture<List<LiveView>> =
-        getLiveViewService(env).compose { it.getLiveViews() }.toCompletionStage().toCompletableFuture()
 
-    private fun clearLiveViews(env: DataFetchingEnvironment): CompletableFuture<Boolean> =
-        getLiveViewService(env).compose { it.clearLiveViews() }.map { true }.toCompletionStage().toCompletableFuture()
+    private fun getLiveViews(env: DataFetchingEnvironment): Future<List<LiveView>> =
+        getLiveViewService(env).compose { it.getLiveViews() }
 
-    private fun getHistoricalMetrics(env: DataFetchingEnvironment): CompletableFuture<HistoricalView> {
+    private fun clearLiveViews(env: DataFetchingEnvironment): Future<Boolean> =
+        getLiveViewService(env).compose { it.clearLiveViews() }.map { true }
+
+    private fun getHistoricalMetrics(env: DataFetchingEnvironment): Future<HistoricalView> {
         val vars = JsonObject.mapFrom(env.variables)
         val entityIds = vars.getJsonArray("entityIds", JsonArray()).list.map { it as String }
         val metricIds = vars.getJsonArray("metricIds", JsonArray()).list.map { it as String }
         if (entityIds.isEmpty()) {
-            val future = CompletableFuture<HistoricalView>()
-            future.completeExceptionally(IllegalArgumentException("entityIds must be provided"))
-            return future
+            val future = Promise.promise<HistoricalView>()
+            future.fail(IllegalArgumentException("entityIds must be provided"))
+            return future.future()
         } else if (metricIds.isEmpty()) {
-            val future = CompletableFuture<HistoricalView>()
-            future.completeExceptionally(IllegalArgumentException("metricIds must be provided"))
-            return future
+            val future = Promise.promise<HistoricalView>()
+            future.fail(IllegalArgumentException("metricIds must be provided"))
+            return future.future()
         }
 
         val step = MetricStep.valueOf(vars.getString("step"))
@@ -776,43 +764,40 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
 
         return getLiveViewService(env).compose {
             it.getHistoricalMetrics(entityIds, metricIds, step, start, stop, labels)
-        }.toCompletionStage().toCompletableFuture()
+        }
     }
 
-    private fun getClientAccessors(env: DataFetchingEnvironment): CompletableFuture<List<ClientAccess>> =
-        getLiveManagementService(env).compose { it.getClientAccessors() }.toCompletionStage().toCompletableFuture()
+    private fun getClientAccessors(env: DataFetchingEnvironment): Future<List<ClientAccess>> =
+        getLiveManagementService(env).compose { it.getClientAccessors() }
 
-    private fun addClientAccess(env: DataFetchingEnvironment): CompletableFuture<ClientAccess> =
-        getLiveManagementService(env).compose { it.addClientAccess() }.toCompletionStage().toCompletableFuture()
+    private fun addClientAccess(env: DataFetchingEnvironment): Future<ClientAccess> =
+        getLiveManagementService(env).compose { it.addClientAccess() }
 
-    private fun removeClientAccess(env: DataFetchingEnvironment): CompletableFuture<Boolean> =
+    private fun removeClientAccess(env: DataFetchingEnvironment): Future<Boolean> =
         getLiveManagementService(env).compose { it.removeClientAccess(env.getArgument("id")) }
-            .map { true }.toCompletionStage().toCompletableFuture()
+            .map { true }
 
-    private fun refreshClientAccess(env: DataFetchingEnvironment): CompletableFuture<ClientAccess> =
+    private fun refreshClientAccess(env: DataFetchingEnvironment): Future<ClientAccess> =
         getLiveManagementService(env).compose { it.refreshClientAccess(env.getArgument("id")) }
-            .toCompletionStage().toCompletableFuture()
 
-    private fun getTraceStack(env: DataFetchingEnvironment): CompletableFuture<Map<String, Any>?> =
+    private fun getTraceStack(env: DataFetchingEnvironment): Future<Map<String, Any>?> =
         getLiveViewService(env).compose { it.getTraceStack(env.getArgument("traceId")) }
             .map { fixJsonMaps(it) }
-            .toCompletionStage().toCompletableFuture()
 
-    private fun getSystemConfig(env: DataFetchingEnvironment): CompletableFuture<List<Map<String, String>>> =
+    private fun getSystemConfig(env: DataFetchingEnvironment): Future<List<Map<String, String>>> =
         getLiveManagementService(env).compose { it.getConfiguration() }
             .map { fixConfigObject(it) }
-            .toCompletionStage().toCompletableFuture()
 
-    private fun getSystemConfigValue(env: DataFetchingEnvironment): CompletableFuture<String> =
+    private fun getSystemConfigValue(env: DataFetchingEnvironment): Future<String> =
         getLiveManagementService(env).compose {
             it.getConfigurationValue(env.getArgument("config"))
                 .map { value -> value ?: "" }
-        }.toCompletionStage().toCompletableFuture()
+        }
 
-    private fun setSystemConfigValue(env: DataFetchingEnvironment): CompletableFuture<Boolean> =
+    private fun setSystemConfigValue(env: DataFetchingEnvironment): Future<Boolean> =
         getLiveManagementService(env).compose {
             it.setConfigurationValue(env.getArgument("config"), env.getArgument("value"))
-        }.toCompletionStage().toCompletableFuture()
+        }
 
     private fun toJsonMap(metaArray: JsonArray?): MutableMap<String, String> {
         val meta = mutableMapOf<String, String>()
