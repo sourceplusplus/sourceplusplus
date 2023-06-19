@@ -37,10 +37,10 @@ jobs:
         uses: gradle/gradle-build-action@v2.4.2
 
       - name: Verify code style
-        run: ./gradlew --scan detekt
+        run: ./gradlew detekt
 
       - name: Verify license headers
-        run: ./gradlew --scan spotlessCheck
+        run: ./gradlew spotlessCheck
 
   test-platform:
     runs-on: ubuntu-20.04
@@ -310,7 +310,7 @@ jobs:
           until $(curl --header "Authorization: Bearer ${{ env.SPP_JWT_TOKEN }}" --output /dev/null --silent --fail http://localhost:12800/health); do printf '.'; sleep 5; done
 
       - name: Build protocol
-        run: ./gradlew --scan :protocol:assemble
+        run: ./gradlew :protocol:assemble
 
       - name: Test interface-cli
         run: |
