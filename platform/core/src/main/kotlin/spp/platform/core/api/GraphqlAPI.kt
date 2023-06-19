@@ -372,29 +372,24 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
         }.map { it?.let { fixJsonMaps(it) } }
 
     private fun getLiveInstruments(env: DataFetchingEnvironment): Future<List<Map<String, Any>>> =
-        getLiveInstrumentService(env).compose { it.getLiveInstruments() }.map { instruments ->
-            instruments.map { fixJsonMaps(it) }
-        }
+        getLiveInstrumentService(env).compose { it.getLiveInstruments() }
+            .map { instruments -> instruments.map { fixJsonMaps(it) } }
 
     private fun getLiveBreakpoints(env: DataFetchingEnvironment): Future<List<Map<String, Any>>> =
-        getLiveInstrumentService(env).compose { it.getLiveInstruments(BREAKPOINT) }.map { instruments ->
-            instruments.map { fixJsonMaps(it) }
-        }
+        getLiveInstrumentService(env).compose { it.getLiveInstruments(BREAKPOINT) }
+            .map { instruments -> instruments.map { fixJsonMaps(it) } }
 
     private fun getLiveLogs(env: DataFetchingEnvironment): Future<List<Map<String, Any>>> =
-        getLiveInstrumentService(env).compose { it.getLiveInstruments(LOG) }.map { instruments ->
-            instruments.map { fixJsonMaps(it) }
-        }
+        getLiveInstrumentService(env).compose { it.getLiveInstruments(LOG) }
+            .map { instruments -> instruments.map { fixJsonMaps(it) } }
 
     private fun getLiveMeters(env: DataFetchingEnvironment): Future<List<Map<String, Any>>> =
-        getLiveInstrumentService(env).compose { it.getLiveInstruments(METER) }.map { instruments ->
-            instruments.map { fixJsonMaps(it) }
-        }
+        getLiveInstrumentService(env).compose { it.getLiveInstruments(METER) }
+            .map { instruments -> instruments.map { fixJsonMaps(it) } }
 
     private fun getLiveSpans(env: DataFetchingEnvironment): Future<List<Map<String, Any>>> =
-        getLiveInstrumentService(env).compose { it.getLiveInstruments(SPAN) }.map { instruments ->
-            instruments.map { fixJsonMaps(it) }
-        }
+        getLiveInstrumentService(env).compose { it.getLiveInstruments(SPAN) }
+            .map { instruments -> instruments.map { fixJsonMaps(it) } }
 
     private fun getLiveInstrumentEvents(env: DataFetchingEnvironment): Future<List<Map<String, Any>>> {
         val instrumentId: String? = env.getArgument("instrumentId")
@@ -438,8 +433,7 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
         }
 
     private fun removeDataRedaction(env: DataFetchingEnvironment): Future<Boolean> =
-        getLiveManagementService(env).compose { it.removeDataRedaction(env.getArgument("id")) }
-            .map { true }
+        getLiveManagementService(env).compose { it.removeDataRedaction(env.getArgument("id")) }.map { true }
 
     private fun addRoleDataRedaction(env: DataFetchingEnvironment): Future<Boolean> =
         getLiveManagementService(env).compose {
@@ -466,8 +460,7 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
         }
 
     private fun removeAccessPermission(env: DataFetchingEnvironment): Future<Boolean> =
-        getLiveManagementService(env).compose { it.removeAccessPermission(env.getArgument("id")) }
-            .map { true }
+        getLiveManagementService(env).compose { it.removeAccessPermission(env.getArgument("id")) }.map { true }
 
     private fun addRoleAccessPermission(env: DataFetchingEnvironment): Future<Boolean> =
         getLiveManagementService(env).compose {
@@ -587,7 +580,6 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
             meta = toJsonMap(input.getJsonArray("meta"))
         )
         return getLiveInstrumentService(env).compose { it.addLiveInstrument(instrument) }.map { fixJsonMaps(it) }
-
     }
 
     private fun addLiveLog(env: DataFetchingEnvironment): Future<Map<String, Any>> {
@@ -625,7 +617,6 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
             meta = toJsonMap(input.getJsonArray("meta"))
         )
         return getLiveInstrumentService(env).compose { it.addLiveInstrument(instrument) }.map { fixJsonMaps(it) }
-
     }
 
     private fun addLiveMeter(env: DataFetchingEnvironment): Future<Map<String, Any>> {
@@ -666,7 +657,6 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
             meta = toJsonMap(input.getJsonArray("meta"))
         )
         return getLiveInstrumentService(env).compose { it.addLiveInstrument(instrument) }.map { fixJsonMaps(it) }
-
     }
 
     private fun addLiveSpan(env: DataFetchingEnvironment): Future<Map<String, Any>> {
@@ -701,7 +691,6 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
             meta = toJsonMap(input.getJsonArray("meta"))
         )
         return getLiveInstrumentService(env).compose { it.addLiveInstrument(instrument) }.map { fixJsonMaps(it) }
-
     }
 
     private fun saveRule(env: DataFetchingEnvironment): Future<ViewRule> {
@@ -735,7 +724,6 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
 
     private fun getRule(env: DataFetchingEnvironment): Future<ViewRule?> =
         getLiveViewService(env).compose { it.getRule(env.getArgument("ruleName")) }
-
 
     private fun getLiveViews(env: DataFetchingEnvironment): Future<List<LiveView>> =
         getLiveViewService(env).compose { it.getLiveViews() }
@@ -774,24 +762,20 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
         getLiveManagementService(env).compose { it.addClientAccess() }
 
     private fun removeClientAccess(env: DataFetchingEnvironment): Future<Boolean> =
-        getLiveManagementService(env).compose { it.removeClientAccess(env.getArgument("id")) }
-            .map { true }
+        getLiveManagementService(env).compose { it.removeClientAccess(env.getArgument("id")) }.map { true }
 
     private fun refreshClientAccess(env: DataFetchingEnvironment): Future<ClientAccess> =
         getLiveManagementService(env).compose { it.refreshClientAccess(env.getArgument("id")) }
 
     private fun getTraceStack(env: DataFetchingEnvironment): Future<Map<String, Any>?> =
-        getLiveViewService(env).compose { it.getTraceStack(env.getArgument("traceId")) }
-            .map { fixJsonMaps(it) }
+        getLiveViewService(env).compose { it.getTraceStack(env.getArgument("traceId")) }.map { fixJsonMaps(it) }
 
     private fun getSystemConfig(env: DataFetchingEnvironment): Future<List<Map<String, String>>> =
-        getLiveManagementService(env).compose { it.getConfiguration() }
-            .map { fixConfigObject(it) }
+        getLiveManagementService(env).compose { it.getConfiguration() }.map { fixConfigObject(it) }
 
     private fun getSystemConfigValue(env: DataFetchingEnvironment): Future<String> =
         getLiveManagementService(env).compose {
-            it.getConfigurationValue(env.getArgument("config"))
-                .map { value -> value ?: "" }
+            it.getConfigurationValue(env.getArgument("config")).map { value -> value ?: "" }
         }
 
     private fun setSystemConfigValue(env: DataFetchingEnvironment): Future<Boolean> =
