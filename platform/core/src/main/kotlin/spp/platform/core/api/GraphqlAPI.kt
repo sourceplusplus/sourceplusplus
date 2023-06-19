@@ -24,17 +24,18 @@ import graphql.execution.DataFetcherExceptionHandler
 import graphql.execution.DataFetcherExceptionHandlerParameters
 import graphql.execution.DataFetcherExceptionHandlerResult
 import graphql.execution.instrumentation.ExecutionStrategyInstrumentationContext
+import graphql.execution.instrumentation.InstrumentationContext
 import graphql.execution.instrumentation.InstrumentationState
 import graphql.execution.instrumentation.SimpleInstrumentation
 import graphql.execution.instrumentation.parameters.InstrumentationExecutionStrategyParameters
-import graphql.schema.Coercing
-import graphql.schema.CoercingParseValueException
-import graphql.schema.DataFetchingEnvironment
-import graphql.schema.GraphQLScalarType
+import graphql.execution.instrumentation.parameters.InstrumentationFieldFetchParameters
+import graphql.execution.instrumentation.parameters.InstrumentationValidationParameters
+import graphql.schema.*
 import graphql.schema.idl.RuntimeWiring
 import graphql.schema.idl.SchemaGenerator
 import graphql.schema.idl.SchemaParser
 import graphql.schema.idl.TypeRuntimeWiring
+import graphql.validation.ValidationError
 import io.vertx.core.Future
 import io.vertx.core.Promise
 import io.vertx.core.Vertx
@@ -171,19 +172,40 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
 
         val schema = SchemaGenerator().makeExecutableSchema(typeDefinitionRegistry, runtimeWiring)
         return GraphQL.newGraphQL(schema)
-            .instrumentation(VertxFutureAdapter.create())
             .instrumentation(object : SimpleInstrumentation() {
+                private val futureAdapter = VertxFutureAdapter.create()
+
+                override fun instrumentDataFetcher(
+                    dataFetcher: DataFetcher<*>?,
+                    parameters: InstrumentationFieldFetchParameters?,
+                    state: InstrumentationState?
+                ): DataFetcher<*> = futureAdapter.instrumentDataFetcher(dataFetcher, parameters, state)
+
+                override fun beginValidation(
+                    parameters: InstrumentationValidationParameters?,
+                    state: InstrumentationState?
+                ): InstrumentationContext<MutableList<ValidationError>> {
+                    val theSuper = super.beginValidation(parameters, state)
+                    return object : InstrumentationContext<MutableList<ValidationError>> {
+                        override fun onDispatched(result: CompletableFuture<MutableList<ValidationError>>?) {
+                            theSuper?.onDispatched(result)
+                        }
+
+                        override fun onCompleted(result: MutableList<ValidationError>?, t: Throwable?) {
+                            theSuper?.onCompleted(result, t)
+                            if (t != null) log.warn("GraphQL validation failed", t)
+                            result?.let { if (it.isNotEmpty()) log.warn("GraphQL validation failed: {}", it) }
+                        }
+                    }
+                }
+
                 override fun beginExecutionStrategy(
                     parameters: InstrumentationExecutionStrategyParameters?,
                     state: InstrumentationState?
-                ): ExecutionStrategyInstrumentationContext {
-                    return object : ExecutionStrategyInstrumentationContext {
-                        override fun onDispatched(result: CompletableFuture<ExecutionResult>?) = Unit
-                        override fun onCompleted(result: ExecutionResult?, t: Throwable?) {
-                            if (t != null) {
-                                log.warn("GraphQL execution failed", t)
-                            }
-                        }
+                ): ExecutionStrategyInstrumentationContext = object : ExecutionStrategyInstrumentationContext {
+                    override fun onDispatched(result: CompletableFuture<ExecutionResult>?) = Unit
+                    override fun onCompleted(result: ExecutionResult?, t: Throwable?) {
+                        if (t != null) log.warn("GraphQL execution failed", t)
                     }
                 }
             })
