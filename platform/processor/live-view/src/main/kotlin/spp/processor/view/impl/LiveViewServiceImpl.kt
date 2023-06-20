@@ -301,26 +301,26 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
     override fun removeLiveView(id: String): Future<LiveView> {
         log.debug { "Removing live view: {}".args(id) }
         val promise = Promise.promise<LiveView>()
-        var unsubbedUser: ViewSubscriber? = null
+        var unsubbedSubscriber: ViewSubscriber? = null
         subscriptionCache.flatMap { it.value.values }.forEach { subList ->
             val subscription = subList.firstOrNull { it.subscription.subscriptionId == id }
             if (subscription != null) {
                 (subList as MutableSet).remove(subscription)
-                unsubbedUser = subscription
+                unsubbedSubscriber = subscription
             }
         }
 
-        if (unsubbedUser != null) {
+        if (unsubbedSubscriber != null) {
             val removedView = LiveView(
-                unsubbedUser!!.subscription.subscriptionId,
-                unsubbedUser!!.subscription.entityIds,
-                unsubbedUser!!.subscription.artifactQualifiedName,
-                unsubbedUser!!.subscription.artifactLocation,
-                unsubbedUser!!.subscription.viewConfig
+                unsubbedSubscriber!!.subscription.subscriptionId,
+                unsubbedSubscriber!!.subscription.entityIds,
+                unsubbedSubscriber!!.subscription.artifactQualifiedName,
+                unsubbedSubscriber!!.subscription.artifactLocation,
+                unsubbedSubscriber!!.subscription.viewConfig
             )
             log.debug { "Removed live view: {}".args(removedView) }
 
-            unsubbedUser!!.consumer.unregister {
+            unsubbedSubscriber!!.consumer.unregister {
                 if (it.succeeded()) {
                     promise.complete(removedView)
                 } else {
