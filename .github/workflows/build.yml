@@ -23,9 +23,11 @@ jobs:
 
     runs-on: ubuntu-20.04
     timeout-minutes: 20
+
+    # Kill the workflow if PR is updated with a new commit
     concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}-verify-mono
-      cancel-in-progress: true
+      group: ${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
     outputs:
       version: ${{ steps.properties.outputs.version }}
@@ -47,9 +49,12 @@ jobs:
   test-platform:
     runs-on: ubuntu-20.04
     timeout-minutes: 20
+
+    # Kill the workflow if PR is updated with a new commit
     concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}-test-platform-${{ matrix.test_module }}
-      cancel-in-progress: true
+      group: ${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
     strategy:
       matrix:
         test_module: [ 'bridge', 'common', 'core', 'processor:live-view', 'processor:live-instrument', 'storage' ]
@@ -132,9 +137,11 @@ jobs:
   test-probe-jvm:
     runs-on: ubuntu-20.04
     timeout-minutes: 20
+
+    # Kill the workflow if PR is updated with a new commit
     concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}-test-probe-jvm
-      cancel-in-progress: true
+      group: ${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
     steps:
       - uses: actions/checkout@v3
@@ -199,9 +206,11 @@ jobs:
   test-probe-nodejs:
     runs-on: ubuntu-20.04
     timeout-minutes: 20
+
+    # Kill the workflow if PR is updated with a new commit
     concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}-test-probe-nodejs
-      cancel-in-progress: true
+      group: ${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
     steps:
       - uses: actions/checkout@v3
@@ -270,9 +279,11 @@ jobs:
   test-interface-cli:
     runs-on: ubuntu-20.04
     timeout-minutes: 20
+
+    # Kill the workflow if PR is updated with a new commit
     concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}-test-interface-cli
-      cancel-in-progress: true
+      group: ${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
     steps:
       - uses: actions/checkout@v3
@@ -335,9 +346,11 @@ jobs:
   test-interface-jetbrains:
     runs-on: ubuntu-20.04
     timeout-minutes: 20
+
+    # Kill the workflow if PR is updated with a new commit
     concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}-test-interface-jetbrains
-      cancel-in-progress: true
+      group: ${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
     steps:
       - uses: actions/checkout@v3
@@ -369,9 +382,11 @@ jobs:
   test-protocol:
     runs-on: ubuntu-20.04
     timeout-minutes: 20
+
+    # Kill the workflow if PR is updated with a new commit
     concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}-protocol
-      cancel-in-progress: true
+      group: ${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
     steps:
       - uses: actions/checkout@v3
@@ -399,9 +414,6 @@ jobs:
 
     runs-on: ubuntu-20.04
     timeout-minutes: 20
-    concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}
-      cancel-in-progress: true
 
     outputs:
       version: ${{ steps.properties.outputs.version }}
