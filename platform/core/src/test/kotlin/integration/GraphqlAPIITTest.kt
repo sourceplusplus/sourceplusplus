@@ -668,11 +668,9 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
 
     @Test
     fun `ensure addLiveView works`() = runBlocking {
-        val addLiveViewResp =
-            request.sendJsonObject(addLiveViewRequest).await().bodyAsJsonObject()
+        val addLiveViewResp = request.sendJsonObject(addLiveViewRequest).await().bodyAsJsonObject()
         assertNull(addLiveViewResp.getJsonArray("errors"))
-        val liveView =
-            addLiveViewResp.getJsonObject("data").getJsonObject("addLiveView")
+        val liveView = addLiveViewResp.getJsonObject("data").getJsonObject("addLiveView")
         assertNotNull(liveView.getString("subscriptionId"))
         val entityIds = liveView.getJsonArray("entityIds")
         assertEquals(3, entityIds.size())
@@ -1113,7 +1111,7 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
         JsonObject().put("query", getGraphql("view/add-live-view")).put(
             "variables", JsonObject().put(
                 "input", mapOf(
-                    "entityIds" to listOf(1, 222, 3),
+                    "entityIds" to listOf("1", "222", "3"),
                     "viewConfig" to mapOf(
                         "viewName" to "addLiveView",
                         "viewMetrics" to listOf("test-metric")
