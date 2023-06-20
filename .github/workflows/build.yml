@@ -15,6 +15,7 @@ on:
 env:
   GRADLE_OPTS: -Dorg.gradle.caching=true -Dorg.gradle.daemon=false -Xmx5g -Xms5g
   GRADLE_BUILD_ACTION_CACHE_DEBUG_ENABLED: true
+  GRADLE_BUILD_ACTION_CACHE_KEY_JOB: ${{ github.workflow }}
 
 jobs:
   verify-mono:
@@ -147,6 +148,8 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2.4.2
+        with:
+          gradle-home-cache-cleanup: true
 
       - name: Write docker-compose.override.yml
         working-directory: docker/e2e
