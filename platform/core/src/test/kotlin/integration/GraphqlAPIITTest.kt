@@ -681,7 +681,7 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
         assertTrue(entityIds.contains("3"))
 
         val viewConfig = liveView.getJsonObject("viewConfig")
-        assertEquals("test", viewConfig.getString("viewName"))
+        assertEquals("addLiveView", viewConfig.getString("viewName"))
         val viewMetrics = viewConfig.getJsonArray("viewMetrics")
         assertEquals(1, viewMetrics.size())
         assertEquals("test-metric", viewMetrics.getString(0))
@@ -1115,7 +1115,7 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
                 "input", mapOf(
                     "entityIds" to listOf(1, 222, 3),
                     "viewConfig" to mapOf(
-                        "viewName" to "test",
+                        "viewName" to "addLiveView",
                         "viewMetrics" to listOf("test-metric")
                     )
                 )

@@ -579,8 +579,8 @@ enum MetricOrder {
 }
 
 type Query {
-    version: String!
-    timeInfo: TimeInfo!
+    getVersion: String!
+    getTimeInfo: TimeInfo!
 
     getAccessToken(authorizationCode: String!): String!
     getAccessPermissions: [AccessPermission!]!
