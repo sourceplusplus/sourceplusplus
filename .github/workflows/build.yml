@@ -105,11 +105,11 @@ jobs:
           echo "TEST_MODULE=$TEST_MODULE"
 
       - name: Make docker logs artifact
-        if: ${{ always() }}
+        if: ${{ !cancelled() }}
         run: ./gradlew :platform:composeLogs
 
       - name: Upload docker logs artifact
-        if: ${{ always() }}
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v3
         with:
           name: ${{ env.TEST_MODULE }}-docker.log
@@ -183,11 +183,11 @@ jobs:
             :probes:jvm:services:test
 
       - name: Make docker logs artifact
-        if: ${{ always() }}
+        if: ${{ !cancelled() }}
         run: ./gradlew :platform:composeLogs
 
       - name: Upload docker logs artifact
-        if: ${{ always() }}
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v3
         with:
           name: test-probe-jvm-platform-logs
@@ -251,11 +251,11 @@ jobs:
         run: ./gradlew --scan :probes:nodejs:test
 
       - name: Make docker logs artifact
-        if: ${{ always() }}
+        if: ${{ !cancelled() }}
         run: ./gradlew :platform:composeLogs
 
       - name: Upload docker logs artifact
-        if: ${{ always() }}
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v3
         with:
           name: test-probe-nodejs-platform-logs
@@ -313,11 +313,11 @@ jobs:
             :interfaces:cli:test
 
       - name: Make docker logs artifact
-        if: ${{ always() }}
+        if: ${{ !cancelled() }}
         run: ./gradlew :platform:composeLogs
 
       - name: Upload docker logs artifact
-        if: ${{ always() }}
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v3
         with:
           name: test-interface-cli-platform-logs
