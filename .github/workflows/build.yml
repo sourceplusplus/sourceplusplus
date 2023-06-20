@@ -376,6 +376,11 @@ jobs:
             :interfaces:jetbrains:marker:ult-marker:test \
             :interfaces:jetbrains:plugin:test
 
+        #todo: gradle-home-cache-excludes should handle
+      - name: Remove IntelliJ from Gradle cache
+        run: |
+          rm -rf ~/.gradle/caches/modules-2/files-2.1/com.jetbrains.intellij.idea
+
   test-protocol:
     runs-on: ubuntu-20.04
     timeout-minutes: 20
