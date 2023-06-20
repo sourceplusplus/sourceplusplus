@@ -57,7 +57,7 @@ class LoggerInstrumentation : SimpleInstrumentation() {
 
             override fun onCompleted(result: MutableList<ValidationError>?, t: Throwable?) {
                 theSuper?.onCompleted(result, t)
-                if (t != null || result != null) {
+                if (t != null || result?.isNotEmpty() == true) {
                     if (t != null) log.warn("GraphQL validation failed (beginValidation)", t)
                     result?.let { if (it.isNotEmpty()) log.warn("GraphQL validation failed (beginValidation): {}", it) }
                     log.warn("Query: {}. Variables: {}", parameters?.query, parameters?.variables)
