@@ -112,8 +112,6 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
     }
 
     private fun setupGraphQL(): GraphQL {
-        val schemaFile = vertx.fileSystem().readFileBlocking("spp-api.graphqls").toString()
-        val typeDefinitionRegistry = SchemaParser().parse(schemaFile)
         val runtimeWiring = RuntimeWiring.newRuntimeWiring()
             .scalar(GraphQLScalarType.newScalar().name("Long").coercing(LongCoercing()).build())
             .type(TypeRuntimeWiring.newTypeWiring("LiveInstrument").typeResolver(LiveInstrumentTypeResolver()).build())
@@ -121,8 +119,9 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
             .type("Mutation") { withDataFetchers(it, true) }
             .build()
 
-        val schema = SchemaGenerator().makeExecutableSchema(typeDefinitionRegistry, runtimeWiring)
-        return GraphQL.newGraphQL(schema)
+        val schemaFile = vertx.fileSystem().readFileBlocking("spp-api.graphqls").toString()
+        val typeDefinitionRegistry = SchemaParser().parse(schemaFile)
+        return GraphQL.newGraphQL(SchemaGenerator().makeExecutableSchema(typeDefinitionRegistry, runtimeWiring))
             .defaultDataFetcherExceptionHandler(LoggerDataFetcherExceptionHandler())
             .instrumentation(
                 ChainedInstrumentation(
