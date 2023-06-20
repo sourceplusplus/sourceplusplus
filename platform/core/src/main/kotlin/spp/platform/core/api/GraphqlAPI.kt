@@ -17,26 +17,14 @@
  */
 package spp.platform.core.api
 
-import graphql.ExceptionWhileDataFetching
-import graphql.ExecutionResult
 import graphql.GraphQL
-import graphql.execution.DataFetcherExceptionHandler
-import graphql.execution.DataFetcherExceptionHandlerParameters
-import graphql.execution.DataFetcherExceptionHandlerResult
-import graphql.execution.instrumentation.ExecutionStrategyInstrumentationContext
-import graphql.execution.instrumentation.InstrumentationContext
-import graphql.execution.instrumentation.InstrumentationState
-import graphql.execution.instrumentation.SimpleInstrumentation
-import graphql.execution.instrumentation.parameters.InstrumentationExecutionParameters
-import graphql.execution.instrumentation.parameters.InstrumentationExecutionStrategyParameters
-import graphql.execution.instrumentation.parameters.InstrumentationFieldFetchParameters
-import graphql.execution.instrumentation.parameters.InstrumentationValidationParameters
-import graphql.schema.*
+import graphql.execution.instrumentation.ChainedInstrumentation
+import graphql.schema.DataFetchingEnvironment
+import graphql.schema.GraphQLScalarType
 import graphql.schema.idl.RuntimeWiring
 import graphql.schema.idl.SchemaGenerator
 import graphql.schema.idl.SchemaParser
 import graphql.schema.idl.TypeRuntimeWiring
-import graphql.validation.ValidationError
 import io.vertx.core.Future
 import io.vertx.core.Promise
 import io.vertx.core.Vertx
@@ -53,6 +41,10 @@ import org.slf4j.LoggerFactory
 import spp.platform.common.ClusterConnection.discovery
 import spp.platform.common.ClusterConnection.router
 import spp.platform.common.DeveloperAuth
+import spp.platform.core.api.graphql.LiveInstrumentTypeResolver
+import spp.platform.core.api.graphql.LoggerDataFetcherExceptionHandler
+import spp.platform.core.api.graphql.LoggerInstrumentation
+import spp.platform.core.api.graphql.LongCoercing
 import spp.protocol.artifact.metrics.MetricStep
 import spp.protocol.artifact.trace.TraceSpan
 import spp.protocol.artifact.trace.TraceStack
@@ -68,7 +60,6 @@ import spp.protocol.instrument.throttle.ThrottleStep
 import spp.protocol.instrument.variable.LiveVariableControl
 import spp.protocol.platform.auth.*
 import spp.protocol.platform.developer.Developer
-import spp.protocol.platform.developer.SelfInfo
 import spp.protocol.platform.general.*
 import spp.protocol.service.LiveInstrumentService
 import spp.protocol.service.LiveManagementService
@@ -80,14 +71,16 @@ import spp.protocol.view.rule.RulePartition
 import spp.protocol.view.rule.ViewRule
 import java.time.Instant
 import java.util.*
-import java.util.concurrent.CompletableFuture
+import kotlin.reflect.full.declaredFunctions
+import kotlin.reflect.full.declaredMemberFunctions
+import kotlin.reflect.jvm.isAccessible
 
 /**
  * Serves the GraphQL API, providing access to:
  *
  * [LiveManagementService], [LiveInstrumentService], & [LiveViewService]
  */
-@Suppress("TooManyFunctions", "LargeClass") // public API
+@Suppress("TooManyFunctions", "LargeClass", "unused") // public API
 class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
 
     private val log = LoggerFactory.getLogger(GraphqlAPI::class.java)
@@ -121,209 +114,74 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
     private fun setupGraphQL(): GraphQL {
         val schemaFile = vertx.fileSystem().readFileBlocking("spp-api.graphqls").toString()
         val typeDefinitionRegistry = SchemaParser().parse(schemaFile)
-        val runtimeWiring = RuntimeWiring.newRuntimeWiring().scalar(
-            GraphQLScalarType.newScalar().name("Long")
-                .coercing(object : Coercing<Long, Long> {
-                    override fun serialize(dataFetcherResult: Any): Long {
-                        if (dataFetcherResult is Instant) {
-                            return dataFetcherResult.toEpochMilli()
-                        }
-                        return dataFetcherResult as Long
-                    }
-
-                    override fun parseValue(input: Any): Long {
-                        return when (input) {
-                            is Number -> input.toLong()
-                            is String -> {
-                                try {
-                                    return input.toLong()
-                                } catch (e: NumberFormatException) {
-                                    throw CoercingParseValueException("Invalid long value: $input")
-                                }
-                            }
-
-                            else -> throw CoercingParseValueException("Expected Number or String")
-                        }
-                    }
-
-                    override fun parseLiteral(input: Any): Long {
-                        return input as Long
-                    }
-                }).build()
-        ).type(TypeRuntimeWiring.newTypeWiring("LiveInstrument").typeResolver {
-            if ((it.getObject() as Any) is LiveBreakpoint ||
-                (it.getObject() as Map<String, Any>)["type"] == "BREAKPOINT"
-            ) {
-                it.schema.getObjectType("LiveBreakpoint")
-            } else if ((it.getObject() as Any) is LiveLog ||
-                (it.getObject() as Map<String, Any>)["type"] == "LOG"
-            ) {
-                it.schema.getObjectType("LiveLog")
-            } else if ((it.getObject() as Any) is LiveMeter ||
-                (it.getObject() as Map<String, Any>)["type"] == "METER"
-            ) {
-                it.schema.getObjectType("LiveMeter")
-            } else {
-                it.schema.getObjectType("LiveSpan")
-            }
-        }.build())
-            .type("Query") { withQueryFetchers(it) }
-            .type("Mutation") { withMutationFetchers(it) }
+        val runtimeWiring = RuntimeWiring.newRuntimeWiring()
+            .scalar(GraphQLScalarType.newScalar().name("Long").coercing(LongCoercing()).build())
+            .type(TypeRuntimeWiring.newTypeWiring("LiveInstrument").typeResolver(LiveInstrumentTypeResolver()).build())
+            .type("Query") { withDataFetchers(it, false) }
+            .type("Mutation") { withDataFetchers(it, true) }
             .build()
 
         val schema = SchemaGenerator().makeExecutableSchema(typeDefinitionRegistry, runtimeWiring)
         return GraphQL.newGraphQL(schema)
-            .instrumentation(object : SimpleInstrumentation() {
-                private val futureAdapter = VertxFutureAdapter.create()
-
-                override fun instrumentDataFetcher(
-                    dataFetcher: DataFetcher<*>?,
-                    parameters: InstrumentationFieldFetchParameters?,
-                    state: InstrumentationState?
-                ): DataFetcher<*> = futureAdapter.instrumentDataFetcher(dataFetcher, parameters, state)
-
-                override fun instrumentExecutionResult(
-                    executionResult: ExecutionResult?,
-                    parameters: InstrumentationExecutionParameters?,
-                    state: InstrumentationState?
-                ): CompletableFuture<ExecutionResult> {
-                    if (executionResult?.errors?.isNotEmpty() == true) {
-                        executionResult.errors.forEach { log.warn("GraphQL execution failed: {}", it) }
-                    }
-                    return super.instrumentExecutionResult(executionResult, parameters, state)
-                }
-
-                override fun beginValidation(
-                    parameters: InstrumentationValidationParameters?,
-                    state: InstrumentationState?
-                ): InstrumentationContext<MutableList<ValidationError>> {
-                    val theSuper = super.beginValidation(parameters, state)
-                    return object : InstrumentationContext<MutableList<ValidationError>> {
-                        override fun onDispatched(result: CompletableFuture<MutableList<ValidationError>>?) {
-                            theSuper?.onDispatched(result)
-                        }
-
-                        override fun onCompleted(result: MutableList<ValidationError>?, t: Throwable?) {
-                            theSuper?.onCompleted(result, t)
-                            if (t != null) log.warn("GraphQL validation failed", t)
-                            result?.let { if (it.isNotEmpty()) log.warn("GraphQL validation failed: {}", it) }
-                        }
-                    }
-                }
-
-                override fun beginExecutionStrategy(
-                    parameters: InstrumentationExecutionStrategyParameters?,
-                    state: InstrumentationState?
-                ): ExecutionStrategyInstrumentationContext = object : ExecutionStrategyInstrumentationContext {
-                    override fun onDispatched(result: CompletableFuture<ExecutionResult>?) = Unit
-                    override fun onCompleted(result: ExecutionResult?, t: Throwable?) {
-                        if (t != null) log.warn("GraphQL execution failed", t)
-                    }
-                }
-            })
-            .defaultDataFetcherExceptionHandler(object : DataFetcherExceptionHandler {
-                override fun handleException(
-                    handlerParameters: DataFetcherExceptionHandlerParameters
-                ): CompletableFuture<DataFetcherExceptionHandlerResult> {
-                    val exception = handlerParameters.exception
-                    exception.message?.let { log.warn(it) }
-                    val sourceLocation = handlerParameters.sourceLocation
-                    val path = handlerParameters.path
-                    val error = ExceptionWhileDataFetching(path, exception, sourceLocation)
-                    return CompletableFuture.completedFuture(
-                        DataFetcherExceptionHandlerResult.newResult().error(error).build()
+            .defaultDataFetcherExceptionHandler(LoggerDataFetcherExceptionHandler())
+            .instrumentation(
+                ChainedInstrumentation(
+                    listOf(
+                        VertxFutureAdapter.create(),
+                        LoggerInstrumentation()
                     )
-                }
-            }).build()
+                )
+            ).build()
     }
 
-    private fun withQueryFetchers(builder: TypeRuntimeWiring.Builder): TypeRuntimeWiring.Builder {
-        return builder.dataFetcher("version", this::version)
-            .dataFetcher("timeInfo", this::timeInfo)
-            .dataFetcher("getAccessToken", this::getAccessToken)
-            .dataFetcher("getAccessPermissions", this::getAccessPermissions)
-            .dataFetcher("getAccessPermission", this::getAccessPermission)
-            .dataFetcher("getRoleAccessPermissions", this::getRoleAccessPermissions)
-            .dataFetcher("getDeveloperAccessPermissions", this::getDeveloperAccessPermissions)
-            .dataFetcher("getDataRedactions", this::getDataRedactions)
-            .dataFetcher("getDataRedaction", this::getDataRedaction)
-            .dataFetcher("getRoleDataRedactions", this::getRoleDataRedactions)
-            .dataFetcher("getDeveloperDataRedactions", this::getDeveloperDataRedactions)
-            .dataFetcher("getRoles", this::getRoles)
-            .dataFetcher("getRolePermissions", this::getRolePermissions)
-            .dataFetcher("getDeveloperRoles", this::getDeveloperRoles)
-            .dataFetcher("getDeveloperPermissions", this::getDeveloperPermissions)
-            .dataFetcher("getDevelopers", this::getDevelopers)
-            .dataFetcher("getLiveInstrument", this::getLiveInstrument)
-            .dataFetcher("getLiveInstruments", this::getLiveInstruments)
-            .dataFetcher("getLiveBreakpoints", this::getLiveBreakpoints)
-            .dataFetcher("getLiveLogs", this::getLiveLogs)
-            .dataFetcher("getLiveMeters", this::getLiveMeters)
-            .dataFetcher("getLiveSpans", this::getLiveSpans)
-            .dataFetcher("getLiveInstrumentEvents", this::getLiveInstrumentEvents)
-            .dataFetcher("getSelf", this::getSelf)
-            .dataFetcher("getServices", this::getServices)
-            .dataFetcher("getInstances", this::getInstances)
-            .dataFetcher("getEndpoints", this::getEndpoints)
-            .dataFetcher("searchEndpoints", this::searchEndpoints)
-            .dataFetcher("sortMetrics", this::sortMetrics)
-            .dataFetcher("getRules", this::getRules)
-            .dataFetcher("getRule", this::getRule)
-            .dataFetcher("getLiveViews", this::getLiveViews)
-            .dataFetcher("getHistoricalMetrics", this::getHistoricalMetrics)
-            .dataFetcher("getClientAccessors", this::getClientAccessors)
-            .dataFetcher("getTraceStack", this::getTraceStack)
-            .dataFetcher("getSystemConfig", this::getSystemConfig)
-            .dataFetcher("getSystemConfigValue", this::getSystemConfigValue)
+    private fun isReadCall(it: String): Boolean {
+        return it.startsWith("get")
+                || it.startsWith("search")
+                || it.startsWith("sort")
     }
 
-    private fun withMutationFetchers(builder: TypeRuntimeWiring.Builder): TypeRuntimeWiring.Builder {
-        return builder.dataFetcher("reset", this::reset)
-            .dataFetcher("addDataRedaction", this::addDataRedaction)
-            .dataFetcher("updateDataRedaction", this::updateDataRedaction)
-            .dataFetcher("removeDataRedaction", this::removeDataRedaction)
-            .dataFetcher("addRoleDataRedaction", this::addRoleDataRedaction)
-            .dataFetcher("removeRoleDataRedaction", this::removeRoleDataRedaction)
-            .dataFetcher("addAccessPermission", this::addAccessPermission)
-            .dataFetcher("removeAccessPermission", this::removeAccessPermission)
-            .dataFetcher("addRoleAccessPermission", this::addRoleAccessPermission)
-            .dataFetcher("removeRoleAccessPermission", this::removeRoleAccessPermission)
-            .dataFetcher("addRole", this::addRole)
-            .dataFetcher("removeRole", this::removeRole)
-            .dataFetcher("addRolePermission", this::addRolePermission)
-            .dataFetcher("removeRolePermission", this::removeRolePermission)
-            .dataFetcher("addDeveloperRole", this::addDeveloperRole)
-            .dataFetcher("removeDeveloperRole", this::removeDeveloperRole)
-            .dataFetcher("addDeveloper", this::addDeveloper)
-            .dataFetcher("removeDeveloper", this::removeDeveloper)
-            .dataFetcher("refreshAuthorizationCode", this::refreshAuthorizationCode)
-            .dataFetcher("removeLiveInstrument", this::removeLiveInstrument)
-            .dataFetcher("removeLiveInstruments", this::removeLiveInstruments)
-            .dataFetcher("clearLiveInstruments", this::clearLiveInstruments)
-            .dataFetcher("addLiveBreakpoint", this::addLiveBreakpoint)
-            .dataFetcher("addLiveLog", this::addLiveLog)
-            .dataFetcher("addLiveMeter", this::addLiveMeter)
-            .dataFetcher("addLiveSpan", this::addLiveSpan)
-            .dataFetcher("saveRule", this::saveRule)
-            .dataFetcher("addLiveView", this::addLiveView)
-            .dataFetcher("clearLiveViews", this::clearLiveViews)
-            .dataFetcher("addClientAccess", this::addClientAccess)
-            .dataFetcher("removeClientAccess", this::removeClientAccess)
-            .dataFetcher("refreshClientAccess", this::refreshClientAccess)
-            .dataFetcher("setSystemConfigValue", this::setSystemConfigValue)
+    private fun withDataFetchers(builder: TypeRuntimeWiring.Builder, canMutate: Boolean): TypeRuntimeWiring.Builder {
+        return builder.apply {
+            val allServiceFunctions = LiveManagementService::class.declaredMemberFunctions +
+                    LiveInstrumentService::class.declaredMemberFunctions +
+                    LiveViewService::class.declaredMemberFunctions
+            val autoWire = allServiceFunctions.map { it.name }.toSet() -
+                    GraphqlAPI::class.declaredFunctions.map { it.name }.toSet()
+            autoWire.filter {
+                isReadCall(it) || (canMutate && !isReadCall(it))
+            }.forEach {
+                dataFetcher(it) { env -> execute(env, it) }
+            }
+
+            GraphqlAPI::class.declaredFunctions.filter {
+                !autoWire.contains(it.name) && (isReadCall(it.name) || (canMutate && !isReadCall(it.name)))
+            }.forEach {
+                it.isAccessible = true
+                dataFetcher(it.name) { env -> it.call(this@GraphqlAPI, env) }
+            }
+        }
     }
 
-    private fun version(env: DataFetchingEnvironment): Future<String> =
-        getLiveManagementService(env).compose { it.getVersion() }
-
-    private fun timeInfo(env: DataFetchingEnvironment): Future<TimeInfo> =
-        getLiveManagementService(env).compose { it.getTimeInfo() }
+    private fun execute(env: DataFetchingEnvironment, name: String): Future<*> {
+        return if (LiveManagementService::class.declaredFunctions.any { it.name == name }) {
+            getLiveManagementService(env).compose {
+                LiveManagementService::class.declaredFunctions.find { it.name == name }!!.call(it) as Future<*>
+            }
+        } else if (LiveInstrumentService::class.declaredFunctions.any { it.name == name }) {
+            getLiveInstrumentService(env).compose {
+                LiveInstrumentService::class.declaredFunctions.find { it.name == name }!!.call(it) as Future<*>
+            }
+        } else if (LiveViewService::class.declaredFunctions.any { it.name == name }) {
+            getLiveViewService(env).compose {
+                LiveViewService::class.declaredFunctions.find { it.name == name }!!.call(it) as Future<*>
+            }
+        } else {
+            throw IllegalArgumentException("Unknown function $name")
+        }
+    }
 
     private fun getAccessToken(env: DataFetchingEnvironment): Future<String> =
         getLiveManagementService(env).compose { it.getAccessToken(env.getArgument("authorizationCode")) }
-
-    private fun getAccessPermissions(env: DataFetchingEnvironment): Future<List<AccessPermission>> =
-        getLiveManagementService(env).compose { it.getAccessPermissions() }
 
     private fun getAccessPermission(env: DataFetchingEnvironment): Future<AccessPermission> =
         getLiveManagementService(env).compose { it.getAccessPermission(env.getArgument("id")) }
@@ -336,9 +194,6 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
         getLiveManagementService(env)
             .compose { it.getDeveloperAccessPermissions(env.getArgument("developerId")) }
 
-    private fun getDataRedactions(env: DataFetchingEnvironment): Future<List<DataRedaction>> =
-        getLiveManagementService(env).compose { it.getDataRedactions() }
-
     private fun getDataRedaction(env: DataFetchingEnvironment): Future<DataRedaction> =
         getLiveManagementService(env).compose { it.getDataRedaction(env.getArgument("id")) }
 
@@ -349,9 +204,6 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
     private fun getDeveloperDataRedactions(env: DataFetchingEnvironment): Future<List<DataRedaction>> =
         getLiveManagementService(env)
             .compose { it.getDeveloperDataRedactions(env.getArgument("developerId")) }
-
-    private fun getRoles(env: DataFetchingEnvironment): Future<List<DeveloperRole>> =
-        getLiveManagementService(env).compose { it.getRoles() }
 
     private fun getRolePermissions(env: DataFetchingEnvironment): Future<List<RolePermission>> =
         getLiveManagementService(env)
@@ -370,15 +222,6 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
                 env.getArgument<String>("id").lowercase().replace(" ", "")
             )
         }
-
-    private fun getDevelopers(env: DataFetchingEnvironment): Future<List<Developer>> =
-        getLiveManagementService(env).compose { it.getDevelopers() }
-
-    private fun getSelf(env: DataFetchingEnvironment): Future<SelfInfo> =
-        getLiveManagementService(env).compose { it.getSelf() }
-
-    private fun getServices(env: DataFetchingEnvironment): Future<List<Service>> =
-        getLiveManagementService(env).compose { it.getServices() }
 
     private fun getInstances(env: DataFetchingEnvironment): Future<List<Map<String, Any>>> =
         getLiveManagementService(env).compose { it.getInstances(env.getArgument("serviceId")) }
@@ -773,14 +616,8 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
         return getLiveViewService(env).compose { it.addLiveView(subscription) }
     }
 
-    private fun getRules(env: DataFetchingEnvironment): Future<List<ViewRule>> =
-        getLiveViewService(env).compose { it.getRules() }
-
     private fun getRule(env: DataFetchingEnvironment): Future<ViewRule?> =
         getLiveViewService(env).compose { it.getRule(env.getArgument("ruleName")) }
-
-    private fun getLiveViews(env: DataFetchingEnvironment): Future<List<LiveView>> =
-        getLiveViewService(env).compose { it.getLiveViews() }
 
     private fun clearLiveViews(env: DataFetchingEnvironment): Future<Boolean> =
         getLiveViewService(env).compose { it.clearLiveViews() }.map { true }
@@ -809,12 +646,6 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
         }
     }
 
-    private fun getClientAccessors(env: DataFetchingEnvironment): Future<List<ClientAccess>> =
-        getLiveManagementService(env).compose { it.getClientAccessors() }
-
-    private fun addClientAccess(env: DataFetchingEnvironment): Future<ClientAccess> =
-        getLiveManagementService(env).compose { it.addClientAccess() }
-
     private fun removeClientAccess(env: DataFetchingEnvironment): Future<Boolean> =
         getLiveManagementService(env).compose { it.removeClientAccess(env.getArgument("id")) }.map { true }
 
@@ -824,15 +655,15 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
     private fun getTraceStack(env: DataFetchingEnvironment): Future<Map<String, Any>?> =
         getLiveViewService(env).compose { it.getTraceStack(env.getArgument("traceId")) }.map { fixJsonMaps(it) }
 
-    private fun getSystemConfig(env: DataFetchingEnvironment): Future<List<Map<String, String>>> =
+    private fun getConfiguration(env: DataFetchingEnvironment): Future<List<Map<String, String>>> =
         getLiveManagementService(env).compose { it.getConfiguration() }.map { fixConfigObject(it) }
 
-    private fun getSystemConfigValue(env: DataFetchingEnvironment): Future<String> =
+    private fun getConfigurationValue(env: DataFetchingEnvironment): Future<String> =
         getLiveManagementService(env).compose {
             it.getConfigurationValue(env.getArgument("config")).map { value -> value ?: "" }
         }
 
-    private fun setSystemConfigValue(env: DataFetchingEnvironment): Future<Boolean> =
+    private fun setConfigurationValue(env: DataFetchingEnvironment): Future<Boolean> =
         getLiveManagementService(env).compose {
             it.setConfigurationValue(env.getArgument("config"), env.getArgument("value"))
         }
@@ -885,6 +716,7 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
         return rtnMap
     }
 
+    //todo: graphql-java 20 can use JsonObjectAdapter, and get rid of this
     private fun fixConfigObject(json: JsonObject): List<Map<String, String>> {
         return (JsonObject.mapFrom(json).map as Map<String, Any?>).map {
             it.key to (it.value?.toString() ?: "")
@@ -922,13 +754,13 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
         getLiveService(env, LiveInstrumentService::class.java)
 
     private fun <T> getLiveService(env: DataFetchingEnvironment, clazz: Class<T>): Future<T> {
-        val promise = Promise.promise<T>()
         var accessToken: String? = null
         if (jwtEnabled) {
             val user = env.graphQlContext.get<RoutingContext>(RoutingContext::class.java).user()
             accessToken = user.principal().getString("access_token")
         }
 
+        val promise = Promise.promise<T>()
         EventBusService.getProxy(
             discovery, clazz,
             JsonObject().apply { accessToken?.let { put("headers", JsonObject().put("auth-token", accessToken)) } }
