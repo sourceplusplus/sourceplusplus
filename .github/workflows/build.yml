@@ -248,7 +248,7 @@ jobs:
         run: npm install
 
       - name: Test probe-nodejs
-        run: ./gradlew --scan -p probes/nodejs test
+        run: ./gradlew --scan :probes:nodejs:test
 
       - name: Make docker logs artifact
         if: ${{ always() }}
@@ -367,7 +367,7 @@ jobs:
         uses: gradle/gradle-build-action@v2.4.2
 
       - name: Test protocol
-        run: ./gradlew --scan -p protocol test
+        run: ./gradlew --scan :protocol:test
 
   make-distribution:
     needs:

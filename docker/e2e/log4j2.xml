@@ -39,11 +39,5 @@
         <Logger name="io.vertx.spi.cluster.redis" level="INFO" additivity="false">
             <Appender-ref ref="Console"/>
         </Logger>
-        <Logger name="graphql.kickstart.tools.SchemaClassScanner" level="ERROR" additivity="false">
-            <Appender-ref ref="Console"/>
-        </Logger>
-        <Logger name="graphql" level="DEBUG" additivity="false">
-            <Appender-ref ref="Console"/>
-        </Logger>
     </Loggers>
 </Configuration>
