@@ -27,6 +27,7 @@ import graphql.execution.instrumentation.ExecutionStrategyInstrumentationContext
 import graphql.execution.instrumentation.InstrumentationContext
 import graphql.execution.instrumentation.InstrumentationState
 import graphql.execution.instrumentation.SimpleInstrumentation
+import graphql.execution.instrumentation.parameters.InstrumentationExecutionParameters
 import graphql.execution.instrumentation.parameters.InstrumentationExecutionStrategyParameters
 import graphql.execution.instrumentation.parameters.InstrumentationFieldFetchParameters
 import graphql.execution.instrumentation.parameters.InstrumentationValidationParameters
@@ -180,6 +181,17 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
                     parameters: InstrumentationFieldFetchParameters?,
                     state: InstrumentationState?
                 ): DataFetcher<*> = futureAdapter.instrumentDataFetcher(dataFetcher, parameters, state)
+
+                override fun instrumentExecutionResult(
+                    executionResult: ExecutionResult?,
+                    parameters: InstrumentationExecutionParameters?,
+                    state: InstrumentationState?
+                ): CompletableFuture<ExecutionResult> {
+                    if (executionResult?.errors?.isNotEmpty() == true) {
+                        executionResult.errors.forEach { log.warn("GraphQL execution failed: {}", it) }
+                    }
+                    return super.instrumentExecutionResult(executionResult, parameters, state)
+                }
 
                 override fun beginValidation(
                     parameters: InstrumentationValidationParameters?,

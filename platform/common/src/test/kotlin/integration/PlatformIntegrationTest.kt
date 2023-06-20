@@ -185,11 +185,29 @@ open class PlatformIntegrationTest {
 
         private val log: Logger by lazy { LoggerFactory.getLogger(javaClass) }
 
+        override fun addLiveView(subscription: LiveView): Future<LiveView> {
+            log.info("Adding live view {}", subscription)
+            val value = delegate.addLiveView(subscription)
+            return value.map {
+                log.info("Added live view {}: {}", it.subscriptionId, it)
+                it
+            }
+        }
+
         override fun removeLiveView(id: String): Future<LiveView> {
             log.info("Removing live view {}", id)
             val value = delegate.removeLiveView(id)
             return value.map {
                 log.info("Removed live view {}: {}", id, it)
+                it
+            }
+        }
+
+        override fun saveRule(rule: ViewRule): Future<ViewRule> {
+            log.info("Saving rule {}", rule)
+            val value = delegate.saveRule(rule)
+            return value.map {
+                log.info("Saved rule {}: {}", rule.name, it)
                 it
             }
         }
