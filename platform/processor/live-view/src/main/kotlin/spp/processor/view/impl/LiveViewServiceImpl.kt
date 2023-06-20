@@ -311,23 +311,26 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
         }
 
         if (unsubbedUser != null) {
+            val removedView = LiveView(
+                unsubbedUser!!.subscription.subscriptionId,
+                unsubbedUser!!.subscription.entityIds,
+                unsubbedUser!!.subscription.artifactQualifiedName,
+                unsubbedUser!!.subscription.artifactLocation,
+                unsubbedUser!!.subscription.viewConfig
+            )
+            log.debug { "Removed live view: {}".args(removedView) }
+
             unsubbedUser!!.consumer.unregister {
                 if (it.succeeded()) {
-                    promise.complete(
-                        LiveView(
-                            unsubbedUser!!.subscription.subscriptionId,
-                            unsubbedUser!!.subscription.entityIds,
-                            unsubbedUser!!.subscription.artifactQualifiedName,
-                            unsubbedUser!!.subscription.artifactLocation,
-                            unsubbedUser!!.subscription.viewConfig
-                        )
-                    )
+                    promise.complete(removedView)
                 } else {
+                    log.error(it.cause()) { "Failed to unregister live view consumer" }
                     promise.fail(it.cause())
                 }
             }
         } else {
-            promise.fail("Invalid subscription id")
+            log.error("Non-existent live view: {}", id)
+            promise.fail("Non-existent live view: $id")
         }
         return promise.future()
     }
@@ -373,7 +376,8 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
 
             promise.complete(subscription)
         } else {
-            promise.fail("Invalid subscription id")
+            log.error("Non-existent live view: {}", id)
+            promise.fail("Non-existent live view: $id")
         }
 
         return promise.future()
@@ -401,7 +405,8 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
                 )
             )
         } else {
-            promise.fail("Invalid subscription id")
+            log.error("Non-existent live view: {}", id)
+            promise.fail("Non-existent live view: $id")
         }
         return promise.future()
     }
