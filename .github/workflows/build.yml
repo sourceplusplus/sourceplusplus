@@ -17,17 +17,17 @@ env:
   GRADLE_BUILD_ACTION_CACHE_DEBUG_ENABLED: true
   GRADLE_BUILD_ACTION_CACHE_KEY_JOB: ${{ github.workflow }}
 
+# Kill the workflow if PR is updated with a new commit
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   verify-mono:
     if: ${{ !contains(github.event.pull_request.head.ref, '#docs') && !(startsWith(github.event.head_commit.message, 'Merge pull request') && contains(github.event.head_commit.message, '#docs')) }}
 
     runs-on: ubuntu-20.04
     timeout-minutes: 20
-
-    # Kill the workflow if PR is updated with a new commit
-    concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}
-      cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
     outputs:
       version: ${{ steps.properties.outputs.version }}
@@ -49,11 +49,6 @@ jobs:
   test-platform:
     runs-on: ubuntu-20.04
     timeout-minutes: 20
-
-    # Kill the workflow if PR is updated with a new commit
-    concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}
-      cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
     strategy:
       matrix:
@@ -138,11 +133,6 @@ jobs:
     runs-on: ubuntu-20.04
     timeout-minutes: 20
 
-    # Kill the workflow if PR is updated with a new commit
-    concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}
-      cancel-in-progress: ${{ github.event_name == 'pull_request' }}
-
     steps:
       - uses: actions/checkout@v3
         with:
@@ -206,11 +196,6 @@ jobs:
   test-probe-nodejs:
     runs-on: ubuntu-20.04
     timeout-minutes: 20
-
-    # Kill the workflow if PR is updated with a new commit
-    concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}
-      cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
     steps:
       - uses: actions/checkout@v3
@@ -280,11 +265,6 @@ jobs:
     runs-on: ubuntu-20.04
     timeout-minutes: 20
 
-    # Kill the workflow if PR is updated with a new commit
-    concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}
-      cancel-in-progress: ${{ github.event_name == 'pull_request' }}
-
     steps:
       - uses: actions/checkout@v3
         with:
@@ -347,11 +327,6 @@ jobs:
     runs-on: ubuntu-20.04
     timeout-minutes: 20
 
-    # Kill the workflow if PR is updated with a new commit
-    concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}
-      cancel-in-progress: ${{ github.event_name == 'pull_request' }}
-
     steps:
       - uses: actions/checkout@v3
         with:
@@ -382,11 +357,6 @@ jobs:
   test-protocol:
     runs-on: ubuntu-20.04
     timeout-minutes: 20
-
-    # Kill the workflow if PR is updated with a new commit
-    concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}
-      cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
     steps:
       - uses: actions/checkout@v3
