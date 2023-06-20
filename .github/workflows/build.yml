@@ -39,6 +39,10 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2.4.2
+        with:
+          gradle-home-cache-cleanup: true
+          gradle-home-cache-excludes: |
+            caches/modules-2/files-2.1/com.jetbrains.intellij.idea
 
       - name: Verify code style
         run: ./gradlew detekt
@@ -66,6 +70,10 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2.4.2
+        with:
+          gradle-home-cache-cleanup: true
+          gradle-home-cache-excludes: |
+            caches/modules-2/files-2.1/com.jetbrains.intellij.idea
 
       - name: Write docker-compose.override.yml
         working-directory: docker/e2e
@@ -147,6 +155,8 @@ jobs:
         uses: gradle/gradle-build-action@v2.4.2
         with:
           gradle-home-cache-cleanup: true
+          gradle-home-cache-excludes: |
+            caches/modules-2/files-2.1/com.jetbrains.intellij.idea
 
       - name: Write docker-compose.override.yml
         working-directory: docker/e2e
@@ -209,6 +219,10 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2.4.2
+        with:
+          gradle-home-cache-cleanup: true
+          gradle-home-cache-excludes: |
+            caches/modules-2/files-2.1/com.jetbrains.intellij.idea
 
         #todo: shouldn't need SPP_CLIENT_ACCESS_ENABLED=false
       - name: Write docker-compose.override.yml
@@ -277,6 +291,10 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2.4.2
+        with:
+          gradle-home-cache-cleanup: true
+          gradle-home-cache-excludes: |
+            caches/modules-2/files-2.1/com.jetbrains.intellij.idea
 
       - name: Write docker-compose.override.yml
         working-directory: docker/e2e
@@ -339,6 +357,10 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2.4.2
+        with:
+          gradle-home-cache-cleanup: true
+          gradle-home-cache-excludes: |
+            caches/modules-2/files-2.1/com.jetbrains.intellij.idea
 
       - name: Test interface-jetbrains
         run: |
@@ -365,6 +387,10 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2.4.2
+        with:
+          gradle-home-cache-cleanup: true
+          gradle-home-cache-excludes: |
+            caches/modules-2/files-2.1/com.jetbrains.intellij.idea
 
       - name: Test protocol
         run: ./gradlew --scan :protocol:test
@@ -415,6 +441,10 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2.4.2
+        with:
+          gradle-home-cache-cleanup: true
+          gradle-home-cache-excludes: |
+            caches/modules-2/files-2.1/com.jetbrains.intellij.idea
 
       - name: Make distribution
         run: ./gradlew --scan makeDist -Dbuild.profile=release -PplatformVersion=$BUILD_VERSION
