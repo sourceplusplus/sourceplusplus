@@ -27,6 +27,7 @@ import io.vertx.kotlin.coroutines.await
 import io.vertx.redis.client.Command.*
 import io.vertx.redis.client.Redis
 import io.vertx.redis.client.RedisAPI
+import io.vertx.redis.client.RedisOptions
 import io.vertx.redis.client.Request.cmd
 import mu.KotlinLogging
 import spp.protocol.instrument.LiveInstrument
@@ -49,7 +50,14 @@ open class RedisStorage(val vertx: Vertx) : CoreStorage {
     override suspend fun init(config: JsonObject) {
         val sdHost = config.getString("host")
         val sdPort = config.getString("port")
-        redisClient = Redis.createClient(vertx, "redis://$sdHost:$sdPort")
+        redisClient = Redis.createClient(
+            vertx,
+            RedisOptions()
+                .setMaxPoolSize(12)
+                .setMaxPoolWaiting(48)
+                .setMaxWaitingHandlers(4096)
+                .setConnectionString("redis://$sdHost:$sdPort")
+        )
         redis = RedisAPI.api(redisClient)
     }
 
