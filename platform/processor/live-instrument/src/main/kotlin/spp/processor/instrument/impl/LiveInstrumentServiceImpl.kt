@@ -312,7 +312,7 @@ class LiveInstrumentServiceImpl : CoroutineVerticle(), LiveInstrumentService {
         return promise.future()
     }
 
-    override fun getLiveInstrumentById(id: String, includeArchive: Boolean): Future<LiveInstrument?> {
+    override fun getLiveInstrument(id: String, includeArchive: Boolean): Future<LiveInstrument?> {
         val devAuth = Vertx.currentContext().getLocal<DeveloperAuth>("developer")
         log.info("Received get live instrument by id request. Developer: {} - Id: {}", devAuth, id)
 
