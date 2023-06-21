@@ -17,6 +17,7 @@
  */
 package spp.platform.storage
 
+import com.google.common.base.CaseFormat
 import io.vertx.core.Vertx
 import io.vertx.core.json.Json
 import io.vertx.core.json.JsonObject
@@ -50,10 +51,17 @@ open class RedisStorage(val vertx: Vertx) : CoreStorage {
     override suspend fun init(config: JsonObject) {
         val sdHost = config.getString("host")
         val sdPort = config.getString("port")
+
+        val redisOptions = JsonObject()
+        (config.getJsonObject("options") ?: JsonObject()).forEach { (key, value) ->
+            redisOptions.put(
+                CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, key),
+                value.toString().toIntOrNull() ?: value
+            )
+        }
+
         redisClient = Redis.createClient(
-            vertx,
-            RedisOptions(config.getJsonObject("options") ?: JsonObject())
-                .setConnectionString("redis://$sdHost:$sdPort")
+            vertx, RedisOptions(redisOptions).setConnectionString("redis://$sdHost:$sdPort")
         )
         redis = RedisAPI.api(redisClient)
     }
