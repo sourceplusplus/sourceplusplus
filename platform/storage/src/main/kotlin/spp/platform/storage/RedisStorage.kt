@@ -52,10 +52,7 @@ open class RedisStorage(val vertx: Vertx) : CoreStorage {
         val sdPort = config.getString("port")
         redisClient = Redis.createClient(
             vertx,
-            RedisOptions()
-                .setMaxPoolSize(12)
-                .setMaxPoolWaiting(48)
-                .setMaxWaitingHandlers(4096)
+            RedisOptions(config.getJsonObject("options") ?: JsonObject())
                 .setConnectionString("redis://$sdHost:$sdPort")
         )
         redis = RedisAPI.api(redisClient)
