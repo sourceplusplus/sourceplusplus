@@ -70,7 +70,7 @@ class SelfInfoCache : CoroutineVerticle() {
         vertx.eventBus().addInboundInterceptor<Any> {
             if (Vertx.currentContext().removeLocal(contextCacheName)) {
                 val accessToken = Vertx.currentContext().getLocal<DeveloperAuth>("developer")?.accessToken
-                if (accessToken != null) {
+                if (accessToken != null && it.message().body() is JsonObject) {
                     cache.put(accessToken, SelfInfo(it.message().body() as JsonObject))
                 }
             } else if (isResetCacheAction(it.message())) {
