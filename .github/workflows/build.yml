@@ -85,6 +85,7 @@ jobs:
           echo "      - SPP_PROBE_ENABLED=true" >> docker-compose.override.yml
 
       - name: Start spp-platform
+        id: start_platform
         run: ./gradlew :platform:assembleUp
 
       - name: Docker IPs
@@ -113,11 +114,12 @@ jobs:
           echo "TEST_MODULE=$TEST_MODULE"
 
       - name: Make docker logs artifact
-        if: ${{ !cancelled() }}
+        id: make_docker_logs
+        if: ${{ !cancelled() && steps.start_platform.outcome == 'success' }}
         run: ./gradlew :platform:composeLogs
 
       - name: Upload docker logs artifact
-        if: ${{ !cancelled() }}
+        if: ${{ steps.make_docker_logs.outcome == 'success' }}
         uses: actions/upload-artifact@v3
         with:
           name: ${{ env.TEST_MODULE }}-docker.log
@@ -168,6 +170,7 @@ jobs:
           echo "      - SPP_PROBE_ENABLED=true" >> docker-compose.override.yml
 
       - name: Start spp-platform
+        id: start_platform
         run: ./gradlew :platform:assembleUp
 
       - name: Docker IPs
@@ -193,11 +196,12 @@ jobs:
             :probes:jvm:services:test
 
       - name: Make docker logs artifact
-        if: ${{ !cancelled() }}
+        id: make_docker_logs
+        if: ${{ !cancelled() && steps.start_platform.outcome == 'success' }}
         run: ./gradlew :platform:composeLogs
 
       - name: Upload docker logs artifact
-        if: ${{ !cancelled() }}
+        if: ${{ steps.make_docker_logs.outcome == 'success' }}
         uses: actions/upload-artifact@v3
         with:
           name: test-probe-jvm-platform-logs
@@ -236,6 +240,7 @@ jobs:
           echo "      - SPP_CLIENT_ACCESS_ENABLED=false" >> docker-compose.override.yml
 
       - name: Start spp-platform
+        id: start_platform
         run: ./gradlew :platform:assembleUp
 
       - name: Docker IPs
@@ -265,11 +270,12 @@ jobs:
         run: ./gradlew --scan :probes:nodejs:test
 
       - name: Make docker logs artifact
-        if: ${{ !cancelled() }}
+        id: make_docker_logs
+        if: ${{ !cancelled() && steps.start_platform.outcome == 'success' }}
         run: ./gradlew :platform:composeLogs
 
       - name: Upload docker logs artifact
-        if: ${{ !cancelled() }}
+        if: ${{ steps.make_docker_logs.outcome == 'success' }}
         uses: actions/upload-artifact@v3
         with:
           name: test-probe-nodejs-platform-logs
@@ -306,6 +312,7 @@ jobs:
           echo "      - SPP_PROBE_ENABLED=true" >> docker-compose.override.yml
 
       - name: Start spp-platform
+        id: start_platform
         run: ./gradlew :platform:assembleUp
 
       - name: Docker IPs
@@ -331,11 +338,12 @@ jobs:
             :interfaces:cli:test
 
       - name: Make docker logs artifact
-        if: ${{ !cancelled() }}
+        id: make_docker_logs
+        if: ${{ !cancelled() && steps.start_platform.outcome == 'success' }}
         run: ./gradlew :platform:composeLogs
 
       - name: Upload docker logs artifact
-        if: ${{ !cancelled() }}
+        if: ${{ steps.make_docker_logs.outcome == 'success' }}
         uses: actions/upload-artifact@v3
         with:
           name: test-interface-cli-platform-logs
