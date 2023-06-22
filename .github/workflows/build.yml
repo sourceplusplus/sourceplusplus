@@ -118,6 +118,17 @@ jobs:
           echo "TEST_MODULE=$TEST_MODULE" >> $GITHUB_ENV
           echo "TEST_MODULE=$TEST_MODULE"
 
+      - name: Download skywalking-api.log from spp-platform container
+        if: ${{ !cancelled() }}
+        run: docker cp $(docker ps -aqf "name=spp-platform"):/tmp/spp-probe/logs/skywalking-api.log .
+
+      - name: Upload skywalking-api.log artifact
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ env.TEST_MODULE }}-skywalking-api.log
+          path: skywalking-api.log
+
       - name: Make docker logs artifact
         id: make_docker_logs
         if: ${{ !cancelled() && steps.start_platform.outcome == 'success' }}
