@@ -17,6 +17,7 @@ env:
   GRADLE_BUILD_ACTION_CACHE_DEBUG_ENABLED: true
   GRADLE_BUILD_ACTION_CACHE_KEY_JOB: ${{ github.workflow }}
   SPP_PROBE_WAIT_FOR_PLATFORM: "true"
+  SPP_PROBE_PLATFORM_HOST: "https://cloud.sourceplus.plus"
   SPP_PROBE_CLIENT_ID: "spp_ci_ouSeYbx23Am6IMMfEnobeHWVt7j2X7EJTvyzoi65ktUSH9lmZp"
   SPP_PROBE_CLIENT_SECRET: "spp_cs_VvT7ryzSE7ud5UdMEi5iiVRfzt3u2mBRT2dqjZDaaNaPABR5dr"
   SPP_PROBE_TENANT_ID: "tenant1"
