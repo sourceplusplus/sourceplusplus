@@ -157,6 +157,20 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
         }
     }
 
+    override fun getRules(): Future<List<ViewRule>> {
+        val rules = mutableListOf<ViewRule>()
+        meterProcessService.converts().forEach { convert ->
+            if (convert !is LiveMetricConvert) return@forEach
+            val rule = convert.config.getLiveMetricsRules().first().rule
+            rules.add(rule.copy(name = "spp_" + rule.name))
+        }
+        return Future.succeededFuture(rules)
+    }
+
+    override fun getRule(ruleName: String): Future<ViewRule?> {
+        return getRules().map { it.firstOrNull { it.name == ruleName } }
+    }
+
     override fun saveRule(rule: ViewRule): Future<ViewRule> {
         //check for existing rule
         val exitingRule = meterProcessService.converts().any { ruleset ->
@@ -287,33 +301,36 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
     override fun removeLiveView(id: String): Future<LiveView> {
         log.debug { "Removing live view: {}".args(id) }
         val promise = Promise.promise<LiveView>()
-        var unsubbedUser: ViewSubscriber? = null
+        var unsubbedSubscriber: ViewSubscriber? = null
         subscriptionCache.flatMap { it.value.values }.forEach { subList ->
             val subscription = subList.firstOrNull { it.subscription.subscriptionId == id }
             if (subscription != null) {
                 (subList as MutableSet).remove(subscription)
-                unsubbedUser = subscription
+                unsubbedSubscriber = subscription
             }
         }
 
-        if (unsubbedUser != null) {
-            unsubbedUser!!.consumer.unregister {
+        if (unsubbedSubscriber != null) {
+            val removedView = LiveView(
+                unsubbedSubscriber!!.subscription.subscriptionId,
+                unsubbedSubscriber!!.subscription.entityIds,
+                unsubbedSubscriber!!.subscription.artifactQualifiedName,
+                unsubbedSubscriber!!.subscription.artifactLocation,
+                unsubbedSubscriber!!.subscription.viewConfig
+            )
+            log.debug { "Removed live view: {}".args(removedView) }
+
+            unsubbedSubscriber!!.consumer.unregister {
                 if (it.succeeded()) {
-                    promise.complete(
-                        LiveView(
-                            unsubbedUser!!.subscription.subscriptionId,
-                            unsubbedUser!!.subscription.entityIds,
-                            unsubbedUser!!.subscription.artifactQualifiedName,
-                            unsubbedUser!!.subscription.artifactLocation,
-                            unsubbedUser!!.subscription.viewConfig
-                        )
-                    )
+                    promise.complete(removedView)
                 } else {
+                    log.error(it.cause()) { "Failed to unregister live view consumer" }
                     promise.fail(it.cause())
                 }
             }
         } else {
-            promise.fail("Invalid subscription id")
+            log.error("Non-existent live view: {}", id)
+            promise.fail("Non-existent live view: $id")
         }
         return promise.future()
     }
@@ -359,7 +376,8 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
 
             promise.complete(subscription)
         } else {
-            promise.fail("Invalid subscription id")
+            log.error("Non-existent live view: {}", id)
+            promise.fail("Non-existent live view: $id")
         }
 
         return promise.future()
@@ -387,7 +405,8 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
                 )
             )
         } else {
-            promise.fail("Invalid subscription id")
+            log.error("Non-existent live view: {}", id)
+            promise.fail("Non-existent live view: $id")
         }
         return promise.future()
     }

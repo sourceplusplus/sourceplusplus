@@ -55,6 +55,7 @@ class RemoveByLocationLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         val hitCount = AtomicInteger(0)
         val testContext = VertxTestContext()
         val listener: (LiveBreakpointHit) -> Unit = { bpHit ->
+            log.info("Verifying hit: $bpHit")
             testContext.verify {
                 assertTrue(bpHit.stackTrace.elements.isNotEmpty())
                 val topFrame = bpHit.stackTrace.elements.first()
@@ -114,6 +115,7 @@ class RemoveByLocationLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
         //todo: wait since applyImmediately doesn't work on multi adds
         instrumentsApplied.future().await()
+        log.info("Instruments applied")
 
         //trigger live breakpoint
         removeMultipleByLine()

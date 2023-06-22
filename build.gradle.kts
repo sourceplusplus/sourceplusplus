@@ -45,7 +45,7 @@ tasks {
 
         into("dist/spp-platform-${project.version}")
 
-        from(file("docker/e2e/config/spp-platform.yml")){
+        from(file("docker/e2e/config/spp-platform.yml")) {
             into("config")
         }
         from(
@@ -81,5 +81,16 @@ tasks {
                 println("Downloaded Apache SkyWalking")
             }
         }
+
+        inputs.property("skywalkingVersion", skywalkingVersion)
+        outputs.file(File(projectDir, "docker/e2e/apache-skywalking-apm-$skywalkingVersion.tar.gz"))
+        outputs.cacheIf { true }
+    }
+}
+
+if (hasProperty("buildScan")) {
+    extensions.findByName("buildScan")?.withGroovyBuilder {
+        setProperty("termsOfServiceUrl", "https://gradle.com/terms-of-service")
+        setProperty("termsOfServiceAgree", "yes")
     }
 }

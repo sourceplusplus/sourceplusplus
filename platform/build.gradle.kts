@@ -51,7 +51,7 @@ subprojects {
         compileOnly("org.slf4j:slf4j-api:$slf4jVersion")
         implementation("io.vertx:vertx-tcp-eventbus-bridge:$vertxVersion")
         implementation("io.vertx:vertx-dropwizard-metrics:$vertxVersion")
-        implementation("io.github.microutils:kotlin-logging-jvm:3.0.4")
+        implementation("io.github.microutils:kotlin-logging-jvm:3.0.5")
         implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jacksonVersion")
         implementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:$jacksonVersion")
         implementation("com.fasterxml.jackson.datatype:jackson-datatype-guava:$jacksonVersion")
@@ -64,7 +64,7 @@ subprojects {
         implementation("org.apache.logging.log4j:log4j-core:2.20.0")
 
         implementation(files(File(findProject(":platform")!!.projectDir.parentFile, ".ext/vertx-redis-clustermanager-0.0.1-local.jar")))
-        implementation("org.redisson:redisson:3.17.7")
+        implementation("org.redisson:redisson:3.20.1")
 
         implementation("org.jooq:joor:$joorVersion")
         implementation("io.vertx:vertx-grpc-server:$vertxVersion") { exclude(group = "io.grpc") }
@@ -76,7 +76,7 @@ subprojects {
         implementation("io.vertx:vertx-web-graphql:$vertxVersion") {
             exclude(group = "com.graphql-java")
         }
-        compileOnly("com.graphql-java:graphql-java:19.2") //tied to SkyWalking OAP version
+        compileOnly("com.graphql-java:graphql-java:20.2") //tied to SkyWalking OAP version
         compileOnly("com.google.protobuf:protobuf-java:3.21.8") //tied to SkyWalking OAP version
         compileOnly("io.grpc:grpc-api:1.49.0") //tied to SkyWalking OAP version
         implementation("io.vertx:vertx-auth-jwt:$vertxVersion")
@@ -219,7 +219,7 @@ tasks.register<Copy>("updateDockerFiles") {
 
 dockerCompose {
     dockerComposeWorkingDirectory.set(File("../docker/e2e"))
-    waitForTcpPorts.set(false)
+    tcpPortsToIgnoreWhenWaiting.set(listOf(5106))
 }
 tasks.getByName("composeBuild")
     .dependsOn("updateDockerFiles")
@@ -242,7 +242,7 @@ tasks.getByName("assemble") {
 }
 
 tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile::class.java).configureEach {
-    kotlinOptions {
-        freeCompilerArgs = listOf("-Xdebug") //todo: disable this for release builds
+    if (System.getProperty("build.profile") != "release") {
+        kotlinOptions.freeCompilerArgs = listOf("-Xdebug")
     }
 }

@@ -78,7 +78,7 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
             hitLimit = 1
         )
 
-        viewService.saveRule(
+        val viewRule = viewService.saveRule(
             ViewRule(
                 name = liveMeter.id!!,
                 exp = buildString {
@@ -113,6 +113,7 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
         val testContext = VertxTestContext()
         val consumer = vertx.eventBus().consumer<JsonObject>(toLiveViewSubscription(subscriptionId))
         consumer.handler {
+            log.info("Received live view event: ${it.body()}")
             val liveViewEvent = LiveViewEvent(it.body())
             val rawMetrics = JsonObject(liveViewEvent.metricsData)
             testContext.verify {
@@ -141,6 +142,7 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
         //clean up
         consumer.unregister()
         assertNotNull(viewService.removeLiveView(subscriptionId).await())
+        assertNotNull(viewService.deleteRule(viewRule.name).await())
     }
 
     @Test
@@ -162,7 +164,7 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
             hitLimit = 1
         )
 
-        viewService.saveRule(
+        val viewRule = viewService.saveRule(
             ViewRule(
                 name = liveMeter.id!!,
                 exp = buildString {
@@ -186,6 +188,7 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
         val testContext = VertxTestContext()
         val consumer = vertx.eventBus().consumer<JsonObject>(toLiveViewSubscription(subscriptionId))
         consumer.handler {
+            log.info("Received live view event: ${it.body()}")
             val liveViewEvent = LiveViewEvent(it.body())
             val rawMetrics = JsonObject(liveViewEvent.metricsData)
             testContext.verify {
@@ -206,5 +209,6 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
         //clean up
         consumer.unregister()
         assertNotNull(viewService.removeLiveView(subscriptionId).await())
+        assertNotNull(viewService.deleteRule(viewRule.name).await())
     }
 }

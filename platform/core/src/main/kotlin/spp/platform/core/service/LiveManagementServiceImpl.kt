@@ -20,6 +20,8 @@ package spp.platform.core.service
 import io.vertx.core.Future
 import io.vertx.core.Promise
 import io.vertx.core.Vertx
+import io.vertx.core.eventbus.ReplyException
+import io.vertx.core.eventbus.ReplyFailure
 import io.vertx.core.json.JsonObject
 import io.vertx.ext.auth.JWTOptions
 import io.vertx.ext.auth.jwt.JWTAuth
@@ -42,6 +44,7 @@ import org.apache.skywalking.oap.server.library.module.ModuleManager
 import spp.platform.common.ClusterConnection
 import spp.platform.common.DeveloperAuth
 import spp.platform.common.service.SourceBridgeService
+import spp.platform.core.service.cache.SelfInfoCache
 import spp.platform.storage.SourceStorage
 import spp.platform.storage.config.SystemConfig
 import spp.protocol.artifact.metrics.MetricStep
@@ -81,6 +84,8 @@ class LiveManagementServiceImpl(
     private lateinit var metricsService: MetricsService
 
     override suspend fun start() {
+        vertx.deployVerticle(SelfInfoCache()).await()
+
         healthChecks = HealthChecks.create(vertx)
         addServiceCheck(healthChecks, SourceServices.LIVE_MANAGEMENT)
         addServiceCheck(healthChecks, SourceServices.LIVE_INSTRUMENT)
@@ -89,7 +94,7 @@ class LiveManagementServiceImpl(
     }
 
     override fun getHealth(): Future<JsonObject> {
-        log.trace { "Getting health" }
+        log.debug { "Getting health" }
         val promise = Promise.promise<JsonObject>()
         healthChecks.checkStatus().onComplete {
             if (it.result().up) {
@@ -102,7 +107,7 @@ class LiveManagementServiceImpl(
     }
 
     override fun getMetrics(includeUnused: Boolean): Future<JsonObject> {
-        log.trace { "Getting metrics" }
+        log.debug { "Getting metrics" }
         val promise = Promise.promise<JsonObject>()
         if (includeUnused) {
             promise.complete(metricsService.getMetricsSnapshot("vertx"))
@@ -125,17 +130,17 @@ class LiveManagementServiceImpl(
         return promise.future()
     }
 
-    override fun setConfigurationValue(config: String, value: String): Future<Boolean> {
-        log.trace { "Setting configuration value $config to $value" }
+    override fun setConfigurationValue(name: String, value: String): Future<Boolean> {
+        log.debug { "Setting configuration value $name to $value" }
         val promise = Promise.promise<Boolean>()
         launch(vertx.dispatcher()) {
-            if (!SystemConfig.isValidConfig(config)) {
-                promise.fail("Invalid configuration $config")
+            if (!SystemConfig.isValidConfig(name)) {
+                promise.fail("Invalid configuration $name")
                 return@launch
             }
 
             try {
-                val config = SystemConfig.get(config)
+                val config = SystemConfig.get(name)
                 config.validator.validateChange(value)
                 val saveValue = config.mapper.mapper(value)!!
                 config.set(saveValue.toString()) //todo: raw saveValue
@@ -148,21 +153,21 @@ class LiveManagementServiceImpl(
         return promise.future()
     }
 
-    override fun getConfigurationValue(config: String): Future<String> {
-        log.trace { "Getting configuration value $config" }
+    override fun getConfigurationValue(name: String): Future<String> {
+        log.debug { "Getting configuration value $name" }
         val promise = Promise.promise<String>()
         launch(vertx.dispatcher()) {
-            if (SystemConfig.isValidConfig(config)) {
-                promise.complete(SystemConfig.get(config).get().toString())
+            if (SystemConfig.isValidConfig(name)) {
+                promise.complete(SystemConfig.get(name).get().toString())
             } else {
-                promise.fail("Invalid configuration $config")
+                promise.fail("Invalid configuration $name")
             }
         }
         return promise.future()
     }
 
     override fun getConfiguration(): Future<JsonObject> {
-        log.trace { "Getting configuration" }
+        log.debug { "Getting configuration" }
         val promise = Promise.promise<JsonObject>()
         launch(vertx.dispatcher()) {
             val config = JsonObject()
@@ -175,7 +180,7 @@ class LiveManagementServiceImpl(
     }
 
     override fun getVersion(): Future<String> {
-        log.trace { "Getting version" }
+        log.debug { "Getting version" }
         val promise = Promise.promise<String>()
         launch(vertx.dispatcher()) {
             promise.complete(ClusterConnection.BUILD.getString("build_version"))
@@ -184,7 +189,7 @@ class LiveManagementServiceImpl(
     }
 
     override fun getTimeInfo(): Future<TimeInfo> {
-        log.trace { "Getting time info" }
+        log.debug { "Getting time info" }
         val promise = Promise.promise<TimeInfo>()
         launch(vertx.dispatcher()) {
             val date = Date()
@@ -195,7 +200,7 @@ class LiveManagementServiceImpl(
     }
 
     override fun getAccessPermissions(): Future<List<AccessPermission>> {
-        log.trace { "Getting access permissions" }
+        log.debug { "Getting access permissions" }
         val promise = Promise.promise<List<AccessPermission>>()
         launch(vertx.dispatcher()) {
             promise.complete(SourceStorage.getAccessPermissions().toList())
@@ -204,7 +209,7 @@ class LiveManagementServiceImpl(
     }
 
     override fun getAccessPermission(id: String): Future<AccessPermission> {
-        log.trace { "Getting access permission $id" }
+        log.debug { "Getting access permission $id" }
         val promise = Promise.promise<AccessPermission>()
         launch(vertx.dispatcher()) {
             if (!SourceStorage.hasAccessPermission(id)) {
@@ -221,7 +226,7 @@ class LiveManagementServiceImpl(
         type: AccessType
     ): Future<AccessPermission> {
         val id = UUID.randomUUID().toString()
-        log.trace { "Adding access permission $id" }
+        log.debug { "Adding access permission $id" }
         val promise = Promise.promise<AccessPermission>()
         launch(vertx.dispatcher()) {
             if (SourceStorage.hasAccessPermission(id)) {
@@ -236,7 +241,7 @@ class LiveManagementServiceImpl(
     }
 
     override fun removeAccessPermission(id: String): Future<Void> {
-        log.trace { "Removing access permission $id" }
+        log.debug { "Removing access permission $id" }
         val promise = Promise.promise<Void>()
         launch(vertx.dispatcher()) {
             if (!SourceStorage.hasAccessPermission(id)) {
@@ -250,7 +255,7 @@ class LiveManagementServiceImpl(
     }
 
     override fun getRoleAccessPermissions(role: DeveloperRole): Future<List<AccessPermission>> {
-        log.trace { "Getting access permissions for role $role" }
+        log.debug { "Getting access permissions for role $role" }
         val promise = Promise.promise<List<AccessPermission>>()
         launch(vertx.dispatcher()) {
             if (!SourceStorage.hasRole(role)) {
@@ -263,7 +268,7 @@ class LiveManagementServiceImpl(
     }
 
     override fun addRoleAccessPermission(role: DeveloperRole, id: String): Future<Void> {
-        log.trace { "Adding access permission $id to role $role" }
+        log.debug { "Adding access permission $id to role $role" }
         val promise = Promise.promise<Void>()
         launch(vertx.dispatcher()) {
             if (!SourceStorage.hasRole(role)) {
@@ -279,7 +284,7 @@ class LiveManagementServiceImpl(
     }
 
     override fun removeRoleAccessPermission(role: DeveloperRole, id: String): Future<Void> {
-        log.trace { "Removing access permission $id from role $role" }
+        log.debug { "Removing access permission $id from role $role" }
         val promise = Promise.promise<Void>()
         launch(vertx.dispatcher()) {
             if (!SourceStorage.hasRole(role)) {
@@ -295,7 +300,7 @@ class LiveManagementServiceImpl(
     }
 
     override fun getDataRedactions(): Future<List<DataRedaction>> {
-        log.trace { "Getting data redactions" }
+        log.debug { "Getting data redactions" }
         val promise = Promise.promise<List<DataRedaction>>()
         launch(vertx.dispatcher()) {
             promise.complete(SourceStorage.getDataRedactions().toList())
@@ -304,10 +309,10 @@ class LiveManagementServiceImpl(
     }
 
     override fun getDataRedaction(id: String): Future<DataRedaction> {
-        log.trace { "Getting data redaction $id" }
+        log.debug { "Getting data redaction $id" }
         val promise = Promise.promise<DataRedaction>()
         launch(vertx.dispatcher()) {
-            if (!SourceStorage.hasDataRedaction(id)) {
+            if (SourceStorage.getDataRedaction(id) == null) {
                 promise.fail("Non-existing data redaction: $id")
             } else {
                 promise.complete(SourceStorage.getDataRedaction(id))
@@ -322,10 +327,10 @@ class LiveManagementServiceImpl(
         lookup: String,
         replacement: String
     ): Future<DataRedaction> {
-        log.trace { "Adding data redaction $id" }
+        log.debug { "Adding data redaction $id" }
         val promise = Promise.promise<DataRedaction>()
         launch(vertx.dispatcher()) {
-            if (SourceStorage.hasDataRedaction(id)) {
+            if (SourceStorage.getDataRedaction(id) != null) {
                 promise.fail("Data redaction already exists: $id")
             } else {
                 val redaction = DataRedaction(id, type, lookup, replacement)
@@ -342,25 +347,25 @@ class LiveManagementServiceImpl(
         lookup: String,
         replacement: String
     ): Future<DataRedaction> {
-        log.trace { "Updating data redaction $id" }
+        log.debug { "Updating data redaction $id" }
         val promise = Promise.promise<DataRedaction>()
         launch(vertx.dispatcher()) {
-            if (!SourceStorage.hasDataRedaction(id)) {
-                promise.fail("Non-existing data redaction: $id")
-            } else {
+            try {
                 val redaction = DataRedaction(id, type, lookup, replacement)
                 SourceStorage.updateDataRedaction(id, type, lookup, replacement)
                 promise.complete(redaction)
+            } catch (e: Exception) {
+                promise.fail(e)
             }
         }
         return promise.future()
     }
 
     override fun removeDataRedaction(id: String): Future<Void> {
-        log.trace { "Removing data redaction $id" }
+        log.debug { "Removing data redaction $id" }
         val promise = Promise.promise<Void>()
         launch(vertx.dispatcher()) {
-            if (!SourceStorage.hasDataRedaction(id)) {
+            if (SourceStorage.getDataRedaction(id) == null) {
                 promise.fail("Non-existing data redaction: $id")
             } else {
                 SourceStorage.removeDataRedaction(id)
@@ -371,7 +376,7 @@ class LiveManagementServiceImpl(
     }
 
     override fun getRoleDataRedactions(role: DeveloperRole): Future<List<DataRedaction>> {
-        log.trace { "Getting data redactions for role $role" }
+        log.debug { "Getting data redactions for role $role" }
         val promise = Promise.promise<List<DataRedaction>>()
         launch(vertx.dispatcher()) {
             if (!SourceStorage.hasRole(role)) {
@@ -384,12 +389,12 @@ class LiveManagementServiceImpl(
     }
 
     override fun addRoleDataRedaction(role: DeveloperRole, id: String): Future<Void> {
-        log.trace { "Adding data redaction $id to role $role" }
+        log.debug { "Adding data redaction $id to role $role" }
         val promise = Promise.promise<Void>()
         launch(vertx.dispatcher()) {
             if (!SourceStorage.hasRole(role)) {
                 promise.fail("Non-existing role: $role")
-            } else if (!SourceStorage.hasDataRedaction(id)) {
+            } else if (SourceStorage.getDataRedaction(id) == null) {
                 promise.fail("Non-existing data redaction: $id")
             } else {
                 SourceStorage.addDataRedactionToRole(id, role)
@@ -400,12 +405,12 @@ class LiveManagementServiceImpl(
     }
 
     override fun removeRoleDataRedaction(role: DeveloperRole, id: String): Future<Void> {
-        log.trace { "Removing data redaction $id from role $role" }
+        log.debug { "Removing data redaction $id from role $role" }
         val promise = Promise.promise<Void>()
         launch(vertx.dispatcher()) {
             if (!SourceStorage.hasRole(role)) {
                 promise.fail("Non-existing role: $role")
-            } else if (!SourceStorage.hasDataRedaction(id)) {
+            } else if (SourceStorage.getDataRedaction(id) == null) {
                 promise.fail("Non-existing data redaction: $id")
             } else {
                 SourceStorage.removeDataRedactionFromRole(id, role)
@@ -416,7 +421,7 @@ class LiveManagementServiceImpl(
     }
 
     override fun getDeveloperDataRedactions(developerId: String): Future<List<DataRedaction>> {
-        log.trace { "Getting data redactions for developer $developerId" }
+        log.debug { "Getting data redactions for developer $developerId" }
         val promise = Promise.promise<List<DataRedaction>>()
         launch(vertx.dispatcher()) {
             if (!SourceStorage.hasDeveloper(developerId)) {
@@ -429,7 +434,7 @@ class LiveManagementServiceImpl(
     }
 
     override fun getDeveloperAccessPermissions(developerId: String): Future<List<AccessPermission>> {
-        log.trace { "Getting access permissions for developer $developerId" }
+        log.debug { "Getting access permissions for developer $developerId" }
         val promise = Promise.promise<List<AccessPermission>>()
         launch(vertx.dispatcher()) {
             if (!SourceStorage.hasDeveloper(developerId)) {
@@ -442,7 +447,7 @@ class LiveManagementServiceImpl(
     }
 
     override fun getClients(): Future<JsonObject> {
-        log.trace { "Getting clients" }
+        log.debug { "Getting clients" }
         val promise = Promise.promise<JsonObject>()
         launch(vertx.dispatcher()) {
             promise.complete(
@@ -462,7 +467,7 @@ class LiveManagementServiceImpl(
     }
 
     override fun getStats(): Future<JsonObject> {
-        log.trace { "Getting management stats" }
+        log.debug { "Getting management stats" }
         val promise = Promise.promise<JsonObject>()
         val devAuth = Vertx.currentContext().getLocal<DeveloperAuth>("developer")
 
@@ -491,7 +496,7 @@ class LiveManagementServiceImpl(
     }
 
     private suspend fun getPlatformStats(): JsonObject {
-        log.trace { "Getting platform stats" }
+        log.debug { "Getting platform stats" }
         return JsonObject()
             .apply {
                 val devAuth = Vertx.currentContext().getLocal<DeveloperAuth>("developer")
@@ -539,20 +544,25 @@ class LiveManagementServiceImpl(
         val selfId = Vertx.currentContext().getLocal<DeveloperAuth>("developer").selfId
 
         launch(vertx.dispatcher()) {
-            promise.complete(
-                SelfInfo(
+            try {
+                val selfInfo = SelfInfo(
                     developer = Developer(selfId),
                     roles = SourceStorage.getDeveloperRoles(selfId),
                     permissions = SourceStorage.getDeveloperPermissions(selfId).toList(),
                     access = SourceStorage.getDeveloperAccessPermissions(selfId)
                 )
-            )
+                log.trace { "Self info: $selfInfo" }
+                promise.complete(selfInfo)
+            } catch (e: Exception) {
+                log.error(e) { "Failed to get self info" }
+                promise.fail(ReplyException(ReplyFailure.RECIPIENT_FAILURE, 500, e.message))
+            }
         }
         return promise.future()
     }
 
     override fun getServices(layer: String?): Future<List<Service>> {
-        log.trace { "Getting services" }
+        log.debug { "Getting services" }
         val promise = Promise.promise<List<Service>>()
         launch(vertx.dispatcher()) {
             val result = mutableListOf<Service>()
@@ -575,7 +585,7 @@ class LiveManagementServiceImpl(
     }
 
     override fun getInstances(serviceId: String): Future<List<ServiceInstance>> {
-        log.trace { "Getting instances for service $serviceId" }
+        log.debug { "Getting instances for service $serviceId" }
         if (serviceId.isEmpty()) {
             return Future.failedFuture("Service id is empty")
         }
@@ -606,7 +616,7 @@ class LiveManagementServiceImpl(
     }
 
     override fun getEndpoints(serviceId: String, limit: Int?): Future<List<ServiceEndpoint>> {
-        log.trace { "Getting endpoints for service $serviceId" }
+        log.debug { "Getting endpoints for service $serviceId" }
         val promise = Promise.promise<List<ServiceEndpoint>>()
         launch(vertx.dispatcher()) {
             val result = mutableListOf<ServiceEndpoint>()
@@ -619,7 +629,7 @@ class LiveManagementServiceImpl(
     }
 
     override fun searchEndpoints(serviceId: String, keyword: String, limit: Int?): Future<List<ServiceEndpoint>> {
-        log.trace { "Searching endpoints for service $serviceId" }
+        log.debug { "Searching endpoints for service $serviceId" }
         val promise = Promise.promise<List<ServiceEndpoint>>()
         launch(vertx.dispatcher()) {
             val result = mutableListOf<ServiceEndpoint>()
@@ -642,7 +652,7 @@ class LiveManagementServiceImpl(
         start: Instant,
         stop: Instant?
     ): Future<List<SelectedRecord>> {
-        log.trace { "Sorting metrics" }
+        log.debug { "Sorting metrics" }
         val promise = Promise.promise<List<SelectedRecord>>()
         launch(vertx.dispatcher()) {
             aggregationQueryDAO.sortMetrics(TopNCondition().apply {
@@ -664,7 +674,7 @@ class LiveManagementServiceImpl(
     }
 
     override fun getActiveProbes(): Future<List<InstanceConnection>> {
-        log.trace { "Getting active probes" }
+        log.debug { "Getting active probes" }
         val promise = Promise.promise<List<InstanceConnection>>()
         launch(vertx.dispatcher()) {
             val devAuth = Vertx.currentContext().getLocal<DeveloperAuth>("developer")
@@ -683,7 +693,7 @@ class LiveManagementServiceImpl(
     }
 
     override fun getRolePermissions(role: DeveloperRole): Future<List<RolePermission>> {
-        log.trace { "Getting role permissions" }
+        log.debug { "Getting role permissions" }
         val promise = Promise.promise<List<RolePermission>>()
         launch(vertx.dispatcher()) {
             try {
@@ -698,7 +708,7 @@ class LiveManagementServiceImpl(
     }
 
     override fun getClientAccessors(): Future<List<ClientAccess>> {
-        log.trace { "Getting client accessors" }
+        log.debug { "Getting client accessors" }
         val promise = Promise.promise<List<ClientAccess>>()
         launch(vertx.dispatcher()) {
             promise.complete(SourceStorage.getClientAccessors())
@@ -707,7 +717,7 @@ class LiveManagementServiceImpl(
     }
 
     override fun getClientAccess(id: String): Future<ClientAccess?> {
-        log.trace { "Getting client access" }
+        log.debug { "Getting client access" }
         val promise = Promise.promise<ClientAccess?>()
         launch(vertx.dispatcher()) {
             promise.complete(SourceStorage.getClientAccess(id))
@@ -716,7 +726,7 @@ class LiveManagementServiceImpl(
     }
 
     override fun addClientAccess(): Future<ClientAccess> {
-        log.trace { "Adding client access" }
+        log.debug { "Adding client access" }
         val promise = Promise.promise<ClientAccess>()
         launch(vertx.dispatcher()) {
             promise.complete(SourceStorage.addClientAccess())
@@ -725,7 +735,7 @@ class LiveManagementServiceImpl(
     }
 
     override fun removeClientAccess(id: String): Future<Boolean> {
-        log.trace { "Removing client access with id: $id" }
+        log.debug { "Removing client access with id: $id" }
         val promise = Promise.promise<Boolean>()
         launch(vertx.dispatcher()) {
             promise.complete(SourceStorage.removeClientAccess(id))
@@ -734,7 +744,7 @@ class LiveManagementServiceImpl(
     }
 
     override fun refreshClientAccess(id: String): Future<ClientAccess> {
-        log.trace { "Refreshing client access with id: $id" }
+        log.debug { "Refreshing client access with id: $id" }
         val promise = Promise.promise<ClientAccess>()
         launch(vertx.dispatcher()) {
             promise.complete(SourceStorage.refreshClientAccess(id))
@@ -743,7 +753,7 @@ class LiveManagementServiceImpl(
     }
 
     override fun getAccessToken(authorizationCode: String): Future<String> {
-        log.trace { "Getting access token" }
+        log.debug { "Getting access token" }
         if (jwt == null) {
             return Future.failedFuture("JWT is not enabled")
         }
@@ -759,9 +769,9 @@ class LiveManagementServiceImpl(
                         }
                     }
                         .put("developer_id", dev.id)
-                        .put("created_at", Instant.now().toEpochMilli())
-                        //todo: reasonable expires_at
-                        .put("expires_at", Instant.now().plus(365, ChronoUnit.DAYS).toEpochMilli()),
+                        //todo: reasonable exp
+                        .put("exp", Instant.now().plus(30, ChronoUnit.DAYS).epochSecond)
+                        .put("iat", Instant.now().epochSecond),
                     JWTOptions().setAlgorithm("RS256")
                 )
                 promise.complete(jwtToken)
@@ -774,7 +784,7 @@ class LiveManagementServiceImpl(
     }
 
     override fun getDevelopers(): Future<List<Developer>> {
-        log.trace { "Getting developers" }
+        log.debug { "Getting developers" }
         val promise = Promise.promise<List<Developer>>()
         launch(vertx.dispatcher()) {
             promise.complete(SourceStorage.getDevelopers())
@@ -783,12 +793,10 @@ class LiveManagementServiceImpl(
     }
 
     override fun addDeveloper(id: String, authorizationCode: String?): Future<Developer> {
-        log.trace { "Adding developer with id: $id" }
+        log.debug { "Adding developer with id: $id" }
         val promise = Promise.promise<Developer>()
         launch(vertx.dispatcher()) {
-            if (authorizationCode != null && authorizationCode.length < 8) {
-                promise.fail("Authorization code must be at least 8 characters long")
-            } else if (SourceStorage.hasDeveloper(id)) {
+            if (SourceStorage.hasDeveloper(id)) {
                 promise.fail("Existing developer: $id")
             } else if (authorizationCode != null && SourceStorage.isExistingAuthorizationCode(authorizationCode)) {
                 promise.fail("Existing authorization code: $authorizationCode")
@@ -800,7 +808,7 @@ class LiveManagementServiceImpl(
     }
 
     override fun removeDeveloper(id: String): Future<Void> {
-        log.trace { "Removing developer with id: $id" }
+        log.debug { "Removing developer with id: $id" }
         val promise = Promise.promise<Void>()
         launch(vertx.dispatcher()) {
             if (id == "system") {
@@ -816,7 +824,7 @@ class LiveManagementServiceImpl(
     }
 
     override fun refreshAuthorizationCode(developerId: String): Future<Developer> {
-        log.trace { "Refreshing developer token with id: $developerId" }
+        log.debug { "Refreshing developer token with id: $developerId" }
         val promise = Promise.promise<Developer>()
         launch(vertx.dispatcher()) {
             if (!SourceStorage.hasDeveloper(developerId)) {
@@ -831,7 +839,7 @@ class LiveManagementServiceImpl(
     }
 
     override fun getRoles(): Future<List<DeveloperRole>> {
-        log.trace { "Getting roles" }
+        log.debug { "Getting roles" }
         val promise = Promise.promise<List<DeveloperRole>>()
         launch(vertx.dispatcher()) {
             promise.complete(SourceStorage.getRoles().toList())
@@ -840,7 +848,7 @@ class LiveManagementServiceImpl(
     }
 
     override fun addRole(role: DeveloperRole): Future<Boolean> {
-        log.trace { "Adding role with name: $role" }
+        log.debug { "Adding role with name: $role" }
         val promise = Promise.promise<Boolean>()
         launch(vertx.dispatcher()) {
             if (SourceStorage.hasRole(role)) {
@@ -853,7 +861,7 @@ class LiveManagementServiceImpl(
     }
 
     override fun removeRole(role: DeveloperRole): Future<Boolean> {
-        log.trace { "Removing role with name: $role" }
+        log.debug { "Removing role with name: $role" }
         val promise = Promise.promise<Boolean>()
         launch(vertx.dispatcher()) {
             if (!SourceStorage.hasRole(role)) {
@@ -868,7 +876,7 @@ class LiveManagementServiceImpl(
     }
 
     override fun getDeveloperRoles(developerId: String): Future<List<DeveloperRole>> {
-        log.trace { "Getting developer roles" }
+        log.debug { "Getting developer roles" }
         val promise = Promise.promise<List<DeveloperRole>>()
         launch(vertx.dispatcher()) {
             if (!SourceStorage.hasDeveloper(developerId)) {
@@ -881,7 +889,7 @@ class LiveManagementServiceImpl(
     }
 
     override fun addDeveloperRole(developerId: String, role: DeveloperRole): Future<Void> {
-        log.trace { "Adding role with id: ${role.roleName} to developer with id: $developerId" }
+        log.debug { "Adding role with id: ${role.roleName} to developer with id: $developerId" }
         val promise = Promise.promise<Void>()
         launch(vertx.dispatcher()) {
             if (!SourceStorage.hasDeveloper(developerId)) {
@@ -897,7 +905,7 @@ class LiveManagementServiceImpl(
     }
 
     override fun removeDeveloperRole(developerId: String, role: DeveloperRole): Future<Void> {
-        log.trace { "Removing role with id: ${role.roleName} from developer with id: $developerId" }
+        log.debug { "Removing role with id: ${role.roleName} from developer with id: $developerId" }
         val promise = Promise.promise<Void>()
         launch(vertx.dispatcher()) {
             if (!SourceStorage.hasDeveloper(developerId)) {
@@ -913,7 +921,7 @@ class LiveManagementServiceImpl(
     }
 
     override fun addRolePermission(role: DeveloperRole, permission: RolePermission): Future<Void> {
-        log.trace { "Adding permission with id: ${permission.name} to role with id: ${role.roleName}" }
+        log.debug { "Adding permission with id: ${permission.name} to role with id: ${role.roleName}" }
         val promise = Promise.promise<Void>()
         launch(vertx.dispatcher()) {
             if (!SourceStorage.hasRole(role)) {
@@ -929,7 +937,7 @@ class LiveManagementServiceImpl(
     }
 
     override fun removeRolePermission(role: DeveloperRole, permission: RolePermission): Future<Void> {
-        log.trace { "Removing permission with id: ${permission.name} from role with id: ${role.roleName}" }
+        log.debug { "Removing permission with id: ${permission.name} from role with id: ${role.roleName}" }
         val promise = Promise.promise<Void>()
         launch(vertx.dispatcher()) {
             if (!SourceStorage.hasRole(role)) {
@@ -945,7 +953,7 @@ class LiveManagementServiceImpl(
     }
 
     override fun getDeveloperPermissions(developerId: String): Future<List<RolePermission>> {
-        log.trace { "Getting developer permissions" }
+        log.debug { "Getting developer permissions" }
         val promise = Promise.promise<List<RolePermission>>()
         launch(vertx.dispatcher()) {
             if (SourceStorage.hasDeveloper(developerId)) {
@@ -958,7 +966,7 @@ class LiveManagementServiceImpl(
     }
 
     override fun getActiveProbe(id: String): Future<InstanceConnection?> {
-        log.trace { "Getting active probe with id: $id" }
+        log.debug { "Getting active probe with id: $id" }
         val promise = Promise.promise<InstanceConnection?>()
         getActiveProbes().onSuccess {
             promise.complete(it.find { it.instanceId == id })
@@ -970,7 +978,7 @@ class LiveManagementServiceImpl(
     }
 
     override fun updateActiveProbeMetadata(id: String, metadata: JsonObject): Future<InstanceConnection> {
-        log.trace { "Updating active probe metadata with id: $id" }
+        log.debug { "Updating active probe metadata with id: $id" }
         val promise = Promise.promise<InstanceConnection>()
         launch(vertx.dispatcher()) {
             val devAuth = Vertx.currentContext().getLocal<DeveloperAuth>("developer")
@@ -986,7 +994,7 @@ class LiveManagementServiceImpl(
     }
 
     override fun reset(): Future<Void> {
-        log.trace { "Resetting" }
+        log.warn { "Resetting" }
         val promise = Promise.promise<Void>()
         val devAuth = Vertx.currentContext().getLocal<DeveloperAuth>("developer")
         launch(vertx.dispatcher()) {

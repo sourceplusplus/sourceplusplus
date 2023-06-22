@@ -35,30 +35,28 @@ class RemoveInstrumentsTest : LiveInstrumentIntegrationTest() {
     fun `remove multiple by location`() = runBlocking {
         val testContext = VertxTestContext()
 
+        log.info("Adding instruments")
         val instruments = instrumentService.addLiveInstruments(
             listOf(
                 LiveBreakpoint(
-                    location = LiveSourceLocation(
-                        RemoveInstrumentsTest::class.java.name,
-                        1,
-                    )
+                    location = LiveSourceLocation(RemoveInstrumentsTest::class.java.name, service = "spp-test-probe"),
+                    id = testNameAsUniqueInstrumentId
                 ),
                 LiveBreakpoint(
-                    location = LiveSourceLocation(
-                        RemoveInstrumentsTest::class.java.name,
-                        1,
-                    )
+                    location = LiveSourceLocation(RemoveInstrumentsTest::class.java.name, service = "spp-test-probe"),
+                    id = testNameAsUniqueInstrumentId
                 )
             )
         ).await()
         assertEquals(2, instruments.size)
+        log.info("Added ${instruments.size} instruments")
 
         val removedCount = AtomicInteger()
         val listener = object : LiveInstrumentListener {
             override fun onInstrumentRemovedEvent(event: LiveInstrumentRemoved) {
                 testContext.verify {
                     assertEquals(
-                        LiveSourceLocation(RemoveInstrumentsTest::class.java.name, 1),
+                        LiveSourceLocation(RemoveInstrumentsTest::class.java.name, service = "spp-test-probe"),
                         event.instrument.location
                     )
 
@@ -73,10 +71,7 @@ class RemoveInstrumentsTest : LiveInstrumentIntegrationTest() {
         }
 
         val removeInstruments = instrumentService.removeLiveInstruments(
-            LiveSourceLocation(
-                RemoveInstrumentsTest::class.java.name,
-                1,
-            )
+            LiveSourceLocation(RemoveInstrumentsTest::class.java.name, service = "spp-test-probe")
         ).await()
         assertEquals(2, removeInstruments.size)
 

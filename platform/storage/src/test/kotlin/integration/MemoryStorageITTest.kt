@@ -34,7 +34,11 @@ class MemoryStorageITTest : BaseStorageITTest<MemoryStorage>() {
                     "storage",
                     JsonObject()
                         .put("selector", "memory")
-                        .put("memory", JsonObject())
+                        .put(
+                            "memory",
+                            JsonObject()
+                                .put("install_defaults", "false")
+                        )
                 )
         }
     }

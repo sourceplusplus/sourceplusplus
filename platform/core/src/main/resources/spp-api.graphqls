@@ -539,6 +539,30 @@ type SelectedRecord {
     refId: String
 }
 
+input RulePartitionInput {
+    find: String!
+    replace: String!
+}
+
+type RulePartition {
+    find: String!
+    replace: String!
+}
+
+type ViewRule {
+    name: String!
+    exp: String!
+    partitions: [RulePartition!]!
+    meterIds: [String!]!
+}
+
+input ViewRuleInput {
+    name: String!
+    exp: String!
+    partitions: [RulePartitionInput!]!
+    meterIds: [String!]!
+}
+
 enum MetricScope {
     All,
     Service,
@@ -555,9 +579,10 @@ enum MetricOrder {
 }
 
 type Query {
-    version: String!
-    timeInfo: TimeInfo!
+    getVersion: String!
+    getTimeInfo: TimeInfo!
 
+    getAccessToken(authorizationCode: String!): String!
     getAccessPermissions: [AccessPermission!]!
     getAccessPermission(id: String!): AccessPermission!
     getRoleAccessPermissions(role: String!): [AccessPermission!]!
@@ -610,6 +635,8 @@ type Query {
     ): [SelectedRecord!]!
     getClientAccessors: [ClientAccess!]!
 
+    getRules: [ViewRule!]!
+    getRule(ruleName: String!): ViewRule
     getLiveViews: [LiveView!]!
     getHistoricalMetrics(
         entityIds: [String!]!,
@@ -622,8 +649,8 @@ type Query {
 
     getTraceStack(traceId: String!): TraceStack
 
-    getSystemConfig: [SystemConfig!]!
-    getSystemConfigValue(config: String!): String!
+    getConfiguration: [SystemConfig!]!
+    getConfigValue(config: String!): String!
 }
 
 type Mutation {
@@ -658,6 +685,7 @@ type Mutation {
     addLiveMeter(input: LiveMeterInput!): LiveMeter!
     addLiveSpan(input: LiveSpanInput!): LiveSpan!
 
+    saveRule(input: ViewRuleInput!): ViewRule!
     addLiveView(input: LiveViewInput!): LiveView!
     clearLiveViews: Boolean!
 
@@ -665,7 +693,7 @@ type Mutation {
     removeClientAccess(id: String!): Boolean!
     refreshClientAccess(id: String!): ClientAccess!
 
-    setSystemConfigValue(config: String!, value: String!): Boolean!
+    setConfigValue(config: String!, value: String!): Boolean!
 }
 
 scalar Long

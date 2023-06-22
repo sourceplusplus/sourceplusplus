@@ -214,16 +214,10 @@ open class MemoryStorage(val vertx: Vertx) : CoreStorage {
         return dataRedactions.list.map { it as DataRedaction }.toSet()
     }
 
-    override suspend fun hasDataRedaction(id: String): Boolean {
+    override suspend fun getDataRedaction(id: String): DataRedaction? {
         val dataRedactionsStorage = vertx.sharedData().getAsyncMap<String, Any>(namespace("dataRedactions")).await()
         val dataRedactions = dataRedactionsStorage.get("dataRedactions").await() as JsonArray? ?: JsonArray()
-        return dataRedactions.list.find { (it as DataRedaction).id == id } != null
-    }
-
-    override suspend fun getDataRedaction(id: String): DataRedaction {
-        val dataRedactionsStorage = vertx.sharedData().getAsyncMap<String, Any>(namespace("dataRedactions")).await()
-        val dataRedactions = dataRedactionsStorage.get("dataRedactions").await() as JsonArray? ?: JsonArray()
-        return dataRedactions.list.find { (it as DataRedaction).id == id } as DataRedaction
+        return dataRedactions.list.find { (it as DataRedaction).id == id } as DataRedaction?
     }
 
     override suspend fun addDataRedaction(id: String, type: RedactionType, lookup: String, replacement: String) {
@@ -250,7 +244,7 @@ open class MemoryStorage(val vertx: Vertx) : CoreStorage {
     }
 
     override suspend fun addDataRedactionToRole(id: String, role: DeveloperRole) {
-        val dataRedaction = getDataRedaction(id)
+        val dataRedaction = getDataRedaction(id) ?: throw IllegalArgumentException("Data redaction not found")
         val roleStorage = vertx.sharedData().getAsyncMap<String, Any>(namespace("role:${role.roleName}")).await()
         val dataRedactions = roleStorage.get("dataRedactions").await() as JsonArray? ?: JsonArray()
         if (dataRedactions.list.find { (it as String) == id } == null) {
@@ -269,7 +263,7 @@ open class MemoryStorage(val vertx: Vertx) : CoreStorage {
     override suspend fun getRoleDataRedactions(role: DeveloperRole): Set<DataRedaction> {
         val roleStorage = vertx.sharedData().getAsyncMap<String, Any>(namespace("role:${role.roleName}")).await()
         val dataRedactions = roleStorage.get("dataRedactions").await() as JsonArray? ?: JsonArray()
-        return dataRedactions.list.map { getDataRedaction(it as String) }.toSet()
+        return dataRedactions.list.mapNotNull { getDataRedaction(it as String) }.toSet()
     }
 
     override suspend fun getRoles(): Set<DeveloperRole> {

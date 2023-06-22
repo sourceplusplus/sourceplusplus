@@ -58,9 +58,11 @@ class SourceBridge : CoroutineVerticle(), SourceBridgeService {
         log.trace { "Getting active probes" }
         val promise = Promise.promise<JsonArray>()
         launch(vertx.dispatcher()) {
-            val map = ProbeBridge.getActiveProbesMap()
-            map.values().onSuccess {
-                promise.complete(JsonArray().apply { it.forEach { add(it) } })
+            ProbeBridge.getActiveProbesMap().values().onSuccess {
+                val activeProbes = JsonArray().apply { it.forEach { add(it) } }
+                log.trace { "Got active probes: $activeProbes" }
+
+                promise.complete(activeProbes)
             }.onFailure {
                 log.error("Failed to get active probes", it)
                 promise.fail(it)

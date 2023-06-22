@@ -38,10 +38,13 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import spp.protocol.instrument.LiveInstrument
+import spp.protocol.instrument.LiveInstrument
 import spp.protocol.service.LiveInsightService
 import spp.protocol.service.LiveInstrumentService
 import spp.protocol.service.LiveManagementService
 import spp.protocol.service.LiveViewService
+import spp.protocol.view.LiveView
+import spp.protocol.view.rule.ViewRule
 import java.util.*
 import java.util.concurrent.TimeUnit
 import java.util.regex.Pattern
@@ -119,11 +122,11 @@ open class PlatformIntegrationTest {
         }
     val instrumentService: LiveInstrumentService
         get() {
-            return LiveInstrumentService.createProxy(vertx, systemAccessToken)
+            return LoggedLiveInstrumentService(LiveInstrumentService.createProxy(vertx, systemAccessToken))
         }
     val viewService: LiveViewService
         get() {
-            return LiveViewService.createProxy(vertx, systemAccessToken)
+            return LoggedLiveViewService(LiveViewService.createProxy(vertx, systemAccessToken))
         }
 
     fun errorOnTimeout(testContext: VertxTestContext, waitTime: Long = 60) {
@@ -150,5 +153,78 @@ open class PlatformIntegrationTest {
         val promise = Promise.promise<Void>()
         completionHandler { promise.handle(it) }
         return promise.future()
+    }
+
+    class LoggedLiveInstrumentService(private val delegate: LiveInstrumentService) : LiveInstrumentService by delegate {
+
+        private val log: Logger by lazy { LoggerFactory.getLogger(javaClass) }
+
+        override fun addLiveInstrument(instrument: LiveInstrument): Future<LiveInstrument> {
+            log.info("Adding live instrument {}", instrument)
+            val value = delegate.addLiveInstrument(instrument)
+            return value.map {
+                log.info("Added live instrument {}: {}", it.id, it)
+                it
+            }
+        }
+
+        override fun addLiveInstruments(instruments: List<LiveInstrument>): Future<List<LiveInstrument>> {
+            log.info("Adding live instruments {}", instruments)
+            val value = delegate.addLiveInstruments(instruments)
+            return value.map {
+                log.info("Added live instruments {}", it)
+                it
+            }
+        }
+
+        override fun removeLiveInstrument(id: String): Future<LiveInstrument?> {
+            log.info("Removing live instrument {}", id)
+            val value = delegate.removeLiveInstrument(id)
+            return value.map {
+                log.info("Removed live instrument {}: {}", id, it)
+                it
+            }
+        }
+    }
+
+    class LoggedLiveViewService(private val delegate: LiveViewService) : LiveViewService by delegate {
+
+        private val log: Logger by lazy { LoggerFactory.getLogger(javaClass) }
+
+        override fun addLiveView(subscription: LiveView): Future<LiveView> {
+            log.info("Adding live view {}", subscription)
+            val value = delegate.addLiveView(subscription)
+            return value.map {
+                log.info("Added live view {}: {}", it.subscriptionId, it)
+                it
+            }
+        }
+
+        override fun removeLiveView(id: String): Future<LiveView> {
+            log.info("Removing live view {}", id)
+            val value = delegate.removeLiveView(id)
+            return value.map {
+                log.info("Removed live view {}: {}", id, it)
+                it
+            }
+        }
+
+        override fun saveRule(rule: ViewRule): Future<ViewRule> {
+            log.info("Saving rule {}", rule)
+            val value = delegate.saveRule(rule)
+            return value.map {
+                log.info("Saved rule {}: {}", rule.name, it)
+                it
+            }
+        }
+
+        override fun deleteRule(ruleName: String): Future<ViewRule?> {
+            log.info("Deleting rule {}", ruleName)
+            val value = delegate.deleteRule(ruleName)
+            return value.map {
+                log.info("Deleted rule {}: {}", ruleName, it)
+                it
+            }
+        }
     }
 }

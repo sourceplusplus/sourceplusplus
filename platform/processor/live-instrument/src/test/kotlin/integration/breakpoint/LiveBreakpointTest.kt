@@ -252,7 +252,7 @@ class LiveBreakpointTest : LiveInstrumentIntegrationTest() {
         val testContext = VertxTestContext()
         instrumentService.addLiveInstrument(
             LiveBreakpoint(
-                id = testNameAsInstrumentId,
+                id = testNameAsUniqueInstrumentId,
                 location = LiveSourceLocation("spp.example.webapp.model.User", 42),
                 condition = "1==2"
             )
@@ -283,7 +283,8 @@ class LiveBreakpointTest : LiveInstrumentIntegrationTest() {
         instrumentService.addLiveInstrument(
             LiveBreakpoint(
                 location = LiveSourceLocation("RemoveByLocation", 42),
-                condition = "1==2"
+                condition = "1==2",
+                id = testNameAsUniqueInstrumentId
             )
         ).onComplete {
             if (it.succeeded()) {
@@ -365,7 +366,8 @@ class LiveBreakpointTest : LiveInstrumentIntegrationTest() {
             LiveBreakpoint(
                 location = LiveSourceLocation("spp.example.webapp.model.User", 42),
                 condition = "1===2",
-                applyImmediately = true
+                applyImmediately = true,
+                id = testNameAsUniqueInstrumentId
             )
         ).onComplete {
             if (it.failed()) {
@@ -393,7 +395,8 @@ class LiveBreakpointTest : LiveInstrumentIntegrationTest() {
         instrumentService.addLiveInstrument(
             LiveBreakpoint(
                 location = LiveSourceLocation("bad.Clazz", 48),
-                applyImmediately = true
+                applyImmediately = true,
+                id = testNameAsUniqueInstrumentId
             )
         ).onComplete {
             if (it.failed()) {

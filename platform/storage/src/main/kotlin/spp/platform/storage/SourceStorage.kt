@@ -38,9 +38,7 @@ import spp.protocol.instrument.event.LiveInstrumentEvent
 import spp.protocol.platform.auth.*
 import spp.protocol.platform.developer.Developer
 import spp.protocol.service.LiveManagementService
-import spp.protocol.service.error.PermissionAccessDenied
 import java.time.Instant
-import java.util.concurrent.CompletableFuture
 
 object SourceStorage {
 
@@ -280,11 +278,7 @@ object SourceStorage {
         return storage.hasDeveloper(id)
     }
 
-    suspend fun addDeveloper(id: String): Developer {
-        return addDeveloper(id, null)
-    }
-
-    suspend fun addDeveloper(id: String, token: String?): Developer {
+    suspend fun addDeveloper(id: String, token: String? = null): Developer {
         return storage.addDeveloper(id, token ?: SecureUUID.get())
     }
 
@@ -302,11 +296,6 @@ object SourceStorage {
 
     suspend fun getDeveloperAccessPermissions(developerId: String): List<AccessPermission> {
         return getDeveloperRoles(developerId).flatMap { getRoleAccessPermissions(it) }
-    }
-
-    suspend fun hasInstrumentAccess(developerId: String, locationPattern: String): Boolean {
-        val permissions = getDeveloperAccessPermissions(developerId)
-        return AccessChecker.hasInstrumentAccess(permissions, locationPattern)
     }
 
     suspend fun getRoleAccessPermissions(role: DeveloperRole): Set<AccessPermission> {
@@ -349,11 +338,7 @@ object SourceStorage {
         return storage.getDataRedactions()
     }
 
-    suspend fun hasDataRedaction(id: String): Boolean {
-        return storage.hasDataRedaction(id)
-    }
-
-    suspend fun getDataRedaction(id: String): DataRedaction {
+    suspend fun getDataRedaction(id: String): DataRedaction? {
         return storage.getDataRedaction(id)
     }
 
@@ -363,7 +348,9 @@ object SourceStorage {
 
     suspend fun updateDataRedaction(id: String, type: RedactionType?, lookup: String?, replacement: String?) {
         val existingDataRedaction = storage.getDataRedaction(id)
-        return storage.updateDataRedaction(
+        requireNotNull(existingDataRedaction) { "Data redaction with id $id does not exist" }
+
+        storage.updateDataRedaction(
             id,
             type ?: existingDataRedaction.type,
             lookup ?: existingDataRedaction.lookup,
@@ -418,21 +405,6 @@ object SourceStorage {
     suspend fun hasPermission(id: String, permission: RolePermission): Boolean {
         log.trace { "Checking permission: {} - Id: {}".args(permission, id) }
         return getDeveloperRoles(id).any { getRolePermissions(it).contains(permission) }
-    }
-
-    suspend fun requiresPermission(
-        id: String,
-        permission: RolePermission,
-        completableFuture: CompletableFuture<*>
-    ): Boolean {
-        return if (hasPermission(id, permission)) {
-            false
-        } else {
-            completableFuture.completeExceptionally(
-                PermissionAccessDenied(permission, "Developer '$id' missing permission: $permission")
-            )
-            true
-        }
     }
 
     fun isValidClientAccess(clientId: String, clientSecret: String?): Future<Void> {

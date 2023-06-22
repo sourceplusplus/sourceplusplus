@@ -42,7 +42,7 @@ class ExpiringSharedData<K, V> private constructor(
         return getLock(key, -1)
     }
 
-    internal suspend fun getLock(key: K, timeout: Long): Lock {
+    suspend fun getLock(key: K, timeout: Long): Lock {
         val lockName = "expiring_shared_data:$mapId:lock:$key"
         val lock = try {
             storage.lock(lockName, timeout)
@@ -122,7 +122,7 @@ class ExpiringSharedData<K, V> private constructor(
         }
     }
 
-    internal suspend fun cleanup() {
+    suspend fun cleanup() {
         val promise = Promise.promise<List<K>>()
         val now = System.nanoTime()
         val backingMap = storage.map<K, V>("expiring_shared_data:$mapId:backing_map")

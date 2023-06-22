@@ -17,6 +17,7 @@
  */
 package spp.platform.storage
 
+import com.google.common.base.CaseFormat
 import io.vertx.core.Vertx
 import io.vertx.core.json.Json
 import io.vertx.core.json.JsonObject
@@ -27,6 +28,7 @@ import io.vertx.kotlin.coroutines.await
 import io.vertx.redis.client.Command.*
 import io.vertx.redis.client.Redis
 import io.vertx.redis.client.RedisAPI
+import io.vertx.redis.client.RedisOptions
 import io.vertx.redis.client.Request.cmd
 import mu.KotlinLogging
 import spp.protocol.instrument.LiveInstrument
@@ -42,14 +44,26 @@ open class RedisStorage(val vertx: Vertx) : CoreStorage {
         private val log = KotlinLogging.logger {}
     }
 
+    @Suppress("MemberVisibilityCanBePrivate")
     lateinit var redisClient: Redis
     lateinit var redis: RedisAPI
 
     override suspend fun init(config: JsonObject) {
         val sdHost = config.getString("host")
         val sdPort = config.getString("port")
-        redisClient = Redis.createClient(vertx, "redis://$sdHost:$sdPort")
-        redis = RedisAPI.api(redisClient.connect().await())
+
+        val redisOptions = JsonObject()
+        (config.getJsonObject("options") ?: JsonObject()).forEach { (key, value) ->
+            redisOptions.put(
+                CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, key),
+                value.toString().toIntOrNull() ?: value
+            )
+        }
+
+        redisClient = Redis.createClient(
+            vertx, RedisOptions(redisOptions).setConnectionString("redis://$sdHost:$sdPort")
+        )
+        redis = RedisAPI.api(redisClient)
     }
 
     override suspend fun counter(name: String): Counter {
@@ -69,7 +83,7 @@ open class RedisStorage(val vertx: Vertx) : CoreStorage {
         }
     }
 
-    override suspend fun <K, V> map(name: String): AsyncMap<K, V> {
+    override suspend fun <K, V> map(name: String): AsyncMap<K, V> { //todo: not redis backed
         return vertx.sharedData().getAsyncMap<K, V>(namespace("maps:$name")).await()
     }
 
@@ -229,15 +243,12 @@ open class RedisStorage(val vertx: Vertx) : CoreStorage {
 
     override suspend fun getDataRedactions(): Set<DataRedaction> {
         val roles = redis.smembers(namespace("data_redactions")).await()
-        return roles.map { getDataRedaction(it.toString(UTF_8)) }.toSet()
+        return roles.mapNotNull { getDataRedaction(it.toString(UTF_8)) }.toSet()
     }
 
-    override suspend fun hasDataRedaction(id: String): Boolean {
-        return redis.sismember(namespace("data_redactions"), id).await().toBoolean()
-    }
-
-    override suspend fun getDataRedaction(id: String): DataRedaction {
-        return DataRedaction(JsonObject(redis.get(namespace("data_redactions:$id")).await().toString(UTF_8)))
+    override suspend fun getDataRedaction(id: String): DataRedaction? {
+        val dataRedactionJson = redis.get(namespace("data_redactions:$id")).await()?.toString(UTF_8)
+        return dataRedactionJson?.let { DataRedaction(JsonObject(it)) }
     }
 
     override suspend fun addDataRedaction(id: String, type: RedactionType, lookup: String, replacement: String) {
@@ -275,7 +286,7 @@ open class RedisStorage(val vertx: Vertx) : CoreStorage {
 
     override suspend fun getRoleDataRedactions(role: DeveloperRole): Set<DataRedaction> {
         val dataRedactions = redis.smembers(namespace("roles:${role.roleName}:data_redactions")).await()
-        return dataRedactions.map { getDataRedaction(it.toString(UTF_8)) }.toSet()
+        return dataRedactions.mapNotNull { getDataRedaction(it.toString(UTF_8)) }.toSet()
     }
 
     override suspend fun getRoles(): Set<DeveloperRole> {
@@ -324,15 +335,29 @@ open class RedisStorage(val vertx: Vertx) : CoreStorage {
     }
 
     override suspend fun updateLiveInstrument(id: String, instrument: LiveInstrument): LiveInstrument {
-        return if (getLiveInstrument(id) == null) {
-            require(getArchiveLiveInstrument(id) != null) { "Live instrument with id $id does not exist" }
-
-            redis.set(listOf(namespace("live_instruments_archive:$id"), Json.encode(instrument))).await()
-            instrument
-        } else {
-            redis.set(listOf(namespace("live_instruments:$id"), Json.encode(instrument))).await()
-            instrument
-        }
+        val instrumentJson = redis.eval(
+            listOf(
+                "local live_instrument = redis.call('get', KEYS[1])\n" +
+                        "if live_instrument then\n" +
+                        "    redis.call('set', KEYS[1], ARGV[1])\n" +
+                        "    return live_instrument\n" +
+                        "else\n" +
+                        "    local live_instrument_archive = redis.call('get', KEYS[2])\n" +
+                        "    if live_instrument_archive then\n" +
+                        "        redis.call('set', KEYS[2], ARGV[1])\n" +
+                        "        return live_instrument_archive\n" +
+                        "    else\n" +
+                        "        return nil\n" +
+                        "    end\n" +
+                        "end",
+                "2",
+                namespace("live_instruments:$id"),
+                namespace("live_instruments_archive:$id"),
+                Json.encode(instrument)
+            )
+        ).await()?.toString(UTF_8)
+        require(instrumentJson != null) { "Live instrument with id $id does not exist" }
+        return instrument
     }
 
     override suspend fun removeLiveInstrument(id: String): Boolean {

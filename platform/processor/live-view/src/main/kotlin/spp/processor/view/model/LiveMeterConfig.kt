@@ -31,7 +31,7 @@ class LiveMeterConfig : MeterConfig() {
         return getLiveMetricsRules().any { it.partitions.isNotEmpty() }
     }
 
-    class Rule(rule: ViewRule) : MeterConfig.Rule() {
+    class Rule(val rule: ViewRule) : MeterConfig.Rule() {
         val partitions: List<RulePartition>
         val meterIds = rule.meterIds
 

@@ -33,15 +33,15 @@ import io.vertx.servicediscovery.Record
 import io.vertx.servicediscovery.types.EventBusService
 import io.vertx.serviceproxy.ServiceBinder
 import io.vertx.serviceproxy.ServiceInterceptor
+import mu.KotlinLogging
 import org.apache.skywalking.oap.server.core.analysis.metrics.DataTable
 import org.apache.skywalking.oap.server.library.module.ModuleManager
-import org.slf4j.LoggerFactory
 import spp.platform.common.ClusterConnection.discovery
 import spp.platform.common.FeedbackProcessor
 import spp.platform.storage.SourceStorage
 import spp.processor.instrument.config.InstrumentConfig
 import spp.processor.instrument.impl.LiveInstrumentServiceImpl
-import spp.protocol.instrument.*
+import spp.protocol.instrument.LiveInstrument
 import spp.protocol.instrument.event.LiveInstrumentEvent
 import spp.protocol.platform.auth.AccessChecker
 import spp.protocol.platform.auth.RolePermission
@@ -58,7 +58,7 @@ import kotlin.system.exitProcess
 
 object InstrumentProcessor : FeedbackProcessor() {
 
-    private val log = LoggerFactory.getLogger(InstrumentProcessor::class.java)
+    private val log = KotlinLogging.logger {}
     private var liveInstrumentRecord: Record? = null
 
     override fun bootProcessor(moduleManager: ModuleManager) {
@@ -248,15 +248,11 @@ object InstrumentProcessor : FeedbackProcessor() {
 
     fun removeInternalMeta(it: LiveInstrument?): LiveInstrument? {
         if (it == null) return null
-        return when (it) {
-            is LiveBreakpoint -> it.copy(meta = it.meta.filterKeys { !it.startsWith("spp.") }.toMutableMap())
-            is LiveLog -> it.copy(meta = it.meta.filterKeys { !it.startsWith("spp.") }.toMutableMap())
-            is LiveMeter -> it.copy(meta = it.meta.filterKeys { !it.startsWith("spp.") }.toMutableMap())
-            is LiveSpan -> it.copy(meta = it.meta.filterKeys { !it.startsWith("spp.") }.toMutableMap())
-        }
+        return it.copy(meta = it.meta.filterKeys { !it.startsWith("spp.") }.toMutableMap())
     }
 
     suspend fun sendEventToSubscribers(instrument: LiveInstrument, event: LiveInstrumentEvent) {
+        log.trace { "Publishing ${event.eventType} for instrument ${instrument.id} to subscribers" }
         SourceStorage.addLiveInstrumentEvent(instrument, event.withInstrument(instrument))
         val eventJson = JsonObject.mapFrom(event)
 
@@ -267,7 +263,9 @@ object InstrumentProcessor : FeedbackProcessor() {
         SourceStorage.getDevelopers().forEach {
             if (SourceStorage.hasPermission(it.id, GET_LIVE_INSTRUMENTS)) {
                 vertx.eventBus().publish(toLiveInstrumentSubscriberAddress(it.id), eventJson)
+                log.trace { "Published ${event.eventType} for instrument ${instrument.id} to developer ${it.id}" }
             }
         }
+        log.debug("Published {} for instrument {}: {}", event.eventType, instrument.id, eventJson)
     }
 }

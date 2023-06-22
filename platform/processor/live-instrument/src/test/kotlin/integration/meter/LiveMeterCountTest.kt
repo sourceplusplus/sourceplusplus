@@ -26,6 +26,7 @@ import io.vertx.kotlin.coroutines.await
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.parallel.Isolated
 import spp.protocol.instrument.LiveMeter
 import spp.protocol.instrument.location.LiveSourceLocation
 import spp.protocol.instrument.meter.MeterType
@@ -38,6 +39,7 @@ import spp.protocol.view.LiveViewConfig
 import spp.protocol.view.LiveViewEvent
 import spp.protocol.view.rule.MeterSumRule
 
+@Isolated
 class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
 
     private fun count1() {
@@ -70,7 +72,7 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
             applyImmediately = true
         )
 
-        viewService.saveRule(MeterSumRule(liveMeter)).await()
+        val viewRule = viewService.saveRule(MeterSumRule(liveMeter)).await()
         val subscriptionId = viewService.addLiveView(
             LiveView(
                 entityIds = mutableSetOf(liveMeter.id!!),
@@ -105,11 +107,13 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
         }
 
         errorOnTimeout(testContext)
+        log.info("Total count: {}", totalCount)
 
         //clean up
         consumer.unregister()
         assertNotNull(instrumentService.removeLiveInstrument(liveMeter.id!!).await())
         assertNotNull(viewService.removeLiveView(subscriptionId).await())
+        assertNotNull(viewService.deleteRule(viewRule.name).await())
 
         assertEquals(100, totalCount)
     }
@@ -132,7 +136,7 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
             applyImmediately = true
         )
 
-        viewService.saveRule(MeterSumRule(liveMeter)).await()
+        val viewRule = viewService.saveRule(MeterSumRule(liveMeter)).await()
         val subscriptionId = viewService.addLiveView(
             LiveView(
                 entityIds = mutableSetOf(liveMeter.id!!),
@@ -167,11 +171,13 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
         }
 
         errorOnTimeout(testContext)
+        log.info("Total count: {}", totalCount)
 
         //clean up
         consumer.unregister()
         assertNotNull(instrumentService.removeLiveInstrument(liveMeter.id!!).await())
         assertNotNull(viewService.removeLiveView(subscriptionId).await())
+        assertNotNull(viewService.deleteRule(viewRule.name).await())
 
         assertEquals(200, totalCount)
     }
@@ -194,7 +200,7 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
             applyImmediately = true
         )
 
-        viewService.saveRule(MeterSumRule(liveMeter1)).await()
+        val viewRule1 = viewService.saveRule(MeterSumRule(liveMeter1)).await()
         val subscriptionId1 = viewService.addLiveView(
             LiveView(
                 entityIds = mutableSetOf(liveMeter1.id!!),
@@ -215,7 +221,7 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
             applyImmediately = true
         )
 
-        viewService.saveRule(MeterSumRule(liveMeter2)).await()
+        val viewRule2 = viewService.saveRule(MeterSumRule(liveMeter2)).await()
         val subscriptionId2 = viewService.addLiveView(
             LiveView(
                 entityIds = mutableSetOf(liveMeter2.id!!),
@@ -254,6 +260,7 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
         count3()
 
         errorOnTimeout(testContext)
+        log.info("Total count: {}", totalCount)
 
         //clean up
         consumer1.unregister()
@@ -262,6 +269,8 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
         assertNotNull(instrumentService.removeLiveInstrument(liveMeter2.id!!).await())
         assertNotNull(viewService.removeLiveView(subscriptionId1).await())
         assertNotNull(viewService.removeLiveView(subscriptionId2).await())
+        assertNotNull(viewService.deleteRule(viewRule1.name).await())
+        assertNotNull(viewService.deleteRule(viewRule2.name).await())
 
         assertEquals(202, totalCount)
     }
