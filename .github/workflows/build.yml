@@ -132,12 +132,11 @@ jobs:
           path: skywalking-api.log
 
       - name: Make docker logs artifact
-        id: make_docker_logs
         if: ${{ !cancelled() && steps.start_platform.outcome == 'success' }}
         run: ./gradlew :platform:composeLogs
 
       - name: Upload docker logs artifact
-        if: ${{ steps.make_docker_logs.outcome == 'success' }}
+        if: ${{ !cancelled() && steps.start_platform.outcome == 'success' }}
         uses: actions/upload-artifact@v3
         with:
           name: ${{ env.TEST_MODULE }}-docker.log
@@ -214,12 +213,11 @@ jobs:
             :probes:jvm:services:test
 
       - name: Make docker logs artifact
-        id: make_docker_logs
         if: ${{ !cancelled() && steps.start_platform.outcome == 'success' }}
         run: ./gradlew :platform:composeLogs
 
       - name: Upload docker logs artifact
-        if: ${{ steps.make_docker_logs.outcome == 'success' }}
+        if: ${{ !cancelled() && steps.start_platform.outcome == 'success' }}
         uses: actions/upload-artifact@v3
         with:
           name: test-probe-jvm-platform-logs
@@ -288,12 +286,11 @@ jobs:
         run: ./gradlew --scan :probes:nodejs:test
 
       - name: Make docker logs artifact
-        id: make_docker_logs
         if: ${{ !cancelled() && steps.start_platform.outcome == 'success' }}
         run: ./gradlew :platform:composeLogs
 
       - name: Upload docker logs artifact
-        if: ${{ steps.make_docker_logs.outcome == 'success' }}
+        if: ${{ !cancelled() && steps.start_platform.outcome == 'success' }}
         uses: actions/upload-artifact@v3
         with:
           name: test-probe-nodejs-platform-logs
@@ -356,12 +353,11 @@ jobs:
             :interfaces:cli:test
 
       - name: Make docker logs artifact
-        id: make_docker_logs
         if: ${{ !cancelled() && steps.start_platform.outcome == 'success' }}
         run: ./gradlew :platform:composeLogs
 
       - name: Upload docker logs artifact
-        if: ${{ steps.make_docker_logs.outcome == 'success' }}
+        if: ${{ !cancelled() && steps.start_platform.outcome == 'success' }}
         uses: actions/upload-artifact@v3
         with:
           name: test-interface-cli-platform-logs
