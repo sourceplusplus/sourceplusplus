@@ -82,15 +82,6 @@ jobs:
           gradle-home-cache-excludes: |
             caches/modules-2/files-2.1/com.jetbrains.intellij.idea
 
-      - name: Write docker-compose.override.yml
-        working-directory: docker/e2e
-        run: |
-          echo "version: '3.3'" > docker-compose.override.yml
-          echo "services:" >> docker-compose.override.yml
-          echo "  spp-platform:" >> docker-compose.override.yml
-          echo "    environment:" >> docker-compose.override.yml
-          echo "      - SPP_PROBE_ENABLED=true" >> docker-compose.override.yml
-
       - name: Start spp-platform
         id: start_platform
         run: ./gradlew :platform:assembleUp
@@ -177,15 +168,6 @@ jobs:
           gradle-home-cache-excludes: |
             caches/modules-2/files-2.1/com.jetbrains.intellij.idea
 
-      - name: Write docker-compose.override.yml
-        working-directory: docker/e2e
-        run: |
-          echo "version: '3.3'" > docker-compose.override.yml
-          echo "services:" >> docker-compose.override.yml
-          echo "  spp-platform:" >> docker-compose.override.yml
-          echo "    environment:" >> docker-compose.override.yml
-          echo "      - SPP_PROBE_ENABLED=true" >> docker-compose.override.yml
-
       - name: Start spp-platform
         id: start_platform
         run: ./gradlew :platform:assembleUp
@@ -252,7 +234,6 @@ jobs:
           echo "services:" >> docker-compose.override.yml
           echo "  spp-platform:" >> docker-compose.override.yml
           echo "    environment:" >> docker-compose.override.yml
-          echo "      - SPP_PROBE_ENABLED=true" >> docker-compose.override.yml
           echo "      - SPP_CLIENT_ACCESS_ENABLED=false" >> docker-compose.override.yml
 
       - name: Start spp-platform
@@ -316,15 +297,6 @@ jobs:
           gradle-home-cache-cleanup: true
           gradle-home-cache-excludes: |
             caches/modules-2/files-2.1/com.jetbrains.intellij.idea
-
-      - name: Write docker-compose.override.yml
-        working-directory: docker/e2e
-        run: |
-          echo "version: '3.3'" > docker-compose.override.yml
-          echo "services:" >> docker-compose.override.yml
-          echo "  spp-platform:" >> docker-compose.override.yml
-          echo "    environment:" >> docker-compose.override.yml
-          echo "      - SPP_PROBE_ENABLED=true" >> docker-compose.override.yml
 
       - name: Start spp-platform
         id: start_platform
