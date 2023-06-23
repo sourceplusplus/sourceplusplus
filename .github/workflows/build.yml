@@ -187,6 +187,7 @@ jobs:
           until $(curl --header "Authorization: Bearer ${{ env.SPP_JWT_TOKEN }}" --output /dev/null --silent --fail http://localhost:12800/health); do printf '.'; sleep 5; done
 
       - name: Test probe-jvm
+        timeout-minutes: 10
         run: |
           ./gradlew --scan -Dtest.profile=integration \
             :probes:jvm:boot:assemble \
@@ -195,11 +196,11 @@ jobs:
             :probes:jvm:services:test
 
       - name: Make docker logs artifact
-        if: ${{ !cancelled() && steps.start_platform.outcome == 'success' }}
+        if: ${{ !cancelled() }}
         run: ./gradlew :platform:composeLogs
 
       - name: Upload docker logs artifact
-        if: ${{ !cancelled() && steps.start_platform.outcome == 'success' }}
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v3
         with:
           name: test-probe-jvm-platform-logs
