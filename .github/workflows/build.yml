@@ -205,6 +205,13 @@ jobs:
           name: test-probe-jvm-platform-logs
           path: platform/build/containers-logs/spp-platform.log
 
+      - name: Upload test-probe-jvm.log artifact
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-probe-jvm.log
+          path: /tmp/spp-probe/logs/skywalking-api.log
+
   test-probe-nodejs:
     runs-on: ubuntu-20.04
     timeout-minutes: 20
