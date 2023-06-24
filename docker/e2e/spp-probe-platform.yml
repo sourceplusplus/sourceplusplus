@@ -13,7 +13,7 @@ spp:
 
 skywalking:
   logging:
-    level: "WARN"
+    level: "DEBUG"
   agent:
     service_name: "spp-platform-ci"
 
