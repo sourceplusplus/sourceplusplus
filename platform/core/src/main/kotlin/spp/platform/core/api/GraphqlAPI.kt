@@ -448,9 +448,7 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
         val input = JsonObject.mapFrom(env.getArgument("input"))
         val id: String? = input.getString("id")
         val variableControl = input.getJsonObject("variableControl")
-        val location = input.getJsonObject("location")
-        val locationSource = location.getString("source")
-        val locationLine = location.getInteger("line")
+        val location = LiveSourceLocation(input.getJsonObject("location"))
 
         val condition = input.getString("condition")
         val expiresAt = input.getLong("expiresAt")
@@ -467,7 +465,7 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
         val instrument = LiveBreakpoint(
             id = id,
             variableControl = variableControl?.let { LiveVariableControl(it) },
-            location = LiveSourceLocation(locationSource, locationLine),
+            location = location,
             condition = condition,
             expiresAt = expiresAt,
             hitLimit = hitLimit ?: 1,
@@ -481,9 +479,7 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
     private fun addLiveLog(env: DataFetchingEnvironment): Future<Map<String, Any>> {
         val input = JsonObject.mapFrom(env.getArgument("input"))
         val id: String? = input.getString("id")
-        val location = input.getJsonObject("location")
-        val locationSource = location.getString("source")
-        val locationLine = location.getInteger("line")
+        val location = LiveSourceLocation(input.getJsonObject("location"))
 
         var logArguments = input.getJsonArray("logArguments")?.list?.map { it.toString() }?.toList()
         if (logArguments == null) {
@@ -504,7 +500,7 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
         val instrument = LiveLog(
             id = id,
             logFormat = input.getString("logFormat"), logArguments = logArguments,
-            location = LiveSourceLocation(locationSource, locationLine),
+            location = location,
             condition = condition,
             expiresAt = expiresAt,
             hitLimit = hitLimit ?: 1,
@@ -518,9 +514,7 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
     private fun addLiveMeter(env: DataFetchingEnvironment): Future<Map<String, Any>> {
         val input = JsonObject.mapFrom(env.getArgument("input"))
         val id: String? = input.getString("id")
-        val location = input.getJsonObject("location")
-        val locationSource = location.getString("source")
-        val locationLine = location.getInteger("line")
+        val location = LiveSourceLocation(input.getJsonObject("location"))
 
         val metricValueInput = input.getJsonObject("metricValue")
         val metricValue = MetricValue(
@@ -544,7 +538,7 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
             meterType = MeterType.valueOf(input.getString("meterType")),
             metricValue = metricValue,
             id = id,
-            location = LiveSourceLocation(locationSource, locationLine),
+            location = location,
             condition = condition,
             expiresAt = expiresAt,
             hitLimit = hitLimit ?: -1,
@@ -559,9 +553,7 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
         val input = JsonObject.mapFrom(env.getArgument("input"))
         val id: String? = input.getString("id")
         val operationName = input.getString("operationName")
-        val location = input.getJsonObject("location")
-        val locationSource = location.getString("source")
-        val locationLine = -1 //location.getInteger("line")
+        val location = LiveSourceLocation(input.getJsonObject("location"))
 
         val condition = input.getString("condition")
         val expiresAt = input.getLong("expiresAt")
@@ -578,7 +570,7 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
         val instrument = LiveSpan(
             id = id,
             operationName = operationName,
-            location = LiveSourceLocation(locationSource, locationLine),
+            location = location,
             condition = condition,
             expiresAt = expiresAt,
             hitLimit = hitLimit ?: -1,

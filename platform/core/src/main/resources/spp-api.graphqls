@@ -425,7 +425,13 @@ type LiveSourceLocation {
 
 input LiveSourceLocationInput {
     source: String!
-    line: Int!
+    line: Int
+    service: String
+    serviceInstance: String
+    commitId: String
+    fileChecksum: String
+    probeId: String
+    scope: LocationScope
 }
 
 input LiveSpanLocationInput {
