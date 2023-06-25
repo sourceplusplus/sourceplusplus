@@ -51,7 +51,6 @@ repositories {
     mavenCentral()
     maven(url = "https://pkg.sourceplus.plus/sourceplusplus/interface-jetbrains")
     maven(url = "https://www.jetbrains.com/intellij-repository/releases")
-    maven(url = "https://www.jetbrains.com/intellij-repository/snapshots")
     maven(url = "https://cache-redirector.jetbrains.com/intellij-dependencies/")
 }
 
@@ -60,15 +59,11 @@ dependencies {
     compileOnly(project(":platform:storage"))
     compileOnly(project(":platform:processor:live-view"))
 
-    implementation("plus.sourceplus.platform:platform-common:0.7.8-SNAPSHOT")
-    implementation("plus.sourceplus.platform:platform-storage:0.7.8-SNAPSHOT")
-    implementation("plus.sourceplus.platform:live-view-processor:0.7.8-SNAPSHOT")
-    implementation("plus.sourceplus.interface:jetbrains-core:0.7.8-SNAPSHOT")
-    implementation("plus.sourceplus.interface:jetbrains-marker:0.7.8-SNAPSHOT")
-    implementation("plus.sourceplus.interface:jetbrains-marker-jvm:0.7.8-SNAPSHOT")
-//    implementation("plus.sourceplus.interface:jetbrains-marker-ult:0.7.8-SNAPSHOT")
+    implementation("plus.sourceplus.interface:jetbrains-core:0.7.9-SNAPSHOT")
+    implementation("plus.sourceplus.interface:jetbrains-marker:0.7.9-SNAPSHOT")
+    implementation("plus.sourceplus.interface:jetbrains-marker-jvm:0.7.9-SNAPSHOT")
 
-    val intellijVersion = "231.8109.175"
+    val intellijVersion = "231.9161.38"
     implementation("com.jetbrains.intellij.platform:core:$intellijVersion")
     implementation("com.jetbrains.intellij.platform:core-impl:$intellijVersion")
     implementation("com.jetbrains.intellij.platform:lang:$intellijVersion")

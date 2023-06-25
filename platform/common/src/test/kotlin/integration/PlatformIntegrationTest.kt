@@ -38,7 +38,6 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import spp.protocol.instrument.LiveInstrument
-import spp.protocol.instrument.LiveInstrument
 import spp.protocol.service.LiveInsightService
 import spp.protocol.service.LiveInstrumentService
 import spp.protocol.service.LiveManagementService
