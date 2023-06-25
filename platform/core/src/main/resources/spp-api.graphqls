@@ -184,6 +184,35 @@ input MetricValueInput {
     value: String
 }
 
+enum MeterValueType {
+    VALUE,
+    VALUE_EXPRESSION
+}
+
+type MeterTag {
+    key: String!
+    valueType: MeterValueType!
+    value: String!
+}
+
+input MeterTagInput {
+    key: String!
+    valueType: MeterValueType!
+    value: String!
+}
+
+type MeterPartition {
+    keys: [String!]!
+    valueType: MeterValueType!
+    value: String!
+}
+
+input MeterPartitionInput {
+    keys: [String!]!
+    valueType: MeterValueType!
+    value: String!
+}
+
 type InstrumentThrottle {
     limit: Int!
     step: ThrottleStep!
@@ -249,7 +278,8 @@ interface LiveInstrument {
 type LiveMeter implements LiveInstrument {
     meterType: MeterType!
     metricValue: MetricValue!
-    #todo: tags, partitions
+    meterTags: [MeterTag!]
+    meterPartitions: [MeterPartition!]
     id: String!
     location: LiveSourceLocation!
     condition: String
@@ -267,6 +297,8 @@ input LiveMeterInput {
     id: String
     meterType: MeterType!
     metricValue: MetricValueInput!
+    meterTags: [MeterTagInput!]
+    meterPartitions: [MeterPartitionInput!]
     location: LiveSourceLocationInput!
     condition: String
     expiresAt: Long
