@@ -220,6 +220,10 @@ tasks.register<Copy>("updateDockerFiles") {
 dockerCompose {
     dockerComposeWorkingDirectory.set(File("../docker/e2e"))
     tcpPortsToIgnoreWhenWaiting.set(listOf(5106))
+
+    //transfer SPP_PROBE_ env vars to containers
+    System.getenv().filterKeys { it.startsWith("SPP_PROBE_") }
+        .forEach { (key, value) -> environment.put(key, value) }
 }
 tasks.getByName("composeBuild")
     .dependsOn("updateDockerFiles")

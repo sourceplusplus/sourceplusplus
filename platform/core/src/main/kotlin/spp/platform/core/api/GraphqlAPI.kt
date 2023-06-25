@@ -52,12 +52,6 @@ import spp.protocol.instrument.*
 import spp.protocol.instrument.LiveInstrumentType.*
 import spp.protocol.instrument.event.LiveInstrumentEvent
 import spp.protocol.instrument.location.LiveSourceLocation
-import spp.protocol.instrument.meter.MeterType
-import spp.protocol.instrument.meter.MetricValue
-import spp.protocol.instrument.meter.MetricValueType
-import spp.protocol.instrument.throttle.InstrumentThrottle
-import spp.protocol.instrument.throttle.ThrottleStep
-import spp.protocol.instrument.variable.LiveVariableControl
 import spp.protocol.platform.auth.*
 import spp.protocol.platform.developer.Developer
 import spp.protocol.platform.general.*
@@ -445,148 +439,27 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
         getLiveInstrumentService(env).compose { it.clearLiveInstruments(null) }
 
     private fun addLiveBreakpoint(env: DataFetchingEnvironment): Future<Map<String, Any>> {
-        val input = JsonObject.mapFrom(env.getArgument("input"))
-        val id: String? = input.getString("id")
-        val variableControl = input.getJsonObject("variableControl")
-        val location = input.getJsonObject("location")
-        val locationSource = location.getString("source")
-        val locationLine = location.getInteger("line")
-
-        val condition = input.getString("condition")
-        val expiresAt = input.getLong("expiresAt")
-        val hitLimit = input.getInteger("hitLimit")
-        val applyImmediately = input.getBoolean("applyImmediately")
-        val throttleOb = input.getJsonObject("throttle")
-        val throttle = if (throttleOb != null) {
-            InstrumentThrottle(
-                throttleOb.getInteger("limit"),
-                ThrottleStep.valueOf(throttleOb.getString("step"))
-            )
-        } else InstrumentThrottle.DEFAULT
-
-        val instrument = LiveBreakpoint(
-            id = id,
-            variableControl = variableControl?.let { LiveVariableControl(it) },
-            location = LiveSourceLocation(locationSource, locationLine),
-            condition = condition,
-            expiresAt = expiresAt,
-            hitLimit = hitLimit ?: 1,
-            applyImmediately = applyImmediately ?: false,
-            throttle = throttle,
-            meta = toJsonMap(input.getJsonArray("meta"))
-        )
-        return getLiveInstrumentService(env).compose { it.addLiveInstrument(instrument) }.map { fixJsonMaps(it) }
+        return getLiveInstrumentService(env)
+            .compose { it.addLiveInstrument(LiveBreakpoint(JsonObject.mapFrom(env.getArgument("input")))) }
+            .map { fixJsonMaps(it) }
     }
 
     private fun addLiveLog(env: DataFetchingEnvironment): Future<Map<String, Any>> {
-        val input = JsonObject.mapFrom(env.getArgument("input"))
-        val id: String? = input.getString("id")
-        val location = input.getJsonObject("location")
-        val locationSource = location.getString("source")
-        val locationLine = location.getInteger("line")
-
-        var logArguments = input.getJsonArray("logArguments")?.list?.map { it.toString() }?.toList()
-        if (logArguments == null) {
-            logArguments = emptyList()
-        }
-        val condition = input.getString("condition")
-        val expiresAt = input.getLong("expiresAt")
-        val hitLimit = input.getInteger("hitLimit")
-        val applyImmediately = input.getBoolean("applyImmediately")
-        val throttleOb = input.getJsonObject("throttle")
-        val throttle = if (throttleOb != null) {
-            InstrumentThrottle(
-                throttleOb.getInteger("limit"),
-                ThrottleStep.valueOf(throttleOb.getString("step"))
-            )
-        } else InstrumentThrottle.DEFAULT
-
-        val instrument = LiveLog(
-            id = id,
-            logFormat = input.getString("logFormat"), logArguments = logArguments,
-            location = LiveSourceLocation(locationSource, locationLine),
-            condition = condition,
-            expiresAt = expiresAt,
-            hitLimit = hitLimit ?: 1,
-            applyImmediately = applyImmediately ?: false,
-            throttle = throttle,
-            meta = toJsonMap(input.getJsonArray("meta"))
-        )
-        return getLiveInstrumentService(env).compose { it.addLiveInstrument(instrument) }.map { fixJsonMaps(it) }
+        return getLiveInstrumentService(env)
+            .compose { it.addLiveInstrument(LiveLog(JsonObject.mapFrom(env.getArgument("input")))) }
+            .map { fixJsonMaps(it) }
     }
 
     private fun addLiveMeter(env: DataFetchingEnvironment): Future<Map<String, Any>> {
-        val input = JsonObject.mapFrom(env.getArgument("input"))
-        val id: String? = input.getString("id")
-        val location = input.getJsonObject("location")
-        val locationSource = location.getString("source")
-        val locationLine = location.getInteger("line")
-
-        val metricValueInput = input.getJsonObject("metricValue")
-        val metricValue = MetricValue(
-            MetricValueType.valueOf(metricValueInput.getString("valueType")),
-            metricValueInput.getString("value")
-        )
-
-        val condition = input.getString("condition")
-        val expiresAt = input.getLong("expiresAt")
-        val hitLimit = input.getInteger("hitLimit")
-        val applyImmediately = input.getBoolean("applyImmediately")
-        val throttleOb = input.getJsonObject("throttle")
-        val throttle = if (throttleOb != null) {
-            InstrumentThrottle(
-                throttleOb.getInteger("limit"),
-                ThrottleStep.valueOf(throttleOb.getString("step"))
-            )
-        } else InstrumentThrottle.DEFAULT
-
-        val instrument = LiveMeter(
-            meterType = MeterType.valueOf(input.getString("meterType")),
-            metricValue = metricValue,
-            id = id,
-            location = LiveSourceLocation(locationSource, locationLine),
-            condition = condition,
-            expiresAt = expiresAt,
-            hitLimit = hitLimit ?: -1,
-            applyImmediately = applyImmediately ?: false,
-            throttle = throttle,
-            meta = toJsonMap(input.getJsonArray("meta"))
-        )
-        return getLiveInstrumentService(env).compose { it.addLiveInstrument(instrument) }.map { fixJsonMaps(it) }
+        return getLiveInstrumentService(env)
+            .compose { it.addLiveInstrument(LiveMeter(JsonObject.mapFrom(env.getArgument("input")))) }
+            .map { fixJsonMaps(it) }
     }
 
     private fun addLiveSpan(env: DataFetchingEnvironment): Future<Map<String, Any>> {
-        val input = JsonObject.mapFrom(env.getArgument("input"))
-        val id: String? = input.getString("id")
-        val operationName = input.getString("operationName")
-        val location = input.getJsonObject("location")
-        val locationSource = location.getString("source")
-        val locationLine = -1 //location.getInteger("line")
-
-        val condition = input.getString("condition")
-        val expiresAt = input.getLong("expiresAt")
-        val hitLimit = input.getInteger("hitLimit")
-        val applyImmediately = input.getBoolean("applyImmediately")
-        val throttleOb = input.getJsonObject("throttle")
-        val throttle = if (throttleOb != null) {
-            InstrumentThrottle(
-                throttleOb.getInteger("limit"),
-                ThrottleStep.valueOf(throttleOb.getString("step"))
-            )
-        } else InstrumentThrottle.DEFAULT
-
-        val instrument = LiveSpan(
-            id = id,
-            operationName = operationName,
-            location = LiveSourceLocation(locationSource, locationLine),
-            condition = condition,
-            expiresAt = expiresAt,
-            hitLimit = hitLimit ?: -1,
-            applyImmediately = applyImmediately ?: false,
-            throttle = throttle,
-            meta = toJsonMap(input.getJsonArray("meta"))
-        )
-        return getLiveInstrumentService(env).compose { it.addLiveInstrument(instrument) }.map { fixJsonMaps(it) }
+        return getLiveInstrumentService(env)
+            .compose { it.addLiveInstrument(LiveSpan(JsonObject.mapFrom(env.getArgument("input")))) }
+            .map { fixJsonMaps(it) }
     }
 
     private fun saveRule(env: DataFetchingEnvironment): Future<ViewRule> {

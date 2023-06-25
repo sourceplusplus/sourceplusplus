@@ -18,7 +18,13 @@ services:
       dockerfile: Dockerfile-spp-platform
     environment:
       - JAVA_OPTS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5106 -javaagent:/tmp/spp-probe/spp-probe.jar
-      - SPP_PROBE_ENABLED=false
+      - SPP_PROBE_WAIT_FOR_PLATFORM=${SPP_PROBE_WAIT_FOR_PLATFORM}
+      - SPP_PROBE_PLATFORM_HOST=${SPP_PROBE_PLATFORM_HOST}
+      - SPP_PROBE_SSL_ENABLED=${SPP_PROBE_SSL_ENABLED}
+      - SPP_PROBE_CLIENT_ID=${SPP_PROBE_CLIENT_ID}
+      - SPP_PROBE_CLIENT_SECRET=${SPP_PROBE_CLIENT_SECRET}
+      - SPP_PROBE_TENANT_ID=${SPP_PROBE_TENANT_ID}
+      - SPP_PROBE_PLATFORM_CERTIFICATE=${SPP_PROBE_PLATFORM_CERTIFICATE}
       - SPP_JWT_ENABLED=true
       - SPP_CLIENT_ACCESS_ENABLED=true
       - SPP_CLIENT_ACCESS_ID=test-id

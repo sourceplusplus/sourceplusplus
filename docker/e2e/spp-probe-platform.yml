@@ -5,13 +5,15 @@ spp:
     client_secret: ${SPP_PROBE_CLIENT_SECRET:-test-secret}
     tenant_id: ${SPP_PROBE_TENANT_ID:-test-tenant}
   platform_host: ${SPP_PROBE_PLATFORM_HOST:-localhost}
+  ssl_enabled: ${SPP_PROBE_SSL_ENABLED:-false}
   platform_certificate: ${SPP_PROBE_PLATFORM_CERTIFICATE:-}
-  delete_probe_directory_on_boot: ${SPP_PROBE_DELETE_PROBE_DIRECTORY_ON_BOOT:-true}
+  delete_probe_directory_on_boot: ${SPP_PROBE_DELETE_PROBE_DIRECTORY_ON_BOOT:-false}
   wait_for_platform: ${SPP_PROBE_WAIT_FOR_PLATFORM:-false}
+  quiet_mode: ${SPP_PROBE_QUIET_MODE:-false}
 
 skywalking:
   logging:
-    level: "WARN"
+    level: "DEBUG"
   agent:
     service_name: "spp-platform-ci"
 
