@@ -39,6 +39,5 @@ class LiveMeterReceiverProvider : MeterReceiverProvider() {
             .getService(IMeterProcessService::class.java) as MeterProcessService
         val analyzerModule = manager.find(AnalyzerModule.NAME).provider()
         analyzerModule.registerServiceImplementation(IMeterProcessService::class.java, LiveMeterProcessService(process))
-        super.start()
     }
 }

@@ -186,15 +186,16 @@ class SourcePlatform(private val manager: ModuleManager) : CoroutineVerticle() {
         }
 
         //Start services
+        val serviceProvider = ServiceProvider(jwt, manager)
         vertx.deployVerticle(
-            ServiceProvider(jwt, manager),
+            serviceProvider,
             DeploymentOptions().setConfig(config.put("SPP_INSTANCE_ID", SPP_INSTANCE_ID))
         ).await()
 
         //Add SkyWalking interceptors
         val grpcHandlerRegister = manager.find(SharingServerModule.NAME)
             .provider().getService(GRPCHandlerRegister::class.java)
-        grpcHandlerRegister.addFilter(SkyWalkingGrpcInterceptor(vertx, config))
+        grpcHandlerRegister.addFilter(SkyWalkingGrpcInterceptor(vertx, config, serviceProvider.managementService))
         vertx.deployVerticle(SkyWalkingGraphqlInterceptor(router), DeploymentOptions().setConfig(config)).await()
 
         if (httpSslEnabled) {

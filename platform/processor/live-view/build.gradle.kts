@@ -41,6 +41,15 @@ dependencies {
     compileOnly("org.apache.skywalking:skywalking-meter-receiver-plugin:$skywalkingVersion") {
         isTransitive = false
     }
+    compileOnly("org.apache.skywalking:skywalking-jvm-receiver-plugin:$skywalkingVersion") {
+        isTransitive = false
+    }
+    compileOnly("org.apache.skywalking:skywalking-log-recevier-plugin:$skywalkingVersion") {
+        isTransitive = false
+    }
+    compileOnly("org.apache.skywalking:skywalking-management-receiver-plugin:$skywalkingVersion") {
+        isTransitive = false
+    }
 
     testImplementation(project(":probes:jvm:boot"))
     testImplementation("org.apache.logging.log4j:log4j-core:2.20.0")

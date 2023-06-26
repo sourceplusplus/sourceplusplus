@@ -51,7 +51,7 @@ class ServiceProvider(
 
     private lateinit var discovery: ServiceDiscovery
     private lateinit var managementServiceRecord: Record
-    private lateinit var managementService: LiveManagementService
+    lateinit var managementService: LiveManagementService
 
     override suspend fun start() {
         try {

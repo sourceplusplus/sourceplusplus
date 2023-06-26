@@ -31,6 +31,9 @@ object ContextUtil {
     val TENANT_ID = Context.key<String>("spp-platform.tenant-id")!!
 
     @JvmStatic
+    val COMMIT_ID = Context.key<String>("spp-platform.commit-id")!!
+
+    @JvmStatic
     fun addToVertx(context: Context?) {
         if (context == null) return
         val vertxContext = Vertx.currentContext() ?: return
@@ -53,6 +56,13 @@ object ContextUtil {
                 vertxContext.putLocal("tenant_id", it)
             } else {
                 vertxContext.removeLocal("tenant_id")
+            }
+        }
+        COMMIT_ID.get(context).let {
+            if (it != null) {
+                vertxContext.putLocal("commit_id", it)
+            } else {
+                vertxContext.removeLocal("commit_id")
             }
         }
     }

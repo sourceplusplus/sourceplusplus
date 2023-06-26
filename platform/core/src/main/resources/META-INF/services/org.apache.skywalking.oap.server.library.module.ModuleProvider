@@ -1,1 +1,7 @@
 spp.platform.core.SourceCoreProvider
+spp.platform.core.vcs.providers.VCSTraceModuleProvider
+spp.platform.core.vcs.providers.VCSEventModuleProvider
+spp.platform.core.vcs.providers.VCSJVMModuleProvider
+spp.platform.core.vcs.providers.VCSLogModuleProvider
+spp.platform.core.vcs.providers.VCSRegisterModuleProvider
+spp.platform.core.vcs.providers.VCSMeterReceiverProvider
