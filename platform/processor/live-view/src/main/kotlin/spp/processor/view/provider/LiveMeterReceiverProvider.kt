@@ -29,7 +29,7 @@ import spp.protocol.view.rule.RulePartition
  * Replaces the default meter process service with the live meter process service.
  * This is done to allow [LiveMeterProcessService] to process meters with [MeterPartition]s via [RulePartition]s.
  */
-class LiveMeterReceiverProvider : MeterReceiverProvider() {
+open class LiveMeterReceiverProvider : MeterReceiverProvider() {
 
     override fun name(): String = "spp-live-meter-receiver"
 
