@@ -20,6 +20,7 @@ package spp.processor.view.impl.view
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import mu.KotlinLogging
+import org.apache.skywalking.oap.server.core.analysis.IDManager
 import org.apache.skywalking.oap.server.core.analysis.metrics.Metrics
 import org.apache.skywalking.oap.server.core.analysis.metrics.PercentMetrics
 import org.apache.skywalking.oap.server.core.analysis.metrics.WithMetadata
@@ -31,7 +32,6 @@ import spp.platform.storage.SourceStorage
 import spp.processor.view.ViewProcessor
 import spp.processor.view.ViewProcessor.realtimeMetricCache
 import spp.processor.view.impl.view.util.*
-import spp.processor.view.impl.view.util.EntityNaming.isSameService
 import spp.processor.view.model.LiveMetricConvert
 import spp.protocol.instrument.event.LiveMeterHit
 import java.time.Instant
@@ -77,6 +77,7 @@ class LiveMeterView(private val subscriptionCache: MetricTypeSubscriptionCache) 
 
         val jsonEvent = toViewEventJson(metrics, realTime)
         val metricService = EntityNaming.getServiceId(metrics)
+        val metricServiceName = metricService?.let { IDManager.ServiceID.analysisId(it).name }
         val metricServiceInstance = EntityNaming.getServiceInstanceId(metadata)
         if (metricName.startsWith("spp_")) {
             log.debug { "Processing Source++ metrics: {} - Data: {}".args(metricName, jsonEvent) }
@@ -106,13 +107,14 @@ class LiveMeterView(private val subscriptionCache: MetricTypeSubscriptionCache) 
 
             //remove subscribers with additional filters
             subs = subs.filter {
-                val service = it.subscription.artifactLocation?.service
-                if (service != null && metricService != null && !isSameService(metricService, service)) {
-                    return@filter false
-                }
-                val serviceInstance = it.subscription.artifactLocation?.serviceInstance
-                if (serviceInstance != null && serviceInstance != metricServiceInstance) {
-                    return@filter false
+                val subLocation = it.subscription.artifactLocation
+                if (subLocation != null) {
+                    val metricsDataLocation = subLocation.copy(
+                        service = subLocation.service?.let { metricServiceName?.substringBefore("|") },
+                        serviceInstance = subLocation.serviceInstance?.let { metricServiceInstance },
+                        commitId = subLocation.commitId?.let { metricServiceName?.substringAfter("|") }
+                    )
+                    return@filter subLocation.isSameLocation(metricsDataLocation)
                 }
                 return@filter true
             }.toSet()
