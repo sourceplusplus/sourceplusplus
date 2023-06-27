@@ -2,7 +2,6 @@ FROM apache/skywalking-oap-server:9.5.0-java17
 
 ADD ./log4j2.xml /skywalking/config/log4j2.xml
 
-ADD ./spp-insight-deps.jar /skywalking/oap-libs/
 ADD ./spp-platform-*.jar /skywalking/oap-libs/
 ADD ./spp-live-*.jar /skywalking/oap-libs/
 
