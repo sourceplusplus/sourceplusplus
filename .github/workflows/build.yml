@@ -63,7 +63,14 @@ jobs:
 
     strategy:
       matrix:
-        test_module: [ 'bridge', 'common', 'core', 'processor:live-view', 'processor:live-instrument', 'storage' ]
+        test_module:
+          - bridge
+          - common
+          - core
+          - processor:live-insight
+          - processor:live-instrument
+          - processor:live-view
+          - storage
 
     steps:
       - uses: actions/checkout@v3
