@@ -26,6 +26,7 @@ import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.parallel.Isolated
 import spp.protocol.instrument.LiveMeter
 import spp.protocol.instrument.location.LiveSourceLocation
 import spp.protocol.instrument.meter.*
@@ -36,6 +37,7 @@ import spp.protocol.view.LiveViewEvent
 import spp.protocol.view.rule.RulePartition
 import spp.protocol.view.rule.ViewRule
 
+@Isolated
 class LiveMeterPartitionTest : LiveInstrumentIntegrationTest() {
 
     @Suppress("UNUSED_VARIABLE")
