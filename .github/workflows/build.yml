@@ -83,6 +83,11 @@ jobs:
           gradle-home-cache-excludes: |
             caches/modules-2/files-2.1/com.jetbrains.intellij.idea
 
+      - name: Set env
+        run: |
+          echo "SPP_APPLICATION_GIT_COMMIT=${GITHUB_SHA}" >> $GITHUB_ENV
+          echo "SPP_APPLICATION_ENVIRONMENT=ci" >> $GITHUB_ENV
+
       - name: Start spp-platform
         id: start_platform
         run: ./gradlew :platform:assembleUp
@@ -169,6 +174,11 @@ jobs:
           gradle-home-cache-excludes: |
             caches/modules-2/files-2.1/com.jetbrains.intellij.idea
 
+      - name: Set env
+        run: |
+          echo "SPP_APPLICATION_GIT_COMMIT=${GITHUB_SHA}" >> $GITHUB_ENV
+          echo "SPP_APPLICATION_ENVIRONMENT=ci" >> $GITHUB_ENV
+
       - name: Start spp-platform
         id: start_platform
         run: ./gradlew :platform:assembleUp
@@ -245,6 +255,11 @@ jobs:
           echo "    environment:" >> docker-compose.override.yml
           echo "      - SPP_CLIENT_ACCESS_ENABLED=false" >> docker-compose.override.yml
 
+      - name: Set env
+        run: |
+          echo "SPP_APPLICATION_GIT_COMMIT=${GITHUB_SHA}" >> $GITHUB_ENV
+          echo "SPP_APPLICATION_ENVIRONMENT=ci" >> $GITHUB_ENV
+
       - name: Start spp-platform
         id: start_platform
         run: ./gradlew :platform:assembleUp
@@ -306,6 +321,11 @@ jobs:
           gradle-home-cache-cleanup: true
           gradle-home-cache-excludes: |
             caches/modules-2/files-2.1/com.jetbrains.intellij.idea
+
+      - name: Set env
+        run: |
+          echo "SPP_APPLICATION_GIT_COMMIT=${GITHUB_SHA}" >> $GITHUB_ENV
+          echo "SPP_APPLICATION_ENVIRONMENT=ci" >> $GITHUB_ENV
 
       - name: Start spp-platform
         id: start_platform
