@@ -18,15 +18,30 @@
 package spp.processor.view.impl
 
 import org.apache.skywalking.apm.network.language.agent.v3.MeterData
-import org.apache.skywalking.oap.server.analyzer.provider.meter.process.IMeterProcessService
+import org.apache.skywalking.oap.meter.analyzer.MetricConvert
+import org.apache.skywalking.oap.server.analyzer.provider.meter.config.MeterConfig
 import org.apache.skywalking.oap.server.analyzer.provider.meter.process.MeterProcessService
 import org.apache.skywalking.oap.server.analyzer.provider.meter.process.MeterProcessor
+import org.apache.skywalking.oap.server.library.module.ModuleManager
 import spp.processor.view.model.LiveMetricConvert
 import spp.protocol.instrument.LiveMeter
+import spp.protocol.instrument.meter.MeterPartition
+import spp.protocol.view.rule.RulePartition
 
-class LiveMeterProcessService(private val delegate: MeterProcessService) : IMeterProcessService by delegate {
+/**
+ * Replaces the default meter process service to allows for processing
+ * meters with [MeterPartition]s via [RulePartition]s.
+ */
+class LiveMeterProcessService(
+    private val delegate: MeterProcessService,
+    manager: ModuleManager,
+) : MeterProcessService(manager) {
 
     private val existingPartitions = mutableSetOf<String>()
+
+    override fun start(configs: MutableList<MeterConfig>?) {
+        delegate.start(configs)
+    }
 
     override fun createProcessor(): MeterProcessor {
         val processor = delegate.createProcessor()
@@ -57,5 +72,9 @@ class LiveMeterProcessService(private val delegate: MeterProcessService) : IMete
 
             override fun process() = processor.process()
         }
+    }
+
+    override fun converts(): MutableList<MetricConvert> {
+        return delegate.converts()
     }
 }

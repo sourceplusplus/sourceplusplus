@@ -39,7 +39,6 @@ class VCSMeterReceiverProvider : MeterReceiverProvider() {
     override fun name(): String = "spp-receiver-meter"
 
     override fun start() {
-        //todo: LiveMeterProcessService
         val processService = manager.find(AnalyzerModule.NAME)
             .provider()
             .getService(IMeterProcessService::class.java)
