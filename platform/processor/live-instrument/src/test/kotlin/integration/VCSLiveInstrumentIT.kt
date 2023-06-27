@@ -33,7 +33,7 @@ import spp.protocol.service.listen.addBreakpointHitListener
 import java.util.concurrent.atomic.AtomicInteger
 
 @Isolated
-class VCSIntegrationTest : LiveInstrumentIntegrationTest() {
+class VCSLiveInstrumentIT : LiveInstrumentIntegrationTest() {
 
     private fun doTest() {
         startEntrySpan("doTest")
@@ -62,7 +62,7 @@ class VCSIntegrationTest : LiveInstrumentIntegrationTest() {
         val instrument = instrumentService.addLiveInstrument(
             LiveBreakpoint(
                 location = LiveSourceLocation(
-                    VCSIntegrationTest::class.java.name,
+                    VCSLiveInstrumentIT::class.java.name,
                     getLineNumber("done"),
                     "spp-test-probe"
                 ),

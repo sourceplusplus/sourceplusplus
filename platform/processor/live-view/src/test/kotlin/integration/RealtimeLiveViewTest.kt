@@ -38,8 +38,6 @@ class RealtimeLiveViewTest : PlatformIntegrationTest() {
 
     @Test
     fun `realtime instance_jvm_cpu`(): Unit = runBlocking {
-        viewService.clearLiveViews().await()
-
         val subscriptionId = viewService.addLiveView(
             LiveView(
                 entityIds = mutableSetOf(MetricType.INSTANCE_JVM_CPU.asRealtime().metricId),
