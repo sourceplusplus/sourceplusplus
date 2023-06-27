@@ -11,9 +11,9 @@ spp:
   wait_for_platform: ${SPP_PROBE_WAIT_FOR_PLATFORM:-false}
   quiet_mode: ${SPP_PROBE_QUIET_MODE:-false}
   application:
-    environment: ${SPP_APPLICATION_ENVIRONMENT:-test}
-    version: ${SPP_APPLICATION_VERSION:-test}
-    git_commit: ${SPP_APPLICATION_GIT_COMMIT:-test}
+    environment: ${SPP_APPLICATION_ENVIRONMENT:-}
+    version: ${SPP_APPLICATION_VERSION:-}
+    git_commit: ${SPP_APPLICATION_GIT_COMMIT:-}
 
 skywalking:
   logging:
