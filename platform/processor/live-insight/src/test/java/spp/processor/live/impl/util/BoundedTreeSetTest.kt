@@ -42,7 +42,7 @@ class BoundedTreeSetTest {
 
         val request1LowPriority = LiveInsightRequest(
             LiveMeter(
-                id = "insight-function-duration:" + "testMethod()",
+                id = "spp_insight_function_duration_testMethod",
                 meterType = MeterType.METHOD_TIMER,
                 metricValue = MetricValue(MetricValueType.NUMBER, "1"),
                 location = LiveSourceLocation("testMethod()", -1)

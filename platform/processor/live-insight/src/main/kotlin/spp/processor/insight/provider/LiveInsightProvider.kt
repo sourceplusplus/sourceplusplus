@@ -53,7 +53,8 @@ class LiveInsightProvider : ModuleProvider() {
         val segmentParserService = manager.find(AnalyzerModule.NAME)
             .provider().getService(ISegmentParserService::class.java) as SegmentParserServiceImpl
         val listenerManager = Reflect.on(segmentParserService).get<SegmentParserListenerManager>("listenerManager")
-        listenerManager.spanListenerFactories.addAll(InsightProcessor.moderators.filterIsInstance<AnalysisListenerFactory>())
+        listenerManager.spanListenerFactories
+            .addAll(InsightProcessor.moderators.filterIsInstance<AnalysisListenerFactory>())
 
         InsightProcessor.bootProcessor(manager)
         log.info("LiveInsightProvider started")

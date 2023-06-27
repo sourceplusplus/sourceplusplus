@@ -238,7 +238,7 @@ tasks.getByName("assemble") {
         ":platform:core:shadowJar",
         ":platform:bridge:jar",
         ":platform:storage:jar",
-        ":platform:processor:live-insight:jar",
+        ":platform:processor:live-insight:shadowJar",
         ":platform:processor:live-instrument:jar",
         ":platform:processor:live-view:jar",
         ":probes:jvm:boot:jar"

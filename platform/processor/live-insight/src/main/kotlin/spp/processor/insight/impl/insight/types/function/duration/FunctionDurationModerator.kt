@@ -75,8 +75,8 @@ class FunctionDurationModerator : InsightModerator(),
     /**
      * Inspects SkyWalking traces for function durations and calculates the average duration of the function.
      *
-     * Note: Functions found via this inspector will have their [InsightType.FUNCTION_DURATION] priority reset to 0 to avoid
-     * unnecessarily creating [LiveInsightRequest] to gather more data.
+     * Note: Functions found via this inspector will have their [InsightType.FUNCTION_DURATION] priority reset
+     * to 0 to avoid unnecessarily creating [LiveInsightRequest] to gather more data.
      */
     private fun parseSpan(span: SpanObject) {
         val gauge = LiveMetricProcessor.getGauge(
@@ -113,33 +113,31 @@ class FunctionDurationModerator : InsightModerator(),
 
     override fun postSetupInsight(request: LiveInsightRequest) {
         val liveMeter = request.liveInstrument as LiveMeter
-        val metricIdWithoutPrefix = liveMeter.meterType.name.lowercase() + "_" +
-                liveMeter.id!!.replace("[^a-zA-Z0-9]".toRegex(), "_") //todo: remove
         ViewProcessor.liveViewService.saveRuleIfAbsent(
             ViewRule(
-                "${metricIdWithoutPrefix}_avg",
+                "${liveMeter.id}_avg",
                 buildString {
                     append("(")
-                    append(metricIdWithoutPrefix).append("_timer_duration_sum")
+                    append(liveMeter.id).append("_timer_duration_sum")
                     append("/")
-                    append(metricIdWithoutPrefix).append("_timer_meter")
+                    append(liveMeter.id).append("_timer_meter")
                     append(").avg(['service']).service(['service'], Layer.GENERAL)")
                 }
             )
         ).onFailure {
-            log.error("Failed to save rule for ${metricIdWithoutPrefix}_avg", it)
+            log.error("Failed to save rule for ${liveMeter.id}_avg", it)
         }
         ViewProcessor.liveViewService.saveRuleIfAbsent(
             ViewRule(
-                "${metricIdWithoutPrefix}_count",
+                "${liveMeter.id}_count",
                 buildString {
                     append("(")
-                    append(metricIdWithoutPrefix).append("_timer_meter")
+                    append(liveMeter.id).append("_timer_meter")
                     append(").sum(['service']).service(['service'], Layer.GENERAL)")
                 }
             )
         ).onFailure {
-            log.error("Failed to save rule for ${metricIdWithoutPrefix}_count", it)
+            log.error("Failed to save rule for ${liveMeter.id}_count", it)
         }
     }
 
@@ -187,12 +185,18 @@ class FunctionDurationModerator : InsightModerator(),
                 log.debug("Found function duration of {} for {}", duration.asLong, qualifiedName)
             }
 
-            val metricIdWithoutPrefix = ("insight-function-duration:" + qualifiedName.identifier)
+            var metricId = "spp_" + ("insight-function-duration:" + qualifiedName.identifier)
                 .replace("[^a-zA-Z0-9]".toRegex(), "_")
+
+            //remove trailing '_' characters
+            var lastChar = metricId.reversed().indexOfFirst { it != '_' }
+            if (lastChar == -1) lastChar = metricId.length
+            metricId = metricId.substring(0, metricId.length - lastChar)
+
             offerQueue.add(
                 LiveInsightRequest(
                     LiveMeter(
-                        id = metricIdWithoutPrefix,
+                        id = metricId,
                         meterType = MeterType.METHOD_TIMER,
                         metricValue = MetricValue(MetricValueType.NUMBER, "1"),
                         location = LiveSourceLocation(qualifiedName.identifier)

@@ -50,7 +50,7 @@ class WorkspaceInsightQueueTest {
 
         val request1 = LiveInsightRequest(
             LiveMeter(
-                id = "insight-function-duration:" + "testMethod()",
+                id = "spp_insight_function_duration_testMethod",
                 meterType = MeterType.METHOD_TIMER,
                 metricValue = MetricValue(MetricValueType.NUMBER, "1"),
                 location = LiveSourceLocation("testMethod()", -1)
@@ -76,7 +76,7 @@ class WorkspaceInsightQueueTest {
 
         val request2 = LiveInsightRequest(
             LiveMeter(
-                id = "insight-function-duration:" + "testMethod2()",
+                id = "spp_insight_function_duration_testMethod2",
                 meterType = MeterType.METHOD_TIMER,
                 metricValue = MetricValue(MetricValueType.NUMBER, "1"),
                 location = LiveSourceLocation("testMethod2()", -1)

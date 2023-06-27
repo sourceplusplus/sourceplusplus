@@ -1,6 +1,7 @@
 plugins {
     kotlin("jvm")
     id("maven-publish")
+    id("com.github.johnrengelman.shadow")
 }
 
 val platformGroup: String by project
@@ -59,9 +60,15 @@ dependencies {
     compileOnly(project(":platform:storage"))
     compileOnly(project(":platform:processor:live-view"))
 
-    implementation("plus.sourceplus.interface:jetbrains-core:0.7.9-SNAPSHOT")
-    implementation("plus.sourceplus.interface:jetbrains-marker:0.7.9-SNAPSHOT")
-    implementation("plus.sourceplus.interface:jetbrains-marker-jvm:0.7.9-SNAPSHOT")
+    implementation("plus.sourceplus.interface:jetbrains-core:0.7.9-SNAPSHOT") {
+        isTransitive = false
+    }
+    implementation("plus.sourceplus.interface:jetbrains-marker:0.7.9-SNAPSHOT") {
+        isTransitive = false
+    }
+    implementation("plus.sourceplus.interface:jetbrains-marker-jvm:0.7.9-SNAPSHOT") {
+        isTransitive = false
+    }
 
     val intellijVersion = "231.9161.38"
     implementation("com.jetbrains.intellij.platform:core:$intellijVersion")
@@ -106,5 +113,24 @@ tasks {
 
     jar {
         archiveBaseName.set("spp-live-insight")
+    }
+
+    shadowJar {
+        isZip64 = true
+
+        archiveBaseName.set("spp-live-insight")
+        archiveClassifier.set("")
+
+        exclude("kotlin/**")
+        exclude("kotlinx/**")
+        exclude("io/vertx/**")
+        exclude("io/netty/**")
+        exclude("io/grpc/**")
+        exclude("com/fasterxml/**")
+        exclude("org/slf4j/**")
+
+        relocate("org.h2", "spp.processor.dependencies.org.h2")
+        relocate("com.google.protobuf", "spp.processor.dependencies.com.google.protobuf")
+        relocate("javassist", "spp.processor.dependencies.javassist")
     }
 }
