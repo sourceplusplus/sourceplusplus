@@ -47,13 +47,13 @@ object ServiceVCS {
 
     private fun getEnvironment(): String {
         val env = ContextUtil.ENVIRONMENT.get()
-        if (env.isNullOrEmpty()) return ""
+        if (env.isNullOrEmpty()) return "|null"
         return "|$env"
     }
 
     private fun getCommitId(): String {
         val commitId = ContextUtil.COMMIT_ID.get()
-        if (commitId.isNullOrEmpty()) return ""
+        if (commitId.isNullOrEmpty()) return "|null"
         return "|$commitId"
     }
 }

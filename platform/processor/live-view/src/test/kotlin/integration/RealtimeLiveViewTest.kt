@@ -26,7 +26,6 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.parallel.Isolated
 import spp.protocol.artifact.metrics.MetricType
-import spp.protocol.instrument.location.LiveSourceLocation
 import spp.protocol.platform.general.Service
 import spp.protocol.service.SourceServices.Subscribe.toLiveViewSubscription
 import spp.protocol.view.LiveView
@@ -46,10 +45,7 @@ class RealtimeLiveViewTest : PlatformIntegrationTest() {
                     "test",
                     listOf(MetricType.INSTANCE_JVM_CPU.asRealtime().metricId)
                 ),
-                artifactLocation = LiveSourceLocation(
-                    "",
-                    service = Service.fromName("spp-test-probe")
-                )
+                service = Service.fromName("spp-test-probe")
             )
         ).await().subscriptionId!!
 

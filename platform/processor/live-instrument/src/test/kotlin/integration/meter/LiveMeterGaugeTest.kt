@@ -24,8 +24,6 @@ import io.vertx.kotlin.coroutines.await
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
-import spp.protocol.artifact.ArtifactQualifiedName
-import spp.protocol.artifact.ArtifactType
 import spp.protocol.instrument.LiveMeter
 import spp.protocol.instrument.location.LiveSourceLocation
 import spp.protocol.instrument.meter.MeterType
@@ -96,18 +94,11 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
         val subscriptionId = viewService.addLiveView(
             LiveView(
                 entityIds = mutableSetOf(liveMeter.id!!),
-                artifactQualifiedName = ArtifactQualifiedName(
-                    LiveMeterGaugeTest::class.java.name,
-                    type = ArtifactType.EXPRESSION
-                ),
-                artifactLocation = LiveSourceLocation(
-                    LiveMeterGaugeTest::class.java.name,
-                    getLineNumber("done")
-                ),
                 viewConfig = LiveViewConfig(
                     "test",
                     listOf(liveMeter.id!!)
-                )
+                ),
+                service = Service.fromName("spp-test-probe")
             )
         ).await().subscriptionId!!
 
@@ -182,7 +173,8 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
         val subscriptionId = viewService.addLiveView(
             LiveView(
                 entityIds = mutableSetOf(liveMeter.id!!),
-                viewConfig = LiveViewConfig("test", listOf(liveMeter.id!!))
+                viewConfig = LiveViewConfig("test", listOf(liveMeter.id!!)),
+                service = Service.fromName("spp-test-probe")
             )
         ).await().subscriptionId!!
 

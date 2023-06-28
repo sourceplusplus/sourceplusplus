@@ -28,7 +28,6 @@ import org.apache.skywalking.oap.log.analyzer.provider.log.listener.LogAnalysisL
 import org.apache.skywalking.oap.log.analyzer.provider.log.listener.LogAnalysisListenerFactory
 import org.apache.skywalking.oap.server.core.analysis.Layer
 import spp.platform.common.ClusterConnection
-import spp.platform.common.util.ContextUtil
 import spp.processor.view.ViewProcessor
 import spp.processor.view.impl.view.util.MetricTypeSubscriptionCache
 import spp.processor.view.model.LiveGaugeValueMetrics
@@ -81,15 +80,12 @@ class LiveLogView(private val subscriptionCache: MetricTypeSubscriptionCache) : 
 
                 //remove subscribers with additional filters
                 subs = subs.filter {
-                    val subLocation = it.subscription.artifactLocation
-                    if (subLocation != null) {
-                        val logDataLocation = subLocation.copy(
-                            service = subLocation.service?.copy(name = logData.service.substringBefore("|")),
-                            serviceInstance = subLocation.serviceInstance?.let { logData.serviceInstance },
-                            commitId = subLocation.commitId?.let { ContextUtil.COMMIT_ID.get() }
-                        )
-                        return@filter subLocation.isSameLocation(logDataLocation)
-                    }
+                    if (it.subscription.serviceInstance?.let {
+                            it != logData.serviceInstance
+                        } == true) return@filter false
+                    if (it.subscription.service?.let {
+                            !it.isSameLocation(it.withName(logData.service))
+                        } == true) return@filter false
                     return@filter true
                 }.toSet()
 
@@ -103,15 +99,12 @@ class LiveLogView(private val subscriptionCache: MetricTypeSubscriptionCache) : 
 
                 //remove subscribers with additional filters
                 subs = subs.filter {
-                    val subLocation = it.subscription.artifactLocation
-                    if (subLocation != null) {
-                        val logDataLocation = subLocation.copy(
-                            service = subLocation.service?.copy(name = logData.service.substringBefore("|")),
-                            serviceInstance = subLocation.serviceInstance?.let { logData.serviceInstance },
-                            commitId = subLocation.commitId?.let { ContextUtil.COMMIT_ID.get() }
-                        )
-                        return@filter subLocation.isSameLocation(logDataLocation)
-                    }
+                    if (it.subscription.serviceInstance?.let {
+                            it != logData.serviceInstance
+                        } == true) return@filter false
+                    if (it.subscription.service?.let {
+                            !it.isSameLocation(it.withName(logData.service))
+                        } == true) return@filter false
                     return@filter true
                 }.toSet()
 
@@ -152,7 +145,6 @@ class LiveLogView(private val subscriptionCache: MetricTypeSubscriptionCache) : 
         val event = JsonObject()
             .put("type", "LOGS")
             .put("multiMetrics", false)
-            .put("artifactQualifiedName", JsonObject.mapFrom(sub.subscription.artifactQualifiedName))
             .put("entityId", logPattern)
             .put("timeBucket", formatter.format(logRecord.timestamp))
             .put("log", JsonObject.mapFrom(logRecord))

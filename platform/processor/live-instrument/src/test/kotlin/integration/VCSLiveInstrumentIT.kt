@@ -82,11 +82,21 @@ class VCSLiveInstrumentIT : LiveInstrumentIntegrationTest() {
 
             if (hitCount.incrementAndGet() == 1) {
                 testContext.verify {
-                    assertEquals(instrument.location.service?.name + "|" + "test1", bpHit.service)
+                    assertEquals(
+                        instrument.location.service?.name +
+                                "|" + instrument.location.service?.environment.toString() +
+                                "|" + "test1",
+                        bpHit.service
+                    )
                 }
             } else {
                 testContext.verify {
-                    assertEquals(instrument.location.service?.name + "|" + "test2", bpHit.service)
+                    assertEquals(
+                        instrument.location.service?.name +
+                                "|" + instrument.location.service?.environment.toString() +
+                                "|" + "test2",
+                        bpHit.service
+                    )
                 }
             }
             testContext.completeNow()

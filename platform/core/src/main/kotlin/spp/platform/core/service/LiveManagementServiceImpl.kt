@@ -570,7 +570,6 @@ class LiveManagementServiceImpl(
             services.forEach {
                 result.add(
                     Service(
-                        id = it.id,
                         name = it.name,
                         group = it.group,
                         shortName = it.shortName,

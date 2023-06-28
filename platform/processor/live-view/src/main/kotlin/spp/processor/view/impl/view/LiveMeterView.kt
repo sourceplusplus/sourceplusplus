@@ -111,17 +111,12 @@ class LiveMeterView(private val subscriptionCache: MetricTypeSubscriptionCache) 
 
             //remove subscribers with additional filters
             subs = subs.filter {
-                val subLocation = it.subscription.artifactLocation
-                if (subLocation != null) {
-                    val metricsDataLocation = subLocation.copy(
-                        service = subLocation.service?.let { service ->
-                            metricServiceName?.let { service.copy(name = it.substringBefore("|")) }
-                        },
-                        serviceInstance = subLocation.serviceInstance?.let { metricServiceInstance },
-                        commitId = subLocation.commitId?.let { metricServiceName?.substringAfter("|") }
-                    )
-                    return@filter subLocation.isSameLocation(metricsDataLocation)
-                }
+                if (it.subscription.serviceInstance?.let {
+                        it != metricServiceInstance
+                    } == true) return@filter false
+                if (it.subscription.service?.let {
+                        !it.isSameLocation(it.withName(metricServiceName))
+                    } == true) return@filter false
                 return@filter true
             }.toSet()
 
@@ -201,10 +196,6 @@ class LiveMeterView(private val subscriptionCache: MetricTypeSubscriptionCache) 
                 val multiMetrics = JsonArray()
                 waitingEventsForBucket.forEach {
                     val metricsOb = JsonObject.mapFrom(it)
-                        .put(
-                            "artifactQualifiedName",
-                            JsonObject.mapFrom(sub.subscription.artifactQualifiedName)
-                        )
                         .put("entityName", EntityNaming.getEntityName((metrics as WithMetadata).meta))
                     log.trace { "Sending multi-metrics $metricsOb to ${sub.subscriberId}" }
 

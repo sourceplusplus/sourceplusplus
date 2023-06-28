@@ -65,14 +65,14 @@ object ContextUtil {
             if (it != null) {
                 vertxContext.putLocal("commit_id", it)
             } else {
-                vertxContext.removeLocal("commit_id")
+                vertxContext.put("commit_id", "null")
             }
         }
         ENVIRONMENT.get(context).let {
             if (it != null) {
                 vertxContext.putLocal("environment", it)
             } else {
-                vertxContext.removeLocal("environment")
+                vertxContext.put("environment", "null")
             }
         }
     }

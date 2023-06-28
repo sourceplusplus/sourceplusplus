@@ -252,7 +252,6 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
                 LiveViewEvent(
                     sub.subscriptionId!!,
                     sub.entityIds.first(),
-                    sub.artifactQualifiedName,
                     firstEvent.getString("timeBucket"),
                     sub.viewConfig,
                     events.toString()
@@ -261,7 +260,6 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
                 LiveViewEvent(
                     sub.subscriptionId!!,
                     sub.entityIds.first(),
-                    sub.artifactQualifiedName,
                     event.getString("timeBucket"),
                     sub.viewConfig,
                     event.toString()
@@ -312,11 +310,11 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
 
         if (unsubbedSubscriber != null) {
             val removedView = LiveView(
-                unsubbedSubscriber!!.subscription.subscriptionId,
                 unsubbedSubscriber!!.subscription.entityIds,
-                unsubbedSubscriber!!.subscription.artifactQualifiedName,
-                unsubbedSubscriber!!.subscription.artifactLocation,
-                unsubbedSubscriber!!.subscription.viewConfig
+                unsubbedSubscriber!!.subscription.viewConfig,
+                unsubbedSubscriber!!.subscription.service,
+                unsubbedSubscriber!!.subscription.serviceInstance,
+                unsubbedSubscriber!!.subscription.subscriptionId,
             )
             log.debug { "Removed live view: {}".args(removedView) }
 
@@ -397,11 +395,11 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
         if (subbedUser != null) {
             promise.complete(
                 LiveView(
-                    subbedUser!!.subscription.subscriptionId,
                     subbedUser!!.subscription.entityIds,
-                    subbedUser!!.subscription.artifactQualifiedName,
-                    subbedUser!!.subscription.artifactLocation,
-                    subbedUser!!.subscription.viewConfig
+                    subbedUser!!.subscription.viewConfig,
+                    subbedUser!!.subscription.service,
+                    subbedUser!!.subscription.serviceInstance,
+                    subbedUser!!.subscription.subscriptionId,
                 )
             )
         } else {

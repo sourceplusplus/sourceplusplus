@@ -92,7 +92,7 @@ class LiveTraceView(
             Instant.ofEpochMilli(span.startTime),
             Instant.ofEpochMilli(span.endTime),
             entityId,
-            subs.first().subscription.artifactQualifiedName,
+            null,
             span.spanType.name,
             span.peer,
             span.componentId.toString(),
@@ -129,7 +129,6 @@ class LiveTraceView(
             val event = JsonObject()
                 .put("type", "TRACES")
                 .put("multiMetrics", false)
-                .put("artifactQualifiedName", JsonObject.mapFrom(sub.subscription.artifactQualifiedName))
                 .put("entityId", entityId)
                 .put("timeBucket", formatter.format(trace.start))
                 .put("trace", JsonObject.mapFrom(trace))

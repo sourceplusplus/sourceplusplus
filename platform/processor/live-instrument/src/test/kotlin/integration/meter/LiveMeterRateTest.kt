@@ -28,8 +28,6 @@ import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.parallel.Isolated
-import spp.protocol.artifact.ArtifactQualifiedName
-import spp.protocol.artifact.ArtifactType
 import spp.protocol.instrument.LiveMeter
 import spp.protocol.instrument.location.LiveSourceLocation
 import spp.protocol.instrument.meter.MeterType
@@ -92,18 +90,11 @@ class LiveMeterRateTest : LiveInstrumentIntegrationTest() {
         val subscriptionId = viewService.addLiveView(
             LiveView(
                 entityIds = mutableSetOf(liveMeter.id!!),
-                artifactQualifiedName = ArtifactQualifiedName(
-                    LiveMeterRateTest::class.java.name,
-                    type = ArtifactType.EXPRESSION
-                ),
-                artifactLocation = LiveSourceLocation(
-                    LiveMeterRateTest::class.java.name,
-                    getLineNumber("done")
-                ),
                 viewConfig = LiveViewConfig(
                     "test",
                     listOf(liveMeter.id!!)
-                )
+                ),
+                service = Service.fromName("spp-test-probe")
             )
         ).await().subscriptionId!!
 

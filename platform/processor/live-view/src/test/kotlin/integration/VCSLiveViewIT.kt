@@ -22,14 +22,12 @@ import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
-import org.apache.skywalking.oap.server.core.analysis.IDManager
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.parallel.Isolated
 import spp.probe.ProbeConfiguration
 import spp.protocol.artifact.metrics.MetricType
-import spp.protocol.instrument.location.LiveSourceLocation
 import spp.protocol.platform.general.Service
 import spp.protocol.service.SourceServices.Subscribe.toLiveViewSubscription
 import spp.protocol.view.LiveView
@@ -48,11 +46,7 @@ class VCSLiveViewIT : PlatformIntegrationTest() {
                     "test",
                     listOf(MetricType.INSTANCE_JVM_CPU.asRealtime().metricId)
                 ),
-                artifactLocation = LiveSourceLocation(
-                    "",
-                    service = Service.fromName("spp-test-probe"),
-                    commitId = "test1"
-                )
+                service = Service.fromName("spp-test-probe").withCommitId("test1"),
             )
         ).await().subscriptionId!!
 
@@ -66,7 +60,11 @@ class VCSLiveViewIT : PlatformIntegrationTest() {
         ).await()
         delay(2000)
         var testContext = VertxTestContext()
-        verifyHit(testContext, subscriptionId, IDManager.ServiceID.buildId("spp-test-probe|test1", true))
+        verifyHit(
+            testContext,
+            subscriptionId,
+            Service.fromName("spp-test-probe").withCommitId("test1").id
+        )
         if (testContext.failed()) {
             throw testContext.causeOfFailure()
         }
@@ -80,7 +78,12 @@ class VCSLiveViewIT : PlatformIntegrationTest() {
         ).await()
         delay(2000)
         testContext = VertxTestContext()
-        verifyHit(testContext, subscriptionId, IDManager.ServiceID.buildId("spp-test-probe|test2", true), false)
+        verifyHit(
+            testContext,
+            subscriptionId,
+            Service.fromName("spp-test-probe").withCommitId("test2").id,
+            false
+        )
         if (testContext.failed()) {
             throw testContext.causeOfFailure()
         }
@@ -98,10 +101,7 @@ class VCSLiveViewIT : PlatformIntegrationTest() {
                     "test",
                     listOf(MetricType.INSTANCE_JVM_CPU.asRealtime().metricId)
                 ),
-                artifactLocation = LiveSourceLocation(
-                    "",
-                    service = Service.fromName("spp-test-probe")
-                )
+                service = Service.fromName("spp-test-probe")
             )
         ).await().subscriptionId!!
 
@@ -115,7 +115,11 @@ class VCSLiveViewIT : PlatformIntegrationTest() {
         ).await()
         delay(2000)
         var testContext = VertxTestContext()
-        verifyHit(testContext, subscriptionId, IDManager.ServiceID.buildId("spp-test-probe|test1", true))
+        verifyHit(
+            testContext,
+            subscriptionId,
+            Service.fromName("spp-test-probe").withCommitId("test1").id
+        )
         if (testContext.failed()) {
             throw testContext.causeOfFailure()
         }
@@ -129,7 +133,11 @@ class VCSLiveViewIT : PlatformIntegrationTest() {
         ).await()
         delay(2000)
         testContext = VertxTestContext()
-        verifyHit(testContext, subscriptionId, IDManager.ServiceID.buildId("spp-test-probe|test2", true))
+        verifyHit(
+            testContext,
+            subscriptionId,
+            Service.fromName("spp-test-probe").withCommitId("test2").id
+        )
         if (testContext.failed()) {
             throw testContext.causeOfFailure()
         }
