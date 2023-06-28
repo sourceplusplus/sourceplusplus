@@ -17,6 +17,7 @@
  */
 package spp.processor.view.impl.view.util
 
+import spp.processor.view.model.ViewSubscriber
 import java.util.concurrent.ConcurrentHashMap
 
 class EntitySubscribersCache : ConcurrentHashMap<String, Set<ViewSubscriber>>()

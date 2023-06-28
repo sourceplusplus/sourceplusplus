@@ -30,9 +30,9 @@ import org.apache.skywalking.oap.server.core.analysis.Layer
 import spp.platform.common.ClusterConnection
 import spp.platform.common.util.ContextUtil
 import spp.processor.view.ViewProcessor
-import spp.processor.view.impl.view.model.LiveGaugeValueMetrics
+import spp.processor.view.model.LiveGaugeValueMetrics
 import spp.processor.view.impl.view.util.MetricTypeSubscriptionCache
-import spp.processor.view.impl.view.util.ViewSubscriber
+import spp.processor.view.model.ViewSubscriber
 import spp.protocol.artifact.log.Log
 import spp.protocol.instrument.location.LiveSourceLocation
 import java.time.Instant

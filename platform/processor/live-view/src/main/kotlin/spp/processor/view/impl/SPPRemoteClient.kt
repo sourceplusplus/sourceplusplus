@@ -30,7 +30,7 @@ import org.apache.skywalking.oap.server.library.module.ModuleManager
 import org.joor.Reflect
 import spp.platform.common.ClusterConnection
 import spp.processor.view.ViewProcessor
-import spp.processor.view.impl.view.model.ClusterMetrics
+import spp.processor.view.model.ClusterMetrics
 import spp.processor.view.impl.view.util.EntityNaming
 import spp.protocol.artifact.metrics.MetricType
 

@@ -29,7 +29,7 @@ import org.apache.skywalking.oap.server.library.module.ModuleManager
 import org.slf4j.LoggerFactory
 import spp.platform.common.ClusterConnection
 import spp.processor.view.impl.view.util.MetricTypeSubscriptionCache
-import spp.processor.view.impl.view.util.ViewSubscriber
+import spp.processor.view.model.ViewSubscriber
 import spp.protocol.artifact.trace.Trace
 import spp.protocol.artifact.trace.TraceSpan
 import spp.protocol.artifact.trace.TraceSpanLogEntry

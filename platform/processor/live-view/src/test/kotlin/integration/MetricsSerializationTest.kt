@@ -22,7 +22,7 @@ import io.vertx.kotlin.coroutines.await
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import spp.processor.view.impl.view.model.ClusterMetrics
+import spp.processor.view.model.ClusterMetrics
 import java.util.*
 
 class MetricsSerializationTest : PlatformIntegrationTest() {
