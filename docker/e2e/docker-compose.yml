@@ -42,7 +42,7 @@ services:
 #      - SW_PROMETHEUS_FETCHER=default
 #      - SW_PROMETHEUS_FETCHER_ENABLED_RULES=self
   elasticsearch:
-    image: blacktop/elasticsearch:7.0.0
+    image: blacktop/elasticsearch:8.1.2
     container_name: elasticsearch
     hostname: elasticsearch
     ports:
