@@ -59,10 +59,10 @@ import spp.processor.view.impl.view.LiveMeterView
 import spp.processor.view.impl.view.LiveTraceView
 import spp.processor.view.impl.view.util.EntitySubscribersCache
 import spp.processor.view.impl.view.util.MetricTypeSubscriptionCache
-import spp.processor.view.model.ViewSubscriber
 import spp.processor.view.model.LiveMeterConfig
 import spp.processor.view.model.LiveMetricConvert
 import spp.processor.view.model.LiveMetricConvert.Companion.NOP_RULE
+import spp.processor.view.model.ViewSubscriber
 import spp.protocol.artifact.metrics.MetricStep
 import spp.protocol.artifact.metrics.MetricType
 import spp.protocol.artifact.trace.TraceSpan
