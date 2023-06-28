@@ -65,7 +65,6 @@ jobs:
     strategy:
       matrix:
         test_module: [ 'bridge', 'common', 'core', 'processor:live-view', 'processor:live-instrument', 'storage' ]
-        sw_storage: [ 'h2', 'elasticsearch' ]
 
     steps:
       - uses: actions/checkout@v3
@@ -87,8 +86,6 @@ jobs:
       - name: Start spp-platform
         id: start_platform
         run: ./gradlew :platform:assembleUp
-        env:
-          SW_STORAGE: ${{ matrix.sw_storage }}
 
       - name: Docker IPs
         run: docker inspect --format='{{.Name}} - {{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $(docker ps -aq)
