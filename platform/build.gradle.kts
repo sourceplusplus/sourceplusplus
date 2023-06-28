@@ -221,6 +221,12 @@ dockerCompose {
     dockerComposeWorkingDirectory.set(File("../docker/e2e"))
     tcpPortsToIgnoreWhenWaiting.set(listOf(5106))
 
+    if (System.getenv("SW_STORAGE") == "elasticsearch") {
+        startedServices.set(listOf("redis", "spp-platform", "elasticsearch"))
+    } else {
+        startedServices.set(listOf("redis", "spp-platform"))
+    }
+
     //transfer SPP_PROBE_ env vars to containers
     System.getenv().filterKeys { it.startsWith("SPP_PROBE_") }
         .forEach { (key, value) -> environment.put(key, value) }
