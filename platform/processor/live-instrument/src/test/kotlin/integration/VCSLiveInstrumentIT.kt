@@ -29,6 +29,7 @@ import org.junit.jupiter.api.parallel.Isolated
 import spp.probe.ProbeConfiguration
 import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.location.LiveSourceLocation
+import spp.protocol.platform.general.Service
 import spp.protocol.service.listen.addBreakpointHitListener
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -64,7 +65,7 @@ class VCSLiveInstrumentIT : LiveInstrumentIntegrationTest() {
                 location = LiveSourceLocation(
                     VCSLiveInstrumentIT::class.java.name,
                     getLineNumber("done"),
-                    "spp-test-probe"
+                    Service.fromName("spp-test-probe")
                 ),
                 applyImmediately = true,
                 id = testNameAsUniqueInstrumentId,
@@ -81,11 +82,11 @@ class VCSLiveInstrumentIT : LiveInstrumentIntegrationTest() {
 
             if (hitCount.incrementAndGet() == 1) {
                 testContext.verify {
-                    assertEquals(instrument.location.service + "|" + "test1", bpHit.service)
+                    assertEquals(instrument.location.service?.name + "|" + "test1", bpHit.service)
                 }
             } else {
                 testContext.verify {
-                    assertEquals(instrument.location.service + "|" + "test2", bpHit.service)
+                    assertEquals(instrument.location.service?.name + "|" + "test2", bpHit.service)
                 }
             }
             testContext.completeNow()

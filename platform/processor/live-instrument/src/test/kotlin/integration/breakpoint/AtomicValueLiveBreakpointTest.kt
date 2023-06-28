@@ -28,6 +28,7 @@ import org.junit.jupiter.api.Test
 import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.location.LiveSourceLocation
 import spp.protocol.instrument.variable.LiveVariable
+import spp.protocol.platform.general.Service
 import spp.protocol.service.listen.addBreakpointHitListener
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
@@ -116,7 +117,7 @@ class AtomicValueLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                 location = LiveSourceLocation(
                     AtomicValueLiveBreakpointTest::class.java.name,
                     getLineNumber("done"),
-                    "spp-test-probe"
+                    Service.fromName("spp-test-probe")
                 ),
                 applyImmediately = true
             )

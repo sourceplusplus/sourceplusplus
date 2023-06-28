@@ -26,6 +26,7 @@ import org.junit.jupiter.api.Test
 import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.event.*
 import spp.protocol.instrument.location.LiveSourceLocation
+import spp.protocol.platform.general.Service
 import spp.protocol.service.listen.LiveInstrumentListener
 import spp.protocol.service.listen.addLiveInstrumentListener
 import java.util.concurrent.atomic.AtomicInteger
@@ -66,7 +67,7 @@ class LiveInstrumentEventsTest : LiveInstrumentIntegrationTest() {
                 location = LiveSourceLocation(
                     LiveInstrumentEventsTest::class.java.name,
                     getLineNumber("done"),
-                    "spp-test-probe"
+                    Service.fromName("spp-test-probe")
                 ),
                 applyImmediately = true,
                 id = instrumentId

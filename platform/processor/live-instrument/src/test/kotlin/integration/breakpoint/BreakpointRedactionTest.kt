@@ -29,6 +29,7 @@ import spp.protocol.platform.auth.DeveloperRole
 import spp.protocol.platform.auth.RedactionType
 import spp.protocol.platform.auth.RedactionType.IDENTIFIER_MATCH
 import spp.protocol.platform.auth.RolePermission
+import spp.protocol.platform.general.Service
 import spp.protocol.service.LiveInstrumentService
 import spp.protocol.service.listen.addBreakpointHitListener
 
@@ -105,7 +106,7 @@ class BreakpointRedactionTest : LiveInstrumentIntegrationTest() {
                 location = LiveSourceLocation(
                     BreakpointRedactionTest::class.java.name,
                     getLineNumber("done"),
-                    "spp-test-probe"
+                    Service.fromName("spp-test-probe")
                 ),
                 applyImmediately = true
             )

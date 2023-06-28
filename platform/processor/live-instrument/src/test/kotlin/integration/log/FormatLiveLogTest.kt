@@ -26,6 +26,7 @@ import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
 import spp.protocol.instrument.LiveLog
 import spp.protocol.instrument.location.LiveSourceLocation
+import spp.protocol.platform.general.Service
 import spp.protocol.service.listen.addLogHitListener
 
 class FormatLiveLogTest : LiveInstrumentIntegrationTest() {
@@ -72,7 +73,7 @@ class FormatLiveLogTest : LiveInstrumentIntegrationTest() {
                     location = LiveSourceLocation(
                         FormatLiveLogTest::class.java.name,
                         getLineNumber("done"),
-                        "spp-test-probe"
+                        Service.fromName("spp-test-probe")
                     ),
                     applyImmediately = true,
                     id = testNameAsInstrumentId

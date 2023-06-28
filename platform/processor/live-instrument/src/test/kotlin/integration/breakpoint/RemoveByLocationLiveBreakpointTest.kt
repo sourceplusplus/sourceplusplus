@@ -28,6 +28,7 @@ import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.event.LiveBreakpointHit
 import spp.protocol.instrument.event.LiveInstrumentApplied
 import spp.protocol.instrument.location.LiveSourceLocation
+import spp.protocol.platform.general.Service
 import spp.protocol.service.listen.LiveInstrumentListener
 import spp.protocol.service.listen.addBreakpointHitListener
 import spp.protocol.service.listen.addLiveInstrumentListener
@@ -94,7 +95,7 @@ class RemoveByLocationLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                     location = LiveSourceLocation(
                         RemoveByLocationLiveBreakpointTest::class.java.name,
                         getLineNumber("line1"),
-                        "spp-test-probe"
+                        Service.fromName("spp-test-probe")
                     ),
                     hitLimit = 2,
                     //applyImmediately = true,
@@ -104,7 +105,7 @@ class RemoveByLocationLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                     location = LiveSourceLocation(
                         RemoveByLocationLiveBreakpointTest::class.java.name,
                         getLineNumber("line2"),
-                        "spp-test-probe"
+                        Service.fromName("spp-test-probe")
                     ),
                     hitLimit = 2,
                     //applyImmediately = true,
@@ -127,7 +128,7 @@ class RemoveByLocationLiveBreakpointTest : LiveInstrumentIntegrationTest() {
             LiveSourceLocation(
                 RemoveByLocationLiveBreakpointTest::class.java.name,
                 getLineNumber("line1"),
-                "spp-test-probe"
+                Service.fromName("spp-test-probe")
             )
         ).await()
         testContext.verify {
@@ -137,7 +138,10 @@ class RemoveByLocationLiveBreakpointTest : LiveInstrumentIntegrationTest() {
 
         //ensure line1 is removed and line2 is still there
         val remainingInstruments = instrumentService.getLiveInstrumentsByLocation(
-            LiveSourceLocation(RemoveByLocationLiveBreakpointTest::class.java.name, service = "spp-test-probe")
+            LiveSourceLocation(
+                RemoveByLocationLiveBreakpointTest::class.java.name,
+                service = Service.fromName("spp-test-probe")
+            )
         ).await()
         testContext.verify {
             assertEquals(1, remainingInstruments.size)
@@ -154,7 +158,10 @@ class RemoveByLocationLiveBreakpointTest : LiveInstrumentIntegrationTest() {
         assertEquals(
             1,
             instrumentService.removeLiveInstruments(
-                LiveSourceLocation(RemoveByLocationLiveBreakpointTest::class.java.name, service = "spp-test-probe")
+                LiveSourceLocation(
+                    RemoveByLocationLiveBreakpointTest::class.java.name,
+                    service = Service.fromName("spp-test-probe")
+                )
             ).await().size
         )
     }

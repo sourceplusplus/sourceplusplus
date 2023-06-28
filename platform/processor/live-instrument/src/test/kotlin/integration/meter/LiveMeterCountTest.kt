@@ -32,6 +32,7 @@ import spp.protocol.instrument.location.LiveSourceLocation
 import spp.protocol.instrument.meter.MeterType
 import spp.protocol.instrument.meter.MetricValue
 import spp.protocol.instrument.meter.MetricValueType
+import spp.protocol.platform.general.Service
 import spp.protocol.service.SourceServices.Subscribe.toLiveViewSubscriberAddress
 import spp.protocol.service.SourceServices.Subscribe.toLiveViewSubscription
 import spp.protocol.view.LiveView
@@ -66,7 +67,7 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
             location = LiveSourceLocation(
                 LiveMeterCountTest::class.java.name,
                 getLineNumber("count1"),
-                "spp-test-probe"
+                Service.fromName("spp-test-probe")
             ),
             id = testNameAsUniqueInstrumentId,
             applyImmediately = true
@@ -130,7 +131,7 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
             location = LiveSourceLocation(
                 LiveMeterCountTest::class.java.name,
                 getLineNumber("count2"),
-                "spp-test-probe"
+                Service.fromName("spp-test-probe")
             ),
             id = testNameAsUniqueInstrumentId,
             applyImmediately = true
@@ -194,7 +195,7 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
             location = LiveSourceLocation(
                 LiveMeterCountTest::class.java.name,
                 getLineNumber("count3"),
-                "spp-test-probe"
+                Service.fromName("spp-test-probe")
             ),
             id = testNameAsUniqueInstrumentId,
             applyImmediately = true
@@ -214,7 +215,7 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
             location = LiveSourceLocation(
                 LiveMeterCountTest::class.java.name,
                 getLineNumber("count3"),
-                "spp-test-probe"
+                Service.fromName("spp-test-probe")
             ),
             id = testNameAsUniqueInstrumentId,
             meta = mapOf("metric.mode" to "RATE"),

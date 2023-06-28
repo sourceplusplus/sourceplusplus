@@ -29,6 +29,7 @@ import spp.protocol.instrument.LiveLog
 import spp.protocol.instrument.event.*
 import spp.protocol.instrument.location.LiveSourceLocation
 import spp.protocol.marshall.ServiceExceptionConverter
+import spp.protocol.platform.general.Service
 import spp.protocol.service.error.LiveInstrumentException
 import spp.protocol.service.listen.LiveInstrumentListener
 import spp.protocol.service.listen.addLiveInstrumentListener
@@ -101,7 +102,7 @@ class LiveLogTest : LiveInstrumentIntegrationTest() {
                 location = LiveSourceLocation(
                     LiveLogTest::class.java.name,
                     getLineNumber("done"),
-                    "spp-test-probe"
+                    Service.fromName("spp-test-probe")
                 ),
                 logFormat = "addHitRemove",
                 applyImmediately = true
@@ -140,7 +141,7 @@ class LiveLogTest : LiveInstrumentIntegrationTest() {
                 location = LiveSourceLocation(
                     "FakeClass",
                     4,
-                    "spp-test-probe"
+                    Service.fromName("spp-test-probe")
                 ),
                 condition = "1==2",
                 logFormat = "removeById"
@@ -185,7 +186,7 @@ class LiveLogTest : LiveInstrumentIntegrationTest() {
                     location = LiveSourceLocation(
                         LiveLogTest::class.java.name,
                         100,
-                        "spp-test-probe"
+                        Service.fromName("spp-test-probe")
                     ),
                     condition = "1==2",
                     logFormat = "removeMultipleByLocation"
@@ -195,7 +196,7 @@ class LiveLogTest : LiveInstrumentIntegrationTest() {
                     location = LiveSourceLocation(
                         LiveLogTest::class.java.name,
                         100,
-                        "spp-test-probe"
+                        Service.fromName("spp-test-probe")
                     ),
                     condition = "1==3",
                     logFormat = "removeMultipleByLocation"
@@ -208,7 +209,7 @@ class LiveLogTest : LiveInstrumentIntegrationTest() {
                     location = LiveSourceLocation(
                         LiveLogTest::class.java.name,
                         100,
-                        "spp-test-probe"
+                        Service.fromName("spp-test-probe")
                     )
                 ).onComplete {
                     if (it.succeeded()) {
@@ -240,7 +241,7 @@ class LiveLogTest : LiveInstrumentIntegrationTest() {
                 location = LiveSourceLocation(
                     LiveLogTest::class.java.name,
                     getLineNumber("done"),
-                    "spp-test-probe"
+                    Service.fromName("spp-test-probe")
                 ),
                 condition = "1===2",
                 logFormat = "addLogWithInvalidCondition",

@@ -35,6 +35,7 @@ import spp.protocol.instrument.location.LiveSourceLocation
 import spp.protocol.instrument.meter.MeterType
 import spp.protocol.instrument.meter.MetricValue
 import spp.protocol.instrument.meter.MetricValueType
+import spp.protocol.platform.general.Service
 import spp.protocol.service.SourceServices.Subscribe.toLiveViewSubscription
 import spp.protocol.view.LiveView
 import spp.protocol.view.LiveViewConfig
@@ -66,7 +67,7 @@ class LiveMeterRateTest : LiveInstrumentIntegrationTest() {
             location = LiveSourceLocation(
                 LiveMeterRateTest::class.java.name,
                 getLineNumber("done"),
-                "spp-test-probe"
+                Service.fromName("spp-test-probe")
             ),
             id = testNameAsUniqueInstrumentId,
             meta = mapOf("metric.mode" to "RATE"),

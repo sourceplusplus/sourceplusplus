@@ -35,6 +35,7 @@ import spp.processor.view.model.LiveGaugeValueMetrics
 import spp.processor.view.model.ViewSubscriber
 import spp.protocol.artifact.log.Log
 import spp.protocol.instrument.location.LiveSourceLocation
+import spp.protocol.platform.general.Service
 import java.time.Instant
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatterBuilder
@@ -83,7 +84,7 @@ class LiveLogView(private val subscriptionCache: MetricTypeSubscriptionCache) : 
                     val subLocation = it.subscription.artifactLocation
                     if (subLocation != null) {
                         val logDataLocation = subLocation.copy(
-                            service = subLocation.service?.let { logData.service.substringBefore("|") },
+                            service = subLocation.service?.copy(name = logData.service.substringBefore("|")),
                             serviceInstance = subLocation.serviceInstance?.let { logData.serviceInstance },
                             commitId = subLocation.commitId?.let { ContextUtil.COMMIT_ID.get() }
                         )
@@ -105,7 +106,7 @@ class LiveLogView(private val subscriptionCache: MetricTypeSubscriptionCache) : 
                     val subLocation = it.subscription.artifactLocation
                     if (subLocation != null) {
                         val logDataLocation = subLocation.copy(
-                            service = subLocation.service?.let { logData.service.substringBefore("|") },
+                            service = subLocation.service?.copy(name = logData.service.substringBefore("|")),
                             serviceInstance = subLocation.serviceInstance?.let { logData.serviceInstance },
                             commitId = subLocation.commitId?.let { ContextUtil.COMMIT_ID.get() }
                         )
@@ -132,7 +133,7 @@ class LiveLogView(private val subscriptionCache: MetricTypeSubscriptionCache) : 
             LiveSourceLocation( //todo: this is different than logDataLocation above
                 logSource,
                 logLineNumber ?: -1,
-                service = logData.service,
+                service = Service.fromName(logData.service),
                 serviceInstance = logData.serviceInstance
             )
         } else null

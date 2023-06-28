@@ -114,7 +114,9 @@ class LiveMeterView(private val subscriptionCache: MetricTypeSubscriptionCache) 
                 val subLocation = it.subscription.artifactLocation
                 if (subLocation != null) {
                     val metricsDataLocation = subLocation.copy(
-                        service = subLocation.service?.let { metricServiceName?.substringBefore("|") },
+                        service = subLocation.service?.let { service ->
+                            metricServiceName?.let { service.copy(name = it.substringBefore("|")) }
+                        },
                         serviceInstance = subLocation.serviceInstance?.let { metricServiceInstance },
                         commitId = subLocation.commitId?.let { metricServiceName?.substringAfter("|") }
                     )

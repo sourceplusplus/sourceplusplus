@@ -30,6 +30,7 @@ import org.junit.jupiter.api.parallel.Isolated
 import spp.probe.ProbeConfiguration
 import spp.protocol.artifact.metrics.MetricType
 import spp.protocol.instrument.location.LiveSourceLocation
+import spp.protocol.platform.general.Service
 import spp.protocol.service.SourceServices.Subscribe.toLiveViewSubscription
 import spp.protocol.view.LiveView
 import spp.protocol.view.LiveViewConfig
@@ -47,7 +48,11 @@ class VCSLiveViewIT : PlatformIntegrationTest() {
                     "test",
                     listOf(MetricType.INSTANCE_JVM_CPU.asRealtime().metricId)
                 ),
-                artifactLocation = LiveSourceLocation("", service = "spp-test-probe", commitId = "test1")
+                artifactLocation = LiveSourceLocation(
+                    "",
+                    service = Service.fromName("spp-test-probe"),
+                    commitId = "test1"
+                )
             )
         ).await().subscriptionId!!
 
@@ -93,7 +98,10 @@ class VCSLiveViewIT : PlatformIntegrationTest() {
                     "test",
                     listOf(MetricType.INSTANCE_JVM_CPU.asRealtime().metricId)
                 ),
-                artifactLocation = LiveSourceLocation("", service = "spp-test-probe")
+                artifactLocation = LiveSourceLocation(
+                    "",
+                    service = Service.fromName("spp-test-probe")
+                )
             )
         ).await().subscriptionId!!
 

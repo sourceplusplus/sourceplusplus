@@ -25,6 +25,7 @@ import org.junit.jupiter.api.Test
 import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.event.LiveInstrumentRemoved
 import spp.protocol.instrument.location.LiveSourceLocation
+import spp.protocol.platform.general.Service
 import spp.protocol.service.listen.LiveInstrumentListener
 import spp.protocol.service.listen.addLiveInstrumentListener
 import java.util.concurrent.atomic.AtomicInteger
@@ -39,11 +40,17 @@ class RemoveInstrumentsTest : LiveInstrumentIntegrationTest() {
         val instruments = instrumentService.addLiveInstruments(
             listOf(
                 LiveBreakpoint(
-                    location = LiveSourceLocation(RemoveInstrumentsTest::class.java.name, service = "spp-test-probe"),
+                    location = LiveSourceLocation(
+                        RemoveInstrumentsTest::class.java.name,
+                        service = Service.fromName("spp-test-probe")
+                    ),
                     id = testNameAsUniqueInstrumentId
                 ),
                 LiveBreakpoint(
-                    location = LiveSourceLocation(RemoveInstrumentsTest::class.java.name, service = "spp-test-probe"),
+                    location = LiveSourceLocation(
+                        RemoveInstrumentsTest::class.java.name,
+                        service = Service.fromName("spp-test-probe")
+                    ),
                     id = testNameAsUniqueInstrumentId
                 )
             )
@@ -56,7 +63,10 @@ class RemoveInstrumentsTest : LiveInstrumentIntegrationTest() {
             override fun onInstrumentRemovedEvent(event: LiveInstrumentRemoved) {
                 testContext.verify {
                     assertEquals(
-                        LiveSourceLocation(RemoveInstrumentsTest::class.java.name, service = "spp-test-probe"),
+                        LiveSourceLocation(
+                            RemoveInstrumentsTest::class.java.name,
+                            service = Service.fromName("spp-test-probe")
+                        ),
                         event.instrument.location
                     )
 
@@ -71,7 +81,10 @@ class RemoveInstrumentsTest : LiveInstrumentIntegrationTest() {
         }
 
         val removeInstruments = instrumentService.removeLiveInstruments(
-            LiveSourceLocation(RemoveInstrumentsTest::class.java.name, service = "spp-test-probe")
+            LiveSourceLocation(
+                RemoveInstrumentsTest::class.java.name,
+                service = Service.fromName("spp-test-probe")
+            )
         ).await()
         assertEquals(2, removeInstruments.size)
 

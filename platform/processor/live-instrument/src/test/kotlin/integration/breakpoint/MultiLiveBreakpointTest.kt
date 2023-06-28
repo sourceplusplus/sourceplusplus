@@ -29,6 +29,7 @@ import spp.protocol.artifact.exception.sourceAsLineNumber
 import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.event.LiveBreakpointHit
 import spp.protocol.instrument.location.LiveSourceLocation
+import spp.protocol.platform.general.Service
 import spp.protocol.service.listen.addBreakpointHitListener
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -73,7 +74,7 @@ class MultiLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                     location = LiveSourceLocation(
                         MultiLiveBreakpointTest::class.java.name,
                         getLineNumber("line1"),
-                        "spp-test-probe"
+                        Service.fromName("spp-test-probe")
                     ),
                     applyImmediately = true,
                     id = "$testNameAsInstrumentId-1"
@@ -82,7 +83,7 @@ class MultiLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                     location = LiveSourceLocation(
                         MultiLiveBreakpointTest::class.java.name,
                         getLineNumber("line1"),
-                        "spp-test-probe"
+                        Service.fromName("spp-test-probe")
                     ),
                     applyImmediately = true,
                     id = "$testNameAsInstrumentId-2"
@@ -143,7 +144,7 @@ class MultiLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                     location = LiveSourceLocation(
                         MultiLiveBreakpointTest::class.java.name,
                         getLineNumber("line1"),
-                        "spp-test-probe"
+                        Service.fromName("spp-test-probe")
                     ),
                     applyImmediately = true,
                     id = "$testNameAsInstrumentId-1"
@@ -152,7 +153,7 @@ class MultiLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                     location = LiveSourceLocation(
                         MultiLiveBreakpointTest::class.java.name,
                         getLineNumber("line2"),
-                        "spp-test-probe"
+                        Service.fromName("spp-test-probe")
                     ),
                     applyImmediately = true,
                     id = "$testNameAsInstrumentId-2"

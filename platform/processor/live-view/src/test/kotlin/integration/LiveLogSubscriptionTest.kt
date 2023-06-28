@@ -29,6 +29,7 @@ import org.junit.jupiter.api.parallel.Isolated
 import spp.protocol.artifact.log.Log
 import spp.protocol.instrument.LiveLog
 import spp.protocol.instrument.location.LiveSourceLocation
+import spp.protocol.platform.general.Service
 import spp.protocol.service.SourceServices.Subscribe.toLiveViewSubscription
 import spp.protocol.view.LiveView
 import spp.protocol.view.LiveViewConfig
@@ -54,7 +55,7 @@ class LiveLogSubscriptionTest : LiveInstrumentIntegrationTest() {
             LiveSourceLocation(
                 LiveLogSubscriptionTest::class.java.name,
                 getLineNumber("done"),
-                "spp-test-probe"
+                Service.fromName("spp-test-probe")
             ),
             id = testNameAsUniqueInstrumentId,
             hitLimit = 5,
@@ -65,7 +66,10 @@ class LiveLogSubscriptionTest : LiveInstrumentIntegrationTest() {
             LiveView(
                 entityIds = mutableSetOf(liveLog.logFormat),
                 viewConfig = LiveViewConfig("test", listOf("endpoint_logs")),
-                artifactLocation = LiveSourceLocation("", service = "spp-test-probe")
+                artifactLocation = LiveSourceLocation(
+                    "",
+                    service = Service.fromName("spp-test-probe")
+                )
             )
         ).await().subscriptionId!!
         log.info("Using subscription id: {}", subscriptionId)

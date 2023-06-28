@@ -28,6 +28,7 @@ import org.junit.jupiter.api.Test
 import spp.protocol.instrument.LiveMeter
 import spp.protocol.instrument.location.LiveSourceLocation
 import spp.protocol.instrument.meter.*
+import spp.protocol.platform.general.Service
 import spp.protocol.service.SourceServices.Subscribe.toLiveViewSubscription
 import spp.protocol.view.LiveView
 import spp.protocol.view.LiveViewConfig
@@ -62,7 +63,7 @@ class LiveMeterPartitionTest : LiveInstrumentIntegrationTest() {
             location = LiveSourceLocation(
                 LiveMeterPartitionTest::class.java.name,
                 getLineNumber("done"),
-                "spp-test-probe"
+                Service.fromName("spp-test-probe")
             ),
             id = testNameAsUniqueInstrumentId,
             applyImmediately = true

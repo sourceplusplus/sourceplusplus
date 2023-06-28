@@ -26,6 +26,7 @@ import org.junit.jupiter.api.parallel.Isolated
 import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.LiveLog
 import spp.protocol.instrument.location.LiveSourceLocation
+import spp.protocol.platform.general.Service
 import spp.protocol.service.listen.addBreakpointHitListener
 import spp.protocol.service.listen.addLogHitListener
 import java.util.concurrent.atomic.AtomicInteger
@@ -59,7 +60,12 @@ class LiveInstrumentTest : LiveInstrumentIntegrationTest() {
     @Test
     fun getLiveInstrumentById(): Unit = runBlocking {
         val instrument = instrumentService.addLiveInstrument(
-            LiveBreakpoint(location = LiveSourceLocation("integration.LiveInstrumentTest", 1, "spp-test-probe"))
+            LiveBreakpoint(
+                location = LiveSourceLocation(
+                    "integration.LiveInstrumentTest", 1,
+                    Service.fromName("spp-test-probe")
+                )
+            )
         ).await()
 
         val originalId = instrument.id!!
@@ -73,8 +79,18 @@ class LiveInstrumentTest : LiveInstrumentIntegrationTest() {
     fun getLiveInstrumentByIds(): Unit = runBlocking {
         val instrument = instrumentService.addLiveInstruments(
             listOf(
-                LiveBreakpoint(location = LiveSourceLocation("integration.LiveInstrumentTest", 1, "spp-test-probe")),
-                LiveBreakpoint(location = LiveSourceLocation("integration.LiveInstrumentTest", 2, "spp-test-probe"))
+                LiveBreakpoint(
+                    location = LiveSourceLocation(
+                        "integration.LiveInstrumentTest", 1,
+                        Service.fromName("spp-test-probe")
+                    )
+                ),
+                LiveBreakpoint(
+                    location = LiveSourceLocation(
+                        "integration.LiveInstrumentTest", 2,
+                        Service.fromName("spp-test-probe")
+                    )
+                )
             )
         ).await()
 
@@ -120,7 +136,7 @@ class LiveInstrumentTest : LiveInstrumentIntegrationTest() {
                 location = LiveSourceLocation(
                     LiveInstrumentTest::class.java.name,
                     getLineNumber("done"),
-                    "spp-test-probe"
+                    Service.fromName("spp-test-probe")
                 ),
                 applyImmediately = true,
                 id = "$testNameAsInstrumentId-log"
@@ -131,7 +147,7 @@ class LiveInstrumentTest : LiveInstrumentIntegrationTest() {
                 location = LiveSourceLocation(
                     LiveInstrumentTest::class.java.name,
                     getLineNumber("done"),
-                    "spp-test-probe"
+                    Service.fromName("spp-test-probe")
                 ),
                 applyImmediately = true,
                 id = "$testNameAsInstrumentId-breakpoint"
@@ -166,7 +182,7 @@ class LiveInstrumentTest : LiveInstrumentIntegrationTest() {
                 location = LiveSourceLocation(
                     LiveInstrumentTest::class.java.name,
                     getLineNumber("done"),
-                    "spp-test-probe"
+                    Service.fromName("spp-test-probe")
                 ),
                 "1==2",
                 applyImmediately = true,
@@ -178,7 +194,7 @@ class LiveInstrumentTest : LiveInstrumentIntegrationTest() {
                 location = LiveSourceLocation(
                     LiveInstrumentTest::class.java.name,
                     getLineNumber("done"),
-                    "spp-test-probe"
+                    Service.fromName("spp-test-probe")
                 ),
                 applyImmediately = true,
                 id = "$testNameAsInstrumentId-breakpoint"

@@ -31,21 +31,29 @@ object ServiceVCS {
             }
             require(service.isNotEmpty()) { "Message ${message.descriptorForType} does not have a service name" }
 
-            return service + getCommitId()
+            return service + getEnvironment() + getCommitId()
         } else if (message.descriptorForType.findFieldByName("source") != null) {
             val source = message.getField(message.descriptorForType.findFieldByName("source"))
             if (source is Message) {
                 val service = source.getField(source.descriptorForType.findFieldByName("service")).toString()
                 require(service.isNotEmpty()) { "Message ${message.descriptorForType} does not have a service name" }
 
-                return service + getCommitId()
+                return service + getEnvironment() + getCommitId()
             }
         }
 
         throw IllegalArgumentException("Message " + message.descriptorForType + " does not have a service name")
     }
 
+    private fun getEnvironment(): String {
+        val env = ContextUtil.ENVIRONMENT.get()
+        if (env.isNullOrEmpty()) return ""
+        return "|$env"
+    }
+
     private fun getCommitId(): String {
-        return ContextUtil.COMMIT_ID.get()?.let { "|$it" } ?: ""
+        val commitId = ContextUtil.COMMIT_ID.get()
+        if (commitId.isNullOrEmpty()) return ""
+        return "|$commitId"
     }
 }

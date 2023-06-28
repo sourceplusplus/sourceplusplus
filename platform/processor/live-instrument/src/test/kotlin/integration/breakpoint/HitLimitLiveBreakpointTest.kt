@@ -28,6 +28,7 @@ import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.event.LiveInstrumentRemoved
 import spp.protocol.instrument.location.LiveSourceLocation
 import spp.protocol.instrument.throttle.InstrumentThrottle
+import spp.protocol.platform.general.Service
 import spp.protocol.service.listen.LiveInstrumentListener
 import spp.protocol.service.listen.addBreakpointHitListener
 import spp.protocol.service.listen.addLiveInstrumentListener
@@ -53,7 +54,7 @@ class HitLimitLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                 location = LiveSourceLocation(
                     HitLimitLiveBreakpointTest::class.java.name,
                     getLineNumber("done"),
-                    "spp-test-probe"
+                    Service.fromName("spp-test-probe")
                 ),
                 hitLimit = 11,
                 throttle = InstrumentThrottle.NONE,

@@ -34,6 +34,9 @@ object ContextUtil {
     val COMMIT_ID = Context.key<String>("spp-platform.commit-id")!!
 
     @JvmStatic
+    val ENVIRONMENT = Context.key<String>("spp-platform.environment")!!
+
+    @JvmStatic
     fun addToVertx(context: Context?) {
         if (context == null) return
         val vertxContext = Vertx.currentContext() ?: return
@@ -63,6 +66,13 @@ object ContextUtil {
                 vertxContext.putLocal("commit_id", it)
             } else {
                 vertxContext.removeLocal("commit_id")
+            }
+        }
+        ENVIRONMENT.get(context).let {
+            if (it != null) {
+                vertxContext.putLocal("environment", it)
+            } else {
+                vertxContext.removeLocal("environment")
             }
         }
     }
