@@ -220,7 +220,9 @@ dockerCompose {
     dockerComposeWorkingDirectory.set(File("../docker/e2e"))
     tcpPortsToIgnoreWhenWaiting.set(listOf(5106))
 
-    if (System.getenv("SW_STORAGE") == "elasticsearch") {
+    if (System.getenv("SW_STORAGE") == "postgresql") {
+        startedServices.set(listOf("redis", "spp-platform", "postgres"))
+    } else if (System.getenv("SW_STORAGE") == "elasticsearch") {
         startedServices.set(listOf("redis", "spp-platform", "elasticsearch"))
     } else {
         startedServices.set(listOf("redis", "spp-platform"))

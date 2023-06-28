@@ -1,5 +1,10 @@
 version: '3.3'
 services:
+#  r3: #todo: broke in 9.5.0; enable in 9.6.0
+#    container_name: r3
+#    hostname: r3
+#    ports:
+#      - "17128:17128"
   redis:
     image: redis:7.0.11
     container_name: redis
@@ -40,10 +45,23 @@ services:
       - SW_ENABLE_UPDATE_UI_TEMPLATE=true
       - SW_STORAGE=${SW_STORAGE}
       - SW_STORAGE_ES_CLUSTER_NODES=elasticsearch:9200
+      - SW_JDBC_URL=jdbc:postgresql://postgres:5432/postgres
+      - SW_DATA_SOURCE_PASSWORD=postgres
+#      - SW_AI_PIPELINE_URI_RECOGNITION_SERVER_ADDR=r3
 #      - SW_TELEMETRY=prometheus
 #      - SW_TELEMETRY_PROMETHEUS_HOST=spp-platform
 #      - SW_PROMETHEUS_FETCHER=default
 #      - SW_PROMETHEUS_FETCHER_ENABLED_RULES=self
+  postgres:
+    image: postgres:13.3
+    container_name: postgres
+    hostname: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=postgres
   elasticsearch:
     image: blacktop/elasticsearch:7.0.0
     container_name: elasticsearch
