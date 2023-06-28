@@ -46,14 +46,13 @@ object InsightProcessor : FeedbackProcessor() {
     lateinit var viewService: LiveViewService
     lateinit var instrumentService: LiveInstrumentService
     private var liveInsightRecord: Record? = null
-    val moderators = mutableListOf<InsightModerator>()
+    val moderators = mutableListOf<InsightModerator>(
+        FunctionDurationModerator()
+    )
     val workspaceQueue = WorkspaceInsightQueue()
 
     override fun bootProcessor(moduleManager: ModuleManager) {
         module = moduleManager
-
-        //add moderators
-        moderators.add(FunctionDurationModerator())
 
         log.info("InsightProcessor initialized")
         connectToPlatform()
@@ -105,13 +104,6 @@ object InsightProcessor : FeedbackProcessor() {
                 exitProcess(-1)
             }
         }
-
-//        val insightConfig = ClusterConnection.config.getJsonObject("live-insight")
-//        val importDir = insightConfig.getString("graph_listing_directory")
-//        ClusterConnection.router.route("/insight/data/*").handler(
-//            StaticHandler.create(FileSystemAccess.ROOT, importDir)
-//                .setDirectoryListing(insightConfig.getString("graph_listing_enabled").toBooleanStrict())
-//        )
     }
 
     override suspend fun stop() {
