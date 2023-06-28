@@ -53,7 +53,7 @@ services:
 #      - SW_PROMETHEUS_FETCHER=default
 #      - SW_PROMETHEUS_FETCHER_ENABLED_RULES=self
   postgres:
-    image: postgres:13.3
+    image: postgres:13.11
     container_name: postgres
     hostname: postgres
     ports:
