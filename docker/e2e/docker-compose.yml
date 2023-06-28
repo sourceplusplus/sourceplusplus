@@ -43,3 +43,20 @@ services:
 #      - SW_TELEMETRY_PROMETHEUS_HOST=spp-platform
 #      - SW_PROMETHEUS_FETCHER=default
 #      - SW_PROMETHEUS_FETCHER_ENABLED_RULES=self
+  elasticsearch:
+    image: blacktop/elasticsearch:7.0.0
+    container_name: elasticsearch
+    hostname: elasticsearch
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    cap_add:
+      - IPC_LOCK
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    command: -E cluster.name=es-spp -E path.data=data -E path.logs=logs -E network.host=0.0.0.0 -E node.name=node-1
