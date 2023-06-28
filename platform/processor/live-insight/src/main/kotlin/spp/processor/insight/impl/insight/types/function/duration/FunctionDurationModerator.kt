@@ -213,7 +213,7 @@ class FunctionDurationModerator : InsightModerator(),
         val durationInsights = JsonArray()
 
         val qualifiedName = function.getFullyQualifiedName().identifier
-        SourceStorage.get<Long>("${InsightType.FUNCTION_DURATION}:${qualifiedName}")?.let { duration ->
+        SourceStorage.get<Long>("${InsightType.FUNCTION_DURATION}:$qualifiedName")?.let { duration ->
             durationInsights.add(JsonObject().put(qualifiedName, duration))
             log.debug("Function: $qualifiedName - Total duration: $duration ms")
         }
