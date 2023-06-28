@@ -9,6 +9,7 @@ services:
   spp-platform:
     container_name: spp-platform
     hostname: spp-platform
+    restart: on-failure
     ports:
       - "5106:5106"
       - "11800:11800"
@@ -33,12 +34,14 @@ services:
       - SPP_CLIENT_ACCESS_ID=test-id
       - SPP_CLIENT_ACCESS_SECRET=test-secret
       - SPP_LOGGING_LEVEL=debug
-      - SPP_STORAGE=redis
-      - SPP_STORAGE_HOST=redis
+      - SPP_STORAGE=${SPP_STORAGE}
+      - SPP_STORAGE_HOST=${SPP_STORAGE}
       - SPP_STORAGE_CLUSTER_ENABLED=true
       - SPP_PRESET_JVM_PROBE_ENABLED=false
       - SW_OAL_ENGINE_DEBUG=Y
       - SW_ENABLE_UPDATE_UI_TEMPLATE=true
+      - SW_STORAGE=${SW_STORAGE}
+      - SW_STORAGE_ES_CLUSTER_NODES=elasticsearch:9200
 #      - SW_TELEMETRY=prometheus
 #      - SW_TELEMETRY_PROMETHEUS_HOST=spp-platform
 #      - SW_PROMETHEUS_FETCHER=default
