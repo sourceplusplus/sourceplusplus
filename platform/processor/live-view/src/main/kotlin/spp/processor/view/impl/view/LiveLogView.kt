@@ -123,7 +123,7 @@ class LiveLogView(private val subscriptionCache: MetricTypeSubscriptionCache) : 
         val logSource = logData.tags.dataList.find { it.key == "source" }?.value
         val logLineNumber = logData.tags.dataList.find { it.key == "line" }?.value?.toInt()
         val logLocation = if (logSource != null) {
-            LiveSourceLocation( //todo: this is different than logDataLocation above
+            LiveSourceLocation(
                 logSource,
                 logLineNumber ?: -1,
                 service = Service.fromName(logData.service),
