@@ -5,9 +5,9 @@ spp:
   platform_host: "localhost"
   platform_port: 12800
   application:
-    environment: ${SPP_APPLICATION_ENVIRONMENT:-test}
-    version: ${SPP_APPLICATION_VERSION:-test}
-    git_commit: ${SPP_APPLICATION_GIT_COMMIT:-test}
+    environment: ${SPP_APPLICATION_ENVIRONMENT:-}
+    version: ${SPP_APPLICATION_VERSION:-}
+    git_commit: ${SPP_APPLICATION_GIT_COMMIT:-}
 
 skywalking:
   logging:
