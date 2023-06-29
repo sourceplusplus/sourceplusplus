@@ -20,7 +20,6 @@ package spp.processor.view.impl.view
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import mu.KotlinLogging
-import org.apache.skywalking.oap.server.core.analysis.IDManager
 import org.apache.skywalking.oap.server.core.analysis.metrics.Metrics
 import org.apache.skywalking.oap.server.core.analysis.metrics.PercentMetrics
 import org.apache.skywalking.oap.server.core.analysis.metrics.WithMetadata
@@ -81,7 +80,6 @@ class LiveMeterView(private val subscriptionCache: MetricTypeSubscriptionCache) 
 
         val jsonEvent = toViewEventJson(metrics, realTime)
         val metricService = EntityNaming.getServiceId(metrics)
-        val metricServiceName = metricService?.let { IDManager.ServiceID.analysisId(it).name }
         val metricServiceInstance = EntityNaming.getServiceInstanceId(metadata)
         if (metricName.startsWith("spp_")) {
             log.debug { "Processing Source++ metrics: {} - Data: {}".args(metricName, jsonEvent) }
@@ -115,7 +113,7 @@ class LiveMeterView(private val subscriptionCache: MetricTypeSubscriptionCache) 
                         it != metricServiceInstance
                     } == true) return@filter false
                 if (it.subscription.service?.let {
-                        !it.isSameLocation(it.withName(metricServiceName))
+                        !it.isSameLocation(it.withId(metricService))
                     } == true) return@filter false
                 return@filter true
             }.toSet()
