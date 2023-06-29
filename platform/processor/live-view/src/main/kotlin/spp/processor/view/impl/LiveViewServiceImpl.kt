@@ -24,7 +24,9 @@ import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import io.vertx.kotlin.coroutines.CoroutineVerticle
 import io.vertx.kotlin.coroutines.await
+import io.vertx.kotlin.coroutines.dispatcher
 import io.vertx.serviceproxy.ServiceException
+import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import org.apache.skywalking.oap.log.analyzer.module.LogAnalyzerModule
 import org.apache.skywalking.oap.log.analyzer.provider.log.ILogAnalyzerService
@@ -69,6 +71,8 @@ import spp.protocol.artifact.trace.TraceSpan
 import spp.protocol.artifact.trace.TraceSpanRef
 import spp.protocol.artifact.trace.TraceStack
 import spp.protocol.platform.PlatformAddress.MARKER_DISCONNECTED
+import spp.protocol.platform.general.Service
+import spp.protocol.service.LiveManagementService
 import spp.protocol.service.LiveViewService
 import spp.protocol.service.SourceServices.Subscribe.toLiveViewSubscriberAddress
 import spp.protocol.service.SourceServices.Subscribe.toLiveViewSubscription
@@ -518,6 +522,55 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
         duration: Duration,
         labels: List<String>
     ): JsonArray {
+        val service = try {
+            Service.fromId(entityId)
+        } catch (ignored: Exception) {
+            null
+        }
+
+        return if (service != null) {
+            //todo: get VCS services more efficiently (search by active commits)
+            val devAuth = Vertx.currentContext().getLocal<DeveloperAuth>("developer")
+            val managementService = LiveManagementService.createProxy(vertx, devAuth.accessToken)
+            val allServices = runBlocking(vertx.dispatcher()) { managementService.getServices().await() }
+            val searchServices = allServices.filter {
+                service.isSameLocation(service.withName(it.name))
+            }
+
+            val allMetrics = mutableListOf<JsonArray>()
+            searchServices.forEach {
+                val array = searchService(metricType, it.id, labels, duration)
+                for (i in 0 until array.size()) {
+                    array.getJsonObject(i).put("service", it.toJson())
+                }
+                allMetrics.add(array)
+            }
+
+            val mergeArray = JsonArray()
+            repeat(allMetrics.first().count()) {
+                mergeArray.add(JsonObject())
+            }
+            allMetrics.forEach {
+                it.forEachIndexed { i, metrics ->
+                    val a = mergeArray.getJsonObject(i)
+                    val b = metrics as JsonObject
+                    if (a.getValue("value") == null) {
+                        a.mergeIn(b)
+                    } //todo: more accurate merging (env, metric type, etc)
+                }
+            }
+            mergeArray
+        } else {
+            searchService(metricType, entityId, labels, duration)
+        }
+    }
+
+    private fun searchService(
+        metricType: MetricType,
+        entityId: String,
+        labels: List<String>,
+        duration: Duration
+    ): JsonArray {
         val condition = MetricsCondition()
         condition.name = metricType.metricId
         condition.entity = object : Entity() {
@@ -529,13 +582,23 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
             JsonArray().apply {
                 metricsQuery.readLabeledMetricsValues(condition, labels, duration).forEach {
                     val label = it.label
-                    it.values.values.forEach { add(JsonObject().put("value", it.value).put("label", label)) }
+                    it.values.values.forEach {
+                        val valueOb = JsonObject().put("label", label)
+                        if (!it.isEmptyValue) {
+                            valueOb.put("value", it.value)
+                        }
+                        add(valueOb)
+                    }
                 }
             }
         } else {
             JsonArray().apply {
                 metricsQuery.readMetricsValues(condition, duration).values.values.forEach {
-                    add(JsonObject().put("value", it.value))
+                    val valueOb = JsonObject()
+                    if (!it.isEmptyValue) {
+                        valueOb.put("value", it.value)
+                    }
+                    add(valueOb)
                 }
             }
         }
