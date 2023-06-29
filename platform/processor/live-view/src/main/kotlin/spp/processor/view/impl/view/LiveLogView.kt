@@ -76,7 +76,8 @@ class LiveLogView(private val subscriptionCache: MetricTypeSubscriptionCache) : 
             var subbedArtifacts = subscriptionCache["endpoint_logs"]
             if (subbedArtifacts != null) {
                 val logPattern = logData.body.text.text
-                var subs = subbedArtifacts[logPattern].orEmpty() + subbedArtifacts["*"].orEmpty()
+                var subs = subbedArtifacts[logPattern].orEmpty() +
+                        subbedArtifacts["*"].orEmpty()
 
                 //remove subscribers with additional filters
                 subs = subs.filter {
@@ -94,7 +95,7 @@ class LiveLogView(private val subscriptionCache: MetricTypeSubscriptionCache) : 
 
             subbedArtifacts = subscriptionCache["service_logs"]
             if (subbedArtifacts != null) {
-                var subs = subbedArtifacts[logData.service.substringBefore("|")].orEmpty() +
+                var subs = subbedArtifacts[Service.fromName(logData.service).name].orEmpty() +
                         subbedArtifacts["*"].orEmpty()
 
                 //remove subscribers with additional filters
