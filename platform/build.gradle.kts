@@ -230,8 +230,8 @@ dockerCompose {
         startedServices.set(listOf("redis", "spp-platform"))
     }
 
-    //transfer SPP_PROBE_ env vars to containers
-    System.getenv().filterKeys { it.startsWith("SPP_PROBE_") }
+    //transfer SPP_PROBE_/SW_ env vars to containers
+    System.getenv().filterKeys { it.startsWith("SPP_PROBE_") || it.startsWith("SW_") }
         .forEach { (key, value) -> environment.put(key, value) }
 }
 tasks.getByName("composeBuild")
