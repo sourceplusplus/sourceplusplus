@@ -24,6 +24,7 @@ import io.vertx.kotlin.coroutines.await
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.parallel.Isolated
 import spp.protocol.instrument.LiveMeter
 import spp.protocol.instrument.location.LiveSourceLocation
 import spp.protocol.instrument.meter.MeterType
@@ -41,6 +42,7 @@ import java.io.Serializable
 import java.util.*
 import java.util.function.Supplier
 
+@Isolated
 class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
 
     @Suppress("UNUSED_VARIABLE")
