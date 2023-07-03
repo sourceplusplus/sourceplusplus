@@ -29,11 +29,13 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Timeout
 import spp.protocol.platform.PlatformAddress.MARKER_CONNECTED
 import spp.protocol.platform.status.InstanceConnection
 import spp.protocol.service.SourceServices
 import java.util.*
 
+@Timeout(10)
 class MarkerBridgeITTest : PlatformIntegrationTest() {
 
     @Test
