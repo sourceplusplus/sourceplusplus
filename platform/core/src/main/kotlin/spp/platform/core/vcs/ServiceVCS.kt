@@ -55,10 +55,10 @@ object ServiceVCS {
 
     private fun useDefaultServiceName(): Boolean {
         val env = ContextUtil.ENVIRONMENT.get()
-        val commitId = ContextUtil.VERSION.get()
+        val version = ContextUtil.VERSION.get()
         val nullEnv = env.isNullOrEmpty() || env == "null"
-        val nullCommitId = commitId.isNullOrEmpty() || commitId == "null"
-        return nullEnv && nullCommitId
+        val nullVersion = version.isNullOrEmpty() || version == "null"
+        return nullEnv && nullVersion
     }
 
     private fun getEnvironment(): String {
@@ -68,8 +68,8 @@ object ServiceVCS {
     }
 
     private fun getVersion(): String {
-        val commitId = ContextUtil.VERSION.get()
-        if (commitId.isNullOrEmpty()) return "|null"
-        return "|$commitId"
+        val version = ContextUtil.VERSION.get()
+        if (version.isNullOrEmpty()) return "|null"
+        return "|$version"
     }
 }

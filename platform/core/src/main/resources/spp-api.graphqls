@@ -501,7 +501,7 @@ type Service {
     layers: [String!]!
     normal: Boolean!
     environment: String
-    commitId: String
+    version: String
 }
 
 type ServiceInstance {
