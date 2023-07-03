@@ -51,7 +51,7 @@ class VCSLiveViewIT : PlatformIntegrationTest() {
         ).await().subscriptionId!!
 
         Agent.AUTHENTICATION = Agent.AUTHENTICATION.substringBeforeLast(":") + ":test1"
-        delay(2000)
+        delay(5000)
 
         var testContext = VertxTestContext()
         verifyHit(
@@ -64,7 +64,7 @@ class VCSLiveViewIT : PlatformIntegrationTest() {
         }
 
         Agent.AUTHENTICATION = Agent.AUTHENTICATION.substringBeforeLast(":") + ":test2"
-        delay(2000)
+        delay(5000)
 
         testContext = VertxTestContext()
         verifyHit(
@@ -95,7 +95,7 @@ class VCSLiveViewIT : PlatformIntegrationTest() {
         ).await().subscriptionId!!
 
         Agent.AUTHENTICATION = Agent.AUTHENTICATION.substringBeforeLast(":") + ":test1"
-        delay(2000)
+        delay(5000)
 
         var testContext = VertxTestContext()
         verifyHit(
@@ -108,7 +108,7 @@ class VCSLiveViewIT : PlatformIntegrationTest() {
         }
 
         Agent.AUTHENTICATION = Agent.AUTHENTICATION.substringBeforeLast(":") + ":test2"
-        delay(2000)
+        delay(5000)
 
         testContext = VertxTestContext()
         verifyHit(

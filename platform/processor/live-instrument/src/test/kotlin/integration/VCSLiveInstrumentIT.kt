@@ -48,7 +48,7 @@ class VCSLiveInstrumentIT : LiveInstrumentIntegrationTest() {
         }
 
         Agent.AUTHENTICATION = Agent.AUTHENTICATION.substringBeforeLast(":") + ":test1"
-        delay(2000)
+        delay(5000)
 
         val hitCount = AtomicInteger()
         var testContext = VertxTestContext()
@@ -99,7 +99,7 @@ class VCSLiveInstrumentIT : LiveInstrumentIntegrationTest() {
         testContext = VertxTestContext()
 
         Agent.AUTHENTICATION = Agent.AUTHENTICATION.substringBeforeLast(":") + ":test2"
-        delay(2000)
+        delay(5000)
 
         doTest()
         errorOnTimeout(testContext)
