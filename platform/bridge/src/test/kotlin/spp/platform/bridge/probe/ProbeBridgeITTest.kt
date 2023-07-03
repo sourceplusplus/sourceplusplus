@@ -32,6 +32,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Timeout
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
 import spp.protocol.platform.PlatformAddress.PROBE_CONNECTED
@@ -40,6 +41,7 @@ import spp.protocol.platform.auth.ClientAccess
 import spp.protocol.platform.status.InstanceConnection
 import java.util.*
 
+@Timeout(10)
 @Execution(ExecutionMode.SAME_THREAD)
 class ProbeBridgeITTest : PlatformIntegrationTest() {
 
