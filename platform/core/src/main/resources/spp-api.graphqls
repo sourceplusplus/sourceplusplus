@@ -447,10 +447,7 @@ input MetaInfoInput {
 type LiveSourceLocation {
     source: String!
     line: Int
-    service: String
-    serviceInstance: String
-    commitId: String
-    fileChecksum: String
+    service: Service
     probeId: String
     scope: LocationScope!
 }
@@ -458,10 +455,7 @@ type LiveSourceLocation {
 input LiveSourceLocationInput {
     source: String!
     line: Int
-    service: String
-    serviceInstance: String
-    commitId: String
-    fileChecksum: String
+    service: ServiceInput
     probeId: String
     scope: LocationScope
 }
@@ -496,10 +490,16 @@ type DataRedaction {
 type Service {
     id: String!
     name: String!
-    group: String!
+    group: String
     shortName: String
     layers: [String!]!
     normal: Boolean!
+    environment: String
+    version: String
+}
+
+input ServiceInput {
+    name: String
     environment: String
     version: String
 }

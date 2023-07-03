@@ -123,7 +123,7 @@ class LiveMeterView(private val subscriptionCache: MetricTypeSubscriptionCache) 
                         it != metricServiceInstance
                     } == true) return@filter false
                 if (it.subscription.service?.let {
-                        !it.isSameLocation(it.withId(metricService))
+                        !it.isSameService(it.withId(metricService))
                     } == true) return@filter false
                 return@filter true
             }.toMutableSet()

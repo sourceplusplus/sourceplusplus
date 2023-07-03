@@ -567,7 +567,7 @@ class LiveManagementServiceImpl(
         val promise = Promise.promise<List<Service>>()
         getServices().onSuccess {
             val searchServices = it.filter {
-                service.isSameLocation(service.withName(it.name))
+                service.isSameService(service.withName(it.name))
             }
             promise.complete(searchServices)
         }.onFailure {

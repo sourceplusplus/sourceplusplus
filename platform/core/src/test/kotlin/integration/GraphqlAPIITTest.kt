@@ -36,7 +36,6 @@ import spp.protocol.platform.auth.AccessType
 import spp.protocol.platform.auth.DeveloperRole.Companion.ROLE_MANAGER
 import spp.protocol.platform.auth.RedactionType
 import spp.protocol.platform.auth.RolePermission
-import java.util.*
 
 @Suppress("LargeClass", "TooManyFunctions", "MaximumLineLength") // public API test
 class GraphqlAPIITTest : PlatformIntegrationTest() {
@@ -1064,6 +1063,17 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
         assertNotEquals(clientSecret, updatedClientAccessJsonObject.getString("secret"))
     }
 
+    @Test
+    fun `ensure add live breakpoint has correct service`() = runBlocking {
+        val addLiveBreakpointResp = request.sendJsonObject(getAddLiveBreakpointRequest()).await().bodyAsJsonObject()
+        assertNull(addLiveBreakpointResp.getJsonArray("errors"))
+        val addLiveBreakpoint = addLiveBreakpointResp.getJsonObject("data").getJsonObject("addLiveBreakpoint")
+        assertEquals(
+            "test-service",
+            addLiveBreakpoint.getJsonObject("location").getJsonObject("service").getString("name")
+        )
+    }
+
     private fun getAddDataRedactionRequest(redactionId: String): JsonObject {
         return JsonObject().put("query", getGraphql("data-redaction/add-data-redaction")).put(
             "variables",
@@ -1126,7 +1136,14 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
                 "input",
                 mapOf(
                     "id" to testNameAsUniqueInstrumentId,
-                    "location" to mapOf("source" to "doing", "line" to 17)
+                    "location" to mapOf(
+                        "source" to "doing",
+                        "line" to 17,
+                        "service" to mapOf(
+                            "name" to "test-service",
+                            "version" to "1.0.0"
+                        )
+                    )
                 )
             )
         )

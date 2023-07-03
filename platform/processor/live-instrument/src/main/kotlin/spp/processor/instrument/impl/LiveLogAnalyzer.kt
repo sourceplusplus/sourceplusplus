@@ -86,7 +86,7 @@ class LiveLogAnalyzer : LogAnalysisListener, LogAnalysisListenerFactory {
                 logSource,
                 logLineNumber ?: -1,
                 service = Service.fromName(logData.service),
-                serviceInstance = logData.serviceInstance
+                //serviceInstance = logData.serviceInstance
             )
         } else null
 

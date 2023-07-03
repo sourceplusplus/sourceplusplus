@@ -90,7 +90,7 @@ class LiveLogView(private val subscriptionCache: MetricTypeSubscriptionCache) : 
                             it != logData.serviceInstance
                         } == true) return@filter false
                     if (it.subscription.service?.let {
-                            !it.isSameLocation(it.withName(logData.service))
+                            !it.isSameService(it.withName(logData.service))
                         } == true) return@filter false
                     return@filter true
                 }.toMutableSet()
@@ -114,7 +114,7 @@ class LiveLogView(private val subscriptionCache: MetricTypeSubscriptionCache) : 
                 logSource,
                 logLineNumber ?: -1,
                 service = Service.fromName(logData.service),
-                serviceInstance = logData.serviceInstance
+                //serviceInstance = logData.serviceInstance
             )
         } else null
 
