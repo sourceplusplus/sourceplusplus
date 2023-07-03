@@ -37,6 +37,7 @@ import spp.processor.view.impl.view.util.MetricTypeSubscriptionCache
 import spp.processor.view.model.LiveMetricConvert
 import spp.processor.view.model.ViewSubscriber
 import spp.protocol.instrument.event.LiveMeterHit
+import spp.protocol.platform.general.Service
 import java.time.Instant
 import java.util.concurrent.CopyOnWriteArrayList
 
@@ -104,8 +105,17 @@ class LiveMeterView(private val subscriptionCache: MetricTypeSubscriptionCache) 
 
         val subbedArtifacts = subscriptionCache[metricName]
         if (subbedArtifacts != null) {
-            var subs = subbedArtifacts[entityName].orEmpty() +
-                    subbedArtifacts[metadata.id].orEmpty() + subbedArtifacts[metricName].orEmpty()
+            var subs = (subbedArtifacts[entityName].orEmpty() +
+                    subbedArtifacts[metadata.id].orEmpty() + subbedArtifacts[metricName].orEmpty()).toMutableSet()
+
+            //todo: more robust service check
+            if (metadata.metricsName.startsWith("service_")) {
+                //entityName = service
+                val service = Service.fromName(entityName)
+                subs += subbedArtifacts[service.name].orEmpty()
+                subs += subbedArtifacts[service.id].orEmpty()
+                subs += subbedArtifacts[Service.fromName(service.name).id].orEmpty()
+            }
 
             //remove subscribers with additional filters
             subs = subs.filter {
@@ -116,7 +126,7 @@ class LiveMeterView(private val subscriptionCache: MetricTypeSubscriptionCache) 
                         !it.isSameLocation(it.withId(metricService))
                     } == true) return@filter false
                 return@filter true
-            }.toSet()
+            }.toMutableSet()
 
             if (subs.isNotEmpty()) {
                 log.trace { "Exporting event $metricName to {} subscribers".args(subs.size) }

@@ -73,11 +73,16 @@ class LiveLogView(private val subscriptionCache: MetricTypeSubscriptionCache) : 
                 return this
             }
 
-            var subbedArtifacts = subscriptionCache["endpoint_logs"]
-            if (subbedArtifacts != null) {
+            val subbedArtifacts = subscriptionCache["endpoint_logs"].orEmpty() +
+                    subscriptionCache["service_logs"].orEmpty()
+            if (subbedArtifacts.isNotEmpty()) {
                 val logPattern = logData.body.text.text
-                var subs = subbedArtifacts[logPattern].orEmpty() +
-                        subbedArtifacts["*"].orEmpty()
+                var subs = (subbedArtifacts[logPattern].orEmpty() + subbedArtifacts["*"].orEmpty()).toMutableSet()
+
+                val service = Service.fromName(logData.service)
+                subs += subbedArtifacts[service.name].orEmpty()
+                subs += subbedArtifacts[service.id].orEmpty()
+                subs += subbedArtifacts[Service.fromName(service.name).id].orEmpty()
 
                 //remove subscribers with additional filters
                 subs = subs.filter {
@@ -88,26 +93,7 @@ class LiveLogView(private val subscriptionCache: MetricTypeSubscriptionCache) : 
                             !it.isSameLocation(it.withName(logData.service))
                         } == true) return@filter false
                     return@filter true
-                }.toSet()
-
-                subs.forEach { sentToSub(it, logData) }
-            }
-
-            subbedArtifacts = subscriptionCache["service_logs"]
-            if (subbedArtifacts != null) {
-                var subs = subbedArtifacts[Service.fromName(logData.service).name].orEmpty() +
-                        subbedArtifacts["*"].orEmpty()
-
-                //remove subscribers with additional filters
-                subs = subs.filter {
-                    if (it.subscription.serviceInstance?.let {
-                            it != logData.serviceInstance
-                        } == true) return@filter false
-                    if (it.subscription.service?.let {
-                            !it.isSameLocation(it.withName(logData.service))
-                        } == true) return@filter false
-                    return@filter true
-                }.toSet()
+                }.toMutableSet()
 
                 subs.forEach { sentToSub(it, logData) }
             }

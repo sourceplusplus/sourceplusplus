@@ -34,6 +34,7 @@ import spp.protocol.artifact.trace.Trace
 import spp.protocol.artifact.trace.TraceSpan
 import spp.protocol.artifact.trace.TraceSpanLogEntry
 import spp.protocol.artifact.trace.TraceSpanRef
+import spp.protocol.platform.general.Service
 import java.net.URI
 import java.time.Instant
 import java.time.ZoneOffset
@@ -66,8 +67,14 @@ class LiveTraceView(
 
         subbedArtifacts = subscriptionCache["service_traces"]
         if (subbedArtifacts != null) {
-            val subs = subbedArtifacts[segment.service]
-            if (!subs.isNullOrEmpty()) {
+            val subs = subbedArtifacts[segment.service].orEmpty().toMutableSet()
+
+            val service = Service.fromName(segment.service)
+            subs += subbedArtifacts[service.name].orEmpty()
+            subs += subbedArtifacts[service.id].orEmpty()
+            subs += subbedArtifacts[Service.fromName(service.name).id].orEmpty()
+
+            if (subs.isNotEmpty()) {
                 sendToSubs(segment, span, entityId, subs)
             }
         }

@@ -31,7 +31,7 @@ object ServiceVCS {
             }
             require(service.isNotEmpty()) { "Message ${message.descriptorForType} does not have a service name" }
 
-            return if (ContextUtil.ENVIRONMENT.get() == null && ContextUtil.COMMIT_ID.get() == null) {
+            return if (useDefaultServiceName()) {
                 service
             } else {
                 service + getEnvironment() + getCommitId()
@@ -42,7 +42,7 @@ object ServiceVCS {
                 val service = source.getField(source.descriptorForType.findFieldByName("service")).toString()
                 require(service.isNotEmpty()) { "Message ${message.descriptorForType} does not have a service name" }
 
-                return if (ContextUtil.ENVIRONMENT.get() == null && ContextUtil.COMMIT_ID.get() == null) {
+                return if (useDefaultServiceName()) {
                     service
                 } else {
                     service + getEnvironment() + getCommitId()
@@ -51,6 +51,14 @@ object ServiceVCS {
         }
 
         throw IllegalArgumentException("Message " + message.descriptorForType + " does not have a service name")
+    }
+
+    private fun useDefaultServiceName(): Boolean {
+        val env = ContextUtil.ENVIRONMENT.get()
+        val commitId = ContextUtil.COMMIT_ID.get()
+        val nullEnv = env.isNullOrEmpty() || env == "null"
+        val nullCommitId = commitId.isNullOrEmpty() || commitId == "null"
+        return nullEnv && nullCommitId
     }
 
     private fun getEnvironment(): String {

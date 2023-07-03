@@ -497,9 +497,11 @@ type Service {
     id: String!
     name: String!
     group: String!
-    shortName: String!
+    shortName: String
     layers: [String!]!
     normal: Boolean!
+    environment: String
+    commitId: String
 }
 
 type ServiceInstance {

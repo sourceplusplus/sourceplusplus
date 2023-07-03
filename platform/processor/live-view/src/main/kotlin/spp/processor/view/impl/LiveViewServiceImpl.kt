@@ -529,14 +529,10 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
         }
 
         return if (service != null) {
-            //todo: get VCS services more efficiently (search by active commits)
             val devAuth = Vertx.currentContext().getLocal<DeveloperAuth>("developer")
             val managementService = LiveManagementService.createProxy(vertx, devAuth.accessToken)
-            val allServices = runBlocking(vertx.dispatcher()) {
-                managementService.getServices().await().map { it.withName(it.name) }
-            }
-            val searchServices = allServices.filter {
-                service.isSameLocation(service.withName(it.name))
+            val searchServices = runBlocking(vertx.dispatcher()) {
+                managementService.getActiveServices(service.name).await()
             }
 
             val allMetrics = mutableListOf<JsonArray>()
