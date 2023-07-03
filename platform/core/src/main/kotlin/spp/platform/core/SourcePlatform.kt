@@ -186,9 +186,8 @@ class SourcePlatform(private val manager: ModuleManager) : CoroutineVerticle() {
         }
 
         //Start services
-        val serviceProvider = ServiceProvider(jwt, manager)
         vertx.deployVerticle(
-            serviceProvider,
+            ServiceProvider(jwt, manager),
             DeploymentOptions().setConfig(config.put("SPP_INSTANCE_ID", SPP_INSTANCE_ID))
         ).await()
 
