@@ -31,14 +31,22 @@ object ServiceVCS {
             }
             require(service.isNotEmpty()) { "Message ${message.descriptorForType} does not have a service name" }
 
-            return service + getEnvironment() + getCommitId()
+            return if (ContextUtil.ENVIRONMENT.get() == null && ContextUtil.COMMIT_ID.get() == null) {
+                service
+            } else {
+                service + getEnvironment() + getCommitId()
+            }
         } else if (message.descriptorForType.findFieldByName("source") != null) {
             val source = message.getField(message.descriptorForType.findFieldByName("source"))
             if (source is Message) {
                 val service = source.getField(source.descriptorForType.findFieldByName("service")).toString()
                 require(service.isNotEmpty()) { "Message ${message.descriptorForType} does not have a service name" }
 
-                return service + getEnvironment() + getCommitId()
+                return if (ContextUtil.ENVIRONMENT.get() == null && ContextUtil.COMMIT_ID.get() == null) {
+                    service
+                } else {
+                    service + getEnvironment() + getCommitId()
+                }
             }
         }
 
