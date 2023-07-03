@@ -98,7 +98,6 @@ class VCSLiveInstrumentIT : LiveInstrumentIntegrationTest() {
         errorOnTimeout(testContext)
         testContext = VertxTestContext()
 
-
         Agent.AUTHENTICATION = Agent.AUTHENTICATION.substringBeforeLast(":") + ":test2"
         delay(2000)
 
