@@ -97,7 +97,7 @@ class VCSHistoricalViewIT : LiveInstrumentIntegrationTest() {
             probeId,
             JsonObject().put(
                 "application",
-                JsonObject().put("git_commit", "test1")
+                JsonObject().put("version", "test1")
             )
         ).await()
         delay(75_000)

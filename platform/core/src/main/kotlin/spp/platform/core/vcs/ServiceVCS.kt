@@ -34,7 +34,7 @@ object ServiceVCS {
             return if (useDefaultServiceName()) {
                 service
             } else {
-                service + getEnvironment() + getCommitId()
+                service + getEnvironment() + getVersion()
             }
         } else if (message.descriptorForType.findFieldByName("source") != null) {
             val source = message.getField(message.descriptorForType.findFieldByName("source"))
@@ -45,7 +45,7 @@ object ServiceVCS {
                 return if (useDefaultServiceName()) {
                     service
                 } else {
-                    service + getEnvironment() + getCommitId()
+                    service + getEnvironment() + getVersion()
                 }
             }
         }
@@ -55,7 +55,7 @@ object ServiceVCS {
 
     private fun useDefaultServiceName(): Boolean {
         val env = ContextUtil.ENVIRONMENT.get()
-        val commitId = ContextUtil.COMMIT_ID.get()
+        val commitId = ContextUtil.VERSION.get()
         val nullEnv = env.isNullOrEmpty() || env == "null"
         val nullCommitId = commitId.isNullOrEmpty() || commitId == "null"
         return nullEnv && nullCommitId
@@ -67,8 +67,8 @@ object ServiceVCS {
         return "|$env"
     }
 
-    private fun getCommitId(): String {
-        val commitId = ContextUtil.COMMIT_ID.get()
+    private fun getVersion(): String {
+        val commitId = ContextUtil.VERSION.get()
         if (commitId.isNullOrEmpty()) return "|null"
         return "|$commitId"
     }

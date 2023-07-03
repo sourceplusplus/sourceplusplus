@@ -13,7 +13,6 @@ spp:
   application:
     environment: ${SPP_APPLICATION_ENVIRONMENT:-}
     version: ${SPP_APPLICATION_VERSION:-}
-    git_commit: ${SPP_APPLICATION_GIT_COMMIT:-}
 
 skywalking:
   logging:

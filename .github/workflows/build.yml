@@ -85,8 +85,8 @@ jobs:
 
       - name: Set env
         run: |
-          echo "SPP_APPLICATION_GIT_COMMIT=${GITHUB_SHA}" >> $GITHUB_ENV
           echo "SPP_APPLICATION_ENVIRONMENT=ci" >> $GITHUB_ENV
+          echo "SPP_APPLICATION_VERSION=${GITHUB_SHA}" >> $GITHUB_ENV
 
       - name: Start spp-platform
         run: ./gradlew :platform:assembleUp
@@ -175,8 +175,8 @@ jobs:
 
       - name: Set env
         run: |
-          echo "SPP_APPLICATION_GIT_COMMIT=${GITHUB_SHA}" >> $GITHUB_ENV
           echo "SPP_APPLICATION_ENVIRONMENT=ci" >> $GITHUB_ENV
+          echo "SPP_APPLICATION_VERSION=${GITHUB_SHA}" >> $GITHUB_ENV
 
       - name: Start spp-platform
         run: ./gradlew :platform:assembleUp
@@ -255,8 +255,8 @@ jobs:
 
       - name: Set env
         run: |
-          echo "SPP_APPLICATION_GIT_COMMIT=${GITHUB_SHA}" >> $GITHUB_ENV
           echo "SPP_APPLICATION_ENVIRONMENT=ci" >> $GITHUB_ENV
+          echo "SPP_APPLICATION_VERSION=${GITHUB_SHA}" >> $GITHUB_ENV
 
       - name: Start spp-platform
         run: ./gradlew :platform:assembleUp
@@ -321,8 +321,8 @@ jobs:
 
       - name: Set env
         run: |
-          echo "SPP_APPLICATION_GIT_COMMIT=${GITHUB_SHA}" >> $GITHUB_ENV
           echo "SPP_APPLICATION_ENVIRONMENT=ci" >> $GITHUB_ENV
+          echo "SPP_APPLICATION_VERSION=${GITHUB_SHA}" >> $GITHUB_ENV
 
       - name: Start spp-platform
         run: ./gradlew :platform:assembleUp

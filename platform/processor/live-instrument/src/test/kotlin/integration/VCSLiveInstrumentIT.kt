@@ -53,7 +53,7 @@ class VCSLiveInstrumentIT : LiveInstrumentIntegrationTest() {
             probeId,
             JsonObject().put(
                 "application",
-                JsonObject().put("git_commit", "test1")
+                JsonObject().put("version", "test1")
             )
         ).await()
         delay(2000)
@@ -110,7 +110,7 @@ class VCSLiveInstrumentIT : LiveInstrumentIntegrationTest() {
             probeId,
             JsonObject().put(
                 "application",
-                JsonObject().put("git_commit", "test2")
+                JsonObject().put("version", "test2")
             )
         ).await()
         delay(2000)
