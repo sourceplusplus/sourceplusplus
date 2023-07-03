@@ -15,4 +15,4 @@ skywalking:
   agent:
     service_name: "spp-test-probe"
   meter:
-    report_interval: 10
+    report_interval: 5
