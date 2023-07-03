@@ -5,6 +5,7 @@ plugins {
 
 val platformGroup: String by project
 val projectVersion: String by project
+val skywalkingAgentVersion: String by project
 
 group = platformGroup
 version = project.properties["platformVersion"] as String? ?: projectVersion
@@ -37,8 +38,12 @@ configure<PublishingExtension> {
 dependencies {
     compileOnly(project(":platform:common"))
     compileOnly(project(":platform:storage"))
+    testCompileOnly("org.apache.skywalking:apm-agent-core:$skywalkingAgentVersion") {
+        isTransitive = false
+    }
 
     testImplementation(project(":probes:jvm:boot"))
+    testCompileOnly(project(":probes:jvm:common"))
     testImplementation("org.apache.logging.log4j:log4j-core:2.20.0")
     //todo: properly add test dependency
     testImplementation(project(":platform:common").dependencyProject.extensions.getByType(SourceSetContainer::class).test.get().output)

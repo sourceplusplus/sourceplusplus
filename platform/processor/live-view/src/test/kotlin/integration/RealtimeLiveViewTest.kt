@@ -26,7 +26,7 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.parallel.Isolated
 import spp.protocol.artifact.metrics.MetricType
-import spp.protocol.instrument.location.LiveSourceLocation
+import spp.protocol.platform.general.Service
 import spp.protocol.service.SourceServices.Subscribe.toLiveViewSubscription
 import spp.protocol.view.LiveView
 import spp.protocol.view.LiveViewConfig
@@ -38,8 +38,6 @@ class RealtimeLiveViewTest : PlatformIntegrationTest() {
 
     @Test
     fun `realtime instance_jvm_cpu`(): Unit = runBlocking {
-        viewService.clearLiveViews().await()
-
         val subscriptionId = viewService.addLiveView(
             LiveView(
                 entityIds = mutableSetOf(MetricType.INSTANCE_JVM_CPU.asRealtime().metricId),
@@ -47,7 +45,7 @@ class RealtimeLiveViewTest : PlatformIntegrationTest() {
                     "test",
                     listOf(MetricType.INSTANCE_JVM_CPU.asRealtime().metricId)
                 ),
-                artifactLocation = LiveSourceLocation("", service = "spp-test-probe")
+                service = Service.fromName("spp-test-probe")
             )
         ).await().subscriptionId!!
 

@@ -561,6 +561,21 @@ class LiveManagementServiceImpl(
         return promise.future()
     }
 
+    override fun getActiveServices(serviceName: String): Future<List<Service>> {
+        //todo: get VCS services more efficiently (search by active commits)
+        val service = Service.fromName(serviceName)
+        val promise = Promise.promise<List<Service>>()
+        getServices().onSuccess {
+            val searchServices = it.filter {
+                service.isSameLocation(service.withName(it.name))
+            }
+            promise.complete(searchServices)
+        }.onFailure {
+            promise.fail(it)
+        }
+        return promise.future()
+    }
+
     override fun getServices(layer: String?): Future<List<Service>> {
         log.debug { "Getting services" }
         val promise = Promise.promise<List<Service>>()
@@ -570,13 +585,12 @@ class LiveManagementServiceImpl(
             services.forEach {
                 result.add(
                     Service(
-                        id = it.id,
                         name = it.name,
                         group = it.group,
                         shortName = it.shortName,
                         layers = it.layers.toList(),
                         normal = it.isNormal
-                    )
+                    ).withName(it.name)
                 )
             }
             promise.complete(result)
@@ -584,12 +598,8 @@ class LiveManagementServiceImpl(
         return promise.future()
     }
 
-    override fun getInstances(serviceId: String): Future<List<ServiceInstance>> {
-        log.debug { "Getting instances for service $serviceId" }
-        if (serviceId.isEmpty()) {
-            return Future.failedFuture("Service id is empty")
-        }
-
+    override fun getInstances(service: Service): Future<List<ServiceInstance>> {
+        log.debug { "Getting instances for service $service" }
         val promise = Promise.promise<List<ServiceInstance>>()
         launch(vertx.dispatcher()) {
             val result = mutableListOf<ServiceInstance>()
@@ -598,45 +608,63 @@ class LiveManagementServiceImpl(
                 end = "2222-02-02 2222"
                 step = Step.MINUTE
             }
-            val instances = metadataQueryService.listInstances(duration, serviceId)
-            instances.forEach {
-                result.add(
-                    ServiceInstance(
-                        id = it.id,
-                        name = it.name,
-                        language = it.language.name,
-                        instanceUUID = it.instanceUUID,
-                        attributes = it.attributes.associate { attr -> attr.name to attr.value }
-                    )
-                )
+
+            getActiveServices(service.name).onSuccess { services ->
+                services.forEach { svc ->
+                    metadataQueryService.listInstances(duration, svc.id).forEach {
+                        result.add(
+                            ServiceInstance(
+                                id = it.id,
+                                name = it.name,
+                                language = it.language.name,
+                                instanceUUID = it.instanceUUID,
+                                attributes = it.attributes.associate { attr -> attr.name to attr.value }
+                            )
+                        )
+                    }
+                }
+                promise.complete(result)
+            }.onFailure {
+                promise.fail(it)
             }
-            promise.complete(result)
         }
         return promise.future()
     }
 
-    override fun getEndpoints(serviceId: String, limit: Int?): Future<List<ServiceEndpoint>> {
-        log.debug { "Getting endpoints for service $serviceId" }
+    override fun getEndpoints(service: Service, limit: Int?): Future<List<ServiceEndpoint>> {
+        log.debug { "Getting endpoints for service $service" }
         val promise = Promise.promise<List<ServiceEndpoint>>()
         launch(vertx.dispatcher()) {
             val result = mutableListOf<ServiceEndpoint>()
-            metadataQueryService.findEndpoint("", serviceId, limit ?: 1000).forEach {
-                result.add(ServiceEndpoint(it.id, it.name))
+            getActiveServices(service.name).onSuccess { services ->
+                services.forEach { svc ->
+                    metadataQueryService.findEndpoint("", svc.id, limit ?: 1000).forEach {
+                        result.add(ServiceEndpoint(it.id, it.name))
+                    }
+                }
+                promise.complete(result)
+            }.onFailure {
+                promise.fail(it)
             }
-            promise.complete(result)
         }
         return promise.future()
     }
 
-    override fun searchEndpoints(serviceId: String, keyword: String, limit: Int?): Future<List<ServiceEndpoint>> {
-        log.debug { "Searching endpoints for service $serviceId" }
+    override fun searchEndpoints(service: Service, keyword: String, limit: Int?): Future<List<ServiceEndpoint>> {
+        log.debug { "Searching endpoints for service $service" }
         val promise = Promise.promise<List<ServiceEndpoint>>()
         launch(vertx.dispatcher()) {
             val result = mutableListOf<ServiceEndpoint>()
-            metadataQueryService.findEndpoint(keyword, serviceId, limit ?: 1000).forEach {
-                result.add(ServiceEndpoint(it.id, it.name))
+            getActiveServices(service.name).onSuccess { services ->
+                services.forEach { svc ->
+                    metadataQueryService.findEndpoint(keyword, svc.id, limit ?: 1000).forEach {
+                        result.add(ServiceEndpoint(it.id, it.name))
+                    }
+                }
+                promise.complete(result)
+            }.onFailure {
+                promise.fail(it)
             }
-            promise.complete(result)
         }
         return promise.future()
     }

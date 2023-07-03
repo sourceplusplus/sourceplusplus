@@ -79,6 +79,8 @@ subprojects {
         compileOnly("com.graphql-java:graphql-java:20.2") //tied to SkyWalking OAP version
         compileOnly("com.google.protobuf:protobuf-java:3.21.8") //tied to SkyWalking OAP version
         compileOnly("io.grpc:grpc-api:1.49.0") //tied to SkyWalking OAP version
+        compileOnly("io.grpc:grpc-stub:1.49.0") //tied to SkyWalking OAP version
+        compileOnly("com.linecorp.armeria:armeria:1.23.1") //tied to SkyWalking OAP version
         implementation("io.vertx:vertx-auth-jwt:$vertxVersion")
         implementation("io.vertx:vertx-redis-client:$vertxVersion")
         implementation("io.vertx:vertx-tcp-eventbus-bridge:$vertxVersion")
@@ -86,7 +88,7 @@ subprojects {
         implementation("org.bouncycastle:bcpkix-jdk15on:$bouncycastleVersion")
         implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
         implementation("commons-io:commons-io:$commonsIoVersion")
-        implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.1")
+        implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.2")
         implementation("io.dropwizard.metrics:metrics-core:4.2.19")
         implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.0")
         implementation("org.apache.commons:commons-text:1.10.0")
@@ -229,8 +231,8 @@ dockerCompose {
         startedServices.set(listOf("redis", "spp-platform"))
     }
 
-    //transfer SPP_PROBE_ env vars to containers
-    System.getenv().filterKeys { it.startsWith("SPP_PROBE_") }
+    //transfer SPP_PROBE_/SW_ env vars to containers
+    System.getenv().filterKeys { it.startsWith("SPP_PROBE_") || it.startsWith("SW_") }
         .forEach { (key, value) -> environment.put(key, value) }
 }
 tasks.getByName("composeBuild")

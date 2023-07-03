@@ -115,8 +115,4 @@ object EntityNaming {
         }
         return null
     }
-
-    fun isSameService(serviceIdOrName: String, serviceName: String): Boolean {
-        return serviceIdOrName == serviceName || serviceIdOrName == IDManager.ServiceID.buildId(serviceName, true)
-    }
 }

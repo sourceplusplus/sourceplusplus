@@ -8,6 +8,7 @@ plugins {
 
 val platformGroup: String by project
 val projectVersion: String by project
+val skywalkingVersion: String by project
 
 group = platformGroup
 version = project.properties["platformVersion"] as String? ?: projectVersion
@@ -40,6 +41,18 @@ configure<PublishingExtension> {
 dependencies {
     compileOnly(project(":platform:storage"))
     implementation(project(":platform:common"))
+    compileOnly("org.apache.skywalking:skywalking-meter-receiver-plugin:$skywalkingVersion") {
+        isTransitive = false
+    }
+    compileOnly("org.apache.skywalking:skywalking-jvm-receiver-plugin:$skywalkingVersion") {
+        isTransitive = false
+    }
+    compileOnly("org.apache.skywalking:skywalking-log-recevier-plugin:$skywalkingVersion") {
+        isTransitive = false
+    }
+    compileOnly("org.apache.skywalking:skywalking-management-receiver-plugin:$skywalkingVersion") {
+        isTransitive = false
+    }
 
     //todo: properly add test dependency
     testImplementation(project(":platform:common").dependencyProject.extensions.getByType(SourceSetContainer::class).test.get().output)

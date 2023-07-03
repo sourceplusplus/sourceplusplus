@@ -42,7 +42,7 @@ import spp.platform.common.FeedbackProcessor
 import spp.platform.storage.ExpiringSharedData
 import spp.platform.storage.SourceStorage
 import spp.processor.view.impl.LiveViewServiceImpl
-import spp.processor.view.impl.view.model.ClusterMetrics
+import spp.processor.view.model.ClusterMetrics
 import spp.protocol.platform.auth.RolePermission
 import spp.protocol.platform.developer.SelfInfo
 import spp.protocol.service.LiveManagementService

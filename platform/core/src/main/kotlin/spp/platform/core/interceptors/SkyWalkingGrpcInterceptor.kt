@@ -28,11 +28,13 @@ import spp.platform.common.util.ContextUtil
 import spp.platform.storage.SourceStorage
 import java.util.concurrent.TimeUnit
 
-class SkyWalkingGrpcInterceptor(private val vertx: Vertx, private val config: JsonObject) : ServerInterceptor {
+class SkyWalkingGrpcInterceptor(
+    private val vertx: Vertx,
+    private val config: JsonObject
+) : ServerInterceptor {
 
     companion object {
         private val log = KotlinLogging.logger {}
-
         private val AUTH_HEAD_HEADER_NAME = Metadata.Key.of("Authentication", Metadata.ASCII_STRING_MARSHALLER)
     }
 
@@ -41,6 +43,10 @@ class SkyWalkingGrpcInterceptor(private val vertx: Vertx, private val config: Js
         .expireAfterAccess(1, TimeUnit.MINUTES)
         .build<String, Boolean>()
 
+    /**
+     * Intercepts gRPC calls and checks for authentication, adds VCS data to the context, and adds the tenant ID to the
+     * context if it is present in the auth header.
+     */
     override fun <ReqT : Any?, RespT : Any?> interceptCall(
         call: ServerCall<ReqT, RespT>,
         headers: Metadata?,
@@ -49,22 +55,28 @@ class SkyWalkingGrpcInterceptor(private val vertx: Vertx, private val config: Js
         val authHeader = headers?.get(AUTH_HEAD_HEADER_NAME)
         if (authHeader != null && probeAuthCache.getIfPresent(authHeader) != null) {
             val authParts = authHeader.split(":")
-            val clientId = authParts.getOrNull(0)
-            val clientSecret = authParts.getOrNull(1)
-            val tenantId = authParts.getOrNull(2)
+            val clientId = authParts.getOrNull(0)?.takeIf { it.isNotBlank() && it != "null" }
+            val clientSecret = authParts.getOrNull(1)?.takeIf { it.isNotBlank() && it != "null" }
+            val tenantId = authParts.getOrNull(2)?.takeIf { it.isNotBlank() && it != "null" }
+            val environment = authParts.getOrNull(3)?.takeIf { it.isNotBlank() && it != "null" }
+            val commitId = authParts.getOrNull(4)?.takeIf { it.isNotBlank() && it != "null" }
 
             val context = Context.current()
                 .withValue(ContextUtil.CLIENT_ID, clientId)
                 .withValue(ContextUtil.CLIENT_ACCESS, clientSecret)
                 .withValue(ContextUtil.TENANT_ID, tenantId)
+                .withValue(ContextUtil.ENVIRONMENT, environment)
+                .withValue(ContextUtil.VERSION, commitId)
             return Contexts.interceptCall(context, call, headers, next)
         } else {
             val authEnabled = config.getJsonObject("client-access")?.getString("enabled")?.toBooleanStrictOrNull()
             if (authEnabled == true) {
                 val authParts = authHeader?.split(":") ?: emptyList()
-                val clientId = authParts.getOrNull(0)
-                val clientSecret = authParts.getOrNull(1)
-                val tenantId = authParts.getOrNull(2)
+                val clientId = authParts.getOrNull(0)?.takeIf { it.isNotBlank() && it != "null" }
+                val clientSecret = authParts.getOrNull(1)?.takeIf { it.isNotBlank() && it != "null" }
+                val tenantId = authParts.getOrNull(2)?.takeIf { it.isNotBlank() && it != "null" }
+                val environment = authParts.getOrNull(3)?.takeIf { it.isNotBlank() && it != "null" }
+                val commitId = authParts.getOrNull(4)?.takeIf { it.isNotBlank() && it != "null" }
                 if (authHeader == null || clientId == null || clientSecret == null) {
                     log.warn { "Invalid auth header: $authHeader" }
                     call.close(Status.PERMISSION_DENIED, Metadata())
@@ -90,6 +102,8 @@ class SkyWalkingGrpcInterceptor(private val vertx: Vertx, private val config: Js
                             .withValue(ContextUtil.CLIENT_ID, clientId)
                             .withValue(ContextUtil.CLIENT_ACCESS, clientSecret)
                             .withValue(ContextUtil.TENANT_ID, tenantId)
+                            .withValue(ContextUtil.ENVIRONMENT, environment)
+                            .withValue(ContextUtil.VERSION, commitId)
                         Contexts.interceptCall(context, call, headers, next)
                     }
                 }

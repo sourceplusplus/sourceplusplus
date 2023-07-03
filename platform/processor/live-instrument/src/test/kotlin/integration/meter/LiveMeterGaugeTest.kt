@@ -24,13 +24,13 @@ import io.vertx.kotlin.coroutines.await
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
-import spp.protocol.artifact.ArtifactQualifiedName
-import spp.protocol.artifact.ArtifactType
+import org.junit.jupiter.api.parallel.Isolated
 import spp.protocol.instrument.LiveMeter
 import spp.protocol.instrument.location.LiveSourceLocation
 import spp.protocol.instrument.meter.MeterType
 import spp.protocol.instrument.meter.MetricValue
 import spp.protocol.instrument.meter.MetricValueType
+import spp.protocol.platform.general.Service
 import spp.protocol.service.SourceServices.Subscribe.toLiveViewSubscription
 import spp.protocol.view.LiveView
 import spp.protocol.view.LiveViewConfig
@@ -42,6 +42,7 @@ import java.io.Serializable
 import java.util.*
 import java.util.function.Supplier
 
+@Isolated
 class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
 
     @Suppress("UNUSED_VARIABLE")
@@ -71,7 +72,7 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
             location = LiveSourceLocation(
                 LiveMeterGaugeTest::class.java.name,
                 getLineNumber("done"),
-                "spp-test-probe"
+                Service.fromName("spp-test-probe")
             ),
             id = instrumentId,
             applyImmediately = true,
@@ -95,18 +96,11 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
         val subscriptionId = viewService.addLiveView(
             LiveView(
                 entityIds = mutableSetOf(liveMeter.id!!),
-                artifactQualifiedName = ArtifactQualifiedName(
-                    LiveMeterGaugeTest::class.java.name,
-                    type = ArtifactType.EXPRESSION
-                ),
-                artifactLocation = LiveSourceLocation(
-                    LiveMeterGaugeTest::class.java.name,
-                    getLineNumber("done")
-                ),
                 viewConfig = LiveViewConfig(
                     "test",
                     listOf(liveMeter.id!!)
-                )
+                ),
+                service = Service.fromName("spp-test-probe")
             )
         ).await().subscriptionId!!
 
@@ -157,7 +151,7 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
             location = LiveSourceLocation(
                 LiveMeterGaugeTest::class.java.name,
                 getLineNumber("done"),
-                "spp-test-probe"
+                Service.fromName("spp-test-probe")
             ),
             id = testNameAsUniqueInstrumentId,
             applyImmediately = true,
@@ -181,7 +175,8 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
         val subscriptionId = viewService.addLiveView(
             LiveView(
                 entityIds = mutableSetOf(liveMeter.id!!),
-                viewConfig = LiveViewConfig("test", listOf(liveMeter.id!!))
+                viewConfig = LiveViewConfig("test", listOf(liveMeter.id!!)),
+                service = Service.fromName("spp-test-probe")
             )
         ).await().subscriptionId!!
 

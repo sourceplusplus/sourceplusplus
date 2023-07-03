@@ -23,6 +23,8 @@ import kotlinx.coroutines.launch
 import mu.KotlinLogging
 import org.apache.skywalking.oap.log.analyzer.module.LogAnalyzerModule
 import org.apache.skywalking.oap.server.analyzer.module.AnalyzerModule
+import org.apache.skywalking.oap.server.analyzer.provider.meter.process.IMeterProcessService
+import org.apache.skywalking.oap.server.analyzer.provider.meter.process.MeterProcessService
 import org.apache.skywalking.oap.server.core.CoreModule
 import org.apache.skywalking.oap.server.core.CoreModuleConfig
 import org.apache.skywalking.oap.server.core.analysis.manual.log.LogRecord
@@ -46,6 +48,7 @@ import org.joor.Reflect
 import spp.platform.common.ClusterConnection
 import spp.processor.view.ViewProcessor
 import spp.processor.view.ViewProcessor.liveViewService
+import spp.processor.view.impl.LiveMeterProcessService
 import spp.processor.view.impl.SPPRemoteClient
 import java.util.concurrent.atomic.AtomicReference
 
@@ -94,6 +97,15 @@ class LiveViewProvider : ModuleProvider() {
 
     override fun start() {
         log.info("Starting spp-live-view")
+
+        val process = manager.find(AnalyzerModule.NAME)
+            .provider()
+            .getService(IMeterProcessService::class.java) as MeterProcessService
+        val analyzerModule = manager.find(AnalyzerModule.NAME).provider()
+        analyzerModule.registerServiceImplementation(
+            IMeterProcessService::class.java,
+            LiveMeterProcessService(process, manager)
+        )
 
         val sppRemoteClient = AtomicReference<SPPRemoteClient>()
 

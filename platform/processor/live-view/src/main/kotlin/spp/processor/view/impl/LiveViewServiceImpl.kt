@@ -24,7 +24,9 @@ import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import io.vertx.kotlin.coroutines.CoroutineVerticle
 import io.vertx.kotlin.coroutines.await
+import io.vertx.kotlin.coroutines.dispatcher
 import io.vertx.serviceproxy.ServiceException
+import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import org.apache.skywalking.oap.log.analyzer.module.LogAnalyzerModule
 import org.apache.skywalking.oap.log.analyzer.provider.log.ILogAnalyzerService
@@ -59,16 +61,18 @@ import spp.processor.view.impl.view.LiveMeterView
 import spp.processor.view.impl.view.LiveTraceView
 import spp.processor.view.impl.view.util.EntitySubscribersCache
 import spp.processor.view.impl.view.util.MetricTypeSubscriptionCache
-import spp.processor.view.impl.view.util.ViewSubscriber
 import spp.processor.view.model.LiveMeterConfig
 import spp.processor.view.model.LiveMetricConvert
 import spp.processor.view.model.LiveMetricConvert.Companion.NOP_RULE
+import spp.processor.view.model.ViewSubscriber
 import spp.protocol.artifact.metrics.MetricStep
 import spp.protocol.artifact.metrics.MetricType
 import spp.protocol.artifact.trace.TraceSpan
 import spp.protocol.artifact.trace.TraceSpanRef
 import spp.protocol.artifact.trace.TraceStack
 import spp.protocol.platform.PlatformAddress.MARKER_DISCONNECTED
+import spp.protocol.platform.general.Service
+import spp.protocol.service.LiveManagementService
 import spp.protocol.service.LiveViewService
 import spp.protocol.service.SourceServices.Subscribe.toLiveViewSubscriberAddress
 import spp.protocol.service.SourceServices.Subscribe.toLiveViewSubscription
@@ -252,7 +256,6 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
                 LiveViewEvent(
                     sub.subscriptionId!!,
                     sub.entityIds.first(),
-                    sub.artifactQualifiedName,
                     firstEvent.getString("timeBucket"),
                     sub.viewConfig,
                     events.toString()
@@ -261,7 +264,6 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
                 LiveViewEvent(
                     sub.subscriptionId!!,
                     sub.entityIds.first(),
-                    sub.artifactQualifiedName,
                     event.getString("timeBucket"),
                     sub.viewConfig,
                     event.toString()
@@ -312,11 +314,11 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
 
         if (unsubbedSubscriber != null) {
             val removedView = LiveView(
-                unsubbedSubscriber!!.subscription.subscriptionId,
                 unsubbedSubscriber!!.subscription.entityIds,
-                unsubbedSubscriber!!.subscription.artifactQualifiedName,
-                unsubbedSubscriber!!.subscription.artifactLocation,
-                unsubbedSubscriber!!.subscription.viewConfig
+                unsubbedSubscriber!!.subscription.viewConfig,
+                unsubbedSubscriber!!.subscription.service,
+                unsubbedSubscriber!!.subscription.serviceInstance,
+                unsubbedSubscriber!!.subscription.subscriptionId,
             )
             log.debug { "Removed live view: {}".args(removedView) }
 
@@ -397,11 +399,11 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
         if (subbedUser != null) {
             promise.complete(
                 LiveView(
-                    subbedUser!!.subscription.subscriptionId,
                     subbedUser!!.subscription.entityIds,
-                    subbedUser!!.subscription.artifactQualifiedName,
-                    subbedUser!!.subscription.artifactLocation,
-                    subbedUser!!.subscription.viewConfig
+                    subbedUser!!.subscription.viewConfig,
+                    subbedUser!!.subscription.service,
+                    subbedUser!!.subscription.serviceInstance,
+                    subbedUser!!.subscription.subscriptionId,
                 )
             )
         } else {
@@ -520,6 +522,53 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
         duration: Duration,
         labels: List<String>
     ): JsonArray {
+        val service = try {
+            Service.fromId(entityId)
+        } catch (ignored: Exception) {
+            null
+        }
+
+        return if (service != null) {
+            val devAuth = Vertx.currentContext().getLocal<DeveloperAuth>("developer")
+            val managementService = LiveManagementService.createProxy(vertx, devAuth.accessToken)
+            val searchServices = runBlocking(vertx.dispatcher()) {
+                managementService.getActiveServices(service.name).await()
+            }
+
+            val allMetrics = mutableListOf<JsonArray>()
+            searchServices.forEach {
+                val array = searchService(metricType, it.id, labels, duration)
+                for (i in 0 until array.size()) {
+                    array.getJsonObject(i).put("service", it.toJson())
+                }
+                allMetrics.add(array)
+            }
+
+            val mergeArray = JsonArray()
+            repeat(allMetrics.first().count()) {
+                mergeArray.add(JsonObject())
+            }
+            allMetrics.forEach {
+                it.forEachIndexed { i, metrics ->
+                    val a = mergeArray.getJsonObject(i)
+                    val b = metrics as JsonObject
+                    if (a.getValue("value") == null) {
+                        a.mergeIn(b)
+                    } //todo: more accurate merging (env, metric type, etc)
+                }
+            }
+            mergeArray
+        } else {
+            searchService(metricType, entityId, labels, duration)
+        }
+    }
+
+    private fun searchService(
+        metricType: MetricType,
+        entityId: String,
+        labels: List<String>,
+        duration: Duration
+    ): JsonArray {
         val condition = MetricsCondition()
         condition.name = metricType.metricId
         condition.entity = object : Entity() {
@@ -531,13 +580,23 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
             JsonArray().apply {
                 metricsQuery.readLabeledMetricsValues(condition, labels, duration).forEach {
                     val label = it.label
-                    it.values.values.forEach { add(JsonObject().put("value", it.value).put("label", label)) }
+                    it.values.values.forEach {
+                        val valueOb = JsonObject().put("label", label)
+                        if (!it.isEmptyValue) {
+                            valueOb.put("value", it.value)
+                        }
+                        add(valueOb)
+                    }
                 }
             }
         } else {
             JsonArray().apply {
                 metricsQuery.readMetricsValues(condition, duration).values.values.forEach {
-                    add(JsonObject().put("value", it.value))
+                    val valueOb = JsonObject()
+                    if (!it.isEmptyValue) {
+                        valueOb.put("value", it.value)
+                    }
+                    add(valueOb)
                 }
             }
         }

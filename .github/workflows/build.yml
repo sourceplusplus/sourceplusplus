@@ -46,7 +46,7 @@ jobs:
           submodules: 'recursive'
 
       - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2.5.0
+        uses: gradle/gradle-build-action@v2.5.1
         with:
           gradle-home-cache-cleanup: true
           gradle-home-cache-excludes: |
@@ -84,14 +84,18 @@ jobs:
           java-version: '17'
 
       - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2.5.0
+        uses: gradle/gradle-build-action@v2.5.1
         with:
           gradle-home-cache-cleanup: true
           gradle-home-cache-excludes: |
             caches/modules-2/files-2.1/com.jetbrains.intellij.idea
 
+      - name: Set env
+        run: |
+          echo "SPP_APPLICATION_ENVIRONMENT=ci" >> $GITHUB_ENV
+          echo "SPP_APPLICATION_VERSION=${GITHUB_SHA}" >> $GITHUB_ENV
+
       - name: Start spp-platform
-        id: start_platform
         run: ./gradlew :platform:assembleUp
 
       - name: Docker IPs
@@ -131,18 +135,18 @@ jobs:
           path: skywalking-api.log
 
       - name: Make docker logs artifact
-        if: ${{ !cancelled() && steps.start_platform.outcome == 'success' }}
+        if: ${{ !cancelled() }}
         run: ./gradlew :platform:composeLogs
 
       - name: Upload docker logs artifact
-        if: ${{ !cancelled() && steps.start_platform.outcome == 'success' }}
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v3
         with:
           name: ${{ env.TEST_MODULE }}-docker.log
           path: platform/build/containers-logs/spp-platform.log
 
       - name: Upload test-live-instrument.log artifact
-        if: ${{ always() && matrix.test_module == 'processor:live-instrument' }}
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v3
         with:
           name: test-live-instrument.log
@@ -170,14 +174,18 @@ jobs:
           java-version: '17'
 
       - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2.5.0
+        uses: gradle/gradle-build-action@v2.5.1
         with:
           gradle-home-cache-cleanup: true
           gradle-home-cache-excludes: |
             caches/modules-2/files-2.1/com.jetbrains.intellij.idea
 
+      - name: Set env
+        run: |
+          echo "SPP_APPLICATION_ENVIRONMENT=ci" >> $GITHUB_ENV
+          echo "SPP_APPLICATION_VERSION=${GITHUB_SHA}" >> $GITHUB_ENV
+
       - name: Start spp-platform
-        id: start_platform
         run: ./gradlew :platform:assembleUp
 
       - name: Docker IPs
@@ -236,7 +244,7 @@ jobs:
           java-version: '17'
 
       - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2.5.0
+        uses: gradle/gradle-build-action@v2.5.1
         with:
           gradle-home-cache-cleanup: true
           gradle-home-cache-excludes: |
@@ -252,8 +260,12 @@ jobs:
           echo "    environment:" >> docker-compose.override.yml
           echo "      - SPP_CLIENT_ACCESS_ENABLED=false" >> docker-compose.override.yml
 
+      - name: Set env
+        run: |
+          echo "SPP_APPLICATION_ENVIRONMENT=ci" >> $GITHUB_ENV
+          echo "SPP_APPLICATION_VERSION=${GITHUB_SHA}" >> $GITHUB_ENV
+
       - name: Start spp-platform
-        id: start_platform
         run: ./gradlew :platform:assembleUp
 
       - name: Docker IPs
@@ -283,11 +295,11 @@ jobs:
         run: ./gradlew --scan :probes:nodejs:test
 
       - name: Make docker logs artifact
-        if: ${{ !cancelled() && steps.start_platform.outcome == 'success' }}
+        if: ${{ !cancelled() }}
         run: ./gradlew :platform:composeLogs
 
       - name: Upload docker logs artifact
-        if: ${{ !cancelled() && steps.start_platform.outcome == 'success' }}
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v3
         with:
           name: test-probe-nodejs-platform-logs
@@ -308,14 +320,18 @@ jobs:
           java-version: '17'
 
       - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2.5.0
+        uses: gradle/gradle-build-action@v2.5.1
         with:
           gradle-home-cache-cleanup: true
           gradle-home-cache-excludes: |
             caches/modules-2/files-2.1/com.jetbrains.intellij.idea
 
+      - name: Set env
+        run: |
+          echo "SPP_APPLICATION_ENVIRONMENT=ci" >> $GITHUB_ENV
+          echo "SPP_APPLICATION_VERSION=${GITHUB_SHA}" >> $GITHUB_ENV
+
       - name: Start spp-platform
-        id: start_platform
         run: ./gradlew :platform:assembleUp
 
       - name: Docker IPs
@@ -341,11 +357,11 @@ jobs:
             :interfaces:cli:test
 
       - name: Make docker logs artifact
-        if: ${{ !cancelled() && steps.start_platform.outcome == 'success' }}
+        if: ${{ !cancelled() }}
         run: ./gradlew :platform:composeLogs
 
       - name: Upload docker logs artifact
-        if: ${{ !cancelled() && steps.start_platform.outcome == 'success' }}
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v3
         with:
           name: test-interface-cli-platform-logs
@@ -366,7 +382,7 @@ jobs:
           java-version: '17'
 
       - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2.5.0
+        uses: gradle/gradle-build-action@v2.5.1
         with:
           gradle-home-cache-cleanup: true
           gradle-home-cache-excludes: |
@@ -401,7 +417,7 @@ jobs:
           submodules: 'true'
 
       - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2.5.0
+        uses: gradle/gradle-build-action@v2.5.1
         with:
           gradle-home-cache-cleanup: true
           gradle-home-cache-excludes: |
@@ -455,7 +471,7 @@ jobs:
           echo "BUILD_VERSION=$SPP_RELEASE_VERSION" >> $GITHUB_ENV
 
       - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2.5.0
+        uses: gradle/gradle-build-action@v2.5.1
         with:
           gradle-home-cache-cleanup: true
           gradle-home-cache-excludes: |
