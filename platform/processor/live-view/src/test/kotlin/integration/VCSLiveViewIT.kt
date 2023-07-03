@@ -22,11 +22,11 @@ import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import org.apache.skywalking.apm.agent.core.conf.Config.Agent
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.parallel.Isolated
-import spp.probe.ProbeConfiguration
 import spp.protocol.artifact.metrics.MetricType
 import spp.protocol.platform.general.Service
 import spp.protocol.service.SourceServices.Subscribe.toLiveViewSubscription
@@ -50,15 +50,9 @@ class VCSLiveViewIT : PlatformIntegrationTest() {
             )
         ).await().subscriptionId!!
 
-        val probeId = ProbeConfiguration.PROBE_ID
-        managementService.updateActiveProbeMetadata(
-            probeId,
-            JsonObject().put(
-                "application",
-                JsonObject().put("version", "test1")
-            )
-        ).await()
+        Agent.AUTHENTICATION = Agent.AUTHENTICATION.substringBeforeLast(":") + ":test1"
         delay(2000)
+
         var testContext = VertxTestContext()
         verifyHit(
             testContext,
@@ -69,14 +63,9 @@ class VCSLiveViewIT : PlatformIntegrationTest() {
             throw testContext.causeOfFailure()
         }
 
-        managementService.updateActiveProbeMetadata(
-            probeId,
-            JsonObject().put(
-                "application",
-                JsonObject().put("version", "test2")
-            )
-        ).await()
+        Agent.AUTHENTICATION = Agent.AUTHENTICATION.substringBeforeLast(":") + ":test2"
         delay(2000)
+
         testContext = VertxTestContext()
         verifyHit(
             testContext,
@@ -105,15 +94,9 @@ class VCSLiveViewIT : PlatformIntegrationTest() {
             )
         ).await().subscriptionId!!
 
-        val probeId = ProbeConfiguration.PROBE_ID
-        managementService.updateActiveProbeMetadata(
-            probeId,
-            JsonObject().put(
-                "application",
-                JsonObject().put("version", "test1")
-            )
-        ).await()
+        Agent.AUTHENTICATION = Agent.AUTHENTICATION.substringBeforeLast(":") + ":test1"
         delay(2000)
+
         var testContext = VertxTestContext()
         verifyHit(
             testContext,
@@ -124,14 +107,9 @@ class VCSLiveViewIT : PlatformIntegrationTest() {
             throw testContext.causeOfFailure()
         }
 
-        managementService.updateActiveProbeMetadata(
-            probeId,
-            JsonObject().put(
-                "application",
-                JsonObject().put("version", "test2")
-            )
-        ).await()
+        Agent.AUTHENTICATION = Agent.AUTHENTICATION.substringBeforeLast(":") + ":test2"
         delay(2000)
+
         testContext = VertxTestContext()
         verifyHit(
             testContext,

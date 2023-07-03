@@ -6,6 +6,7 @@ plugins {
 val platformGroup: String by project
 val projectVersion: String by project
 val skywalkingVersion: String by project
+val skywalkingAgentVersion: String by project
 
 group = platformGroup
 version = project.properties["platformVersion"] as String? ?: projectVersion
@@ -48,6 +49,12 @@ dependencies {
         isTransitive = false
     }
     compileOnly("org.apache.skywalking:skywalking-management-receiver-plugin:$skywalkingVersion") {
+        isTransitive = false
+    }
+    compileOnly("org.apache.skywalking:skywalking-trace-receiver-plugin:$skywalkingVersion") {
+        isTransitive = false
+    }
+    testCompileOnly("org.apache.skywalking:apm-agent-core:$skywalkingAgentVersion") {
         isTransitive = false
     }
 
