@@ -17,16 +17,15 @@
  */
 package integration
 
-import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import org.apache.skywalking.apm.agent.core.conf.Config.Agent
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.parallel.Isolated
-import spp.probe.ProbeConfiguration
 import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.location.LiveSourceLocation
 import spp.protocol.platform.general.Service
@@ -48,14 +47,7 @@ class VCSLiveInstrumentIT : LiveInstrumentIntegrationTest() {
             doTest()
         }
 
-        val probeId = ProbeConfiguration.PROBE_ID
-        managementService.updateActiveProbeMetadata(
-            probeId,
-            JsonObject().put(
-                "application",
-                JsonObject().put("version", "test1")
-            )
-        ).await()
+        Agent.AUTHENTICATION = Agent.AUTHENTICATION.substringBeforeLast(":") + ":test1"
         delay(2000)
 
         val hitCount = AtomicInteger()
@@ -106,13 +98,8 @@ class VCSLiveInstrumentIT : LiveInstrumentIntegrationTest() {
         errorOnTimeout(testContext)
         testContext = VertxTestContext()
 
-        managementService.updateActiveProbeMetadata(
-            probeId,
-            JsonObject().put(
-                "application",
-                JsonObject().put("version", "test2")
-            )
-        ).await()
+
+        Agent.AUTHENTICATION = Agent.AUTHENTICATION.substringBeforeLast(":") + ":test2"
         delay(2000)
 
         doTest()
