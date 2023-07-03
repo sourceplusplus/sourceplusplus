@@ -111,11 +111,11 @@ class VCSHistoricalViewIT : LiveInstrumentIntegrationTest() {
         ).await()
         assertTrue(historicalView.data.map { it as JsonObject }.any {
             val service = Service(it.getJsonObject("service"))
-            it.getString("value") == "2" && service.commitId == "test"
+            it.getString("value") == "2" && service.version == "test"
         })
         assertTrue(historicalView.data.map { it as JsonObject }.any {
             val service = Service(it.getJsonObject("service"))
-            it.getString("value") == "2" && service.commitId == "test1"
+            it.getString("value") == "2" && service.version == "test1"
         })
 
         //clean up

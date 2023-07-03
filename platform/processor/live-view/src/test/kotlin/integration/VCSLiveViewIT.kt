@@ -46,7 +46,7 @@ class VCSLiveViewIT : PlatformIntegrationTest() {
                     "test",
                     listOf(MetricType.INSTANCE_JVM_CPU.asRealtime().metricId)
                 ),
-                service = Service.fromName("spp-test-probe").withCommitId("test1"),
+                service = Service.fromName("spp-test-probe").withVersion("test1"),
             )
         ).await().subscriptionId!!
 
@@ -63,7 +63,7 @@ class VCSLiveViewIT : PlatformIntegrationTest() {
         verifyHit(
             testContext,
             subscriptionId,
-            Service.fromName("spp-test-probe").withCommitId("test1").id
+            Service.fromName("spp-test-probe").withVersion("test1").id
         )
         if (testContext.failed()) {
             throw testContext.causeOfFailure()
@@ -81,7 +81,7 @@ class VCSLiveViewIT : PlatformIntegrationTest() {
         verifyHit(
             testContext,
             subscriptionId,
-            Service.fromName("spp-test-probe").withCommitId("test2").id,
+            Service.fromName("spp-test-probe").withVersion("test2").id,
             false
         )
         if (testContext.failed()) {
@@ -118,7 +118,7 @@ class VCSLiveViewIT : PlatformIntegrationTest() {
         verifyHit(
             testContext,
             subscriptionId,
-            Service.fromName("spp-test-probe").withCommitId("test1").id
+            Service.fromName("spp-test-probe").withVersion("test1").id
         )
         if (testContext.failed()) {
             throw testContext.causeOfFailure()
@@ -136,7 +136,7 @@ class VCSLiveViewIT : PlatformIntegrationTest() {
         verifyHit(
             testContext,
             subscriptionId,
-            Service.fromName("spp-test-probe").withCommitId("test2").id
+            Service.fromName("spp-test-probe").withVersion("test2").id
         )
         if (testContext.failed()) {
             throw testContext.causeOfFailure()
