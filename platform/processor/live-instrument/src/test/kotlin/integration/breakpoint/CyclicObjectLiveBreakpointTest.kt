@@ -27,6 +27,7 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.location.LiveSourceLocation
+import spp.protocol.platform.general.Service
 import spp.protocol.service.listen.addBreakpointHitListener
 
 class CyclicObjectLiveBreakpointTest : LiveInstrumentIntegrationTest() {
@@ -98,7 +99,7 @@ class CyclicObjectLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                 location = LiveSourceLocation(
                     CyclicObjectLiveBreakpointTest::class.java.name,
                     getLineNumber("done"),
-                    "spp-test-probe"
+                    Service.fromName("spp-test-probe")
                 ),
                 applyImmediately = true,
                 id = testNameAsInstrumentId

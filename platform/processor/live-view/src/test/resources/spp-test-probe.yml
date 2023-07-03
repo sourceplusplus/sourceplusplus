@@ -4,6 +4,7 @@ spp:
     client_secret: "test-secret"
   platform_host: "localhost"
   platform_port: 12800
+
 skywalking:
   logging:
     level: "DEBUG"
@@ -11,4 +12,4 @@ skywalking:
   agent:
     service_name: "spp-test-probe"
   meter:
-    report_interval: 10
+    report_interval: 5

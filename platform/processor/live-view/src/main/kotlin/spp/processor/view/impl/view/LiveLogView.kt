@@ -29,12 +29,12 @@ import org.apache.skywalking.oap.log.analyzer.provider.log.listener.LogAnalysisL
 import org.apache.skywalking.oap.server.core.analysis.Layer
 import spp.platform.common.ClusterConnection
 import spp.processor.view.ViewProcessor
-import spp.processor.view.impl.view.model.LiveGaugeValueMetrics
-import spp.processor.view.impl.view.util.EntityNaming.isSameService
 import spp.processor.view.impl.view.util.MetricTypeSubscriptionCache
-import spp.processor.view.impl.view.util.ViewSubscriber
+import spp.processor.view.model.LiveGaugeValueMetrics
+import spp.processor.view.model.ViewSubscriber
 import spp.protocol.artifact.log.Log
 import spp.protocol.instrument.location.LiveSourceLocation
+import spp.protocol.platform.general.Service
 import java.time.Instant
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatterBuilder
@@ -73,35 +73,27 @@ class LiveLogView(private val subscriptionCache: MetricTypeSubscriptionCache) : 
                 return this
             }
 
-            var subbedArtifacts = subscriptionCache["endpoint_logs"]
-            if (subbedArtifacts != null) {
+            val subbedArtifacts = subscriptionCache["endpoint_logs"].orEmpty() +
+                    subscriptionCache["service_logs"].orEmpty()
+            if (subbedArtifacts.isNotEmpty()) {
                 val logPattern = logData.body.text.text
-                var subs = subbedArtifacts[logPattern].orEmpty() + subbedArtifacts["*"].orEmpty()
+                var subs = (subbedArtifacts[logPattern].orEmpty() + subbedArtifacts["*"].orEmpty()).toMutableSet()
+
+                val service = Service.fromName(logData.service)
+                subs += subbedArtifacts[service.name].orEmpty()
+                subs += subbedArtifacts[service.id].orEmpty()
+                subs += subbedArtifacts[Service.fromName(service.name).id].orEmpty()
 
                 //remove subscribers with additional filters
                 subs = subs.filter {
-                    val service = it.subscription.artifactLocation?.service
-                    if (service != null && !isSameService(service, logData.service)) {
-                        return@filter false
-                    }
+                    if (it.subscription.serviceInstance?.let {
+                            it != logData.serviceInstance
+                        } == true) return@filter false
+                    if (it.subscription.service?.let {
+                            !it.isSameLocation(it.withName(logData.service))
+                        } == true) return@filter false
                     return@filter true
-                }.toSet()
-
-                subs.forEach { sentToSub(it, logData) }
-            }
-
-            subbedArtifacts = subscriptionCache["service_logs"]
-            if (subbedArtifacts != null) {
-                var subs = subbedArtifacts[logData.service].orEmpty() + subbedArtifacts["*"].orEmpty()
-
-                //remove subscribers with additional filters
-                subs = subs.filter {
-                    val service = it.subscription.artifactLocation?.service
-                    if (service != null && !isSameService(service, logData.service)) {
-                        return@filter false
-                    }
-                    return@filter true
-                }.toSet()
+                }.toMutableSet()
 
                 subs.forEach { sentToSub(it, logData) }
             }
@@ -121,7 +113,7 @@ class LiveLogView(private val subscriptionCache: MetricTypeSubscriptionCache) : 
             LiveSourceLocation(
                 logSource,
                 logLineNumber ?: -1,
-                service = logData.service,
+                service = Service.fromName(logData.service),
                 serviceInstance = logData.serviceInstance
             )
         } else null
@@ -140,7 +132,6 @@ class LiveLogView(private val subscriptionCache: MetricTypeSubscriptionCache) : 
         val event = JsonObject()
             .put("type", "LOGS")
             .put("multiMetrics", false)
-            .put("artifactQualifiedName", JsonObject.mapFrom(sub.subscription.artifactQualifiedName))
             .put("entityId", logPattern)
             .put("timeBucket", formatter.format(logRecord.timestamp))
             .put("log", JsonObject.mapFrom(logRecord))

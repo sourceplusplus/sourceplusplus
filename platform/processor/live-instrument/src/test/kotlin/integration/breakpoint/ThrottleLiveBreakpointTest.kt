@@ -28,6 +28,7 @@ import spp.protocol.instrument.LiveBreakpoint
 import spp.protocol.instrument.location.LiveSourceLocation
 import spp.protocol.instrument.throttle.InstrumentThrottle
 import spp.protocol.instrument.throttle.ThrottleStep
+import spp.protocol.platform.general.Service
 import spp.protocol.service.listen.addBreakpointHitListener
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -73,7 +74,7 @@ class ThrottleLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                 location = LiveSourceLocation(
                     ThrottleLiveBreakpointTest::class.java.name,
                     getLineNumber("throttle1"),
-                    "spp-test-probe"
+                    Service.fromName("spp-test-probe")
                 ),
                 hitLimit = -1,
                 applyImmediately = true,
@@ -119,7 +120,7 @@ class ThrottleLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                 location = LiveSourceLocation(
                     ThrottleLiveBreakpointTest::class.java.name,
                     getLineNumber("throttle2"),
-                    "spp-test-probe"
+                    Service.fromName("spp-test-probe")
                 ),
                 hitLimit = -1,
                 throttle = InstrumentThrottle(2, ThrottleStep.SECOND),
@@ -165,7 +166,7 @@ class ThrottleLiveBreakpointTest : LiveInstrumentIntegrationTest() {
                 location = LiveSourceLocation(
                     ThrottleLiveBreakpointTest::class.java.name,
                     getLineNumber("throttle3"),
-                    "spp-test-probe"
+                    Service.fromName("spp-test-probe")
                 ),
                 hitLimit = -1,
                 throttle = InstrumentThrottle.NONE,

@@ -30,10 +30,14 @@ import spp.platform.common.util.args
 import spp.platform.storage.SourceStorage
 import spp.processor.view.ViewProcessor
 import spp.processor.view.ViewProcessor.realtimeMetricCache
-import spp.processor.view.impl.view.util.*
-import spp.processor.view.impl.view.util.EntityNaming.isSameService
+import spp.processor.view.impl.view.util.EntityNaming
+import spp.processor.view.impl.view.util.InternalRealtimeViewSubscriber
+import spp.processor.view.impl.view.util.InternalViewSubscriber
+import spp.processor.view.impl.view.util.MetricTypeSubscriptionCache
 import spp.processor.view.model.LiveMetricConvert
+import spp.processor.view.model.ViewSubscriber
 import spp.protocol.instrument.event.LiveMeterHit
+import spp.protocol.platform.general.Service
 import java.time.Instant
 import java.util.concurrent.CopyOnWriteArrayList
 
@@ -101,21 +105,28 @@ class LiveMeterView(private val subscriptionCache: MetricTypeSubscriptionCache) 
 
         val subbedArtifacts = subscriptionCache[metricName]
         if (subbedArtifacts != null) {
-            var subs = subbedArtifacts[entityName].orEmpty() +
-                    subbedArtifacts[metadata.id].orEmpty() + subbedArtifacts[metricName].orEmpty()
+            var subs = (subbedArtifacts[entityName].orEmpty() +
+                    subbedArtifacts[metadata.id].orEmpty() + subbedArtifacts[metricName].orEmpty()).toMutableSet()
+
+            //todo: more robust service check
+            if (metadata.metricsName.startsWith("service_")) {
+                //entityName = service
+                val service = Service.fromName(entityName)
+                subs += subbedArtifacts[service.name].orEmpty()
+                subs += subbedArtifacts[service.id].orEmpty()
+                subs += subbedArtifacts[Service.fromName(service.name).id].orEmpty()
+            }
 
             //remove subscribers with additional filters
             subs = subs.filter {
-                val service = it.subscription.artifactLocation?.service
-                if (service != null && metricService != null && !isSameService(metricService, service)) {
-                    return@filter false
-                }
-                val serviceInstance = it.subscription.artifactLocation?.serviceInstance
-                if (serviceInstance != null && serviceInstance != metricServiceInstance) {
-                    return@filter false
-                }
+                if (it.subscription.serviceInstance?.let {
+                        it != metricServiceInstance
+                    } == true) return@filter false
+                if (it.subscription.service?.let {
+                        !it.isSameLocation(it.withId(metricService))
+                    } == true) return@filter false
                 return@filter true
-            }.toSet()
+            }.toMutableSet()
 
             if (subs.isNotEmpty()) {
                 log.trace { "Exporting event $metricName to {} subscribers".args(subs.size) }
@@ -193,10 +204,6 @@ class LiveMeterView(private val subscriptionCache: MetricTypeSubscriptionCache) 
                 val multiMetrics = JsonArray()
                 waitingEventsForBucket.forEach {
                     val metricsOb = JsonObject.mapFrom(it)
-                        .put(
-                            "artifactQualifiedName",
-                            JsonObject.mapFrom(sub.subscription.artifactQualifiedName)
-                        )
                         .put("entityName", EntityNaming.getEntityName((metrics as WithMetadata).meta))
                     log.trace { "Sending multi-metrics $metricsOb to ${sub.subscriberId}" }
 

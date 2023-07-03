@@ -51,7 +51,7 @@ class ServiceProvider(
 
     private lateinit var discovery: ServiceDiscovery
     private lateinit var managementServiceRecord: Record
-    private lateinit var managementService: LiveManagementService
+    lateinit var managementService: LiveManagementService
 
     override suspend fun start() {
         try {
@@ -153,7 +153,7 @@ class ServiceProvider(
         return promise.future()
     }
 
-    @Suppress("MaxLineLength") //todo: clean up (#892/#930)
+    @Suppress("MaxLineLength", "CyclomaticComplexMethod") //todo: clean up (#892/#930)
     private fun validateRolePermission(
         selfInfo: SelfInfo,
         msg: Message<JsonObject>,

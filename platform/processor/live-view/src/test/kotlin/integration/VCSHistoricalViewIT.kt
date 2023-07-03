@@ -15,73 +15,65 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package integration.meter
+package integration
 
-import integration.LiveInstrumentIntegrationTest
 import io.vertx.core.json.JsonObject
-import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Assumptions.assumeTrue
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.parallel.Isolated
+import spp.probe.ProbeConfiguration
+import spp.protocol.artifact.metrics.MetricStep
 import spp.protocol.instrument.LiveMeter
 import spp.protocol.instrument.location.LiveSourceLocation
 import spp.protocol.instrument.meter.MeterType
 import spp.protocol.instrument.meter.MetricValue
 import spp.protocol.instrument.meter.MetricValueType
 import spp.protocol.platform.general.Service
-import spp.protocol.service.SourceServices.Subscribe.toLiveViewSubscription
 import spp.protocol.view.LiveView
 import spp.protocol.view.LiveViewConfig
-import spp.protocol.view.LiveViewEvent
 import spp.protocol.view.rule.ViewRule
+import java.time.Instant
+import java.time.temporal.ChronoUnit
 
 @Isolated
-class LiveMeterRateTest : LiveInstrumentIntegrationTest() {
+class VCSHistoricalViewIT : LiveInstrumentIntegrationTest() {
 
-    private fun triggerRate() {
+    private fun doTest() {
         addLineLabel("done") { Throwable().stackTrace[0].lineNumber }
     }
 
-    @BeforeEach
-    fun reset(): Unit = runBlocking {
-        viewService.clearLiveViews().await()
-    }
-
     @Test
-    fun `60 calls per minute rate`(): Unit = runBlocking {
+    fun `vcs historical view`(): Unit = runBlocking {
         assumeTrue("true" == System.getProperty("test.includeSlow"))
         setupLineLabels {
-            triggerRate()
+            doTest()
         }
 
         val liveMeter = LiveMeter(
-            MeterType.COUNT,
-            MetricValue(MetricValueType.NUMBER, "1"),
+            MeterType.GAUGE,
+            MetricValue(MetricValueType.NUMBER, "2"),
             location = LiveSourceLocation(
-                LiveMeterRateTest::class.java.name,
+                VCSHistoricalViewIT::class.java.name,
                 getLineNumber("done"),
                 Service.fromName("spp-test-probe")
             ),
             id = testNameAsUniqueInstrumentId,
-            meta = mapOf("metric.mode" to "RATE"),
             applyImmediately = true
         )
 
-        viewService.saveRuleIfAbsent(
+        val rule = viewService.saveRule(
             ViewRule(
                 name = liveMeter.id!!,
                 exp = buildString {
                     append("(")
-                    append(liveMeter.id!!)
-                    append(".sum(['service', 'instance'])")
-                    append(".downsampling(SUM)")
-                    append(")")
-                    append(".instance(['service'], ['instance'], Layer.GENERAL)")
+                    append(liveMeter.id)
+                    append(".downsampling(LATEST)")
+                    append(").service(['service'], Layer.GENERAL)")
                 },
                 meterIds = listOf(liveMeter.id!!)
             )
@@ -90,54 +82,45 @@ class LiveMeterRateTest : LiveInstrumentIntegrationTest() {
         val subscriptionId = viewService.addLiveView(
             LiveView(
                 entityIds = mutableSetOf(liveMeter.id!!),
-                viewConfig = LiveViewConfig(
-                    "test",
-                    listOf(liveMeter.id!!)
-                ),
+                viewConfig = LiveViewConfig("test", listOf(liveMeter.id!!)),
                 service = Service.fromName("spp-test-probe")
             )
         ).await().subscriptionId!!
 
-        val testContext = VertxTestContext()
-        var rate = 0
-        val consumer = vertx.eventBus().consumer<JsonObject>(toLiveViewSubscription(subscriptionId))
-        consumer.handler {
-            val liveViewEvent = LiveViewEvent(it.body())
-            val rawMetrics = JsonObject(liveViewEvent.metricsData)
-            log.info("Received metrics: {}", rawMetrics)
-
-            testContext.verify {
-                val meta = rawMetrics.getJsonObject("meta")
-                assertEquals(liveMeter.id!!, meta.getString("metricsName"))
-
-                rate = rawMetrics.getInteger("value")
-                if (rate >= 50) { //allow for some variance (GH actions are sporadic)
-                    testContext.completeNow()
-                }
-            }
-        }
-
         instrumentService.addLiveInstrument(liveMeter).await()
+        doTest()
+        delay(75_000)
 
-        vertx.executeBlocking<Void> {
-            runBlocking {
-                //trigger live meter 100 times once per second
-                repeat((0 until 100).count()) {
-                    triggerRate()
-                    delay(1000)
-                    if (testContext.completed()) return@runBlocking
-                }
-            }
-            it.complete()
-        }
+        //update commit id
+        val probeId = ProbeConfiguration.PROBE_ID
+        managementService.updateActiveProbeMetadata(
+            probeId,
+            JsonObject().put(
+                "application",
+                JsonObject().put("version", "test1")
+            )
+        ).await()
+        delay(75_000)
 
-        errorOnTimeout(testContext, 150)
+        val stop = Instant.now().truncatedTo(ChronoUnit.MINUTES)
+        val start = stop.minusSeconds(5 * 60L)
+        val historicalView = viewService.getHistoricalMetrics(
+            listOf(Service.fromName("spp-test-probe").id),
+            listOf(liveMeter.id!!),
+            MetricStep.MINUTE, start, stop
+        ).await()
+        assertTrue(historicalView.data.map { it as JsonObject }.any {
+            val service = Service(it.getJsonObject("service"))
+            it.getString("value") == "2" && service.version == "test"
+        })
+        assertTrue(historicalView.data.map { it as JsonObject }.any {
+            val service = Service(it.getJsonObject("service"))
+            it.getString("value") == "2" && service.version == "test1"
+        })
 
         //clean up
-        consumer.unregister()
         assertNotNull(instrumentService.removeLiveInstrument(liveMeter.id!!).await())
         assertNotNull(viewService.removeLiveView(subscriptionId).await())
-
-        assertTrue(rate >= 50, rate.toString()) //allow for some variance (GH actions are sporadic)
+        assertNotNull(viewService.deleteRule(rule.name).await())
     }
 }

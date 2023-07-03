@@ -25,9 +25,11 @@ import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.parallel.Isolated
 import spp.protocol.instrument.LiveMeter
 import spp.protocol.instrument.location.LiveSourceLocation
 import spp.protocol.instrument.meter.*
+import spp.protocol.platform.general.Service
 import spp.protocol.service.SourceServices.Subscribe.toLiveViewSubscription
 import spp.protocol.view.LiveView
 import spp.protocol.view.LiveViewConfig
@@ -35,6 +37,7 @@ import spp.protocol.view.LiveViewEvent
 import spp.protocol.view.rule.RulePartition
 import spp.protocol.view.rule.ViewRule
 
+@Isolated
 class LiveMeterPartitionTest : LiveInstrumentIntegrationTest() {
 
     @Suppress("UNUSED_VARIABLE")
@@ -62,7 +65,7 @@ class LiveMeterPartitionTest : LiveInstrumentIntegrationTest() {
             location = LiveSourceLocation(
                 LiveMeterPartitionTest::class.java.name,
                 getLineNumber("done"),
-                "spp-test-probe"
+                Service.fromName("spp-test-probe")
             ),
             id = testNameAsUniqueInstrumentId,
             applyImmediately = true
@@ -88,7 +91,8 @@ class LiveMeterPartitionTest : LiveInstrumentIntegrationTest() {
                 viewConfig = LiveViewConfig(
                     "test",
                     listOf("${liveMeter.id}_true", "${liveMeter.id}_false")
-                )
+                ),
+                service = Service.fromName("spp-test-probe")
             )
         ).await().subscriptionId!!
 

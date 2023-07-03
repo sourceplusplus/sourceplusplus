@@ -32,6 +32,7 @@ import spp.protocol.instrument.location.LiveSourceLocation
 import spp.protocol.instrument.meter.MeterType
 import spp.protocol.instrument.meter.MetricValue
 import spp.protocol.instrument.meter.MetricValueType
+import spp.protocol.platform.general.Service
 import spp.protocol.service.SourceServices.Subscribe.toLiveViewSubscriberAddress
 import spp.protocol.service.SourceServices.Subscribe.toLiveViewSubscription
 import spp.protocol.view.LiveView
@@ -66,7 +67,7 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
             location = LiveSourceLocation(
                 LiveMeterCountTest::class.java.name,
                 getLineNumber("count1"),
-                "spp-test-probe"
+                Service.fromName("spp-test-probe")
             ),
             id = testNameAsUniqueInstrumentId,
             applyImmediately = true
@@ -77,6 +78,7 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
             LiveView(
                 entityIds = mutableSetOf(liveMeter.id!!),
                 viewConfig = LiveViewConfig("test", listOf(liveMeter.id!!)),
+                service = Service.fromName("spp-test-probe")
             )
         ).await().subscriptionId!!
 
@@ -130,7 +132,7 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
             location = LiveSourceLocation(
                 LiveMeterCountTest::class.java.name,
                 getLineNumber("count2"),
-                "spp-test-probe"
+                Service.fromName("spp-test-probe")
             ),
             id = testNameAsUniqueInstrumentId,
             applyImmediately = true
@@ -140,7 +142,8 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
         val subscriptionId = viewService.addLiveView(
             LiveView(
                 entityIds = mutableSetOf(liveMeter.id!!),
-                viewConfig = LiveViewConfig("test", listOf(liveMeter.id!!))
+                viewConfig = LiveViewConfig("test", listOf(liveMeter.id!!)),
+                service = Service.fromName("spp-test-probe")
             )
         ).await().subscriptionId!!
 
@@ -194,7 +197,7 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
             location = LiveSourceLocation(
                 LiveMeterCountTest::class.java.name,
                 getLineNumber("count3"),
-                "spp-test-probe"
+                Service.fromName("spp-test-probe")
             ),
             id = testNameAsUniqueInstrumentId,
             applyImmediately = true
@@ -204,7 +207,8 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
         val subscriptionId1 = viewService.addLiveView(
             LiveView(
                 entityIds = mutableSetOf(liveMeter1.id!!),
-                viewConfig = LiveViewConfig("test", listOf(liveMeter1.id!!))
+                viewConfig = LiveViewConfig("test", listOf(liveMeter1.id!!)),
+                service = Service.fromName("spp-test-probe")
             )
         ).await().subscriptionId!!
 
@@ -214,7 +218,7 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
             location = LiveSourceLocation(
                 LiveMeterCountTest::class.java.name,
                 getLineNumber("count3"),
-                "spp-test-probe"
+                Service.fromName("spp-test-probe")
             ),
             id = testNameAsUniqueInstrumentId,
             meta = mapOf("metric.mode" to "RATE"),
@@ -225,7 +229,8 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
         val subscriptionId2 = viewService.addLiveView(
             LiveView(
                 entityIds = mutableSetOf(liveMeter2.id!!),
-                viewConfig = LiveViewConfig("test", listOf(liveMeter2.id!!))
+                viewConfig = LiveViewConfig("test", listOf(liveMeter2.id!!)),
+                service = Service.fromName("spp-test-probe")
             )
         ).await().subscriptionId!!
 

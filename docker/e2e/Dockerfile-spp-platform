@@ -20,8 +20,23 @@ RUN printf "\nspp-live-instrument:\n  selector: \${SPP_LIVE_INSTRUMENT:default}\
 RUN printf "\nexporter:\n  selector: \${SPP_LIVE_VIEW:default}\n  default:\n" \
     >> /skywalking/config/application.yml
 
-# replace default receiver-meter with spp-live-meter-receiver
-RUN sed -i -z 's/receiver-meter:\n  selector: \${SW_RECEIVER_METER:default}\n  default:/receiver-meter:\n  selector: \${SW_RECEIVER_METER:spp-live-meter-receiver}\n  spp-live-meter-receiver:/' /skywalking/config/application.yml
+# replace default receiver-meter with spp-receiver-meter
+RUN sed -i -z 's/receiver-meter:\n  selector: \${SW_RECEIVER_METER:default\}\n  default:/receiver-meter:\n  selector: \${SW_RECEIVER_METER:spp-receiver-meter}\n  spp-receiver-meter:/' /skywalking/config/application.yml
+
+# replace default receiver-trace with spp-receiver-trace
+RUN sed -i -z 's/receiver-trace:\n  selector: \${SW_RECEIVER_TRACE:default\}\n  default:/receiver-trace:\n  selector: \${SW_RECEIVER_TRACE:spp-receiver-trace}\n  spp-receiver-trace:/' /skywalking/config/application.yml
+
+# replace default event-analyzer with spp-event-analyzer
+RUN sed -i -z 's/event-analyzer:\n  selector: \${SW_EVENT_ANALYZER:default}\n  default:/event-analyzer:\n  selector: \${SW_EVENT_ANALYZER:spp-event-analyzer}\n  spp-event-analyzer:/' /skywalking/config/application.yml
+
+# replace default receiver-jvm with spp-receiver-jvm
+RUN sed -i -z 's/receiver-jvm:\n  selector: \${SW_RECEIVER_JVM:default\}\n  default:/receiver-jvm:\n  selector: \${SW_RECEIVER_JVM:spp-receiver-jvm}\n  spp-receiver-jvm:/' /skywalking/config/application.yml
+
+# replace default receiver-log with spp-receiver-log
+RUN sed -i -z 's/receiver-log:\n  selector: \${SW_RECEIVER_LOG:default\}\n  default:/receiver-log:\n  selector: \${SW_RECEIVER_LOG:spp-receiver-log}\n  spp-receiver-log:/' /skywalking/config/application.yml
+
+# replace default receiver-register with spp-receiver-register
+RUN sed -i -z 's/receiver-register:\n  selector: \${SW_RECEIVER_REGISTER:default\}\n  default:/receiver-register:\n  selector: \${SW_RECEIVER_REGISTER:spp-receiver-register}\n  spp-receiver-register:/' /skywalking/config/application.yml
 
 ADD ./config/spp-platform.crt /skywalking/config/
 ADD ./config/spp-platform.key /skywalking/config/

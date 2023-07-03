@@ -21,6 +21,7 @@ import io.grpc.Context
 import io.vertx.core.Vertx
 
 object ContextUtil {
+
     @JvmStatic
     val CLIENT_ID = Context.key<String>("spp-platform.client-id")!!
 
@@ -29,6 +30,12 @@ object ContextUtil {
 
     @JvmStatic
     val TENANT_ID = Context.key<String>("spp-platform.tenant-id")!!
+
+    @JvmStatic
+    val ENVIRONMENT = Context.key<String>("spp-platform.environment")!!
+
+    @JvmStatic
+    val VERSION = Context.key<String>("spp-platform.version")!!
 
     @JvmStatic
     fun addToVertx(context: Context?) {
@@ -53,6 +60,20 @@ object ContextUtil {
                 vertxContext.putLocal("tenant_id", it)
             } else {
                 vertxContext.removeLocal("tenant_id")
+            }
+        }
+        ENVIRONMENT.get(context).let {
+            if (it != null) {
+                vertxContext.putLocal("environment", it)
+            } else {
+                vertxContext.put("environment", "null")
+            }
+        }
+        VERSION.get(context).let {
+            if (it != null) {
+                vertxContext.putLocal("version", it)
+            } else {
+                vertxContext.put("version", "null")
             }
         }
     }

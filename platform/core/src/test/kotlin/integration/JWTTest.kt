@@ -29,6 +29,7 @@ import spp.protocol.marshall.ServiceExceptionConverter
 import spp.protocol.platform.auth.AccessType.BLACK_LIST
 import spp.protocol.platform.auth.DeveloperRole
 import spp.protocol.platform.auth.RolePermission.ADD_LIVE_BREAKPOINT
+import spp.protocol.platform.general.Service
 import spp.protocol.service.LiveInstrumentService
 import spp.protocol.service.error.InstrumentAccessDenied
 import spp.protocol.service.error.PermissionAccessDenied
@@ -42,7 +43,7 @@ class JWTTest : PlatformIntegrationTest() {
         val testContext = VertxTestContext()
         instrumentService.addLiveInstrument(
             LiveBreakpoint(
-                location = LiveSourceLocation(JWTTest::class.java.name, 1, "spp-test-probe"),
+                location = LiveSourceLocation(JWTTest::class.java.name, 1, Service.fromName("spp-test-probe")),
                 condition = "1 == 2"
             )
         ).onComplete {

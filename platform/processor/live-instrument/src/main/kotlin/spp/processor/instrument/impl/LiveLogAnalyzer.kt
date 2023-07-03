@@ -39,6 +39,7 @@ import spp.protocol.artifact.log.LogOrderType
 import spp.protocol.artifact.log.LogResult
 import spp.protocol.instrument.event.LiveLogHit
 import spp.protocol.instrument.location.LiveSourceLocation
+import spp.protocol.platform.general.Service
 import java.time.Instant
 import java.util.concurrent.TimeUnit
 import kotlin.collections.set
@@ -84,7 +85,7 @@ class LiveLogAnalyzer : LogAnalysisListener, LogAnalysisListenerFactory {
             LiveSourceLocation(
                 logSource,
                 logLineNumber ?: -1,
-                service = logData.service,
+                service = Service.fromName(logData.service),
                 serviceInstance = logData.serviceInstance
             )
         } else null
