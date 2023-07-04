@@ -26,6 +26,7 @@ import io.vertx.kotlin.coroutines.CoroutineVerticle
 import io.vertx.kotlin.coroutines.await
 import io.vertx.kotlin.coroutines.dispatcher
 import io.vertx.serviceproxy.ServiceException
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import org.apache.skywalking.oap.log.analyzer.module.LogAnalyzerModule
@@ -42,12 +43,14 @@ import org.apache.skywalking.oap.server.analyzer.provider.trace.parser.SegmentPa
 import org.apache.skywalking.oap.server.analyzer.provider.trace.parser.SegmentParserServiceImpl
 import org.apache.skywalking.oap.server.core.CoreModule
 import org.apache.skywalking.oap.server.core.analysis.meter.MeterSystem
+import org.apache.skywalking.oap.server.core.query.AggregationQueryService
 import org.apache.skywalking.oap.server.core.query.MetricsQueryService
 import org.apache.skywalking.oap.server.core.query.TraceQueryService
 import org.apache.skywalking.oap.server.core.query.enumeration.Step
 import org.apache.skywalking.oap.server.core.query.input.Duration
 import org.apache.skywalking.oap.server.core.query.input.Entity
 import org.apache.skywalking.oap.server.core.query.input.MetricsCondition
+import org.apache.skywalking.oap.server.core.query.input.TopNCondition
 import org.apache.skywalking.oap.server.core.query.type.Ref
 import org.apache.skywalking.oap.server.core.query.type.Span
 import org.joor.Reflect
@@ -71,6 +74,9 @@ import spp.protocol.artifact.trace.TraceSpan
 import spp.protocol.artifact.trace.TraceSpanRef
 import spp.protocol.artifact.trace.TraceStack
 import spp.protocol.platform.PlatformAddress.MARKER_DISCONNECTED
+import spp.protocol.platform.general.Order
+import spp.protocol.platform.general.Scope
+import spp.protocol.platform.general.SelectedRecord
 import spp.protocol.platform.general.Service
 import spp.protocol.service.LiveManagementService
 import spp.protocol.service.LiveViewService
@@ -83,6 +89,8 @@ import spp.protocol.view.LiveViewEvent
 import spp.protocol.view.rule.ViewRule
 import java.time.Instant
 import java.util.*
+import org.apache.skywalking.oap.server.core.query.enumeration.Order as SkyWalkingOrder
+import org.apache.skywalking.oap.server.core.query.enumeration.Scope as SkyWalkingScope
 
 @Suppress("TooManyFunctions") // public API
 class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
@@ -95,6 +103,7 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
     internal lateinit var meterProcessService: MeterProcessService
     private lateinit var metricsQuery: MetricsQueryService
     private lateinit var traceQuery: TraceQueryService
+    private lateinit var aggregationQuery: AggregationQueryService
 
     //todo: use ExpiringSharedData
     private val subscriptionCache = MetricTypeSubscriptionCache()
@@ -115,6 +124,9 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
         }
         FeedbackProcessor.module!!.find(CoreModule.NAME).provider().apply {
             traceQuery = getService(TraceQueryService::class.java) as TraceQueryService
+        }
+        FeedbackProcessor.module!!.find(CoreModule.NAME).provider().apply {
+            aggregationQuery = getService(AggregationQueryService::class.java) as AggregationQueryService
         }
 
         //load preset view rules
@@ -466,6 +478,43 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
             }
         }
         return Future.succeededFuture(subStats)
+    }
+
+    override fun sortMetrics(
+        name: String,
+        parentService: String?,
+        normal: Boolean?,
+        scope: Scope?,
+        topN: Int,
+        order: Order,
+        step: MetricStep,
+        start: Instant,
+        stop: Instant?
+    ): Future<List<SelectedRecord>> {
+        log.debug { "Sorting metrics" }
+        val promise = Promise.promise<List<SelectedRecord>>()
+        launch(vertx.dispatcher()) {
+            try {
+                aggregationQuery.sortMetrics(TopNCondition().apply {
+                    this.name = name
+                    this.parentService = parentService
+                    this.isNormal = normal ?: false
+                    this.scope = SkyWalkingScope.valueOf(scope?.name ?: "ALL")
+                    this.topN = topN
+                    this.order = SkyWalkingOrder.valueOf(order.name)
+                }, Duration().apply {
+                    this.start = step.formatter.format(start)
+                    this.end = step.formatter.format(stop ?: Instant.now())
+                    this.step = Step.valueOf(step.name)
+                }).map { JsonObject.mapFrom(it) }.map { SelectedRecord(it) }.let {
+                    promise.complete(it)
+                }
+            } catch (e: Exception) {
+                log.error(e) { "Failed to sort metrics" }
+                promise.fail(e)
+            }
+        }
+        return promise.future()
     }
 
     override fun getHistoricalMetrics(

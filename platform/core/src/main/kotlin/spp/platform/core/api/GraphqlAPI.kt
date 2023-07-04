@@ -231,7 +231,7 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
         }
 
     private fun sortMetrics(env: DataFetchingEnvironment): Future<List<SelectedRecord>> {
-        return getLiveManagementService(env).compose {
+        return getLiveViewService(env).compose {
             it.sortMetrics(
                 env.getArgument("name"),
                 env.getArgument<String?>("parentService"),

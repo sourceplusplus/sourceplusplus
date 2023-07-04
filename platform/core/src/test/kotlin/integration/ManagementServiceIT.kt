@@ -25,15 +25,20 @@ import org.apache.skywalking.apm.toolkit.trace.Tracer
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
+import spp.protocol.artifact.metrics.MetricStep
 import spp.protocol.artifact.metrics.MetricType
+import spp.protocol.platform.general.Order
+import spp.protocol.platform.general.Scope
 import spp.protocol.platform.general.Service
 import spp.protocol.platform.general.util.IDManager
 import spp.protocol.service.SourceServices.Subscribe.toLiveViewSubscription
 import spp.protocol.view.LiveView
 import spp.protocol.view.LiveViewConfig
 import spp.protocol.view.LiveViewEvent
+import java.time.ZonedDateTime
+import java.time.temporal.ChronoUnit
 
-class EndpointCPMViewTest : PlatformIntegrationTest() {
+class ManagementServiceIT : PlatformIntegrationTest() {
 
     private fun fakeEndpoint() {
         Tracer.createEntrySpan("fakeEndpoint", null)
@@ -41,7 +46,7 @@ class EndpointCPMViewTest : PlatformIntegrationTest() {
     }
 
     @Test
-    fun `endpoint cpm view`(): Unit = runBlocking {
+    fun `test sortMetrics`(): Unit = runBlocking {
         val subscriptionId = viewService.addLiveView(
             LiveView(
                 entityIds = mutableSetOf(MetricType.Endpoint_RespTime_AVG.asRealtime().metricId),
@@ -75,5 +80,21 @@ class EndpointCPMViewTest : PlatformIntegrationTest() {
         //clean up
         consumer.unregister()
         assertNotNull(viewService.removeLiveView(subscriptionId).await())
+
+        val endTime = ZonedDateTime.now().truncatedTo(ChronoUnit.MINUTES)
+        val startTime = endTime.minusMinutes(5)
+        val metrics = viewService.sortMetrics(
+            MetricType.Endpoint_RespTime_AVG.metricId,
+            null,
+            true,
+            Scope.Endpoint,
+            100,
+            Order.DES,
+            MetricStep.MINUTE,
+            startTime.toInstant(),
+            endTime.toInstant()
+        ).await()
+        assertEquals(1, metrics.size)
+        assertEquals("fakeEndpoint", IDManager.EndpointID.analysisId(metrics[0].id).endpointName)
     }
 }
