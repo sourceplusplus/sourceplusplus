@@ -145,8 +145,6 @@ class SourcePlatform(private val manager: ModuleManager) : CoroutineVerticle() {
         if (jwtEnabled) {
             val jwtAuthHandler = JWTAuthHandler.create(jwt)
             router.post("/graphql").order(1).handler(jwtAuthHandler)
-            router.post("/graphql/skywalking").order(1).handler(jwtAuthHandler)
-            router.post("/graphql/spp").order(1).handler(jwtAuthHandler)
             router.get("/health").order(1).handler(jwtAuthHandler)
             router.get("/stats").order(1).handler(jwtAuthHandler)
             router.get("/metrics").order(1).handler(jwtAuthHandler)
@@ -195,7 +193,7 @@ class SourcePlatform(private val manager: ModuleManager) : CoroutineVerticle() {
         val grpcHandlerRegister = manager.find(SharingServerModule.NAME)
             .provider().getService(GRPCHandlerRegister::class.java)
         grpcHandlerRegister.addFilter(SkyWalkingGrpcInterceptor(vertx, config))
-        vertx.deployVerticle(SkyWalkingGraphqlInterceptor(router), DeploymentOptions().setConfig(config)).await()
+        vertx.deployVerticle(SkyWalkingGraphqlInterceptor(), DeploymentOptions().setConfig(config)).await()
 
         if (httpSslEnabled) {
             log.debug { "Starting HTTPS server(s)" }

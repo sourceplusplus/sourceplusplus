@@ -85,13 +85,6 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
         }.await()
         val sppGraphQLHandler = GraphQLHandler.create(graphql)
         router.post("/graphql").handler(BodyHandler.create()).handler {
-            if (it.request().getHeader("spp-platform-request") == "true") {
-                sppGraphQLHandler.handle(it)
-            } else {
-                it.reroute("/graphql/skywalking")
-            }
-        }
-        router.post("/graphql/spp").handler(BodyHandler.create()).handler {
             if (it.user() != null && Vertx.currentContext().getLocal<DeveloperAuth>("developer") == null) {
                 Vertx.currentContext().putLocal(
                     "developer",
