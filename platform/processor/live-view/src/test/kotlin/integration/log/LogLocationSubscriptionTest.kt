@@ -25,6 +25,7 @@ import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.parallel.Isolated
 import spp.protocol.artifact.log.Log
 import spp.protocol.instrument.LiveLog
 import spp.protocol.instrument.location.LiveSourceLocation
@@ -34,6 +35,7 @@ import spp.protocol.view.LiveView
 import spp.protocol.view.LiveViewConfig
 import spp.protocol.view.LiveViewEvent
 
+@Isolated //todo: improve robustness
 class LogLocationSubscriptionTest : LiveInstrumentIntegrationTest() {
 
     private fun triggerLog() {
