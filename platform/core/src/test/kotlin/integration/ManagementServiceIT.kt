@@ -49,10 +49,10 @@ class ManagementServiceIT : PlatformIntegrationTest() {
     fun `test sortMetrics`(): Unit = runBlocking {
         val subscriptionId = viewService.addLiveView(
             LiveView(
-                entityIds = mutableSetOf(MetricType.Endpoint_RespTime_AVG.asRealtime().metricId),
+                entityIds = mutableSetOf(MetricType.Endpoint_RespTime_AVG.metricId),
                 viewConfig = LiveViewConfig(
                     "test",
-                    listOf(MetricType.Endpoint_RespTime_AVG.asRealtime().metricId)
+                    listOf(MetricType.Endpoint_RespTime_AVG.metricId)
                 ),
                 location = Service.fromName("spp-test-probe")
             )
