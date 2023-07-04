@@ -683,19 +683,24 @@ class LiveManagementServiceImpl(
         log.debug { "Sorting metrics" }
         val promise = Promise.promise<List<SelectedRecord>>()
         launch(vertx.dispatcher()) {
-            aggregationQueryDAO.sortMetrics(TopNCondition().apply {
-                this.name = name
-                this.parentService = parentService
-                this.isNormal = normal ?: false
-                this.scope = SkyWalkingScope.valueOf(scope?.name ?: "ALL")
-                this.topN = topN
-                this.order = SkyWalkingOrder.valueOf(order.name)
-            }, Duration().apply {
-                this.start = step.formatter.format(start)
-                this.end = step.formatter.format(stop ?: Instant.now())
-                this.step = Step.valueOf(step.name)
-            }).map { JsonObject.mapFrom(it) }.map { SelectedRecord(it) }.let {
-                promise.complete(it)
+            try {
+                aggregationQueryDAO.sortMetrics(TopNCondition().apply {
+                    this.name = name
+                    this.parentService = parentService
+                    this.isNormal = normal ?: false
+                    this.scope = SkyWalkingScope.valueOf(scope?.name ?: "ALL")
+                    this.topN = topN
+                    this.order = SkyWalkingOrder.valueOf(order.name)
+                }, Duration().apply {
+                    this.start = step.formatter.format(start)
+                    this.end = step.formatter.format(stop ?: Instant.now())
+                    this.step = Step.valueOf(step.name)
+                }).map { JsonObject.mapFrom(it) }.map { SelectedRecord(it) }.let {
+                    promise.complete(it)
+                }
+            } catch (e: Exception) {
+                log.error(e) { "Failed to sort metrics" }
+                promise.fail(e)
             }
         }
         return promise.future()
