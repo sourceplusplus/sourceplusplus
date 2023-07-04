@@ -65,7 +65,7 @@ services:
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=postgres
   elasticsearch:
-    image: blacktop/elasticsearch:7.0.0
+    image: blacktop/elasticsearch:7.17.2
     container_name: elasticsearch
     hostname: elasticsearch
     ports:
