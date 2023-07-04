@@ -78,7 +78,7 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
             LiveView(
                 entityIds = mutableSetOf(liveMeter.id!!),
                 viewConfig = LiveViewConfig("test", listOf(liveMeter.id!!)),
-                service = Service.fromName("spp-test-probe")
+                location = Service.fromName("spp-test-probe")
             )
         ).await().subscriptionId!!
 
@@ -143,7 +143,7 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
             LiveView(
                 entityIds = mutableSetOf(liveMeter.id!!),
                 viewConfig = LiveViewConfig("test", listOf(liveMeter.id!!)),
-                service = Service.fromName("spp-test-probe")
+                location = Service.fromName("spp-test-probe")
             )
         ).await().subscriptionId!!
 
@@ -208,7 +208,7 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
             LiveView(
                 entityIds = mutableSetOf(liveMeter1.id!!),
                 viewConfig = LiveViewConfig("test", listOf(liveMeter1.id!!)),
-                service = Service.fromName("spp-test-probe")
+                location = Service.fromName("spp-test-probe")
             )
         ).await().subscriptionId!!
 
@@ -230,7 +230,7 @@ class LiveMeterCountTest : LiveInstrumentIntegrationTest() {
             LiveView(
                 entityIds = mutableSetOf(liveMeter2.id!!),
                 viewConfig = LiveViewConfig("test", listOf(liveMeter2.id!!)),
-                service = Service.fromName("spp-test-probe")
+                location = Service.fromName("spp-test-probe")
             )
         ).await().subscriptionId!!
 

@@ -86,11 +86,11 @@ class LiveLogView(private val subscriptionCache: MetricTypeSubscriptionCache) : 
 
                 //remove subscribers with additional filters
                 subs = subs.filter {
-                    if (it.subscription.serviceInstance?.let {
-                            it != logData.serviceInstance
-                        } == true) return@filter false
-                    if (it.subscription.service?.let {
-                            !it.isSameService(it.withName(logData.service))
+//                    if (it.subscription.serviceInstance?.let {
+//                            it != logData.serviceInstance
+//                        } == true) return@filter false
+                    if (it.subscription.location?.service?.let {
+                            !it.isSameLocation(it.withName(logData.service))
                         } == true) return@filter false
                     return@filter true
                 }.toMutableSet()

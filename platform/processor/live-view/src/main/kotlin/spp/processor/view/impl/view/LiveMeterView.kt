@@ -119,11 +119,11 @@ class LiveMeterView(private val subscriptionCache: MetricTypeSubscriptionCache) 
 
             //remove subscribers with additional filters
             subs = subs.filter {
-                if (it.subscription.serviceInstance?.let {
-                        it != metricServiceInstance
-                    } == true) return@filter false
-                if (it.subscription.service?.let {
-                        !it.isSameService(it.withId(metricService))
+//                if (it.subscription.serviceInstance?.let {
+//                        it != metricServiceInstance
+//                    } == true) return@filter false
+                if (it.subscription.location?.service?.let {
+                        !it.isSameLocation(it.withId(metricService))
                     } == true) return@filter false
                 return@filter true
             }.toMutableSet()

@@ -316,8 +316,7 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
             val removedView = LiveView(
                 unsubbedSubscriber!!.subscription.entityIds,
                 unsubbedSubscriber!!.subscription.viewConfig,
-                unsubbedSubscriber!!.subscription.service,
-                unsubbedSubscriber!!.subscription.serviceInstance,
+                unsubbedSubscriber!!.subscription.location,
                 unsubbedSubscriber!!.subscription.subscriptionId,
             )
             log.debug { "Removed live view: {}".args(removedView) }
@@ -401,8 +400,7 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
                 LiveView(
                     subbedUser!!.subscription.entityIds,
                     subbedUser!!.subscription.viewConfig,
-                    subbedUser!!.subscription.service,
-                    subbedUser!!.subscription.serviceInstance,
+                    subbedUser!!.subscription.location,
                     subbedUser!!.subscription.subscriptionId,
                 )
             )

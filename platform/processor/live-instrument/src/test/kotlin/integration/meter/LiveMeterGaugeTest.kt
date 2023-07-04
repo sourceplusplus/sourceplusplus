@@ -100,7 +100,7 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
                     "test",
                     listOf(liveMeter.id!!)
                 ),
-                service = Service.fromName("spp-test-probe")
+                location = Service.fromName("spp-test-probe")
             )
         ).await().subscriptionId!!
 
@@ -176,7 +176,7 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
             LiveView(
                 entityIds = mutableSetOf(liveMeter.id!!),
                 viewConfig = LiveViewConfig("test", listOf(liveMeter.id!!)),
-                service = Service.fromName("spp-test-probe")
+                location = Service.fromName("spp-test-probe")
             )
         ).await().subscriptionId!!
 

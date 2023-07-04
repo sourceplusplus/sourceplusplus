@@ -46,7 +46,7 @@ class VCSLiveViewIT : PlatformIntegrationTest() {
                     "test",
                     listOf(MetricType.INSTANCE_JVM_CPU.asRealtime().metricId)
                 ),
-                service = Service.fromName("spp-test-probe").withVersion("test1"),
+                location = Service.fromName("spp-test-probe").withVersion("test1")
             )
         ).await().subscriptionId!!
 
@@ -90,7 +90,7 @@ class VCSLiveViewIT : PlatformIntegrationTest() {
                     "test",
                     listOf(MetricType.INSTANCE_JVM_CPU.asRealtime().metricId)
                 ),
-                service = Service.fromName("spp-test-probe")
+                location = Service.fromName("spp-test-probe")
             )
         ).await().subscriptionId!!
 
