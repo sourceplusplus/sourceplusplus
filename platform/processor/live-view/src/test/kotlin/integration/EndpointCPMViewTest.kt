@@ -52,6 +52,7 @@ class EndpointCPMViewTest : PlatformIntegrationTest() {
                 location = Service.fromName("spp-test-probe")
             )
         ).await().subscriptionId!!
+        log.info("Subscription id: $subscriptionId")
 
         val testContext = VertxTestContext()
         val consumer = vertx.eventBus().consumer<JsonObject>(toLiveViewSubscription(subscriptionId))
