@@ -210,13 +210,14 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
         }
 
     private fun getInstances(env: DataFetchingEnvironment): Future<List<Map<String, Any>>> =
-        getLiveManagementService(env).compose { it.getInstances(env.getArgument("serviceId")) }
-            .map { instances -> instances.map { fixJsonMaps(it) } }
+        getLiveManagementService(env).compose {
+            it.getInstances(Service.fromId(env.getArgument("serviceId")))
+        }.map { instances -> instances.map { fixJsonMaps(it) } }
 
     private fun getEndpoints(env: DataFetchingEnvironment): Future<List<ServiceEndpoint>> =
         getLiveManagementService(env).compose {
             it.getEndpoints(
-                env.getArgument("serviceId"),
+                Service.fromId(env.getArgument("serviceId")),
                 env.getArgument<Int?>("limit").toString().toIntOrNull()
             )
         }
@@ -224,7 +225,7 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
     private fun searchEndpoints(env: DataFetchingEnvironment): Future<List<ServiceEndpoint>> =
         getLiveManagementService(env).compose {
             it.searchEndpoints(
-                env.getArgument("serviceId"),
+                Service.fromId(env.getArgument("serviceId")),
                 env.getArgument("keyword"),
                 env.getArgument<Int?>("limit").toString().toIntOrNull()
             )
