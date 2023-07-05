@@ -187,8 +187,8 @@ object InstrumentProcessor : FeedbackProcessor() {
             if (failsPermissionCheck(REMOVE_LIVE_INSTRUMENT)) return
         } else if (action.startsWith("getLiveInstrument")) {
             if (failsPermissionCheck(GET_LIVE_INSTRUMENTS)) return
-        } else if (RolePermission.fromString(action) != null) {
-            val necessaryPermission = RolePermission.fromString(action)!!
+        } else if (RolePermission.fromStringOrNull(action) != null) {
+            val necessaryPermission = RolePermission.fromString(action)
             if (failsPermissionCheck(necessaryPermission)) return
         } else {
             TODO()

@@ -319,7 +319,7 @@ open class RedisStorage(val vertx: Vertx) : CoreStorage {
 
     override suspend fun getRolePermissions(role: DeveloperRole): Set<RolePermission> {
         val permissions = redis.smembers(namespace("roles:${role.roleName}:permissions")).await()
-        return permissions.map { RolePermission.valueOf(it.toString(UTF_8)) }.toSet()
+        return permissions.map { RolePermission.fromString(it.toString(UTF_8)) }.toSet()
     }
 
     override suspend fun addLiveInstrument(instrument: LiveInstrument): LiveInstrument {
