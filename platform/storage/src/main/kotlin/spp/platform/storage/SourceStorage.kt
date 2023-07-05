@@ -137,7 +137,7 @@ object SourceStorage {
             JsonObject.mapFrom(it).let {
                 Triple(
                     DeveloperRole.fromString(it.getString("id")),
-                    it.getJsonArray("permissions")?.list?.mapNotNull { RolePermission.fromString(it.toString()) },
+                    it.getJsonArray("permissions")?.list?.mapNotNull { RolePermission.fromStringOrNull(it.toString()) },
                     it.getJsonArray("redactions")?.list?.mapNotNull { it.toString() },
                 )
             }

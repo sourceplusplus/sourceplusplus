@@ -36,6 +36,7 @@ import spp.protocol.platform.auth.AccessType
 import spp.protocol.platform.auth.DeveloperRole.Companion.ROLE_MANAGER
 import spp.protocol.platform.auth.RedactionType
 import spp.protocol.platform.auth.RolePermission
+import spp.protocol.platform.general.Service
 
 @Suppress("LargeClass", "TooManyFunctions", "MaximumLineLength") // public API test
 class GraphqlAPIITTest : PlatformIntegrationTest() {
@@ -1074,6 +1075,29 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
         )
     }
 
+    @Test
+    fun `ensure getInstances works`() = runBlocking {
+        val service = Service.fromName("spp-test-probe")
+        val getInstancesResp = request.sendJsonObject(getGetInstancesRequest(service.id)).await().bodyAsJsonObject()
+        assertNull(getInstancesResp.getJsonArray("errors"))
+    }
+
+    @Test
+    fun `ensure getEndpoints works`() = runBlocking {
+        val service = Service.fromName("spp-test-probe")
+        val getEndpointsResp = request.sendJsonObject(getGetEndpointsRequest(service.id)).await().bodyAsJsonObject()
+        assertNull(getEndpointsResp.getJsonArray("errors"))
+    }
+
+    @Test
+    fun `ensure searchEndpoints works`() = runBlocking {
+        val service = Service.fromName("spp-test-probe")
+        val getEndpointsResp = request.sendJsonObject(
+            getSearchEndpointsRequest(service.id, "")
+        ).await().bodyAsJsonObject()
+        assertNull(getEndpointsResp.getJsonArray("errors"))
+    }
+
     private fun getAddDataRedactionRequest(redactionId: String): JsonObject {
         return JsonObject().put("query", getGraphql("data-redaction/add-data-redaction")).put(
             "variables",
@@ -1115,6 +1139,21 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
     private fun addRoleAccessPermissionRequest(accessPermissionId: String, role: String): JsonObject {
         return JsonObject().put("query", getGraphql("access/add-role-access-permission"))
             .put("variables", JsonObject().put("accessPermissionId", accessPermissionId).put("role", role))
+    }
+
+    private fun getGetInstancesRequest(serviceId: String): JsonObject {
+        return JsonObject().put("query", getGraphql("system/get-instances"))
+            .put("variables", JsonObject().put("serviceId", serviceId))
+    }
+
+    private fun getGetEndpointsRequest(serviceId: String): JsonObject {
+        return JsonObject().put("query", getGraphql("system/get-endpoints"))
+            .put("variables", JsonObject().put("serviceId", serviceId))
+    }
+
+    private fun getSearchEndpointsRequest(serviceId: String, keyword: String): JsonObject {
+        return JsonObject().put("query", getGraphql("system/search-endpoints"))
+            .put("variables", JsonObject().put("serviceId", serviceId).put("keyword", keyword))
     }
 
     private val addLiveViewRequest =
