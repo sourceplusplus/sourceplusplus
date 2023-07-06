@@ -122,10 +122,10 @@ abstract class InstanceBridge(private val jwtAuth: JWTAuth?) : CoroutineVerticle
 
                 val socket = Reflect.on(event).get<Any>("socket")
                 if (socket is SockJSSocketBase) {
-                    log.info { "Closed connection ${socket.remoteAddress()}" }
+                    log.error { "Closed connection ${socket.remoteAddress()}" }
                     socket.close()
                 } else if (socket is NetSocket) {
-                    log.info { "Closed connection ${socket.remoteAddress()}" }
+                    log.error { "Closed connection ${socket.remoteAddress()}" }
                     socket.close()
                 }
             } else {
