@@ -23,6 +23,7 @@ import io.vertx.core.Handler
 import io.vertx.core.Vertx
 import io.vertx.core.buffer.Buffer
 import io.vertx.core.net.NetServerOptions
+import io.vertx.core.net.NetSocket
 import io.vertx.ext.auth.authentication.TokenCredentials
 import io.vertx.ext.auth.jwt.JWTAuth
 import io.vertx.ext.bridge.BaseBridgeEvent
@@ -33,8 +34,10 @@ import io.vertx.ext.eventbus.bridge.tcp.TcpEventBusBridge
 import io.vertx.ext.web.handler.sockjs.SockJSBridgeOptions
 import io.vertx.ext.web.handler.sockjs.SockJSHandler
 import io.vertx.ext.web.handler.sockjs.SockJSHandlerOptions
+import io.vertx.ext.web.handler.sockjs.impl.SockJSSocketBase
 import io.vertx.kotlin.coroutines.CoroutineVerticle
 import mu.KotlinLogging
+import org.joor.Reflect
 import spp.platform.common.ClientAuth
 import spp.platform.common.ClusterConnection
 import spp.platform.common.ClusterConnection.router
@@ -116,6 +119,15 @@ abstract class InstanceBridge(private val jwtAuth: JWTAuth?) : CoroutineVerticle
             if (activeConnection == null && kickUnknownPingConnections) {
                 log.error("Unknown connection pinged. Closing connection.")
                 event.complete(false)
+
+                val socket = Reflect.on(event).get<Any>("socket")
+                if (socket is SockJSSocketBase) {
+                    log.info { "Closed connection ${socket.remoteAddress()}" }
+                    socket.close()
+                } else if (socket is NetSocket) {
+                    log.info { "Closed connection ${socket.remoteAddress()}" }
+                    socket.close()
+                }
             } else {
                 activeConnection?.lastPing = System.currentTimeMillis()
                 event.complete(true)
