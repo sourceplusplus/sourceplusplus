@@ -77,7 +77,7 @@ subprojects {
             exclude(group = "com.graphql-java")
         }
         compileOnly("com.graphql-java:graphql-java:20.2") //tied to SkyWalking OAP version
-        compileOnly("com.google.protobuf:protobuf-java:3.21.8") //tied to SkyWalking OAP version
+        compileOnly("com.google.protobuf:protobuf-java:3.23.4") //tied to SkyWalking OAP version
         compileOnly("io.grpc:grpc-api:1.49.0") //tied to SkyWalking OAP version
         compileOnly("io.grpc:grpc-stub:1.49.0") //tied to SkyWalking OAP version
         compileOnly("com.linecorp.armeria:armeria:1.23.1") //tied to SkyWalking OAP version
