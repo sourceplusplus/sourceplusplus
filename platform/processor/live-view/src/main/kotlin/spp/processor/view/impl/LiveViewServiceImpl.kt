@@ -53,6 +53,7 @@ import org.apache.skywalking.oap.server.core.query.input.MetricsCondition
 import org.apache.skywalking.oap.server.core.query.input.TopNCondition
 import org.apache.skywalking.oap.server.core.query.type.Ref
 import org.apache.skywalking.oap.server.core.query.type.Span
+import org.apache.skywalking.oap.server.core.storage.annotation.ValueColumnMetadata
 import org.joor.Reflect
 import spp.platform.common.ClusterConnection
 import spp.platform.common.DeveloperAuth
