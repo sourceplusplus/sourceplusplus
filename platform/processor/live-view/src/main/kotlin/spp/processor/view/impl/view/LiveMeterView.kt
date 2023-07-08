@@ -83,7 +83,11 @@ class LiveMeterView(private val subscriptionCache: MetricTypeSubscriptionCache) 
         val metricService = EntityNaming.getServiceId(metrics)
         val metricServiceInstance = EntityNaming.getServiceInstanceId(metadata)
         if (metricName.startsWith("spp_")) {
-            log.debug { "Processing Source++ metrics: {} - Data: {}".args(metricName, jsonEvent) }
+            if (log.isDebugEnabled) {
+                log.debug { "Processing Source++ metrics: {} - Data: {}".args(metricName, jsonEvent) }
+            } else {
+                log.info { "Processing Source++ metrics: {}".args(metricName) }
+            }
             val meterId = ViewProcessor.liveViewService.meterProcessService.converts()
                 .filterIsInstance<LiveMetricConvert>().firstNotNullOfOrNull {
                     findMeterId(metricName, it)
