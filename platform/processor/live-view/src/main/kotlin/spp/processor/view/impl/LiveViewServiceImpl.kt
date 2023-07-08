@@ -132,27 +132,26 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
         }
 
         //load preset view rules
+        val viewRules = SourceStorage.getViewRules()
         val livePresets = ClusterConnection.config.getJsonObject("live-presets") ?: JsonObject()
         livePresets.map.keys.forEach {
             val presetName = it
             val preset = livePresets.getJsonObject(presetName)
             if (preset.getString("enabled").toBooleanStrict()) {
-                val viewRules = preset.getJsonArray("view-rules", JsonArray())
+                val viewRulesArr = preset.getJsonArray("view-rules", JsonArray())
                 Vertx.currentContext().putLocal("developer", DeveloperAuth("system"))
-                viewRules.forEach {
+                viewRulesArr.forEach {
                     val viewRule = ViewRule(JsonObject.mapFrom(it))
                     saveRuleIfAbsent(viewRule).await()
                 }
                 Vertx.currentContext().removeLocal("developer")
-                if (viewRules.size() > 0) {
-                    log.info { "Loaded ${viewRules.size()} live view rules from preset '$presetName'" }
+                if (viewRulesArr.size() > 0) {
+                    log.info { "Loaded ${viewRulesArr.size()} live view rules from preset '$presetName'" }
                 }
             }
         }
-
         //load view rules from database
-        val viewRules = SourceStorage.getViewRules()
-        SourceStorage.getViewRules().forEach {
+        viewRules.forEach {
             saveRuleIfAbsent(it).await()
         }
         if (viewRules.isNotEmpty()) {
@@ -199,16 +198,6 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
     }
 
     override fun saveRule(rule: ViewRule): Future<ViewRule> {
-        //check for existing rule
-        val exitingRule = meterProcessService.converts().any { ruleset ->
-            val analyzers = Reflect.on(ruleset).get<MutableList<Analyzer>>("analyzers")
-            analyzers.any { Reflect.on(it).get<String>("metricName") == "spp_" + rule.name }
-        }
-        if (exitingRule) {
-            return Future.failedFuture(RuleAlreadyExistsException("Rule with name ${rule.name} already exists"))
-        }
-        log.info { "Saving live view rule: $rule" }
-
         //setup spp rule
         var saveRule = rule
         if (saveRule.name.startsWith("spp_")) {
@@ -217,6 +206,16 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
         val meterConfig = LiveMeterConfig()
         meterConfig.metricPrefix = "spp"
         meterConfig.metricsRules = listOf(LiveMeterConfig.Rule(saveRule))
+
+        //check for existing rule
+        val exitingRule = meterProcessService.converts().any { ruleset ->
+            if (ruleset !is LiveMetricConvert) return@any false
+            ruleset.config.getLiveMetricsRules().any { it.rule.name == saveRule.name }
+        }
+        if (exitingRule) {
+            return Future.failedFuture(RuleAlreadyExistsException("Rule with name ${saveRule.name} already exists"))
+        }
+        log.info { "Saving live view rule: $saveRule" }
 
         //create spp ruleset
         val promise = Promise.promise<ViewRule>()
