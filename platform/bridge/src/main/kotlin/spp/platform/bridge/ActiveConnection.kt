@@ -17,7 +17,6 @@
  */
 package spp.platform.bridge
 
-import io.vertx.core.Future
 import io.vertx.core.net.NetSocket
 import io.vertx.ext.bridge.BaseBridgeEvent
 import io.vertx.ext.web.handler.sockjs.SockJSSocket
@@ -29,16 +28,16 @@ class ActiveConnection(private val netSocket: NetSocket? = null, private val soc
     lateinit var id: String
     var lastPing = System.currentTimeMillis()
 
-    fun close(): Future<Void> {
+    fun close() {
         val remoteAddress = netSocket?.remoteAddress() ?: sockJSSocket?.remoteAddress()
         log.info { "Closed connection from $remoteAddress" }
 
-        return if (netSocket != null) {
+        if (netSocket != null) {
             netSocket.close()
         } else if (sockJSSocket != null) {
-            sockJSSocket.end()
+            sockJSSocket.close()
         } else {
-            Future.failedFuture("No socket to close")
+            throw IllegalStateException("No socket to close")
         }
     }
 
