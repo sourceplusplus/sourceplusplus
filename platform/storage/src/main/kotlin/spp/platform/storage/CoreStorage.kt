@@ -26,6 +26,7 @@ import spp.protocol.instrument.LiveInstrument
 import spp.protocol.instrument.event.LiveInstrumentEvent
 import spp.protocol.platform.auth.*
 import spp.protocol.platform.developer.Developer
+import spp.protocol.view.rule.ViewRule
 import java.time.Instant
 
 interface CoreStorage {
@@ -143,4 +144,8 @@ interface CoreStorage {
     fun generateClientSecret(): String {
         return "spp_cs_" + SecureUUID.get()
     }
+
+    suspend fun getViewRules(): List<ViewRule>
+    suspend fun addViewRule(viewRule: ViewRule)
+    suspend fun removeViewRule(name: String): Boolean
 }

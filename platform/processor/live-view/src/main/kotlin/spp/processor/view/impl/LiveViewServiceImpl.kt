@@ -59,6 +59,7 @@ import spp.platform.common.ClusterConnection
 import spp.platform.common.DeveloperAuth
 import spp.platform.common.FeedbackProcessor
 import spp.platform.common.util.args
+import spp.platform.storage.SourceStorage
 import spp.processor.view.ViewProcessor
 import spp.processor.view.impl.view.LiveLogView
 import spp.processor.view.impl.view.LiveMeterView
@@ -149,6 +150,15 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
             }
         }
 
+        //load view rules from database
+        val viewRules = SourceStorage.getViewRules()
+        SourceStorage.getViewRules().forEach {
+            saveRuleIfAbsent(it).await()
+        }
+        if (viewRules.isNotEmpty()) {
+            log.info { "Loaded ${viewRules.size} live view rules from database" }
+        }
+
         //live traces view
         val segmentParserService = FeedbackProcessor.module!!.find(AnalyzerModule.NAME)
             .provider().getService(ISegmentParserService::class.java) as SegmentParserServiceImpl
@@ -197,6 +207,7 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
         if (exitingRule) {
             return Future.failedFuture(RuleAlreadyExistsException("Rule with name ${rule.name} already exists"))
         }
+        log.info { "Saving live view rule: $rule" }
 
         //setup spp rule
         var saveRule = rule
@@ -208,13 +219,18 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
         meterConfig.metricsRules = listOf(LiveMeterConfig.Rule(saveRule))
 
         //create spp ruleset
-        try {
-            val passRule = if (saveRule.partitions.isEmpty()) meterConfig else NOP_RULE
-            meterProcessService.converts().add(LiveMetricConvert(meterConfig, meterSystem, passRule))
-        } catch (e: Exception) {
-            return Future.failedFuture(e)
+        val promise = Promise.promise<ViewRule>()
+        launch(vertx.dispatcher()) {
+            try {
+                val passRule = if (saveRule.partitions.isEmpty()) meterConfig else NOP_RULE
+                meterProcessService.converts().add(LiveMetricConvert(meterConfig, meterSystem, passRule))
+                SourceStorage.addViewRule(saveRule)
+                promise.complete(saveRule)
+            } catch (e: Exception) {
+                promise.fail(e)
+            }
         }
-        return Future.succeededFuture(saveRule)
+        return promise.future()
     }
 
     override fun deleteRule(ruleName: String): Future<ViewRule?> {
@@ -250,7 +266,17 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
             }
             analyzers.isEmpty()
         }
-        return Future.succeededFuture(removedRule)
+
+        val promise = Promise.promise<ViewRule?>()
+        launch(vertx.dispatcher()) {
+            try {
+                SourceStorage.removeViewRule(deleteRuleName)
+                promise.complete(removedRule)
+            } catch (e: Exception) {
+                promise.fail(e)
+            }
+        }
+        return promise.future()
     }
 
     override fun addLiveView(subscription: LiveView): Future<LiveView> {
