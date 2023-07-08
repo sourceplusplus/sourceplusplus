@@ -55,7 +55,6 @@ abstract class InstanceBridge(private val jwtAuth: JWTAuth?) : CoroutineVerticle
     abstract val inboundPermitted: List<PermittedOptions>
     abstract val outboundPermitted: List<PermittedOptions>
     protected val activeConnections = ConcurrentHashMap<String, ActiveConnection>()
-    private var kickUnknownPingConnections = false
 
     override suspend fun start() {
         startPingChecker()
@@ -65,8 +64,6 @@ abstract class InstanceBridge(private val jwtAuth: JWTAuth?) : CoroutineVerticle
         val pingTimeoutInterval = (ClusterConnection.config
             .getJsonObject("spp-platform")?.getJsonObject("bridge")?.getString("ping_timeout")?.toIntOrNull() ?: -1)
         if (pingTimeoutInterval > 0) {
-            kickUnknownPingConnections = true
-
             val timeoutIntervalMs = pingTimeoutInterval * 1000
             vertx.setPeriodic(1000) {
                 val now = System.currentTimeMillis()
@@ -113,12 +110,8 @@ abstract class InstanceBridge(private val jwtAuth: JWTAuth?) : CoroutineVerticle
     open fun handleBridgeEvent(event: BaseBridgeEvent) {
         if (event.type() == BridgeEventType.SOCKET_PING) {
             val activeConnection = activeConnections[getWriteHandlerID(event)]
-            if (activeConnection == null && kickUnknownPingConnections) {
-                log.error("Unknown connection pinged. Closing connection.")
-                event.complete(false)
-                ActiveConnection.from(event).close()
-            } else {
-                activeConnection?.lastPing = System.currentTimeMillis()
+            if (activeConnection != null) {
+                activeConnection.lastPing = System.currentTimeMillis()
                 event.complete(true)
             }
         } else {
