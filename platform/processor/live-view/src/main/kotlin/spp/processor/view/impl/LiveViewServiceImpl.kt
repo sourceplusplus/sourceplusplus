@@ -598,7 +598,7 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
             }
 
             val mergeArray = JsonArray()
-            repeat(allMetrics.first().count()) {
+            repeat(allMetrics.firstOrNull()?.size() ?: 0) {
                 mergeArray.add(JsonObject())
             }
             allMetrics.forEach {
