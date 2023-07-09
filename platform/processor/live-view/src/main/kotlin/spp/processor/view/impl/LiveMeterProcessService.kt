@@ -37,8 +37,6 @@ class LiveMeterProcessService(
     manager: ModuleManager,
 ) : MeterProcessService(manager) {
 
-    private val existingPartitions = mutableSetOf<String>()
-
     override fun start(configs: MutableList<MeterConfig>?) {
         delegate.start(configs)
     }
@@ -51,23 +49,25 @@ class LiveMeterProcessService(
                     LiveMeter.formatMeterName(data.singleValue.name)
                 } else if (data.hasHistogram()) {
                     LiveMeter.formatMeterName(data.histogram.name)
-                } else null ?: return
-
-                if (existingPartitions.contains(meterName)) {
+                } else null
+                if (meterName == null) {
                     processor.read(data)
-                } else {
-                    //see if partition is necessary
-                    delegate.converts().filterIsInstance<LiveMetricConvert>().filter {
-                        it.config.hasPartitions()
-                    }.find {
-                        it.config.getLiveMetricsRules().any {
-                            it.partitions.any {
-                                meterName.startsWith(it.replace.replace("_\$partition\$", ""))
-                            }
-                        }
-                    }?.addRule(existingPartitions, meterName)
-                    processor.read(data)
+                    return
                 }
+
+                //see if partition(s) are necessary
+                delegate.converts().filterIsInstance<LiveMetricConvert>().filter {
+                    it.config.hasPartitions()
+                }.filter {
+                    it.config.getLiveMetricsRules().any {
+                        it.partitions.any {
+                            meterName.startsWith(it.replace.replace("_\$partition\$", ""))
+                        }
+                    }
+                }.forEach { it.addRule(meterName) }
+
+                //continue processing
+                processor.read(data)
             }
 
             override fun process() = processor.process()
