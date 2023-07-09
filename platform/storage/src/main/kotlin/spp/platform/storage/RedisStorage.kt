@@ -35,6 +35,7 @@ import spp.protocol.instrument.LiveInstrument
 import spp.protocol.instrument.event.LiveInstrumentEvent
 import spp.protocol.platform.auth.*
 import spp.protocol.platform.developer.Developer
+import spp.protocol.view.rule.ViewRule
 import java.nio.charset.StandardCharsets.UTF_8
 import java.time.Instant
 
@@ -509,5 +510,35 @@ open class RedisStorage(val vertx: Vertx) : CoreStorage {
             )
         ).await()
         return clientAccess!!
+    }
+
+    override suspend fun getViewRules(): List<ViewRule> {
+        val viewRules = redis.smembers(namespace("view_rules")).await()
+        return viewRules.map { ViewRule(JsonObject(it.toString(UTF_8))) }
+    }
+
+    override suspend fun addViewRule(viewRule: ViewRule) {
+        redis.sadd(listOf(namespace("view_rules"), Json.encode(viewRule))).await()
+    }
+
+    override suspend fun removeViewRule(name: String): Boolean {
+        val viewRules = getViewRules()
+        if (viewRules.any { it.name == name }) {
+            val batchCommand = mutableListOf(
+                cmd(MULTI),
+                cmd(DEL, namespace("view_rules"))
+            )
+            val updatedViewRules = viewRules.filter { it.name != name }
+            if (updatedViewRules.isNotEmpty()) {
+                batchCommand.add(cmd(SADD).apply {
+                    arg(namespace("view_rules"))
+                    updatedViewRules.forEach { arg(it.toJson().toString()) }
+                })
+            }
+            batchCommand.add(cmd(EXEC))
+            redisClient.batch(batchCommand).await()
+            return true
+        }
+        return false
     }
 }

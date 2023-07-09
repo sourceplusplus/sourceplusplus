@@ -30,13 +30,17 @@ import org.junit.jupiter.api.TestInfo
 import org.junit.jupiter.api.extension.ExtendWith
 import spp.platform.storage.CoreStorage
 import spp.platform.storage.SourceStorage
-import spp.protocol.instrument.*
+import spp.protocol.instrument.LiveBreakpoint
+import spp.protocol.instrument.LiveLog
+import spp.protocol.instrument.LiveMeter
+import spp.protocol.instrument.LiveSpan
 import spp.protocol.instrument.event.LiveInstrumentAdded
 import spp.protocol.instrument.location.LiveSourceLocation
 import spp.protocol.instrument.meter.MeterType
 import spp.protocol.instrument.meter.MetricValue
 import spp.protocol.instrument.meter.MetricValueType
 import spp.protocol.platform.auth.*
+import spp.protocol.view.rule.ViewRule
 import java.time.Instant
 import java.util.*
 
@@ -701,5 +705,32 @@ abstract class BaseStorageITTest<T : CoreStorage> {
     @Test
     fun `remove non-existent live instrument`(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
         assertFalse(storageInstance.removeLiveInstrument("non-existent-id"))
+    }
+
+    @Test
+    fun `test get view rules`(vertx: Vertx): Unit = runBlocking(vertx.dispatcher()) {
+        val existingViewRules = storageInstance.getViewRules()
+        val viewRule = ViewRule(
+            name = "spp_test_id",
+            exp = buildString {
+                append("(")
+                append("spp_test_id")
+                append(".sum(['service', 'instance'])")
+                append(".downsampling(SUM)")
+                append(")")
+                append(".instance(['service'], ['instance'], Layer.GENERAL)")
+            },
+            meterIds = listOf("spp_test_id")
+        )
+        storageInstance.addViewRule(viewRule)
+
+        val viewRules = storageInstance.getViewRules()
+        assertEquals(existingViewRules.size + 1, viewRules.size)
+        assertTrue(viewRules.contains(viewRule))
+
+        storageInstance.removeViewRule(viewRule.name)
+        val viewRulesAfterRemove = storageInstance.getViewRules()
+        assertEquals(existingViewRules.size, viewRulesAfterRemove.size)
+        assertFalse(viewRulesAfterRemove.contains(viewRule))
     }
 }

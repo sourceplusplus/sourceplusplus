@@ -23,7 +23,6 @@ import io.vertx.core.Handler
 import io.vertx.core.Vertx
 import io.vertx.core.buffer.Buffer
 import io.vertx.core.net.NetServerOptions
-import io.vertx.core.net.NetSocket
 import io.vertx.ext.auth.authentication.TokenCredentials
 import io.vertx.ext.auth.jwt.JWTAuth
 import io.vertx.ext.bridge.BaseBridgeEvent
@@ -34,10 +33,8 @@ import io.vertx.ext.eventbus.bridge.tcp.TcpEventBusBridge
 import io.vertx.ext.web.handler.sockjs.SockJSBridgeOptions
 import io.vertx.ext.web.handler.sockjs.SockJSHandler
 import io.vertx.ext.web.handler.sockjs.SockJSHandlerOptions
-import io.vertx.ext.web.handler.sockjs.impl.SockJSSocketBase
 import io.vertx.kotlin.coroutines.CoroutineVerticle
 import mu.KotlinLogging
-import org.joor.Reflect
 import spp.platform.common.ClientAuth
 import spp.platform.common.ClusterConnection
 import spp.platform.common.ClusterConnection.router
@@ -58,7 +55,6 @@ abstract class InstanceBridge(private val jwtAuth: JWTAuth?) : CoroutineVerticle
     abstract val inboundPermitted: List<PermittedOptions>
     abstract val outboundPermitted: List<PermittedOptions>
     protected val activeConnections = ConcurrentHashMap<String, ActiveConnection>()
-    private var kickUnknownPingConnections = false
 
     override suspend fun start() {
         startPingChecker()
@@ -68,8 +64,6 @@ abstract class InstanceBridge(private val jwtAuth: JWTAuth?) : CoroutineVerticle
         val pingTimeoutInterval = (ClusterConnection.config
             .getJsonObject("spp-platform")?.getJsonObject("bridge")?.getString("ping_timeout")?.toIntOrNull() ?: -1)
         if (pingTimeoutInterval > 0) {
-            kickUnknownPingConnections = true
-
             val timeoutIntervalMs = pingTimeoutInterval * 1000
             vertx.setPeriodic(1000) {
                 val now = System.currentTimeMillis()
@@ -116,20 +110,8 @@ abstract class InstanceBridge(private val jwtAuth: JWTAuth?) : CoroutineVerticle
     open fun handleBridgeEvent(event: BaseBridgeEvent) {
         if (event.type() == BridgeEventType.SOCKET_PING) {
             val activeConnection = activeConnections[getWriteHandlerID(event)]
-            if (activeConnection == null && kickUnknownPingConnections) {
-                log.error("Unknown connection pinged. Closing connection.")
-                event.complete(false)
-
-                val socket = Reflect.on(event).get<Any>("socket")
-                if (socket is SockJSSocketBase) {
-                    log.info { "Closed connection ${socket.remoteAddress()}" }
-                    socket.close()
-                } else if (socket is NetSocket) {
-                    log.info { "Closed connection ${socket.remoteAddress()}" }
-                    socket.close()
-                }
-            } else {
-                activeConnection?.lastPing = System.currentTimeMillis()
+            if (activeConnection != null) {
+                activeConnection.lastPing = System.currentTimeMillis()
                 event.complete(true)
             }
         } else {

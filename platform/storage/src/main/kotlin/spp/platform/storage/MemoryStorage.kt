@@ -29,6 +29,7 @@ import spp.protocol.instrument.LiveInstrument
 import spp.protocol.instrument.event.LiveInstrumentEvent
 import spp.protocol.platform.auth.*
 import spp.protocol.platform.developer.Developer
+import spp.protocol.view.rule.ViewRule
 import java.security.MessageDigest
 import java.time.Instant
 
@@ -482,5 +483,30 @@ open class MemoryStorage(val vertx: Vertx) : CoreStorage {
             return clientAccess
         }
         throw IllegalArgumentException("Client access with id $id does not exist")
+    }
+
+    override suspend fun getViewRules(): List<ViewRule> {
+        val viewRulesStorage = vertx.sharedData().getAsyncMap<String, Any>(namespace("view_rules")).await()
+        return (viewRulesStorage.get("view_rules").await() as JsonArray? ?: JsonArray())
+            .list.map { ViewRule(JsonObject(it.toString())) }
+    }
+
+    override suspend fun addViewRule(viewRule: ViewRule) {
+        val viewRulesStorage = vertx.sharedData().getAsyncMap<String, Any>(namespace("view_rules")).await()
+        val viewRules = viewRulesStorage.get("view_rules").await() as JsonArray? ?: JsonArray()
+        viewRules.add(JsonObject.mapFrom(viewRule))
+        viewRulesStorage.put("view_rules", viewRules).await()
+    }
+
+    override suspend fun removeViewRule(name: String): Boolean {
+        val viewRulesStorage = vertx.sharedData().getAsyncMap<String, Any>(namespace("view_rules")).await()
+        val viewRules = (viewRulesStorage.get("view_rules").await() as JsonArray? ?: JsonArray())
+        val existingViewRule = viewRules.find { JsonObject.mapFrom(it).getString("name") == name }
+        if (existingViewRule != null) {
+            viewRules.remove(existingViewRule)
+            viewRulesStorage.put("view_rules", viewRules).await()
+            return true
+        }
+        return false
     }
 }

@@ -467,6 +467,9 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
         return getLiveViewService(env).compose { it.saveRule(viewRule) }
     }
 
+    private fun deleteRule(env: DataFetchingEnvironment): Future<Boolean> =
+        getLiveViewService(env).compose { it.deleteRule(env.getArgument("ruleName")) }.map { it != null }
+
     private fun addLiveView(env: DataFetchingEnvironment): Future<LiveView> {
         val input = JsonObject.mapFrom(env.getArgument("input"))
         val viewConfig = LiveViewConfig(

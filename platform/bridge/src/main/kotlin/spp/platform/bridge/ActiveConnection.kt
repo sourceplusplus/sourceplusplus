@@ -17,22 +17,27 @@
  */
 package spp.platform.bridge
 
-import io.vertx.core.Future
 import io.vertx.core.net.NetSocket
 import io.vertx.ext.bridge.BaseBridgeEvent
 import io.vertx.ext.web.handler.sockjs.SockJSSocket
+import mu.KotlinLogging
 
 class ActiveConnection(private val netSocket: NetSocket? = null, private val sockJSSocket: SockJSSocket? = null) {
+
+    private val log = KotlinLogging.logger {}
     lateinit var id: String
     var lastPing = System.currentTimeMillis()
 
-    fun close(): Future<Void> {
-        return if (netSocket != null) {
+    fun close() {
+        val remoteAddress = netSocket?.remoteAddress() ?: sockJSSocket?.remoteAddress()
+        log.info { "Closed connection from $remoteAddress" }
+
+        if (netSocket != null) {
             netSocket.close()
         } else if (sockJSSocket != null) {
-            sockJSSocket.end()
+            sockJSSocket.close()
         } else {
-            Future.failedFuture("No socket to close")
+            throw IllegalStateException("No socket to close")
         }
     }
 
