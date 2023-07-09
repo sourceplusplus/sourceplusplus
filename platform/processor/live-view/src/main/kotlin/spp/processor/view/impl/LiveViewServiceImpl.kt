@@ -545,9 +545,12 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
                 metricIds.forEach { metricId ->
                     val metricType = MetricType(metricId).asHistorical()
                     if (!ValueColumnMetadata.INSTANCE.readValueColumnDefinition(metricType.metricId).isPresent) {
-                        log.warn("Metric {} does not exist", metricId)
-                        it.fail(ServiceException(404, "Metric $metricId does not exist"))
-                        return@executeBlocking
+                        historicalView.data.add(
+                            JsonObject().put("metricId", metricId)
+                                .put("error", "Metric type not found")
+                        )
+
+                        return@forEach
                     }
 
                     val values = getHistoricalMetrics(metricType, entityId, duration, labels)
