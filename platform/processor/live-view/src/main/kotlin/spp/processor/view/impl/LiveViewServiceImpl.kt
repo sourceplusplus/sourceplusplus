@@ -32,9 +32,7 @@ import mu.KotlinLogging
 import org.apache.skywalking.oap.log.analyzer.module.LogAnalyzerModule
 import org.apache.skywalking.oap.log.analyzer.provider.log.ILogAnalyzerService
 import org.apache.skywalking.oap.log.analyzer.provider.log.LogAnalyzerServiceImpl
-import org.apache.skywalking.oap.meter.analyzer.Analyzer
 import org.apache.skywalking.oap.meter.analyzer.MetricConvert
-import org.apache.skywalking.oap.meter.analyzer.dsl.Expression
 import org.apache.skywalking.oap.server.analyzer.module.AnalyzerModule
 import org.apache.skywalking.oap.server.analyzer.provider.meter.process.IMeterProcessService
 import org.apache.skywalking.oap.server.analyzer.provider.meter.process.MeterProcessService
@@ -54,7 +52,6 @@ import org.apache.skywalking.oap.server.core.query.input.TopNCondition
 import org.apache.skywalking.oap.server.core.query.type.Ref
 import org.apache.skywalking.oap.server.core.query.type.Span
 import org.apache.skywalking.oap.server.core.storage.annotation.ValueColumnMetadata
-import org.joor.Reflect
 import spp.platform.common.ClusterConnection
 import spp.platform.common.DeveloperAuth
 import spp.platform.common.FeedbackProcessor
@@ -241,29 +238,13 @@ class LiveViewServiceImpl : CoroutineVerticle(), LiveViewService {
         var removedRule: ViewRule? = null
         (meterProcessService.converts() as MutableList<MetricConvert>).removeIf { convert ->
             if (convert !is LiveMetricConvert) return@removeIf false
-            val analyzers = Reflect.on(convert).get<MutableList<Analyzer>>("analyzers")
-            analyzers.removeIf {
-                val metricName = Reflect.on(it).get<String>("metricName")
-                var remove = metricName == deleteRuleName || metricName == "spp_$deleteRuleName"
-                if (convert.config.hasPartitions()) {
-                    remove = convert.config.getLiveMetricsRules().first().name == deleteRuleName
-                    removedRule = ViewRule(
-                        "spp_$deleteRuleName",
-                        convert.config.getLiveMetricsRules().first().exp,
-                        convert.config.getLiveMetricsRules().first().partitions,
-                        convert.config.getLiveMetricsRules().first().meterIds
-                    )
-                }
-                if (remove) {
-                    val expression = Reflect.on(it).get<Expression>("expression")
-                    if (!convert.config.hasPartitions()) {
-                        val meterIds = convert.config.getLiveMetricsRules().first().meterIds
-                        removedRule = ViewRule(metricName, Reflect.on(expression).get("literal"), meterIds = meterIds)
-                    }
-                }
-                remove
+            val rule = convert.config.getLiveMetricsRules().firstOrNull { it.rule.name == deleteRuleName }
+            if (rule != null) {
+                removedRule = rule.rule
+                return@removeIf true
+            } else {
+                return@removeIf false
             }
-            analyzers.isEmpty()
         }
 
         val promise = Promise.promise<ViewRule?>()

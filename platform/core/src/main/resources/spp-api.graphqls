@@ -727,6 +727,7 @@ type Mutation {
     addLiveSpan(input: LiveSpanInput!): LiveSpan!
 
     saveRule(input: ViewRuleInput!): ViewRule!
+    deleteRule(ruleName: String!): Boolean!
     addLiveView(input: LiveViewInput!): LiveView!
     clearLiveViews: Boolean!
 

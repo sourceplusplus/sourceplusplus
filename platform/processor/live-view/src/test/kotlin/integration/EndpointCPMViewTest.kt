@@ -25,6 +25,7 @@ import org.apache.skywalking.apm.toolkit.trace.Tracer
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.parallel.Isolated
 import spp.protocol.artifact.metrics.MetricType
 import spp.protocol.platform.general.Service
 import spp.protocol.platform.general.util.IDManager
@@ -33,6 +34,7 @@ import spp.protocol.view.LiveView
 import spp.protocol.view.LiveViewConfig
 import spp.protocol.view.LiveViewEvent
 
+@Isolated //todo: more robust
 class EndpointCPMViewTest : PlatformIntegrationTest() {
 
     private fun fakeEndpoint() {

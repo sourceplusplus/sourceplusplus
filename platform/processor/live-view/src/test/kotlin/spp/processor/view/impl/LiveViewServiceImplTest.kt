@@ -194,7 +194,7 @@ class LiveViewServiceImplTest {
 
         //delete rule
         val deletedRule = viewService.deleteRule(rule.name).await()
-        assertEquals(rule.copy(name = "spp_" + rule.name), deletedRule)
+        assertEquals(rule, deletedRule)
         assertEquals(0, convertList.size)
 
         vertx.close()
@@ -247,7 +247,7 @@ class LiveViewServiceImplTest {
 
         //delete rule
         val deletedRule = viewService.deleteRule(rule.name).await()
-        assertEquals(rule.copy(name = "spp_" + rule.name), deletedRule)
+        assertEquals(rule, deletedRule)
         assertEquals(0, convertList.size)
 
         vertx.close()
