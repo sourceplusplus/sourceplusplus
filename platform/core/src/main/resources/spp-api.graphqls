@@ -691,7 +691,7 @@ type Query {
     getTraceStack(traceId: String!): TraceStack
 
     getConfiguration: [SystemConfig!]!
-    getConfigValue(config: String!): String!
+    getConfigurationValue(config: String!): String!
 }
 
 type Mutation {
@@ -735,7 +735,7 @@ type Mutation {
     removeClientAccess(id: String!): Boolean!
     refreshClientAccess(id: String!): ClientAccess!
 
-    setConfigValue(config: String!, value: String!): Boolean!
+    setConfigurationValue(config: String!, value: String!): Boolean!
 }
 
 scalar Long
