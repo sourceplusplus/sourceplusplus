@@ -183,8 +183,8 @@ class ServiceProvider(
             if (failsPermissionCheck(RolePermission.UPDATE_CLIENT_ACCESS)) return
         } else if (action == "getConfiguration") {
             if (failsPermissionCheck(RolePermission.GET_CONFIGURATION_VALUE)) return
-        } else if (RolePermission.fromString(action) != null) {
-            val necessaryPermission = RolePermission.fromString(action)!!
+        } else if (RolePermission.fromStringOrNull(action) != null) {
+            val necessaryPermission = RolePermission.fromString(action)
             if (failsPermissionCheck(necessaryPermission)) return
         }
         handler.handle(Future.succeededFuture(msg))

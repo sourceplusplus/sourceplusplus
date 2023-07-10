@@ -36,7 +36,7 @@ import spp.protocol.platform.auth.AccessType
 import spp.protocol.platform.auth.DeveloperRole.Companion.ROLE_MANAGER
 import spp.protocol.platform.auth.RedactionType
 import spp.protocol.platform.auth.RolePermission
-import java.util.*
+import spp.protocol.platform.general.Service
 
 @Suppress("LargeClass", "TooManyFunctions", "MaximumLineLength") // public API test
 class GraphqlAPIITTest : PlatformIntegrationTest() {
@@ -48,7 +48,7 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
         @JvmStatic
         fun setupInit() {
             val client = WebClient.create(vertx, WebClientOptions())
-            request = client.post(platformPort, platformHost, "/graphql/spp")
+            request = client.post(platformPort, platformHost, "/graphql")
                 .bearerTokenAuthentication(systemAccessToken)
         }
     }
@@ -1064,6 +1064,40 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
         assertNotEquals(clientSecret, updatedClientAccessJsonObject.getString("secret"))
     }
 
+    @Test
+    fun `ensure add live breakpoint has correct service`() = runBlocking {
+        val addLiveBreakpointResp = request.sendJsonObject(getAddLiveBreakpointRequest()).await().bodyAsJsonObject()
+        assertNull(addLiveBreakpointResp.getJsonArray("errors"))
+        val addLiveBreakpoint = addLiveBreakpointResp.getJsonObject("data").getJsonObject("addLiveBreakpoint")
+        assertEquals(
+            "test-service",
+            addLiveBreakpoint.getJsonObject("location").getJsonObject("service").getString("name")
+        )
+    }
+
+    @Test
+    fun `ensure getInstances works`() = runBlocking {
+        val service = Service.fromName("spp-test-probe")
+        val getInstancesResp = request.sendJsonObject(getGetInstancesRequest(service.id)).await().bodyAsJsonObject()
+        assertNull(getInstancesResp.getJsonArray("errors"))
+    }
+
+    @Test
+    fun `ensure getEndpoints works`() = runBlocking {
+        val service = Service.fromName("spp-test-probe")
+        val getEndpointsResp = request.sendJsonObject(getGetEndpointsRequest(service.id)).await().bodyAsJsonObject()
+        assertNull(getEndpointsResp.getJsonArray("errors"))
+    }
+
+    @Test
+    fun `ensure searchEndpoints works`() = runBlocking {
+        val service = Service.fromName("spp-test-probe")
+        val getEndpointsResp = request.sendJsonObject(
+            getSearchEndpointsRequest(service.id, "")
+        ).await().bodyAsJsonObject()
+        assertNull(getEndpointsResp.getJsonArray("errors"))
+    }
+
     private fun getAddDataRedactionRequest(redactionId: String): JsonObject {
         return JsonObject().put("query", getGraphql("data-redaction/add-data-redaction")).put(
             "variables",
@@ -1107,6 +1141,21 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
             .put("variables", JsonObject().put("accessPermissionId", accessPermissionId).put("role", role))
     }
 
+    private fun getGetInstancesRequest(serviceId: String): JsonObject {
+        return JsonObject().put("query", getGraphql("system/get-instances"))
+            .put("variables", JsonObject().put("serviceId", serviceId))
+    }
+
+    private fun getGetEndpointsRequest(serviceId: String): JsonObject {
+        return JsonObject().put("query", getGraphql("system/get-endpoints"))
+            .put("variables", JsonObject().put("serviceId", serviceId))
+    }
+
+    private fun getSearchEndpointsRequest(serviceId: String, keyword: String): JsonObject {
+        return JsonObject().put("query", getGraphql("system/search-endpoints"))
+            .put("variables", JsonObject().put("serviceId", serviceId).put("keyword", keyword))
+    }
+
     private val addLiveViewRequest =
         JsonObject().put("query", getGraphql("view/add-live-view")).put(
             "variables", JsonObject().put(
@@ -1126,7 +1175,14 @@ class GraphqlAPIITTest : PlatformIntegrationTest() {
                 "input",
                 mapOf(
                     "id" to testNameAsUniqueInstrumentId,
-                    "location" to mapOf("source" to "doing", "line" to 17)
+                    "location" to mapOf(
+                        "source" to "doing",
+                        "line" to 17,
+                        "service" to mapOf(
+                            "name" to "test-service",
+                            "version" to "1.0.0"
+                        )
+                    )
                 )
             )
         )

@@ -37,8 +37,8 @@ configure<PublishingExtension> {
 }
 
 dependencies {
-    compileOnly(project(":platform:common"))
-    compileOnly(project(":platform:storage"))
+    implementation(project(":platform:storage"))
+    implementation(project(":platform:common"))
     compileOnly("org.apache.skywalking:skywalking-meter-receiver-plugin:$skywalkingVersion") {
         isTransitive = false
     }

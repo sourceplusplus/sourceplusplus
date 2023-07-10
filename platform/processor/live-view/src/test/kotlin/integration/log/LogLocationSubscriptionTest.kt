@@ -15,12 +15,12 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package integration
+package integration.log
 
+import integration.LiveInstrumentIntegrationTest
 import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
@@ -34,45 +34,58 @@ import spp.protocol.service.SourceServices.Subscribe.toLiveViewSubscription
 import spp.protocol.view.LiveView
 import spp.protocol.view.LiveViewConfig
 import spp.protocol.view.LiveViewEvent
-import java.util.concurrent.atomic.AtomicInteger
 
-@Isolated
-class LiveLogSubscriptionTest : LiveInstrumentIntegrationTest() {
+@Isolated //todo: improve robustness
+class LogLocationSubscriptionTest : LiveInstrumentIntegrationTest() {
 
     private fun triggerLog() {
-        addLineLabel("done") { Throwable().stackTrace[0].lineNumber }
+        addLineLabel("done1") { Throwable().stackTrace[0].lineNumber }
+        addLineLabel("done2") { Throwable().stackTrace[0].lineNumber }
     }
 
     @Test
-    fun `test live log subscription`(): Unit = runBlocking {
+    fun `test live log location subscription`(): Unit = runBlocking {
         setupLineLabels {
             triggerLog()
         }
 
-        val liveLog = LiveLog(
+        val liveLog1 = LiveLog(
             "test log",
             emptyList(),
             LiveSourceLocation(
-                LiveLogSubscriptionTest::class.java.name,
-                getLineNumber("done"),
+                LogLocationSubscriptionTest::class.java.name,
+                getLineNumber("done1"),
                 Service.fromName("spp-test-probe")
             ),
             id = testNameAsUniqueInstrumentId,
-            hitLimit = 5,
+            applyImmediately = true
+        )
+        val liveLog2 = LiveLog(
+            "test log",
+            emptyList(),
+            LiveSourceLocation(
+                LogLocationSubscriptionTest::class.java.name,
+                getLineNumber("done2"),
+                Service.fromName("spp-test-probe")
+            ),
+            id = testNameAsUniqueInstrumentId,
             applyImmediately = true
         )
 
         val subscriptionId = viewService.addLiveView(
             LiveView(
-                entityIds = mutableSetOf(liveLog.logFormat),
+                entityIds = mutableSetOf(liveLog1.logFormat),
                 viewConfig = LiveViewConfig("test", listOf("endpoint_logs")),
-                location = Service.fromName("spp-test-probe")
+                location = LiveSourceLocation(
+                    LogLocationSubscriptionTest::class.java.name,
+                    getLineNumber("done2"),
+                    Service.fromName("spp-test-probe")
+                )
             )
         ).await().subscriptionId!!
         log.info("Using subscription id: {}", subscriptionId)
 
         val testContext = VertxTestContext()
-        val totalCount = AtomicInteger(0)
         val consumer = vertx.eventBus().consumer<JsonObject>(toLiveViewSubscription(subscriptionId))
         consumer.handler {
             val liveViewEvent = LiveViewEvent(it.body())
@@ -82,24 +95,15 @@ class LiveLogSubscriptionTest : LiveInstrumentIntegrationTest() {
             testContext.verify {
                 assertEquals("test log", rawLog.content)
                 assertEquals("Live", rawLog.level)
-
-                if (totalCount.incrementAndGet() >= 5) {
-                    testContext.completeNow()
-                }
+                assertEquals(getLineNumber("done2"), rawLog.location?.line)
             }
+            testContext.completeNow()
         }.completionHandler().await()
 
-        instrumentService.addLiveInstrument(liveLog).await()
-        log.info("Applied live log")
-
-        repeat(5) {
-            triggerLog()
-            log.info("Triggered log")
-
-            delay(2000)
-        }
-
-        errorOnTimeout(testContext, 30)
+        instrumentService.addLiveInstrument(liveLog1).await()
+        instrumentService.addLiveInstrument(liveLog2).await()
+        triggerLog()
+        errorOnTimeout(testContext)
 
         //clean up
         consumer.unregister()

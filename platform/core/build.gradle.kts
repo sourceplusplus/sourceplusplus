@@ -56,6 +56,7 @@ dependencies {
 
     //todo: properly add test dependency
     testImplementation(project(":platform:common").dependencyProject.extensions.getByType(SourceSetContainer::class).test.get().output)
+    testImplementation("org.apache.skywalking:apm-toolkit-trace:8.16.0")
 }
 
 //todo: shouldn't need to put in src (GitHub actions needs for some reason)
@@ -129,3 +130,25 @@ tasks.getByName<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("sha
     configurations.add(project.configurations.shadow.get())
 }
 tasks.getByName("assemble").dependsOn("shadowJar")
+
+tasks {
+    test {
+        val isIntegrationProfile = System.getProperty("test.profile") == "integration"
+        val testsIndex = gradle.startParameter.taskNames.indexOf("--tests")
+        var runningIntegrationTests = false
+        if (testsIndex != -1) {
+            val testName = gradle.startParameter.taskNames[testsIndex + 1]
+            if (testName.contains("integration.") || testName.endsWith("IT")) {
+                runningIntegrationTests = true
+            }
+        }
+
+        //exclude attaching probe to self unless requested
+        if (isIntegrationProfile || runningIntegrationTests) {
+            dependsOn(":probes:jvm:boot:jar")
+
+            val probeJar = "${project(":probes:jvm:boot").buildDir}/libs/spp-probe-$version.jar"
+            jvmArgs = listOf("-javaagent:$probeJar=${projectDir}/src/test/resources/spp-test-probe.yml")
+        }
+    }
+}

@@ -83,7 +83,11 @@ class LiveMeterView(private val subscriptionCache: MetricTypeSubscriptionCache) 
         val metricService = EntityNaming.getServiceId(metrics)
         val metricServiceInstance = EntityNaming.getServiceInstanceId(metadata)
         if (metricName.startsWith("spp_")) {
-            log.debug { "Processing Source++ metrics: {} - Data: {}".args(metricName, jsonEvent) }
+            if (log.isDebugEnabled) {
+                log.debug { "Processing Source++ metrics: {} - Data: {}".args(metricName, jsonEvent) }
+            } else {
+                log.info { "Processing Source++ metrics: {}".args(metricName) }
+            }
             val meterId = ViewProcessor.liveViewService.meterProcessService.converts()
                 .filterIsInstance<LiveMetricConvert>().firstNotNullOfOrNull {
                     findMeterId(metricName, it)
@@ -119,10 +123,10 @@ class LiveMeterView(private val subscriptionCache: MetricTypeSubscriptionCache) 
 
             //remove subscribers with additional filters
             subs = subs.filter {
-                if (it.subscription.serviceInstance?.let {
-                        it != metricServiceInstance
-                    } == true) return@filter false
-                if (it.subscription.service?.let {
+//                if (it.subscription.serviceInstance?.let {
+//                        it != metricServiceInstance
+//                    } == true) return@filter false
+                if (it.subscription.location?.service?.let {
                         !it.isSameLocation(it.withId(metricService))
                     } == true) return@filter false
                 return@filter true

@@ -92,7 +92,7 @@ class LiveMeterPartitionTest : LiveInstrumentIntegrationTest() {
                     "test",
                     listOf("${liveMeter.id}_true", "${liveMeter.id}_false")
                 ),
-                service = Service.fromName("spp-test-probe")
+                location = Service.fromName("spp-test-probe")
             )
         ).await().subscriptionId!!
 

@@ -165,13 +165,13 @@ object ViewProcessor : FeedbackProcessor() {
 
         val action = msg.headers().get("action")
         if (action == "addLiveView") {
-            if (failsPermissionCheck(RolePermission.ADD_LIVE_VIEW_SUBSCRIPTION)) return
+            if (failsPermissionCheck(RolePermission.ADD_LIVE_VIEW)) return
         } else if (action == "getLiveViews" || action == "getHistoricalMetrics") {
-            if (failsPermissionCheck(RolePermission.GET_LIVE_VIEW_SUBSCRIPTIONS)) return
+            if (failsPermissionCheck(RolePermission.GET_LIVE_VIEWS)) return
         } else if (action == "clearLiveViews") {
-            if (failsPermissionCheck(RolePermission.REMOVE_LIVE_VIEW_SUBSCRIPTION)) return
-        } else if (RolePermission.fromString(action) != null) {
-            val necessaryPermission = RolePermission.fromString(action)!!
+            if (failsPermissionCheck(RolePermission.REMOVE_LIVE_VIEW)) return
+        } else if (RolePermission.fromStringOrNull(action) != null) {
+            val necessaryPermission = RolePermission.fromString(action)
             if (selfInfo.permissions.contains(necessaryPermission)) {
                 handler.handle(Future.succeededFuture(msg))
             } else {

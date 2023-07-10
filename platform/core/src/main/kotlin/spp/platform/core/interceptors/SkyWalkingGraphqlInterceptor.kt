@@ -24,11 +24,8 @@ import graphql.language.SelectionSet
 import graphql.parser.Parser
 import io.vertx.core.Vertx
 import io.vertx.core.http.HttpMethod
-import io.vertx.core.http.HttpServerRequest
 import io.vertx.core.http.RequestOptions
 import io.vertx.core.json.JsonObject
-import io.vertx.ext.web.Router
-import io.vertx.ext.web.handler.BodyHandler
 import io.vertx.kotlin.coroutines.CoroutineVerticle
 import io.vertx.kotlin.coroutines.await
 import kotlinx.coroutines.launch
@@ -39,11 +36,9 @@ import spp.protocol.platform.auth.DataRedaction
 import spp.protocol.platform.auth.RedactionType
 import java.util.regex.Pattern
 
-class SkyWalkingGraphqlInterceptor(private val router: Router) : CoroutineVerticle() {
+class SkyWalkingGraphqlInterceptor : CoroutineVerticle() {
 
-    companion object {
-        private val log = KotlinLogging.logger {}
-    }
+    private val log = KotlinLogging.logger {}
 
     override suspend fun start() {
         val swHost = config.getJsonObject("skywalking-core").getString("host")
@@ -126,50 +121,6 @@ class SkyWalkingGraphqlInterceptor(private val router: Router) : CoroutineVertic
                 }
                 forward.putHeader("tenant_id", tenantId)
                 forward.end(body).await()
-            }
-        }
-
-        router.route("/graphql/skywalking").handler(BodyHandler.create()).handler { req ->
-            var selfId = req.user()?.principal()?.getString("developer_id")
-            if (selfId == null) {
-                val jwtConfig = config.getJsonObject("spp-platform").getJsonObject("jwt")
-                val jwtEnabled = jwtConfig.getString("enabled").toBooleanStrict()
-                if (jwtEnabled) {
-                    req.response().setStatusCode(500).end("Missing self id")
-                    return@handler
-                } else {
-                    selfId = "system"
-                }
-            }
-
-            val tenantId = req.user()?.principal()?.getString("tenant_id")
-            forwardSkyWalkingRequest(req.body().asJsonObject(), req.request(), selfId, tenantId)
-        }
-    }
-
-    private fun forwardSkyWalkingRequest(
-        body: JsonObject,
-        req: HttpServerRequest,
-        developerId: String,
-        tenantId: String?
-    ) {
-        val forward = JsonObject()
-        forward.put("developer_id", developerId)
-        forward.put("tenant_id", tenantId)
-        forward.put("body", body)
-        val headers = JsonObject()
-        req.headers().names().forEach {
-            headers.put(it, req.headers().get(it))
-        }
-        forward.put("headers", headers)
-        forward.put("method", req.method().name())
-        vertx.eventBus().request<JsonObject>("skywalking-forwarder", forward) {
-            if (it.succeeded()) {
-                val resp = it.result().body()
-                req.response().setStatusCode(resp.getInteger("status")).end(resp.getString("body"))
-            } else {
-                log.error("Failed to forward SkyWalking request", it.cause())
-                req.response().setStatusCode(500).end(it.cause().message)
             }
         }
     }

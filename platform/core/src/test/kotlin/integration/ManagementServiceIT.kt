@@ -20,89 +20,81 @@ package integration
 import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import org.apache.skywalking.apm.toolkit.trace.Tracer
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.parallel.Isolated
-import spp.protocol.artifact.log.Log
-import spp.protocol.instrument.LiveLog
-import spp.protocol.instrument.location.LiveSourceLocation
+import spp.protocol.artifact.metrics.MetricStep
+import spp.protocol.artifact.metrics.MetricType
+import spp.protocol.platform.general.Order
+import spp.protocol.platform.general.Scope
 import spp.protocol.platform.general.Service
+import spp.protocol.platform.general.util.IDManager
 import spp.protocol.service.SourceServices.Subscribe.toLiveViewSubscription
 import spp.protocol.view.LiveView
 import spp.protocol.view.LiveViewConfig
 import spp.protocol.view.LiveViewEvent
-import java.util.concurrent.atomic.AtomicInteger
+import java.time.ZonedDateTime
+import java.time.temporal.ChronoUnit
 
-@Isolated
-class LiveLogSubscriptionTest : LiveInstrumentIntegrationTest() {
+class ManagementServiceIT : PlatformIntegrationTest() {
 
-    private fun triggerLog() {
-        addLineLabel("done") { Throwable().stackTrace[0].lineNumber }
+    private fun fakeEndpoint() {
+        Tracer.createEntrySpan("fakeEndpoint", null)
+        Tracer.stopSpan()
     }
 
     @Test
-    fun `test live log subscription`(): Unit = runBlocking {
-        setupLineLabels {
-            triggerLog()
-        }
-
-        val liveLog = LiveLog(
-            "test log",
-            emptyList(),
-            LiveSourceLocation(
-                LiveLogSubscriptionTest::class.java.name,
-                getLineNumber("done"),
-                Service.fromName("spp-test-probe")
-            ),
-            id = testNameAsUniqueInstrumentId,
-            hitLimit = 5,
-            applyImmediately = true
-        )
-
+    fun `test sortMetrics`(): Unit = runBlocking {
         val subscriptionId = viewService.addLiveView(
             LiveView(
-                entityIds = mutableSetOf(liveLog.logFormat),
-                viewConfig = LiveViewConfig("test", listOf("endpoint_logs")),
+                entityIds = mutableSetOf(MetricType.Endpoint_RespTime_AVG.metricId),
+                viewConfig = LiveViewConfig(
+                    "test",
+                    listOf(MetricType.Endpoint_RespTime_AVG.metricId)
+                ),
                 location = Service.fromName("spp-test-probe")
             )
         ).await().subscriptionId!!
-        log.info("Using subscription id: {}", subscriptionId)
 
         val testContext = VertxTestContext()
-        val totalCount = AtomicInteger(0)
         val consumer = vertx.eventBus().consumer<JsonObject>(toLiveViewSubscription(subscriptionId))
         consumer.handler {
             val liveViewEvent = LiveViewEvent(it.body())
-            val rawLog = Log(JsonObject(liveViewEvent.metricsData).getJsonObject("log"))
-            log.info("Received log: {}", rawLog)
+            val rawMetrics = JsonObject(liveViewEvent.metricsData)
+            log.info("Received metrics: $rawMetrics")
 
             testContext.verify {
-                assertEquals("test log", rawLog.content)
-                assertEquals("Live", rawLog.level)
-
-                if (totalCount.incrementAndGet() >= 5) {
-                    testContext.completeNow()
-                }
+                assertEquals(
+                    "fakeEndpoint",
+                    IDManager.EndpointID.analysisId(rawMetrics.getString("entityId")).endpointName
+                )
             }
-        }.completionHandler().await()
-
-        instrumentService.addLiveInstrument(liveLog).await()
-        log.info("Applied live log")
-
-        repeat(5) {
-            triggerLog()
-            log.info("Triggered log")
-
-            delay(2000)
+            testContext.completeNow()
         }
 
-        errorOnTimeout(testContext, 30)
+        fakeEndpoint()
+        errorOnTimeout(testContext)
 
         //clean up
         consumer.unregister()
         assertNotNull(viewService.removeLiveView(subscriptionId).await())
+
+        val endTime = ZonedDateTime.now().truncatedTo(ChronoUnit.MINUTES)
+        val startTime = endTime.minusMinutes(5)
+        val metrics = viewService.sortMetrics(
+            MetricType.Endpoint_RespTime_AVG.metricId,
+            null,
+            true,
+            Scope.Endpoint,
+            100,
+            Order.DES,
+            MetricStep.MINUTE,
+            startTime.toInstant(),
+            endTime.toInstant()
+        ).await()
+        assertEquals(1, metrics.size)
+        assertEquals("fakeEndpoint", IDManager.EndpointID.analysisId(metrics[0].id).endpointName)
     }
 }

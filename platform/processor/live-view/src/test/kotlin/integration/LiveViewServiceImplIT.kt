@@ -19,6 +19,7 @@ package integration
 
 import io.vertx.kotlin.coroutines.await
 import kotlinx.coroutines.runBlocking
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.BeforeEach
@@ -28,6 +29,7 @@ import spp.protocol.view.LiveViewConfig
 
 class LiveViewServiceImplIT : PlatformIntegrationTest() {
 
+    @AfterEach
     @BeforeEach
     fun reset(): Unit = runBlocking {
         viewService.clearLiveViews().await()

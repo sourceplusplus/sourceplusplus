@@ -86,11 +86,26 @@ class LiveLogView(private val subscriptionCache: MetricTypeSubscriptionCache) : 
 
                 //remove subscribers with additional filters
                 subs = subs.filter {
-                    if (it.subscription.serviceInstance?.let {
-                            it != logData.serviceInstance
-                        } == true) return@filter false
-                    if (it.subscription.service?.let {
+//                    if (it.subscription.serviceInstance?.let {
+//                            it != logData.serviceInstance
+//                        } == true) return@filter false
+                    if (it.subscription.location?.service?.let {
                             !it.isSameLocation(it.withName(logData.service))
+                        } == true) return@filter false
+
+                    //get log location (if available)
+                    val logSource = logData.tags.dataList.find { it.key == "source" }?.value
+                    val logLineNumber = logData.tags.dataList.find { it.key == "line" }?.value?.toInt()
+                    val logLocation = if (logSource != null) {
+                        LiveSourceLocation(
+                            source = logSource,
+                            line = logLineNumber ?: -1,
+                            service = Service.fromName(logData.service),
+                            //serviceInstance = logData.serviceInstance
+                        )
+                    } else null
+                    if (it.subscription.location?.let {
+                            if (logLocation == null) true else !it.isSameLocation(logLocation)
                         } == true) return@filter false
                     return@filter true
                 }.toMutableSet()
@@ -114,7 +129,7 @@ class LiveLogView(private val subscriptionCache: MetricTypeSubscriptionCache) : 
                 logSource,
                 logLineNumber ?: -1,
                 service = Service.fromName(logData.service),
-                serviceInstance = logData.serviceInstance
+                //serviceInstance = logData.serviceInstance
             )
         } else null
 

@@ -38,6 +38,7 @@ import spp.protocol.instrument.event.LiveInstrumentEvent
 import spp.protocol.platform.auth.*
 import spp.protocol.platform.developer.Developer
 import spp.protocol.service.LiveManagementService
+import spp.protocol.view.rule.ViewRule
 import java.time.Instant
 
 object SourceStorage {
@@ -137,7 +138,7 @@ object SourceStorage {
             JsonObject.mapFrom(it).let {
                 Triple(
                     DeveloperRole.fromString(it.getString("id")),
-                    it.getJsonArray("permissions")?.list?.mapNotNull { RolePermission.fromString(it.toString()) },
+                    it.getJsonArray("permissions")?.list?.mapNotNull { RolePermission.fromStringOrNull(it.toString()) },
                     it.getJsonArray("redactions")?.list?.mapNotNull { it.toString() },
                 )
             }
@@ -476,5 +477,17 @@ object SourceStorage {
      */
     suspend fun getLiveInstruments(includeArchive: Boolean = false): List<LiveInstrument> {
         return storage.getLiveInstruments(includeArchive)
+    }
+
+    suspend fun getViewRules(): List<ViewRule> {
+        return storage.getViewRules()
+    }
+
+    suspend fun addViewRule(viewRule: ViewRule) {
+        return storage.addViewRule(viewRule)
+    }
+
+    suspend fun removeViewRule(name: String): Boolean {
+        return storage.removeViewRule(name)
     }
 }

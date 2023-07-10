@@ -134,10 +134,11 @@ enum RolePermission {
 
     BREAKPOINT_VARIABLE_CONTROL,
 
-    ADD_LIVE_VIEW_SUBSCRIPTION,
-    REMOVE_LIVE_VIEW_SUBSCRIPTION,
-    GET_LIVE_VIEW_SUBSCRIPTIONS,
-    #    VIEW_OVERVIEW,
+    ADD_LIVE_VIEW,
+    REMOVE_LIVE_VIEW,
+    GET_LIVE_VIEWS,
+
+    #VIEW_OVERVIEW,
     VIEW_ACTIVITY,
     VIEW_TRACES,
     VIEW_LOGS,
@@ -447,10 +448,7 @@ input MetaInfoInput {
 type LiveSourceLocation {
     source: String!
     line: Int
-    service: String
-    serviceInstance: String
-    commitId: String
-    fileChecksum: String
+    service: Service
     probeId: String
     scope: LocationScope!
 }
@@ -458,10 +456,7 @@ type LiveSourceLocation {
 input LiveSourceLocationInput {
     source: String!
     line: Int
-    service: String
-    serviceInstance: String
-    commitId: String
-    fileChecksum: String
+    service: ServiceInput
     probeId: String
     scope: LocationScope
 }
@@ -496,10 +491,16 @@ type DataRedaction {
 type Service {
     id: String!
     name: String!
-    group: String!
+    group: String
     shortName: String
     layers: [String!]!
     normal: Boolean!
+    environment: String
+    version: String
+}
+
+input ServiceInput {
+    name: String
     environment: String
     version: String
 }
@@ -726,6 +727,7 @@ type Mutation {
     addLiveSpan(input: LiveSpanInput!): LiveSpan!
 
     saveRule(input: ViewRuleInput!): ViewRule!
+    deleteRule(ruleName: String!): Boolean!
     addLiveView(input: LiveViewInput!): LiveView!
     clearLiveViews: Boolean!
 

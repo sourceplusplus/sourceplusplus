@@ -17,17 +17,66 @@
  */
 package integration
 
+import io.vertx.core.json.JsonObject
+import io.vertx.junit5.VertxTestContext
+import io.vertx.kotlin.coroutines.await
 import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.Disabled
+import org.apache.skywalking.apm.toolkit.trace.Tracer
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.parallel.Isolated
+import spp.protocol.artifact.metrics.MetricType
+import spp.protocol.platform.general.Service
+import spp.protocol.platform.general.util.IDManager
+import spp.protocol.service.SourceServices.Subscribe.toLiveViewSubscription
+import spp.protocol.view.LiveView
+import spp.protocol.view.LiveViewConfig
+import spp.protocol.view.LiveViewEvent
 
+@Isolated //todo: more robust
 class EndpointCPMViewTest : PlatformIntegrationTest() {
 
     private fun fakeEndpoint() {
-        //todo: use Tracer in 8.15.0
+        Tracer.createEntrySpan("fakeEndpoint", null)
+        Tracer.stopSpan()
     }
 
-    @Disabled
+    @Test
     fun `endpoint cpm view`(): Unit = runBlocking {
+        val subscriptionId = viewService.addLiveView(
+            LiveView(
+                entityIds = mutableSetOf(MetricType.Endpoint_RespTime_AVG.asRealtime().metricId),
+                viewConfig = LiveViewConfig(
+                    "test",
+                    listOf(MetricType.Endpoint_RespTime_AVG.asRealtime().metricId)
+                ),
+                location = Service.fromName("spp-test-probe")
+            )
+        ).await().subscriptionId!!
+        log.info("Subscription id: $subscriptionId")
+
+        val testContext = VertxTestContext()
+        val consumer = vertx.eventBus().consumer<JsonObject>(toLiveViewSubscription(subscriptionId))
+        consumer.handler {
+            val liveViewEvent = LiveViewEvent(it.body())
+            val rawMetrics = JsonObject(liveViewEvent.metricsData)
+            log.info("Received metrics: $rawMetrics")
+
+            testContext.verify {
+                assertEquals(
+                    "fakeEndpoint",
+                    IDManager.EndpointID.analysisId(rawMetrics.getString("entityId")).endpointName
+                )
+            }
+            testContext.completeNow()
+        }
+
         fakeEndpoint()
+        errorOnTimeout(testContext)
+
+        //clean up
+        consumer.unregister()
+        assertNotNull(viewService.removeLiveView(subscriptionId).await())
     }
 }

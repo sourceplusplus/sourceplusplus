@@ -35,11 +35,9 @@ import kotlinx.coroutines.launch
 import mu.KotlinLogging
 import org.apache.commons.lang3.RandomStringUtils
 import org.apache.skywalking.oap.server.core.CoreModule
-import org.apache.skywalking.oap.server.core.query.AggregationQueryService
 import org.apache.skywalking.oap.server.core.query.MetadataQueryService
 import org.apache.skywalking.oap.server.core.query.enumeration.Step
 import org.apache.skywalking.oap.server.core.query.input.Duration
-import org.apache.skywalking.oap.server.core.query.input.TopNCondition
 import org.apache.skywalking.oap.server.library.module.ModuleManager
 import spp.platform.common.ClusterConnection
 import spp.platform.common.DeveloperAuth
@@ -47,12 +45,14 @@ import spp.platform.common.service.SourceBridgeService
 import spp.platform.core.service.cache.SelfInfoCache
 import spp.platform.storage.SourceStorage
 import spp.platform.storage.config.SystemConfig
-import spp.protocol.artifact.metrics.MetricStep
 import spp.protocol.platform.ProbeAddress
 import spp.protocol.platform.auth.*
 import spp.protocol.platform.developer.Developer
 import spp.protocol.platform.developer.SelfInfo
-import spp.protocol.platform.general.*
+import spp.protocol.platform.general.Service
+import spp.protocol.platform.general.ServiceEndpoint
+import spp.protocol.platform.general.ServiceInstance
+import spp.protocol.platform.general.TimeInfo
 import spp.protocol.platform.status.InstanceConnection
 import spp.protocol.service.LiveInstrumentService
 import spp.protocol.service.LiveManagementService
@@ -63,8 +63,6 @@ import java.text.SimpleDateFormat
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.*
-import org.apache.skywalking.oap.server.core.query.enumeration.Order as SkyWalkingOrder
-import org.apache.skywalking.oap.server.core.query.enumeration.Scope as SkyWalkingScope
 
 @Suppress("LargeClass", "TooManyFunctions") // public API
 class LiveManagementServiceImpl(
@@ -77,9 +75,6 @@ class LiveManagementServiceImpl(
     private val metadataQueryService = moduleManager.find(CoreModule.NAME)
         .provider()
         .getService(MetadataQueryService::class.java)
-    private val aggregationQueryDAO = moduleManager.find(CoreModule.NAME)
-        .provider()
-        .getService(AggregationQueryService::class.java)
     private lateinit var healthChecks: HealthChecks
     private lateinit var metricsService: MetricsService
 
@@ -664,38 +659,6 @@ class LiveManagementServiceImpl(
                 promise.complete(result)
             }.onFailure {
                 promise.fail(it)
-            }
-        }
-        return promise.future()
-    }
-
-    override fun sortMetrics(
-        name: String,
-        parentService: String?,
-        normal: Boolean?,
-        scope: Scope?,
-        topN: Int,
-        order: Order,
-        step: MetricStep,
-        start: Instant,
-        stop: Instant?
-    ): Future<List<SelectedRecord>> {
-        log.debug { "Sorting metrics" }
-        val promise = Promise.promise<List<SelectedRecord>>()
-        launch(vertx.dispatcher()) {
-            aggregationQueryDAO.sortMetrics(TopNCondition().apply {
-                this.name = name
-                this.parentService = parentService
-                this.isNormal = normal ?: false
-                this.scope = SkyWalkingScope.valueOf(scope?.name ?: "ALL")
-                this.topN = topN
-                this.order = SkyWalkingOrder.valueOf(order.name)
-            }, Duration().apply {
-                this.start = step.formatter.format(start)
-                this.end = step.formatter.format(stop ?: Instant.now())
-                this.step = Step.valueOf(step.name)
-            }).map { JsonObject.mapFrom(it) }.map { SelectedRecord(it) }.let {
-                promise.complete(it)
             }
         }
         return promise.future()

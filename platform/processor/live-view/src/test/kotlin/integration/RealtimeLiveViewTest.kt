@@ -45,7 +45,7 @@ class RealtimeLiveViewTest : PlatformIntegrationTest() {
                     "test",
                     listOf(MetricType.INSTANCE_JVM_CPU.asRealtime().metricId)
                 ),
-                service = Service.fromName("spp-test-probe")
+                location = Service.fromName("spp-test-probe")
             )
         ).await().subscriptionId!!
 

@@ -39,12 +39,12 @@ class LiveMetricConvert(
         private val log = KotlinLogging.logger {}
     }
 
+    private var setupMetricIds = mutableSetOf<String>()
+
     @Synchronized
-    fun addRule(existingPartitions: MutableSet<String>, meterName: String) {
-        if (existingPartitions.contains(meterName)) {
-            return
-        }
-        existingPartitions.add(meterName)
+    fun addRule(meterName: String) {
+        if (setupMetricIds.contains(meterName)) return
+        setupMetricIds.add(meterName)
 
         val rules = config.getLiveMetricsRules()
         if (rules.size != 1) {

@@ -94,7 +94,7 @@ class LiveMeterRateTest : LiveInstrumentIntegrationTest() {
                     "test",
                     listOf(liveMeter.id!!)
                 ),
-                service = Service.fromName("spp-test-probe")
+                location = Service.fromName("spp-test-probe")
             )
         ).await().subscriptionId!!
 

@@ -17,6 +17,9 @@
  */
 package spp.processor.view.impl
 
+import io.vertx.core.Vertx
+import io.vertx.kotlin.coroutines.await
+import kotlinx.coroutines.runBlocking
 import org.apache.skywalking.oap.meter.analyzer.Analyzer
 import org.apache.skywalking.oap.meter.analyzer.MetricConvert
 import org.apache.skywalking.oap.meter.analyzer.dsl.Expression
@@ -27,14 +30,19 @@ import org.joor.Reflect
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito
+import spp.platform.storage.CoreStorage
+import spp.platform.storage.SourceStorage
 import spp.protocol.view.rule.RulePartition
 import spp.protocol.view.rule.ViewRule
 
 class LiveViewServiceImplTest {
 
     @Test
-    fun createRule() {
+    fun createRule(): Unit = runBlocking {
         val viewService = LiveViewServiceImpl()
+        SourceStorage.storage = Mockito.mock(CoreStorage::class.java)
+        val vertx = Vertx.vertx()
+        viewService.init(vertx, vertx.orCreateContext)
         viewService.meterSystem = Mockito.mock(MeterSystem::class.java)
 
         val convertList = mutableListOf<MetricConvert>()
@@ -47,7 +55,7 @@ class LiveViewServiceImplTest {
                 name = "build_test1",
                 exp = "test_count1.tagEqual(\"k1\", \"v1\").service([\"service\"], Layer.GENERAL)"
             )
-        )
+        ).await()
 
         assertEquals(1, convertList.size)
         val analyzers = Reflect.on(convertList.first()).get<List<Analyzer>>("analyzers")
@@ -62,11 +70,16 @@ class LiveViewServiceImplTest {
             "test_count1.tagEqual(\"k1\", \"v1\").service([\"service\"], Layer.GENERAL)",
             Reflect.on(expression).get("literal")
         )
+
+        vertx.close()
     }
 
     @Test
-    fun `two unique rules`() {
+    fun `two unique rules`(): Unit = runBlocking {
         val viewService = LiveViewServiceImpl()
+        SourceStorage.storage = Mockito.mock(CoreStorage::class.java)
+        val vertx = Vertx.vertx()
+        viewService.init(vertx, vertx.orCreateContext)
         viewService.meterSystem = Mockito.mock(MeterSystem::class.java)
 
         val convertList = mutableListOf<MetricConvert>()
@@ -79,13 +92,13 @@ class LiveViewServiceImplTest {
                 name = "build_test1",
                 exp = "test_count1.tagEqual(\"k1\", \"v1\").service([\"service\"], Layer.GENERAL)"
             )
-        )
+        ).await()
         viewService.saveRule(
             ViewRule(
                 name = "build_test2",
                 exp = "test_count2.tagEqual(\"k1\", \"v1\").service([\"service\"], Layer.GENERAL)"
             )
-        )
+        ).await()
 
         assertEquals(2, convertList.size)
 
@@ -110,11 +123,16 @@ class LiveViewServiceImplTest {
             "test_count2.tagEqual(\"k1\", \"v1\").service([\"service\"], Layer.GENERAL)",
             Reflect.on(expression2).get("literal")
         )
+
+        vertx.close()
     }
 
     @Test
-    fun `try to save duplicate rule`() {
+    fun `try to save duplicate rule`(): Unit = runBlocking {
         val viewService = LiveViewServiceImpl()
+        SourceStorage.storage = Mockito.mock(CoreStorage::class.java)
+        val vertx = Vertx.vertx()
+        viewService.init(vertx, vertx.orCreateContext)
         viewService.meterSystem = Mockito.mock(MeterSystem::class.java)
 
         val convertList = mutableListOf<MetricConvert>()
@@ -126,8 +144,12 @@ class LiveViewServiceImplTest {
             name = "build_test1",
             exp = "test_count1.tagEqual(\"k1\", \"v1\").service([\"service\"], Layer.GENERAL)"
         )
-        viewService.saveRule(rule)
-        viewService.saveRule(rule)
+        viewService.saveRule(rule).await()
+        try {
+            viewService.saveRule(rule).await()
+        } catch (e: Exception) {
+            assertEquals("Rule with name build_test1 already exists", e.message)
+        }
 
         assertEquals(1, convertList.size)
         val analyzers = Reflect.on(convertList.first()).get<List<Analyzer>>("analyzers")
@@ -142,11 +164,16 @@ class LiveViewServiceImplTest {
             "test_count1.tagEqual(\"k1\", \"v1\").service([\"service\"], Layer.GENERAL)",
             Reflect.on(expression).get("literal")
         )
+
+        vertx.close()
     }
 
     @Test
-    fun deleteRule() {
+    fun deleteRule(): Unit = runBlocking {
         val viewService = LiveViewServiceImpl()
+        SourceStorage.storage = Mockito.mock(CoreStorage::class.java)
+        val vertx = Vertx.vertx()
+        viewService.init(vertx, vertx.orCreateContext)
         viewService.meterSystem = Mockito.mock(MeterSystem::class.java)
 
         val convertList = mutableListOf<MetricConvert>()
@@ -160,20 +187,25 @@ class LiveViewServiceImplTest {
                 name = "build_test1",
                 exp = "test_count1.tagEqual(\"k1\", \"v1\").service([\"service\"], Layer.GENERAL)"
             )
-        ).toCompletionStage().toCompletableFuture().get()
+        ).await()
         assertEquals(1, convertList.size)
         val analyzers = Reflect.on(convertList.first()).get<List<Analyzer>>("analyzers")
         assertEquals(1, analyzers.size)
 
         //delete rule
-        val deletedRule = viewService.deleteRule(rule.name).toCompletionStage().toCompletableFuture().get()
-        assertEquals(rule.copy(name = "spp_" + rule.name), deletedRule)
+        val deletedRule = viewService.deleteRule(rule.name).await()
+        assertEquals(rule, deletedRule)
         assertEquals(0, convertList.size)
+
+        vertx.close()
     }
 
     @Test
-    fun deleteRule_partitioned() {
+    fun deleteRule_partitioned(): Unit = runBlocking {
         val viewService = LiveViewServiceImpl()
+        SourceStorage.storage = Mockito.mock(CoreStorage::class.java)
+        val vertx = Vertx.vertx()
+        viewService.init(vertx, vertx.orCreateContext)
         viewService.meterSystem = Mockito.mock(MeterSystem::class.java)
 
         val convertList = mutableListOf<MetricConvert>()
@@ -193,7 +225,7 @@ class LiveViewServiceImplTest {
                     )
                 )
             )
-        ).toCompletionStage().toCompletableFuture().get()
+        ).await()
         assertEquals(1, convertList.size)
         val analyzers = Reflect.on(convertList.first()).get<MutableList<Analyzer>>("analyzers")
         assertEquals(0, analyzers.size)
@@ -214,8 +246,10 @@ class LiveViewServiceImplTest {
         analyzers.add(newAnalyzer)
 
         //delete rule
-        val deletedRule = viewService.deleteRule(rule.name).toCompletionStage().toCompletableFuture().get()
-        assertEquals(rule.copy(name = "spp_" + rule.name), deletedRule)
+        val deletedRule = viewService.deleteRule(rule.name).await()
+        assertEquals(rule, deletedRule)
         assertEquals(0, convertList.size)
+
+        vertx.close()
     }
 }
