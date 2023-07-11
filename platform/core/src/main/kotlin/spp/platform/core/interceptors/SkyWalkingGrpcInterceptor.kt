@@ -76,7 +76,7 @@ class SkyWalkingGrpcInterceptor(
                 val clientSecret = authParts.getOrNull(1)?.takeIf { it.isNotBlank() && it != "null" }
                 val tenantId = authParts.getOrNull(2)?.takeIf { it.isNotBlank() && it != "null" }
                 val environment = authParts.getOrNull(3)?.takeIf { it.isNotBlank() && it != "null" }
-                val commitId = authParts.getOrNull(4)?.takeIf { it.isNotBlank() && it != "null" }
+                val version = authParts.getOrNull(4)?.takeIf { it.isNotBlank() && it != "null" }
                 if (authHeader == null || clientId == null || clientSecret == null) {
                     log.warn { "Invalid auth header: $authHeader" }
                     call.close(Status.PERMISSION_DENIED, Metadata())
@@ -96,6 +96,15 @@ class SkyWalkingGrpcInterceptor(
                         call.close(Status.PERMISSION_DENIED, Metadata())
                         object : ServerCall.Listener<ReqT>() {}
                     } else {
+                        log.debug {
+                            buildString {
+                                append("Valid auth header: ").append(authHeader)
+                                append(" Client ID: ").append(clientId)
+                                append(" Tenant ID: ").append(tenantId)
+                                append(" Environment: ").append(environment)
+                                append(" Version: ").append(version)
+                            }
+                        }
                         probeAuthCache.put(authHeader, true)
 
                         val context = Context.current()
@@ -103,7 +112,7 @@ class SkyWalkingGrpcInterceptor(
                             .withValue(ContextUtil.CLIENT_ACCESS, clientSecret)
                             .withValue(ContextUtil.TENANT_ID, tenantId)
                             .withValue(ContextUtil.ENVIRONMENT, environment)
-                            .withValue(ContextUtil.VERSION, commitId)
+                            .withValue(ContextUtil.VERSION, version)
                         Contexts.interceptCall(context, call, headers, next)
                     }
                 }
