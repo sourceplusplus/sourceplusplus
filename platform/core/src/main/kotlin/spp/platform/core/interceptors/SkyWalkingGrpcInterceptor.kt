@@ -96,6 +96,16 @@ class SkyWalkingGrpcInterceptor(
                         call.close(Status.PERMISSION_DENIED, Metadata())
                         object : ServerCall.Listener<ReqT>() {}
                     } else {
+                        log.debug {
+                            buildString {
+                                append("Validated auth header: ")
+                                append(authHeader)
+                                append(". Client ID: ").append(clientId)
+                                append(". Tenant ID: ").append(tenantId)
+                                append(". Environment: ").append(environment)
+                                append(". Version: ").append(version)
+                            }
+                        }
                         probeAuthCache.put(authHeader, true)
 
                         val context = Context.current()
