@@ -76,7 +76,7 @@ class SkyWalkingGrpcInterceptor(
                 val clientSecret = authParts.getOrNull(1)?.takeIf { it.isNotBlank() && it != "null" }
                 val tenantId = authParts.getOrNull(2)?.takeIf { it.isNotBlank() && it != "null" }
                 val environment = authParts.getOrNull(3)?.takeIf { it.isNotBlank() && it != "null" }
-                val commitId = authParts.getOrNull(4)?.takeIf { it.isNotBlank() && it != "null" }
+                val version = authParts.getOrNull(4)?.takeIf { it.isNotBlank() && it != "null" }
                 if (authHeader == null || clientId == null || clientSecret == null) {
                     log.warn { "Invalid auth header: $authHeader" }
                     call.close(Status.PERMISSION_DENIED, Metadata())
@@ -103,7 +103,7 @@ class SkyWalkingGrpcInterceptor(
                             .withValue(ContextUtil.CLIENT_ACCESS, clientSecret)
                             .withValue(ContextUtil.TENANT_ID, tenantId)
                             .withValue(ContextUtil.ENVIRONMENT, environment)
-                            .withValue(ContextUtil.VERSION, commitId)
+                            .withValue(ContextUtil.VERSION, version)
                         Contexts.interceptCall(context, call, headers, next)
                     }
                 }
