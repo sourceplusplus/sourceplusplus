@@ -54,8 +54,8 @@ class SkyWalkingGrpcInterceptor(
     ): ServerCall.Listener<ReqT> {
         val authHeader = headers?.get(AUTH_HEAD_HEADER_NAME)
         if (authHeader != null && probeAuthCache.getIfPresent(authHeader) != null) {
-            val (clientId, clientSecret, tenantId, environment, version) = extractPartsFromAuth(authHeader)
-            val context = getContextWithValues(clientId, clientSecret, tenantId, environment, version)
+            val authData = extractPartsFromAuth(authHeader)
+            val context = getContextWithValues(authData)
             return Contexts.interceptCall(context, call, headers, next)
         } else {
             val authEnabled = config.getJsonObject("client-access")?.getString("enabled")?.toBooleanStrictOrNull()
@@ -92,13 +92,7 @@ class SkyWalkingGrpcInterceptor(
                         }
                         probeAuthCache.put(authHeader, true)
 
-                        val context = getContextWithValues(
-                            authData.clientId,
-                            authData.clientSecret,
-                            authData.tenantId,
-                            authData.environment,
-                            authData.version
-                        )
+                        val context = getContextWithValues(authData)
                         Contexts.interceptCall(context, call, headers, next)
                     }
                 }
@@ -118,19 +112,13 @@ class SkyWalkingGrpcInterceptor(
         return AuthData(clientId, clientSecret, tenantId, environment, version)
     }
 
-    private fun getContextWithValues(
-        clientId: String?,
-        clientSecret: String?,
-        tenantId: String?,
-        environment: String?,
-        version: String?
-    ): Context {
+    private fun getContextWithValues(authData: AuthData?): Context {
         return Context.current()
-            .withValue(ContextUtil.CLIENT_ID, clientId)
-            .withValue(ContextUtil.CLIENT_ACCESS, clientSecret)
-            .withValue(ContextUtil.TENANT_ID, tenantId)
-            .withValue(ContextUtil.ENVIRONMENT, environment)
-            .withValue(ContextUtil.VERSION, version)
+            .withValue(ContextUtil.CLIENT_ID, authData?.clientId)
+            .withValue(ContextUtil.CLIENT_ACCESS, authData?.clientSecret)
+            .withValue(ContextUtil.TENANT_ID, authData?.tenantId)
+            .withValue(ContextUtil.ENVIRONMENT, authData?.environment)
+            .withValue(ContextUtil.VERSION, authData?.version)
     }
 
     private data class AuthData(
