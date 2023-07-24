@@ -60,22 +60,22 @@ class SkyWalkingGrpcInterceptor(
         } else {
             val authEnabled = config.getJsonObject("client-access")?.getString("enabled")?.toBooleanStrictOrNull()
             if (authEnabled == true) {
-                val (clientId, clientSecret, tenantId, environment, version) = extractPartsFromAuth(authHeader)
-                if (authHeader == null || clientId == null || clientSecret == null) {
+                val authData = extractPartsFromAuth(authHeader)
+                if (authHeader == null || authData.clientId == null || authData.clientSecret == null) {
                     log.warn { "Invalid auth header: $authHeader" }
                     call.close(Status.PERMISSION_DENIED, Metadata())
                     return object : ServerCall.Listener<ReqT>() {}
                 }
 
                 return runBlocking(vertx.dispatcher()) {
-                    if (tenantId != null) {
-                        Vertx.currentContext().putLocal("tenant_id", tenantId)
+                    if (authData.tenantId != null) {
+                        Vertx.currentContext().putLocal("tenant_id", authData.tenantId)
                     } else {
                         Vertx.currentContext().removeLocal("tenant_id")
                     }
 
-                    val clientAccess = SourceStorage.getClientAccess(clientId)
-                    return@runBlocking if (clientAccess == null || clientAccess.secret != clientSecret) {
+                    val clientAccess = SourceStorage.getClientAccess(authData.clientId)
+                    return@runBlocking if (clientAccess == null || clientAccess.secret != authData.clientSecret) {
                         log.warn { "Invalid auth header: $authHeader" }
                         call.close(Status.PERMISSION_DENIED, Metadata())
                         object : ServerCall.Listener<ReqT>() {}
@@ -84,15 +84,21 @@ class SkyWalkingGrpcInterceptor(
                             buildString {
                                 append("Validated auth header: ")
                                 append(authHeader)
-                                append(". Client ID: ").append(clientId)
-                                append(". Tenant ID: ").append(tenantId)
-                                append(". Environment: ").append(environment)
-                                append(". Version: ").append(version)
+                                append(". Client ID: ").append(authData.clientId)
+                                append(". Tenant ID: ").append(authData.tenantId)
+                                append(". Environment: ").append(authData.environment)
+                                append(". Version: ").append(authData.version)
                             }
                         }
                         probeAuthCache.put(authHeader, true)
 
-                        val context = getContextWithValues(clientId, clientSecret, tenantId, environment, version)
+                        val context = getContextWithValues(
+                            authData.clientId,
+                            authData.clientSecret,
+                            authData.tenantId,
+                            authData.environment,
+                            authData.version
+                        )
                         Contexts.interceptCall(context, call, headers, next)
                     }
                 }
@@ -102,14 +108,14 @@ class SkyWalkingGrpcInterceptor(
         }
     }
 
-    private fun extractPartsFromAuth(authHeader: String?): List<String?> {
+    private fun extractPartsFromAuth(authHeader: String?): AuthData {
         val authParts = authHeader?.split(":") ?: emptyList()
         val clientId = authParts.getOrNull(0)?.takeIf { it.isNotBlank() && it != "null" }
         val clientSecret = authParts.getOrNull(1)?.takeIf { it.isNotBlank() && it != "null" }
         val tenantId = authParts.getOrNull(2)?.takeIf { it.isNotBlank() && it != "null" }
         val environment = authParts.getOrNull(3)?.takeIf { it.isNotBlank() && it != "null" }
         val version = authParts.getOrNull(4)?.takeIf { it.isNotBlank() && it != "null" }
-        return listOf(clientId, clientSecret, tenantId, environment, version)
+        return AuthData(clientId, clientSecret, tenantId, environment, version)
     }
 
     private fun getContextWithValues(
@@ -126,4 +132,12 @@ class SkyWalkingGrpcInterceptor(
             .withValue(ContextUtil.ENVIRONMENT, environment)
             .withValue(ContextUtil.VERSION, version)
     }
+
+    private data class AuthData(
+        val clientId: String?,
+        val clientSecret: String?,
+        val tenantId: String?,
+        val environment: String?,
+        val version: String?
+    )
 }
