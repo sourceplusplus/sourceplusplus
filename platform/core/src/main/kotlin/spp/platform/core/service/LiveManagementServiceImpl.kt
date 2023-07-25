@@ -627,19 +627,17 @@ class LiveManagementServiceImpl(
     }
 
     override fun getEndpoints(service: Service, limit: Int?, ignoreInactive: Boolean): Future<List<ServiceEndpoint>> {
-        log.debug { "##### Getting endpoints for service $service; ignoreInactive = $ignoreInactive" }
+        log.debug { "Getting endpoints for service $service; ignoreInactive = $ignoreInactive" }
         val promise = Promise.promise<List<ServiceEndpoint>>()
         launch(vertx.dispatcher()) {
             val result = mutableListOf<ServiceEndpoint>()
             getActiveServices(service.name).onSuccess { services ->
                 services.forEach { svc ->
-                    log.info { ">>>>>>>>>> svc id = $svc.id, sep = $svc" }
-                    metadataQueryService.findEndpoint("", svc.id, limit ?: 1000).forEach {
-                        log.info { ">>>>>>>>>> Endpoint it = $it" }
-                        val sep = ServiceEndpoint(it.id, it.name)
-                        log.info { ">>>>>>>>>> ServiceEndpoint sep = $sep" }
-                        result.add(ServiceEndpoint(it.id, it.name))
-                    }
+                    metadataQueryService.findEndpoint("", svc.id, limit ?: 1000)
+                        .filterNot { ignoreInactive } //todo (issue-1021) Optimize later
+                        .forEach {
+                            result.add(ServiceEndpoint(it.id, it.name))
+                        }
                 }
                 promise.complete(result)
             }.onFailure {
