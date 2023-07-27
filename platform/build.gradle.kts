@@ -79,7 +79,7 @@ subprojects {
         compileOnly("com.graphql-java:graphql-java:20.2") //tied to SkyWalking OAP version
         compileOnly("com.google.protobuf:protobuf-java:3.21.8") //tied to SkyWalking OAP version
         compileOnly("io.grpc:grpc-api:1.49.0") //tied to SkyWalking OAP version
-        compileOnly("io.grpc:grpc-stub:1.49.0") //tied to SkyWalking OAP version
+        compileOnly("io.grpc:grpc-stub:1.57.0") //tied to SkyWalking OAP version
         compileOnly("com.linecorp.armeria:armeria:1.24.3") //tied to SkyWalking OAP version
         implementation("io.vertx:vertx-auth-jwt:$vertxVersion")
         implementation("io.vertx:vertx-redis-client:$vertxVersion")
