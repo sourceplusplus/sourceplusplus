@@ -218,7 +218,8 @@ class GraphqlAPI(private val jwtEnabled: Boolean) : CoroutineVerticle() {
         getLiveManagementService(env).compose {
             it.getEndpoints(
                 Service.fromId(env.getArgument("serviceId")),
-                env.getArgument<Int?>("limit").toString().toIntOrNull()
+                env.getArgument<Int?>("limit").toString().toIntOrNull(),
+                env.getArgument<Boolean?>("ignoreInactive").toString().toBooleanStrictOrNull()
             )
         }
 
