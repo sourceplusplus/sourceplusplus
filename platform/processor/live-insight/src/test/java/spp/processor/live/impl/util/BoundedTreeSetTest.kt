@@ -49,7 +49,7 @@ class BoundedTreeSetTest {
             ),
             object : InsightModerator() {
                 override val type: InsightType
-                    get() = throw IllegalStateException()
+                    get() = TODO()
 
                 override suspend fun addAvailableInsights(
                     psiFile: PsiFile,
