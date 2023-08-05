@@ -26,7 +26,12 @@ object InsightWorkspaceProvider {
 //        JVMLanguageProvider().setup(project)
     }
 
+    private val workspaces = mutableMapOf<String, InsightEnvironment>()
+
     fun getWorkspace(workspaceId: String): InsightEnvironment {
-        return insightEnvironment
+        if (!workspaces.containsKey(workspaceId)) {
+            workspaces[workspaceId] = InsightEnvironment()
+        }
+        return workspaces[workspaceId]!!
     }
 }

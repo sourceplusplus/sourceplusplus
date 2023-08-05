@@ -29,8 +29,9 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
 import mu.KotlinLogging
 import org.zeroturnaround.exec.ProcessExecutor
-import org.zeroturnaround.exec.ProcessResult
 import org.zeroturnaround.exec.stream.slf4j.Slf4jStream
+import spp.jetbrains.artifact.service.toArtifact
+import spp.jetbrains.marker.service.getFullyQualifiedName
 import spp.processor.insight.InsightProcessor
 import spp.processor.insight.provider.InsightWorkspaceProvider
 import spp.protocol.artifact.ArtifactQualifiedName
@@ -42,8 +43,7 @@ class LiveInsightServiceImpl : CoroutineVerticle(), LiveInsightService {
 
     private val log = KotlinLogging.logger {}
 
-    override fun uploadSourceCode(sourceCode: JsonObject): Future<Void> {
-        val workspaceId = "test"
+    override fun uploadSourceCode(workspaceId: String, sourceCode: JsonObject): Future<Void> {
         val tempDir = File("/tmp/$workspaceId").apply { mkdirs() }
         val filename = File(sourceCode.getString("file_path")).name
         val sourceFile = File(tempDir.absolutePath, filename)
@@ -55,16 +55,16 @@ class LiveInsightServiceImpl : CoroutineVerticle(), LiveInsightService {
         return Future.succeededFuture()
     }
 
-    override fun uploadRepository(repository: JsonObject): Future<Void> {
-        val workspaceId = "test"
+    override fun uploadRepository(workspaceId: String, repository: JsonObject): Future<Void> {
         val tempDir = File("/tmp/$workspaceId").apply { mkdirs() }
         val repoUrl = repository.getString("repo_url")
         val repoBranch = repository.getString("repo_branch")
         val repoPath = repository.getString("repo_path")
+        val srcPath = repository.getString("src_path") ?: "src/main/java"
 
         val promise = Promise.promise<Void>()
         launch(vertx.dispatcher()) {
-            val process = vertx.executeBlocking<ProcessResult> {
+            val process = vertx.executeBlocking {
                 val process = if (repoPath.isNullOrEmpty()) {
                     ProcessExecutor()
                         .command("git", "clone", "-b", repoBranch, repoUrl, tempDir.absolutePath)
@@ -111,6 +111,9 @@ class LiveInsightServiceImpl : CoroutineVerticle(), LiveInsightService {
                 it.complete(process)
             }.await()
 
+            InsightWorkspaceProvider.getWorkspace(workspaceId)
+                .addSourceDirectory(File(tempDir.absolutePath, srcPath))
+
             if (process.exitValue != 0) {
                 log.error("Failed to clone repository: {}", repoUrl)
                 promise.fail("Failed to clone repository: $repoUrl")
@@ -124,15 +127,16 @@ class LiveInsightServiceImpl : CoroutineVerticle(), LiveInsightService {
     }
 
     override fun getArtifactInsights(
+        workspaceId: String,
         artifact: ArtifactQualifiedName,
         types: JsonArray
     ): Future<JsonObject> {
-        val workspaceId = "test"
         log.info("Getting artifact insights. Artifact: {} - Workspace: {} - Insights: {}", artifact, workspaceId, types)
 
-        val psiFile = InsightWorkspaceProvider.insightEnvironment.getPsiFile(
+        val workspace = InsightWorkspaceProvider.getWorkspace(workspaceId)
+        val psiFile = workspace.getPsiFile(
             File("/tmp/$workspaceId/" + artifact.toClass()!!.identifier.substringAfterLast(".") + ".kt")
-        ) ?: InsightWorkspaceProvider.insightEnvironment.getPsiFile(
+        ) ?: workspace.getPsiFile(
             File("/tmp/$workspaceId/" + artifact.toClass()!!.identifier.substringAfterLast(".") + ".java")
         )!!
         println(psiFile)
@@ -152,5 +156,32 @@ class LiveInsightServiceImpl : CoroutineVerticle(), LiveInsightService {
             promise.complete(insights)
         }
         return promise.future()
+    }
+
+    override fun getProjectClasses(workspaceId: String, offset: Int, limit: Int): Future<JsonArray> {
+        val testClasses = InsightWorkspaceProvider.getWorkspace(workspaceId).getAllClasses().toSet()
+        return Future.succeededFuture(JsonArray(testClasses.map {
+            it.toArtifact()?.getFullyQualifiedName()?.identifier
+        }))
+    }
+
+    override fun getProjectFunctions(workspaceId: String, offset: Int, limit: Int): Future<JsonArray> {
+        val testFunctions = InsightWorkspaceProvider.getWorkspace(workspaceId).getAllFunctions().toSet()
+        return Future.succeededFuture(JsonArray(testFunctions.map {
+            it.toArtifact()?.getFullyQualifiedName()?.identifier
+        }))
+    }
+
+    override fun getFunctionCode(workspaceId: String, function: ArtifactQualifiedName): Future<JsonObject> {
+        val projectFunction = InsightWorkspaceProvider.getWorkspace(workspaceId).getAllFunctions()
+            .find { it.toArtifact()?.getFullyQualifiedName()?.identifier == function.identifier }
+        if (projectFunction == null) {
+            log.error("Function not found: {}", function)
+            return Future.failedFuture("Function not found: $function")
+        }
+
+        val code = JsonObject()
+        code.put("code", "    " + projectFunction.text) //todo: spacing
+        return Future.succeededFuture(code)
     }
 }

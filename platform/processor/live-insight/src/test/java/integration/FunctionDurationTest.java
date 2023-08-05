@@ -26,6 +26,7 @@ import spp.protocol.artifact.ArtifactType;
 import spp.protocol.insight.InsightType;
 
 import java.io.File;
+import java.util.UUID;
 
 public class FunctionDurationTest extends PlatformIntegrationTest {
 
@@ -47,8 +48,11 @@ public class FunctionDurationTest extends PlatformIntegrationTest {
         var testContext = new VertxTestContext();
 
         //upload source code
+        var workspaceId = UUID.randomUUID().toString();
         var sourceFile = new File("src/test/java/integration/FunctionDurationTest.java");
-        getInsightService().uploadSourceCode(new JsonObject()
+        getInsightService().uploadSourceCode(
+                workspaceId,
+                new JsonObject()
                 .put("file_path", sourceFile.getAbsolutePath())
                 .put("file_content", vertx.fileSystem().readFile(
                         sourceFile.getAbsolutePath()).toCompletionStage().toCompletableFuture().get()
@@ -71,6 +75,7 @@ public class FunctionDurationTest extends PlatformIntegrationTest {
         //keep requesting function duration insight for function1
         vertx.setPeriodic(1000, id -> {
             getInsightService().getArtifactInsights(
+                    workspaceId,
                     new ArtifactQualifiedName(
                             FunctionDurationTest.class.getName() + ".function1()",
                             null,
