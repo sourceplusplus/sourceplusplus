@@ -57,7 +57,7 @@ subprojects {
         implementation("com.fasterxml.jackson.datatype:jackson-datatype-guava:$jacksonVersion")
         implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
         implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:$jacksonVersion")
-        implementation("org.zeroturnaround:zt-zip:1.15")
+        implementation("org.zeroturnaround:zt-zip:1.16")
         implementation("org.kohsuke:github-api:1.315")
         implementation("org.bouncycastle:bcprov-jdk15on:$bouncycastleVersion")
         implementation("org.bouncycastle:bcpkix-jdk15on:$bouncycastleVersion")
@@ -88,7 +88,7 @@ subprojects {
         implementation("org.bouncycastle:bcpkix-jdk15on:$bouncycastleVersion")
         implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
         implementation("commons-io:commons-io:$commonsIoVersion")
-        implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.2")
+        implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
         implementation("io.dropwizard.metrics:metrics-core:4.2.19")
         implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.0")
         implementation("org.apache.commons:commons-text:1.10.0")
@@ -108,7 +108,7 @@ subprojects {
         compileOnly("org.apache.skywalking:storage-elasticsearch-plugin:$skywalkingVersion") { isTransitive = false }
         compileOnly("org.apache.skywalking:library-elasticsearch-client:$skywalkingVersion") { isTransitive = false }
 
-        detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.23.0")
+        detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.23.1")
 
         testImplementation("org.slf4j:slf4j-simple:$slf4jVersion")
         testImplementation("org.junit.jupiter:junit-jupiter-engine:$jupiterVersion")
