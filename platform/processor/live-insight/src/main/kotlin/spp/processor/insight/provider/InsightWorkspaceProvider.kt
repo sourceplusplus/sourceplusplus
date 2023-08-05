@@ -21,11 +21,6 @@ import spp.processor.insight.impl.environment.InsightEnvironment
 
 object InsightWorkspaceProvider {
 
-    val insightEnvironment = InsightEnvironment().apply {
-//        UserData.vertx(project, ClusterConnection.getVertx())
-//        JVMLanguageProvider().setup(project)
-    }
-
     private val workspaces = mutableMapOf<String, InsightEnvironment>()
 
     fun getWorkspace(workspaceId: String): InsightEnvironment {
@@ -33,5 +28,9 @@ object InsightWorkspaceProvider {
             workspaces[workspaceId] = InsightEnvironment()
         }
         return workspaces[workspaceId]!!
+    }
+
+    fun getWorkspaces(): List<InsightEnvironment> {
+        return workspaces.values.toList()
     }
 }

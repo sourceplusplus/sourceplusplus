@@ -70,7 +70,9 @@ abstract class InsightModerator : CoroutineVerticle() { //todo: InsightSensor?
         vertx.setPeriodic(1000) {
             log.trace("Checking for insights to gather")
             launch(vertx.dispatcher()) {
-                searchProject(InsightWorkspaceProvider.insightEnvironment)
+                InsightWorkspaceProvider.getWorkspaces().forEach {
+                    searchProject(it)
+                }
             }
         }
     }

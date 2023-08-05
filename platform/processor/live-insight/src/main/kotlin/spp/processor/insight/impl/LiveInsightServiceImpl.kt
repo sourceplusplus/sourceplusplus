@@ -161,7 +161,7 @@ class LiveInsightServiceImpl : CoroutineVerticle(), LiveInsightService {
     override fun getProjectClasses(workspaceId: String, offset: Int, limit: Int): Future<JsonArray> {
         val testClasses = InsightWorkspaceProvider.getWorkspace(workspaceId).getAllClasses().toSet()
         return Future.succeededFuture(JsonArray(testClasses.map {
-            it.toArtifact()?.getFullyQualifiedName()?.identifier
+            it.getFullyQualifiedName().identifier
         }))
     }
 
