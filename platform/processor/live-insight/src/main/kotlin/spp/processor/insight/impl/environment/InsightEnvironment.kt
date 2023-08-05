@@ -101,4 +101,8 @@ class InsightEnvironment {
     fun getAllFunctions(): List<PsiNamedElement> {
         return projectFiles.flatMap { ArtifactScopeService.getFunctions(it) }
     }
+
+    fun getAllClasses(): List<PsiNamedElement> {
+        return projectFiles.flatMap { ArtifactScopeService.getClasses(it) }
+    }
 }

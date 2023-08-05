@@ -75,7 +75,6 @@ public class FunctionDurationTest extends PlatformIntegrationTest {
                             FunctionDurationTest.class.getName() + ".function1()",
                             null,
                             ArtifactType.FUNCTION,
-                            null,
                             null
                     ),
                     JsonArray.of(InsightType.FUNCTION_DURATION.name())
