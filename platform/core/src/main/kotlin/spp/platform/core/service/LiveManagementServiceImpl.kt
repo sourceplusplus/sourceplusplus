@@ -35,9 +35,12 @@ import kotlinx.coroutines.launch
 import mu.KotlinLogging
 import org.apache.commons.lang3.RandomStringUtils
 import org.apache.skywalking.oap.server.core.CoreModule
+import org.apache.skywalking.oap.server.core.query.AggregationQueryService
 import org.apache.skywalking.oap.server.core.query.MetadataQueryService
+import org.apache.skywalking.oap.server.core.query.enumeration.Scope
 import org.apache.skywalking.oap.server.core.query.enumeration.Step
 import org.apache.skywalking.oap.server.core.query.input.Duration
+import org.apache.skywalking.oap.server.core.query.input.TopNCondition
 import org.apache.skywalking.oap.server.library.module.ModuleManager
 import spp.platform.common.ClusterConnection
 import spp.platform.common.DeveloperAuth
@@ -45,14 +48,13 @@ import spp.platform.common.service.SourceBridgeService
 import spp.platform.core.service.cache.SelfInfoCache
 import spp.platform.storage.SourceStorage
 import spp.platform.storage.config.SystemConfig
+import spp.protocol.artifact.metrics.MetricStep
+import spp.protocol.artifact.metrics.MetricType.Companion.Endpoint_CPM
 import spp.protocol.platform.ProbeAddress
 import spp.protocol.platform.auth.*
 import spp.protocol.platform.developer.Developer
 import spp.protocol.platform.developer.SelfInfo
-import spp.protocol.platform.general.Service
-import spp.protocol.platform.general.ServiceEndpoint
-import spp.protocol.platform.general.ServiceInstance
-import spp.protocol.platform.general.TimeInfo
+import spp.protocol.platform.general.*
 import spp.protocol.platform.status.InstanceConnection
 import spp.protocol.service.LiveInstrumentService
 import spp.protocol.service.LiveManagementService
@@ -61,6 +63,7 @@ import spp.protocol.service.SourceServices
 import spp.protocol.service.error.HealthCheckException
 import java.text.SimpleDateFormat
 import java.time.Instant
+import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
 import java.util.*
 
@@ -75,6 +78,9 @@ class LiveManagementServiceImpl(
     private val metadataQueryService = moduleManager.find(CoreModule.NAME)
         .provider()
         .getService(MetadataQueryService::class.java)
+    private var aggregationQuery = moduleManager.find(CoreModule.NAME)
+        .provider()
+        .getService(AggregationQueryService::class.java)
     private lateinit var healthChecks: HealthChecks
     private lateinit var metricsService: MetricsService
 
@@ -626,20 +632,42 @@ class LiveManagementServiceImpl(
         return promise.future()
     }
 
-    override fun getEndpoints(service: Service, limit: Int?): Future<List<ServiceEndpoint>> {
-        log.debug { "Getting endpoints for service $service" }
+    override fun getEndpoints(service: Service, limit: Int?, ignoreInactive: Boolean?): Future<List<ServiceEndpoint>> {
+        log.debug { "Getting endpoints for service $service; ignoreInactive = $ignoreInactive" }
         val promise = Promise.promise<List<ServiceEndpoint>>()
         launch(vertx.dispatcher()) {
             val result = mutableListOf<ServiceEndpoint>()
-            getActiveServices(service.name).onSuccess { services ->
-                services.forEach { svc ->
-                    metadataQueryService.findEndpoint("", svc.id, limit ?: 1000).forEach {
-                        result.add(ServiceEndpoint(it.id, it.name))
-                    }
+            val now = ZonedDateTime.now().truncatedTo(ChronoUnit.MINUTES)
+            val startF = MetricStep.MINUTE.formatter.format(now.minus(1, ChronoUnit.DAYS))
+            val endF = MetricStep.MINUTE.formatter.format(now)
+            val step = Step.valueOf(MetricStep.MINUTE.name)
+            if (ignoreInactive == true) { //todo (issue-1021) Optimize later
+                aggregationQuery.sortMetrics(TopNCondition().apply {
+                    this.name = Endpoint_CPM.metricId
+                    this.parentService = service.name
+                    this.isNormal = true
+                    this.scope = Scope.Endpoint
+                    this.topN = 1000
+                    // this.order = Order.DES
+                }, Duration().apply {
+                    this.start = startF
+                    this.end = endF
+                    this.step = step
+                }).filter { it.value.toInt() > 0 }.forEach {
+                    result.add(ServiceEndpoint(it.id, it.name))
                 }
                 promise.complete(result)
-            }.onFailure {
-                promise.fail(it)
+            } else {
+                getActiveServices(service.name).onSuccess { services ->
+                    services.forEach { svc ->
+                        metadataQueryService.findEndpoint("", svc.id, limit ?: 1000).forEach {
+                            result.add(ServiceEndpoint(it.id, it.name))
+                        }
+                    }
+                    promise.complete(result)
+                }.onFailure {
+                    promise.fail(it)
+                }
             }
         }
         return promise.future()
