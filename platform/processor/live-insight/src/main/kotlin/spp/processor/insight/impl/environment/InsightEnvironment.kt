@@ -30,8 +30,11 @@ import com.intellij.psi.impl.search.PsiSearchHelperImpl
 import mu.KotlinLogging
 import spp.jetbrains.artifact.service.ArtifactScopeService
 import java.io.File
+import java.util.*
 
-class InsightEnvironment {
+class InsightEnvironment(
+    val workspaceId: String = UUID.randomUUID().toString()
+) {
 
     private val log = KotlinLogging.logger {}
     private val disposable = Disposable {}
@@ -67,18 +70,18 @@ class InsightEnvironment {
     }
 
     fun addSourceDirectory(sourceDirectory: File) {
-        log.info { "Adding source directory: $sourceDirectory" }
+        log.info { "Adding source directory: $sourceDirectory. Workspace id: $workspaceId" }
         val root = applicationEnvironment.localFileSystem.findFileByIoFile(sourceDirectory)!!
         projectEnvironment.addSourcesToClasspath(root)
 
         sourceDirectory.walkTopDown().filter { it.isFile && it.extension == "java" }.forEach {
-            log.info { "Adding source file: $it" }
+            log.info { "Adding source file: $it. Workspace id: $workspaceId" }
             projectFiles.add(getPsiFile(it)!!)
         }
     }
 
     fun addJarToClasspath(jar: File) {
-        log.info { "Adding jar to classpath: $jar" }
+        log.info { "Adding jar to classpath: $jar. Workspace id: $workspaceId" }
         projectEnvironment.addJarToClassPath(jar)
     }
 
@@ -104,10 +107,12 @@ class InsightEnvironment {
     }
 
     fun getAllFunctions(): List<PsiNamedElement> {
+        log.info { "Getting all functions. Workspace id: $workspaceId. Project files: ${projectFiles.size}" }
         return projectFiles.flatMap { ArtifactScopeService.getFunctions(it) }
     }
 
     fun getAllClasses(): List<PsiNamedElement> {
+        log.info { "Getting all classes. Workspace id: $workspaceId. Project files: ${projectFiles.size}" }
         return projectFiles.flatMap { ArtifactScopeService.getClasses(it) }
     }
 }

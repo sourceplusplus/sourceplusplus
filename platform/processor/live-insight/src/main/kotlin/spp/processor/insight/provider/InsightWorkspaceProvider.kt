@@ -25,7 +25,7 @@ object InsightWorkspaceProvider {
 
     fun createWorkspace(workspaceId: String): InsightEnvironment {
         if (!workspaces.containsKey(workspaceId)) {
-            workspaces[workspaceId] = InsightEnvironment()
+            workspaces[workspaceId] = InsightEnvironment(workspaceId)
         }
         return workspaces[workspaceId]!!
     }
