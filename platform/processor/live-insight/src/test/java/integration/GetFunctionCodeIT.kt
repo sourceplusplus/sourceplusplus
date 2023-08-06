@@ -30,17 +30,18 @@ import java.util.*
 class GetFunctionCodeIT : PlatformIntegrationTest() {
 
     @Test
-    fun testGitUpload(): Unit = runBlocking {
+    fun getFunctionCode(): Unit = runBlocking {
         val testContext = VertxTestContext()
 
         //upload git
         val workspaceId = UUID.randomUUID().toString()
+        log.info("Workspace ID: $workspaceId")
         insightService.uploadRepository(
             workspaceId,
             JsonObject()
                 .put("repo_url", "https://github.com/IntelliDebug/java-login-bug")
                 .put("repo_branch", "master")
-        ).toCompletionStage().toCompletableFuture().get()
+        ).await()
 
         val functionCode = insightService.getFunctionCode(
             workspaceId,

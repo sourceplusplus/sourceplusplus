@@ -44,9 +44,9 @@ class GetProjectFunctionsIT : PlatformIntegrationTest() {
                 .put(
                     "file_content", vertx.fileSystem().readFile(
                         sourceFile.absolutePath
-                    ).toCompletionStage().toCompletableFuture().get()
+                    ).await()
                 )
-        ).toCompletionStage().toCompletableFuture().get()
+        ).await()
 
         val projectFunctions = insightService.getProjectFunctions(workspaceId, 0, 10).await()
         testContext.verify {
@@ -70,7 +70,7 @@ class GetProjectFunctionsIT : PlatformIntegrationTest() {
             JsonObject()
                 .put("repo_url", "https://github.com/IntelliDebug/java-login-bug")
                 .put("repo_branch", "master")
-        ).toCompletionStage().toCompletableFuture().get()
+        ).await()
 
         val projectFunctions = insightService.getProjectFunctions(workspaceId, 0, 10).await()
         testContext.verify {
