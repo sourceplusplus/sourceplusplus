@@ -44,9 +44,10 @@ class LiveInsightServiceImpl : CoroutineVerticle(), LiveInsightService {
     private val log = KotlinLogging.logger {}
 
     override fun uploadSourceCode(workspaceId: String, sourceCode: JsonObject): Future<Void> {
-        log.info("Uploading source code {} to workspace {}", sourceCode, workspaceId)
         val tempDir = File("/tmp/$workspaceId").apply { mkdirs() }
         val filename = File(sourceCode.getString("file_path")).name
+        log.info("Uploading {} to workspace {}", filename, workspaceId)
+
         val sourceFile = File(tempDir.absolutePath, filename)
         sourceFile.createNewFile()
         vertx.fileSystem().writeFileBlocking(sourceFile.absolutePath, sourceCode.getBuffer("file_content"))

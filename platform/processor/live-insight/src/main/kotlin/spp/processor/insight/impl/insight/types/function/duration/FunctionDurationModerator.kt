@@ -182,7 +182,7 @@ class FunctionDurationModerator : InsightModerator(),
                     qualifiedName, insightPriority
                 )
             } else {
-                log.debug("Found function duration of {} for {}", duration.asLong, qualifiedName)
+                log.trace("Found function duration of {} for {}", duration.asLong, qualifiedName)
             }
 
             var metricId = "spp_" + ("insight-function-duration:" + qualifiedName.identifier)
@@ -215,7 +215,7 @@ class FunctionDurationModerator : InsightModerator(),
         val qualifiedName = function.getFullyQualifiedName().identifier
         SourceStorage.get<Long>("${InsightType.FUNCTION_DURATION}:$qualifiedName")?.let { duration ->
             durationInsights.add(JsonObject().put(qualifiedName, duration))
-            log.debug("Function: $qualifiedName - Total duration: $duration ms")
+            log.trace("Function: $qualifiedName - Total duration: $duration ms")
         }
 
 //        val fileMarker = SourceFileMarker(function.containingFile)
