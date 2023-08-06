@@ -1,5 +1,8 @@
 FROM apache/skywalking-oap-server:9.5.0-java17
 
+#Install git
+RUN apt-get update && apt-get install -y git
+
 ADD ./log4j2.xml /skywalking/config/log4j2.xml
 
 ADD ./spp-platform-*.jar /skywalking/oap-libs/
@@ -12,6 +15,9 @@ RUN printf "\nspp-platform-storage:\n  selector: \${SPP_PLATFORM_STORAGE:default
     >> /skywalking/config/application.yml
 
 RUN printf "\nspp-platform-bridge:\n  selector: \${SPP_PLATFORM_BRIDGE:default}\n  default:\n" \
+    >> /skywalking/config/application.yml
+
+RUN printf "\nspp-live-insight:\n  selector: \${SPP_LIVE_INSIGHT:default}\n  default:\n" \
     >> /skywalking/config/application.yml
 
 RUN printf "\nspp-live-instrument:\n  selector: \${SPP_LIVE_INSTRUMENT:default}\n  default:\n" \

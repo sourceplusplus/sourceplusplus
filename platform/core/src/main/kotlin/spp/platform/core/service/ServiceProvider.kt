@@ -91,7 +91,7 @@ class ServiceProvider(
                     return@addInterceptor ensureGetAccessTokenAction(msg, promise)
                 }
 
-                if (jwtAuth != null) {
+                if (jwtAuth != null && msg.headers().get("action") != "getAuthToken") {
                     jwtAuth.authenticate(TokenCredentials(msg.headers().get("auth-token"))) {
                         if (it.succeeded()) {
                             Vertx.currentContext().putLocal("user", it.result())

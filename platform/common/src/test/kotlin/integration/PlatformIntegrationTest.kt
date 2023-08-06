@@ -38,6 +38,7 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import spp.protocol.instrument.LiveInstrument
+import spp.protocol.service.LiveInsightService
 import spp.protocol.service.LiveInstrumentService
 import spp.protocol.service.LiveManagementService
 import spp.protocol.service.LiveViewService
@@ -113,6 +114,10 @@ open class PlatformIntegrationTest {
     val managementService: LiveManagementService
         get() {
             return LiveManagementService.createProxy(vertx, systemAccessToken)
+        }
+    val insightService: LiveInsightService
+        get() {
+            return LiveInsightService.createProxy(vertx, systemAccessToken)
         }
     val instrumentService: LiveInstrumentService
         get() {
