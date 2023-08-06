@@ -46,7 +46,13 @@ import java.util.function.Supplier
 class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
 
     @Suppress("UNUSED_VARIABLE")
-    private fun triggerGauge() {
+    private fun triggerGauge1() {
+        val str = "hello"
+        addLineLabel("done") { Throwable().stackTrace[0].lineNumber }
+    }
+
+    @Suppress("UNUSED_VARIABLE")
+    private fun triggerGauge2() {
         val str = "hello"
         addLineLabel("done") { Throwable().stackTrace[0].lineNumber }
     }
@@ -54,7 +60,7 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
     @Test
     fun `test number supplier gauge`(): Unit = runBlocking {
         setupLineLabels {
-            triggerGauge()
+            triggerGauge1()
         }
 
         val supplier = @Suppress("SerialVersionUIDInSerializableClass") object : Supplier<Double>, Serializable {
@@ -129,7 +135,7 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
 
         instrumentService.addLiveInstrument(liveMeter).await()
 
-        triggerGauge()
+        triggerGauge1()
 
         errorOnTimeout(testContext)
 
@@ -142,7 +148,7 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
     @Test
     fun `test value expression gauge`(): Unit = runBlocking {
         setupLineLabels {
-            triggerGauge()
+            triggerGauge2()
         }
 
         val liveMeter = LiveMeter(
@@ -197,7 +203,7 @@ class LiveMeterGaugeTest : LiveInstrumentIntegrationTest() {
 
         instrumentService.addLiveInstrument(liveMeter).await()
 
-        triggerGauge()
+        triggerGauge2()
 
         errorOnTimeout(testContext)
 
