@@ -51,7 +51,7 @@ class LiveInsightServiceImpl : CoroutineVerticle(), LiveInsightService {
         val sourceFile = File(tempDir.absolutePath, filename)
         sourceFile.createNewFile()
         vertx.fileSystem().writeFileBlocking(sourceFile.absolutePath, sourceCode.getBuffer("file_content"))
-        InsightWorkspaceProvider.getWorkspace(workspaceId).addSourceDirectory(sourceFile)
+        InsightWorkspaceProvider.createWorkspace(workspaceId).addSourceDirectory(sourceFile)
 
         log.info("Uploaded {} to workspace {}", filename, workspaceId)
         return Future.succeededFuture()
@@ -114,7 +114,7 @@ class LiveInsightServiceImpl : CoroutineVerticle(), LiveInsightService {
                 it.complete(process)
             }.await()
 
-            InsightWorkspaceProvider.getWorkspace(workspaceId)
+            InsightWorkspaceProvider.createWorkspace(workspaceId)
                 .addSourceDirectory(File(tempDir.absolutePath, srcPath))
 
             if (process.exitValue != 0) {
@@ -135,8 +135,12 @@ class LiveInsightServiceImpl : CoroutineVerticle(), LiveInsightService {
         types: JsonArray
     ): Future<JsonObject> {
         log.info("Getting artifact insights. Artifact: {} - Workspace: {} - Insights: {}", artifact, workspaceId, types)
-
         val workspace = InsightWorkspaceProvider.getWorkspace(workspaceId)
+        if (workspace == null) {
+            log.error("Workspace {} not found", workspaceId)
+            return Future.failedFuture("Workspace $workspaceId not found")
+        }
+
         val psiFile = workspace.getPsiFile(
             File("/tmp/$workspaceId/" + artifact.toClass()!!.identifier.substringAfterLast(".") + ".kt")
         ) ?: workspace.getPsiFile(
@@ -163,7 +167,13 @@ class LiveInsightServiceImpl : CoroutineVerticle(), LiveInsightService {
 
     override fun getProjectClasses(workspaceId: String, offset: Int, limit: Int): Future<JsonArray> {
         log.info("Getting project classes. Workspace: {}", workspaceId)
-        val testClasses = InsightWorkspaceProvider.getWorkspace(workspaceId).getAllClasses().toSet()
+        val workspace = InsightWorkspaceProvider.getWorkspace(workspaceId)
+        if (workspace == null) {
+            log.error("Workspace {} not found", workspaceId)
+            return Future.failedFuture("Workspace $workspaceId not found")
+        }
+
+        val testClasses = workspace.getAllClasses().toSet()
         return Future.succeededFuture(JsonArray(testClasses.map {
             it.getFullyQualifiedName().identifier
         }))
@@ -171,7 +181,13 @@ class LiveInsightServiceImpl : CoroutineVerticle(), LiveInsightService {
 
     override fun getProjectFunctions(workspaceId: String, offset: Int, limit: Int): Future<JsonArray> {
         log.info("Getting project functions. Workspace: {}", workspaceId)
-        val testFunctions = InsightWorkspaceProvider.getWorkspace(workspaceId).getAllFunctions().toSet()
+        val workspace = InsightWorkspaceProvider.getWorkspace(workspaceId)
+        if (workspace == null) {
+            log.error("Workspace {} not found", workspaceId)
+            return Future.failedFuture("Workspace $workspaceId not found")
+        }
+
+        val testFunctions = workspace.getAllFunctions().toSet()
         return Future.succeededFuture(JsonArray(testFunctions.map {
             it.toArtifact()?.getFullyQualifiedName()?.identifier
         }))
@@ -179,7 +195,13 @@ class LiveInsightServiceImpl : CoroutineVerticle(), LiveInsightService {
 
     override fun getFunctionCode(workspaceId: String, function: ArtifactQualifiedName): Future<JsonObject> {
         log.info("Getting function code. Workspace: {} - Function: {}", workspaceId, function)
-        val projectFunction = InsightWorkspaceProvider.getWorkspace(workspaceId).getAllFunctions()
+        val workspace = InsightWorkspaceProvider.getWorkspace(workspaceId)
+        if (workspace == null) {
+            log.error("Workspace {} not found", workspaceId)
+            return Future.failedFuture("Workspace $workspaceId not found")
+        }
+
+        val projectFunction = workspace.getAllFunctions()
             .find { it.toArtifact()?.getFullyQualifiedName()?.identifier == function.identifier }
         if (projectFunction == null) {
             log.error("Function not found: {}", function)

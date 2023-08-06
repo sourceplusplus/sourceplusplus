@@ -23,11 +23,15 @@ object InsightWorkspaceProvider {
 
     private val workspaces = mutableMapOf<String, InsightEnvironment>()
 
-    fun getWorkspace(workspaceId: String): InsightEnvironment {
+    fun createWorkspace(workspaceId: String): InsightEnvironment {
         if (!workspaces.containsKey(workspaceId)) {
             workspaces[workspaceId] = InsightEnvironment()
         }
         return workspaces[workspaceId]!!
+    }
+
+    fun getWorkspace(workspaceId: String): InsightEnvironment? {
+        return workspaces[workspaceId]
     }
 
     fun getWorkspaces(): List<InsightEnvironment> {
