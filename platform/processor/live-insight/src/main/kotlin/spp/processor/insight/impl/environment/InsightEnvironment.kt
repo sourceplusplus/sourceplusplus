@@ -27,11 +27,13 @@ import com.intellij.psi.*
 import com.intellij.psi.impl.PsiNameHelperImpl
 import com.intellij.psi.impl.file.impl.JavaFileManager
 import com.intellij.psi.impl.search.PsiSearchHelperImpl
+import mu.KotlinLogging
 import spp.jetbrains.artifact.service.ArtifactScopeService
 import java.io.File
 
 class InsightEnvironment {
 
+    private val log = KotlinLogging.logger {}
     private val disposable = Disposable {}
     private val applicationEnvironment = InsightApplicationEnvironment(disposable)
     private val projectEnvironment = JavaCoreProjectEnvironment(disposable, applicationEnvironment)
@@ -65,15 +67,18 @@ class InsightEnvironment {
     }
 
     fun addSourceDirectory(sourceDirectory: File) {
+        log.info { "Adding source directory: $sourceDirectory" }
         val root = applicationEnvironment.localFileSystem.findFileByIoFile(sourceDirectory)!!
         projectEnvironment.addSourcesToClasspath(root)
 
         sourceDirectory.walkTopDown().filter { it.isFile && it.extension == "java" }.forEach {
+            log.info { "Adding source file: $it" }
             projectFiles.add(getPsiFile(it)!!)
         }
     }
 
     fun addJarToClasspath(jar: File) {
+        log.info { "Adding jar to classpath: $jar" }
         projectEnvironment.addJarToClassPath(jar)
     }
 

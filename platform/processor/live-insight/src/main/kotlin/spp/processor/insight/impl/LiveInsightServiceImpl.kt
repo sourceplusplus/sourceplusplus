@@ -44,6 +44,7 @@ class LiveInsightServiceImpl : CoroutineVerticle(), LiveInsightService {
     private val log = KotlinLogging.logger {}
 
     override fun uploadSourceCode(workspaceId: String, sourceCode: JsonObject): Future<Void> {
+        log.info("Uploading source code {} to workspace {}", sourceCode, workspaceId)
         val tempDir = File("/tmp/$workspaceId").apply { mkdirs() }
         val filename = File(sourceCode.getString("file_path")).name
         val sourceFile = File(tempDir.absolutePath, filename)
@@ -56,6 +57,7 @@ class LiveInsightServiceImpl : CoroutineVerticle(), LiveInsightService {
     }
 
     override fun uploadRepository(workspaceId: String, repository: JsonObject): Future<Void> {
+        log.info("Uploading repository {} to workspace {}", repository, workspaceId)
         val tempDir = File("/tmp/$workspaceId").apply { mkdirs() }
         val repoUrl = repository.getString("repo_url")
         val repoBranch = repository.getString("repo_branch")
@@ -159,6 +161,7 @@ class LiveInsightServiceImpl : CoroutineVerticle(), LiveInsightService {
     }
 
     override fun getProjectClasses(workspaceId: String, offset: Int, limit: Int): Future<JsonArray> {
+        log.info("Getting project classes. Workspace: {}", workspaceId)
         val testClasses = InsightWorkspaceProvider.getWorkspace(workspaceId).getAllClasses().toSet()
         return Future.succeededFuture(JsonArray(testClasses.map {
             it.getFullyQualifiedName().identifier
@@ -166,6 +169,7 @@ class LiveInsightServiceImpl : CoroutineVerticle(), LiveInsightService {
     }
 
     override fun getProjectFunctions(workspaceId: String, offset: Int, limit: Int): Future<JsonArray> {
+        log.info("Getting project functions. Workspace: {}", workspaceId)
         val testFunctions = InsightWorkspaceProvider.getWorkspace(workspaceId).getAllFunctions().toSet()
         return Future.succeededFuture(JsonArray(testFunctions.map {
             it.toArtifact()?.getFullyQualifiedName()?.identifier
@@ -173,6 +177,7 @@ class LiveInsightServiceImpl : CoroutineVerticle(), LiveInsightService {
     }
 
     override fun getFunctionCode(workspaceId: String, function: ArtifactQualifiedName): Future<JsonObject> {
+        log.info("Getting function code. Workspace: {} - Function: {}", workspaceId, function)
         val projectFunction = InsightWorkspaceProvider.getWorkspace(workspaceId).getAllFunctions()
             .find { it.toArtifact()?.getFullyQualifiedName()?.identifier == function.identifier }
         if (projectFunction == null) {
