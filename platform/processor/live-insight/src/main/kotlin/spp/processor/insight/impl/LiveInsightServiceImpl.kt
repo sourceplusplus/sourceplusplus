@@ -201,8 +201,13 @@ class LiveInsightServiceImpl : CoroutineVerticle(), LiveInsightService {
             return Future.failedFuture("Workspace $workspaceId not found")
         }
 
-        val projectFunction = workspace.getAllFunctions()
-            .find { it.toArtifact()?.getFullyQualifiedName()?.identifier == function.identifier }
+        val workspaceFunctions = workspace.getAllFunctions()
+        log.info("Workspace functions: {}", workspaceFunctions)
+        val functionArtifacts = workspace.getAllFunctions().mapNotNull { it.toArtifact() }
+        val functionNames = functionArtifacts.map { it.getFullyQualifiedName() }
+        log.info("Workspace function names: {}", functionNames)
+
+        val projectFunction = functionArtifacts.find { it.getFullyQualifiedName() == function }
         if (projectFunction == null) {
             log.error("Function not found: {}", function)
             return Future.failedFuture("Function not found: $function")
