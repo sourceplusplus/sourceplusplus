@@ -53,7 +53,8 @@ tasks {
             file("platform/bridge/build/libs/spp-platform-bridge-${project.version}.jar"),
             file("platform/storage/build/libs/spp-platform-storage-${project.version}.jar"),
             file("platform/processor/live-instrument/build/libs/spp-live-instrument-${project.version}.jar"),
-            file("platform/processor/live-view/build/libs/spp-live-view-${project.version}.jar")
+            file("platform/processor/live-view/build/libs/spp-live-view-${project.version}.jar"),
+            file("platform/processor/live-insight/build/libs/spp-live-insight-${project.version}.jar")
         )
     }
     register<Tar>("makeDist") {
