@@ -1,5 +1,8 @@
 FROM apache/skywalking-oap-server:9.5.0-java17
 
+#Install git
+RUN apt-get update && apt-get install -y git
+
 ADD ./config/spp-platform.yml /skywalking/config/
 
 RUN rm /skywalking/config/log4j2.xml
