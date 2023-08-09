@@ -34,7 +34,7 @@ jobs:
   verify-mono:
     if: ${{ !contains(github.event.pull_request.head.ref, '#docs') && !(startsWith(github.event.head_commit.message, 'Merge pull request') && contains(github.event.head_commit.message, '#docs')) }}
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     timeout-minutes: 20
 
     outputs:
@@ -59,7 +59,7 @@ jobs:
         run: ./gradlew spotlessCheck
 
   test-platform:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     timeout-minutes: 25
 
     strategy:
@@ -160,7 +160,7 @@ jobs:
           path: /tmp/spp-probe/logs/test-live-view.log
 
   test-probe-jvm:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     timeout-minutes: 20
 
     steps:
@@ -230,7 +230,7 @@ jobs:
           path: /tmp/spp-probe/logs/skywalking-api.log
 
   test-probe-nodejs:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     timeout-minutes: 20
 
     steps:
@@ -306,7 +306,7 @@ jobs:
           path: platform/build/containers-logs/spp-platform.log
 
   test-interface-cli:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     timeout-minutes: 20
 
     steps:
@@ -368,7 +368,7 @@ jobs:
           path: platform/build/containers-logs/spp-platform.log
 
   test-interface-jetbrains:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     timeout-minutes: 20
 
     steps:
@@ -408,7 +408,7 @@ jobs:
           rm -rf ~/.gradle/caches/modules-2/files-2.1/com.jetbrains.intellij.idea
 
   test-protocol:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     timeout-minutes: 20
 
     steps:
@@ -439,7 +439,7 @@ jobs:
     if: github.ref == 'refs/heads/master'
     #if: ${{ !contains(github.event.pull_request.head.ref, '#docs') && !(startsWith(github.event.head_commit.message, 'Merge pull request') && contains(github.event.head_commit.message, '#docs')) }}
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     timeout-minutes: 20
 
     outputs:
@@ -509,7 +509,7 @@ jobs:
   release-draft:
     if: github.ref == 'refs/heads/master'
     needs: [ make-distribution ]
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Remove Old Release Drafts
@@ -552,7 +552,7 @@ jobs:
     if: github.ref == 'refs/heads/master'
     needs:
       - make-distribution
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     steps:
       - uses: actions/checkout@v3
