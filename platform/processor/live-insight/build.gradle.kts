@@ -81,7 +81,7 @@ dependencies {
 
     implementation("org.zeroturnaround:zt-exec:1.12")
 
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.4")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.7.3")
     testImplementation(project(":probes:jvm:boot"))
     testImplementation("org.apache.logging.log4j:log4j-core:2.20.0")
     //todo: properly add test dependency
