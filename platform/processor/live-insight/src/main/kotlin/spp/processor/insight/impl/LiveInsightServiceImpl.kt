@@ -31,6 +31,7 @@ import mu.KotlinLogging
 import org.zeroturnaround.exec.ProcessExecutor
 import org.zeroturnaround.exec.stream.slf4j.Slf4jStream
 import spp.jetbrains.artifact.service.toArtifact
+import spp.jetbrains.marker.SourceMarkerUtils
 import spp.jetbrains.marker.service.getFullyQualifiedName
 import spp.processor.insight.InsightProcessor
 import spp.processor.insight.provider.InsightWorkspaceProvider
@@ -215,6 +216,8 @@ class LiveInsightServiceImpl : CoroutineVerticle(), LiveInsightService {
 
         val code = JsonObject()
         code.put("code", "    " + projectFunction.text) //todo: spacing
+        code.put("line_start", SourceMarkerUtils.getStartLineNumber(projectFunction.psiElement))
+        code.put("line_end", SourceMarkerUtils.getEndLineNumber(projectFunction.psiElement))
         return Future.succeededFuture(code)
     }
 }
