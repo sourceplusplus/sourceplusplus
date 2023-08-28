@@ -27,8 +27,19 @@ import com.intellij.psi.*
 import com.intellij.psi.impl.PsiNameHelperImpl
 import com.intellij.psi.impl.file.impl.JavaFileManager
 import com.intellij.psi.impl.search.PsiSearchHelperImpl
+import io.vertx.core.Vertx
+import io.vertx.core.json.JsonArray
+import io.vertx.core.json.JsonObject
+import io.vertx.kotlin.coroutines.await
 import mu.KotlinLogging
+import spp.jetbrains.UserData
 import spp.jetbrains.artifact.service.ArtifactScopeService
+import spp.jetbrains.artifact.service.toArtifact
+import spp.jetbrains.marker.jvm.detect.JVMEndpointDetector
+import spp.jetbrains.marker.jvm.detect.endpoint.VertxEndpoint
+import spp.jetbrains.marker.service.getFullyQualifiedName
+import spp.jetbrains.marker.source.SourceFileMarker
+import spp.jetbrains.marker.source.mark.guide.MethodGuideMark
 import java.io.File
 import java.util.*
 
@@ -114,5 +125,26 @@ class InsightEnvironment(
     fun getAllClasses(): List<PsiNamedElement> {
         log.info { "Getting all classes. Workspace id: $workspaceId. Project files: ${projectFiles.size}" }
         return projectFiles.flatMap { ArtifactScopeService.getClasses(it) }
+    }
+
+    suspend fun getAllEndpoints(vertx: Vertx): JsonArray {
+        log.info { "Getting all endpoints. Workspace id: $workspaceId. Project files: ${projectFiles.size}" }
+        val result = JsonArray()
+        val project = projectEnvironment.project
+        UserData.vertx(project, vertx)
+        val endpointDetector = JVMEndpointDetector(project)
+        endpointDetector.detectorSet.removeIf { it is VertxEndpoint } //todo: not this
+        getAllFunctions().forEach {
+            val guideMark = MethodGuideMark(
+                SourceFileMarker(it.containingFile),
+                it as PsiNameIdentifierOwner
+            )
+
+            val fullyQualifiedName = it.toArtifact()?.getFullyQualifiedName()?.identifier
+            endpointDetector.determineEndpointName(guideMark).await().forEach {
+                result.add(JsonObject().put("uri", it.name).put("qualifiedName", fullyQualifiedName))
+            }
+        }
+        return result
     }
 }

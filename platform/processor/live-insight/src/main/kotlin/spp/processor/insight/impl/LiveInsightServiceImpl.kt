@@ -194,6 +194,26 @@ class LiveInsightServiceImpl : CoroutineVerticle(), LiveInsightService {
         }))
     }
 
+    override fun getProjectEndpoints(workspaceId: String, offset: Int, limit: Int): Future<JsonArray> {
+        log.info("Getting project endpoints. Workspace: {}", workspaceId)
+        val workspace = InsightWorkspaceProvider.getWorkspace(workspaceId)
+        if (workspace == null) {
+            log.error("Workspace {} not found", workspaceId)
+            return Future.failedFuture("Workspace $workspaceId not found")
+        }
+
+        val promise = Promise.promise<JsonArray>()
+        launch(vertx.dispatcher()) {
+            try {
+                promise.complete(workspace.getAllEndpoints(vertx))
+            } catch (e: Exception) {
+                log.error(e) { "Error getting endpoints. Workspace id: $workspaceId" }
+                promise.fail(e)
+            }
+        }
+        return promise.future()
+    }
+
     override fun getFunctionCode(workspaceId: String, function: ArtifactQualifiedName): Future<JsonObject> {
         log.info("Getting function code. Workspace: {} - Function: {}", workspaceId, function)
         val workspace = InsightWorkspaceProvider.getWorkspace(workspaceId)
