@@ -41,6 +41,8 @@ exceptions:
     excludes: [ '**/test/**' ]
 
 complexity:
+  CyclomaticComplexMethod:
+    threshold: 20
   NestedBlockDepth:
     threshold: 5
   TooManyFunctions:
