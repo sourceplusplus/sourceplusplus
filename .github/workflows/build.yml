@@ -46,7 +46,7 @@ jobs:
           submodules: 'recursive'
 
       - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2.7.1
+        uses: gradle/gradle-build-action@v2.8.0
         with:
           gradle-home-cache-cleanup: true
           gradle-home-cache-excludes: |
@@ -84,7 +84,7 @@ jobs:
           java-version: '17'
 
       - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2.7.1
+        uses: gradle/gradle-build-action@v2.8.0
         with:
           gradle-home-cache-cleanup: true
           gradle-home-cache-excludes: |
@@ -174,7 +174,7 @@ jobs:
           java-version: '17'
 
       - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2.7.1
+        uses: gradle/gradle-build-action@v2.8.0
         with:
           gradle-home-cache-cleanup: true
           gradle-home-cache-excludes: |
@@ -244,7 +244,7 @@ jobs:
           java-version: '17'
 
       - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2.7.1
+        uses: gradle/gradle-build-action@v2.8.0
         with:
           gradle-home-cache-cleanup: true
           gradle-home-cache-excludes: |
@@ -320,7 +320,7 @@ jobs:
           java-version: '17'
 
       - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2.7.1
+        uses: gradle/gradle-build-action@v2.8.0
         with:
           gradle-home-cache-cleanup: true
           gradle-home-cache-excludes: |
@@ -382,7 +382,7 @@ jobs:
           java-version: '17'
 
       - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2.7.1
+        uses: gradle/gradle-build-action@v2.8.0
         with:
           gradle-home-cache-cleanup: true
           gradle-home-cache-excludes: |
@@ -417,7 +417,7 @@ jobs:
           submodules: 'true'
 
       - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2.7.1
+        uses: gradle/gradle-build-action@v2.8.0
         with:
           gradle-home-cache-cleanup: true
           gradle-home-cache-excludes: |
@@ -471,7 +471,7 @@ jobs:
           echo "BUILD_VERSION=$SPP_RELEASE_VERSION" >> $GITHUB_ENV
 
       - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2.7.1
+        uses: gradle/gradle-build-action@v2.8.0
         with:
           gradle-home-cache-cleanup: true
           gradle-home-cache-excludes: |
