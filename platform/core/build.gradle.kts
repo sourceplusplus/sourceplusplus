@@ -56,7 +56,7 @@ dependencies {
 
     //todo: properly add test dependency
     testImplementation(project(":platform:common").dependencyProject.extensions.getByType(SourceSetContainer::class).test.get().output)
-    testImplementation("org.apache.skywalking:apm-toolkit-trace:8.16.0")
+    testImplementation("org.apache.skywalking:apm-toolkit-trace:9.0.0")
 }
 
 //todo: shouldn't need to put in src (GitHub actions needs for some reason)
