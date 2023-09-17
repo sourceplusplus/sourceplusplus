@@ -6,7 +6,7 @@ services:
 #    ports:
 #      - "17128:17128"
   redis:
-    image: redis:7.2.0
+    image: redis:7.2.1
     container_name: redis
     hostname: redis
     ports:
