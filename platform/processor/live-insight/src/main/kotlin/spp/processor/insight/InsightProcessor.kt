@@ -19,6 +19,7 @@ package spp.processor.insight
 
 import io.vertx.core.CompositeFuture
 import io.vertx.core.DeploymentOptions
+import io.vertx.core.Future
 import io.vertx.core.Vertx
 import io.vertx.core.json.JsonObject
 import io.vertx.kotlin.coroutines.await
@@ -79,7 +80,7 @@ object InsightProcessor : FeedbackProcessor() {
 
         //deploy moderators
         val workerOptions = DeploymentOptions().setWorker(true)
-        CompositeFuture.all(moderators.map { vertx.deployVerticle(it, workerOptions) }).await()
+        Future.all(moderators.map { vertx.deployVerticle(it, workerOptions) }).await()
 
         vertx.deployVerticle(workspaceQueue).await()
 
