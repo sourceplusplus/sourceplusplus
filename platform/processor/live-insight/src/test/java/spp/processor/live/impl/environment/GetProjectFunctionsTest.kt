@@ -26,6 +26,9 @@ class GetProjectFunctionsTest {
 
     @Test
     fun `test java project functions`() {
+        File("/tmp/idea").mkdirs()
+        File("/tmp/idea/idea.properties").createNewFile()
+        System.setProperty("idea.home.path", "/tmp/idea")
         val env = InsightEnvironment()
         env.addSourceDirectory(File("src/test/testData"))
 

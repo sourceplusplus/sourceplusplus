@@ -41,7 +41,7 @@ import spp.jetbrains.marker.service.*
 
 class InsightApplicationEnvironment(parentDisposable: Disposable) : JavaCoreApplicationEnvironment(parentDisposable) {
     init {
-        myApplication.registerService(JavaClassSupers::class.java, JavaClassSupersImpl())
+        application.registerService(JavaClassSupers::class.java, JavaClassSupersImpl())
 
         val rootArea = Extensions.getRootArea()
         registerExtensionPoint(rootArea, FileContextProvider.EP_NAME, FileContextProvider::class.java)
