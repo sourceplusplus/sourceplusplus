@@ -161,7 +161,7 @@ jobs:
 
   test-probe-jvm:
     runs-on: ubuntu-20.04
-    timeout-minutes: 20
+    timeout-minutes: 25
 
     steps:
       - uses: actions/checkout@v3
