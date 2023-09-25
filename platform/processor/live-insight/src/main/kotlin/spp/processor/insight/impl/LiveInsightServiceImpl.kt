@@ -51,6 +51,9 @@ class LiveInsightServiceImpl : CoroutineVerticle(), LiveInsightService {
             return Future.failedFuture("Workspace $workspaceId already exists")
         }
 
+        File("/tmp/idea").mkdirs()
+        File("/tmp/idea/idea.properties").createNewFile()
+        System.setProperty("idea.home.path", "/tmp/idea")
         log.info("Creating workspace: {}", workspaceId)
         InsightWorkspaceProvider.createWorkspace(workspaceId, config)
         return Future.succeededFuture()
