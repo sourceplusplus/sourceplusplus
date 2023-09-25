@@ -44,7 +44,8 @@ import java.io.File
 import java.util.*
 
 class InsightEnvironment(
-    val workspaceId: String = UUID.randomUUID().toString()
+    val workspaceId: String = UUID.randomUUID().toString(),
+    val config: JsonObject = JsonObject()
 ) {
 
     private val log = KotlinLogging.logger {}

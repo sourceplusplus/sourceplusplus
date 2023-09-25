@@ -44,7 +44,24 @@ class LiveInsightServiceImpl : CoroutineVerticle(), LiveInsightService {
 
     private val log = KotlinLogging.logger {}
 
+    override fun createWorkspace(workspaceId: String, config: JsonObject): Future<Void> {
+        val workspace = InsightWorkspaceProvider.getWorkspace(workspaceId)
+        if (workspace != null) {
+            log.error("Workspace {} already exists", workspaceId)
+            return Future.failedFuture("Workspace $workspaceId already exists")
+        }
+
+        log.info("Creating workspace: {}", workspaceId)
+        InsightWorkspaceProvider.createWorkspace(workspaceId, config)
+        return Future.succeededFuture()
+    }
+
     override fun uploadSourceCode(workspaceId: String, sourceCode: JsonObject): Future<Void> {
+        val workspace = InsightWorkspaceProvider.getWorkspace(workspaceId)
+        if (workspace == null) {
+            log.error("Workspace {} not found", workspaceId)
+            return Future.failedFuture("Workspace $workspaceId not found")
+        }
         val tempDir = File("/tmp/$workspaceId").apply { mkdirs() }
         val filename = File(sourceCode.getString("file_path")).name
         log.info("Uploading {} to workspace {}", filename, workspaceId)
@@ -52,13 +69,18 @@ class LiveInsightServiceImpl : CoroutineVerticle(), LiveInsightService {
         val sourceFile = File(tempDir.absolutePath, filename)
         sourceFile.createNewFile()
         vertx.fileSystem().writeFileBlocking(sourceFile.absolutePath, sourceCode.getBuffer("file_content"))
-        InsightWorkspaceProvider.createWorkspace(workspaceId).addSourceDirectory(sourceFile)
+        workspace.addSourceDirectory(sourceFile)
 
         log.info("Uploaded {} to workspace {}", filename, workspaceId)
         return Future.succeededFuture()
     }
 
     override fun uploadRepository(workspaceId: String, repository: JsonObject): Future<Void> {
+        val workspace = InsightWorkspaceProvider.getWorkspace(workspaceId)
+        if (workspace == null) {
+            log.error("Workspace {} not found", workspaceId)
+            return Future.failedFuture("Workspace $workspaceId not found")
+        }
         log.info("Uploading repository {} to workspace {}", repository, workspaceId)
         val tempDir = File("/tmp/$workspaceId").apply { mkdirs() }
         val repoUrl = repository.getString("repo_url")
@@ -114,9 +136,7 @@ class LiveInsightServiceImpl : CoroutineVerticle(), LiveInsightService {
                 }
                 it.complete(process)
             }.await()
-
-            InsightWorkspaceProvider.createWorkspace(workspaceId)
-                .addSourceDirectory(File(tempDir.absolutePath, srcPath))
+            workspace.addSourceDirectory(File(tempDir.absolutePath, srcPath))
 
             if (process.exitValue != 0) {
                 log.error("Failed to clone repository: {}", repoUrl)

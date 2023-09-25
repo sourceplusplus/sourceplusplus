@@ -49,14 +49,18 @@ public class FunctionDurationTest extends PlatformIntegrationTest {
 
         //upload source code
         var workspaceId = UUID.randomUUID().toString();
+        getInsightService().createWorkspace(
+                workspaceId,
+                new JsonObject().put("moderators." + InsightType.FUNCTION_DURATION + ".enabled", true)
+        ).toCompletionStage().toCompletableFuture().get();
         var sourceFile = new File("src/test/java/integration/FunctionDurationTest.java");
         getInsightService().uploadSourceCode(
                 workspaceId,
                 new JsonObject()
-                .put("file_path", sourceFile.getAbsolutePath())
-                .put("file_content", vertx.fileSystem().readFile(
-                        sourceFile.getAbsolutePath()).toCompletionStage().toCompletableFuture().get()
-                )
+                        .put("file_path", sourceFile.getAbsolutePath())
+                        .put("file_content", vertx.fileSystem().readFile(
+                                sourceFile.getAbsolutePath()).toCompletionStage().toCompletableFuture().get()
+                        )
         ).toCompletionStage().toCompletableFuture().get();
 
         //keep executing function1

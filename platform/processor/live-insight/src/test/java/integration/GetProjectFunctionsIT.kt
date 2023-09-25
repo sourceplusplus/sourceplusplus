@@ -35,6 +35,7 @@ class GetProjectFunctionsIT : PlatformIntegrationTest() {
 
         //upload source code
         val workspaceId = UUID.randomUUID().toString()
+        insightService.createWorkspace(workspaceId).await()
         log.info("Workspace ID: $workspaceId")
         val sourceFile = File("src/test/java/integration/FunctionDurationTest.java")
         insightService.uploadSourceCode(
@@ -64,6 +65,7 @@ class GetProjectFunctionsIT : PlatformIntegrationTest() {
 
         //upload git
         val workspaceId = UUID.randomUUID().toString()
+        insightService.createWorkspace(workspaceId).await()
         log.info("Workspace ID: $workspaceId")
         insightService.uploadRepository(
             workspaceId,

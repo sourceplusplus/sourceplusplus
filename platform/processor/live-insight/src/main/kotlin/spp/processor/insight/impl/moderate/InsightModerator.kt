@@ -71,7 +71,9 @@ abstract class InsightModerator : CoroutineVerticle() { //todo: InsightSensor?
             log.trace("Checking for insights to gather")
             launch(vertx.dispatcher()) {
                 InsightWorkspaceProvider.getWorkspaces().forEach {
-                    searchProject(it)
+                    if (it.config.getBoolean("moderators.${type.name}.enabled", false)) {
+                        searchProject(it)
+                    }
                 }
             }
         }

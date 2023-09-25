@@ -31,6 +31,7 @@ class GetProjectEndpointsIT : PlatformIntegrationTest() {
     fun testGitUpload(): Unit = runBlocking {
         //upload git
         val workspaceId = UUID.randomUUID().toString()
+        insightService.createWorkspace(workspaceId).await()
         log.info("Workspace ID: $workspaceId")
         insightService.uploadRepository(
             workspaceId,

@@ -17,15 +17,16 @@
  */
 package spp.processor.insight.provider
 
+import io.vertx.core.json.JsonObject
 import spp.processor.insight.impl.environment.InsightEnvironment
 
 object InsightWorkspaceProvider {
 
     private val workspaces = mutableMapOf<String, InsightEnvironment>()
 
-    fun createWorkspace(workspaceId: String): InsightEnvironment {
+    fun createWorkspace(workspaceId: String, config: JsonObject): InsightEnvironment {
         if (!workspaces.containsKey(workspaceId)) {
-            workspaces[workspaceId] = InsightEnvironment(workspaceId)
+            workspaces[workspaceId] = InsightEnvironment(workspaceId, config)
         }
         return workspaces[workspaceId]!!
     }
