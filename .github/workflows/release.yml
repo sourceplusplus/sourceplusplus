@@ -46,7 +46,7 @@ jobs:
         run: cd ./docker/spp-platform && tar -zxvf spp-platform-${{ env.SPP_PLATFORM_VERSION }}.tar.gz --strip-components=1
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
+        uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
         run: docker buildx create --use --platform linux/arm64,linux/amd64 --driver-opt=network=host
