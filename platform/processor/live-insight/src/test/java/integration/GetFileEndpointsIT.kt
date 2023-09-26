@@ -52,7 +52,7 @@ class GetFileEndpointsIT : PlatformIntegrationTest() {
                 .put("uri", "POST:/debug/login-error/login")
                 .put(
                     "qualifiedName",
-                    "application.JavaVertxEndpoints.login(RoutingContext)"
+                    "application.JavaVertxEndpoints.login(io.vertx.ext.web.RoutingContext)"
                 )
         })
         assertTrue(projectEndpoints.any {
@@ -60,7 +60,7 @@ class GetFileEndpointsIT : PlatformIntegrationTest() {
                 .put("uri", "POST:/debug/login-error/create-user")
                 .put(
                     "qualifiedName",
-                    "application.JavaVertxEndpoints.createUser(RoutingContext)"
+                    "application.JavaVertxEndpoints.createUser(io.vertx.ext.web.RoutingContext)"
                 )
         })
     }
