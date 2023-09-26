@@ -134,7 +134,6 @@ class InsightEnvironment(
         val project = projectEnvironment.project
         UserData.vertx(project, vertx)
         val endpointDetector = JVMEndpointDetector(project)
-        endpointDetector.detectorSet.removeIf { it is VertxEndpoint } //todo: not this
         getAllFunctions().forEach {
             val guideMark = MethodGuideMark(
                 SourceFileMarker(it.containingFile),
