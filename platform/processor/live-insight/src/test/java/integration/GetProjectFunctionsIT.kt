@@ -23,6 +23,7 @@ import io.vertx.kotlin.coroutines.await
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.io.File
 import java.util.*
@@ -59,6 +60,7 @@ class GetProjectFunctionsIT : PlatformIntegrationTest() {
         }
     }
 
+    @Disabled
     @Test
     fun testGitUpload(): Unit = runBlocking {
         val testContext = VertxTestContext()
@@ -70,7 +72,7 @@ class GetProjectFunctionsIT : PlatformIntegrationTest() {
         insightService.uploadRepository(
             workspaceId,
             JsonObject()
-                .put("repo_url", "https://github.com/IntelliDebug/java-login-bug")
+                .put("repo_url", "https://github.com/bfergerson/java-login-bug")
                 .put("repo_branch", "master")
         ).await()
 

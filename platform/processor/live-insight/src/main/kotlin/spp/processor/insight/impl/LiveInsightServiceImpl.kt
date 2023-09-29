@@ -139,12 +139,12 @@ class LiveInsightServiceImpl : CoroutineVerticle(), LiveInsightService {
                 }
                 it.complete(process)
             }.await()
-            workspace.addSourceDirectory(File(tempDir.absolutePath, srcPath))
 
             if (process.exitValue != 0) {
                 log.error("Failed to clone repository: {}", repoUrl)
                 promise.fail("Failed to clone repository: $repoUrl")
             } else {
+                workspace.addSourceDirectory(File(tempDir.absolutePath, srcPath))
                 log.info("Cloned repository {} to workspace {}", repoUrl, workspaceId)
                 promise.complete()
             }

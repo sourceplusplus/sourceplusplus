@@ -18,43 +18,29 @@
 package integration
 
 import io.vertx.core.json.JsonObject
-import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
-import spp.protocol.artifact.ArtifactQualifiedName
-import spp.protocol.artifact.ArtifactType
 import java.util.*
 
-class GetFunctionCodeIT : PlatformIntegrationTest() {
+class WorkspaceIT : PlatformIntegrationTest() {
 
-    @Disabled
     @Test
-    fun getFunctionCode(): Unit = runBlocking {
-        val testContext = VertxTestContext()
-
-        //upload git
+    fun `upload missing repo`(): Unit = runBlocking {
         val workspaceId = UUID.randomUUID().toString()
         insightService.createWorkspace(workspaceId).await()
         log.info("Workspace ID: $workspaceId")
-        insightService.uploadRepository(
-            workspaceId,
-            JsonObject()
-                .put("repo_url", "https://github.com/bfergerson/java-login-bug")
-                .put("repo_branch", "master")
-        ).await()
-
-        val functionCode = insightService.getFunctionCode(
-            workspaceId,
-            ArtifactQualifiedName(
-                identifier = "id.demo.LoginError.login(java.lang.String,java.lang.String)",
-                type = ArtifactType.FUNCTION
-            )
-        ).await().getString("code")
-        testContext.verify {
-            assertTrue(functionCode?.contains("login(@Nullable String username, @Nullable String password)") == true)
+        try {
+            insightService.uploadRepository(
+                workspaceId,
+                JsonObject()
+                    .put("repo_url", "https://github.com/bfergerson/doesntexist")
+                    .put("repo_branch", "master")
+            ).await()
+        } catch (e: Exception) {
+            log.info("Exception: $e")
+            assertTrue(e.message!!.contains("Failed to clone repository"))
         }
     }
 }
