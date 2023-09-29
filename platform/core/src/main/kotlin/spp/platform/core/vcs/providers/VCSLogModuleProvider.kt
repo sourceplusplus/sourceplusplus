@@ -24,10 +24,10 @@ import org.apache.skywalking.apm.network.logging.v3.LogData
 import org.apache.skywalking.oap.server.core.server.GRPCHandlerRegister
 import org.apache.skywalking.oap.server.core.server.HTTPHandlerRegister
 import org.apache.skywalking.oap.server.library.module.ModuleManager
+import org.apache.skywalking.oap.server.receiver.log.provider.LogModuleProvider
+import org.apache.skywalking.oap.server.receiver.log.provider.handler.grpc.LogReportServiceGrpcHandler
+import org.apache.skywalking.oap.server.receiver.log.provider.handler.rest.LogReportServiceHTTPHandler
 import org.apache.skywalking.oap.server.receiver.sharing.server.SharingServerModule
-import org.apache.skywalking.oap.server.recevier.log.provider.LogModuleProvider
-import org.apache.skywalking.oap.server.recevier.log.provider.handler.grpc.LogReportServiceGrpcHandler
-import org.apache.skywalking.oap.server.recevier.log.provider.handler.rest.LogReportServiceHTTPHandler
 import spp.platform.core.vcs.ServiceVCS
 
 /**

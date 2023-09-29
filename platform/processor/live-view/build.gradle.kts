@@ -45,7 +45,7 @@ dependencies {
     compileOnly("org.apache.skywalking:skywalking-jvm-receiver-plugin:$skywalkingVersion") {
         isTransitive = false
     }
-    compileOnly("org.apache.skywalking:skywalking-log-recevier-plugin:$skywalkingVersion") {
+    compileOnly("org.apache.skywalking:skywalking-log-receiver-plugin:$skywalkingVersion") {
         isTransitive = false
     }
     compileOnly("org.apache.skywalking:skywalking-management-receiver-plugin:$skywalkingVersion") {
