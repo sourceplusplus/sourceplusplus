@@ -74,17 +74,10 @@ dependencies {
 tasks {
     test {
         val isIntegrationProfile = System.getProperty("test.profile") == "integration"
-        val testsIndex = gradle.startParameter.taskNames.indexOf("--tests")
-        var runningIntegrationTests = false
-        if (testsIndex != -1) {
-            val testName = gradle.startParameter.taskNames[testsIndex + 1]
-            if (testName.contains("integration.") || testName.endsWith("IT")) {
-                runningIntegrationTests = true
-            }
-        }
+        val runningSpecificTests = gradle.startParameter.taskRequests.isNotEmpty()
 
         //exclude attaching probe to self unless requested
-        if (isIntegrationProfile || runningIntegrationTests) {
+        if (isIntegrationProfile || runningSpecificTests) {
             dependsOn(":probes:jvm:boot:jar")
 
             val probeJar = "${project(":probes:jvm:boot").buildDir}/libs/spp-probe-$version.jar"

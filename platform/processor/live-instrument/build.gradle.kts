@@ -56,7 +56,7 @@ tasks {
 
         //todo: should have way to distinguish tests that just need platform and tests that attach to self
         val isIntegrationProfile = System.getProperty("test.profile") == "integration"
-        val runningSpecificTests = gradle.startParameter.taskNames.contains("--tests")
+        val runningSpecificTests = gradle.startParameter.taskRequests.isNotEmpty()
 
         //exclude attaching probe to self unless requested
         if (isIntegrationProfile || runningSpecificTests) {

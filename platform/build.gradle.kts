@@ -163,7 +163,7 @@ subprojects {
         useJUnitPlatform()
 
         val isIntegrationProfile = System.getProperty("test.profile") == "integration"
-        val runningSpecificTests = gradle.startParameter.taskNames.contains("--tests")
+        val runningSpecificTests = gradle.startParameter.taskRequests.isNotEmpty()
         if (!isIntegrationProfile && !runningSpecificTests) {
             //exclude integration tests unless requested
             exclude("integration/**", "**/*IntegrationTest.class", "**/*ITTest.class")
