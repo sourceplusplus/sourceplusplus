@@ -144,7 +144,12 @@ class LiveInsightServiceImpl : CoroutineVerticle(), LiveInsightService {
                 log.error("Failed to clone repository: {}", repoUrl)
                 promise.fail("Failed to clone repository: $repoUrl")
             } else {
-                workspace.addSourceDirectory(File(tempDir.absolutePath, srcPath))
+                val srcDir = File(tempDir.absolutePath, srcPath)
+                if (srcDir.exists()) {
+                    workspace.addSourceDirectory(srcDir)
+                } else {
+                    log.warn("Source directory not found: {}", srcDir)
+                }
                 log.info("Cloned repository {} to workspace {}", repoUrl, workspaceId)
                 promise.complete()
             }
