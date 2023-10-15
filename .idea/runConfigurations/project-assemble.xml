@@ -15,6 +15,7 @@
           <option value=":platform:bridge:assemble" />
           <option value=":platform:common:assemble" />
           <option value=":platform:core:assemble" />
+          <option value=":platform:processor:live-insight:assemble" />
           <option value=":platform:processor:live-instrument:assemble" />
           <option value=":platform:processor:live-view:assemble" />
           <option value=":platform:storage:assemble" />

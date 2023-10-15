@@ -15,6 +15,7 @@
           <option value=":platform:bridge:check" />
           <option value=":platform:common:check" />
           <option value=":platform:core:check" />
+          <option value=":platform:processor:live-insight:check" />
           <option value=":platform:processor:live-instrument:check" />
           <option value=":platform:processor:live-view:check" />
           <option value=":platform:storage:check" />

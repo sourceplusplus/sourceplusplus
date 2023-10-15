@@ -10,6 +10,7 @@
       </option>
       <option name="taskNames">
         <list>
+          <option value=":platform:processor:live-insight:check" />
           <option value=":platform:processor:live-instrument:check" />
           <option value=":platform:processor:live-view:check" />
         </list>
