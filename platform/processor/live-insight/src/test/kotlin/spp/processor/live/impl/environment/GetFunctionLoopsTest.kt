@@ -27,13 +27,23 @@ class GetFunctionLoopsTest {
 
     @Test
     fun `test java function loops`() {
+        doTest("java")
+    }
+
+    @Test
+    fun `test kotlin function loops`() {
+        doTest("kotlin")
+    }
+
+    private fun doTest(lang: String) {
         File("/tmp/idea").mkdirs()
         File("/tmp/idea/idea.properties").createNewFile()
         System.setProperty("idea.home.path", "/tmp/idea")
         val env = InsightEnvironment()
-        env.addSourceDirectory(File("src/test/testData/loops"))
+        env.addSourceDirectory(File("src/test/testData/$lang/loops"))
 
-        val functionLoopsFile = env.getProjectFiles().first { it.name == "FunctionLoops.java" }
+        val fileExtension = if (lang == "kotlin") "kt" else lang
+        val functionLoopsFile = env.getProjectFiles().first { it.name == "FunctionLoops.$fileExtension" }
         assertEquals(4, ArtifactScopeService.getLoops(functionLoopsFile).size)
     }
 }

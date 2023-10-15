@@ -31,6 +31,8 @@ import com.intellij.psi.impl.JavaClassSupersImpl
 import com.intellij.psi.impl.smartPointers.SmartPointerAnchorProvider
 import com.intellij.psi.meta.MetaDataContributor
 import com.intellij.psi.util.JavaClassSupers
+import org.jetbrains.kotlin.idea.KotlinFileType
+import org.jetbrains.kotlin.parsing.KotlinParserDefinition
 import spp.jetbrains.artifact.service.ArtifactModelService
 import spp.jetbrains.artifact.service.ArtifactScopeService
 import spp.jetbrains.artifact.service.ArtifactTypeService
@@ -57,6 +59,10 @@ class InsightApplicationEnvironment(parentDisposable: Disposable) : JavaCoreAppl
             DynamicBundle.LanguageBundleEP::class.java
         )
         registerApplicationExtensionPoint(SmartPointerAnchorProvider.EP_NAME, SmartPointerAnchorProvider::class.java)
+
+        registerFileType(KotlinFileType.INSTANCE, "kt")
+        registerFileType(KotlinFileType.INSTANCE, KotlinParserDefinition.STD_SCRIPT_SUFFIX)
+        registerParserDefinition(KotlinParserDefinition())
 
         SourceMarkerUtils.getJvmLanguages().let {
             ArtifactMarkService.addService(JVMArtifactMarkService(), it)

@@ -26,11 +26,20 @@ class GetProjectFunctionsTest {
 
     @Test
     fun `test java project functions`() {
+        doTest("java")
+    }
+
+    @Test
+    fun `test kotlin project functions`() {
+        doTest("kotlin")
+    }
+
+    private fun doTest(lang: String) {
         File("/tmp/idea").mkdirs()
         File("/tmp/idea/idea.properties").createNewFile()
         System.setProperty("idea.home.path", "/tmp/idea")
         val env = InsightEnvironment()
-        env.addSourceDirectory(File("src/test/testData"))
+        env.addSourceDirectory(File("src/test/testData/$lang"))
 
         val projectFunctions = env.getAllFunctions()
         assertEquals(4, projectFunctions.size)

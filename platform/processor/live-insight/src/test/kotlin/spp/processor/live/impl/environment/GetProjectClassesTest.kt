@@ -25,12 +25,21 @@ import java.io.File
 class GetProjectClassesTest {
 
     @Test
-    fun `test java project classes`() {
+    fun `test project classes`() {
+        doTest("java")
+    }
+
+    @Test
+    fun `test kotlin project classes`() {
+        doTest("kotlin")
+    }
+
+    private fun doTest(lang: String) {
         File("/tmp/idea").mkdirs()
         File("/tmp/idea/idea.properties").createNewFile()
         System.setProperty("idea.home.path", "/tmp/idea")
         val env = InsightEnvironment()
-        env.addSourceDirectory(File("src/test/testData"))
+        env.addSourceDirectory(File("src/test/testData/$lang"))
 
         val projectClasses = env.getAllClasses()
         assertEquals(3, projectClasses.size)

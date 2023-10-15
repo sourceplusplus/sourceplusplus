@@ -78,7 +78,8 @@ dependencies {
     implementation("com.jetbrains.intellij.java:java:$intellijVersion")
     implementation("com.jetbrains.intellij.java:java-impl:$intellijVersion")
     implementation("com.jetbrains.intellij.java:java-psi:$intellijVersion")
-
+    //todo: need some kind of shaded kotlin-compiler + kotlin-plugin setup
+    implementation(files(File(findProject(":platform")!!.projectDir.parentFile, ".ext/kotlin-compiler-plugin-1.8.22-min.jar")))
     implementation("org.zeroturnaround:zt-exec:1.12")
 
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.7.3")

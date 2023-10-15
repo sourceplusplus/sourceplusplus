@@ -27,6 +27,7 @@ import com.intellij.psi.*
 import com.intellij.psi.impl.PsiNameHelperImpl
 import com.intellij.psi.impl.file.impl.JavaFileManager
 import com.intellij.psi.impl.search.PsiSearchHelperImpl
+import com.intellij.psi.search.PsiSearchHelper
 import io.vertx.core.Vertx
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
@@ -36,7 +37,6 @@ import spp.jetbrains.UserData
 import spp.jetbrains.artifact.service.ArtifactScopeService
 import spp.jetbrains.artifact.service.toArtifact
 import spp.jetbrains.marker.jvm.detect.JVMEndpointDetector
-import spp.jetbrains.marker.jvm.detect.endpoint.VertxEndpoint
 import spp.jetbrains.marker.service.getFullyQualifiedName
 import spp.jetbrains.marker.source.SourceFileMarker
 import spp.jetbrains.marker.source.mark.guide.MethodGuideMark
@@ -75,10 +75,7 @@ class InsightEnvironment(
             ProjectRootManagerImpl(projectEnvironment.project),
         )
 
-        project.registerService(
-            com.intellij.psi.search.PsiSearchHelper::class.java,
-            PsiSearchHelperImpl(project)
-        )
+        project.registerService(PsiSearchHelper::class.java, PsiSearchHelperImpl(project))
     }
 
     fun addSourceDirectory(sourceDirectory: File) {
@@ -86,7 +83,7 @@ class InsightEnvironment(
         val root = applicationEnvironment.localFileSystem.findFileByIoFile(sourceDirectory)!!
         projectEnvironment.addSourcesToClasspath(root)
 
-        sourceDirectory.walkTopDown().filter { it.isFile && it.extension == "java" }.forEach {
+        sourceDirectory.walkTopDown().filter { it.isFile && (it.extension == "java" || it.extension == "kt") }.forEach {
             log.info { "Adding source file: $it. Workspace id: $workspaceId" }
             projectFiles.add(getPsiFile(it)!!)
         }

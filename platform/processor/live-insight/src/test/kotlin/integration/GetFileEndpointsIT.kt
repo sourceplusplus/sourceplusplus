@@ -30,10 +30,21 @@ class GetFileEndpointsIT : PlatformIntegrationTest() {
 
     @Test
     fun `java vertx endpoints`(): Unit = runBlocking {
+        doTest("java")
+    }
+
+    @Test
+    fun `kotlin vertx endpoints`(): Unit = runBlocking {
+        doTest("kotlin")
+    }
+
+    private suspend fun doTest(lang: String) {
         val workspaceId = UUID.randomUUID().toString()
         insightService.createWorkspace(workspaceId).await()
         log.info("Workspace ID: $workspaceId")
-        val sourceFile = File("src/test/java/application/JavaVertxEndpoints.java")
+        val fileExtension = if (lang == "kotlin") "kt" else lang
+        val className = "${lang.capitalize()}VertxEndpoints"
+        val sourceFile = File("src/test/$lang/application/$className.$fileExtension")
         insightService.uploadSourceCode(
             workspaceId,
             JsonObject()
@@ -52,7 +63,7 @@ class GetFileEndpointsIT : PlatformIntegrationTest() {
                 .put("uri", "POST:/debug/login-error/login")
                 .put(
                     "qualifiedName",
-                    "application.JavaVertxEndpoints.login(io.vertx.ext.web.RoutingContext)"
+                    "application.$className.login(io.vertx.ext.web.RoutingContext)"
                 )
         })
         assertTrue(projectEndpoints.any {
@@ -60,7 +71,7 @@ class GetFileEndpointsIT : PlatformIntegrationTest() {
                 .put("uri", "POST:/debug/login-error/create-user")
                 .put(
                     "qualifiedName",
-                    "application.JavaVertxEndpoints.createUser(io.vertx.ext.web.RoutingContext)"
+                    "application.$className.createUser(io.vertx.ext.web.RoutingContext)"
                 )
         })
     }
