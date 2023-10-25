@@ -18,43 +18,51 @@
 package integration
 
 import io.vertx.core.json.JsonObject
-import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.await
 import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.Disabled
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import spp.protocol.artifact.ArtifactQualifiedName
 import spp.protocol.artifact.ArtifactType
+import java.io.File
 import java.util.*
 
 class GetFunctionCodeIT : PlatformIntegrationTest() {
 
-    @Disabled
     @Test
     fun getFunctionCode(): Unit = runBlocking {
-        val testContext = VertxTestContext()
-
-        //upload git
+        //upload source code
         val workspaceId = UUID.randomUUID().toString()
         insightService.createWorkspace(workspaceId).await()
         log.info("Workspace ID: $workspaceId")
-        insightService.uploadRepository(
+        val sourceFile = File("src/test/kotlin/application/KotlinVertxEndpoints.kt")
+        insightService.uploadSourceCode(
             workspaceId,
             JsonObject()
-                .put("repo_url", "https://github.com/bfergerson/java-login-bug")
-                .put("repo_branch", "master")
+                .put("file_path", sourceFile.absolutePath)
+                .put(
+                    "file_content", vertx.fileSystem().readFile(
+                        sourceFile.absolutePath
+                    ).await()
+                )
         ).await()
 
-        val functionCode = insightService.getFunctionCode(
+        val functionCode1 = insightService.getFunctionCode(
             workspaceId,
             ArtifactQualifiedName(
-                identifier = "id.demo.LoginError.login(java.lang.String,java.lang.String)",
+                identifier = "application.KotlinVertxEndpoints.login(io.vertx.ext.web.RoutingContext)",
                 type = ArtifactType.FUNCTION
             )
         ).await().getString("code")
-        testContext.verify {
-            assertTrue(functionCode?.contains("login(@Nullable String username, @Nullable String password)") == true)
-        }
+        assertEquals("private fun login(ctx: RoutingContext) = Unit", functionCode1.trim())
+
+        val functionCode2 = insightService.getFunctionCode(
+            workspaceId,
+            ArtifactQualifiedName(
+                identifier = "application.KotlinVertxEndpoints.login",
+                type = ArtifactType.FUNCTION
+            )
+        ).await().getString("code")
+        assertEquals("private fun login(ctx: RoutingContext) = Unit", functionCode2.trim())
     }
 }

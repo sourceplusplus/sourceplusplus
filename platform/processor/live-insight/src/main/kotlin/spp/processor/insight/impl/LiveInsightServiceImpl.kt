@@ -36,6 +36,7 @@ import spp.jetbrains.marker.service.getFullyQualifiedName
 import spp.processor.insight.InsightProcessor
 import spp.processor.insight.provider.InsightWorkspaceProvider
 import spp.protocol.artifact.ArtifactQualifiedName
+import spp.protocol.artifact.ArtifactType
 import spp.protocol.insight.InsightType
 import spp.protocol.service.LiveInsightService
 import java.io.File
@@ -256,13 +257,24 @@ class LiveInsightServiceImpl : CoroutineVerticle(), LiveInsightService {
         val functionNames = functionArtifacts.map { it.getFullyQualifiedName() }
         log.info("Workspace function names: {}", functionNames)
 
-        val projectFunction = functionArtifacts.find { it.getFullyQualifiedName() == function }
-        if (projectFunction == null) {
+        val projectFunctions = functionArtifacts.filter {
+            if (function.type == ArtifactType.FUNCTION && !function.identifier.contains("(")) {
+                //todo: more robust (only works for JVM languages)
+                it.getFullyQualifiedName().identifier.startsWith(function.identifier + "(")
+            } else {
+                it.getFullyQualifiedName() == function
+            }
+        }
+        if (projectFunctions.isEmpty()) {
             log.error("Function not found: {}", function)
             return Future.failedFuture("Function not found: $function")
+        } else if (projectFunctions.size > 1) {
+            log.error("Multiple functions found for: {}", function)
+            return Future.failedFuture("Multiple functions found for: $function")
         }
 
         val code = JsonObject()
+        val projectFunction = projectFunctions.first()
         code.put("code", "    " + projectFunction.text) //todo: spacing
         code.put("line_start", SourceMarkerUtils.getStartLineNumber(projectFunction.psiElement))
         code.put("line_end", SourceMarkerUtils.getEndLineNumber(projectFunction.psiElement))
