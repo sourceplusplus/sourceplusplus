@@ -9,7 +9,7 @@ pluginManagement {
         id("com.github.johnrengelman.shadow") version "8.1.1" apply false
         id("com.apollographql.apollo3") version "3.8.2" apply false
         id("org.mikeneck.graalvm-native-image") version "1.4.1" apply false
-        id("com.diffplug.spotless") version "6.21.0" apply false
+        id("com.diffplug.spotless") version "6.25.0" apply false
     }
 }
 
