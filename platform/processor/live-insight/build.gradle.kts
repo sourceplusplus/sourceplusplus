@@ -70,7 +70,7 @@ dependencies {
         isTransitive = false
     }
 
-    val intellijVersion = "232.9921.47"
+    val intellijVersion = "232.10335.17"
     implementation("com.jetbrains.intellij.platform:core:$intellijVersion")
     implementation("com.jetbrains.intellij.platform:core-impl:$intellijVersion")
     implementation("com.jetbrains.intellij.platform:lang:$intellijVersion")
