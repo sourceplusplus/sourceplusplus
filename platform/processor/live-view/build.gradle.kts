@@ -67,7 +67,7 @@ dependencies {
         //exclude network dependencies since agent shadows them
         exclude("org.apache.skywalking", "apm-network")
     }
-    testImplementation("org.mockito:mockito-core:5.5.0")
+    testImplementation("org.mockito:mockito-core:5.14.2")
     testImplementation("org.apache.skywalking:apm-toolkit-trace:9.0.0")
 }
 
